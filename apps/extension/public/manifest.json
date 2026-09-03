@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "FocusOn Extension",
+  "version": "0.1.0",
+  "description": "Chrome 브라우저의 학습 흐름을 분석합니다.",
+  "permissions": ["tabs", "storage", "webNavigation"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["content-script.js"]
+    }
+  ],
+  "action": {
+    "default_title": "FocusOn",
+    "default_popup": "index.html"
+  }
+}
