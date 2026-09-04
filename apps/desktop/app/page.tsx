@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import './App.css'
+'use client'
 
-function App() {
+import { useState } from 'react'
+
+export default function Page() {
   const [isStudying, setIsStudying] = useState(false)
 
   return (
@@ -20,34 +21,17 @@ function App() {
           <span>{isStudying ? '학습 세션 진행 중' : '학습 세션 준비됨'}</span>
         </div>
         <h2 id="study-title">오늘의 학습 목표를 설정해보자</h2>
-        <p className="muted-text">
-          화면과 학습 흐름을 기록해서 집중 습관을 확인할 수 있어.
-        </p>
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() => setIsStudying((current) => !current)}
-        >
+        <p className="muted-text">화면과 학습 흐름을 기록해서 집중 습관을 확인할 수 있어.</p>
+        <button type="button" className="primary-button" onClick={() => setIsStudying((current) => !current)}>
           {isStudying ? '학습 세션 일시정지' : '학습 세션 시작'}
         </button>
       </section>
 
       <section className="summary-grid" aria-label="FocusOn 준비 상태">
-        <article className="summary-item">
-          <span className="summary-label">목표</span>
-          <strong>아직 설정되지 않음</strong>
-        </article>
-        <article className="summary-item">
-          <span className="summary-label">타이머</span>
-          <strong>00:00:00</strong>
-        </article>
-        <article className="summary-item">
-          <span className="summary-label">분석</span>
-          <strong>대기 중</strong>
-        </article>
+        <article className="summary-item"><span className="summary-label">목표</span><strong>아직 설정되지 않음</strong></article>
+        <article className="summary-item"><span className="summary-label">타이머</span><strong>00:00:00</strong></article>
+        <article className="summary-item"><span className="summary-label">분석</span><strong>대기 중</strong></article>
       </section>
     </main>
   )
 }
-
-export default App

@@ -15,7 +15,7 @@
 
 ### 완료된 작업
 
-- Vite 기본 화면을 FocusOn 기본 대시보드로 교체했다.
+- Next.js 기본 화면을 FocusOn 기본 대시보드로 교체했다.
 - Desktop 앱 기본 실행·빌드 구조를 확인했다.
 - 공통 모노레포와 pnpm Workspace를 사용한다.
 
@@ -34,7 +34,7 @@
 
 ## 현재 기술
 
-- 프레임워크: React, Electron 예정
+- 프레임워크: Next.js, React, Electron 예정
 - 언어: TypeScript
 - 스타일: CSS, Tailwind 도입 여부 검토
 - 패키지 관리: pnpm Workspace
@@ -73,4 +73,3 @@
 - 변경된 결정과 관련 문서
 - 발생한 오류 보고서
 - 다음 작업과 선행 조건
-

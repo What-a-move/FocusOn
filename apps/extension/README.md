@@ -1,6 +1,6 @@
 # FocusOn Chrome Extension
 
-Chrome 브라우저의 학습 흐름을 수집하는 Extension이다.
+Chrome 브라우저의 학습 흐름을 수집하는 Extension이다. Popup 화면은 Next.js 정적 Export로 생성한다.
 
 ## 담당 기능
 
@@ -17,5 +17,4 @@ pnpm --filter @focuson/extension dev
 pnpm --filter @focuson/extension build
 ```
 
-Build 결과물의 `dist/` 폴더를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를 확인한다.
-
+Build 결과물의 `out/` 폴더를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를 확인한다.

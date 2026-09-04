@@ -16,7 +16,7 @@
 
 ### 완료된 작업
 
-- Vite 기본 화면을 FocusOn 브라우저 분석 화면으로 교체했다.
+- Next.js 기본 화면을 FocusOn 브라우저 분석 화면으로 교체했다.
 - Manifest V3 기본 파일을 `public/manifest.json`으로 정리했다.
 - Content Script와 Service Worker 진입 파일을 추가했다.
 - Extension production build 결과물에 manifest와 스크립트가 포함되는 것을 확인했다.
@@ -37,7 +37,7 @@
 
 ## 현재 기술
 
-- 프레임워크: React, Vite
+- 프레임워크: Next.js, React
 - 언어: TypeScript
 - 확장 규격: Chrome Extension Manifest V3
 - 주요 구성: Popup, Content Script, Service Worker
@@ -77,4 +77,3 @@ Chrome 탭
 - 변경된 권한과 수집 범위
 - 발생한 오류 보고서
 - 다음 작업과 선행 조건
-

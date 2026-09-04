@@ -11,11 +11,11 @@
 
 ### 결정 내용
 
-macOS 전용 Desktop 앱은 Electron + React + TypeScript 기반으로 개발한다.
+macOS 전용 Desktop 앱은 Electron + Next.js + React + TypeScript 기반으로 개발한다.
 
 ### 결정 이유
 
-React 기반 화면 기술을 유지하면서 macOS 앱 확인, 화면 캡처, 알림, 권한 처리를 연결하기 쉽다.
+Next.js 정적 빌드 기반의 React 화면 기술을 유지하면서 macOS 앱 확인, 화면 캡처, 알림, 권한 처리를 Electron에 연결하기 쉽다.
 
 ### 영향 범위
 
@@ -58,4 +58,3 @@ React 기반 화면 기술을 유지하면서 macOS 앱 확인, 화면 캡처, �
 - 고려한 대안:
 - 영향받는 파일:
 - 관련 Issue·PR:
-
