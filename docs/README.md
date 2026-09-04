@@ -16,8 +16,7 @@ docs/
 ├── COMMIT_CONVENTION.md
 ├── SENTENCE_WRITING.md
 ├── QA_CONVENTION.md
-├── ENVIRONMENT.md
-└── PROJECT_SCHEDULE.md
+└── ENVIRONMENT.md
 ```
 
 ## 먼저 읽을 문서

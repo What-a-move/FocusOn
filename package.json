@@ -5,11 +5,11 @@
     "scripts": {
         "dev:desktop": "pnpm --filter @focuson/desktop dev",
         "dev:extension": "pnpm --filter @focuson/extension dev",
-        "dev:server": "./server/gradlew bootRun",
+        "dev:server": "./server/gradlew -p server bootRun",
         "build:desktop": "pnpm --filter @focuson/desktop build",
         "build:extension": "pnpm --filter @focuson/extension build",
-        "build:server": "./server/gradlew build",
-        "test:server": "./server/gradlew test",
+        "build:server": "./server/gradlew -p server build",
+        "test:server": "./server/gradlew -p server test",
         "lint": "pnpm -r lint",
         "build": "pnpm -r build",
         "install:all": "pnpm install"

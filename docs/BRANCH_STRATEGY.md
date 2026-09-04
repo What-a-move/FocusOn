@@ -66,6 +66,17 @@ docs/40-common-workflow
 | `chore` | 설정·의존성·기타 작업 |
 | `test` | 테스트 추가·수정 |
 
+## PR 제목
+
+PR 제목은 작업 영역 Prefix로 시작한다.
+
+| 영역 | Prefix | 예시 |
+| --- | --- | --- |
+| Desktop·Extension | `[FE]` | `[FE] 현재 탭 정보 수집` |
+| Server | `[BE]` | `[BE] 학습 세션 API 구현` |
+| AI | `[AI]` | `[AI] 목표 관련성 판단 연결` |
+| 공통 | `[COMMON]` | `[COMMON] 공통 타입 추가` |
+
 ## Issue Branch 생성
 
 작업 시작 전 `dev`를 최신 상태로 만든 후 Issue 번호를 포함한 Branch를 생성한다.
@@ -91,6 +102,7 @@ git merge dev
 
 - `main`과 `dev`에 직접 개발하지 않는다.
 - `main`과 `dev`에 직접 Push하지 않는다.
+- GitHub 보호 규칙으로 `main`과 `dev`의 직접 Push 및 PR 없는 Merge를 차단한다.
 - 하나의 Issue에는 하나의 작업 Branch만 사용한다.
 - 하나의 Branch에는 하나의 Issue 작업만 포함한다.
 - Issue Branch의 PR 대상은 `dev`다.
@@ -98,4 +110,3 @@ git merge dev
 - Review가 끝난 PR만 Merge한다.
 - Branch 이름은 소문자와 하이픈을 사용한다.
 - 다른 영역 파일을 함께 수정하면 PR 설명에 이유를 남긴다.
-

@@ -4,6 +4,19 @@
 
 -
 
+## PR 제목 규칙
+
+제목 앞에 작업 영역 Prefix를 붙인다.
+
+- `[FE]` Desktop·Chrome Extension
+- `[BE]` Server
+- `[AI]` AI
+- `[COMMON]` 공통 타입·문서·설정
+
+예시: `[FE] 학습 세션 타이머 구현`
+
+- [ ] PR 제목에 영역 Prefix를 작성했다.
+
 ## 주요 변경 사항
 
 -

@@ -8,9 +8,9 @@
 | Desktop 문서 | `apps/desktop/docs/` | Electron·데스크톱 UI·macOS 연동 |
 | Extension 문서 | `apps/extension/docs/` | Chrome Extension·브라우저 분석 |
 | Server 문서 | `server/docs/` | Spring Boot·API·DB |
-| AI 문서 | `ai/docs/` | 분석 모델·추론·AI API |
+| AI 문서 | `AI/docs/` | 분석 모델·추론·AI API |
 
-AI 폴더는 담당자가 생성한 뒤 같은 규칙을 적용한다.
+AI 폴더는 현재 `AI/`로 구성하며 같은 규칙을 적용한다.
 
 각 담당 영역의 템플릿은 해당 영역의 `docs/templates/` 안에서 관리한다. 영역별 기술과 작업 흐름이 다를 수 있으므로 루트에 공통 기능 템플릿을 두지 않는다.
 

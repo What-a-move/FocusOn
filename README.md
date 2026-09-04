@@ -4,11 +4,11 @@ FocusOn은 사용자가 설정한 학습 목표를 기준으로 macOS 앱과 Chr
 
 ## 핵심 구성
 
-- `apps/desktop`: Electron + React 기반 macOS 데스크톱 앱
-- `apps/extension`: Chrome Extension 기반 브라우저 분석 모듈
+- `apps/desktop`: Electron + Next.js + React 기반 macOS 데스크톱 앱
+- `apps/extension`: Chrome Extension + Next.js + React 기반 브라우저 분석 모듈
 - `packages/shared-types`: Desktop·Extension·Server·AI가 공유할 타입
 - `server`: Spring Boot 백엔드
-- `ai`: AI 분석 서버 예정
+- `AI`: AI 분석 서버 예정
 - `docs`: 공통 개발 문서
 
 ## 현재 MVP 방향
@@ -28,18 +28,20 @@ FocusOn은 사용자가 설정한 학습 목표를 기준으로 macOS 앱과 Chr
 pnpm install
 pnpm --filter @focuson/desktop dev
 pnpm --filter @focuson/extension dev
-./server/gradlew bootRun
+./server/gradlew -p server bootRun
 ```
+
+Desktop 개발 서버는 `3000`, Extension UI 개발 서버는 `3001` 포트를 사용한다.
 
 ## 빌드
 
 ```bash
 pnpm --filter @focuson/desktop build
 pnpm --filter @focuson/extension build
-./server/gradlew build
+./server/gradlew -p server build
 ```
 
-Extension을 테스트할 때는 Build 결과물인 `apps/extension/dist/`를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다.
+Extension을 테스트할 때는 Build 결과물인 `apps/extension/out/`를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다.
 
 ## 작업 시작 순서
 

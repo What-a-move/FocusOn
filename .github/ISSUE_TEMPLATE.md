@@ -18,6 +18,15 @@
 - [ ] Shared
 - [ ] 문서
 
+## Labels
+
+Issue 생성 전 `.github/ISSUE_LABELS.md`를 확인하고 아래 기준으로 Label을 선택한다.
+
+- 영역: `area:desktop`, `area:extension`, `area:server`, `area:ai`, `area:shared`
+- 유형: `type:feature`, `type:bug`, `type:refactor`, `type:docs`, `type:test`, `type:chore`
+- 우선순위: `priority:mvp-core`, `priority:mvp-basic`, `priority:enhancement`
+- 필요 시: `status:blocked`
+
 ## 작업 제목
 
 <!-- 예시: 학습 세션 타이머 일시정지 기능 구현 -->

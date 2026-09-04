@@ -8,6 +8,7 @@
 4. 같은 기능의 `기능명-ERROR.md`와 `기능명-REPORT.md`도 함께 생성한다.
 5. 기획서의 완료 조건과 담당 범위를 확인한 뒤 개발을 시작한다.
 6. `dev`에서 Issue 번호를 포함한 작업 Branch를 생성한다.
+7. Issue 생성 전 `.github/ISSUE_LABELS.md`를 읽고 기획서 기준으로 영역·유형·우선순위 Label을 선택한다.
 
 ## 작업 중
 
@@ -30,6 +31,6 @@
 - Desktop 작업: `apps/desktop/docs/`
 - Chrome Extension 작업: `apps/extension/docs/`
 - Server 작업: `server/docs/`
-- AI 작업: `ai/docs/`
+- AI 작업: `AI/docs/`
 
-AI 폴더가 생성되면 담당자의 기술과 작업 방식에 맞춰 `CONTEXT.md`, `NEXT_TASK.md`, `DECISION_RECORD.md`, `templates/`, `features/` 구조를 구성한다.
+AI 폴더는 `AI/docs/`를 기준으로 `CONTEXT.md`, `NEXT_TASK.md`, `DECISION_RECORD.md`, `templates/`, `features/` 구조를 관리한다.

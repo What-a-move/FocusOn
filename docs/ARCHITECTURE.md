@@ -5,13 +5,13 @@
 ```text
 사용자
   ↓
-Desktop App (Electron + React)
+  Desktop App (Electron + Next.js + React)
   ├─ macOS 활성 앱 확인
   ├─ 화면 캡처 및 학습 세션 제어
   ├─ MediaPipe 카메라 분석 결과 수신
   └─ 집중 상태·알림·리포트 표시
        │
-       ├──────── Chrome Extension (React)
+       ├──────── Chrome Extension (Next.js + React)
        │             ├─ 현재 탭·페이지 제목 확인
        │             ├─ 페이지 이동 흐름 기록
        │             └─ 콘텐츠 분석용 데이터 전달
@@ -69,4 +69,3 @@ Desktop App (Electron + React)
 | `DISTRACTED` | 목표와 관련성이 낮은 활동이 확인됨 |
 | `PAUSED` | 사용자가 타이머 또는 분석을 중지함 |
 | `EXCLUDED` | 사용자가 분석 제외 대상으로 설정함 |
-
