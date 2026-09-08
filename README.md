@@ -7,6 +7,7 @@ FocusOn은 사용자가 설정한 학습 목표를 기준으로 macOS 앱과 Chr
 - `apps/desktop`: Electron + Next.js + React 기반 macOS 데스크톱 앱
 - `apps/extension`: Chrome Extension + Next.js + React 기반 브라우저 분석 모듈
 - `packages/shared-types`: Desktop·Extension·Server·AI가 공유할 타입
+- `turbo.json`: Desktop·Extension·공통 패키지의 작업 실행과 캐시 설정
 - `server`: Spring Boot 백엔드
 - `AI`: AI 분석 서버 예정
 - `docs`: 공통 개발 문서
@@ -26,9 +27,10 @@ FocusOn은 사용자가 설정한 학습 목표를 기준으로 macOS 앱과 Chr
 
 ```bash
 pnpm install
-pnpm --filter @focuson/desktop dev
-pnpm --filter @focuson/extension dev
-./server/gradlew -p server bootRun
+pnpm dev
+pnpm dev:desktop
+pnpm dev:extension
+pnpm dev:server
 ```
 
 Desktop 개발 서버는 `3000`, Extension UI 개발 서버는 `3001` 포트를 사용한다.
@@ -36,10 +38,14 @@ Desktop 개발 서버는 `3000`, Extension UI 개발 서버는 `3001` 포트를 
 ## 빌드
 
 ```bash
-pnpm --filter @focuson/desktop build
-pnpm --filter @focuson/extension build
-./server/gradlew -p server build
+pnpm build
+pnpm build:desktop
+pnpm build:extension
+pnpm build:server
+pnpm lint
 ```
+
+프론트엔드 화면은 Next.js App Router와 Tailwind CSS v4를 사용한다. Desktop·Extension의 공통 작업은 Turborepo가 병렬 실행하고, Spring Boot Server와 Python AI는 각자의 Gradle·Python 실행 방식을 유지한다.
 
 Extension을 테스트할 때는 Build 결과물인 `apps/extension/out/`를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다.
 

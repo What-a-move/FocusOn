@@ -6,7 +6,8 @@
 | --- | --- |
 | Desktop | Electron, Next.js, React, TypeScript |
 | Extension | Chrome Extension Manifest V3, Next.js, React, TypeScript |
-| 공통 패키지 | pnpm Workspace |
+| 모노레포 작업 관리 | pnpm Workspace, Turborepo |
+| 프론트엔드 스타일 | Tailwind CSS v4, PostCSS |
 | Server | Spring Boot |
 | AI | Python 기반 예정, 실행 방식 검토 필요 |
 | 카메라 분석 | MediaPipe 기반 클라이언트 처리 우선 검토 |
@@ -15,12 +16,13 @@
 
 ```bash
 pnpm install
-pnpm --filter @focuson/desktop dev
-pnpm --filter @focuson/extension dev
-pnpm --filter @focuson/desktop build
-pnpm --filter @focuson/extension build
-pnpm --filter @focuson/desktop lint
-pnpm --filter @focuson/extension lint
+pnpm dev
+pnpm dev:desktop
+pnpm dev:extension
+pnpm build
+pnpm build:desktop
+pnpm build:extension
+pnpm lint
 ./server/gradlew -p server test
 ```
 
@@ -40,6 +42,7 @@ pnpm --filter @focuson/extension lint
 
 - Node.js LTS가 설치되어 있는지 확인한다.
 - pnpm 버전이 팀 기준과 일치하는지 확인한다.
+- 루트 `turbo.json`의 작업과 각 패키지 `package.json`의 스크립트가 일치하는지 확인한다.
 - macOS 카메라·화면 기록 권한을 확인한다.
 - Chrome Extension 개발자 모드가 켜져 있는지 확인한다.
 
