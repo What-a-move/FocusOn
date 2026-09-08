@@ -13,8 +13,9 @@ Chrome 브라우저의 학습 흐름을 수집하는 Extension이다. Popup 화�
 ## 실행
 
 ```bash
-pnpm --filter @focuson/extension dev
-pnpm --filter @focuson/extension build
+pnpm dev:extension
+pnpm build:extension
+pnpm turbo run lint --filter=@focuson/extension
 ```
 
-Build 결과물의 `out/` 폴더를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를 확인한다.
+화면 스타일은 Tailwind CSS v4로 작성하며 `app/globals.css`와 `postcss.config.mjs`가 진입점이다. Build 결과물의 `out/` 폴더를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를, Extension 학습·주석·유지보수 규칙은 [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md)를 확인한다.

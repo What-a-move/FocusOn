@@ -10,7 +10,8 @@
 - 페이지 이동 흐름 기록
 - Content Script와 Service Worker
 - 분석 제외 도메인 처리
-- Desktop 앱과 상태 연결
+- Desktop 앱과 학습 세션·타이머 상태 연결
+- 연결 코드 기반 기기 연동과 인증 상태
 
 ## 현재 상태
 
@@ -20,11 +21,13 @@
 - Manifest V3 기본 파일을 `public/manifest.json`으로 정리했다.
 - Content Script와 Service Worker 진입 파일을 추가했다.
 - Extension production build 결과물에 manifest와 스크립트가 포함되는 것을 확인했다.
+- Next.js App Router와 Tailwind CSS v4 기반 화면 구조를 확인했다.
 
 ### 진행 중인 작업
 
 - 실제 탭 정보와 FocusOn Desktop 연결 방식을 구체화해야 한다.
 - 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
+- Desktop에서 시작한 학습 세션을 조회하고 일시정지·재개·종료하는 흐름을 구체화해야 한다.
 
 ### 아직 진행하지 않은 작업
 
@@ -34,15 +37,18 @@
 - 분석 제외 도메인 적용
 - Desktop 연결 및 상태 동기화
 - Server API 연결
+- Google 로그인 사용자와 Extension 연결
+- Popup 타이머 조회·제어 UI
 
 ## 현재 기술
 
-- 프레임워크: Next.js, React
+- 프레임워크: Next.js, React, Tailwind CSS v4
 - 언어: TypeScript
 - 확장 규격: Chrome Extension Manifest V3
 - 주요 구성: Popup, Content Script, Service Worker
-- 실행: `pnpm --filter @focuson/extension dev`
-- 빌드: `pnpm --filter @focuson/extension build`
+- 작업 실행: Turborepo
+- 실행: `pnpm dev:extension` 또는 `pnpm turbo run dev --filter=@focuson/extension`
+- 빌드: `pnpm build:extension` 또는 `pnpm turbo run build --filter=@focuson/extension`
 
 ## 현재 데이터 흐름
 
@@ -50,7 +56,8 @@
 Chrome 탭
   → Content Script / tabs API
   → Service Worker
-  → Desktop 또는 Server
+  → Server의 인증·학습 세션·분석 API
+  → Desktop과 상태 동기화
   → 관련성 판단·집중 상태·리포트
 ```
 
@@ -61,6 +68,8 @@ Chrome 탭
 - 비밀번호, 결제 정보, 개인 메시지 등 민감한 본문을 기본 수집하지 않는다.
 - 페이지 이동이나 탭 변경이 발생해도 중복 이벤트를 최소화한다.
 - Desktop 연결 실패가 Chrome 페이지 동작을 막지 않아야 한다.
+- Popup은 타이머의 기준이 아니며 Server의 세션 상태를 조회해 표시한다.
+- Extension에서 일시정지·재개·종료를 요청하면 서버 응답을 확인한 뒤 UI를 갱신한다.
 - 기능 추가 전 `features/` 안에 기획서를 먼저 만든다.
 
 ## 참고 문서

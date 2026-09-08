@@ -16,6 +16,7 @@
 ```text
 apps/extension/docs/
 ├── README.md
+├── DEVELOPMENT_GUIDE.md
 ├── CONTEXT.md
 ├── NEXT_TASK.md
 ├── DECISION_RECORD.md
@@ -26,6 +27,17 @@ apps/extension/docs/
 └── features/
     └── 기능명-PLAN.md / 기능명-ERROR.md / 기능명-REPORT.md
 ```
+
+## 개발·학습 규칙
+
+Next.js, Tailwind CSS, TypeScript를 공부하면서 개발할 때는 [`DEVELOPMENT_GUIDE.md`](./DEVELOPMENT_GUIDE.md)를 기준으로 한다.
+
+- 어려운 문법과 유지해야 하는 판단에는 초보자가 이해할 수 있는 짧은 한국어 주석을 작성한다.
+- 코드 자체로 충분히 설명되는 줄에는 불필요한 주석을 달지 않는다.
+- `any`를 피하고 데이터 모양을 타입으로 설명한다.
+- Next.js의 서버·클라이언트 경계를 지키고, Tailwind 클래스와 컴포넌트의 역할이 읽히게 작성한다.
+- 함수와 컴포넌트의 책임을 작게 유지해 다음 담당자가 쉽게 수정할 수 있도록 한다.
+- 결과 리포트에는 이번 작업에서 배운 문법·개념과 유지보수 메모를 남긴다.
 
 ## 기능 문서 작성 규칙
 
@@ -44,4 +56,3 @@ apps/extension/docs/
 - Content Script와 Service Worker 생명주기
 - Desktop 앱 연결 끊김과 재연결
 - Chrome의 권한·보안 제한
-

@@ -14,8 +14,9 @@ FocusOn의 macOS 데스크톱 앱 Renderer다. Next.js가 정적 화면을 생�
 ## 실행
 
 ```bash
-pnpm --filter @focuson/desktop dev
-pnpm --filter @focuson/desktop build
+pnpm dev:desktop
+pnpm build:desktop
+pnpm turbo run lint --filter=@focuson/desktop
 ```
 
-`next build` 결과는 `out/`에 생성된다. Electron Main·Preload 연결은 별도 작업으로 진행한다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를 확인한다.
+화면 스타일은 Tailwind CSS v4로 작성하며 `app/globals.css`와 `postcss.config.mjs`가 진입점이다. `next build` 결과는 `out/`에 생성된다. Electron Main·Preload 연결은 별도 작업으로 진행한다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를, Desktop 학습·주석·유지보수 규칙은 [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md)를 확인한다.
