@@ -3,15 +3,19 @@
     "private": true,
     "packageManager": "pnpm@11.19.0",
     "scripts": {
-        "dev:desktop": "pnpm --filter @focuson/desktop dev",
-        "dev:extension": "pnpm --filter @focuson/extension dev",
+        "dev": "turbo run dev",
+        "dev:desktop": "turbo run dev --filter=@focuson/desktop",
+        "dev:extension": "turbo run dev --filter=@focuson/extension",
         "dev:server": "./server/gradlew -p server bootRun",
-        "build:desktop": "pnpm --filter @focuson/desktop build",
-        "build:extension": "pnpm --filter @focuson/extension build",
+        "build": "turbo run build",
+        "build:desktop": "turbo run build --filter=@focuson/desktop",
+        "build:extension": "turbo run build --filter=@focuson/extension",
         "build:server": "./server/gradlew -p server build",
         "test:server": "./server/gradlew -p server test",
-        "lint": "pnpm -r lint",
-        "build": "pnpm -r build",
+        "lint": "turbo run lint",
         "install:all": "pnpm install"
+    },
+    "devDependencies": {
+        "turbo": "^2.10.12"
     }
 }

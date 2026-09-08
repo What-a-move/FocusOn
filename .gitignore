@@ -18,3 +18,8 @@ server/.idea/
 server/.vscode/
 
 .DS_Store
+
+.handoff/
+.turbo/
+.claude
+AGENTS.md

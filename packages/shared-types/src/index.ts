@@ -1,4 +1,10 @@
-export type Relevance = "RELATED" | "SUPPORTIVE" | "DISTRACTING" | "UNKNOWN";
+export type FocusState = "FOCUSED" | "DISTRACTED" | "UNCERTAIN";
+
+export type AnalysisReasonCode =
+    | "GOAL_RELATED"
+    | "GOAL_UNRELATED"
+    | "INSUFFICIENT_CONTEXT"
+    | "AMBIGUOUS_CONTEXT";
 
 export interface PageInfo {
     title: string;
@@ -7,7 +13,9 @@ export interface PageInfo {
 }
 
 export interface AnalysisResult {
-    relevance: Relevance;
+    state: FocusState;
+    relevanceScore: number;
     confidence: number;
+    reasonCode: AnalysisReasonCode;
     reason: string;
 }
