@@ -18,6 +18,8 @@
 - Spring Boot 프로젝트 기본 구조가 `server/`에 생성되어 있다.
 - Backend 담당 영역의 문서 구조를 생성했다.
 - 공통 API 응답 형식은 루트 `docs/API_CONTRACT.md`에서 초안으로 정의했다.
+- Backend 개발 불변 규칙을 `server/docs/DEVELOPMENT_RULES.md`(Rule ID BE-001~BE-005)로 정리했다. 공통 응답 형식·ErrorCode 초안·인증 헤더 형식은 `제안` 상태이며 Desktop·Extension·AI 확인 후 확정한다(`DECISION_RECORD.md` 결정 003, 004).
+- API 명세 갭 5건(AUTH_001, notifications.triggerSource, REPORT_001 필드, GOAL_004 응답, 수정 API 메서드 통일)을 `DECISION_RECORD.md`에 "결정 필요"로 기록했다.
 
 ### 진행 중인 작업
 
@@ -60,9 +62,11 @@ Desktop / Extension
 - 비밀번호·토큰·API Key를 로그에 남기지 않는다.
 - 원본 화면·카메라 영상은 기본 저장하지 않는다.
 - API 변경 시 Desktop·Extension·AI 담당자에게 공유한다.
+- 세부 규칙과 확인 방법은 `server/docs/DEVELOPMENT_RULES.md`를 따른다.
 
 ## 참고 문서
 
+- 영역: `server/docs/DEVELOPMENT_RULES.md`
 - 루트: `docs/API_CONTRACT.md`
 - 루트: `docs/DATA_PRIVACY.md`
 - 루트: `docs/ARCHITECTURE.md`
