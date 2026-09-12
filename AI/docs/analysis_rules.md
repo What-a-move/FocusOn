@@ -6,7 +6,7 @@
 - 작성 기준일: 2026-09-05
 - 적용 대상: `POST /api/v1/analysis/relevance`
 - 관련 문서: `api_spec.md`, `prompt_guide.md`, 루트 `docs/DATA_PRIVACY.md`
-- 확정 조건: AI 평가 결과를 확인하고 Server·Desktop·Extension 담당자와 상태값을 합의한 뒤 `DECISION_RECORD.md`에 기록한다.
+- 확정 조건: AI 평가 결과를 확인하고 Server·Frontend(`apps`) 담당자와 상태값을 합의한 뒤 `DECISION_RECORD.md`에 기록한다.
 
 이 문서는 구현 완료 상태를 설명하지 않는다. 관련성 분석기를 구현하고 평가할 때 따라야 할 판정 기준을 정의한다.
 

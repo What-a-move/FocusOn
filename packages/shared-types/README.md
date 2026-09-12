@@ -42,7 +42,7 @@ const page: PageInfo = {
 - `StudySessionStatus`: `IDLE`, `RUNNING`, `PAUSED`, `COMPLETED`
 - `StudySessionSnapshot`: 현재 세션 상태와 기준 시간
 - `StudySessionCommand`: 시작·일시정지·재개·종료 명령
-- `FocusState`: 화면 분석 결과의 집중 상태. 카메라 분석 상태는 별도 계약으로 분리한다.
+- `AnalysisActivityState`: 분석 작동 상태(`RUNNING`, `PAUSED`, `EXCLUDED`). 실제 공유 Type 추가는 세션 API 계약 구현 시 진행한다.
 - `DevicePairing`: Desktop과 Extension 연결 상태
 
 ## 넣지 않는 것

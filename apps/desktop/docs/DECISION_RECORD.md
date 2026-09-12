@@ -6,7 +6,8 @@
 ## 결정 001 - Desktop 실행 환경
 
 - 결정일: 2026-09-03
-- 담당 영역: Desktop
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
 - 상태: 확정
 
 ### 결정 내용
@@ -27,7 +28,8 @@ Next.js 정적 빌드 기반의 React 화면 기술을 유지하면서 macOS 앱
 ## 결정 002 - 민감 데이터 기본 처리
 
 - 결정일: 2026-09-03
-- 담당 영역: Desktop
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
 - 상태: 확정
 
 ### 결정 내용
@@ -40,15 +42,16 @@ Next.js 정적 빌드 기반의 React 화면 기술을 유지하면서 macOS 앱
 
 ### 후속 확인
 
-- [ ] 카메라 권한 거부 UX 확정
+- [x] 카메라 권한 거부 UX 확정
 - [ ] 화면 캡처 데이터의 메모리 처리 범위 확정
 - [ ] Server 전송 필드 확정
 
 ### 결정 003 - Desktop 중심 학습 세션과 Extension 동기화
 
 - 결정일: 2026-09-05
-- 담당 영역: Desktop·Extension·Server
-- 상태: 제안
+- 담당 영역: Frontend(`apps`)·Server
+- 대상 앱: Desktop·Extension
+- 상태: 확정
 
 #### 결정 내용
 
@@ -72,8 +75,9 @@ Desktop과 Chrome Extension은 Google 로그인으로 연결된 동일 사용자
 ### 결정 004 - 화면 부유형 두더지 피드백
 
 - 결정일: 2026-09-05
-- 담당 영역: Desktop
-- 상태: 제안
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
 
 #### 결정 내용
 
@@ -96,13 +100,75 @@ Desktop과 Chrome Extension은 Google 로그인으로 연결된 동일 사용자
 - [ ] 문구 생성·선택 방식과 금칙어 기준 확정
 - [ ] 동일 사이트 재방문 시 문구 강도 기준 확정
 
+## 결정 005 - Electron Build·Loading·배포 방식
+
+- 결정일: 2026-09-13
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- Main·Preload는 TypeScript Compiler로 `dist-electron/`에 Build한다.
+- Renderer는 Next.js Static Export의 `out/`을 사용한다.
+- 개발 환경은 `http://127.0.0.1:3000`, Production은 보안 설정된 `app://` Custom Protocol로 Renderer를 연다.
+- Packaging은 현재 설치된 electron-builder를 사용한다.
+- 배포 시 `arm64`와 `x64`를 각각 Build해 `dmg`와 `zip`을 제공한다.
+- 정식 배포는 Developer ID Application 서명, Hardened Runtime, Apple Notarization과 Stapling을 적용한다.
+- 자동 Update는 MVP에서 제외한다.
+
+### 결정 이유
+
+현재 설치된 도구를 활용하면서 Main·Preload와 Next.js Renderer의 Build 책임을 분리할 수 있다. Production에서 `file://`보다 접근 범위를 제한한 전용 Protocol을 사용하고, Architecture별 Build를 분리하면 이후 Native Module이 추가될 때 Universal Merge 문제를 줄일 수 있다.
+
+## 결정 006 - Window와 앱 생명주기
+
+- 결정일: 2026-09-13
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- 앱은 Single Instance로 실행한다.
+- Main Window를 닫으면 Window만 숨기고 앱과 학습 세션은 유지한다.
+- `Cmd+Q` 또는 명시적인 종료 메뉴에서만 앱을 완전히 종료한다.
+- Settings는 MVP에서 Main Window의 `/settings` Route로 구현한다.
+- Floating Window는 기본적으로 클릭 가능하며 지정된 Handle에서만 Drag한다.
+- 위치는 Display ID와 화면 내부 비율로 저장하고 화면 구성이 바뀌면 Primary Display 안으로 보정한다.
+
+### 결정 이유
+
+학습 세션과 Floating Feedback을 유지하면서 macOS 앱의 일반적인 닫기·종료 동작을 제공하고, 초기 Window 수와 상태 복잡도를 줄이기 위해서다.
+
+## 결정 007 - IPC 오류와 macOS 권한 UX
+
+- 결정일: 2026-09-13
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- Preload에는 기능별 IPC 함수만 노출하고 범용 Channel 전송 함수를 제공하지 않는다.
+- IPC 실패 응답은 `code`와 `retryable`만 전달하며 Renderer가 사용자 안전 문구로 변환한다.
+- Camera·Screen Recording·Notification은 실제 사용 직전에 각각 이유를 설명하고 요청한다.
+- 권한 거부 시 Timer와 앱은 유지하고 해당 분석 기능만 중지한다.
+- 제외 앱 또는 제외 도메인 상태에서는 화면·OCR·AI·Camera 분석을 모두 중지한다.
+
+### 결정 이유
+
+Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막고, 사용자가 권한을 이해하고 선택할 수 있게 하기 위해서다.
+
 ## 새 결정 기록
 
-다음 결정은 `결정 003`부터 추가한다.
+다음 결정은 `결정 008`부터 추가한다.
 
-### 결정 003
+### 결정 008
 
 - 결정일:
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop / Extension / 공통
 - 주제:
 - 상태: 제안 / 확정 / 변경됨 / 폐기
 - 결정 내용:
