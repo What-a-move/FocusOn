@@ -51,10 +51,13 @@
 - 정답 케이스 수:
 - 오판 케이스 수:
 - `UNCERTAIN` 케이스 수:
+- `UNAVAILABLE` 케이스 수:
+- `SUPPORTING`을 `OFF_TASK`로 오판한 케이스 수:
 - 정확도·재현율 등 지표:
 - 단계별 처리 건수:
 - LLM 호출률:
-- `DISTRACTED` 오판율:
+- 잘못된 `DRIFT_RISK`·알림 비율:
+- stale 결과 적용 건수:
 - 목표 기준 충족 여부:
 
 ## 성능 및 제한사항

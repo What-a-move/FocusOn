@@ -22,7 +22,7 @@
 
 ## 입력 데이터
 
-- 입력 출처: Desktop / Extension / Server
+- 입력 출처: Extension / macOS 네이티브 모듈 / Server / 기타
 - 필수 필드:
 - 선택 필드:
 - 텍스트 출처: OCR / 페이지 본문 / 자막 / 문서 추출 / 기타
@@ -43,15 +43,23 @@
 - 외부 API 사용 조건:
 - 점수 범위:
 - 신뢰도 기준:
-- `FOCUSED` 기준:
-- `DISTRACTED` 기준:
-- `UNCERTAIN` 기준:
+- 추출 상태 기준:
+- 분석 상태 기준:
+- `RELATED` 기준:
+- `SUPPORTING` 기준:
+- `OFF_TASK` 기준:
+- `UNCERTAIN`·`UNAVAILABLE` 기준:
+- 흐름 상태와 권장 행동 기준:
 
 ## 출력 데이터
 
 ```json
 {
-  "state": "UNCERTAIN",
+  "extractionStatus": "SUCCESS",
+  "analysisStatus": "NEEDS_CONFIRMATION",
+  "relevanceLabel": "UNCERTAIN",
+  "driftState": "UNKNOWN",
+  "recommendedAction": "ASK_USER",
   "relevanceScore": 0,
   "confidence": 0,
   "reasonCode": "INSUFFICIENT_CONTEXT"
@@ -89,7 +97,8 @@
 | --- | --- | --- |
 | 입력 누락 |  |  |
 | 분석 실패 |  |  |
-| 신뢰도 부족 | `UNCERTAIN` |  |
+| 의미적 근거 부족 | `UNCERTAIN` |  |
+| 추출·모델 실패 | `UNAVAILABLE` | 이탈 판정 금지 |
 | 민감 데이터 포함 |  |  |
 
 ## 평가 계획
@@ -115,7 +124,9 @@
 
 - [ ] 입력·출력 계약을 공유했다.
 - [ ] 정상·경계·실패 케이스를 정의했다.
-- [ ] `UNCERTAIN` 기준을 정의했다.
+- [ ] `UNCERTAIN`과 `UNAVAILABLE` 기준을 구분했다.
+- [ ] `OFF_TASK`와 `DRIFT_RISK`를 구분했다.
+- [ ] 적용되는 Rule ID를 기록했다.
 - [ ] 평가 데이터를 준비했다.
 - [ ] `*-ERROR.md`를 갱신했다.
 - [ ] `*-REPORT.md`를 작성했다.

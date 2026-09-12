@@ -129,11 +129,181 @@ YouTube 자막과 PDF 추출 텍스트는 현재 활동 관련성 API가 안정�
 
 외부 콘텐츠는 분석 범위를 넓히지만 MVP 관련성 판단의 필수 조건은 아니며 외부 서비스 장애와 비용이 추가되기 때문이다.
 
+## 결정 008 - Rule ID 기반 AI 개발 기준
+
+- 결정일: 2026-09-12
+- 담당 영역: AI
+- 상태: 제안
+
+### 결정 내용
+
+AI의 개인정보, 실패 처리, 상태 분리, LLM 권한, 캐시, stale 결과, 시간 집계와 평가 규칙을 `DEVELOPMENT_RULES.md`의 고정 Rule ID로 관리한다. 각 구현 Issue와 PR은 관련 Rule ID와 검증 결과를 연결한다.
+
+### 결정 이유
+
+같은 원칙이 API·분석·Prompt 문서에 서로 다른 표현으로 반복되어 구현 시 확인 누락과 의미 충돌이 발생할 수 있기 때문이다.
+
+### 영향 범위
+
+- `AI/docs/DEVELOPMENT_RULES.md`
+- AI 코드·테스트·평가 데이터
+- 관련 Issue·PR 검토 방식
+
+### 관련 Issue·PR
+
+- Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
+
+## 결정 009 - 다중 상태 모델과 기존 FocusState 호환
+
+- 결정일: 2026-09-12
+- 담당 영역: AI·Server·Shared·Client
+- 상태: 제안
+
+### 결정 내용
+
+`extractionStatus`, `analysisStatus`, `relevanceLabel`, `driftState`, `recommendedAction`을 분리한다. 기존 `FOCUSED`, `DISTRACTED`, `UNCERTAIN`은 소비자 전환 기간의 파생 호환값으로 유지하는 안을 검토한다.
+
+### 결정 이유
+
+추출 실패, 목표 무관, 지속적 이탈과 실제 사용자 행동 제안을 하나의 값으로 표현하면 실패가 이탈로 보이고 짧은 방문이 잘못된 알림으로 이어질 수 있기 때문이다.
+
+### 고려한 대안
+
+- 기존 세 상태만 유지: 소비자 변경은 적지만 실패 원인과 흐름 상태를 표현하기 어렵다.
+- 즉시 기존 상태 제거: 계약은 단순해지지만 현재 공유 타입과 Client 호환이 깨진다.
+
+### 영향 범위
+
+- `AI/docs/state_model.md`
+- `AI/docs/api_spec.md`
+- `packages/shared-types`
+- Server 저장 Schema와 Client 표시
+
+## 결정 010 - DOM·Apple Vision 기본 경로와 ColPali 실험 경로
+
+- 결정일: 2026-09-12
+- 담당 영역: AI·Extension·macOS 네이티브 모듈
+- 상태: 제안
+
+### 결정 내용
+
+브라우저 MVP는 DOM 추출을 우선하고 정보가 부족할 때 허용된 로컬 Apple Vision OCR을 사용한다. ColPali는 PDF·Canvas·이미지·슬라이드처럼 시각 구조가 중요한 콘텐츠의 검색·근거 보강 후보로 기준선 비교 후 편입한다.
+
+### 결정 이유
+
+DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지를 로컬에서 텍스트로 바꿀 수 있다. ColPali는 시각 구조 이해에 장점이 있을 수 있지만 실행 위치, 모델 자원과 이미지 전송 정책 검증이 필요하다.
+
+### 고려한 대안
+
+- 모든 페이지에 ColPali 사용: 일반 DOM 페이지의 비용·지연이 증가하고 원본 이미지 처리 범위가 넓어진다.
+- OCR만 사용: 표·수식·슬라이드의 구조 정보가 손실될 수 있다.
+
+### 영향 범위
+
+- Extension 추출기와 Native Messaging
+- AI 시각 콘텐츠 실험
+- `AI/docs/data_lifecycle.md`
+- `AI/docs/evaluation_spec.md`
+
+### 관련 Issue·PR
+
+- Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
+
+## 결정 011 - 목표·논리 세션·실제 회차 분리
+
+- 결정일: 2026-09-12
+- 담당 영역: AI·Server·Shared·Client
+- 상태: 제안
+
+### 결정 내용
+
+`goalId`는 학습 목표, `sessionId`는 목표를 이어 가는 논리 세션, `runId`는 실제 한 번의 공부 회차, `eventId`는 관찰 구간으로 분리한다. 시간과 회차 상태는 Server가 관리하고 AI 결과는 원래 이벤트에 귀속한다.
+
+### 결정 이유
+
+목표를 다음 날 이어 공부하는 흐름과 일시정지·종료·새 회차를 구분하고, 중복·역순 이벤트와 늦은 AI 결과가 시간과 현재 상태를 덮어쓰는 문제를 막기 위해서다.
+
+### 영향 범위
+
+- `AI/docs/goal_session_spec.md`
+- Server Entity·집계·세션 API
+- `packages/shared-types`
+- Extension 세션·이벤트 처리
+
+### 관련 Issue·PR
+
+- Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
+
+## 결정 012 - 제한된 단일 FocusSessionAgent
+
+- 결정일: 2026-09-12
+- 담당 영역: AI
+- 상태: 제안
+
+### 결정 내용
+
+명확한 전처리·캐시·임베딩·시간 정책은 고정 코드로 처리하고, 여러 허용 근거를 조회해야 하는 모호한 사례만 단일 상태 기반 FocusSessionAgent로 처리한다. Agent는 읽기 도구, 사용자 범위와 호출·시간 예산을 강제한다.
+
+### 결정 이유
+
+모든 이벤트에 Agent를 사용하면 비용과 지연, 비결정성과 권한 표면이 커진다. 반대로 모호한 보조 학습 흐름에는 제한된 문맥 조회가 필요할 수 있기 때문이다.
+
+### 고려한 대안
+
+- 모든 분석을 Agent로 처리: 흐름은 유연하지만 비용·안전·재현성이 나빠진다.
+- Agent 없이 단일 LLM 호출만 사용: 단순하지만 피드백과 최근 흐름 조회를 안전하게 조합하기 어렵다.
+
+### 영향 범위
+
+- `AI/docs/focus_session_agent_spec.md`
+- `AI/docs/prompt_guide.md`
+- AI Worker·Checkpoint·모델 호출
+
+## 결정 013 - 범위가 명확한 피드백 우선 적용
+
+- 결정일: 2026-09-12
+- 담당 영역: AI·Server·Client
+- 상태: 제안
+
+### 결정 내용
+
+사용자의 명시적 관련성 수정은 같은 사용자·목표 버전·콘텐츠 범위에서 AI 캐시보다 우선한다. 한 페이지의 수정은 Domain 전체나 다른 목표로 자동 확대하지 않으며 `계속 보기`, 닫기와 무응답은 정답 라벨로 사용하지 않는다.
+
+### 결정 이유
+
+사용자 선택을 즉시 반영하면서도 한 번의 수정이 과도한 허용 규칙으로 일반화되는 것을 막기 위해서다.
+
+### 영향 범위
+
+- `AI/docs/feedback_personalization_spec.md`
+- 피드백 API·저장 Schema
+- 캐시·알림·집계·노트 무효화
+
+## 결정 014 - 비동기 근거 기반 회차 노트
+
+- 결정일: 2026-09-12
+- 담당 영역: AI·Server·Client
+- 상태: 제안
+
+### 결정 내용
+
+회차 종료와 시간 저장을 먼저 확정하고 학습 노트는 낮은 우선순위의 비동기 작업으로 생성한다. 노트의 학습 주장은 허용된 `evidenceId`에 연결하고, 열람만으로 이해·구현·오류 해결 완료를 주장하지 않는다.
+
+### 결정 이유
+
+모델 장애가 핵심 시간 기록을 막지 않게 하고, 사용자가 확인하지 않은 학습 성취를 AI가 만들어내는 문제를 방지하기 위해서다.
+
+### 영향 범위
+
+- `AI/docs/session_note_spec.md`
+- Server 집계·Queue·노트 저장
+- 노트 Prompt·Schema·평가
+
 ## 새 결정 기록
 
-다음 결정은 `결정 008`부터 추가한다.
+다음 결정은 `결정 015`부터 추가한다.
 
-### 결정 008
+### 결정 015
 
 - 결정일:
 - 주제:
