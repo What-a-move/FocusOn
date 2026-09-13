@@ -65,7 +65,10 @@ Issue Branch에서 작업한 PR의 대상은 `dev`로 설정한다. PR에는 작
 
 ## Merge 후
 
-- Issue Branch를 `dev`에 Merge한 뒤 관련 Issue를 종료한다.
+- Issue Branch PR이 실제로 `dev`에 Merge된 것을 먼저 확인한다. 닫혔지만 Merge되지 않은 PR의 Issue나 Branch는 정리하지 않는다.
+- `dev` Merge는 GitHub 기본 Branch Merge가 아니므로 `Closes #번호`만으로 관련 Issue가 자동 종료되지 않는다. Merge 확인 후 관련 Issue를 직접 종료한다.
+- Merge된 작업의 원격 Issue Branch를 삭제한다.
+- 최신 `dev`로 이동·동기화한 뒤 로컬 Issue Branch를 삭제한다.
 - `dev`를 최종 검수한 뒤 `main`에 Merge한다.
 - 결정이 확정되었다면 `DECISION_RECORD.md`를 갱신한다.
 - 다른 담당자가 이어서 작업할 수 있도록 `CONTEXT.md`와 `NEXT_TASK.md`를 갱신한다.
