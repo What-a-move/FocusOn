@@ -22,13 +22,21 @@
 - 공통 API 응답 초안은 루트 `docs/API_CONTRACT.md`에 정의되어 있다.
 - 현재 활동 관련성 API, 분석 기준, Prompt 가이드를 초안으로 작성했다.
 - 관련성, 학습 흐름, MediaPipe 사용자 상태를 분리된 기능으로 개발하는 방향을 정리했다.
+- Issue #3에서 AI 개발 불변 규칙, 다중 상태 모델, 데이터 수명, 평가 기준 문서 초안을 작성했다.
+- DOM 우선·Apple Vision OCR 보조 경로와 ColPali 시각 콘텐츠 비교 실험 경로를 문서로 구분했다.
+- 목표·논리 세션·회차·이벤트·시간 집계 계약을 `goal_session_spec.md`로 분리했다.
+- 콘텐츠 감지·DOM·Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
+- FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
 
 ### 진행 중인 작업
 
-- AI 실행 방식과 Python 의존성 확정
-- Server·Desktop·Extension과 관련성 분석 요청·응답 계약 확인
-- OCR 정제, 규칙, 임베딩, LLM Fallback의 세부 기준 확정
-- 평가 데이터와 기준 결과 구성
+- 루트 `docs/ARCHITECTURE.md`의 Desktop 중심 흐름과 Notion의 Extension 중심 기본안 차이 검토
+- Server·Extension·공유 타입 담당자와 다중 상태 및 API 경로 검토
+- 목표·세션·회차·이벤트 관계와 사용자당 동시 활성 회차 정책 검토
+- Agent 도구 Schema·예산·Checkpoint 저장소와 피드백 적용 범위 검토
+- 학습 노트 Queue·근거 Schema·재생성·삭제 정책 검토
+- 기능별 PLAN·ERROR·REPORT와 GitHub Issue·PR 역할 정리
+- ColPali 실행 위치와 개인정보·자원 예산 검토
 
 ### 아직 진행하지 않은 작업
 
@@ -40,9 +48,21 @@
 - LLM Fallback 구현
 - Server 연동
 - 성능·정확도 평가 자동화
+- 목표·세션·회차·이벤트·집계 Schema 구현
+- FocusSessionAgent 상태 그래프와 제한 도구 구현
+- 피드백 저장·캐시·알림·집계 무효화 구현
+- 비동기 학습 노트 작업과 근거 검증 구현
 - 페이지 이동·체류 시간 기반 학습 흐름 분석
 - MediaPipe 상태값 보조 분석
 - YouTube 자막·PDF 추출 텍스트 연동
+
+### 확인된 문서·코드 차이
+
+- `packages/shared-types`는 아직 `FOCUSED`, `DISTRACTED`, `UNCERTAIN` 단일 상태만 정의한다.
+- Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
+- Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
+- AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
+- 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·로컬 OCR을 기본으로 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
 
@@ -52,35 +72,48 @@
 - 테스트: pytest 검토
 - 모델: 임베딩 모델과 LLM 공급자 검토 필요
 - 분석 대상: 화면·페이지에서 추출한 텍스트와 메타데이터
-- OCR: 클라이언트가 로컬로 추출한 텍스트를 AI가 정제·평가
+- OCR: Extension 서비스 워커와 macOS 네이티브 모듈의 Apple Vision 보조 경로 제안; AI는 허용된 정제 텍스트만 평가
+- 시각 분석: ColPali는 PDF·Canvas·이미지·슬라이드 대상 비교 실험 단계
 - 카메라 분석: MediaPipe 클라이언트 결과값만 후속 사용자 상태 분석에 사용
 - 원본 저장: 원본 화면·카메라 영상은 기본 저장하지 않음
 
 ## 예상 데이터 흐름
 
 ```text
-Desktop / Extension
-  → 로컬 OCR 또는 페이지 텍스트 추출
-  → Spring Server 검증·민감 정보 제거
+Extension 사전 제외·권한 검사
+  → DOM 우선 추출
+  → 정보 부족 시 macOS 로컬 Apple Vision OCR
+  → 개인정보·품질 검사
+  → Spring Server 인증·소유권·최신 버전 검증
   → AI 텍스트 정제
   → 규칙 기반 판단
   → 임베딩 판단
-  → 애매한 경우 LLM 판단
+  → 애매한 경우 LLM 또는 FocusSessionAgent 판단
+  → 관련성·흐름·행동 상태 분리
   → Server 결과 저장
-  → Desktop 상태·알림·리포트 표시
+  → Extension·웹 대시보드 상태·알림·기록 표시
 ```
 
 ## 반드시 지켜야 하는 조건
 
 - 입력 데이터에 비밀번호·결제 정보·개인 메시지가 포함되지 않도록 확인한다.
 - 원본 화면·카메라 영상을 기본 저장하지 않는다.
-- OCR 엔진 자체 개발과 원본 이미지 처리는 AI 담당 범위에 포함하지 않는다.
+- OCR 실행과 원본 이미지 처리는 AI 서버 담당 범위에 포함하지 않는다.
+- Server 또는 외부 ColPali로 원본 이미지를 전송하려면 현재 개인정보 결정 변경이 먼저 필요하다.
 - 관련성 분석 API에는 체류 시간과 MediaPipe 상태값을 섞지 않는다.
 - 학습 흐름과 사용자 상태는 별도 분석 기능으로 구현한다.
-- 판단이 어려운 경우 확정적인 `FOCUSED` 또는 `DISTRACTED` 대신 `UNCERTAIN`을 반환한다.
+- 추출·분석·관련성·흐름·행동 상태를 서로 다른 필드로 관리하는 안을 검토한다.
+- `OFF_TASK`만으로 `DRIFT_RISK`, 알림 또는 차단을 결정하지 않는다.
+- 판단이 어렵거나 실패한 경우 목표 무관이나 이탈로 단정하지 않는다.
 - 규칙이나 임베딩으로 충분히 판단 가능한 요청에는 LLM을 호출하지 않는다.
 - 모델·프롬프트·임계값 변경은 `DECISION_RECORD.md`에 기록한다.
 - 분석 결과에는 최소한 상태값과 신뢰도 기준을 포함한다.
+- 오래된 목표·회차·탭 결과는 적용 전에 폐기한다.
+- 같은 이벤트·세션 명령·노트 작업의 중복 처리는 멱등해야 한다.
+- 명시적 사용자 수정은 정확히 일치하는 목표·콘텐츠 범위에서 캐시보다 우선한다.
+- 학습 시간은 Server가 계산하고 LLM이 추정하지 않는다.
+- 학습 노트는 관찰 근거 없이 이해·해결 완료를 주장하지 않는다.
+- 회차 종료와 시간 저장은 학습 노트 생성 성공에 의존하지 않는다.
 - 기능 추가 전 `features/` 안에 기획서를 먼저 작성한다.
 
 ## 작업 종료 시 갱신
