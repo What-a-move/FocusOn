@@ -50,10 +50,10 @@
 
 ### Chrome Extension
 
-- 현재 탭, URL, 페이지 제목 확인
-- 페이지 이동 이벤트 수집
+- 활성 학습 세션 중 현재 활성 탭, URL, 페이지 제목 자동 추적
+- `tabs`와 `webNavigation`을 이용한 페이지 이동 이벤트 수집
 - 일정 시간 머문 페이지의 재분석 요청
-- 분석 제외 도메인 처리
+- 분석 제외 도메인에서는 Page·Screen·OCR·AI·Camera 분석 중지
 - Desktop 세션 조회와 타이머 표시
 - 일시정지·재개·종료 명령을 Server에 요청
 - Desktop 연결·인증 상태 안내
@@ -87,8 +87,18 @@
 | `FOCUSED` | 목표와 관련된 활동이 확인됨 |
 | `UNCERTAIN` | 판단할 정보가 부족함 |
 | `DISTRACTED` | 목표와 관련성이 낮은 활동이 확인됨 |
-| `PAUSED` | 사용자가 타이머 또는 분석을 중지함 |
-| `EXCLUDED` | 사용자가 분석 제외 대상으로 설정함 |
+
+`FocusState`는 AI가 판단한 집중 결과만 나타낸다. 사용자가 분석을 멈췄거나 제외 대상을 보고 있는지는 집중 판단 결과가 아니라 분석 작동 상태로 분리한다.
+
+## 분석 작동 상태 (`AnalysisActivityState`)
+
+| 상태 | 의미 |
+| --- | --- |
+| `RUNNING` | 분석이 동작 중임 |
+| `PAUSED` | 사용자가 타이머 또는 분석을 일시정지함 |
+| `EXCLUDED` | 사용자가 지정한 제외 대상이라 분석하지 않음 |
+
+`AnalysisActivityState`는 `FocusState`와 분리해 관리하고, 실제 공유 Type 추가는 세션 API 계약을 구현할 때 진행한다.
 
 ## 학습 세션 동기화 원칙
 

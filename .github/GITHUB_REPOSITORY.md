@@ -147,9 +147,9 @@ git push -u origin feat/12-desktop-study-timer
 
 Issue에는 아래 3종류의 Label을 적용한다.
 
--   영역: `area: frontend`, `area: backend`, `area: ai`, `area: common`
--   유형: `type: feature`, `type: bug`, `type: refactor`, `type: docs`
--   우선순위: `priority: high`, `priority: medium`, `priority: low`
+-   영역: `area:desktop`, `area:extension`, `area:server`, `area:ai`, `area:shared`
+-   유형: `type:feature`, `type:bug`, `type:refactor`, `type:docs`, `type:test`, `type:chore`
+-   우선순위: `priority:mvp-core`, `priority:mvp-basic`, `priority:enhancement`
 
 상세 목록은 [`ISSUE_LABELS.md`](ISSUE_LABELS.md)를 확인한다.
 

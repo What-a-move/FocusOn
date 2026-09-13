@@ -1,12 +1,14 @@
 # Desktop 기능 기획서
 
 > Desktop 기능 개발 전에 작성하고, 기획 확인 후 개발을 시작한다.
-> 이 문서를 먼저 작성한 뒤 오류 보고서와 결과 리포트 템플릿을 함께 준비한다.
+> ERROR와 REPORT 파일은 미리 만들지 않는다. 오류가 실제 발생하면 오류별 ERROR를 만들고, 기능이 완료되면 REPORT를 작성한다.
 
 ## 기본 정보
 
 - 기능명:
 - 기능 ID:
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
 - 작성자:
 - 작성일:
 - 우선순위: MVP - 핵심 / MVP - 기본 / 2차 / 검토 필요
@@ -26,6 +28,8 @@
 3.
 
 ## Desktop 상세 동작
+
+Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECTURE.md`, `WINDOW_LIFECYCLE.md`, `IPC_CONTRACT.md`, `MACOS_PERMISSION_FLOW.md`를 따른다. 변경하려면 먼저 `DECISION_RECORD.md`를 갱신한다.
 
 - 진입 조건:
 - 정상 동작:
@@ -68,6 +72,7 @@
 | 권한 거부 |  |  |
 | 앱 연결 실패 |  |  |
 | 분석 제외 앱 |  |  |
+| 분석 제외 도메인 |  |  |
 
 ## 보안·개인정보
 
@@ -82,8 +87,8 @@
 - [ ] 정상 흐름 구현
 - [ ] 권한 거부 흐름 구현
 - [ ] 예외 상황 확인
+- [ ] 키보드 사용·접근 가능한 이름·색상 대비·Focus 표시 확인
 - [ ] 테스트 완료
-- [ ] `*-ERROR.md` 갱신
+- [ ] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성
 - [ ] `*-REPORT.md` 작성
 - [ ] `CONTEXT.md`, `NEXT_TASK.md` 갱신
-

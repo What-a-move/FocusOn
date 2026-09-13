@@ -24,7 +24,7 @@ Desktop OCR 결과와 Extension 페이지 텍스트를 학습 목표와 비교�
 
 ## 예상 작업 순서
 
-1. Server·Desktop·Extension 담당자와 `api_spec.md`의 요청·응답을 확인한다.
+1. Server·Frontend(`apps`) 담당자와 `api_spec.md`의 요청·응답을 확인한다.
 2. FastAPI, Pydantic, pytest 기반 실행 환경을 기능 기획서에서 확정한다.
 3. OCR·페이지 텍스트 정제와 품질 판정 기준을 정의한다.
 4. 규칙 기반 관련성 판단을 구현하고 임베딩·LLM Client Interface를 분리한다.
