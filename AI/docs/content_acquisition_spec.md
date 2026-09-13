@@ -10,6 +10,13 @@
 
 이 문서는 Chrome Extension, macOS 네이티브 OCR 프로그램, Server와 AI 사이의 콘텐츠 수집 경계를 정의한다. 현재 Extension의 Content Script와 Service Worker는 진입 파일만 있고 이 계약은 아직 구현되지 않았다.
 
+### 현재 저장소에서 확인한 사실
+
+- `apps/extension/public/content-script.js`와 `service-worker.js`는 설명 주석만 있는 진입 파일이다.
+- 현재 Manifest는 `tabs`, `storage`, `webNavigation`과 HTTP(S) Host Permission을 선언한다.
+- `activeTab`, `nativeMessaging`과 네이티브 호스트 Manifest는 아직 추가되지 않았다.
+- 따라서 캡처 권한 방식, Native Messaging 설치와 실제 메시지 크기는 구현 완료가 아니라 PoC 대상이다.
+
 ## 1. 책임 경계
 
 | 구성요소 | 담당 | 담당하지 않는 것 |
@@ -166,7 +173,7 @@ Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네�
   "requestId": "request-uuid",
   "navigationId": "navigation-003",
   "imageFormat": "PNG",
-  "imageBytes": "<memory-only binary transport>"
+  "imageData": "<JSON-compatible encoded image placeholder>"
 }
 ```
 
@@ -187,7 +194,9 @@ Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네�
 }
 ```
 
-예시의 전송 형식은 제안이다. Base64를 JSON에 넣을지 Binary Transport를 사용할지, 최대 크기와 Timeout은 PoC로 결정한다. `recognitionConfidence`는 OCR 품질이며 목표 관련성 Confidence가 아니다.
+예시의 필드명과 인코딩은 제안이다. Chrome Native Messaging에서 사용할 JSON 호환 인코딩, 최대 크기와 Timeout은 PoC로 결정한다. `recognitionConfidence`는 OCR 품질이며 목표 관련성 Confidence가 아니다.
+
+Chrome Native Messaging은 UTF-8 JSON 메시지를 길이 Prefix와 함께 전달한다. Chrome 공식 제한은 Extension에서 Native Host로 보내는 한 메시지가 최대 64 MiB, Native Host에서 Chrome으로 보내는 한 메시지가 최대 1 MiB다. FocusOn은 이 상한을 허용 크기로 사용하지 않고, 캡처 해상도·메모리·지연 평가를 거쳐 더 작은 제품 상한을 정한다.
 
 ### 8.3 이미지 수명
 
@@ -291,6 +300,13 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 - Native Messaging 설치·업데이트·서명 담당
 - 이미지 전송 형식과 최대 크기
 - ColPali 실행 위치와 목표 하드웨어 자원 예산
+
+## 16. 기술 근거
+
+- Chrome의 [`captureVisibleTab`](https://developer.chrome.com/docs/extensions/reference/api/tabs#method-captureVisibleTab)은 지정 창의 현재 활성 탭에서 보이는 영역을 캡처하며 `activeTab` 또는 `<all_urls>` 권한이 필요하다. Chrome이 공개한 호출 상한이 있더라도 FocusOn은 이벤트 중복 제거와 자체 호출 제한을 둔다.
+- [Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)은 JSON 기반 통신, Native Host Manifest의 `allowed_origins`, 메시지 방향별 크기 제한을 정의한다. 네이티브 프로그램은 호출 Extension Origin과 메시지 Schema를 함께 검증한다.
+- Apple의 [Vision 텍스트 인식 문서](https://developer.apple.com/documentation/vision/recognizing-text-in-images)는 이미지에서 텍스트를 찾는 `VNRecognizeTextRequest` 계열과 기기 내 처리를 설명한다. 실제 API와 지원 OS는 목표 macOS 버전으로 PoC한다.
+- [ColPali 원 논문](https://arxiv.org/abs/2407.01449)은 문서 페이지 이미지를 다중 벡터로 표현하는 시각 문서 검색 방법을 제안한다. 따라서 FocusOn에서는 일반 브라우저 분류기보다 시각 구조 문서의 페이지·영역 검색 후보로 평가한다.
 
 ## 관련 문서
 

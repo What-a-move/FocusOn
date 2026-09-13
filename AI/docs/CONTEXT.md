@@ -30,6 +30,7 @@
 
 ### 진행 중인 작업
 
+- 루트 `docs/ARCHITECTURE.md`의 Desktop 중심 흐름과 Notion의 Extension 중심 기본안 차이 검토
 - Server·Extension·공유 타입 담당자와 다중 상태 및 API 경로 검토
 - 목표·세션·회차·이벤트 관계와 사용자당 동시 활성 회차 정책 검토
 - Agent 도구 Schema·예산·Checkpoint 저장소와 피드백 적용 범위 검토
@@ -54,6 +55,14 @@
 - 페이지 이동·체류 시간 기반 학습 흐름 분석
 - MediaPipe 상태값 보조 분석
 - YouTube 자막·PDF 추출 텍스트 연동
+
+### 확인된 문서·코드 차이
+
+- `packages/shared-types`는 아직 `FOCUSED`, `DISTRACTED`, `UNCERTAIN` 단일 상태만 정의한다.
+- Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
+- Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
+- AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
+- 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·로컬 OCR을 기본으로 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
 
