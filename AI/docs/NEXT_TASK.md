@@ -29,7 +29,7 @@
 
 ## 예상 작업 순서
 
-1. `/analysis/relevance`와 `/analyze/relevance` 중 API 경로를 Server 담당자와 확정한다.
+1. `/analysis/relevance`와 `/analyze/relevance` 중 API 경로를 Server·Frontend(`apps`) 담당자와 확정한다.
 2. 기존 `FocusState`와 다중 상태 필드의 호환 전략을 공유 타입 담당자와 확정한다.
 3. `goalId`, `sessionId`, `runId`, `eventId`, `navigationId`의 필수 범위와 stale 응답 규칙을 확정한다.
 4. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.

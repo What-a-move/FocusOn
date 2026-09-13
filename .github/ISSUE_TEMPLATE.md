@@ -11,12 +11,17 @@
 
 ## 담당 영역
 
-- [ ] Desktop
-- [ ] Chrome Extension
+- [ ] Frontend (`apps`)
 - [ ] Server
 - [ ] AI
 - [ ] Shared
 - [ ] 문서
+
+## Frontend 대상 앱
+
+- [ ] Desktop
+- [ ] Chrome Extension
+- [ ] Frontend 공통
 
 ## Labels
 
@@ -72,7 +77,7 @@ Issue 생성 전 `.github/ISSUE_LABELS.md`를 확인하고 아래 기준으로 L
 
 ## 관련 문서
 
-- 기능 기획서:
+- 기능 기획서(`type:feature`만):
 - API 문서:
 - 디자인 문서:
 - 참고 링크:

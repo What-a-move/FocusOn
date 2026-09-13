@@ -5,8 +5,9 @@
 - 상태: 팀 검토용 초안, 미구현
 - 버전: `0.2.0-draft`
 - 기준일: 2026-09-12
-- 검토 필요: Server·Extension·Shared·Client 담당자
+- 검토 필요: Server 담당자, Frontend(`apps`) 담당자, Shared 타입 담당자
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md), [데이터 수명](data_lifecycle.md)
+- 확정 조건: 호출 경로, 인증, Timeout, 요청 필드, 상태값, 캐시 정책을 관련 담당자가 확인한 뒤 AI `DECISION_RECORD.md`에 확정 결정을 남긴다.
 
 이 문서는 FocusOn Server와 AI 서비스 사이의 목표 구조화, 페이지 관련성 분석과 학습 노트 생성 계약을 제안한다. 기존 루트 `docs/API_CONTRACT.md`나 `packages/shared-types`를 자동으로 대체하지 않는다. 경로, 인증, 필드, 상태 호환 방식은 관련 담당자 합의 후 `DECISION_RECORD.md`에 확정한다.
 

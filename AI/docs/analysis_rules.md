@@ -5,7 +5,9 @@
 - 상태: 팀 검토용 초안, 미구현
 - 버전: `0.2.0-draft`
 - 기준일: 2026-09-12
+- 검토 필요: Server 담당자, Frontend(`apps`) 담당자
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [Agent 계약](focus_session_agent_spec.md), [피드백 명세](feedback_personalization_spec.md), [평가 명세](evaluation_spec.md)
+- 확정 조건: AI 평가 결과를 확인하고 Server·Frontend(`apps`) 담당자와 상태값을 합의한 뒤 `DECISION_RECORD.md`에 기록한다.
 
 이 문서는 목표 구조화, 콘텐츠 품질, 관련성, 학습 흐름과 개입 제안의 처리 순서를 정의한다. 상태 enum과 허용 조합은 `state_model.md`, 평가 기준은 `evaluation_spec.md`를 단일 기준으로 사용한다.
 
