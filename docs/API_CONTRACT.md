@@ -24,6 +24,21 @@
 }
 ```
 
+> 참고: 응답 최상위에 별도 `code` 필드를 추가하지 않는다. 오류 코드는 `error.code`에만 둔다. (검토 필요: Backend 결정 — `server/docs/DECISION_RECORD.md` 결정 003, Desktop·Extension·AI 확인 전까지 제안 상태)
+
+## 공통 ErrorCode (초안)
+
+| Code | 의미 | 기본 HTTP 상태 |
+| --- | --- | --- |
+| `INVALID_REQUEST` | 요청 값 검증 실패 | 400 |
+| `UNAUTHORIZED` | 인증 실패, 토큰 없음/만료 | 401 |
+| `FORBIDDEN` | 권한 없음 | 403 |
+| `NOT_FOUND` | 대상 리소스 없음 | 404 |
+| `CONFLICT` | 중복 요청, 상태 충돌(예: 오래된 `version`) | 409 |
+| `INTERNAL_ERROR` | 서버 내부 오류 | 500 |
+
+기능별로 필요한 코드는 이 표에 추가한다. (검토 필요: Backend 결정 — `server/docs/DECISION_RECORD.md` 결정 004, Notion `ErrorCode` 페이지에도 동일하게 반영 예정)
+
 ## 분석 결과 예시
 
 ```json
@@ -45,6 +60,14 @@ Desktop에서 Google 로그인 후 Server가 Google 계정의 고유 식별자�
 
 Extension은 최초 1회 Desktop에 표시된 일회용 연결 코드 또는 QR을 사용해 같은 사용자의 기기로 연결한다.
 
+인증이 필요한 모든 API는 요청 헤더에 다음 형식을 사용한다.
+
+```text
+Authorization: Bearer {focuson-token}
+```
+
+토큰 검증에 실패하면 `UNAUTHORIZED`, 토큰은 유효하지만 권한이 없으면 `FORBIDDEN`을 반환한다.
+
 예상 API:
 
 ```text
@@ -55,6 +78,8 @@ GET  /api/v1/devices
 ```
 
 연결 코드는 짧은 유효 시간과 1회 사용 조건을 가져야 한다.
+
+> 검토 필요: `AUTH_001`(구글 로그인) 응답 필드가 Notion에 아직 비어 있음 — `server/docs/DECISION_RECORD.md` 결정 005 참고.
 
 ## 학습 세션 동기화
 
@@ -108,4 +133,5 @@ TypeScript로 작성하는 공통 요청·응답 타입은 `packages/shared-type
 - 식별자는 문자열 UUID를 우선 사용한다.
 - 클라이언트는 `error.code`를 기준으로 분기하고 문구에 의존하지 않는다.
 - 분석 결과는 신뢰도와 판단 근거를 함께 반환한다.
+- 리소스를 전체 교체하는 수정 API는 PUT, 일부 필드만 수정하는 API는 PATCH를 사용한다. (검토 필요: 기존 `USER_004`/`GOAL_004` 불일치 정리 — `server/docs/DECISION_RECORD.md` 결정 009)
 - API 변경은 Server와 모든 소비자에게 먼저 공유한다.
