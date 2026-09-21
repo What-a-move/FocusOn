@@ -43,8 +43,8 @@
 - 외부 API 사용 조건:
 - 점수 범위:
 - 신뢰도 기준:
-- `FOCUSED` 기준:
-- `DISTRACTED` 기준:
+- `RELATED` 기준:
+- `UNRELATED` 기준:
 - `UNCERTAIN` 기준:
 
 ## 출력 데이터

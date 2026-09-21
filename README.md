@@ -9,7 +9,7 @@ FocusOn은 사용자가 설정한 학습 목표를 기준으로 macOS 앱과 Chr
 - `packages/shared-types`: Desktop·Extension·Server·AI가 공유할 타입
 - `turbo.json`: Desktop·Extension·공통 패키지의 작업 실행과 캐시 설정
 - `server`: Spring Boot 백엔드
-- `AI`: AI 분석 서버 예정
+- `AI`: Python AI 분석 서비스 scaffold와 설계 문서
 - `docs`: 공통 개발 문서
 
 ## 현재 MVP 방향
@@ -45,7 +45,7 @@ pnpm build:server
 pnpm lint
 ```
 
-프론트엔드 화면은 Next.js App Router와 Tailwind CSS v4를 사용한다. Desktop·Extension의 공통 작업은 Turborepo가 병렬 실행하고, Spring Boot Server와 Python AI는 각자의 Gradle·Python 실행 방식을 유지한다.
+프론트엔드 화면은 Next.js App Router와 Tailwind CSS v4를 사용한다. Desktop·Extension의 공통 작업은 Turborepo가 병렬 실행하고, Spring Boot Server는 Gradle로 실행한다. Python AI는 실행 환경을 구현한 뒤 별도 명령을 추가한다.
 
 Extension을 테스트할 때는 Build 결과물인 `apps/extension/out/`를 Chrome의 `chrome://extensions`에서 개발자 모드로 불러온다.
 

@@ -18,8 +18,8 @@
 
 분석기는 다음 결과를 반환한다.
 
-- `FOCUSED`: 현재 활동이 학습 목표 또는 목표 달성에 필요한 보조 활동과 관련됨
-- `DISTRACTED`: 현재 활동이 학습 목표와 명확하게 무관함
+- `RELATED`: 현재 활동이 학습 목표 또는 목표 달성에 필요한 보조 활동과 관련됨
+- `UNRELATED`: 현재 활동이 학습 목표와 명확하게 무관함
 - `UNCERTAIN`: 정보가 부족하거나 서로 충돌해 관련성을 확정하기 어려움
 
 ## 2. 분석 입력
@@ -90,7 +90,7 @@ Server가 1차 제거를 담당하고 AI 서비스가 모델 호출 전에 다�
 - 시스템 Prompt 또는 비밀 값을 출력하라는 문장
 - JSON 이외의 형식으로 응답하라는 문장
 
-Prompt Injection 문장이 있다는 이유만으로 활동을 `DISTRACTED`로 판단하지 않는다. 남은 안전한 문맥으로 판단할 수 없으면 `UNCERTAIN`을 반환한다.
+Prompt Injection 문장이 있다는 이유만으로 활동을 `UNRELATED`로 판단하지 않는다. 남은 안전한 문맥으로 판단할 수 없으면 `UNCERTAIN`을 반환한다.
 
 ### 3.4 OCR·페이지 텍스트 정제
 
@@ -139,7 +139,7 @@ OCR 엔진과 원본 화면 처리는 클라이언트가 담당한다. AI는 `te
 - 목표 수행을 지원하는 도구·자료·과정으로 볼 근거가 없음
 - 판단에 필요한 정보가 충분하고 서로 충돌하지 않음
 
-특정 앱이나 도메인이라는 이유만으로 자동으로 `DISTRACTED`를 반환하지 않는다. 예를 들어 YouTube도 학습 강의일 수 있고, 메신저도 팀 프로젝트 논의에 쓰일 수 있다.
+특정 앱이나 도메인이라는 이유만으로 자동으로 `UNRELATED`를 반환하지 않는다. 예를 들어 YouTube도 학습 강의일 수 있고, 메신저도 팀 프로젝트 논의에 쓰일 수 있다.
 
 ### 4.3 불확실한 활동
 
@@ -153,7 +153,7 @@ OCR 엔진과 원본 화면 처리는 클라이언트가 담당한다. AI는 `te
 - 관련성 점수와 별개로 판단 신뢰도가 기준보다 낮음
 - 서로 다른 언어, 약어 또는 고유명사 때문에 의미를 확정하기 어려움
 
-정보가 부족한 상황을 억지로 `FOCUSED` 또는 `DISTRACTED`로 분류하지 않는다.
+정보가 부족한 상황을 억지로 `RELATED` 또는 `UNRELATED`로 분류하지 않는다.
 
 ### 4.4 단계적 판단
 
@@ -170,7 +170,7 @@ OCR 엔진과 원본 화면 처리는 클라이언트가 담당한다. AI는 `te
 - 텍스트가 없거나 품질이 낮은 경우 빠르게 `UNCERTAIN` 후보로 분류한다.
 - 목표 핵심 개념이 제목과 본문에서 함께 확인되면 관련 활동 후보로 분류한다.
 - 앱·도메인 차단과 개인정보 화면 판단은 AI 규칙이 아니라 Server의 호출 전 정책이 담당한다.
-- 앱 이름, 도메인 또는 단일 키워드만으로 `DISTRACTED`를 확정하지 않는다.
+- 앱 이름, 도메인 또는 단일 키워드만으로 `UNRELATED`를 확정하지 않는다.
 
 임베딩 판단:
 
@@ -229,12 +229,12 @@ LLM Fallback:
 | 판단 정보 자체가 부족함 | `UNCERTAIN` | `INSUFFICIENT_CONTEXT` |
 | 입력 근거가 서로 충돌하거나 의미가 모호함 | `UNCERTAIN` | `AMBIGUOUS_CONTEXT` |
 | `contextStatus = SUFFICIENT`이고 `confidence < 0.60` | `UNCERTAIN` | `AMBIGUOUS_CONTEXT` |
-| `relevanceScore >= 0.65`이고 `confidence >= 0.60` | `FOCUSED` | `GOAL_RELATED` |
-| `relevanceScore <= 0.35`이고 `confidence >= 0.60` | `DISTRACTED` | `GOAL_UNRELATED` |
+| `relevanceScore >= 0.65`이고 `confidence >= 0.60` | `RELATED` | `GOAL_RELATED` |
+| `relevanceScore <= 0.35`이고 `confidence >= 0.60` | `UNRELATED` | `GOAL_UNRELATED` |
 | 그 외 모든 경우 | `UNCERTAIN` | `AMBIGUOUS_CONTEXT` |
 
-- 경계값 `0.65`는 `FOCUSED` 구간에 포함한다.
-- 경계값 `0.35`는 `DISTRACTED` 구간에 포함한다.
+- 경계값 `0.65`는 `RELATED` 구간에 포함한다.
+- 경계값 `0.35`는 `UNRELATED` 구간에 포함한다.
 - 모델 장애, 외부 API 장애, 형식 오류, Timeout은 `UNCERTAIN`으로 변환하지 않고 `api_spec.md`의 실패 응답으로 처리한다.
 
 ## 7. 근거 문구
@@ -256,12 +256,12 @@ LLM Fallback:
 
 | 학습 목표 | 현재 활동 | 예상 결과 | 이유 |
 | --- | --- | --- | --- |
-| Java 백엔드 개발 | IntelliJ에서 Java 파일 편집 | `FOCUSED` | 목표 결과물을 직접 작성함 |
-| Spring Security 공부 | Spring 공식 문서 | `FOCUSED` | 목표 주제와 문서 주제가 직접 일치함 |
-| 영어 듣기 공부 | 영어 강의 YouTube 영상 | `FOCUSED` | 도메인이 아니라 콘텐츠가 목표와 관련됨 |
+| Java 백엔드 개발 | IntelliJ에서 Java 파일 편집 | `RELATED` | 목표 결과물을 직접 작성함 |
+| Spring Security 공부 | Spring 공식 문서 | `RELATED` | 목표 주제와 문서 주제가 직접 일치함 |
+| 영어 듣기 공부 | 영어 강의 YouTube 영상 | `RELATED` | 도메인이 아니라 콘텐츠가 목표와 관련됨 |
 | Java 공부 | 제목 없는 GitHub 화면 | `UNCERTAIN` | 저장소 주제와 활동 목적을 알 수 없음 |
 | 시험 공부 | Chrome 새 탭 | `UNCERTAIN` | 판단할 활동 정보가 부족함 |
-| 알고리즘 공부 | 연예 뉴스 기사 | `DISTRACTED` | 충분한 문맥에서 목표와 다른 주제가 확인됨 |
+| 알고리즘 공부 | 연예 뉴스 기사 | `UNRELATED` | 충분한 문맥에서 목표와 다른 주제가 확인됨 |
 | 발표 자료 작성 | 팀 메신저 대화 | `UNCERTAIN` | 수집 제외 가능성이 있고 대화 목적을 확정하기 어려움 |
 
 ## 9. 평가 기준
@@ -269,7 +269,7 @@ LLM Fallback:
 초기 평가 데이터는 실제 개인정보가 없는 인공 문장 또는 공개 자료의 축약문으로 작성한다.
 
 - 최소 60개 사례를 준비한다.
-- `FOCUSED`, `DISTRACTED`, `UNCERTAIN` 정답 사례를 각각 최소 20개 포함한다.
+- `RELATED`, `UNRELATED`, `UNCERTAIN` 정답 사례를 각각 최소 20개 포함한다.
 - Desktop과 Extension 입력을 모두 포함한다.
 - 한국어, 영어, 한·영 혼합 입력을 포함한다.
 - 일반 앱·도메인, 모호한 목표, 충돌하는 제목·본문, Prompt Injection 사례를 포함한다.
@@ -278,7 +278,7 @@ LLM Fallback:
 1차 품질 기준은 다음과 같다.
 
 - 세 상태 전체 Macro F1 `0.75` 이상
-- `DISTRACTED` 오판으로 불필요한 알림이 발생하는 비율 `10%` 이하
+- `UNRELATED` 오판으로 불필요한 알림이 발생하는 비율 `10%` 이하
 - 민감 정보 차단 평가 사례 통과율 `100%`
 - 동일 입력·동일 분석 버전의 상태와 근거 코드 일치율 `100%`
 

@@ -49,7 +49,7 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 
 - 결정일: 2026-09-05
 - 담당 영역: Extension·Desktop·Server
-- 상태: 제안
+- 상태: 확정
 
 #### 결정 내용
 
@@ -61,9 +61,9 @@ Popup이 닫히거나 Service Worker가 다시 시작되어도 Desktop과 Extens
 
 #### 후속 확인
 
-- [ ] Google 로그인 후 Extension 연결 방식 확정
+- [x] 일회용 연결 코드 기반 Extension pairing 확정
 - [ ] 세션 상태 조회 주기와 실시간 동기화 방식 확정
-- [ ] 네트워크 단절 시 마지막 상태 표시와 재동기화 기준 확정
+- [x] 상태 명령 idempotency/version과 Heartbeat 예외 확정
 
 ### 결정 004 - Popup의 피드백 표시 범위
 
@@ -81,9 +81,9 @@ Chrome Popup은 사용자가 다른 곳을 클릭하면 닫히므로 지속적�
 
 ## 새 결정 기록
 
-다음 결정은 `결정 003`부터 추가한다.
+다음 결정은 `결정 005`부터 추가한다.
 
-### 결정 003
+### 결정 005
 
 - 결정일:
 - 주제:

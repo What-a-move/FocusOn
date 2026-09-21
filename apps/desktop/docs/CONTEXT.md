@@ -25,9 +25,9 @@
 ### 진행 중인 작업
 
 - Electron Main/Renderer 구조와 React 화면 연결을 구체화해야 한다.
-- 학습 세션 상태와 타이머 상태 모델을 확정해야 한다.
+- 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
-- Desktop과 Chrome Extension이 같은 학습 세션을 조회·제어하는 방식을 확정해야 한다.
+- Desktop과 Chrome Extension의 세션 조회·상태 명령·Heartbeat 계약을 구현해야 한다.
 
 ### 아직 진행하지 않은 작업
 
@@ -37,7 +37,7 @@
 - MediaPipe 카메라 분석 연동
 - Server API 연결
 - 화면 부유형 마스코트 표시 및 사용자 문구 설정
-- Google 로그인 후 Extension 연결
+- 일회용 연결 코드 기반 Extension pairing
 
 ## 현재 기술
 

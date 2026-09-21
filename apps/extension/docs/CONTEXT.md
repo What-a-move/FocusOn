@@ -25,9 +25,9 @@
 
 ### 진행 중인 작업
 
-- 실제 탭 정보와 FocusOn Desktop 연결 방식을 구체화해야 한다.
+- 실제 탭 정보 수집과 일회용 연결 코드 pairing을 구현해야 한다.
 - 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
-- Desktop에서 시작한 학습 세션을 조회하고 일시정지·재개·종료하는 흐름을 구체화해야 한다.
+- Desktop에서 시작한 학습 세션 조회와 상태 명령의 idempotency/version 처리를 구현해야 한다.
 
 ### 아직 진행하지 않은 작업
 
@@ -37,7 +37,7 @@
 - 분석 제외 도메인 적용
 - Desktop 연결 및 상태 동기화
 - Server API 연결
-- Google 로그인 사용자와 Extension 연결
+- 일회용 연결 코드 기반 Extension pairing
 - Popup 타이머 조회·제어 UI
 
 ## 현재 기술

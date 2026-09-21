@@ -9,7 +9,7 @@ FocusOn AI는 사용자의 학습 목표와 현재 화면·페이지 정보를 �
 - Desktop OCR 결과와 Extension 페이지 텍스트 정제·품질 확인
 - 목표와 현재 콘텐츠의 관련성 판단
 - 규칙 기반 판단, 임베딩 유사도, 필요한 경우 LLM을 사용하는 단계적 분석
-- `FOCUSED`, `DISTRACTED`, `UNCERTAIN` 상태와 점수·신뢰도·근거 반환
+- `RELATED`, `UNRELATED`, `UNCERTAIN` 관련성과 점수·신뢰도·근거 반환
 
 ### 후속 기능
 
@@ -35,8 +35,8 @@ Desktop / Extension
 
 ## 현재 상태
 
-- Python 디렉터리와 모듈 파일만 구성되어 있으며 실행 가능한 코드는 아직 없다.
-- 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
+- Python 디렉터리와 빈 모듈 파일만 구성되어 있으며 실행 가능한 코드는 아직 없다.
+- 공개 분석 API는 Notion 명세를 따르고, 내부 AI 호출 계약·분석 기준·Prompt 계약은 문서 초안 상태다.
 - FastAPI, Pydantic, 임베딩 모델, LLM 공급자, 캐시 저장소는 구현 전 검토·확정한다.
 - 원본 화면과 원본 카메라 영상은 AI 입력·저장 대상으로 사용하지 않는다.
 

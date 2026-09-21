@@ -30,7 +30,7 @@ const page: PageInfo = {
 
 ## 현재 타입
 
-- `FocusState`: 분석 결과 상태(`FOCUSED`, `DISTRACTED`, `UNCERTAIN`)
+- `FocusState`: 현재 구현의 임시 타입. 최신 API 계약의 `RELATED`, `UNRELATED`, `UNCERTAIN`으로 변경해야 한다.
 - `AnalysisReasonCode`: 분석 판단 근거 코드
 - `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
 - `AnalysisResult`: 상태·관련성 점수·신뢰도·판단 근거·설명
@@ -39,10 +39,10 @@ const page: PageInfo = {
 
 여러 영역에서 함께 사용하는 것이 확정된 경우에만 다음 타입을 추가한다.
 
-- `StudySessionStatus`: `IDLE`, `RUNNING`, `PAUSED`, `COMPLETED`
+- `StudySessionStatus`: `DRAFT`, `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED`
 - `StudySessionSnapshot`: 현재 세션 상태와 기준 시간
-- `StudySessionCommand`: 시작·일시정지·재개·종료 명령
-- `FocusState`: 화면 분석 결과의 집중 상태. 카메라 분석 상태는 별도 계약으로 분리한다.
+- `StudySessionCommand`: 시작·일시정지·재개·연장·종료 명령
+- `AnalysisRelation`: 화면·페이지와 목표의 관련성(`RELATED`, `UNRELATED`, `UNCERTAIN`). 카메라 분석 상태는 별도 계약으로 분리한다.
 - `DevicePairing`: Desktop과 Extension 연결 상태
 
 ## 넣지 않는 것
