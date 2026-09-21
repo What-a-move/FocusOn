@@ -114,7 +114,7 @@ Markdown은 규칙을 설명하지만 자체로 코드를 강제하지 못한다
 다음 항목은 문서에 제안으로 기록하되 관련 담당자의 합의 전에는 확정하지 않는다.
 
 - 기존 `FocusState`를 호환 필드로 유지할 기간과 제거 조건
-- `/api/v1/analysis/relevance`와 `/api/v1/analyze/relevance` 중 최종 경로
+- 관련성 분석 최종 경로 `POST /api/v1/sessions/{sessionId}/analysis-runs`의 Server 연동 계약
 - 목표당 논리 세션과 다회차 `runId` 구조
 - 콘텐츠 캐시, 체크포인트, 진단 로그의 TTL
 - 임베딩·LLM 제공자와 외부 전송 조건

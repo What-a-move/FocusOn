@@ -43,9 +43,9 @@
 
 ```json
 {
-  "sessionId": "session-uuid",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440001",
   "source": "desktop",
-  "state": "FOCUSED",
+  "relation": "RELATED",
   "relevanceScore": 0.91,
   "confidence": 0.86,
   "reasonCode": "GOAL_RELATED",
@@ -71,9 +71,9 @@ Authorization: Bearer {focuson-token}
 예상 API:
 
 ```text
-POST /api/v1/auth/google
-POST /api/v1/devices/pairing-codes
-POST /api/v1/devices/pair
+POST /api/v1/auth/google/exchange
+POST /api/v1/pairing-codes
+POST /api/v1/extension-pairings
 GET  /api/v1/devices
 ```
 
@@ -88,24 +88,24 @@ Desktop과 Extension은 같은 `sessionId`를 사용한다. Server가 상태와 
 예상 API:
 
 ```text
-POST /api/v1/study-sessions
-GET  /api/v1/study-sessions/active
-POST /api/v1/study-sessions/{sessionId}/pause
-POST /api/v1/study-sessions/{sessionId}/resume
-POST /api/v1/study-sessions/{sessionId}/end
+POST /api/v1/sessions
+GET  /api/v1/sessions/active
+POST /api/v1/sessions/{sessionId}/pause
+POST /api/v1/sessions/{sessionId}/resume
+POST /api/v1/sessions/{sessionId}/end
 ```
 
 세션 상태 예시:
 
 ```json
 {
-  "sessionId": "session-uuid",
-  "goalId": "goal-uuid",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440001",
+  "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "status": "RUNNING",
-  "plannedSeconds": 7200,
+  "targetDurationMs": 7200000,
   "startedAt": "2026-09-05T03:00:00Z",
   "pausedAt": null,
-  "totalPausedSeconds": 0,
+  "accumulatedActiveMs": 0,
   "serverTime": "2026-09-05T03:15:00Z",
   "version": 3
 }

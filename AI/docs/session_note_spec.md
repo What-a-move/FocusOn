@@ -97,9 +97,9 @@ runId
 
 ```json
 {
-  "runId": "run-uuid",
+  "runId": "550e8400-e29b-41d4-a716-446655440004",
   "goal": {
-    "goalId": "goal-uuid",
+    "goalId": "550e8400-e29b-41d4-a716-446655440000",
     "goalVersion": 2,
     "mainTopic": "Spring Security JWT 인증 구현",
     "purpose": "IMPLEMENTATION"
@@ -144,7 +144,7 @@ runId
 
 ```json
 {
-  "runId": "run-uuid",
+  "runId": "550e8400-e29b-41d4-a716-446655440004",
   "noteVersion": 1,
   "status": "COMPLETED",
   "goalSummary": "Spring Security JWT 인증 구현",

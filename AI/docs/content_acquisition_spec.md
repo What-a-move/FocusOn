@@ -170,7 +170,7 @@ Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네�
 ```json
 {
   "type": "RECOGNIZE_VISIBLE_TAB",
-  "requestId": "request-uuid",
+  "requestId": "550e8400-e29b-41d4-a716-446655440002",
   "navigationId": "navigation-003",
   "imageFormat": "PNG",
   "imageData": "<JSON-compatible encoded image placeholder>"
@@ -179,7 +179,7 @@ Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네�
 
 ```json
 {
-  "requestId": "request-uuid",
+  "requestId": "550e8400-e29b-41d4-a716-446655440002",
   "navigationId": "navigation-003",
   "status": "SUCCESS",
   "languageHints": ["ko", "en"],

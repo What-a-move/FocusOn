@@ -36,11 +36,11 @@
 ```json
 {
   "feedbackId": "feedback-uuid",
-  "goalId": "goal-uuid",
+  "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "goalVersion": 2,
-  "sessionId": "session-uuid",
-  "runId": "run-uuid",
-  "eventId": "event-uuid",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440001",
+  "runId": "550e8400-e29b-41d4-a716-446655440004",
+  "eventId": "550e8400-e29b-41d4-a716-446655440003",
   "contentHash": "sanitized-content-hash",
   "scope": "EXACT_CONTENT",
   "originalLabel": "OFF_TASK",

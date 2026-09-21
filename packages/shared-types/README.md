@@ -30,7 +30,7 @@ const page: PageInfo = {
 
 ## 현재 타입
 
-- `FocusState`: 분석 결과 상태(`FOCUSED`, `DISTRACTED`, `UNCERTAIN`)
+- `FocusState`: 분석 결과 상태(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`)
 - `AnalysisReasonCode`: 분석 판단 근거 코드
 - `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
 - `AnalysisResult`: 상태·관련성 점수·신뢰도·판단 근거·설명

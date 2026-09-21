@@ -63,11 +63,10 @@ Extension / macOS 네이티브 모듈
 | 기능 | Method·경로 | 상태 |
 | --- | --- | --- |
 | 목표 구조화 | `POST /api/v1/goals/profile` | 제안 |
-| 페이지 관련성 분석 | `POST /api/v1/analyze/relevance` | 제안 |
-| 기존 관련성 경로 | `POST /api/v1/analysis/relevance` | 기존 초안, 경로 합의 필요 |
+| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | Notion 기준 |
 | 학습 노트 생성 | `POST /api/v1/session-notes/generate` | 후속 제안 |
 
-두 관련성 경로를 동시에 구현하지 않는다. Server 담당자와 하나를 확정하거나 버전 마이그레이션 계획을 만든다.
+관련성 분석은 Notion 기준 경로 하나만 사용한다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
 ## 4. 목표 구조화
 
@@ -75,8 +74,8 @@ Extension / macOS 네이티브 모듈
 
 ```json
 {
-  "requestId": "request-uuid",
-  "goalId": "goal-uuid",
+  "requestId": "550e8400-e29b-41d4-a716-446655440002",
+  "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "goalVersion": 1,
   "originalText": "Spring Security JWT 인증 구현"
 }
@@ -88,7 +87,7 @@ Extension / macOS 네이티브 모듈
 {
   "success": true,
   "data": {
-    "goalId": "goal-uuid",
+    "goalId": "550e8400-e29b-41d4-a716-446655440000",
     "goalVersion": 1,
     "originalText": "Spring Security JWT 인증 구현",
     "mainTopic": "Spring Security 기반 JWT 인증",
@@ -110,11 +109,11 @@ Extension / macOS 네이티브 모듈
 
 ```json
 {
-  "requestId": "request-uuid",
-  "eventId": "event-uuid",
-  "sessionId": "session-uuid",
-  "runId": "run-uuid",
-  "goalId": "goal-uuid",
+  "requestId": "550e8400-e29b-41d4-a716-446655440002",
+  "eventId": "550e8400-e29b-41d4-a716-446655440003",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440001",
+  "runId": "550e8400-e29b-41d4-a716-446655440004",
+  "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "goalVersion": 1,
   "navigationId": "navigation-003",
   "source": "EXTENSION",
@@ -163,21 +162,21 @@ Extension / macOS 네이티브 모듈
 {
   "success": true,
   "data": {
-    "requestId": "request-uuid",
-    "eventId": "event-uuid",
-    "sessionId": "session-uuid",
-    "runId": "run-uuid",
-    "goalId": "goal-uuid",
+    "requestId": "550e8400-e29b-41d4-a716-446655440002",
+    "eventId": "550e8400-e29b-41d4-a716-446655440003",
+    "sessionId": "550e8400-e29b-41d4-a716-446655440001",
+    "runId": "550e8400-e29b-41d4-a716-446655440004",
+    "goalId": "550e8400-e29b-41d4-a716-446655440000",
     "goalVersion": 1,
     "navigationId": "navigation-003",
     "extractionStatus": "SUCCESS",
     "analysisStatus": "COMPLETED",
-    "relevanceLabel": "SUPPORTING",
+    "relevanceLabel": "RELATED",
     "driftState": "LEARNING",
     "recommendedAction": "NO_ACTION",
     "confidence": 0.84,
     "confidenceType": "HEURISTIC",
-    "reasonCode": "GOAL_SUPPORTING",
+    "reasonCode": "GOAL_RELATED",
     "reason": "현재 자료는 목표를 진행하는 데 필요한 보조 학습 자료입니다.",
     "evidenceIds": ["passage-001"],
     "decisionStage": "FINAL",
@@ -206,17 +205,11 @@ Extension / macOS 네이티브 모듈
 - `driftState`: 최근 흐름·체류를 고려한 이탈 위험
 - `recommendedAction`: 사용자에게 제안 가능한 행동
 
-### 5.5 기존 FocusState 호환
+### 5.5 공개 상태 경계
 
-현재 `packages/shared-types`의 `FOCUSED`, `DISTRACTED`, `UNCERTAIN`을 유지해야 한다면 응답에 `legacyState`를 임시 추가하는 안을 검토한다.
+공개 API의 분석 상태는 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`만 사용한다.
 
-```json
-{
-  "legacyState": "FOCUSED"
-}
-```
-
-`legacyState`는 새 상태 조합에서 애플리케이션 코드가 파생한다. 모델이 직접 생성하지 않는다. 매핑과 제거 일정은 `state_model.md` 및 공유 타입 담당자 합의가 필요하다.
+AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세부 상태는 분석 근거와 정책 판단을 위한 내부 값이다. Server가 공개 응답을 만들 때 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED` 중 하나로 변환하며, 내부 상태를 Client에 그대로 노출하지 않는다.
 
 ## 6. 처리된 비분석 결과
 
@@ -226,7 +219,7 @@ Extension / macOS 네이티브 모듈
 {
   "success": true,
   "data": {
-    "eventId": "event-uuid",
+    "eventId": "550e8400-e29b-41d4-a716-446655440003",
     "extractionStatus": "UNSUPPORTED",
     "analysisStatus": "SKIPPED",
     "relevanceLabel": "UNAVAILABLE",
@@ -321,9 +314,9 @@ Extension / macOS 네이티브 모듈
 
 ```json
 {
-  "requestId": "request-uuid",
-  "runId": "run-uuid",
-  "goalId": "goal-uuid",
+  "requestId": "550e8400-e29b-41d4-a716-446655440002",
+  "runId": "550e8400-e29b-41d4-a716-446655440004",
+  "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "goalVersion": 2,
   "aggregationVersion": 3,
   "evidenceSnapshotVersion": 1,
@@ -348,7 +341,7 @@ Server가 실제 집계와 허용된 근거 Snapshot을 구성한다. Client가 
 ## 11. 검증 시나리오
 
 - 정상 `RELATED`와 `SUPPORTING` 결과가 서로 구분된다.
-- 짧은 `OFF_TASK`가 즉시 `DISTRACTED`나 차단으로 변환되지 않는다.
+- 짧은 `OFF_TASK`가 즉시 `UNRELATED`나 차단으로 변환되지 않는다.
 - `FAILED`, `UNSUPPORTED`, 모델 오류에서 `NO_ACTION`을 반환하거나 실패 envelope를 사용한다.
 - 목표 수정·탭 전환·회차 종료 후 오래된 결과가 폐기된다.
 - 같은 이벤트 재전송으로 결과와 시간이 중복되지 않는다.

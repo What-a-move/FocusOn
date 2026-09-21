@@ -38,7 +38,7 @@
 ## BE-004 인증 방식
 
 - 인증이 필요한 모든 API는 `Authorization: Bearer {token}` 헤더를 사용한다.
-- `POST /api/v1/auth/google` 성공 시 FocusOn 자체 토큰을 발급하며, Google Access Token은 Desktop·Extension 사이에서 재사용하지 않는다(`docs/API_CONTRACT.md` 인증 절 참고).
+- `POST /api/v1/auth/google/exchange` 성공 시 FocusOn 자체 토큰을 발급하며, Google Access Token은 Desktop·Extension 사이에서 재사용하지 않는다(`docs/API_CONTRACT.md` 인증 절 참고).
 - 토큰 검증 실패는 `UNAUTHORIZED`, 권한 부족은 `FORBIDDEN`으로 응답한다.
 - 확인 방법: 기능 기획서(`*-PLAN.md`)의 "인증 필요 여부" 항목에 반드시 표시한다.
 

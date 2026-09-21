@@ -14,7 +14,7 @@
 
 ## 예시
 
-### 1. 🟡 Medium — `GET /api/v1/study-sessions/active`의 만료 세션 처리가 통합 테스트로 커버되지 않음
+### 1. 🟡 Medium — `GET /api/v1/sessions/active`의 만료 세션 처리가 통합 테스트로 커버되지 않음
 
 **문제**: `StudySessionServiceTest`는 정상 조회만 확인한다. `endedAt`이 지난 세션을 다시 활성 세션으로 조회했을 때의 동작(404 반환 여부)은 어떤 테스트로도 검증되지 않는다. `StudySessionController:42`에서 상태 필터링 없이 최신 세션을 그대로 반환하고 있어, 실제로는 종료된 세션이 활성 세션으로 잘못 반환될 수 있다.
 

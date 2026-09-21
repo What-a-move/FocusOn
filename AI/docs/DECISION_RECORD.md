@@ -153,7 +153,7 @@ AI의 개인정보, 실패 처리, 상태 분리, LLM 권한, 캐시, stale 결�
 
 - Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 
-## 결정 009 - 다중 상태 모델과 기존 FocusState 호환
+## 결정 009 - Notion 공개 상태와 AI 내부 세부 상태 분리
 
 - 결정일: 2026-09-12
 - 담당 영역: AI·Server·Shared·Client
@@ -161,7 +161,7 @@ AI의 개인정보, 실패 처리, 상태 분리, LLM 권한, 캐시, stale 결�
 
 ### 결정 내용
 
-`extractionStatus`, `analysisStatus`, `relevanceLabel`, `driftState`, `recommendedAction`을 분리한다. 기존 `FOCUSED`, `DISTRACTED`, `UNCERTAIN`은 소비자 전환 기간의 파생 호환값으로 유지하는 안을 검토한다.
+`extractionStatus`, `analysisStatus`, `relevanceLabel`, `driftState`, `recommendedAction`을 분리한다. 공개 `FocusState`와 API의 관련성 값은 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`로 통일한다. `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 내부 세부 상태는 Server가 공개 상태로 변환한다.
 
 ### 결정 이유
 
@@ -169,8 +169,8 @@ AI의 개인정보, 실패 처리, 상태 분리, LLM 권한, 캐시, stale 결�
 
 ### 고려한 대안
 
-- 기존 세 상태만 유지: 소비자 변경은 적지만 실패 원인과 흐름 상태를 표현하기 어렵다.
-- 즉시 기존 상태 제거: 계약은 단순해지지만 현재 공유 타입과 Client 호환이 깨진다.
+- 내부 세부 상태를 공개 API에 그대로 노출: 의미가 풍부하지만 Client·Notion 계약이 달라진다.
+- 공개 5개 상태만 내부에서도 사용: 계약은 단순하지만 AI 정책과 실패 원인을 세밀하게 표현하기 어렵다.
 
 ### 영향 범위
 

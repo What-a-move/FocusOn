@@ -9,7 +9,7 @@
 - 관련 규칙: `AI-STATE-001`, `AI-FAIL-001`, `AI-DRIFT-001`, `AI-ACTION-001`
 - 관련 문서: [목표·세션 모델](goal_session_spec.md), [피드백 명세](feedback_personalization_spec.md), [AI API 계약](api_spec.md)
 
-이 문서는 콘텐츠 확보 상태, AI 분석 실행 결과, 목표 관련성, 시간 기반 이탈 흐름과 사용자에게 제안할 행동을 분리한다. 기존 `FOCUSED`, `DISTRACTED`, `UNCERTAIN`은 현재 공유 타입과의 호환을 위한 파생 상태이며, 다중 상태 계약이 합의되기 전까지 자동으로 대체하지 않는다.
+이 문서는 콘텐츠 확보 상태, AI 분석 실행 결과, 목표 관련성, 시간 기반 이탈 흐름과 사용자에게 제안할 행동을 분리한다. 공개 API의 관련성 값은 Notion 기준 5개 상태(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`)를 사용한다. `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE`은 내부 분석·정책용 세부 상태이며 API 경계에서 공개 상태로 변환한다.
 
 ## 1. 상태 계층
 
@@ -115,18 +115,19 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 | 사용자 관련성 수정 | 캐시·대기 알림 무효화 후 `RECOVERED` 처리 |
 | 목표·탭·회차 버전 불일치 | 결과 폐기, 현재 상태 변경 금지 |
 
-## 8. 기존 FocusState 호환 제안
+## 8. 공개 상태 매핑
 
-`packages/shared-types`의 기존 `FocusState`는 소비자 마이그레이션 전까지 파생 값으로 유지하는 안을 검토한다.
+`packages/shared-types`의 `FocusState`와 Server 공개 응답은 Notion 기준 5개 상태만 사용한다. 내부 AI 상태를 그대로 Client에 전달하지 않는다.
 
-| 새 상태 조합 | 기존 `FocusState` 제안 매핑 |
+| 내부 상태 | 공개 `FocusState` 매핑 |
 | --- | --- |
-| `RELATED/SUPPORTING` + `LEARNING/RECOVERED` | `FOCUSED` |
-| `OFF_TASK` + `DRIFT_RISK` | `DISTRACTED` |
+| `RELATED` 또는 `SUPPORTING` + `LEARNING/RECOVERED` | `RELATED` |
+| `OFF_TASK` + `DRIFT_RISK` | `UNRELATED` |
 | `UNCERTAIN`, 짧은 `OFF_TASK`, `OBSERVING`, `POSSIBLE_DRIFT` | `UNCERTAIN` |
-| `UNAVAILABLE`, `UNKNOWN`, 분석 오류 | `UNCERTAIN` + 상세 상태 또는 실패 envelope |
+| 정책 제외 | `EXCLUDED` |
+| 개인정보·권한 차단 또는 분석 입력 차단 | `PRIVACY_BLOCKED` |
 
-이 매핑은 팀 합의 전 제안이다. 기존 `state`만 받는 Client는 실패와 의미적 불확실성을 구분할 수 없으므로 상세 필드를 함께 소비해야 한다.
+내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
 
 ## 9. 응답 적용 전 확인
 

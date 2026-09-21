@@ -165,7 +165,7 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 5. 모델 원본 출력은 로그와 캐시에 남기지 않는다.
 6. 안전한 이전 단계가 없으면 `MODEL_OUTPUT_INVALID` 또는 `MODEL_UNAVAILABLE`로 판단을 보류한다.
 
-모델 장애를 `OFF_TASK`, `UNCERTAIN` 또는 기존 `DISTRACTED`로 위장하지 않는다. 의미적 모호함과 시스템 오류는 다른 상태다.
+모델 장애를 `OFF_TASK`, `UNCERTAIN` 또는 `UNRELATED`로 위장하지 않는다. 의미적 모호함과 시스템 오류는 다른 상태다.
 
 ## 8. FocusSessionAgent
 

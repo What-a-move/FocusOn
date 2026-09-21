@@ -40,7 +40,7 @@
     "returnedToRelatedContent": false
   },
   "expected": {
-    "relevanceLabel": "SUPPORTING",
+    "relevanceLabel": "RELATED",
     "allowedDriftStates": ["LEARNING"],
     "allowedActions": ["NO_ACTION"]
   },
@@ -145,9 +145,9 @@
 
 ## 7. 초기 품질 목표
 
-기존 문서의 Macro F1 `0.75`, 잘못된 `DISTRACTED` 알림 비율 `10% 이하`는 초기 가설로 유지하되 출시 기준으로 확정하지 않는다. 다중 상태 평가 데이터를 만든 뒤 다음 값을 팀과 확정한다.
+기존 문서의 Macro F1 `0.75`, 잘못된 `UNRELATED` 알림 비율 `10% 이하`는 초기 가설로 유지하되 출시 기준으로 확정하지 않는다. 다중 상태 평가 데이터를 만든 뒤 다음 값을 팀과 확정한다.
 
-- `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`별 최소 Precision·Recall
+- 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`별 최소 Precision·Recall
 - 보조 학습 오판의 최대 허용 비율
 - 정상 학습 시간당 잘못된 알림 상한
 - 흐름 복귀 인식 시간
