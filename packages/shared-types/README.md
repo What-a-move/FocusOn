@@ -30,10 +30,10 @@ const page: PageInfo = {
 
 ## 현재 타입
 
-- `FocusState`: 현재 구현의 임시 타입. 최신 API 계약의 `RELATED`, `UNRELATED`, `UNCERTAIN`으로 변경해야 한다.
+- `FocusState`: 현재 구현에서 관련성과 처리 상태를 함께 담은 임시 타입. 최신 계약에 맞춰 `relation`과 `analysisStatus` 타입으로 분리해야 한다.
 - `AnalysisReasonCode`: 분석 판단 근거 코드
 - `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
-- `AnalysisResult`: 상태·관련성 점수·신뢰도·판단 근거·설명
+- `AnalysisResult`: 현재 구현 타입. 최신 계약의 `relation`·`analysisStatus` 분리를 반영해야 한다.
 
 ## 앞으로 추가할 타입
 
@@ -42,7 +42,9 @@ const page: PageInfo = {
 - `StudySessionStatus`: `DRAFT`, `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED`
 - `StudySessionSnapshot`: 현재 세션 상태와 기준 시간
 - `StudySessionCommand`: 시작·일시정지·재개·연장·종료 명령
-- `AnalysisRelation`: 화면·페이지와 목표의 관련성(`RELATED`, `UNRELATED`, `UNCERTAIN`). 카메라 분석 상태는 별도 계약으로 분리한다.
+- `AnalysisActivityState`: 분석 작동 상태(`RUNNING`, `PAUSED`, `EXCLUDED`). 실제 공유 Type 추가는 세션 API 계약 구현 시 진행한다.
+- `AnalysisRelation`: 목표 관련성(`RELATED`, `UNRELATED`, `UNCERTAIN`)
+- `AnalysisStatus`: `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN` 등을 오류와 구분하는 분석 처리 상태
 - `DevicePairing`: Desktop과 Extension 연결 상태
 
 ## 넣지 않는 것

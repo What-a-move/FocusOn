@@ -1,11 +1,15 @@
 # Extension 기능 문서
 
-기능 하나당 아래 세 문서를 같은 기능명으로 생성한다.
+새 기능을 시작할 때 PLAN을 만들고 기능이 완료되면 REPORT를 한 번 만든다. 개발 중 실제 오류가 발생하면 오류마다 ERROR 문서를 추가한다.
 
 ```text
 tab-tracking-PLAN.md
-tab-tracking-ERROR.md
+tab-tracking-restricted-page-ERROR.md
+tab-tracking-duplicate-event-ERROR.md
 tab-tracking-REPORT.md
 ```
 
-기획서 작성과 확인이 끝난 뒤 개발을 시작하고, 오류 보고서와 결과 리포트는 작업 중·작업 완료 시 갱신한다.
+- 오류가 없으면 ERROR 문서를 만들지 않는다.
+- 단순 버그 수정에는 REPORT를 만들지 않는다.
+- 기능명과 오류명은 소문자 kebab-case를 사용한다.
+- PLAN과 REPORT는 기능 단위, ERROR는 오류 단위로 관리한다.

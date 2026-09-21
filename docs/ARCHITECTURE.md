@@ -50,10 +50,10 @@
 
 ### Chrome Extension
 
-- 현재 탭, URL, 페이지 제목 확인
-- 페이지 이동 이벤트 수집
+- 활성 학습 세션 중 현재 활성 탭, URL, 페이지 제목 자동 추적
+- `tabs`와 `webNavigation`을 이용한 페이지 이동 이벤트 수집
 - 일정 시간 머문 페이지의 재분석 요청
-- 분석 제외 도메인 처리
+- 분석 제외 도메인에서는 Page·Screen·OCR·AI·Camera 분석 중지
 - Desktop 세션 조회와 타이머 표시
 - 일시정지·재개·종료 명령을 Server에 요청
 - Desktop 연결·인증 상태 안내
@@ -80,15 +80,25 @@
 - 페이지 정보, 분석 결과, 학습 세션 상태처럼 여러 영역이 함께 사용하는 구조만 둔다.
 - API 호출이나 런타임 검증을 대신하지 않으므로 Server DTO 검증은 별도로 구현한다.
 
-## 활동 분석 결과
+## 활동 관련성
 
 | 상태 | 의미 |
 | --- | --- |
 | `RELATED` | 목표와 관련된 활동이 확인됨 |
-| `UNCERTAIN` | 판단할 정보가 부족함 |
 | `UNRELATED` | 목표와 관련성이 낮은 활동이 확인됨 |
-| `PAUSED` | 사용자가 타이머 또는 분석을 중지함 |
-| `EXCLUDED` | 사용자가 분석 제외 대상으로 설정함 |
+| `UNCERTAIN` | 판단할 정보가 부족함 |
+
+관련성은 공개 API의 `relation` 필드로 표현한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 `analysisStatus`이며 오류 코드가 아니다. 개인정보 차단·제외처럼 관련성 판정을 하지 않은 상태와 `RELATED`·`UNRELATED` 관계값을 한 enum으로 합치지 않는다.
+
+## 분석 작동 상태 (`AnalysisActivityState`)
+
+| 상태 | 의미 |
+| --- | --- |
+| `RUNNING` | 분석이 동작 중임 |
+| `PAUSED` | 사용자가 타이머 또는 분석을 일시정지함 |
+| `EXCLUDED` | 사용자가 지정한 제외 대상이라 분석하지 않음 |
+
+`AnalysisActivityState`는 `FocusState`와 분리해 관리하고, 실제 공유 Type 추가는 세션 API 계약을 구현할 때 진행한다.
 
 ## 학습 세션 동기화 원칙
 
@@ -96,7 +106,7 @@
 - Desktop에서 시작한 세션을 Extension이 조회해 타이머를 표시한다.
 - Extension의 일시정지·재개·종료 요청은 Server가 검증한 뒤 상태를 변경한다.
 - Desktop과 Extension은 상태 변경 응답 또는 동기화 이벤트를 받아 화면을 갱신한다.
-- 매초 서버에 시간을 요청하지 않고 시작 시각·일시정지 시각·누적 일시정지 시간을 이용해 클라이언트에서 남은 시간을 계산한다.
+- 매초 서버에 시간을 요청하지 않고 `targetDurationMs`와 Server가 확정한 `accumulatedActiveMs`를 이용해 클라이언트에서 남은 시간을 계산한다.
 
 ## 화면 부유형 두더지 피드백 원칙
 
