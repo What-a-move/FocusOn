@@ -30,7 +30,7 @@ type ExtensionResponse<T> =
 
 - Message는 JSON으로 직렬화할 수 있는 값만 사용한다.
 - 함수, DOM Node, Class Instance, 순환 참조 객체를 보내지 않는다.
-- 응답 분기는 `error.code`를 사용하고 Popup이 사용자 안전 문구로 변환한다.
+- 응답 분기는 오류 응답 최상위 `code`를 사용하고 Popup이 사용자 안전 문구로 변환한다.
 - 내부 오류 문구와 Stack Trace는 Message에 넣지 않는다.
 
 ## 공통 값

@@ -1,73 +1,58 @@
 # Backend 작업 컨텍스트
 
-> Backend 담당자가 작업 시작 시 가장 먼저 읽는 문서다.
-> 백엔드 구조가 정해지거나 변경되면 이 문서를 갱신한다.
-
 ## 담당 영역
 
-- Spring Boot 백엔드
-- REST API
-- 사용자·목표·학습 세션 데이터
-- 분석 이벤트와 리포트 데이터
+- Spring Boot REST API
+- 인증, 사용자, 기기 연결, 목표, 세션, 분석 이벤트, 리포트
 - Desktop·Extension·AI 연동
+- PostgreSQL 스키마와 Flyway migration
 
 ## 현재 상태
 
-### 완료된 작업
+### 완료
 
-- Spring Boot 프로젝트 기본 구조가 `server/`에 생성되어 있다.
-- Backend 담당 영역의 문서 구조를 생성했다.
-- 공통 API 응답 형식은 루트 `docs/API_CONTRACT.md`에서 초안으로 정의했다.
-- Backend 개발 불변 규칙을 `server/docs/DEVELOPMENT_RULES.md`(Rule ID BE-001~BE-005)로 정리했다. 공통 응답 형식·ErrorCode 초안·인증 헤더 형식은 `제안` 상태이며 Desktop·Extension·AI 확인 후 확정한다(`DECISION_RECORD.md` 결정 003, 004).
-- API 명세 갭 5건(AUTH_001, notifications.triggerSource, REPORT_001 필드, GOAL_004 응답, 수정 API 메서드 통일)을 `DECISION_RECORD.md`에 "결정 필요"로 기록했다.
+- Spring Boot 4.1.1 / Java 25 / Gradle 기본 프로젝트
+- PostgreSQL 17과 Backend를 함께 실행하는 Docker Compose 구성
+- local·docker 프로필과 환경 변수 예제
+- Flyway migration 위치와 작성 규칙
+- Notion `FocusOn API 명세서` 39개 엔드포인트 및 공통 정책 확정
+- 로컬 API 계약과 Backend 불변 규칙 최신화
 
-### 진행 중인 작업
+### 다음 구현 범위
 
-- 데이터베이스와 Entity 구조 설계
-- 클라이언트와 AI 서버의 API 계약 확정
+- 공통 응답·예외·requestId 처리
+- 사용자·기기·목표·세션 Entity 및 V1 migration
+- Google ID token 교환과 FocusOn token 발급
+- MVP API를 도메인 단위로 구현
 
-### 아직 진행하지 않은 작업
+### 미구현
 
-- 인증 및 사용자 API
-- 학습 목표·세션 API
-- 앱·페이지 이벤트 저장 API
-- 분석 결과 저장 API
-- 리포트 조회 API
-- 배포 환경 구성
+- Controller, Service, Repository, Entity
+- 인증·사용자·기기 연결 API
+- 목표·세션·분석·리포트 API
+- AI 서비스 연동
+- 운영 배포 구성
 
-## 현재 기술
+## 기술 기준
 
-- 프레임워크: Spring Boot
-- 언어: Java
-- API: REST
-- 빌드: Gradle
-- 데이터베이스: 검토 필요
+- Java 25, Spring Boot 4.1.1, Gradle
+- PostgreSQL 17, Flyway
+- REST `/api/v1`
+- Database와 애플리케이션 시각 기준 UTC
 
-## 예상 데이터 흐름
+## 필수 조건
 
-```text
-Desktop / Extension
-  → Spring Boot API
-  → 검증·인증
-  → Service
-  → Repository / Database
-  → 응답
-```
-
-## 반드시 지켜야 하는 조건
-
-- Controller에 비즈니스 로직을 작성하지 않는다.
+- Notion `FocusOn API 명세서`를 엔드포인트 계약의 원본으로 사용한다.
+- 공통 오류와 세션 상태는 Notion 하위 정책을 따른다.
+- Controller, Service, Repository 책임을 분리한다.
 - 요청 DTO와 응답 DTO를 분리한다.
-- 사용자 식별자와 세션 식별자를 검증한다.
-- 비밀번호·토큰·API Key를 로그에 남기지 않는다.
-- 원본 화면·카메라 영상은 기본 저장하지 않는다.
-- API 변경 시 Desktop·Extension·AI 담당자에게 공유한다.
-- 세부 규칙과 확인 방법은 `server/docs/DEVELOPMENT_RULES.md`를 따른다.
+- 원본 화면·카메라 영상과 인증 정보를 저장·로그하지 않는다.
+- 계약 변경은 Notion을 먼저 갱신하고 소비자 및 로컬 문서를 같은 작업에서 맞춘다.
 
-## 참고 문서
+## 참고
 
-- 영역: `server/docs/DEVELOPMENT_RULES.md`
-- 루트: `docs/API_CONTRACT.md`
-- 루트: `docs/DATA_PRIVACY.md`
-- 루트: `docs/ARCHITECTURE.md`
-- 루트: `docs/WORKFLOW.md`
+- `docs/API_CONTRACT.md`
+- `docs/DATA_PRIVACY.md`
+- `server/docs/DEVELOPMENT_RULES.md`
+- `server/docs/DECISION_RECORD.md`
+- `server/docs/rules/migration-convention.md`

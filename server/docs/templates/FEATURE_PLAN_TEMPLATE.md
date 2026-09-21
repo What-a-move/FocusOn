@@ -42,11 +42,12 @@
 
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "오류 안내 문구"
-  }
+  "code": "VALIDATION_ERROR",
+  "message": "요청 값을 확인해주세요.",
+  "retryable": false,
+  "retryAfterSeconds": null,
+  "requestId": "req_01...",
+  "details": {}
 }
 ```
 
@@ -92,4 +93,3 @@ Controller → Service → Repository → Database
 - [ ] `*-ERROR.md`를 갱신했다.
 - [ ] `*-REPORT.md`를 작성했다.
 - [ ] `CONTEXT.md`, `NEXT_TASK.md`를 갱신했다.
-

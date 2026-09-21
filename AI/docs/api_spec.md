@@ -9,7 +9,7 @@
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md), [데이터 수명](data_lifecycle.md)
 - 확정 조건: 호출 경로, 인증, Timeout, 요청 필드, 상태값, 캐시 정책을 관련 담당자가 확인한 뒤 AI `DECISION_RECORD.md`에 확정 결정을 남긴다.
 
-이 문서는 FocusOn Server와 AI 서비스 사이의 목표 구조화, 페이지 관련성 분석과 학습 노트 생성 계약을 제안한다. 기존 루트 `docs/API_CONTRACT.md`나 `packages/shared-types`를 자동으로 대체하지 않는다. 경로, 인증, 필드, 상태 호환 방식은 관련 담당자 합의 후 `DECISION_RECORD.md`에 확정한다.
+이 문서는 FocusOn Server와 AI 서비스 사이의 목표 구조화, 페이지 관련성 분석과 학습 노트 생성 계약을 제안한다. 외부 클라이언트 계약의 원본은 Notion `FocusOn API 명세서`이며, 이 문서는 공개 경로·응답·오류를 새로 정의하지 않는다. 내부 경로, 서비스 인증, 필드와 상태 변환은 관련 담당자 합의 후 `DECISION_RECORD.md`에 확정한다.
 
 ## 1. 책임 경계
 
@@ -42,7 +42,7 @@ Extension / macOS 네이티브 모듈
 | 호출자 | Spring Server |
 | 인증 | 서비스 간 인증 방식 검토 필요; 비밀 값은 환경변수·비밀 관리 시스템 사용 |
 | Timeout | 기능별 예산 검토 필요; Timeout 시 현재 판정 적용 금지 |
-| 응답 | 루트 공통 성공·실패 envelope 유지 |
+| 응답 | 내부 응답을 Server가 Notion 공개 계약의 성공·오류 형식으로 변환 |
 | 버전 | API·분석기·모델·Prompt·추출기·정책 버전 분리 |
 
 ### 2.1 요청 식별자
@@ -62,9 +62,9 @@ Extension / macOS 네이티브 모듈
 
 | 기능 | Method·경로 | 상태 |
 | --- | --- | --- |
-| 목표 구조화 | `POST /api/v1/goals/profile` | 제안 |
+| 목표 구조화 | `POST /internal/v1/goals/clarify` | 내부 제안 |
 | 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | Notion 기준 |
-| 학습 노트 생성 | `POST /api/v1/session-notes/generate` | 후속 제안 |
+| 학습 노트 생성 | `POST /internal/v1/learning-summaries` | 내부 후속 제안 |
 
 관련성 분석은 Notion 기준 경로 하나만 사용한다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
@@ -85,7 +85,6 @@ Extension / macOS 네이티브 모듈
 
 ```json
 {
-  "success": true,
   "data": {
     "goalId": "550e8400-e29b-41d4-a716-446655440000",
     "goalVersion": 1,
@@ -96,8 +95,7 @@ Extension / macOS 네이티브 모듈
     "supportingTopics": ["HTTP 인증 헤더", "인증 오류 해결", "CORS"],
     "expectedActivities": ["공식 문서", "예제 코드", "오류 검색", "강의 시청"],
     "clarificationNeeded": false
-  },
-  "message": "목표 해석이 생성되었습니다."
+  }
 }
 ```
 
@@ -160,7 +158,6 @@ Extension / macOS 네이티브 모듈
 
 ```json
 {
-  "success": true,
   "data": {
     "requestId": "550e8400-e29b-41d4-a716-446655440002",
     "eventId": "550e8400-e29b-41d4-a716-446655440003",
@@ -188,8 +185,7 @@ Extension / macOS 네이티브 모듈
       "extractor": "proposal-1"
     },
     "observedAt": "2026-09-12T10:00:00Z"
-  },
-  "message": "분석이 완료되었습니다."
+  }
 }
 ```
 
@@ -207,17 +203,16 @@ Extension / macOS 네이티브 모듈
 
 ### 5.5 공개 상태 경계
 
-공개 API의 분석 상태는 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`만 사용한다.
+공개 API의 `relation`은 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`을 사용한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 오류가 아닌 `analysisStatus`로 전달한다.
 
-AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세부 상태는 분석 근거와 정책 판단을 위한 내부 값이다. Server가 공개 응답을 만들 때 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED` 중 하나로 변환하며, 내부 상태를 Client에 그대로 노출하지 않는다.
+AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세부 상태는 분석 근거와 정책 판단을 위한 내부 값이다. Server는 공개 응답을 만들 때 관련성과 처리 상태를 각각 변환하며 내부 상태를 Client에 그대로 노출하지 않는다.
 
 ## 6. 처리된 비분석 결과
 
-예상 가능한 추출 실패나 미지원은 요청이 Server까지 도달한 경우 성공 envelope의 처리 상태로 표현할 수 있다.
+예상 가능한 추출 실패나 미지원은 요청이 Server까지 도달한 경우 정상 처리 결과의 분석 상태로 표현할 수 있다.
 
 ```json
 {
-  "success": true,
   "data": {
     "eventId": "550e8400-e29b-41d4-a716-446655440003",
     "extractionStatus": "UNSUPPORTED",
@@ -227,12 +222,11 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
     "recommendedAction": "NO_ACTION",
     "confidence": null,
     "reasonCode": "OCR_UNAVAILABLE"
-  },
-  "message": "지원되지 않는 추출 경로라 이번 활동은 판단하지 않았습니다."
+  }
 }
 ```
 
-잘못된 요청, 인증 실패, 모델 호출 오류와 내부 오류는 실패 envelope를 사용한다.
+잘못된 요청, 인증 실패, 모델 호출 오류와 내부 오류는 Notion 공통 오류 형식으로 변환한다.
 
 ### 6.1 비분석 `reasonCode`
 
@@ -255,11 +249,12 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "MODEL_TIMEOUT",
-    "message": "AI 분석이 지연되어 이번 페이지는 판단하지 않았습니다."
-  }
+  "code": "ANALYSIS_SERVICE_UNAVAILABLE",
+  "message": "AI 분석을 완료하지 못했습니다.",
+  "retryable": true,
+  "retryAfterSeconds": 3,
+  "requestId": "req_01...",
+  "details": {}
 }
 ```
 
@@ -269,7 +264,6 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 | `UNAUTHORIZED` | 서비스 인증 실패 | 원문 없는 오류 반환 |
 | `UNAUTHORIZED_SCOPE` | 사용자·목표·세션 소유 범위 불일치 | 데이터 미반환, 재시도 금지 |
 | `REQUEST_CONFLICT` | 같은 멱등 키에 다른 요청 내용 | 기존 결과를 덮어쓰지 않음 |
-| `PRIVACY_BLOCKED` | 민감정보 2차 검사 실패 | 모델 미호출, 원문 미저장 |
 | `MODEL_TIMEOUT` | 모델 시간 예산 초과 | 결과 미사용, 무알림 |
 | `MODEL_UNAVAILABLE` | 모델 의존성 사용 불가 | 안전한 이전 단계가 없으면 판단 보류 |
 | `MODEL_OUTPUT_INVALID` | 출력 Schema 검증 실패 | 결과 미사용 |
@@ -279,6 +273,8 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 | `NOTE_INPUT_STALE` | 노트 집계·목표·근거 버전이 변경됨 | 최신 Snapshot으로 새 작업 |
 | `NOTE_OUTPUT_INVALID` | 노트 Schema·근거 검증 실패 | 노트 미저장, 시간 기록 유지 |
 | `INTERNAL_ERROR` | 예상하지 못한 내부 오류 | 안전한 오류 코드와 요청 ID만 기록 |
+
+위 코드는 AI 내부 진단용 후보이며 외부 Client에 그대로 노출하지 않는다. Server는 Notion `공통 Error Code`의 `ANALYSIS_SERVICE_UNAVAILABLE`, `REQUEST_TIMEOUT`, `VALIDATION_ERROR` 등으로 변환한다. 개인정보 차단은 오류 대신 정상 `analysisStatus = PRIVACY_BLOCKED`로 처리한다.
 
 오류 메시지에 입력 원문, 모델 원본 출력, 비밀 값과 내부 Stack Trace를 포함하지 않는다.
 

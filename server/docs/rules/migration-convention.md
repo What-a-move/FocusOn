@@ -13,7 +13,7 @@ V1__create_initial_schema.sql
 V2__add_device_pairing.sql
 ```
 
-- 아직 `V1`이 만들어지지 않은 이유는 API 응답 형식·ID 타입·인증 계정 구조가 문서마다 달라서다(`server/docs/DECISION_RECORD.md` 결정 003~009 확정 후 진행).
+- API 계약과 PostgreSQL 기준이 확정되었으므로 다음 Backend 작업에서 `V1__create_initial_schema.sql`을 작성한다.
 - 여러 브랜치가 동시에 마이그레이션을 추가하는 상황이 잦아지면 순번 충돌 위험이 커진다. 그 경우 타임스탬프 버전(`V{yyyyMMddHHmmss}__{설명}.sql`, KST 기준)으로 전환할지 팀 논의 후 이 문서를 갱신한다 — 지금은 순번 방식을 유지한다.
 
 ## 기본 원칙

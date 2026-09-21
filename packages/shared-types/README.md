@@ -30,19 +30,21 @@ const page: PageInfo = {
 
 ## 현재 타입
 
-- `FocusState`: 분석 결과 상태(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`)
+- `FocusState`: 현재 구현에서 관련성과 처리 상태를 함께 담은 임시 타입. 최신 계약에 맞춰 `relation`과 `analysisStatus` 타입으로 분리해야 한다.
 - `AnalysisReasonCode`: 분석 판단 근거 코드
 - `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
-- `AnalysisResult`: 상태·관련성 점수·신뢰도·판단 근거·설명
+- `AnalysisResult`: 현재 구현 타입. 최신 계약의 `relation`·`analysisStatus` 분리를 반영해야 한다.
 
 ## 앞으로 추가할 타입
 
 여러 영역에서 함께 사용하는 것이 확정된 경우에만 다음 타입을 추가한다.
 
-- `StudySessionStatus`: `IDLE`, `RUNNING`, `PAUSED`, `COMPLETED`
+- `StudySessionStatus`: `DRAFT`, `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED`
 - `StudySessionSnapshot`: 현재 세션 상태와 기준 시간
-- `StudySessionCommand`: 시작·일시정지·재개·종료 명령
+- `StudySessionCommand`: 시작·일시정지·재개·연장·종료 명령
 - `AnalysisActivityState`: 분석 작동 상태(`RUNNING`, `PAUSED`, `EXCLUDED`). 실제 공유 Type 추가는 세션 API 계약 구현 시 진행한다.
+- `AnalysisRelation`: 목표 관련성(`RELATED`, `UNRELATED`, `UNCERTAIN`)
+- `AnalysisStatus`: `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN` 등을 오류와 구분하는 분석 처리 상태
 - `DevicePairing`: Desktop과 Extension 연결 상태
 
 ## 넣지 않는 것

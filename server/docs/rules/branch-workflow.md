@@ -73,7 +73,7 @@
 - QA와 코드 리뷰가 끝난 뒤에만 PR을 생성한다. 상세 규칙: PR 본문은 `.github/PULL_REQUEST_TEMPLATE.md`를 그대로 쓴다.
 - **PR 생성도 Issue 생성과 마찬가지로 GitHub에 실제로 올라가는 행위이므로, 작업자에게 제목·본문 초안을 먼저 보여주고 승인받은 뒤에만 생성한다. 승인 없이 Merge하지 않는다.**
 - FocusOn 저장소의 default 브랜치는 `main`이고 feature PR은 `dev`로 머지되므로 GitHub의 "closes #N" 자동 종료는 이 시점에 발동하지 않는다. `dev`에 머지된 직후 관련 Issue를 직접 닫는다.
-- PR이 `dev`에 머지된 게 확인되면, 이번에 추가·변경된 엔드포인트를 Notion `FocusOn API 데이터베이스`에 반영한다 — 형식: `server/docs/rules/notion-api-spec.md`.
+- API 계약 변경은 구현 전에 Notion `FocusOn API 명세서`에 먼저 반영한다. PR이 `dev`에 머지되면 구현 결과와 Notion 행, `docs/API_CONTRACT.md`가 일치하는지 다시 확인한다 — 형식: `server/docs/rules/notion-api-spec.md`.
 - Postman은 이 프로젝트에서 아직 쓰지 않는다. API 수동 검증은 QA 단계에서 `curl` 또는 Swagger UI(`springdoc-openapi`, 서버 기동 후 `/swagger-ui`)로 진행한다. 팀이 Postman 도입을 결정하면 이 절을 갱신하고 `postman-collection-structure.md`를 새로 만든다.
 
 ## 관련 문서

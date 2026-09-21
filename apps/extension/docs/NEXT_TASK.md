@@ -36,7 +36,7 @@
 - 15초 체류 후 페이지 재분석
 - 현재 페이지 관련성 분석 요청
 - 분석 제외 도메인 설정 UI
-- Google 로그인 사용자와 Extension 연결
+- 일회용 연결 코드 기반 Extension pairing
 - Desktop 학습 세션 조회 및 타이머 표시
 - Desktop 세션 일시정지·재개·종료 명령
 - Desktop 연결 상태 표시

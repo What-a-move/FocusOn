@@ -32,7 +32,7 @@
 
 - 학습 세션 타이머
 - 화면 부유형 두더지 마스코트 피드백 및 표시 모드 설정
-- Google 로그인 후 Chrome Extension 연결
+- 일회용 연결 코드 기반 Chrome Extension pairing
 - Desktop·Extension 학습 세션 상태 동기화
 - macOS 활성 앱과 Bundle Identifier 확인
 - 분석 제외 앱 설정

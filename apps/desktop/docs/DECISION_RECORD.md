@@ -55,7 +55,7 @@ Next.js 정적 빌드 기반의 React 화면 기술을 유지하면서 macOS 앱
 
 #### 결정 내용
 
-Desktop과 Chrome Extension은 Google 로그인으로 연결된 동일 사용자의 학습 세션을 공유한다. 학습 세션의 기준 상태와 시간은 Server가 관리하고, Desktop은 학습 시작·카메라·화면 분석을 주로 담당하며 Extension은 타이머 조회와 일시정지·재개·종료 명령을 제공한다.
+Desktop이 발급한 일회용 연결 코드를 Extension이 입력해 같은 사용자 기기로 pairing한다. 두 클라이언트는 동일한 학습 세션을 공유하고, 상태와 시간은 Server가 관리한다. Desktop은 학습 시작·카메라·화면 분석을 주로 담당하며 Extension은 타이머 조회와 일시정지·재개·종료 명령을 제공한다.
 
 #### 결정 이유
 
@@ -68,9 +68,9 @@ Desktop과 Chrome Extension은 Google 로그인으로 연결된 동일 사용자
 
 #### 후속 확인
 
-- [ ] Google 로그인 후 Extension 최초 연결 방식(일회용 코드 또는 QR) 확정
+- [x] 일회용 연결 코드 기반 Extension pairing 확정
 - [ ] 초기 MVP 동기화 방식(API 주기 조회 또는 WebSocket) 확정
-- [ ] 네트워크 끊김과 동시 명령 처리 기준 확정
+- [x] 상태 명령의 idempotency key와 version, Heartbeat 예외 확정
 
 ### 결정 004 - 화면 부유형 두더지 피드백
 

@@ -34,7 +34,7 @@
 - 확정한 현재 Tab 자동 추적과 Message 구조를 실제 코드로 구현해야 한다.
 - 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
 - 전체 HTTP·HTTPS Host 권한을 필수 또는 Optional 권한으로 요청할지 확정해야 한다.
-- 로그인 Token 저장과 Desktop 연결 방식, Server 실시간 동기화 방식은 추가 확정이 필요하다.
+- 일회용 연결 코드 pairing과 token 저장 정책을 구현해야 하며 Server 실시간 동기화 방식은 추가 확정이 필요하다.
 
 ### 아직 진행하지 않은 작업
 
@@ -44,7 +44,7 @@
 - 분석 제외 도메인 적용
 - Desktop 연결 및 상태 동기화
 - Server API 연결
-- Google 로그인 사용자와 Extension 연결
+- 일회용 연결 코드 기반 Extension pairing
 - Popup 타이머 조회·제어 UI
 
 ## 현재 기술

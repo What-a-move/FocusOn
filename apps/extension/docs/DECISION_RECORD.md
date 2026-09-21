@@ -65,9 +65,9 @@ Popup이 닫히거나 Service Worker가 다시 시작되어도 Desktop과 Extens
 
 #### 후속 확인
 
-- [ ] Google 로그인 후 Extension 연결 방식 확정
+- [x] 일회용 연결 코드 기반 Extension pairing 확정
 - [ ] 세션 상태 조회 주기와 실시간 동기화 방식 확정
-- [ ] 네트워크 단절 시 마지막 상태 표시와 재동기화 기준 확정
+- [x] 상태 명령 idempotency/version과 Heartbeat 예외 확정
 
 ### 결정 004 - Popup의 피드백 표시 범위
 

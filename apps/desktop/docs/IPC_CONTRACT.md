@@ -47,7 +47,7 @@ type IpcResult<T> =
     }
 ```
 
-- Renderer는 `error.code`를 사용자에게 보여줄 안전한 문구로 변환한다.
+- Renderer는 오류 응답 최상위 `code`를 사용자에게 보여줄 안전한 문구로 변환한다.
 - Main Process의 내부 Error Message는 Renderer로 보내지 않고 민감 정보를 제거한 개발 Log에만 남긴다.
 - Stack Trace, File Path, Token, 원본 화면을 응답에 포함하지 않는다.
 

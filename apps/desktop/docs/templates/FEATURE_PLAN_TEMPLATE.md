@@ -34,7 +34,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 - 진입 조건:
 - 정상 동작:
 - 종료 조건:
-- 상태 변화: `READY → RUNNING → PAUSED → COMPLETED`
+- 상태 변화: `DRAFT → RUNNING → PAUSED/AUTO_PAUSED → AWAITING_END_CONFIRMATION → ENDING → ENDED/ABANDONED`
 
 ## macOS 권한 및 시스템 기능
 

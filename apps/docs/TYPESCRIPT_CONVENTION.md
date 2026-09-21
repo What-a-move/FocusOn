@@ -24,7 +24,15 @@
 - 같은 목적의 타입 선언 방식을 한 기능 안에서 섞지 않는다.
 
 ```ts
-type StudySessionStatus = 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED'
+type StudySessionStatus =
+  | 'DRAFT'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'AUTO_PAUSED'
+  | 'AWAITING_END_CONFIRMATION'
+  | 'ENDING'
+  | 'ENDED'
+  | 'ABANDONED'
 
 interface StudySession {
   id: string

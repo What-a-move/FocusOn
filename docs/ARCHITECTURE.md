@@ -80,17 +80,15 @@
 - 페이지 정보, 분석 결과, 학습 세션 상태처럼 여러 영역이 함께 사용하는 구조만 둔다.
 - API 호출이나 런타임 검증을 대신하지 않으므로 Server DTO 검증은 별도로 구현한다.
 
-## 집중 상태
+## 활동 관련성
 
 | 상태 | 의미 |
 | --- | --- |
 | `RELATED` | 목표와 관련된 활동이 확인됨 |
 | `UNRELATED` | 목표와 관련성이 낮은 활동이 확인됨 |
 | `UNCERTAIN` | 판단할 정보가 부족함 |
-| `EXCLUDED` | 사용자가 제외한 대상이라 분석하지 않음 |
-| `PRIVACY_BLOCKED` | 개인정보·권한 정책으로 분석하지 않음 |
 
-`FocusState`는 Notion API 명세에 맞춘 공개 분석 관계 상태다. 내부 AI의 보조·이탈 상태는 API 경계에서 이 5개 값으로 변환한다. 사용자가 분석을 멈췄거나 제외 대상을 보고 있는지는 분석 작동 상태로 분리한다.
+관련성은 공개 API의 `relation` 필드로 표현한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 `analysisStatus`이며 오류 코드가 아니다. 개인정보 차단·제외처럼 관련성 판정을 하지 않은 상태와 `RELATED`·`UNRELATED` 관계값을 한 enum으로 합치지 않는다.
 
 ## 분석 작동 상태 (`AnalysisActivityState`)
 
