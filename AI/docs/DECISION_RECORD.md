@@ -189,6 +189,8 @@ AI의 개인정보, 실패 처리, 상태 분리, LLM 권한, 캐시, stale 결�
 
 브라우저 MVP는 DOM 추출을 우선하고 정보가 부족할 때 허용된 로컬 Apple Vision OCR을 사용한다. ColPali는 PDF·Canvas·이미지·슬라이드처럼 시각 구조가 중요한 콘텐츠의 검색·근거 보강 후보로 기준선 비교 후 편입한다.
 
+이 결정의 OCR 책임 표현은 결정 016에서 Client별 경로로 구체화한다. Chrome은 Extension 내부 OCR, macOS Desktop은 Apple Vision OCR을 사용하며 Chrome이 Desktop Native Messaging으로 자동 우회하지 않는다.
+
 ### 결정 이유
 
 DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지를 로컬에서 텍스트로 바꿀 수 있다. ColPali는 시각 구조 이해에 장점이 있을 수 있지만 실행 위치, 모델 자원과 이미지 전송 정책 검증이 필요하다.
@@ -299,11 +301,103 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 - Server 집계·Queue·노트 저장
 - 노트 Prompt·Schema·평가
 
+## 결정 015 - 제품 표시 상태와 AI 내부 상태 매핑
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Server·Client
+- 상태: 제안
+
+### 결정 내용
+
+AI 내부는 `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`, `UNAVAILABLE`을 유지한다. 제품 표시에서는 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. `SUPPORTING`은 `RELATED`의 보조 유형, `OFF_TASK`는 `UNRELATED`, `UNAVAILABLE`은 `UNCERTAIN`과 처리 실패 상세 상태로 투영한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 관련성 결과가 아닌 비분석 결과다.
+
+### 결정 이유
+
+AI 분석의 의미를 잃지 않으면서 기존 제품·공유 타입의 표시값과 실패·민감정보 상태를 구분하기 위해서다.
+
+### 영향받는 파일
+
+- `AI/docs/state_model.md`
+- `AI/docs/api_spec.md`
+- `AI/docs/prompt_guide.md`
+- `AI/docs/evaluation_spec.md`
+
+## 결정 016 - Client별 로컬 OCR 경로
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Extension·macOS 네이티브 모듈
+- 상태: 제안
+
+### 결정 내용
+
+Chrome은 DOM 우선 후 Extension 내부 로컬 OCR을 사용하고, macOS Desktop은 허용된 활성 앱 화면에 Apple Vision 로컬 OCR을 사용한다. Chrome OCR 실패를 Desktop Native Messaging이나 외부 OCR로 자동 우회하지 않는다.
+
+### 결정 이유
+
+현재 Notion 기획의 Client 책임을 분리하고, 권한·설치·지연·개인정보 경계를 서로 다른 경로에서 검증하기 위해서다.
+
+### 영향받는 파일
+
+- `AI/docs/content_acquisition_spec.md`
+- `AI/docs/CONTEXT.md`
+- `AI/docs/DEVELOPMENT_RULES.md`
+
+## 결정 017 - 목표 보조 명확성 상태
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Server·Client
+- 상태: 제안
+
+### 결정 내용
+
+목표 보조는 `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM`을 사용한다. 사용자 확인 전에는 목표를 확정하지 않으며 AI 오류·무응답이어도 직접 입력 목표를 사용자가 확인하면 세션을 시작할 수 있다.
+
+### 영향받는 파일
+
+- `AI/docs/goal_session_spec.md`
+- `AI/docs/api_spec.md`
+- `AI/docs/prompt_guide.md`
+- `AI/docs/evaluation_spec.md`
+
+## 결정 018 - 분석 제외 모드와 Server 상태 투영
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Server·Client
+- 상태: 제안
+
+### 결정 내용
+
+Server는 `sessionStatus=ACTIVE/PAUSED/ENDED`, `exclusionMode=NONE/ANALYSIS_ONLY/ANALYSIS_AND_TIME`, `pauseReason`, `resumeRequired`를 관리한다. `ANALYSIS_ONLY`는 타이머를 유지하고 `ANALYSIS_AND_TIME`은 타이머·학습 기록을 중지한다. 두 모드 모두 콘텐츠 payload를 AI에 보내지 않는다.
+
+### 영향받는 파일
+
+- `AI/docs/goal_session_spec.md`
+- `AI/docs/content_acquisition_spec.md`
+- `AI/docs/api_spec.md`
+- `AI/docs/evaluation_spec.md`
+
+## 결정 019 - 카메라 출시 여부 보류
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Desktop·Server·Client
+- 상태: 제안
+
+### 결정 내용
+
+Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있어 제품 출시 여부는 팀 결정 전까지 보류한다. AI는 원본 영상·프레임·랜드마크를 받지 않으며, 출시되더라도 클라이언트의 최소 상태·집계값만 선택적으로 사용한다. 개인화 휴식은 카메라 없이 시간·휴식 선택 데이터만으로도 동작해야 한다.
+
+### 영향받는 파일
+
+- `AI/README.md`
+- `AI/docs/CONTEXT.md`
+- `AI/docs/DEVELOPMENT_RULES.md`
+- `AI/docs/features/personalized-break-recommendation-PLAN.md`
+
 ## 새 결정 기록
 
-다음 결정은 `결정 015`부터 추가한다.
+다음 결정은 `결정 020`부터 추가한다.
 
-### 결정 015
+### 결정 020
 
 - 결정일:
 - 주제:

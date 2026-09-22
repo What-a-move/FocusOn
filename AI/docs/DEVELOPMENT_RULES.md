@@ -54,11 +54,14 @@
 | `AI-TIME-001` | MUST | 제안 | 학습 시간은 Server의 결정적 로직이 계산한다. LLM은 시간 값을 추정하거나 확정하지 않는다. | 시간 집계 경계 테스트 |
 | `AI-NOTE-001` | MUST | 제안 | 학습 노트는 근거 없이 이해, 습득, 해결 완료를 주장하지 않는다. 관찰한 자료와 사용자가 확인한 사실을 구분한다. | 노트 근거 평가 |
 | `AI-NOTE-002` | MUST | 제안 | 회차 종료와 시간 저장은 비동기 노트 생성 성공에 의존하지 않으며 중복·stale·삭제된 작업이 노트를 재생성하지 않게 한다. | 노트 멱등성·삭제 테스트 |
-| `AI-VISION-001` | SHOULD | 제안 | 브라우저 MVP는 DOM을 우선 사용하고 정보가 부족할 때만 허용된 로컬 Apple Vision OCR을 사용한다. | 추출 경로 테스트 |
+| `AI-VISION-001` | SHOULD | 제안 | Chrome은 DOM 우선 후 Extension 내부 로컬 OCR을 사용하고, macOS Desktop은 허용된 활성 앱 화면에 Apple Vision OCR을 사용한다. Client 경로를 서로 자동 우회하지 않는다. | Client별 추출 경로 테스트 |
 | `AI-VISION-002` | MAY | 실험 | PDF·Canvas·이미지·슬라이드처럼 시각 구조가 중요한 콘텐츠에는 ColPali 비교 경로를 사용할 수 있다. | ColPali 기준선 비교 평가 |
 | `AI-VISION-003` | MUST | 실험 | ColPali 결과만으로 이탈, 알림, 차단을 결정하지 않는다. Server에서 원본 이미지를 처리하려면 `AI-PRIV-002` 변경과 사용자 동의 검토가 선행되어야 한다. | 보안 설계 리뷰·정책 테스트 |
 | `AI-EVAL-001` | MUST | 제안 | 모델, Prompt, 임계값, 전처리, 추출기 또는 상태 의미가 바뀌면 동일 고정 평가 세트로 회귀 평가한다. | 평가 실행 기록 |
 | `AI-VERSION-001` | MUST | 제안 | API, 분석기, 모델, Prompt, 추출기, 정책 버전을 분리해 기록하고 호환되지 않는 의미 변경은 Major Version으로 관리한다. | 응답 필드·릴리스 리뷰 |
+| `AI-LABEL-001` | MUST | 제안 | AI 내부 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE`과 제품 공개 `RELATED`, `UNRELATED`, `UNCERTAIN`을 명시적으로 매핑하며 내부 라벨을 공개 상태로 그대로 노출하지 않는다. | 상태 매핑 계약 테스트 |
+| `AI-EXCLUSION-001` | MUST | 제안 | `ANALYSIS_ONLY`와 `ANALYSIS_AND_TIME`을 구분하고 두 상태 모두 콘텐츠 payload를 AI에 보내지 않는다. `resumeRequired`가 있으면 사용자 확인 전 재개하지 않는다. | 제외·재개 통합 테스트 |
+| `AI-GOAL-002` | MUST | 제안 | 목표 보조는 `clarityStatus` 6개 상태를 사용하고 사용자 확인 전 목표를 확정하지 않으며, AI 장애 시 직접 입력 fallback을 제공한다. | 목표 보조 계약 테스트 |
 
 ## 3. 작업 시작 확인
 

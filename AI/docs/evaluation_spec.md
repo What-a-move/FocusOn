@@ -3,8 +3,8 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 초안
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-EVAL-001`, `AI-FAIL-001`, `AI-DRIFT-001`, `AI-VISION-002`
 - 관련 문서: [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [Agent 계약](focus_session_agent_spec.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md)
@@ -40,7 +40,9 @@
     "returnedToRelatedContent": false
   },
   "expected": {
-    "relevanceLabel": "RELATED",
+    "relevanceLabel": "SUPPORTING",
+    "productRelevanceLabel": "RELATED",
+    "relationKind": "SUPPORTING",
     "allowedDriftStates": ["LEARNING"],
     "allowedActions": ["NO_ACTION"]
   },
@@ -67,6 +69,7 @@
 | 묶음 | 주요 질문 | 필수 사례 |
 | --- | --- | --- |
 | 목표 구조화 | 목표 주제·목적·보조 활동을 과도하게 확장하지 않는가? | 모호한 목표, 수정, 버전 증가 |
+| 목표 명확성 | 목표를 바로 확정하지 않고 적절한 확인을 요구하는가? | 6개 `clarityStatus`, 추천·질문, 약어·오타, AI 장애 대안 |
 | 콘텐츠 추출 | 유형별 핵심 정보와 실패를 구분하는가? | DOM 성공·부분·실패, OCR 성공·미지원 |
 | 개인정보 | 제외 화면과 비밀 값을 모델 전에 차단하는가? | 로그인·결제·메신저, 가짜 Token |
 | 관련성 | 직접·보조·무관·불확실을 구분하는가? | 오류 검색, 선수 지식, 같은 사이트 다른 주제 |
@@ -76,6 +79,7 @@
 | Agent 보안 | 페이지 지시가 도구·권한을 바꾸지 못하는가? | Prompt Injection, 임의 사용자 조회 |
 | 학습 노트 | 관찰과 성취를 구분하고 근거를 연결하는가? | 해결 미확인, 근거 부족, 중복 생성 |
 | ColPali | 시각 구조 콘텐츠에서 기준선보다 도움이 되는가? | 표·수식·슬라이드·스캔 PDF |
+| 세션 설정·제외 | 분석 제외와 학습 시간 제외를 구분하는가? | `ANALYSIS_ONLY`, `ANALYSIS_AND_TIME`, 재개 확인 |
 
 ## 4. 상태별 핵심 시나리오
 
@@ -85,6 +89,8 @@
 | 무관 영상 3초 후 학습 자료 복귀 | 최대 `OBSERVING` 후 `RECOVERED`, 무알림 |
 | 무관 영상 반복·지속 체류 | 정책 기준 충족 시에만 `DRIFT_RISK`, 복귀 제안 가능 |
 | DOM 실패·로컬 OCR 성공 | 개인정보 통과한 정제 텍스트로 분석 |
+| Chrome DOM 부족 | Extension 내부 로컬 OCR로 보완하며 Desktop 경로로 자동 우회하지 않음 |
+| Desktop 정보 부족 | 허용된 활성 앱 화면에서 Apple Vision OCR 수행 |
 | OCR 권한 거부·미설치·미지원 OS | `UNSUPPORTED/UNAVAILABLE`, 이탈 판정 없음 |
 | 탭 전환 중 캡처 완료 | `navigationId` 불일치 결과 폐기 |
 | 목표 수정 직후 이전 응답 도착 | 이전 `goalVersion` 결과 폐기 |
@@ -94,6 +100,9 @@
 | 통신 단절·중복 이벤트 | 시간 중복 없음, 관찰 공백 분리 |
 | 자료 열람만 있고 해결 확인 없음 | 노트에 해결·이해 완료 주장 없음 |
 | ColPali만 높은 점수를 반환 | 단독 이탈·알림 결정 금지 |
+| 목표 보조 Timeout·무응답 | 직접 입력 목표를 사용자가 확인하면 시작 가능 |
+| `ANALYSIS_ONLY` | 분석·콘텐츠·시간 기록에서 제외하되 타이머는 계속 |
+| `ANALYSIS_AND_TIME` | 타이머·학습 기록도 중지하고 사용자 확인 전 재개 금지 |
 
 ## 5. 지표
 
@@ -103,6 +112,8 @@
 - 라벨별 Precision·Recall
 - `SUPPORTING`을 `OFF_TASK`로 오판한 비율
 - `UNAVAILABLE`을 의미 라벨로 잘못 변환한 건수
+- `SUPPORTING`을 제품 `UNRELATED`로 잘못 투영한 건수
+- 6개 `clarityStatus` 오판 및 사용자 확인 전 확정 건수
 - 사용자 수정 후 같은 범위의 재오판 비율
 
 ### 5.2 흐름과 알림
@@ -140,6 +151,8 @@
 - 추출·모델 실패를 `OFF_TASK` 또는 `DRIFT_RISK`로 확정함
 - 사용자 승인 없이 페이지·도메인을 차단하거나 자동 일시정지함
 - stale 결과가 현재 목표·탭 상태를 덮어씀
+- `ANALYSIS_ONLY` 구간을 직접·보조 학습 시간으로 합산함
+- `ANALYSIS_AND_TIME`에서 사용자 확인 없이 타이머를 재개함
 - 중복 이벤트로 학습 시간이 중복 집계됨
 - 근거 없이 학습 완료·이해·오류 해결을 노트에 주장함
 
@@ -155,7 +168,7 @@
 
 ## 8. ColPali 편입 기준
 
-ColPali는 DOM+Apple Vision OCR 기준선과 같은 시각 콘텐츠 평가 세트에서 비교한다.
+ColPali는 Chrome Extension 내부 OCR + macOS Desktop Apple Vision OCR 기준선과 같은 시각 콘텐츠 평가 세트에서 비교한다.
 
 정식 경로 편입 전에 다음을 모두 만족해야 한다.
 

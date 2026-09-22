@@ -4,7 +4,7 @@
 
 - 상태: 팀 검토용 계약 초안, 미구현
 - 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-NOTE-001`, `AI-NOTE-002`, `AI-TIME-001`, `AI-PRIV-002`, `AI-STALE-001`
 
@@ -79,9 +79,12 @@ runId
 - `runId`, `aggregationVersion`, 시작·종료 시각
 - Server가 계산한 직접·보조·무관·확인 필요·미관찰·중지 시간
 - 기록 저장이 허용된 활동 요약
+- `recordOnly`와 기록 저장 동의 상태
 - 안전한 `sourceRef`와 노트용 `evidenceId`
 - 사용자의 명시적 판정 수정·메모·미해결 표시
 - 모델·Prompt·정책·노트 Schema 버전
+
+`recordOnly=true`이거나 기록 저장 동의가 없으면 콘텐츠 기반 근거와 노트를 생성하지 않는다. 허용된 최소 시간·집계만 제공하며, 노트 생성 실패는 회차 종료와 시간 저장을 막지 않는다.
 
 ### 5.2 금지 입력
 

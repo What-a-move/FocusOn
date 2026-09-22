@@ -3,8 +3,8 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 초안, 미구현
-- 버전: `0.2.0-draft`
-- 기준일: 2026-09-12
+- 버전: `0.3.0-draft`
+- 기준일: 2026-09-22
 - 검토 필요: Server 담당자, Frontend(`apps`) 담당자, Shared 타입 담당자
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md), [데이터 수명](data_lifecycle.md)
 - 확정 조건: 호출 경로, 인증, Timeout, 요청 필드, 상태값, 캐시 정책을 관련 담당자가 확인한 뒤 AI `DECISION_RECORD.md`에 확정 결정을 남긴다.
@@ -16,7 +16,8 @@
 ```text
 Extension / macOS 네이티브 모듈
   → 제외·권한 검사
-  → DOM 또는 허용된 로컬 Apple Vision OCR
+  ├─ Chrome: DOM 또는 Extension 내부 로컬 OCR
+  └─ macOS Desktop: 허용된 활성 앱 화면의 Apple Vision OCR
   → 로컬 개인정보·품질 검사
   → Spring Server
       → 인증·사용자·목표·세션·회차 소유권 검증
@@ -60,13 +61,14 @@ Extension / macOS 네이티브 모듈
 
 ## 3. 제안 Endpoint
 
-| 기능 | Method·경로 | 상태 |
+| 기능 | 공개 Server 경로 | 내부 AI 경로 | 상태 |
 | --- | --- | --- |
-| 목표 구조화 | `POST /internal/v1/goals/clarify` | 내부 제안 |
-| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | Notion 기준 |
-| 학습 노트 생성 | `POST /internal/v1/learning-summaries` | 내부 후속 제안 |
+| 목표 구조화 | `POST /api/v1/goals/profile` | `POST /internal/v1/goals/clarify` | 제안 |
+| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
+| 피드백 저장·무효화 | `POST /api/v1/feedback` | Server가 검증 후 무효화 이벤트 전달 | 제안 |
+| 학습 노트 생성 | `POST /api/v1/session-notes/generate` | `POST /internal/v1/learning-summaries` | 후속 제안 |
 
-관련성 분석은 Notion 기준 경로 하나만 사용한다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
+기존 `/api/v1/analyze/relevance`는 레거시 경로 후보로만 기록하며 최신 `/api/v1/sessions/{sessionId}/analysis-runs`와 동시에 최종 경로로 구현하지 않는다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
 ## 4. 목표 구조화
 
@@ -75,17 +77,25 @@ Extension / macOS 네이티브 모듈
 ```json
 {
   "requestId": "550e8400-e29b-41d4-a716-446655440002",
-  "goalId": "550e8400-e29b-41d4-a716-446655440000",
-  "goalVersion": 1,
-  "originalText": "Spring Security JWT 인증 구현"
+  "originalText": "Spring Security JWT 인증 구현",
+  "previousGoalProfile": null,
+  "feedbackVersion": null
 }
 ```
 
-### 4.2 성공 응답 예시
+최초 목표 입력은 `originalText`를 기준으로 처리한다. 재분석 요청에서만 기존 `goalId`·`goalVersion`을 선택적으로 함께 보내며, 사용자 확인 전 후보와 확인 후 확정 `GoalProfile`을 동일 객체로 덮어쓰지 않는다.
+
+### 4.2 확정 전 보조 응답
 
 ```json
 {
   "data": {
+    "clarityStatus": "NEEDS_SUGGESTION",
+    "confidence": 0.74,
+    "interpretedGoal": "React 상태 관리 학습",
+    "recommendedGoals": ["useState 상태 갱신", "Context 상태 공유"],
+    "questions": [],
+    "requiresUserConfirmation": true,
     "goalId": "550e8400-e29b-41d4-a716-446655440000",
     "goalVersion": 1,
     "originalText": "Spring Security JWT 인증 구현",
@@ -94,12 +104,13 @@ Extension / macOS 네이티브 모듈
     "coreTopics": ["JWT", "SecurityFilterChain", "토큰 검증"],
     "supportingTopics": ["HTTP 인증 헤더", "인증 오류 해결", "CORS"],
     "expectedActivities": ["공식 문서", "예제 코드", "오류 검색", "강의 시청"],
-    "clarificationNeeded": false
+    "clarificationNeeded": true,
+    "confirmedByUser": false
   }
 }
 ```
 
-사용자 확인·수정 후 Server가 `confirmedByUser`를 관리한다. AI가 방문한 콘텐츠만으로 사용자 목표를 자동 확장하지 않는다.
+허용 `clarityStatus`는 `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM`이다. 추천 목표는 기본 2~3개, 질문은 기본 1~2개로 제한한다. 사용자 확인·수정 후 Server가 `confirmedByUser`를 관리한다. AI 실패·Timeout·무응답이어도 사용자가 직접 작성한 목표를 확인한 뒤 시작할 수 있다. AI가 방문한 콘텐츠만으로 사용자 목표를 자동 확장하지 않는다.
 
 ## 5. 페이지 관련성 분석
 
@@ -114,7 +125,18 @@ Extension / macOS 네이티브 모듈
   "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "goalVersion": 1,
   "navigationId": "navigation-003",
-  "source": "EXTENSION",
+  "source": "extension",
+  "sessionStatus": "ACTIVE",
+  "exclusionMode": "NONE",
+  "pauseReason": null,
+  "resumeRequired": false,
+  "settings": {
+    "durationMode": "PRESET",
+    "interventionLevel": "NORMAL",
+    "recordOnly": false,
+    "personalizedBreakEnabled": false,
+    "settingsVersion": 1
+  },
   "goalProfile": {
     "mainTopic": "Spring Security JWT 인증 구현",
     "purpose": "IMPLEMENTATION",
@@ -169,6 +191,8 @@ Extension / macOS 네이티브 모듈
     "extractionStatus": "SUCCESS",
     "analysisStatus": "COMPLETED",
     "relevanceLabel": "RELATED",
+    "productRelevanceLabel": "RELATED",
+    "relationKind": "DIRECT",
     "driftState": "LEARNING",
     "recommendedAction": "NO_ACTION",
     "confidence": 0.84,
@@ -201,11 +225,43 @@ Extension / macOS 네이티브 모듈
 - `driftState`: 최근 흐름·체류를 고려한 이탈 위험
 - `recommendedAction`: 사용자에게 제안 가능한 행동
 
-### 5.5 공개 상태 경계
+### 5.5 제품 표시 라벨 매핑
 
-공개 API의 `relation`은 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`을 사용한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 오류가 아닌 `analysisStatus`로 전달한다.
+공개 API의 `relation`은 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 오류가 아닌 비분석 상태로 전달한다.
 
 AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세부 상태는 분석 근거와 정책 판단을 위한 내부 값이다. Server는 공개 응답을 만들 때 관련성과 처리 상태를 각각 변환하며 내부 상태를 Client에 그대로 노출하지 않는다.
+
+| AI 내부 값 | 제품 표시 값 | 설명 |
+| --- | --- | --- |
+| `RELATED` | `RELATED` | 직접 학습 |
+| `SUPPORTING` | `RELATED` | 보조 학습이며 `relationKind=SUPPORTING`으로 구분 |
+| `OFF_TASK` | `UNRELATED` | 충분한 근거가 있는 목표 무관 활동 |
+| `UNCERTAIN` | `UNCERTAIN` | 의미적 판단 보류 |
+| `UNAVAILABLE` | `UNCERTAIN` | 처리 실패이며 상세 원인은 별도 상태로 전달 |
+| `extractionStatus=EXCLUDED` | `EXCLUDED` | AI 호출 없음 |
+| 개인정보 2차 차단 | `PRIVACY_BLOCKED` | 캡처·전송·AI 호출 없음 |
+
+### 5.6 세션·제외 입력 계약
+
+AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태를 입력으로 받아 분석 가능 여부를 결정한다.
+
+| 필드 | 허용 값·의미 |
+| --- | --- |
+| `sessionStatus` | `ACTIVE`, `PAUSED`, `ENDED` |
+| `exclusionMode` | `NONE`, `ANALYSIS_ONLY`, `ANALYSIS_AND_TIME` |
+| `pauseReason` | 수동 휴식, 제외 사이트, 권한·복구 사유 등 Server enum |
+| `resumeRequired` | 사용자 확인 전 재개 금지 여부 |
+| `recordOnly` | 기록만 허용하고 알림·콘텐츠 노트를 만들지 않는지 여부 |
+| `personalizedBreakEnabled` | 개인화 휴식 제안 동의·사용 여부 |
+| `settingsVersion` | 세션 설정 변경 감지를 위한 버전 |
+
+`ANALYSIS_ONLY`는 콘텐츠 수집·OCR·AI·카메라를 중지하지만 타이머는 계속한다. `ANALYSIS_AND_TIME`은 학습 기록과 타이머도 중지하며, `resumeRequired=true`이면 사용자 확인 전 재개하지 않는다. 두 모드 모두 콘텐츠 payload를 AI에 보내지 않는다.
+
+### 5.7 피드백 Endpoint
+
+`POST /api/v1/feedback`은 Client가 직접 AI를 호출하는 경로가 아니다. Client는 Server에 피드백을 저장하고, Server가 검증된 사용자·목표·콘텐츠 범위와 무효화 이벤트를 AI에 전달한다.
+
+한 페이지의 수정이 Domain 전체 허용으로 확대되지 않으며, 수정 결과는 동일 목표·콘텐츠 범위의 캐시와 대기 알림을 우선 무효화한다.
 
 ## 6. 처리된 비분석 결과
 
@@ -242,7 +298,7 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 | `OCR_FAILED` | 허용된 로컬 OCR 실행 실패 | `FAILED`, `SKIPPED` |
 | `UNSUPPORTED_CONTENT_TYPE` | 안전한 추출 경로가 없음 | `UNSUPPORTED`, `SKIPPED` |
 | `ANALYSIS_NOT_REQUIRED` | 현재 캐시·정책으로 모델 호출 불필요 | 검증된 기존 결과 또는 `SKIPPED` |
-| `SESSION_NOT_RUNNING` | 회차가 실행 중이 아님 | 콘텐츠 분석 없음 |
+| `SESSION_NOT_ACTIVE` | `sessionStatus`가 `ACTIVE`가 아님 | 콘텐츠 분석 없음 |
 | `PRIVACY_EXCLUDED` | 제외·민감 대상 | AI 요청을 만들지 않는 것이 기본 |
 
 ## 7. 실패 응답
