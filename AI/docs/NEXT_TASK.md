@@ -15,7 +15,6 @@
 
 ## 선행 조건
 
-- 로컬 `AI/.env`에 `AI_GATEWAY_API_KEY`를 설정한 뒤 JEV 판단과 구조화 생성의 최소 Live 호출을 각각 1회 검증
 - 루트 `docs/API_CONTRACT.md` 확인
 - `DEVELOPMENT_RULES.md`, `state_model.md`, `data_lifecycle.md`, `evaluation_spec.md` 확인
 - `goal_session_spec.md`의 식별자·회차·멱등·시간 집계 경계 확인

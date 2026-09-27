@@ -97,9 +97,10 @@ def _analyze(*, selected_goal_text: str | None = None) -> None:
         )
     except InputValidationError:
         st.session_state.analysis_error = "입력 길이 또는 답변 개수를 확인해 주세요."
-    except ModelConfigurationError as exc:
+    except ModelConfigurationError:
         st.session_state.analysis_error = (
-            f"{exc} AI/.env를 수정했다면 Streamlit 서버를 재시작해 주세요."
+            "API Key 또는 모델 설정을 확인해 주세요. AI/.env를 수정했다면 화면을 새로고침해 주세요."
+            " API Key를 변경했다면 Streamlit 서버를 재시작해야 합니다."
         )
     except ModelUnavailableError:
         st.session_state.analysis_error = (
@@ -152,21 +153,16 @@ def _save_goal(result: dict[str, Any]) -> None:
 
 def _render_configuration(settings: Settings) -> None:
     st.sidebar.header("테스트 설정")
-    if settings.uses_ai_gateway:
-        st.sidebar.write("Vercel AI Gateway", "✅ 설정됨")
-        st.sidebar.caption(f"JEV 모델: {settings.jev_model}")
-        st.sidebar.caption(f"문장 생성 모델: {settings.generation_model}")
-    else:
-        st.sidebar.write(
-            "TypeSafe JEV",
-            "✅ 설정됨" if settings.typesafe_api_key else "❌ API Key 없음",
-        )
-        st.sidebar.write(
-            "OpenAI",
-            "✅ 설정됨" if settings.openai_api_key else "❌ API Key 없음",
-        )
-        st.sidebar.caption(f"JEV 모델: {settings.jev_model}")
-        st.sidebar.caption(f"문장 생성 모델: {settings.generation_model}")
+    st.sidebar.write(
+        "TypeSafe JEV",
+        "✅ 설정됨" if settings.typesafe_api_key else "❌ API Key 없음",
+    )
+    st.sidebar.write(
+        "OpenAI",
+        "✅ 설정됨" if settings.openai_api_key else "❌ API Key 없음",
+    )
+    st.sidebar.caption(f"JEV 모델: {settings.typesafe_default_model}")
+    st.sidebar.caption(f"OpenAI 모델: {settings.openai_model}")
     st.sidebar.warning(
         "입력한 목표와 답변은 외부 JEV·OpenAI 서비스로 전송됩니다. 테스트용 문장만 사용하세요."
     )
@@ -309,7 +305,7 @@ def main() -> None:
     _render_configuration(settings)
 
     st.title("🎯 FocusOn 목표 설정 AI 테스트")
-    st.caption("JEV는 판단하고 생성 모델은 질문·추천·GoalProfile 문구를 생성합니다.")
+    st.caption("JEV는 판단하고 OpenAI는 질문·추천·GoalProfile 문구를 생성합니다.")
     st.info(
         "목표 저장을 누르면 바로 저장하지 않고 먼저 AI 분석을 진행합니다. "
         "질문·추천 과정을 마친 뒤 명확한 목표만 최종 확인할 수 있습니다."

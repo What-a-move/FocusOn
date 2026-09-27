@@ -22,7 +22,6 @@
 - 6개 `clarityStatus`, 후보별 JEV 검수, 전체 재평가, fallback, 로그 개인정보 제외를 Fake 기반 테스트로 검증했다.
 - Offline 평가 Fixture와 명시적으로만 실행되는 JEV Live 평가 경로를 추가했다.
 - 실제 JEV·OpenAI Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 최초 `목표 저장`은 분석만 시작하고 `CLEAR` 결과의 최종 확인 후에만 현재 테스트 세션 메모리에 저장하며, 제품 저장소나 학습 세션은 변경하지 않는다.
-- `AI_GATEWAY_API_KEY` 하나로 Vercel AI Gateway의 `typesafe-ai/jev` 판단과 `openai/gpt-5-mini` 구조화 생성을 모두 호출할 수 있다. Gateway Key가 있으면 기존 직접 제공자 Key보다 우선하며, 직접 TypeSafe·OpenAI 설정도 호환 경로로 유지한다.
 - AI 기본 디렉터리와 평가 디렉터리가 생성되어 있다.
 - AI 전용 문서 구조와 기능별 템플릿을 구성했다.
 - 공통 API 응답 초안은 루트 `docs/API_CONTRACT.md`에 정의되어 있다.
@@ -75,7 +74,7 @@
 - API 서버: FastAPI 0.141 계열
 - Schema 검증: Pydantic 2.13 계열
 - 테스트: pytest 9.1 계열, pytest-asyncio 1.4 계열
-- 목표 보조 모델: Vercel AI Gateway 기본 `typesafe-ai/jev` 판단과 `openai/gpt-5-mini` Structured Output 생성; 직접 TypeSafe·OpenAI 설정 호환
+- 목표 보조 모델: TypeSafe JEV `jev-latest` 판단, OpenAI Structured Output 생성
 - Workflow: LangGraph 1.2 계열, 요청 단위 실행·Checkpointer 없음
 - 분석 대상: 화면·페이지에서 추출한 텍스트와 메타데이터
 - OCR: Extension 서비스 워커와 macOS 네이티브 모듈의 Apple Vision 보조 경로 제안; AI는 허용된 정제 텍스트만 평가

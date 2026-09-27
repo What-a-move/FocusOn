@@ -21,8 +21,6 @@ Issue #12의 목표 설정 보조에서는 JEV와 OpenAI 역할을 다음처럼 
 
 목표·선택·답변 문자열은 모두 데이터로 직렬화한다. OpenAI Structured Output은 `json_schema` 방식을 사용하고 추가 필드, enum, 배열 개수와 중복을 Pydantic으로 검증한다. 후보와 GoalProfile은 JEV의 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough` 세 Noul 결과가 모두 Threshold 이상이어야 통과한다.
 
-로컬 테스트의 기본 전송 경로는 Vercel AI Gateway다. `AI_GATEWAY_API_KEY`가 설정되면 JEV는 TypeSafe 호환 Base URL `https://ai-gateway.vercel.sh/typesafe`와 모델 `typesafe-ai/jev`를 사용하고, 생성 모델은 OpenAI 호환 Base URL `https://ai-gateway.vercel.sh/v1`과 모델 `openai/gpt-5-mini`를 사용한다. Gateway Key가 없을 때만 기존 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY` 직접 호출 설정을 사용한다.
-
 검증 실패 시 실패한 검사 이름만 Repair Prompt에 추가하고 최대 한 번 실행한다. 두 번째 검증도 실패하면 원본 생성물을 표시하지 않고 `NEEDS_QUESTION`으로 이동한다. 모델 장애는 `INVALID`로 변환하지 않는다.
 
 ## 1. 역할 분리

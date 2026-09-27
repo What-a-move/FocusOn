@@ -13,7 +13,6 @@ FOCUSON_LIVE_GOAL_EVAL=1 python -m evaluation.evaluate --live
 streamlit run streamlit_app.py
 ```
 
-- Vercel AI Gateway로 전체 Workflow를 수동 테스트할 때는 `AI/.env`에 `AI_GATEWAY_API_KEY` 한 항목만 입력하면 된다. JEV·생성 모델과 Base URL은 기본값을 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
 - 프로젝트 상위 경로의 `.python-version`이 `what-a-move`를 선택하므로 pyenv shell 연동이 활성화된 터미널에서는 `pyenv activate`를 생략할 수 있다.
 - 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
 - Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
