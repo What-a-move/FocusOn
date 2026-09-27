@@ -44,6 +44,7 @@
 - 단위·API·Workflow·Streamlit 렌더·저장 조건 테스트: 29개 통과
 - Offline 평가: 7개 Fixture 통과
 - Streamlit 기동 검사: `127.0.0.1:8501/_stcore/health` 응답 `ok`
+- 실행 환경: 사용자 pyenv 가상환경 `what-a-move` (Python 3.11.6)
 - 실제 외부 모델 평가: 미실행
 
 ## 주요 결과

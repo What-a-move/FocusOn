@@ -6,12 +6,14 @@ Issue #12는 외부 호출이 없는 고정 Fixture 평가와 명시적 JEV 실�
 
 ```bash
 cd AI
-.venv/bin/python -m pytest -q
-.venv/bin/python -m evaluation.evaluate
-FOCUSON_LIVE_GOAL_EVAL=1 .venv/bin/python -m evaluation.evaluate --live
-.venv/bin/streamlit run streamlit_app.py
+pyenv activate what-a-move
+python -m pytest -q
+python -m evaluation.evaluate
+FOCUSON_LIVE_GOAL_EVAL=1 python -m evaluation.evaluate --live
+streamlit run streamlit_app.py
 ```
 
+- 프로젝트 상위 경로의 `.python-version`이 `what-a-move`를 선택하므로 pyenv shell 연동이 활성화된 터미널에서는 `pyenv activate`를 생략할 수 있다.
 - 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
 - Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
 - 고정 사례는 6개 상태, 복수 목표, 약어, 의미 없는 문자열, Prompt Injection을 포함한다.
