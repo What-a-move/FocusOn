@@ -23,6 +23,67 @@ def noul(value):
     return SimpleNamespace(noul=value)
 
 
+def test_gateway_key_configures_jev_typesafe_compatible_endpoint():
+    settings = Settings(
+        _env_file=None,
+        ai_gateway_api_key="gateway-test-key",
+        typesafe_api_key="direct-typesafe-test-key",
+    )
+
+    client = TypeSafeJevClient(settings)
+
+    assert client._client is not None
+    assert client._client._config.base_url == "https://ai-gateway.vercel.sh/typesafe"
+    assert client._client._config.default_model == "typesafe-ai/jev"
+    assert client._client._config.api_key == "gateway-test-key"
+
+
+def test_gateway_key_configures_openai_compatible_generation_endpoint():
+    settings = Settings(
+        _env_file=None,
+        ai_gateway_api_key="gateway-test-key",
+        openai_api_key="direct-openai-test-key",
+    )
+
+    client = OpenAIGoalGenerationClient(settings)
+
+    assert client._llm is not None
+    assert client._llm.model_name == "openai/gpt-5-mini"
+    assert str(client._llm.openai_api_base) == "https://ai-gateway.vercel.sh/v1"
+    assert client._llm.openai_api_key.get_secret_value() == "gateway-test-key"
+
+
+def test_direct_provider_keys_remain_supported_without_gateway_key():
+    settings = Settings(
+        _env_file=None,
+        typesafe_api_key="direct-typesafe-test-key",
+        openai_api_key="direct-openai-test-key",
+    )
+
+    jev = TypeSafeJevClient(settings)
+    generator = OpenAIGoalGenerationClient(settings)
+
+    assert jev._client is not None
+    assert jev._client._config.base_url == "https://api.typesafe.ai"
+    assert jev._client._config.default_model == "jev-latest"
+    assert generator._llm is not None
+    assert generator._llm.model_name == "gpt-5-mini"
+    assert generator._llm.openai_api_base is None
+
+
+def test_blank_gateway_key_does_not_override_direct_provider_keys():
+    settings = Settings(
+        _env_file=None,
+        ai_gateway_api_key="",
+        typesafe_api_key="direct-typesafe-test-key",
+        openai_api_key="direct-openai-test-key",
+    )
+
+    assert settings.uses_ai_gateway is False
+    assert settings.jev_model == "jev-latest"
+    assert settings.generation_model == "gpt-5-mini"
+
+
 @pytest.mark.asyncio
 async def test_initial_jev_assessment_sends_four_typed_questions_in_one_call():
     response = SimpleNamespace(

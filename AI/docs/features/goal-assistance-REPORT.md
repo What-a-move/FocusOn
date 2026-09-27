@@ -16,7 +16,7 @@
 ## 구현 결과
 
 - 구현 상태: AI 영역 구현 및 로컬 검증 완료
-- 구현 범위: JEV 판단, OpenAI 생성, LangGraph Workflow, 내부 FastAPI Endpoint, Fake 기반 테스트, 선택형 실제 평가 Script, 로컬 Streamlit 테스트 화면
+- 구현 범위: JEV 판단, OpenAI 생성, Vercel AI Gateway 단일 Key 경로, LangGraph Workflow, 내부 FastAPI Endpoint, Fake 기반 테스트, 선택형 실제 평가 Script, 로컬 Streamlit 테스트 화면
 - 구현 제외: 목표 저장, 공개 Server API, Desktop·Extension 제품 UI, 장기 대화 저장
 - 구현한 OCR·텍스트 정제: 목표 입력 공백·길이·답변 개수 검증만 수행; OCR·페이지 입력은 범위 밖
 - 구현한 규칙 기반 판단: JEV 확률에 대한 고정 우선순위와 환경변수 Threshold
@@ -31,6 +31,7 @@
 | `AI/src/analysis/goal_analyzer.py` | JEV 평가 타입과 결정적 Router |
 | `AI/src/models/jev_client.py` | TypeSafe SDK 판단·검수 Adapter |
 | `AI/src/models/llm_client.py` | OpenAI Structured Output 생성·Schema Repair |
+| `AI/src/config.py` | Vercel AI Gateway 단일 Key 우선 설정과 직접 제공자 호환 설정 |
 | `AI/src/workflow/goal_assistance.py` | Stateless LangGraph 분기·검수·1회 Repair |
 | `AI/src/api/schemas.py`, `routes.py`, `main.py` | 내부 API, camelCase Schema, 오류 처리 |
 | `AI/tests/` | Router·Workflow·API·SDK 계약·로그 테스트 |
@@ -41,11 +42,11 @@
 ## 테스트 결과
 
 - 정적 검사: `python -m compileall -q src` 통과
-- 단위·API·Workflow·Streamlit 렌더·저장 조건 테스트: 29개 통과
+- 단위·API·Workflow·Streamlit 렌더·저장 조건·Gateway 설정 테스트: 33개 통과
 - Offline 평가: 7개 Fixture 통과
 - Streamlit 기동 검사: `127.0.0.1:8501/_stcore/health` 응답 `ok`
 - 실행 환경: 사용자 pyenv 가상환경 `what-a-move` (Python 3.11.6)
-- 실제 외부 모델 평가: 미실행
+- 실제 외부 모델 평가: Gateway Key가 아직 로컬 `.env`에 없어 미실행
 
 ## 주요 결과
 
@@ -57,6 +58,7 @@
 - Fake Client 기본 테스트와 외부 호출을 명시적으로 잠그는 Live 평가 Script를 분리했다.
 - 로그 Utility는 허용된 운영 메타데이터 외 목표·답변·모델 원문과 인증 값을 폐기한다.
 - Streamlit에서 `목표 저장` 클릭 시 선분석, 추천 후보 선택, 빠른 선택지·직접 답변, `CLEAR` 최종 확인 후 세션 메모리 저장, 결과 JSON 확인을 지원한다.
+- `AI_GATEWAY_API_KEY`가 있으면 동일 Key로 JEV와 생성 모델을 Gateway에 연결하고, 없으면 기존 TypeSafe·OpenAI 직접 Key로 동작한다.
 
 ## 기능 테스트
 
