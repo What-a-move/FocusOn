@@ -21,7 +21,7 @@
 - `POST /internal/v1/goals/clarify`와 camelCase Pydantic 계약, 공통 422·502·503 오류 응답을 구현했다.
 - 6개 `clarityStatus`, 후보별 JEV 검수, 전체 재평가, fallback, 로그 개인정보 제외를 Fake 기반 테스트로 검증했다.
 - Offline 평가 Fixture와 명시적으로만 실행되는 JEV Live 평가 경로를 추가했다.
-- 실제 JEV·OpenAI Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 이 화면은 목표를 저장하거나 세션을 시작하지 않는다.
+- 실제 JEV·OpenAI Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 최초 `목표 저장`은 분석만 시작하고 `CLEAR` 결과의 최종 확인 후에만 현재 테스트 세션 메모리에 저장하며, 제품 저장소나 학습 세션은 변경하지 않는다.
 - AI 기본 디렉터리와 평가 디렉터리가 생성되어 있다.
 - AI 전용 문서 구조와 기능별 템플릿을 구성했다.
 - 공통 API 응답 초안은 루트 `docs/API_CONTRACT.md`에 정의되어 있다.

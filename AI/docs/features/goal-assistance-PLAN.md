@@ -114,6 +114,8 @@ START
 
 Graph는 Checkpointer 없이 요청마다 `START`부터 실행한다. 같은 Node에 정적 Edge와 조건부 Edge를 함께 연결하지 않는다.
 
+Streamlit 테스트 화면의 최초 동작명은 `목표 저장`이지만 클릭 즉시 저장하지 않는다. 위 Workflow를 먼저 실행하고 질문·추천이 끝나 `CLEAR`와 검증된 GoalProfile을 얻은 뒤 사용자가 별도의 최종 저장 버튼을 눌러야 테스트 세션 메모리에 저장한다.
+
 ## 모델·외부 연동
 
 - JEV: TypeSafe Python SDK `AsyncTypeSafeClient`, 기본 모델 `jev-latest`

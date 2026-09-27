@@ -38,13 +38,14 @@ def _initialize_state() -> None:
         "analysis_result": None,
         "analysis_error": None,
         "last_request_id": None,
+        "saved_goal": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
 
-def _reset_flow(*, clear_input: bool = False) -> None:
+def _reset_flow(*, clear_input: bool = False, clear_saved: bool = False) -> None:
     if clear_input:
         st.session_state.goal_input = ""
     st.session_state.flow_original_text = None
@@ -53,6 +54,8 @@ def _reset_flow(*, clear_input: bool = False) -> None:
     st.session_state.analysis_result = None
     st.session_state.analysis_error = None
     st.session_state.last_request_id = None
+    if clear_saved:
+        st.session_state.saved_goal = None
 
 
 async def _run_workflow(
@@ -130,6 +133,24 @@ def _submit_answer(question_id: str, question: str, answer: str) -> None:
     _analyze()
 
 
+def _build_saved_goal(result: dict[str, Any]) -> dict[str, Any]:
+    """Build the session-only saved value after explicit final confirmation."""
+
+    if result.get("clarityStatus") != ClarityStatus.CLEAR.value:
+        raise ValueError("명확한 목표만 저장할 수 있습니다.")
+    profile = result.get("goalProfileDraft")
+    if not profile or not result.get("interpretedGoal"):
+        raise ValueError("확인 가능한 GoalProfile이 필요합니다.")
+    return {
+        "goalText": result["interpretedGoal"],
+        "goalProfile": profile,
+    }
+
+
+def _save_goal(result: dict[str, Any]) -> None:
+    st.session_state.saved_goal = _build_saved_goal(result)
+
+
 def _render_configuration(settings: Settings) -> None:
     st.sidebar.header("테스트 설정")
     st.sidebar.write(
@@ -145,8 +166,11 @@ def _render_configuration(settings: Settings) -> None:
     st.sidebar.warning(
         "입력한 목표와 답변은 외부 JEV·OpenAI 서비스로 전송됩니다. 테스트용 문장만 사용하세요."
     )
+    if st.session_state.saved_goal:
+        st.sidebar.success("테스트 세션에 저장된 목표")
+        st.sidebar.write(st.session_state.saved_goal["goalText"])
     if st.sidebar.button("전체 초기화", use_container_width=True):
-        _reset_flow(clear_input=True)
+        _reset_flow(clear_input=True, clear_saved=True)
         st.rerun()
 
 
@@ -172,7 +196,7 @@ def _render_candidates(result: dict[str, Any]) -> None:
             st.write(f"**{goal['title']}**")
             st.caption(goal["reason"])
             if st.button(
-                "이 목표로 다시 분석",
+                "이 목표 선택",
                 key=f"candidate-{goal['id']}",
                 use_container_width=True,
             ):
@@ -240,11 +264,23 @@ def _render_result() -> None:
     if result["question"]:
         _render_question(result)
     if result["goalProfileDraft"]:
+        st.subheader("최종 확인")
+        st.write("아래 목표와 범위를 확인한 뒤 저장해 주세요.")
         _render_profile(result["goalProfileDraft"])
+        saved_goal = _build_saved_goal(result)
+        if st.session_state.saved_goal == saved_goal:
+            st.success("목표가 현재 테스트 세션에 저장되었습니다.")
+        elif st.button(
+            "최종 확인 후 목표 저장",
+            type="primary",
+            use_container_width=True,
+        ):
+            _save_goal(result)
+            st.rerun()
 
     st.divider()
     st.caption(
-        "이 화면은 테스트 도구이며 목표를 저장하거나 학습 세션을 시작하지 않습니다. "
+        "이 화면의 저장은 현재 Streamlit 테스트 세션 메모리에만 유지되며 학습 세션을 시작하지 않습니다. "
         f"사용자 확인 필요: {result['requiresUserConfirmation']}"
     )
     with st.expander("응답 JSON 확인"):
@@ -270,6 +306,10 @@ def main() -> None:
 
     st.title("🎯 FocusOn 목표 설정 AI 테스트")
     st.caption("JEV는 판단하고 OpenAI는 질문·추천·GoalProfile 문구를 생성합니다.")
+    st.info(
+        "목표 저장을 누르면 바로 저장하지 않고 먼저 AI 분석을 진행합니다. "
+        "질문·추천 과정을 마친 뒤 명확한 목표만 최종 확인할 수 있습니다."
+    )
 
     with st.form("goal-input-form"):
         st.text_area(
@@ -280,7 +320,7 @@ def main() -> None:
             height=120,
         )
         submitted = st.form_submit_button(
-            "목표 분석하기", type="primary", use_container_width=True
+            "목표 저장", type="primary", use_container_width=True
         )
     if submitted:
         _submit_new_goal()

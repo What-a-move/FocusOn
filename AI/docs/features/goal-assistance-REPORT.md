@@ -41,7 +41,7 @@
 ## 테스트 결과
 
 - 정적 검사: `python -m compileall -q src` 통과
-- 단위·API·Workflow·Streamlit 렌더 테스트: 28개 통과
+- 단위·API·Workflow·Streamlit 렌더·저장 조건 테스트: 29개 통과
 - Offline 평가: 7개 Fixture 통과
 - Streamlit 기동 검사: `127.0.0.1:8501/_stcore/health` 응답 `ok`
 - 실제 외부 모델 평가: 미실행
@@ -55,7 +55,7 @@
 - camelCase 내부 API, 동적 길이 검증, 422·502·503 공통 오류 계약을 구현했다.
 - Fake Client 기본 테스트와 외부 호출을 명시적으로 잠그는 Live 평가 Script를 분리했다.
 - 로그 Utility는 허용된 운영 메타데이터 외 목표·답변·모델 원문과 인증 값을 폐기한다.
-- Streamlit에서 목표 입력, 추천 후보 선택, 빠른 선택지·직접 답변, 결과 JSON 확인을 지원한다.
+- Streamlit에서 `목표 저장` 클릭 시 선분석, 추천 후보 선택, 빠른 선택지·직접 답변, `CLEAR` 최종 확인 후 세션 메모리 저장, 결과 JSON 확인을 지원한다.
 
 ## 기능 테스트
 
