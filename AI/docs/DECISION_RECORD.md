@@ -299,17 +299,37 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 - Server 집계·Queue·노트 저장
 - 노트 Prompt·Schema·평가
 
+## 결정 015 - 목표 보조의 JEV 판단과 OpenAI 생성 분리
+
+- 결정일: 2026-09-27
+- 담당 영역: AI
+- 상태: 확정
+
+### 결정 내용
+
+학습 목표 설정 보조에서 TypeSafe JEV System One은 타입화된 확률 판단·검증만 수행하고 OpenAI는 사용자 표시 문장과 GoalProfile 구조화 생성만 수행한다. Python Router와 LangGraph가 Threshold, 우선순위, 최대 1회 Repair와 fallback을 결정하며 OpenAI가 JEV 결과 또는 `clarityStatus`를 덮어쓰지 못하게 한다.
+
+### 결정 이유
+
+비생성형 판단 모델과 생성 모델의 책임을 섞으면 JEV 응답에 존재하지 않는 설명을 파싱하거나 생성 문장이 Workflow 결정을 바꾸는 오류가 생긴다. 결정적 코드를 신뢰 경계로 두어 판단 재현성과 사용자 확인 보장을 유지한다.
+
+### 고려한 대안
+
+- OpenAI 단일 호출로 판단과 문구를 함께 생성: 단순하지만 분기 재현성과 확률 기반 평가가 약해진다.
+- JEV가 사용자 문구까지 생성한다고 가정: JEV의 질문 타입·응답 계약과 맞지 않아 제외했다.
+
+### 영향 범위
+
+- `AI/src/models/jev_client.py`
+- `AI/src/models/llm_client.py`
+- `AI/src/workflow/goal_assistance.py`
+- `AI/docs/prompt_guide.md`
+- `AI/docs/evaluation_spec.md`
+
+### 관련 Issue·PR
+
+- Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
+
 ## 새 결정 기록
 
-다음 결정은 `결정 015`부터 추가한다.
-
-### 결정 015
-
-- 결정일:
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 고려한 대안:
-- 영향받는 파일:
-- 관련 Issue·PR:
+다음 결정은 `결정 016`부터 추가한다.

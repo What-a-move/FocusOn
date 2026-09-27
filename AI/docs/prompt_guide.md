@@ -2,12 +2,26 @@
 
 ## 문서 상태
 
-- 상태: 팀 검토용 초안, 미구현
+- 상태: 목표 설정 보조 Prompt 구현, 관련성 Prompt는 팀 검토용 초안
 - 버전: `relevance-prompt-v1-draft`
 - 기준일: 2026-09-12
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [Agent 실행 계약](focus_session_agent_spec.md), [상태 모델](state_model.md), [분석 규칙](analysis_rules.md), [노트 명세](session_note_spec.md), [평가 명세](evaluation_spec.md)
 
 이 문서는 규칙과 임베딩만으로 판단하기 어려운 경우 사용하는 LLM 및 FocusSessionAgent의 입력·출력·도구 제한을 정의한다. 모델은 관련성 후보와 근거를 제안하지만 최종 알림, 차단, 시간 집계와 저장을 실행하지 않는다.
+
+## 0. 학습 목표 설정 보조의 모델 역할
+
+Issue #12의 목표 설정 보조에서는 JEV와 OpenAI 역할을 다음처럼 고정한다.
+
+| 구성요소 | 허용 역할 | 금지 역할 |
+| --- | --- | --- |
+| JEV System One | 유효성, 복수 목표, 불명확 용어, 구체성, 생성 결과 일치 여부의 타입화된 확률 판단 | 질문·추천·이유·GoalProfile 자연어 생성 |
+| OpenAI | 질문 한 개, 선택지 2~3개, 후보 2~3개, 추천 이유, GoalProfile 구조화 생성과 1회 Repair | `clarityStatus` 결정·변경, JEV 판단 덮어쓰기 |
+| Python·LangGraph | Threshold, 우선순위, 분기, 재시도, fallback, 사용자 확인 강제 | 모델의 자유 출력 신뢰, 무제한 반복 |
+
+목표·선택·답변 문자열은 모두 데이터로 직렬화한다. OpenAI Structured Output은 `json_schema` 방식을 사용하고 추가 필드, enum, 배열 개수와 중복을 Pydantic으로 검증한다. 후보와 GoalProfile은 JEV의 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough` 세 Noul 결과가 모두 Threshold 이상이어야 통과한다.
+
+검증 실패 시 실패한 검사 이름만 Repair Prompt에 추가하고 최대 한 번 실행한다. 두 번째 검증도 실패하면 원본 생성물을 표시하지 않고 `NEEDS_QUESTION`으로 이동한다. 모델 장애는 `INVALID`로 변환하지 않는다.
 
 ## 1. 역할 분리
 

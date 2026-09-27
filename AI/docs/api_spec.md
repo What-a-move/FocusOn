@@ -2,9 +2,9 @@
 
 ## 문서 상태
 
-- 상태: 팀 검토용 초안, 미구현
-- 버전: `0.2.0-draft`
-- 기준일: 2026-09-12
+- 상태: 목표 설정 보조 내부 API 구현, 나머지 계약은 팀 검토용 초안
+- 버전: `0.3.0-draft`
+- 기준일: 2026-09-27
 - 검토 필요: Server 담당자, Frontend(`apps`) 담당자, Shared 타입 담당자
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md), [데이터 수명](data_lifecycle.md)
 - 확정 조건: 호출 경로, 인증, Timeout, 요청 필드, 상태값, 캐시 정책을 관련 담당자가 확인한 뒤 AI `DECISION_RECORD.md`에 확정 결정을 남긴다.
@@ -68,16 +68,33 @@ Extension / macOS 네이티브 모듈
 
 관련성 분석은 Notion 기준 경로 하나만 사용한다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
-## 4. 목표 구조화
+## 4. 목표 구조화·명확화
+
+Issue #12에서 AI 내부 경로 `POST /internal/v1/goals/clarify`를 구현했다. 이 경로는 Server 공개 API가 아니며 인증 계약 확정 전 로컬·테스트에서만 사용한다.
+
+### 4.0 구현 계약
+
+- 외부 JSON은 lower camel case, 내부 Python은 snake case를 사용한다.
+- `requestId`, `originalText`는 필수이며 `selectedGoalText`, `clarificationAnswers`는 선택이다.
+- `originalText`와 `selectedGoalText`는 200자, 답변은 개당 500자, 답변은 최대 20개다.
+- `clarityStatus`: `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `UNRECOGNIZED_TERM`, `INVALID`.
+- 모든 정상 응답은 `requiresUserConfirmation=true`이며 AI가 목표를 저장하거나 확정하지 않는다.
+- 선택 후보 또는 답변이 추가되면 새 요청으로 최초 JEV 평가 네 가지를 다시 실행한다.
 
 ### 4.1 요청 예시
 
 ```json
 {
-  "requestId": "550e8400-e29b-41d4-a716-446655440002",
-  "goalId": "550e8400-e29b-41d4-a716-446655440000",
-  "goalVersion": 1,
-  "originalText": "Spring Security JWT 인증 구현"
+  "requestId": "req_01",
+  "originalText": "rq 캐싱 조지기",
+  "selectedGoalText": null,
+  "clarificationAnswers": [
+    {
+      "questionId": "question_01",
+      "question": "rq가 React Query를 의미하나요?",
+      "answer": "네, React Query예요."
+    }
+  ]
 }
 ```
 
@@ -86,20 +103,39 @@ Extension / macOS 네이티브 모듈
 ```json
 {
   "data": {
-    "goalId": "550e8400-e29b-41d4-a716-446655440000",
-    "goalVersion": 1,
-    "originalText": "Spring Security JWT 인증 구현",
-    "mainTopic": "Spring Security 기반 JWT 인증",
-    "purpose": "IMPLEMENTATION",
-    "coreTopics": ["JWT", "SecurityFilterChain", "토큰 검증"],
-    "supportingTopics": ["HTTP 인증 헤더", "인증 오류 해결", "CORS"],
-    "expectedActivities": ["공식 문서", "예제 코드", "오류 검색", "강의 시청"],
-    "clarificationNeeded": false
+    "clarityStatus": "UNRECOGNIZED_TERM",
+    "interpretedGoal": null,
+    "recommendedGoals": [],
+    "question": {
+      "id": "term_confirmation",
+      "text": "rq가 React Query를 의미하나요?",
+      "options": [
+        {"id": "react-query", "label": "React Query"},
+        {"id": "other", "label": "다른 의미예요"}
+      ],
+      "allowCustomAnswer": true
+    },
+    "goalProfileDraft": null,
+    "invalidReason": null,
+    "requiresUserConfirmation": true,
+    "fallbackAllowed": true
   }
 }
 ```
 
-사용자 확인·수정 후 Server가 `confirmedByUser`를 관리한다. AI가 방문한 콘텐츠만으로 사용자 목표를 자동 확장하지 않는다.
+`recommendedGoals`는 2~3개이며 각 항목은 `id`, `title`, `reason`을 가진다. `question`은 한 번에 하나이며 `id`, `label`로 된 선택지는 2~3개다. `goalProfileDraft`는 `originalText`, `interpretedGoal`, `mainTopic`, `purpose`, `coreTopics`, `supportingTopics`, `expectedActivities`, `profileSource`를 사용하며 배열은 필드별 최대 5개·중복 불가다. 사용자 확인·수정 후 Server가 확정과 저장을 관리한다.
+
+### 4.3 목표 명확화 오류
+
+| HTTP | code | retryable | fallbackAllowed | 의미 |
+| --- | --- | --- | --- | --- |
+| 422 | `VALIDATION_ERROR` | false | false | 공백·길이·개수·Schema 오류 |
+| 502 | `INVALID_MODEL_RESPONSE` | true | true | 구조화 모델 응답을 검증하지 못함 |
+| 503 | `AI_UNAVAILABLE` | true | true | JEV 또는 OpenAI를 일시적으로 사용할 수 없음 |
+
+오류 응답은 최상위 `code`, `message`, `retryable`, `retryAfterSeconds`, `requestId`, `details`를 사용한다. `details.fallbackAllowed`로 원문 시작 fallback 가능 여부를 전달한다. 목표 원문, 답변, 모델 원본 출력은 오류나 로그에 포함하지 않는다.
+
+API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해결되지 않는 설정 오류도 `AI_UNAVAILABLE`로 숨기되 `retryable=false`로 반환한다. Rate Limit, Overload, Timeout과 연결 장애만 제한된 Retry 대상이다.
 
 ## 5. 페이지 관련성 분석
 

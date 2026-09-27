@@ -10,6 +10,12 @@ relevance-analysis-REPORT.md
 
 기획서 작성과 입력·출력 계약 확인이 끝난 뒤 개발을 시작하고, 오류 보고서와 결과 리포트는 작업 중·작업 완료 시 갱신한다.
 
+## 구현된 기능 문서
+
+- `goal-assistance-PLAN.md`: JEV 판단·OpenAI 생성 기반 목표 설정 보조 기획
+- `goal-assistance-ERROR.md`: 구현 중 오류와 해결 기록
+- `goal-assistance-REPORT.md`: 구현·테스트·평가 결과
+
 ## 기능 개발 순서
 
 1. `relevance-analysis`: OCR·페이지 텍스트 정제와 현재 활동 관련성 판단

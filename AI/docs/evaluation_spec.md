@@ -1,5 +1,22 @@
 # AI 평가와 회귀 검증 명세
 
+## 학습 목표 설정 보조 실행 방법
+
+Issue #12는 외부 호출이 없는 고정 Fixture 평가와 명시적 JEV 실제 평가를 분리한다.
+
+```bash
+cd AI
+.venv/bin/python -m pytest -q
+.venv/bin/python -m evaluation.evaluate
+FOCUSON_LIVE_GOAL_EVAL=1 .venv/bin/python -m evaluation.evaluate --live
+```
+
+- 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
+- Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
+- 고정 사례는 6개 상태, 복수 목표, 약어, 의미 없는 문자열, Prompt Injection을 포함한다.
+- 구현 검증은 상태 우선순위, 후보별 독립 검수, 1회 Repair, 두 번째 실패 fallback, 후보 선택·답변 후 전체 재평가, 오류 envelope와 로그 개인정보 제외를 포함한다.
+- 실제 평가에서는 상태별 Precision·Recall, confusion matrix, fallback 비율, 후보 검수 실패율, 호출 횟수와 P50·P95 지연시간을 추가 기록한다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안

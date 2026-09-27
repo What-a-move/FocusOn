@@ -17,6 +17,10 @@
 
 ### 완료된 작업
 
+- Issue #12에서 JEV 판단, OpenAI 구조화 생성, LangGraph 분기·1회 Repair를 결합한 학습 목표 설정 보조를 구현했다.
+- `POST /internal/v1/goals/clarify`와 camelCase Pydantic 계약, 공통 422·502·503 오류 응답을 구현했다.
+- 6개 `clarityStatus`, 후보별 JEV 검수, 전체 재평가, fallback, 로그 개인정보 제외를 Fake 기반 테스트로 검증했다.
+- Offline 평가 Fixture와 명시적으로만 실행되는 JEV Live 평가 경로를 추가했다.
 - AI 기본 디렉터리와 평가 디렉터리가 생성되어 있다.
 - AI 전용 문서 구조와 기능별 템플릿을 구성했다.
 - 공통 API 응답 초안은 루트 `docs/API_CONTRACT.md`에 정의되어 있다.
@@ -40,12 +44,11 @@
 
 ### 아직 진행하지 않은 작업
 
-- 실행 가능한 AI 서버 진입점 구현
-- Pydantic 요청·응답 Schema 구현
+- 목표 보조 외 나머지 AI 기능의 서버 Endpoint와 Schema 구현
 - OCR·페이지 텍스트 정제와 품질 판단 구현
 - 규칙 기반 관련성 판단 구현
 - 임베딩 기반 유사도 판단 구현
-- LLM Fallback 구현
+- 페이지 관련성 분석용 LLM Fallback 구현
 - Server 연동
 - 성능·정확도 평가 자동화
 - 목표·세션·회차·이벤트·집계 Schema 구현
@@ -61,16 +64,17 @@
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
-- AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
+- AI의 목표 설정 보조 관련 `src/`, `tests/`, `evaluation/`은 구현됐고, 관련성·흐름·사용자 상태 파일은 여전히 골격이다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·로컬 OCR을 기본으로 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
 
 - 언어: Python
-- API 서버: FastAPI 검토
-- Schema 검증: Pydantic 검토
-- 테스트: pytest 검토
-- 모델: 임베딩 모델과 LLM 공급자 검토 필요
+- API 서버: FastAPI 0.141 계열
+- Schema 검증: Pydantic 2.13 계열
+- 테스트: pytest 9.1 계열, pytest-asyncio 1.4 계열
+- 목표 보조 모델: TypeSafe JEV `jev-latest` 판단, OpenAI Structured Output 생성
+- Workflow: LangGraph 1.2 계열, 요청 단위 실행·Checkpointer 없음
 - 분석 대상: 화면·페이지에서 추출한 텍스트와 메타데이터
 - OCR: Extension 서비스 워커와 macOS 네이티브 모듈의 Apple Vision 보조 경로 제안; AI는 허용된 정제 텍스트만 평가
 - 시각 분석: ColPali는 PDF·Canvas·이미지·슬라이드 대상 비교 실험 단계
