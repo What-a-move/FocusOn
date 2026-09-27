@@ -8,6 +8,7 @@ from typesafe_sdk import (
     Noul,
     RetryPolicy,
     Score,
+    TypeSafeAPIError,
     TypeSafeAPIResponseValidationError,
     TypeSafeAuthenticationError,
     TypeSafeBadRequestError,
@@ -43,12 +44,15 @@ class TypeSafeJevClient:
     """JEV adapter. It performs typed judgments and never generates display text."""
 
     def __init__(self, settings: Settings) -> None:
-        if settings.typesafe_api_key is None:
+        self._using_gateway = settings.uses_ai_gateway
+        api_key = settings.jev_api_key
+        if api_key is None:
             self._client = None
         else:
             self._client = AsyncTypeSafeClient(
-                api_key=settings.typesafe_api_key.get_secret_value(),
-                model=settings.typesafe_default_model,
+                api_key=api_key.get_secret_value(),
+                base_url=settings.jev_base_url,
+                model=settings.jev_model,
                 retry=RetryPolicy(
                     max_retries=settings.goal_assistance_max_retries,
                     timeout=settings.goal_assistance_timeout_seconds,
@@ -135,7 +139,17 @@ class TypeSafeJevClient:
             TypeSafeBadRequestError,
             TypeSafeUnprocessableEntityError,
         ) as exc:
-            raise ModelConfigurationError("JEV 호출 설정이 올바르지 않습니다.") from exc
+            provider = "Vercel AI Gateway" if self._using_gateway else "TypeSafe"
+            raise ModelConfigurationError(
+                f"{provider}의 API Key 또는 JEV 모델 설정이 올바르지 않습니다."
+            ) from exc
+        except TypeSafeAPIError as exc:
+            if exc.status == 402:
+                provider = "Vercel AI Gateway" if self._using_gateway else "TypeSafe"
+                raise ModelConfigurationError(
+                    f"{provider} 사용 가능 잔액이 부족하거나 결제가 중지됐습니다."
+                ) from exc
+            raise ModelUnavailableError("JEV 판단 서비스를 사용할 수 없습니다.") from exc
         except TypeSafeError as exc:
             raise ModelUnavailableError("JEV 판단 서비스를 사용할 수 없습니다.") from exc
 
@@ -208,7 +222,17 @@ class TypeSafeJevClient:
             TypeSafeBadRequestError,
             TypeSafeUnprocessableEntityError,
         ) as exc:
-            raise ModelConfigurationError("JEV 호출 설정이 올바르지 않습니다.") from exc
+            provider = "Vercel AI Gateway" if self._using_gateway else "TypeSafe"
+            raise ModelConfigurationError(
+                f"{provider}의 API Key 또는 JEV 모델 설정이 올바르지 않습니다."
+            ) from exc
+        except TypeSafeAPIError as exc:
+            if exc.status == 402:
+                provider = "Vercel AI Gateway" if self._using_gateway else "TypeSafe"
+                raise ModelConfigurationError(
+                    f"{provider} 사용 가능 잔액이 부족하거나 결제가 중지됐습니다."
+                ) from exc
+            raise ModelUnavailableError("JEV 판단 서비스를 사용할 수 없습니다.") from exc
         except TypeSafeError as exc:
             raise ModelUnavailableError("JEV 판단 서비스를 사용할 수 없습니다.") from exc
 

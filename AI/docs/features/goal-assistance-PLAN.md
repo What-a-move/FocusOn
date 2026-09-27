@@ -118,8 +118,10 @@ Streamlit 테스트 화면의 최초 동작명은 `목표 저장`이지만 클�
 
 ## 모델·외부 연동
 
-- JEV: TypeSafe Python SDK `AsyncTypeSafeClient`, 기본 모델 `jev-latest`
-- OpenAI: `ChatOpenAI.with_structured_output(..., method="json_schema")`와 `ainvoke`
+- 기본 로컬 테스트 설정: `AI_GATEWAY_API_KEY` 하나로 Vercel AI Gateway를 사용한다.
+- JEV: TypeSafe Python SDK `AsyncTypeSafeClient`, Gateway Base URL `https://ai-gateway.vercel.sh/typesafe`, 모델 `typesafe-ai/jev`
+- 생성: `ChatOpenAI.with_structured_output(..., method="json_schema")`, Gateway Base URL `https://ai-gateway.vercel.sh/v1`, 모델 `openai/gpt-5-mini`
+- 호환 경로: Gateway Key가 없으면 기존 `TYPESAFE_API_KEY`·`OPENAI_API_KEY` 직접 제공자 설정을 사용한다.
 - Timeout·Retry: Pydantic Settings와 TypeSafe `RetryPolicy`로 제한하고 인증·검증 4xx는 재시도하지 않는다.
 - 기본 테스트: Fake Client만 사용하며 실제 외부 API를 호출하지 않는다.
 - 실제 평가: 별도 명령과 환경 변수로 명시적으로 활성화할 때만 실행한다.

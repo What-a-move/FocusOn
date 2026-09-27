@@ -330,6 +330,32 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
+## 결정 016 - 로컬 목표 보조의 Vercel AI Gateway 단일 Key 경로
+
+- 결정일: 2026-09-27
+- 담당 영역: AI
+- 상태: 확정
+
+### 결정 내용
+
+로컬 목표 보조 테스트는 `AI_GATEWAY_API_KEY` 하나가 설정되면 Vercel AI Gateway를 우선 사용한다. JEV는 TypeSafe 호환 Base URL과 `typesafe-ai/jev`, 자연어 생성은 OpenAI 호환 Base URL과 `openai/gpt-5-mini`를 사용한다. Gateway Key가 없으면 기존 TypeSafe·OpenAI 직접 제공자 Key를 사용하는 호환 경로를 유지한다.
+
+### 결정 이유
+
+TypeSafe 또는 별도 Jev 서비스의 Key·잔액과 호출 주소가 맞지 않아 발생하는 인증 오류를 제거하고, 판단과 생성 모델의 로컬 테스트 인증을 한 Key로 단순화하기 위해서다. 모델 역할 분리는 결정 015를 그대로 유지하며 Gateway는 호출·과금 경로만 통합한다.
+
+### 영향 범위
+
+- `AI/src/config.py`
+- `AI/src/models/jev_client.py`
+- `AI/src/models/llm_client.py`
+- `AI/streamlit_app.py`
+- `AI/.env.example`
+
+### 관련 Issue·PR
+
+- Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
+
 ## 새 결정 기록
 
-다음 결정은 `결정 016`부터 추가한다.
+다음 결정은 `결정 017`부터 추가한다.
