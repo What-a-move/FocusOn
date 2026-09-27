@@ -6,7 +6,7 @@ from src.api.routes import get_goal_workflow
 from src.api.schemas import ClarityStatus
 from src.config import Settings
 from src.main import create_app
-from src.models.errors import ModelUnavailableError
+from src.models.errors import ModelConfigurationError, ModelUnavailableError
 from src.models.fakes import FakeGoalGenerationClient, FakeJevClient
 from src.workflow.goal_assistance import GoalAssistanceWorkflow
 
@@ -92,7 +92,17 @@ async def test_model_outage_is_503_not_invalid():
 
 @pytest.mark.asyncio
 async def test_missing_model_configuration_is_not_marked_retryable():
+    class MisconfiguredJev:
+        async def assess_goal(self, request):
+            raise ModelConfigurationError("test-only configuration failure")
+
+        async def aclose(self):
+            return None
+
     app = create_app()
+    app.dependency_overrides[get_goal_workflow] = lambda: GoalAssistanceWorkflow(
+        Settings(), MisconfiguredJev(), FakeGoalGenerationClient()
+    )
 
     response = await post(app, {"requestId": "req-5", "originalText": "React 학습"})
 

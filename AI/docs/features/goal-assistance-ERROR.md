@@ -23,3 +23,11 @@
 - 원인: 파일 경로로 직접 실행하면 Python 검색 경로가 `AI/evaluation`부터 시작한다.
 - 해결: `evaluation`을 Package로 만들고 `python -m evaluation.evaluate`로 실행하도록 문서화했다.
 - 재발 방지: 결과 검증 명령에 Offline 평가 Module 실행을 포함한다.
+
+## API Key가 있는 환경에서 단위 테스트가 외부 호출을 시도함
+
+- 발생일: 2026-09-27
+- 증상: `.env`에 실제 TypeSafe Key를 넣자 설정 오류 API 테스트가 실제 JEV Client를 생성해 외부 요청 경로로 진입했다.
+- 원인: 테스트가 “개발 환경에 API Key가 없다”는 조건에 의존하고 Dependency를 Fake로 교체하지 않았다.
+- 해결: 설정 오류를 반환하는 `MisconfiguredJev`를 테스트에 주입해 환경변수와 무관하게 결정적으로 검증한다.
+- 재발 방지: 기본 pytest의 모든 모델 경로는 Fake Client 또는 Dependency Override만 사용하고 실제 호출은 명시적 Live 평가와 Streamlit 수동 테스트로 제한한다.

@@ -9,6 +9,7 @@ cd AI
 .venv/bin/python -m pytest -q
 .venv/bin/python -m evaluation.evaluate
 FOCUSON_LIVE_GOAL_EVAL=1 .venv/bin/python -m evaluation.evaluate --live
+.venv/bin/streamlit run streamlit_app.py
 ```
 
 - 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
@@ -16,6 +17,7 @@ FOCUSON_LIVE_GOAL_EVAL=1 .venv/bin/python -m evaluation.evaluate --live
 - 고정 사례는 6개 상태, 복수 목표, 약어, 의미 없는 문자열, Prompt Injection을 포함한다.
 - 구현 검증은 상태 우선순위, 후보별 독립 검수, 1회 Repair, 두 번째 실패 fallback, 후보 선택·답변 후 전체 재평가, 오류 envelope와 로그 개인정보 제외를 포함한다.
 - 실제 평가에서는 상태별 Precision·Recall, confusion matrix, fallback 비율, 후보 검수 실패율, 호출 횟수와 P50·P95 지연시간을 추가 기록한다.
+- Streamlit은 `AI/.env`의 실제 JEV·OpenAI Key를 사용하는 로컬 수동 테스트 전용이다. 목표 저장이나 학습 세션 시작은 수행하지 않는다.
 
 ## 문서 상태
 

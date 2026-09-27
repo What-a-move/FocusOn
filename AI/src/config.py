@@ -1,14 +1,18 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+AI_ROOT = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
     """Runtime configuration. Thresholds are experimental and environment-tunable."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=AI_ROOT / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
