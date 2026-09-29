@@ -45,6 +45,31 @@ Extension 제외·권한 검사
 - 원본 화면과 원본 카메라 영상은 AI 입력·저장 대상으로 사용하지 않는다.
 - ColPali는 정식 기본 경로가 아니라 시각 구조 콘텐츠의 실험 경로다.
 
+## 로컬 목표 보조 실행
+
+`AI/.env`에 아래 두 Key를 입력하면 별도 Gateway 설정 없이 Streamlit 테스트 화면을 실행할 수 있다. Key 값은 저장소에 Commit하지 않는다.
+
+```dotenv
+TYPESAFE_API_KEY=your_typesafe_key
+OPENAI_API_KEY=your_openai_key
+```
+
+```bash
+cd AI
+python -m streamlit run streamlit_app.py
+```
+
+## Laya 비교 판단
+
+Streamlit 목표 설정 화면은 JEV와 같은 입력·네 가지 판단 질문을 로컬 `convaiinnovations/laya-multilingual`에도 전달해 비교 표로 표시한다. Laya 결과는 비교 전용이며 실제 상태, 질문·추천 생성, GoalProfile, 저장 흐름에는 사용하지 않는다.
+
+처음 실행하기 전 의존성을 설치해야 하며, 첫 Laya 비교 시 공개 모델 체크포인트를 내려받을 수 있다.
+
+```bash
+cd AI
+python -m pip install -r requirements.txt
+```
+
 ## 문서
 
 - [AI 문서 안내](docs/README.md)

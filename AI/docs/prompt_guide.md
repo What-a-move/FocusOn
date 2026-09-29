@@ -18,12 +18,27 @@ Issue #12의 목표 설정 보조에서는 JEV와 OpenAI 역할을 다음처럼 
 | JEV System One | 유효성, 복수 목표, 불명확 용어, 구체성, 생성 결과 일치 여부의 타입화된 확률 판단 | 질문·추천·이유·GoalProfile 자연어 생성 |
 | OpenAI | 질문 한 개, 선택지 2~3개, 후보 2~3개, 추천 이유, GoalProfile 구조화 생성과 1회 Repair | `clarityStatus` 결정·변경, JEV 판단 덮어쓰기 |
 | Python·LangGraph | Threshold, 우선순위, 분기, 재시도, fallback, 사용자 확인 강제 | 모델의 자유 출력 신뢰, 무제한 반복 |
+| Laya Multilingual | JEV와 동일한 state·typed question으로 로컬 비교 판단 | `clarityStatus` 결정·변경, 질문·추천·GoalProfile 생성, 저장 흐름 참여 |
 
 목표·선택·답변 문자열은 모두 데이터로 직렬화한다. OpenAI Structured Output은 `json_schema` 방식을 사용하고 추가 필드, enum, 배열 개수와 중복을 Pydantic으로 검증한다. 후보와 GoalProfile은 JEV의 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough` 세 Noul 결과가 모두 Threshold 이상이어야 통과한다.
 
-로컬 테스트의 기본 전송 경로는 Vercel AI Gateway다. `AI_GATEWAY_API_KEY`가 설정되면 JEV는 TypeSafe 호환 Base URL `https://ai-gateway.vercel.sh/typesafe`와 모델 `typesafe-ai/jev`를 사용하고, 생성 모델은 OpenAI 호환 Base URL `https://ai-gateway.vercel.sh/v1`과 모델 `openai/gpt-5-mini`를 사용한다. Gateway Key가 없을 때만 기존 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY` 직접 호출 설정을 사용한다.
+로컬 테스트는 직접 제공자 API를 사용한다. JEV 판단은 `TYPESAFE_API_KEY`와 기본 모델 `jev-latest`로 TypeSafe 공식 API를 호출하고, 문장 생성은 `OPENAI_API_KEY`와 기본 모델 `gpt-5-mini`로 OpenAI 공식 API를 호출한다. Vercel AI Gateway 설정과 우회 경로는 지원하지 않는다.
 
 검증 실패 시 실패한 검사 이름만 Repair Prompt에 추가하고 최대 한 번 실행한다. 두 번째 검증도 실패하면 원본 생성물을 표시하지 않고 `NEEDS_QUESTION`으로 이동한다. 모델 장애는 `INVALID`로 변환하지 않는다.
+
+### 목표 명확성 정책
+
+강한 `INVALID`·불명확 용어·복수 목표 판정 뒤에는 Score Router를 사용한다. `is_usable_goal`이 0.60 미만이거나 `specificity_confidence`가 0.45 미만이면 질문으로 보낸다. 그 외 `specificity_level` 2.00 이상은 `CLEAR`, 1.00 이상은 추천, 그 미만은 질문이다. 추천 상태에서는 사용자가 원문을 명시적으로 선택해 GoalProfile 확인으로 진행할 수 있다.
+
+최초 JEV 판단은 처음 기능 구현 때의 영어 instructions와 criteria를 유지한다. 약어·오타 때문에 의미를 확신 있게 해석하지 못하면 `has_unclear_term=true`이며, 단지 범위가 넓다는 이유만으로는 불명확 표현으로 분류하지 않는다.
+
+`is_usable_goal`은 "좋은 목표인지" 또는 "상세 계획인지"를 채점하지 않는다. 학습·연습·구현·문제 해결에 사용할 수 있는 주제 또는 활동이면 넓은 표현이라도 true를 높게 판단한다. 이 수치는 화면에서 학습 목표 성립 가능성으로 표시하며, 단독으로 통과를 차단하지 않는다.
+
+질문 답변은 단순 이력으로만 쓰지 않는다. 생성 Prompt는 최신 답변을 사용자 요구사항으로 명시하고, 답변에 주제·활동·범위·결과가 있으면 후보 제목과 GoalProfile의 `interpretedGoal` 및 관련 필드에 반영하도록 요구한다.
+
+질문·추천·GoalProfile 생성은 `gpt-5-mini`의 최소 추론량과 낮은 응답 길이를 기본값으로 사용한다. JEV 판단 결과를 먼저 보여 준 뒤 이루어지는 생성 단계의 지연을 줄이되, 구조화 Schema 검증과 재시도 정책은 유지한다.
+
+Streamlit 비교용 Laya는 JEV와 동일한 네 typed question을 받지만 확률·Score 보정 체계가 JEV와 다르다. 따라서 결과를 비교 표로만 보여 주고 JEV Router의 Threshold나 실제 사용자 흐름에 사용하지 않는다.
 
 ## 1. 역할 분리
 

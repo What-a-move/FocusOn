@@ -43,7 +43,7 @@
 
 ## 분석 기준
 
-JEV 최초 평가는 같은 `state`에 다음 네 질문을 한 번에 전달한다.
+JEV 최초 평가는 최초 구현과 동일하게 같은 `state`에 다음 네 질문을 한 번에 전달한다.
 
 1. `is_usable_goal`: Noul
 2. `has_multiple_main_goals`: Noul
@@ -56,22 +56,27 @@ JEV는 설명이나 사용자 문구를 생성하지 않는다. Router는 실험
 INVALID
 → UNRECOGNIZED_TERM
 → NEEDS_SELECTION
-→ 낮은 usable 확률 또는 specificity confidence면 NEEDS_QUESTION
-→ CLEAR
-→ NEEDS_SUGGESTION
-→ NEEDS_QUESTION
+→ is_usable_goal < 0.60: NEEDS_QUESTION
+→ specificity_confidence < 0.45: NEEDS_QUESTION
+→ specificity_level >= 2.00: CLEAR
+→ specificity_level >= 1.00: NEEDS_SUGGESTION
+→ otherwise: NEEDS_QUESTION
 ```
 
-JEV 또는 OpenAI 실패를 `INVALID`로 바꾸지 않는다. 낮은 확신은 질문 경로로 보낸다.
+`specificity_level`은 0(해석 불가)부터 3(명확한 단일 실행 목표)까지의 Score다. 2.00 이상은 `CLEAR`, 1.00 이상은 `NEEDS_SUGGESTION`, 그 미만은 `NEEDS_QUESTION`으로 보낸다. `is_usable_goal`의 `INVALID` 임계값, 복수 목표, 불명확 용어의 `UNRECOGNIZED_TERM`·`NEEDS_SELECTION` 우선순위와 임계값은 변경하지 않는다. 추천 화면에서는 사용자가 원문을 명시적으로 선택해 GoalProfile 확인으로 진행할 수 있다.
+
+최초 판단은 최초 기능의 영어 instructions와 criteria를 유지한다. 약어·오타 때문에 의미를 확신 있게 해석하지 못하면 `UNRECOGNIZED_TERM`이며, 단지 범위가 넓다는 이유만으로는 불명확 용어로 처리하지 않는다.
+
+JEV 또는 OpenAI 실패를 `INVALID`로 바꾸지 않는다.
 
 ## 생성과 재검증
 
 - OpenAI: 질문 한 개와 선택지 2~3개, 추천 목표 2~3개와 이유, GoalProfile 초안을 구조화 Schema로 생성한다.
 - JEV: 각 생성 결과에 대해 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough`를 Noul로 검증한다.
-- 후보는 개별 요청으로 검증하며 제한된 병렬 실행을 허용한다.
+- 후보는 개별 요청으로 검증하며 외부 요청 급증을 피하기 위해 순차 실행한다.
 - 검증 실패 시 실패 항목만 전달해 OpenAI Repair를 최대 1회 수행한다.
 - 두 번째 검증도 실패하면 `NEEDS_QUESTION` 또는 직접 수정 fallback으로 종료한다.
-- 사용자가 답변하거나 후보를 선택하면 새 요청으로 네 가지 최초 평가 전체를 다시 실행한다.
+- 사용자가 답변하거나 후보를 선택하면 새 요청으로 네 가지 최초 평가 전체를 다시 실행한다. 생성 Prompt는 최신 답변을 사용자 요구사항으로 취급해 GoalProfile의 `interpretedGoal`과 후보 문구에 반영한다.
 
 ## 출력 데이터
 
@@ -118,13 +123,15 @@ Streamlit 테스트 화면의 최초 동작명은 `목표 저장`이지만 클�
 
 ## 모델·외부 연동
 
-- 기본 로컬 테스트 설정: `AI_GATEWAY_API_KEY` 하나로 Vercel AI Gateway를 사용한다.
-- JEV: TypeSafe Python SDK `AsyncTypeSafeClient`, Gateway Base URL `https://ai-gateway.vercel.sh/typesafe`, 모델 `typesafe-ai/jev`
-- 생성: `ChatOpenAI.with_structured_output(..., method="json_schema")`, Gateway Base URL `https://ai-gateway.vercel.sh/v1`, 모델 `openai/gpt-5-mini`
-- 호환 경로: Gateway Key가 없으면 기존 `TYPESAFE_API_KEY`·`OPENAI_API_KEY` 직접 제공자 설정을 사용한다.
+- 기본 로컬 테스트 설정: `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 사용한다.
+- JEV: TypeSafe Python SDK `AsyncTypeSafeClient`, TypeSafe 공식 API 기본 주소, 모델 `jev-latest`
+- 생성: `ChatOpenAI.with_structured_output(..., method="json_schema")`, OpenAI 공식 API 기본 주소, 모델 `gpt-5-mini`
+- 질문·추천·GoalProfile처럼 짧은 구조화 생성은 기본 `reasoning_effort=minimal`, `verbosity=low`, 최대 600 출력 토큰으로 호출한다. 이는 상태 판단을 생략하지 않고 생성 대기만 줄이는 설정이다.
+- Vercel AI Gateway 설정과 우회 경로는 지원하지 않는다.
 - Timeout·Retry: Pydantic Settings와 TypeSafe `RetryPolicy`로 제한하고 인증·검증 4xx는 재시도하지 않는다.
 - 기본 테스트: Fake Client만 사용하며 실제 외부 API를 호출하지 않는다.
 - 실제 평가: 별도 명령과 환경 변수로 명시적으로 활성화할 때만 실행한다.
+- Streamlit 비교 화면: 로컬 `convaiinnovations/laya-multilingual`에 JEV와 같은 state·네 질문을 전달해 결과만 표시한다. Laya는 상태 Router, 질문·추천 생성, GoalProfile, 저장·세션 시작에 관여하지 않는다.
 
 ## 내부 API와 오류
 

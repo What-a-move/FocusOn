@@ -36,6 +36,7 @@ def candidate_prompt(request: GoalClarifyRequest, status: ClarityStatus) -> str:
             "context": request_context(request),
             "requirements": [
                 "Write a stable short id, Korean title, and a short Korean reason for each candidate.",
+                "Treat the latest clarification answer as a user requirement. Reflect a topic, activity, scope, or intended result it specifies in every candidate instead of ignoring it.",
                 "Do not combine independent goals in one title.",
                 "Do not add an unsupported technology, quantity, or deadline.",
             ],
@@ -67,7 +68,9 @@ def profile_prompt(request: GoalClarifyRequest) -> str:
             "task": "Create a GoalProfile draft for this already-clear single learning goal.",
             "context": request_context(request),
             "requirements": [
-                "Copy originalText, write interpretedGoal, and use a concise Korean mainTopic.",
+                "Keep originalText unchanged, but write interpretedGoal as the final goal after applying selectedGoalText and clarificationAnswers.",
+                "Treat the latest clarification answer as a user requirement. When it specifies a topic, activity, scope, or intended result, reflect it in interpretedGoal and the relevant profile fields instead of merely copying originalText.",
+                "Use a concise Korean mainTopic.",
                 "Choose one supported purpose enum.",
                 "Use at most 5 unique items in coreTopics, supportingTopics, and expectedActivities.",
                 "Set profileSource to AI_ASSISTED.",

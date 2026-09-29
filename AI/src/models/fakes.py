@@ -79,9 +79,14 @@ class FakeGoalGenerationClient:
         )
 
     async def generate_profile(self, request: GoalClarifyRequest) -> GoalProfileDraft:
+        interpreted_goal = request.selected_goal_text or request.original_text
+        if request.clarification_answers:
+            interpreted_goal = (
+                f"{interpreted_goal} - {request.clarification_answers[-1].answer}"
+            )
         return GoalProfileDraft(
             original_text=request.original_text,
-            interpreted_goal=request.selected_goal_text or request.original_text,
+            interpreted_goal=interpreted_goal,
             main_topic=request.selected_goal_text or request.original_text,
             purpose=GoalPurpose.CONCEPT_LEARNING,
             core_topics=["핵심 원리"],

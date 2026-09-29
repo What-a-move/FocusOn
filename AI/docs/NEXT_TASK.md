@@ -15,7 +15,9 @@
 
 ## 선행 조건
 
-- 로컬 `AI/.env`에 `AI_GATEWAY_API_KEY`를 설정한 뒤 JEV 판단과 구조화 생성의 최소 Live 호출을 각각 1회 검증
+- 로컬 `AI/.env`에 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 설정한 뒤 JEV 판단 표, 질문·추천 생성, 후보별 순차 JEV 검수의 Live 흐름을 각각 최소 1회 검증. 이때 `React Query에서 캐시 무효화 구현하기`와 구체성 2.00 이상 목표는 `CLEAR`, 구체성 1.00 이상 2.00 미만 목표는 `NEEDS_SUGGESTION`, 핵심 주제 또는 활동이 없는 목표는 `NEEDS_QUESTION`, 한국어 약어·오타·다중 목표·무효 입력은 기존 우선순위 상태인지 확인한다. 질문 답변 뒤 `interpretedGoal`과 추천 제목이 답변의 주제·활동·범위를 반영하는지도 확인한다.
+- `laya` 패키지와 `convaiinnovations/laya-multilingual` 체크포인트를 설치한 뒤 비교 표가 같은 네 판단 항목을 표시하는지 확인한다. Laya 응답·실패 여부와 무관하게 JEV `clarityStatus`, 질문·추천, 저장 경로가 동일한지 확인한다.
+- Laya Multilingual 기본 모델은 목표 분류 Live sanity check에서 단일 목표도 복수 목표로 높게 응답해, 현재 값은 원시 실험값으로만 표시한다. 제품 판단에 사용하려면 한국어 목표 라벨 데이터로 fine-tune·확률 보정·holdout 평가를 별도 수행한다.
 - 루트 `docs/API_CONTRACT.md` 확인
 - `DEVELOPMENT_RULES.md`, `state_model.md`, `data_lifecycle.md`, `evaluation_spec.md` 확인
 - `goal_session_spec.md`의 식별자·회차·멱등·시간 집계 경계 확인

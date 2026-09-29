@@ -13,7 +13,7 @@ FOCUSON_LIVE_GOAL_EVAL=1 python -m evaluation.evaluate --live
 streamlit run streamlit_app.py
 ```
 
-- Vercel AI Gateway로 전체 Workflow를 수동 테스트할 때는 `AI/.env`에 `AI_GATEWAY_API_KEY` 한 항목만 입력하면 된다. JEV·생성 모델과 Base URL은 기본값을 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
+- 전체 Workflow를 수동 테스트하려면 `AI/.env`에 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 입력한다. JEV와 생성 모델은 기본값으로 각각 `jev-latest`, `gpt-5-mini`를 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
 - 프로젝트 상위 경로의 `.python-version`이 `what-a-move`를 선택하므로 pyenv shell 연동이 활성화된 터미널에서는 `pyenv activate`를 생략할 수 있다.
 - 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
 - Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
@@ -190,6 +190,22 @@ ColPali는 DOM+Apple Vision OCR 기준선과 같은 시각 콘텐츠 평가 세�
 - ColPali 결과만으로 이탈·알림·차단을 결정하지 않음
 
 개선 폭과 자원 예산의 수치는 PoC 결과 후 `DECISION_RECORD.md`에 확정한다.
+
+### 8.1 목표 설정 보조 명확성 고정 세트
+
+`evaluation/evaluation_cases.json`의 목표 보조 Fixture는 다음 정책을 회귀 검증한다.
+
+- `goalDetailLevel=CLEAR`인 목표는 `CLEAR`, `goalDetailLevel=BROAD`인 목표는 `NEEDS_SUGGESTION`, `goalDetailLevel=MISSING`인 목표는 `NEEDS_QUESTION`이다. `BROAD`에서는 원문 직접 시작과 구체화 추천을 모두 제공한다.
+- `isStartableAsIs`, `specificityLevel`, `specificityConfidence`는 JEV 판단 표의 설명값이며 상태를 단독으로 결정하지 않는다.
+- 답변 뒤 생성된 `interpretedGoal`과 추천 후보는 최신 답변에 포함된 주제·활동·범위·결과를 반영해야 한다.
+- `INVALID`, 복수 목표, 불명확 약어·오타는 명확성 완화보다 먼저 기존 우선순위로 판정한다.
+- React Query, Spring Security, 영어 독해와 한국어 약어·오타·넓은 주제 사례는 정책의 대표 Fixture일 뿐이다. 한국어·영어·혼합 표현의 다른 주제와 활동도 같은 의미 기준으로 평가한다.
+
+명확성 Prompt, Score 기준, Threshold를 변경할 때는 이 고정 세트와 Router 단위 테스트를 함께 실행하고, 각 상태의 변경 사유를 결정 기록에 남긴다.
+
+### 8.2 Laya 비교 화면
+
+Laya 비교 테스트는 JEV와 동일한 `state` 및 네 typed question을 받는지와, Laya 결과가 JEV Router·Workflow에 전달되지 않는지를 검증한다. Laya Multilingual의 확률과 Score는 별도 보정 체계를 사용하므로 JEV Threshold에 재사용하지 않는다.
 
 ## 9. 회귀 평가 트리거
 

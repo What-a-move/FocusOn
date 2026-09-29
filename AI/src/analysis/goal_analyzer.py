@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-
 from src.api.schemas import ClarityStatus
 from src.config import Settings
 

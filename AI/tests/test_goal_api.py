@@ -26,7 +26,10 @@ async def test_api_uses_camel_case_and_never_confirms_automatically():
     app = create_app()
     workflow = GoalAssistanceWorkflow(
         Settings(),
-        FakeJevClient([GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)], [PASS]),
+        FakeJevClient(
+            [GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)],
+            [PASS],
+        ),
         FakeGoalGenerationClient(),
     )
     app.dependency_overrides[get_goal_workflow] = lambda: workflow
@@ -55,7 +58,10 @@ async def test_schema_validation_has_common_safe_error_shape():
 @pytest.mark.asyncio
 async def test_dynamic_length_validation_does_not_call_jev():
     app = create_app()
-    jev = FakeJevClient([GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)], [PASS])
+    jev = FakeJevClient(
+        [GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)],
+        [PASS],
+    )
     workflow = GoalAssistanceWorkflow(
         Settings(goal_text_max_length=5), jev, FakeGoalGenerationClient()
     )

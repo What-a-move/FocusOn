@@ -69,17 +69,18 @@ class OpenAIGoalGenerationClient:
     """OpenAI adapter restricted to schema-bound natural-language generation."""
 
     def __init__(self, settings: Settings) -> None:
-        self._using_gateway = settings.uses_ai_gateway
-        api_key = settings.generation_api_key
+        api_key = settings.openai_api_key
         if api_key is None:
             self._llm = None
         else:
             self._llm = ChatOpenAI(
-                model=settings.generation_model,
+                model=settings.openai_model,
                 api_key=api_key,
-                base_url=settings.generation_base_url,
                 timeout=settings.goal_assistance_timeout_seconds,
                 max_retries=settings.goal_assistance_max_retries,
+                reasoning_effort=settings.openai_reasoning_effort,
+                verbosity=settings.openai_verbosity,
+                max_completion_tokens=settings.openai_max_completion_tokens,
             )
 
     async def _generate(self, schema: type[SchemaT], prompt: str) -> SchemaT:
@@ -112,15 +113,13 @@ class OpenAIGoalGenerationClient:
                     "OpenAI 생성 서비스를 사용할 수 없습니다."
                 ) from exc
             except (AuthenticationError, PermissionDeniedError, BadRequestError) as exc:
-                provider = "Vercel AI Gateway" if self._using_gateway else "OpenAI"
                 raise ModelConfigurationError(
-                    f"{provider}의 API Key 또는 문장 생성 모델 설정이 올바르지 않습니다."
+                    "OpenAI API Key 또는 문장 생성 모델 설정이 올바르지 않습니다."
                 ) from exc
             except APIStatusError as exc:
                 if exc.status_code == 402:
-                    provider = "Vercel AI Gateway" if self._using_gateway else "OpenAI"
                     raise ModelConfigurationError(
-                        f"{provider} 사용 가능 잔액이 부족하거나 결제가 중지됐습니다."
+                        "OpenAI 사용 가능 잔액이 부족하거나 결제가 중지됐습니다."
                     ) from exc
                 raise ModelUnavailableError(
                     "문장 생성 서비스를 사용할 수 없습니다."

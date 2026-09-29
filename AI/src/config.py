@@ -1,11 +1,16 @@
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 AI_ROOT = Path(__file__).resolve().parents[1]
+
+# Pydantic reads .env values for Settings, but LangSmith/LangChain read directly
+# from os.environ. Loading here keeps local Streamlit/API runs consistent.
+load_dotenv(AI_ROOT / ".env", override=False)
 
 
 class Settings(BaseSettings):
@@ -17,12 +22,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    ai_gateway_api_key: SecretStr | None = None
-    ai_gateway_typesafe_base_url: str = "https://ai-gateway.vercel.sh/typesafe"
-    ai_gateway_openai_base_url: str = "https://ai-gateway.vercel.sh/v1"
-    ai_gateway_jev_model: str = "typesafe-ai/jev"
-    ai_gateway_text_model: str = "openai/gpt-5-mini"
-
     typesafe_api_key: SecretStr | None = None
     typesafe_default_model: str = Field(
         default="jev-latest",
@@ -31,49 +30,12 @@ class Settings(BaseSettings):
     typesafe_log_level: str = "warning"
     openai_api_key: SecretStr | None = None
     openai_model: str = "gpt-5-mini"
+    openai_reasoning_effort: str = "minimal"
+    openai_verbosity: str = "low"
+    openai_max_completion_tokens: int = Field(default=600, ge=100, le=2_000)
 
-    @property
-    def uses_ai_gateway(self) -> bool:
-        return bool(
-            self.ai_gateway_api_key
-            and self.ai_gateway_api_key.get_secret_value().strip()
-        )
-
-    @property
-    def jev_api_key(self) -> SecretStr | None:
-        if self.uses_ai_gateway:
-            return self.ai_gateway_api_key
-        return self.typesafe_api_key
-
-    @property
-    def jev_base_url(self) -> str | None:
-        if self.uses_ai_gateway:
-            return self.ai_gateway_typesafe_base_url
-        return None
-
-    @property
-    def jev_model(self) -> str:
-        if self.uses_ai_gateway:
-            return self.ai_gateway_jev_model
-        return self.typesafe_default_model
-
-    @property
-    def generation_api_key(self) -> SecretStr | None:
-        if self.uses_ai_gateway:
-            return self.ai_gateway_api_key
-        return self.openai_api_key
-
-    @property
-    def generation_base_url(self) -> str | None:
-        if self.uses_ai_gateway:
-            return self.ai_gateway_openai_base_url
-        return None
-
-    @property
-    def generation_model(self) -> str:
-        if self.uses_ai_gateway:
-            return self.ai_gateway_text_model
-        return self.openai_model
+    laya_comparison_enabled: bool = True
+    laya_comparison_model: str = "convaiinnovations/laya-multilingual"
 
     goal_assistance_timeout_seconds: float = Field(default=10.0, gt=0)
     goal_assistance_max_retries: int = Field(default=2, ge=0, le=5)
@@ -82,8 +44,8 @@ class Settings(BaseSettings):
     unclear_term_min: float = Field(default=0.70, ge=0, le=1)
     multiple_goals_min: float = Field(default=0.70, ge=0, le=1)
     usable_confident_min: float = Field(default=0.60, ge=0, le=1)
-    clear_specificity_min: float = Field(default=2.50, ge=0, le=3)
-    suggestion_specificity_min: float = Field(default=1.50, ge=0, le=3)
+    clear_specificity_min: float = Field(default=2.00, ge=0, le=3)
+    suggestion_specificity_min: float = Field(default=1.00, ge=0, le=3)
     specificity_confidence_min: float = Field(default=0.45, ge=0, le=1)
     generated_result_pass_min: float = Field(default=0.70, ge=0, le=1)
 

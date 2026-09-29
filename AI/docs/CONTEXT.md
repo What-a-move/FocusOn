@@ -22,7 +22,14 @@
 - 6개 `clarityStatus`, 후보별 JEV 검수, 전체 재평가, fallback, 로그 개인정보 제외를 Fake 기반 테스트로 검증했다.
 - Offline 평가 Fixture와 명시적으로만 실행되는 JEV Live 평가 경로를 추가했다.
 - 실제 JEV·OpenAI Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 최초 `목표 저장`은 분석만 시작하고 `CLEAR` 결과의 최종 확인 후에만 현재 테스트 세션 메모리에 저장하며, 제품 저장소나 학습 세션은 변경하지 않는다.
-- `AI_GATEWAY_API_KEY` 하나로 Vercel AI Gateway의 `typesafe-ai/jev` 판단과 `openai/gpt-5-mini` 구조화 생성을 모두 호출할 수 있다. Gateway Key가 있으면 기존 직접 제공자 Key보다 우선하며, 직접 TypeSafe·OpenAI 설정도 호환 경로로 유지한다.
+- 로컬 목표 보조는 TypeSafe 공식 API의 `TYPESAFE_API_KEY`로 JEV 판단을 호출하고, OpenAI 공식 API의 `OPENAI_API_KEY`로 구조화 생성을 호출한다. Vercel AI Gateway 설정과 우회 경로는 제거했다.
+- Streamlit은 1차 JEV 판단을 먼저 표시하고, 사용자가 다음 단계 생성 버튼을 누를 때만 OpenAI 질문·추천·GoalProfile 생성과 후속 JEV 검수를 실행한다. 후보별 JEV 검수와 Repair는 외부 요청 급증을 피하기 위해 순차 실행한다.
+- Streamlit의 JEV 판단 결과는 확률·구체성 수치만 있는 JSON 대신 판단 항목, 값, 한국어 설명이 나란히 표시되는 표로 요약하며 원본 JSON은 펼침 영역에 유지한다. `CLEAR`의 최종 확인 정보가 생성된 뒤에도 같은 판단 표를 계속 표시한다.
+- 목표 명확성 Router는 최초 구현의 4개 JEV 질문과 Score Threshold를 사용한다. 강한 `INVALID`·복수 목표·불명확 용어 판정 후 `is_usable_goal` 0.60, 구체성 신뢰도 0.45, 구체성 점수 2.00/1.00 기준으로 `CLEAR`·추천·질문으로 분기한다.
+- 최초 JEV 판단의 영어 instructions와 criteria, snake_case state(`goal_text`, `selected_goal_text`, `clarification_answers`)를 복원했다. 질문 답변에 주제·활동·범위가 있으면 최종 GoalProfile과 추천 후보에 반영한다.
+- OpenAI 구조화 생성에는 `reasoning_effort=minimal`, `verbosity=low`, 최대 600 출력 토큰을 기본 적용해 질문 생성 대기를 줄인다.
+- Streamlit 목표 입력 시 로컬 `convaiinnovations/laya-multilingual`도 JEV와 동일한 state·네 typed question으로 비교 판단한다. Laya는 비교 표에만 쓰고 실제 상태, Workflow, GoalProfile, 저장에는 연결하지 않는다. 최초 비교는 패키지 설치와 공개 체크포인트 다운로드가 필요하다.
+- 2026-09-28 로컬 Live 확인에서 Laya 호출·응답 매핑은 정상이나, 단일 목표 `React Query 캐시 무효화 구현하기`와 `Spring Security JWT 인증 구현하기`도 복수 목표 Noul이 각각 86.57%, 97.12%로 나왔다. 현재 기본 모델의 목표 분류 zero-shot 결과는 원시 실험값으로만 표시하며 JEV 확률과 비교하거나 정책에 사용하지 않는다.
 - AI 기본 디렉터리와 평가 디렉터리가 생성되어 있다.
 - AI 전용 문서 구조와 기능별 템플릿을 구성했다.
 - 공통 API 응답 초안은 루트 `docs/API_CONTRACT.md`에 정의되어 있다.
@@ -75,7 +82,7 @@
 - API 서버: FastAPI 0.141 계열
 - Schema 검증: Pydantic 2.13 계열
 - 테스트: pytest 9.1 계열, pytest-asyncio 1.4 계열
-- 목표 보조 모델: Vercel AI Gateway 기본 `typesafe-ai/jev` 판단과 `openai/gpt-5-mini` Structured Output 생성; 직접 TypeSafe·OpenAI 설정 호환
+- 목표 보조 모델: TypeSafe 공식 API `jev-latest` 판단과 OpenAI 공식 API `gpt-5-mini` Structured Output 생성. 제공자별 일시 장애는 UI에 JEV 또는 OpenAI 서비스로 구분해 표시
 - Workflow: LangGraph 1.2 계열, 요청 단위 실행·Checkpointer 없음
 - 분석 대상: 화면·페이지에서 추출한 텍스트와 메타데이터
 - OCR: Extension 서비스 워커와 macOS 네이티브 모듈의 Apple Vision 보조 경로 제안; AI는 허용된 정제 텍스트만 평가

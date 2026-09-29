@@ -1,6 +1,11 @@
+import asyncio
+
 import pytest
 
-from src.analysis.goal_analyzer import GoalAssessment, GeneratedResultVerification
+from src.analysis.goal_analyzer import (
+    GoalAssessment,
+    GeneratedResultVerification,
+)
 from src.api.schemas import ClarityStatus, ClarificationAnswer, GoalClarifyRequest
 from src.config import Settings
 from src.models.fakes import FakeGoalGenerationClient, FakeJevClient
@@ -25,15 +30,15 @@ def score(*, usable=0.9, multiple=0.1, unclear=0.1, specificity=3.0, confidence=
 @pytest.mark.parametrize(
     ("assessment", "expected"),
     [
-        (score(specificity=3), ClarityStatus.CLEAR),
+        (score(specificity=3.0), ClarityStatus.CLEAR),
         (score(multiple=0.9), ClarityStatus.NEEDS_SELECTION),
-        (score(specificity=2), ClarityStatus.NEEDS_SUGGESTION),
-        (score(specificity=1), ClarityStatus.NEEDS_QUESTION),
+        (score(specificity=1.5), ClarityStatus.NEEDS_SUGGESTION),
+        (score(specificity=0.9), ClarityStatus.NEEDS_QUESTION),
         (score(unclear=0.9), ClarityStatus.UNRECOGNIZED_TERM),
         (score(usable=0.1), ClarityStatus.INVALID),
     ],
 )
-async def test_six_statuses_reach_expected_response(assessment, expected):
+async def test_routable_statuses_reach_expected_response(assessment, expected):
     verification_count = 1 if expected is ClarityStatus.CLEAR else 2 if expected in {
         ClarityStatus.NEEDS_SELECTION, ClarityStatus.NEEDS_SUGGESTION
     } else 0
@@ -90,6 +95,70 @@ async def test_candidate_selection_and_answer_start_full_assessment_again():
 
 
 @pytest.mark.asyncio
+async def test_answer_is_reflected_in_the_final_interpreted_goal():
+    jev = FakeJevClient(
+        [
+            score(specificity=0.9),
+            score(specificity=3.0),
+        ],
+        [PASS],
+    )
+    workflow = GoalAssistanceWorkflow(Settings(), jev, FakeGoalGenerationClient())
+
+    first = await workflow.run(req(originalText="상태 관리"))
+    second = await workflow.run(
+        req(
+            originalText="상태 관리",
+            clarificationAnswers=[
+                {
+                    "questionId": first.question.id,
+                    "question": first.question.text,
+                    "answer": "React에서 Context API로 전역 상태 구현",
+                }
+            ],
+        )
+    )
+
+    assert first.clarity_status is ClarityStatus.NEEDS_QUESTION
+    assert second.clarity_status is ClarityStatus.CLEAR
+    assert "React에서 Context API로 전역 상태 구현" in second.interpreted_goal
+
+
+@pytest.mark.asyncio
+async def test_user_can_start_the_original_broad_goal_after_explicit_selection():
+    jev = FakeJevClient(
+        [score(specificity=1.5), score(specificity=1.5)],
+        [PASS, PASS, PASS],
+    )
+    workflow = GoalAssistanceWorkflow(Settings(), jev, FakeGoalGenerationClient())
+
+    first = await workflow.run(req(originalText="상태 관리 공부하기"))
+    second = await workflow.run(
+        req(
+            originalText="상태 관리 공부하기",
+            selectedGoalText="상태 관리 공부하기",
+        )
+    )
+
+    assert first.clarity_status is ClarityStatus.NEEDS_SUGGESTION
+    assert second.clarity_status is ClarityStatus.CLEAR
+    assert second.interpreted_goal == "상태 관리 공부하기"
+
+
+@pytest.mark.asyncio
+async def test_follow_up_uses_displayed_jev_assessment_without_reassessing():
+    jev = FakeJevClient([score(multiple=0.9)], [PASS, PASS])
+    workflow = GoalAssistanceWorkflow(Settings(), jev, FakeGoalGenerationClient())
+
+    assessment, clarity_status = await workflow.assess(req())
+    result = await workflow.run_after_assessment(req(), assessment, clarity_status)
+
+    assert result.clarity_status is ClarityStatus.NEEDS_SELECTION
+    assert jev.assess_calls == 1
+    assert jev.verify_calls == 2
+
+
+@pytest.mark.asyncio
 async def test_candidate_results_are_verified_independently():
     jev = FakeJevClient([score(multiple=0.9)], [PASS, PASS])
     workflow = GoalAssistanceWorkflow(Settings(), jev, FakeGoalGenerationClient())
@@ -98,6 +167,31 @@ async def test_candidate_results_are_verified_independently():
 
     assert len(result.recommended_goals) == 2
     assert jev.verify_calls == 2
+
+
+@pytest.mark.asyncio
+async def test_candidate_results_are_verified_sequentially():
+    class SequentialProbeJev(FakeJevClient):
+        def __init__(self):
+            super().__init__([score(multiple=0.9)], [PASS, PASS])
+            self.in_flight = 0
+            self.max_in_flight = 0
+
+        async def verify_generated_result(self, *args, **kwargs):
+            self.in_flight += 1
+            self.max_in_flight = max(self.max_in_flight, self.in_flight)
+            await asyncio.sleep(0)
+            try:
+                return await super().verify_generated_result(*args, **kwargs)
+            finally:
+                self.in_flight -= 1
+
+    jev = SequentialProbeJev()
+    workflow = GoalAssistanceWorkflow(Settings(), jev, FakeGoalGenerationClient())
+
+    await workflow.run(req())
+
+    assert jev.max_in_flight == 1
 
 
 @pytest.mark.asyncio

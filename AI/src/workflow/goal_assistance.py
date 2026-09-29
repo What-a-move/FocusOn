@@ -1,6 +1,4 @@
 from __future__ import annotations
-
-import asyncio
 from typing import Any, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -93,11 +91,46 @@ class GoalAssistanceWorkflow:
         return graph.compile()
 
     async def run(self, request: GoalClarifyRequest) -> GoalClarifyData:
-        state = await self._graph.ainvoke({"request": request, "repair_count": 0})
+        assessment, clarity_status = await self.assess(request)
+        return await self.run_after_assessment(request, assessment, clarity_status)
+
+    async def assess(
+        self, request: GoalClarifyRequest
+    ) -> tuple[GoalAssessment, ClarityStatus]:
+        """Run only the initial JEV assessment before any display-text generation."""
+
+        self._validate_request(request)
+        assessment = await self._judgments.assess_goal(request)
+        clarity_status = route_goal_assessment(assessment, self._settings)
+        if (
+            clarity_status is ClarityStatus.NEEDS_SUGGESTION
+            and request.selected_goal_text is not None
+        ):
+            # The user explicitly selected either a recommended or original broad goal.
+            # Generate a final profile without pretending JEV reclassified its breadth.
+            clarity_status = ClarityStatus.CLEAR
+        return assessment, clarity_status
+
+    async def run_after_assessment(
+        self,
+        request: GoalClarifyRequest,
+        assessment: GoalAssessment,
+        clarity_status: ClarityStatus,
+    ) -> GoalClarifyData:
+        """Generate the response from a confirmed JEV assessment without reassessing."""
+
+        self._validate_request(request)
+        state = await self._graph.ainvoke(
+            {
+                "request": request,
+                "assessment": assessment,
+                "clarity_status": clarity_status,
+                "repair_count": 0,
+            }
+        )
         return state["response"]
 
-    async def _validate_input(self, state: GoalAssistanceState) -> dict[str, Any]:
-        request = state["request"]
+    def _validate_request(self, request: GoalClarifyRequest) -> None:
         details: list[dict[str, object]] = []
         if len(request.original_text) > self._settings.goal_text_max_length:
             details.append({"field": "originalText", "reason": "length_exceeded"})
@@ -123,9 +156,14 @@ class GoalAssistanceWorkflow:
                 )
         if details:
             raise InputValidationError(details)
+
+    async def _validate_input(self, state: GoalAssistanceState) -> dict[str, Any]:
+        self._validate_request(state["request"])
         return {}
 
     async def _assess_with_jev(self, state: GoalAssistanceState) -> dict[str, Any]:
+        if "assessment" in state and "clarity_status" in state:
+            return {}
         assessment = await self._judgments.assess_goal(state["request"])
         return {
             "assessment": assessment,
@@ -178,16 +216,14 @@ class GoalAssistanceWorkflow:
             return {"failed_checks": failed, "candidate_failures": {}}
 
         candidates = state["candidates"].goals
-        verifications = await asyncio.gather(
-            *(
-                self._judgments.verify_generated_result(
-                    request,
-                    candidate.model_dump(mode="json", by_alias=True),
-                    "recommended_goal",
-                )
-                for candidate in candidates
+        verifications = []
+        for candidate in candidates:
+            verification = await self._judgments.verify_generated_result(
+                request,
+                candidate.model_dump(mode="json", by_alias=True),
+                "recommended_goal",
             )
-        )
+            verifications.append(verification)
         candidate_failures = {
             index: failed
             for index, verification in enumerate(verifications)
@@ -230,16 +266,10 @@ class GoalAssistanceWorkflow:
         else:
             candidates = list(state["candidates"].goals)
             failures = state["candidate_failures"]
-            repaired = await asyncio.gather(
-                *(
-                    self._generator.repair_candidate(
-                        request, candidates[index], checks
-                    )
-                    for index, checks in failures.items()
+            for index, checks in failures.items():
+                candidates[index] = await self._generator.repair_candidate(
+                    request, candidates[index], checks
                 )
-            )
-            for index, candidate in zip(failures, repaired, strict=True):
-                candidates[index] = candidate
             result["candidates"] = RecommendedGoalBatch(goals=candidates)
         return result
 
