@@ -3,8 +3,8 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-STATE-001`, `AI-FAIL-001`, `AI-DRIFT-001`, `AI-ACTION-001`
 - 관련 문서: [목표·세션 모델](goal_session_spec.md), [피드백 명세](feedback_personalization_spec.md), [AI API 계약](api_spec.md)
@@ -98,11 +98,26 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 | `SUGGEST_RETURN` | 목표 자료로 돌아갈 것을 제안한다. | `DRIFT_RISK`와 알림 정책 충족 |
 | `SUGGEST_BREAK` | 휴식을 제안한다. | 사용자 설정과 장시간 활동 근거 |
 | `SUGGEST_PAUSE` | 타이머 일시정지를 제안한다. | 자리 비움 등 선택 기능의 지속 근거 |
-| `SUGGEST_TEMPORARY_BLOCK` | 제한 시간의 임시 차단을 제안한다. | 반복 이탈, 쿨다운, 사용자 선택 가능 UI |
+| `SUGGEST_TEMPORARY_BLOCK` | 후속 기능에서 제한 시간의 임시 차단을 제안한다. | 현재 MVP 상태 계약에는 포함하지 않음 |
 
 권장 행동은 실행 명령이 아니다. 실제 일시정지나 차단은 Client가 대상과 시간을 보여주고 사용자가 선택한 경우에만 수행한다. 사전 설정된 자동 정지는 별도 합의와 검증이 필요하다.
 
-## 7. 조합 불변 조건
+## 7. 세션·분석 제외 상태 투영
+
+세션의 최종 상태는 Server가 소유한다. AI에는 현재 상태의 투영값만 전달한다.
+
+| 필드 | 값 | 의미 |
+| --- | --- | --- |
+| `sessionStatus` | `ACTIVE` | 타이머와 회차가 진행 중이며 분석 가능 |
+| `sessionStatus` | `PAUSED` | 타이머·학습 기록이 중지됨 |
+| `sessionStatus` | `ENDED` | 회차 종료; 결과를 현재 상태에 적용하지 않음 |
+| `exclusionMode` | `NONE` | 일반 분석 가능 |
+| `exclusionMode` | `ANALYSIS_ONLY` | 콘텐츠 수집·OCR·AI·카메라 분석을 중지하고 타이머는 계속 |
+| `exclusionMode` | `ANALYSIS_AND_TIME` | 분석·수집·학습 기록·타이머를 모두 중지 |
+
+`ANALYSIS_AND_TIME`에서 `resumeRequired=true`이면 사용자 확인 전 자동 재개하지 않는다. 두 제외 모드 모두 콘텐츠 payload와 원문을 AI에 보내지 않는다.
+
+## 8. 조합 불변 조건
 
 | 조건 | 강제 결과 |
 | --- | --- |
@@ -114,8 +129,9 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 | `relevanceLabel = OFF_TASK` 단독 | 최대 `OBSERVING`; 즉시 차단·이탈 알림 금지 |
 | 사용자 관련성 수정 | 캐시·대기 알림 무효화 후 `RECOVERED` 처리 |
 | 목표·탭·회차 버전 불일치 | 결과 폐기, 현재 상태 변경 금지 |
+| 민감정보 2차 검사 실패 | `PRIVACY_BLOCKED`, AI 미호출, 원문 미저장 |
 
-## 8. 공개 상태 매핑
+## 9. 공개 상태 매핑
 
 `packages/shared-types`의 `FocusState`와 Server 공개 응답은 Notion 기준 5개 상태만 사용한다. 내부 AI 상태를 그대로 Client에 전달하지 않는다.
 
@@ -129,7 +145,7 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 
 내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
 
-## 9. 응답 적용 전 확인
+## 10. 응답 적용 전 확인
 
 결과를 현재 화면에 적용하기 전에 다음 값이 요청 당시와 같은지 확인한다.
 

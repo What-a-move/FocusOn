@@ -3,8 +3,8 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안, 미구현
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-PRIV-001`, `AI-PRIV-002`, `AI-PIPE-001`, `AI-FAIL-001`, `AI-STALE-001`, `AI-VISION-001`, `AI-VISION-002`, `AI-VISION-003`
 
@@ -15,15 +15,17 @@
 - `apps/extension/public/content-script.js`와 `service-worker.js`는 설명 주석만 있는 진입 파일이다.
 - 현재 Manifest는 `tabs`, `storage`, `webNavigation`과 HTTP(S) Host Permission을 선언한다.
 - `activeTab`, `nativeMessaging`과 네이티브 호스트 Manifest는 아직 추가되지 않았다.
-- 따라서 캡처 권한 방식, Native Messaging 설치와 실제 메시지 크기는 구현 완료가 아니라 PoC 대상이다.
+- Chrome Extension 내부 OCR과 macOS Desktop Apple Vision OCR은 별도 경로로 검증해야 한다.
+- 따라서 캡처 권한 방식, Extension 내부 OCR 호환성, Desktop Native Messaging 설치와 실제 메시지 크기는 구현 완료가 아니라 PoC 대상이다.
 
 ## 1. 책임 경계
 
 | 구성요소 | 담당 | 담당하지 않는 것 |
 | --- | --- | --- |
 | Content Script | 허용된 DOM 영역 탐색, 구조 보존 추출, 변경 신호 생성 | 세션 인증, 최종 관련성 판단 |
-| Extension Service Worker | 탭·탐색 식별, 제외·권한 검사, 이벤트 중복 제거, Native Messaging 중계 | OCR 실행, AI 직접 호출 |
-| macOS 네이티브 모듈 | Apple Vision OCR, 이미지 메모리 처리, OCR 품질 메타데이터 | 외부 이미지 업로드, 학습 관련성 판단 |
+| Extension Service Worker | 탭·탐색 식별, 제외·권한 검사, 이벤트 중복 제거, Extension 내부 OCR 중계 | AI 직접 호출, Desktop Native Messaging 실행 |
+| Chrome Extension 로컬 OCR | 허용된 가시 영역의 브라우저 호환 OCR과 품질 메타데이터 | 원본 이미지 업로드, 학습 관련성 판단 |
+| macOS 네이티브 모듈 | Desktop 허용 화면의 Apple Vision OCR, 이미지 메모리 처리, OCR 품질 메타데이터 | 외부 이미지 업로드, 학습 관련성 판단 |
 | Server | 인증·소유권·최신 버전·크기 제한 검증, AI 중계 | 브라우저 DOM 직접 수집 |
 | AI | 정제 문단 검증, 품질 2차 확인, 관련성 분석 | 원본 화면·전체 DOM 수신, 브라우저 제어 |
 
@@ -37,9 +39,14 @@
   → DOM 전용 추출기 또는 일반 추출기
   → 로컬 개인정보·품질 검사
   ├─ 충분함: 정제 문단 생성
-  ├─ 부족함: 캡처 권한과 OCR 조건 재검사
+  ├─ Chrome 부족함: 캡처 권한과 Extension OCR 조건 재검사
   │           → 현재 탭 가시 영역 캡처
-  │           → 로컬 Apple Vision OCR
+  │           → Extension 내부 로컬 OCR
+  │           → 이미지 즉시 폐기
+  │           → 개인정보·품질 재검사
+  ├─ Desktop 부족함: 활성 앱 화면 권한과 Apple Vision 조건 재검사
+  │           → 허용된 활성 앱 화면 캡처
+  │           → macOS Apple Vision OCR
   │           → 이미지 즉시 폐기
   │           → 개인정보·품질 재검사
   └─ 금지·실패·미지원: AI 미호출 또는 비분석 상태
@@ -78,7 +85,7 @@
 
 모든 조건을 통과해야 수집을 시작한다.
 
-1. 활성 `runId`가 있고 세션이 `RUNNING`이다.
+1. `sessionStatus=ACTIVE`이고 활성 `runId`가 있다.
 2. 브라우저 창과 대상 탭이 실제 활성 상태다.
 3. 사용자 제외 도메인·앱에 해당하지 않는다.
 4. 로그인·결제·인증·메신저 등 민감 화면이 아니다.
@@ -149,27 +156,39 @@ AI로 전달하는 최소 단위는 전체 HTML이나 평문 덩어리가 아니
 
 이메일·전화번호·주소·JWT·Bearer Token·알려진 API Key Prefix·결제 카드 후보를 제거하거나 전송을 중지한다. 마스킹만으로 안전하다고 단정하지 않는다. 안전하게 분리할 수 없으면 `PRIVACY_BLOCKED`로 종료하고 발견한 문자열은 로그에 남기지 않는다.
 
-## 8. Apple Vision OCR 계약
+## 8. Client별 OCR 계약
 
-### 8.1 호출 구조
+### 8.1 Chrome Extension 내부 OCR
 
 ```text
 Content Script
   → Service Worker
   → captureVisibleTab
-  → Native Messaging
-  → macOS OCR 프로그램
+  → Extension 내부 OCR 엔진
   → OCR 결과
   → Service Worker의 개인정보·품질 검사
 ```
 
-Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네이티브 호스트는 허용된 Extension ID, 메시지 타입, 이미지 크기와 요청 버전을 검사하고 파일 경로나 시스템 명령을 입력받지 않는다.
+Chrome은 DOM 추출이 부족할 때만 Extension 내부 OCR을 사용한다. Chrome OCR 실패를 Desktop Native Messaging이나 외부 OCR로 자동 우회하지 않는다.
 
-### 8.2 요청·응답 제안
+### 8.2 macOS Desktop Apple Vision OCR
+
+```text
+Desktop App
+  → 활성 앱·권한·제외 상태 검사
+  → 허용된 활성 앱 화면 캡처
+  → Native Messaging 또는 macOS 네이티브 모듈
+  → Apple Vision OCR
+  → 이미지 즉시 폐기
+```
+
+Desktop Native Messaging을 사용할 경우 네이티브 호스트는 허용된 Client 식별자, 메시지 타입, 이미지 크기와 요청 버전을 검사하고 파일 경로나 시스템 명령을 입력받지 않는다. Chrome Extension은 이 Desktop 경로를 사용하지 않는다.
+
+### 8.3 Desktop 요청·응답 제안
 
 ```json
 {
-  "type": "RECOGNIZE_VISIBLE_TAB",
+  "type": "RECOGNIZE_ACTIVE_APP",
   "requestId": "550e8400-e29b-41d4-a716-446655440002",
   "navigationId": "navigation-003",
   "imageFormat": "PNG",
@@ -194,11 +213,11 @@ Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네�
 }
 ```
 
-예시의 필드명과 인코딩은 제안이다. Chrome Native Messaging에서 사용할 JSON 호환 인코딩, 최대 크기와 Timeout은 PoC로 결정한다. `recognitionConfidence`는 OCR 품질이며 목표 관련성 Confidence가 아니다.
+예시의 필드명과 인코딩은 제안이다. Desktop Native Messaging에서 사용할 JSON 호환 인코딩, 최대 크기와 Timeout은 PoC로 결정한다. `recognitionConfidence`는 OCR 품질이며 목표 관련성 Confidence가 아니다.
 
-Chrome Native Messaging은 UTF-8 JSON 메시지를 길이 Prefix와 함께 전달한다. Chrome 공식 제한은 Extension에서 Native Host로 보내는 한 메시지가 최대 64 MiB, Native Host에서 Chrome으로 보내는 한 메시지가 최대 1 MiB다. FocusOn은 이 상한을 허용 크기로 사용하지 않고, 캡처 해상도·메모리·지연 평가를 거쳐 더 작은 제품 상한을 정한다.
+Desktop Native Messaging은 UTF-8 JSON 메시지를 길이 Prefix와 함께 전달할 수 있다. 공식 상한을 제품 허용 크기로 사용하지 않고, 캡처 해상도·메모리·지연 평가를 거쳐 더 작은 Desktop 제품 상한을 정한다.
 
-### 8.3 이미지 수명
+### 8.4 이미지 수명
 
 - 캡처 직전과 OCR 응답 직후 `tabId`, `windowId`, `navigationId`를 비교한다.
 - 캡처 이미지는 사용자 기기 메모리에서만 처리한다.
@@ -214,7 +233,7 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 ```text
 허용된 시각 콘텐츠
   → 개인정보 Gate
-  → DOM + Apple Vision OCR 기준선
+  → Chrome Extension 내부 OCR + macOS Desktop Apple Vision OCR 기준선
   → ColPali 후보 검색
   → 근거 영역 검증
   → 동일 평가 세트 비교

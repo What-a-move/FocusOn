@@ -3,8 +3,8 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안, 미구현
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-GOAL-001`, `AI-SESSION-001`, `AI-EVENT-001`, `AI-STALE-001`, `AI-TIME-001`
 
@@ -63,6 +63,19 @@ User
 | `clarificationNeeded` | Boolean | 예 | 사용자 확인 질문이 필요한지 나타낸다. |
 | `confirmedByUser` | Boolean | 예 | Server가 사용자 확인 이벤트로 관리한다. |
 
+확정 전 목표 보조 응답은 `clarityStatus`로 세분화한다.
+
+| `clarityStatus` | 의미 | 기본 Client 동작 |
+| --- | --- | --- |
+| `CLEAR` | 목표와 예상 활동이 비교적 명확함 | 해석 결과 확인 |
+| `NEEDS_SELECTION` | 여러 목표가 포함됨 | 추천 목표 2~3개 중 하나 선택 |
+| `NEEDS_SUGGESTION` | 주제는 알지만 범위가 넓음 | 구체 목표 2~3개 제안 |
+| `NEEDS_QUESTION` | 의미·대상·활동 확인 필요 | 질문 1~2개 표시 |
+| `INVALID` | 비어 있거나 분석 불가 | 다시 입력 |
+| `UNRECOGNIZED_TERM` | 약어·오타 의미 불확실 | 후보 확인 후 사용자 선택 |
+
+`recommendedGoals`, `questions`, `requiresUserConfirmation`은 확정 전 응답에 사용한다. `confirmedByUser`는 AI가 반환한 값이 아니라 Server가 사용자 확인 이벤트를 기록한 결과다.
+
 ### 3.2 생성과 확인
 
 1. 사용자가 목표 원문을 입력한다.
@@ -71,7 +84,7 @@ User
 4. 사용자가 확인하거나 수정한다.
 5. Server가 확인된 Profile을 저장하고 해당 버전만 활성화한다.
 
-사용자 확인 전 Profile은 세션의 확정 판단 기준으로 사용하지 않는다. 단, 미확정 목표로 체험 흐름을 제공한다면 모든 결과를 `NEEDS_CONFIRMATION`으로 제한하는 별도 제품 합의가 필요하다.
+사용자 확인 전 Profile은 세션의 확정 판단 기준으로 사용하지 않는다. 단, 미확정 목표로 체험 흐름을 제공한다면 모든 결과를 `NEEDS_CONFIRMATION`으로 제한하는 별도 제품 합의가 필요하다. AI 실패·Timeout·무응답이어도 사용자가 직접 작성한 목표를 확인하면 세션을 시작할 수 있다.
 
 ### 3.3 버전 증가 규칙
 
@@ -120,6 +133,20 @@ CREATED → RUNNING ↔ PAUSED → ENDING → COMPLETED
 
 초기 정책은 사용자당 활성 `runId` 하나를 제안한다. 여러 기기에서 동시에 시작하려는 경우 Server가 최신 버전과 현재 활성 회차를 반환하며, Client가 기존 회차로 이동할지 종료할지 사용자에게 보여준다.
 
+### 4.3 Server 상태의 AI 투영
+
+Notion 제품 계약의 `sessionStatus`는 Server가 소유하며 AI는 아래 값만 입력으로 받는다. 이 투영값은 이 문서의 내부 `SessionRun` 생명주기를 대체하지 않는다.
+
+| 입력 | 의미 |
+| --- | --- |
+| `ACTIVE` | `RUNNING` 회차에서 분석 가능 |
+| `PAUSED` | 수동 휴식·제외·권한 복구 대기 등으로 타이머와 학습 기록 중지 |
+| `ENDED` | `COMPLETED`·`ABORTED` 등 회차 종료 상태; 현재 화면에 결과 적용 금지 |
+
+제외 모드는 `NONE`, `ANALYSIS_ONLY`, `ANALYSIS_AND_TIME`으로 구분한다. `ANALYSIS_ONLY`는 타이머를 계속하지만 콘텐츠 수집·OCR·AI·카메라 분석을 중지한다. `ANALYSIS_AND_TIME`은 타이머와 학습 기록도 중지하고 사용자 재개 확인을 요구한다.
+
+세션 설정 Snapshot에는 `durationMode`, `durationMinutes`, `interventionLevel`, `notificationChannels`, `soundEnabled`, `recordOnly`, `breakReminderEnabled`, `breakReminderAtMinutes`, `expectedBreakMinutes`, `personalizedBreakEnabled`, `settingsVersion`을 포함할 수 있다. AI는 설정을 실행하지 않고 분석·제안 조건에만 사용한다.
+
 ## 5. ActivityEvent
 
 ### 5.1 최소 식별자
@@ -154,6 +181,8 @@ CREATED → RUNNING ↔ PAUSED → ENDING → COMPLETED
 | `UNAVAILABLE` | 미관찰·분석 불가 시간 | 실패를 무관 시간으로 계산하지 않음 |
 | `PAUSED`·휴식 | 비활성 시간 | 학습 시간 제외 |
 | `EXCLUDED` | 정책에 따른 내용 없는 구간 또는 미기록 | 콘텐츠를 저장하지 않음 |
+
+`ANALYSIS_ONLY` 구간은 타이머가 진행되어도 직접·보조 학습 시간에 합산하지 않는다. `ANALYSIS_AND_TIME` 구간은 타이머·학습 기록에서 모두 제외한다. 두 구간 모두 원문·제목·URL을 학습 기록에 남기지 않는다.
 
 추정 학습 시간은 직접 학습 구간과 보조 학습 구간의 합이다. 이 값은 관찰 가능한 브라우저 활동의 추정치이며 실제 이해 시간을 의미하지 않는다.
 

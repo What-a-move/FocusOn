@@ -4,7 +4,7 @@
 
 - 상태: 팀 검토용 초안, 미구현
 - 버전: `relevance-prompt-v1-draft`
-- 기준일: 2026-09-12
+- 기준일: 2026-09-22
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [Agent 실행 계약](focus_session_agent_spec.md), [상태 모델](state_model.md), [분석 규칙](analysis_rules.md), [노트 명세](session_note_spec.md), [평가 명세](evaluation_spec.md)
 
 이 문서는 규칙과 임베딩만으로 판단하기 어려운 경우 사용하는 LLM 및 FocusSessionAgent의 입력·출력·도구 제한을 정의한다. 모델은 관련성 후보와 근거를 제안하지만 최종 알림, 차단, 시간 집계와 저장을 실행하지 않는다.
@@ -23,6 +23,7 @@
 모델이 제안할 수 있는 값:
 
 - `relevanceLabelCandidate`
+- `clarityStatusCandidate` (목표 보조 요청일 때)
 - 설명용 `confidence`
 - `contextStatus`
 - 요청에 포함된 `evidenceIds`
@@ -60,6 +61,8 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 - 사용자 수정이 동일 목표·콘텐츠 범위에 명확히 적용됨
 - 규칙과 임베딩의 강한 근거가 충돌 없이 같은 결론을 지지함
 - 캐시가 현재 모든 버전과 일치함
+
+목표 보조 요청에서는 콘텐츠 분석 Prompt를 사용하지 않고, `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM` 중 하나의 `clarityStatusCandidate`를 반환한다. 추천 목표는 2~3개, 질문은 1~2개를 넘기지 않는다.
 
 다음 경우에만 호출을 검토한다.
 
@@ -138,14 +141,30 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 }
 ```
 
+목표 보조 응답은 다음 형태를 사용한다.
+
+```json
+{
+  "clarityStatusCandidate": "NEEDS_QUESTION",
+  "confidence": 0.61,
+  "interpretedGoal": null,
+  "recommendedGoals": [],
+  "questions": ["어떤 방식으로 영어를 공부하려고 하나요?"],
+  "requiresUserConfirmation": true
+}
+```
+
 | 필드 | 허용 값·조건 |
 | --- | --- |
 | `relevanceLabelCandidate` | `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK` |
+| `clarityStatusCandidate` | 목표 보조 요청에서 `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM` |
 | `confidence` | `0.0~1.0`; 의미와 보정 방식은 평가 후 확정 |
 | `contextStatus` | `SUFFICIENT`, `INSUFFICIENT`, `AMBIGUOUS` |
 | `evidenceIds` | 입력에 실제로 존재하는 passage ID만 허용 |
 
 모델이 `UNAVAILABLE`, `driftState`, `recommendedAction`, `legacyState`를 생성하지 않게 한다. 이 값들은 시스템 상태와 정책 코드가 결정한다.
+
+제품 표시 라벨은 모델이 직접 생성하지 않는다. 애플리케이션이 `RELATED/SUPPORTING/OFF_TASK/UNCERTAIN/UNAVAILABLE`을 각각 제품의 `RELATED/RELATED/UNRELATED/UNCERTAIN/UNCERTAIN`으로 투영하고, `EXCLUDED`와 `PRIVACY_BLOCKED`는 모델 호출 전에 처리한다.
 
 허용하지 않는 출력:
 
