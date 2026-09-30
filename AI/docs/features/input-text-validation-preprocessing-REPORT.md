@@ -1,6 +1,7 @@
 # DOM·OCR 입력 텍스트 검증·전처리 결과
 
 - 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
+- 관련 PR: [#13](https://github.com/What-a-move/FocusOn/pull/13)
 - PLAN: [input-text-validation-preprocessing-PLAN.md](input-text-validation-preprocessing-PLAN.md)
 - 작업 Branch: `feat/11-ai-input-text-preprocessing`
 - 작성일: 2026-09-30
