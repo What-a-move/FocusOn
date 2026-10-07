@@ -4,10 +4,10 @@
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: Issue #10 확정 계약 기준 전처리 JSON Adapter 연결
+- 작업명: 통합 #11의 최신 계약 검토·입력 Adapter 및 Hybrid 관련성 연결
 - 담당 영역: AI
 - 우선순위: 높음
-- 상태: Issue #11 순수 모듈 구현 완료, Issue #10·#2 선행 작업 대기
+- 상태: 순수 전처리 테스트 통과, 공개 계약·최종 품질·관련성 운영 연동 미완료
 
 ## 작업 목적
 
@@ -21,6 +21,27 @@ Issue #10에서 확정한 Client·Server JSON 필드명과 enum을 Issue #11의 
 - 문단당 최대 800자와 긴 문단 청크 1,000~1,500자 중 최종 출력 단위를 계약에서 확정한다.
 - 기존 개인정보·실패·중복·stale 단위 테스트를 그대로 통과해야 한다.
 
+
+### 최신 dev 계약 확인 항목
+
+- 루트 `docs/API_CONTRACT.md` 확인
+- `DEVELOPMENT_RULES.md`, `state_model.md`, `data_lifecycle.md`, `evaluation_spec.md` 확인
+- `goal_session_spec.md`의 식별자·회차·멱등·시간 집계 경계 확인
+- `content_acquisition_spec.md`의 AI 입력과 비분석 상태 계약 확인
+- `focus_session_agent_spec.md`, `feedback_personalization_spec.md`, `session_note_spec.md`는 후속 구현 경계로 사용
+- Desktop·Extension에서 전달할 최소 데이터 확인
+- Server의 AI 요청·결과 저장 범위 확인
+- 원본 화면·카메라 영상 미저장 원칙 확인
+- Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로, AI 서버의 원본 이미지 비수신 경계 확인
+- Chrome Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로를 분리 확인
+- 목표 보조 6개 `clarityStatus`, 추천·질문·직접 입력 장애 대안 확인
+- `ANALYSIS_ONLY`와 `ANALYSIS_AND_TIME`, `sessionStatus`, `resumeRequired` 계약 확인
+- AI 내부 라벨과 제품 표시 라벨 매핑 확인
+- 개인화 휴식의 최근 7일 규칙과 카메라 비필수 경로 확인
+- ColPali는 기본 서버 구조에 바로 포함하지 않고 별도 PoC·평가로 분리
+- 관련 기능의 PLAN·ERROR·REPORT 파일 준비
+
+
 ## 예상 작업 순서
 
 1. Issue #10의 확정 JSON 예시와 공유 enum을 확인한다.
@@ -29,11 +50,23 @@ Issue #10에서 확정한 Client·Server JSON 필드명과 enum을 Issue #11의 
 4. Adapter가 원문 값을 오류 메시지나 로그에 포함하지 않는지 확인한다.
 5. Issue #2의 API 경계에 연결하고 계약 테스트를 실행한다.
 
+### Server·Client 공통 계약 작업
+
+
+1. `/api/v1/analyze/relevance`, `/api/v1/feedback`, `/api/v1/goals/profile`의 AI 경계를 Server·Client 담당자와 확정한다.
+2. AI 내부 라벨과 제품 표시 라벨, 기존 `FocusState` 호환 전략을 공유 타입 담당자와 확정한다.
+3. `goalId`, `sessionId`, `runId`, `eventId`, `navigationId`와 `sessionStatus`, `exclusionMode`, `resumeRequired`의 필수 범위를 확정한다.
+4. 목표 보조 6개 상태와 AI 장애 시 직접 목표 시작 경로를 확정한다.
+5. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.
+6. Health Check, 공통 성공·실패 envelope, Schema 검증 테스트를 구현한다.
+7. 로그에 원문·비밀 값이 남지 않는지 검사한다.
+8. 현재 관련성 분석은 통합 #11에서 진행하고, Agent·노트·ColPali 등 범위 밖 작업은 별도 Issue로 관리한다.
+
 ## 이후 작업 후보
 
 - Issue #2 FastAPI 기반 AI 분석 서버 기본 구조 구현
 - Server 관련성 분석 요청·결과 저장 연동
-- DOM·Apple Vision OCR 왕복 PoC와 실패 경로 검증
+- Chrome 내부 OCR·Desktop Apple Vision OCR 왕복 PoC와 실패 경로 검증
 - ColPali 시각 콘텐츠 기준선 비교 PoC
 - 페이지 이동·체류 시간 기반 학습 흐름·목표 이탈 분석
 - MediaPipe 얼굴·시선·자세 상태값 보조 분석

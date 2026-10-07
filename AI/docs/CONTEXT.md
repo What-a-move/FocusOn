@@ -22,10 +22,11 @@
 - 공통 API 응답 초안은 루트 `docs/API_CONTRACT.md`에 정의되어 있다.
 - 현재 활동 관련성 API, 분석 기준, Prompt 가이드를 초안으로 작성했다.
 - 관련성, 학습 흐름, MediaPipe 사용자 상태를 분리된 기능으로 개발하는 방향을 정리했다.
+- Notion AI 기획 v1.1의 목표 보조 6상태, Client별 OCR 경로, 두 분석 제외 모드, 최근 7일 개인화 휴식 입력 계약을 문서 초안에 반영했다.
 - Issue #3에서 AI 개발 불변 규칙, 다중 상태 모델, 데이터 수명, 평가 기준 문서 초안을 작성했다.
-- DOM 우선·Apple Vision OCR 보조 경로와 ColPali 시각 콘텐츠 비교 실험 경로를 문서로 구분했다.
+- Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로, ColPali 시각 콘텐츠 비교 실험 경로를 문서로 구분했다.
 - 목표·논리 세션·회차·이벤트·시간 집계 계약을 `goal_session_spec.md`로 분리했다.
-- 콘텐츠 감지·DOM·Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
+- 콘텐츠 감지·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
 - Issue #11의 DOM·OCR 공통 입력 모델, 텍스트 정제·청크 분할, 품질·개인정보·중복·stale 검증과 단위 테스트를 구현했다.
 - RTX A4000 유사도 비교용 실험 지침과 방식별 결과 양식을 `AI/evaluation/SIMILARITY_EVALUATION_GUIDE.md`에 작성했다. 실제 임베딩·재정렬 평가 결과는 아직 없다.
@@ -42,6 +43,7 @@
 - 학습 노트 Queue·근거 Schema·재생성·삭제 정책 검토
 - 기능별 PLAN·ERROR·REPORT와 GitHub Issue·PR 역할 정리
 - ColPali 실행 위치와 개인정보·자원 예산 검토
+- Notion 내부의 카메라 MVP 포함·출시 미정 충돌을 해결하고 출시 범위를 결정
 
 ### 아직 진행하지 않은 작업
 
@@ -67,7 +69,7 @@
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
 - AI의 실행 서버·관련성 분석·평가 자동화는 골격 상태지만 Issue #11의 순수 전처리 모듈과 단위 테스트는 구현되어 있다.
 - Issue #11의 외부 요청 필드와 enum은 Issue #10 및 Client·Server 계약 확정 전까지 제안이다. 순수 모듈은 문단당 최대 800자를 기본값으로 사용하며 다른 길이·품질 수치는 설정 가능한 초기 실험값이다.
-- 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·로컬 OCR을 기본으로 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
+- 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR을 Client별로 분리해 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
 
@@ -77,17 +79,17 @@
 - 테스트: pytest 검토
 - 모델: 임베딩 모델과 LLM 공급자 검토 필요
 - 분석 대상: 화면·페이지에서 추출한 텍스트와 메타데이터
-- OCR: Extension 서비스 워커와 macOS 네이티브 모듈의 Apple Vision 보조 경로 제안; AI는 허용된 정제 텍스트만 평가
+- OCR: Chrome Extension 내부 로컬 OCR과 macOS Desktop Apple Vision OCR의 독립 경로 제안; AI는 허용된 정제 텍스트만 평가
 - 시각 분석: ColPali는 PDF·Canvas·이미지·슬라이드 대상 비교 실험 단계
-- 카메라 분석: MediaPipe 클라이언트 결과값만 후속 사용자 상태 분석에 사용
+- 카메라 분석: 출시 여부 보류; 출시되더라도 MediaPipe 클라이언트가 계산한 최소 상태값만 사용
 - 원본 저장: 원본 화면·카메라 영상은 기본 저장하지 않음
 
 ## 예상 데이터 흐름
 
 ```text
-Extension 사전 제외·권한 검사
-  → DOM 우선 추출
-  → 정보 부족 시 macOS 로컬 Apple Vision OCR
+Client별 사전 제외·권한 검사
+  → Chrome DOM 우선 추출 → 부족할 때 Extension 내부 로컬 OCR
+  → macOS Desktop 허용 화면 → Apple Vision OCR
   → 개인정보·품질 검사
   → Spring Server 인증·소유권·최신 버전 검증
   → AI 텍스트 정제
@@ -120,6 +122,8 @@ Extension 사전 제외·권한 검사
 - 학습 노트는 관찰 근거 없이 이해·해결 완료를 주장하지 않는다.
 - 회차 종료와 시간 저장은 학습 노트 생성 성공에 의존하지 않는다.
 - 기능 추가 전 `features/` 안에 기획서를 먼저 작성한다.
+- 분석 제외는 `ANALYSIS_ONLY`와 `ANALYSIS_AND_TIME`을 구분하고 두 경우 모두 콘텐츠 payload를 AI에 보내지 않는다.
+- 목표 보조는 사용자의 최종 확인 전 확정 목표로 사용하지 않는다.
 
 ## 작업 종료 시 갱신
 

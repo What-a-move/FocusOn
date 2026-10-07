@@ -55,3 +55,9 @@ PYTHONPATH=AI python3 -m pytest AI/tests/test_content_parser.py AI/tests/test_te
 - 모델 파일·가상환경·.env는 게시 대상이 아니다. 테스트 Fixture는 합성 데이터다.
 - 테스트는 실제 실행 결과만 기록한다. 원문·비밀 값·모의 정확도는 결과로 남기지 않는다.
 - CONTEXT·NEXT_TASK에는 부분 구현과 후속 작업 경계를 유지한다.
+
+## 최신 dev 통합
+
+- dev의 AI 계약 문서 커밋을 함께 가져오고 로컬 구현·학교 지침을 보존했다.
+- 결정 번호 중복은 dev의 015~019를 유지하고 이 Branch 기록을 020·021로 옮겨 해결했다.
+- 모델 실행 방식·공유 API·품질 산식을 이번 게시 작업에서 새로 확정하지 않았다.

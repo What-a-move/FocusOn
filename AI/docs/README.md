@@ -61,7 +61,9 @@ AI/docs/
 │   ├── DEVELOPMENT_ERROR_TEMPLATE.md
 │   └── RESULT_REPORT_TEMPLATE.md
 └── features/
-    └── README.md
+    ├── README.md
+    ├── goal-assistance-PLAN.md
+    └── personalized-break-recommendation-PLAN.md
 ```
 
 ## 문서별 책임
@@ -73,7 +75,7 @@ AI/docs/
 | `NEXT_TASK.md` | 다음 작업·선행 조건·완료 조건 | 과거 작업 전체 기록 |
 | `DECISION_RECORD.md` | 합의된 장기 결정과 변경 이력 | 검토되지 않은 구현 세부값 |
 | `goal_session_spec.md` | 목표·논리 세션·회차·이벤트·시간 집계 계약 | DB Entity 구현 세부 |
-| `content_acquisition_spec.md` | 감지 이벤트·DOM·Apple Vision OCR·ColPali 입력 경계 | 관련성 판정 임계값 |
+| `content_acquisition_spec.md` | 감지 이벤트·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계 | 관련성 판정 임계값 |
 | `state_model.md` | 상태 계층·전이·호환 매핑 | 모델 Prompt 전문 |
 | `api_spec.md` | Server와 AI 사이 요청·응답 계약 | 내부 모델 선택 과정 |
 | `analysis_rules.md` | 단계적 분석과 판정 정책 | 데이터 보존 기간 상세 |
@@ -86,12 +88,17 @@ AI/docs/
 
 RTX A4000에서 유사도 방식별 기준·결과 양식·평가 절차를 확인하려면 [유사도 평가 지침](../evaluation/SIMILARITY_EVALUATION_GUIDE.md)을 읽는다.
 
+현재 별도 기능 PLAN:
+
+- [학습 목표 설정 보조](features/goal-assistance-PLAN.md)
+- [개인화 휴식 추천](features/personalized-break-recommendation-PLAN.md)
+
 ## 기본 분석 경로
 
 ```text
-Extension 사전 제외·권한 검사
-  → DOM 우선 추출
-  → 정보 부족 시 허용된 로컬 Apple Vision OCR
+Client별 사전 제외·권한 검사
+  → Chrome DOM 우선 추출 → 부족할 때 Extension 내부 로컬 OCR
+  → macOS Desktop 허용 화면 → Apple Vision 로컬 OCR
   → 개인정보·품질 검사
   → Server의 인증·소유권 검증
   → AI의 규칙·캐시·임베딩 분석
