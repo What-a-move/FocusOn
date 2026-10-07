@@ -123,3 +123,11 @@ Extension 사전 제외·권한 검사
 - 모델·프롬프트·임계값 결정
 - 발생한 오류와 평가 결과
 - 다음 작업과 선행 조건
+
+## 2026-10-07 학교 캡스톤 지침 작성
+
+- 이재빈 노션 전처리·관련성 문서를 기준으로 [#14 PLAN](features/learning-goal-content-relevance-evaluation-PLAN.md)을 작성했다. Issue 본문은 지침의 요구사항 원본으로 사용하지 않았다.
+- 현재 개발 방향은 Hybrid 6번·Qwen3-Embedding-4B·FP16·vLLM이며 숫자 결합 비율·임계값은 미확정이다. Windows GPU는 WSL2·Linux 방향으로 호환성을 확인한다.
+- 김성현 → 이재빈 입력은 text·ocr 형식, 최종 qualityScore·contentHash는 이재빈 전처리 책임이다. 출력 계약은 유지하고 백엔드 필드 9개는 협의 예정이다.
+- 이번 Branch에서 변경한 것은 지침·작업 기록 문서다. AI 모델·관련성 CLI·FastAPI 구현 및 학교 GPU 성능 측정은 수행하지 않았다. #11 작업 공간의 미커밋 전처리는 자동 통합하지 않았다.
+- 기존 문서의 후보 미정·사용자 판정 수정/피드백 우선 제안은 이번 PLAN의 현재 구현 근거로 사용하지 않는다. 공통 API 계약의 채택 여부는 별도 확인한다.

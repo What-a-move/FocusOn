@@ -65,3 +65,13 @@
 - [ ] `DECISION_RECORD.md`를 읽었다.
 - [ ] 관련 기능의 `*-PLAN.md`를 확인했다.
 - [ ] Desktop·Extension·Server 담당자와 계약을 공유했다.
+
+## 2026-10-07 학교 캡스톤 다음 작업 — #14
+
+1. [학교 지침 PLAN](features/learning-goal-content-relevance-evaluation-PLAN.md)을 읽고 #11의 승인된 전처리 코드를 연결한다. 미커밋 변경을 자동 가져오지 않는다.
+2. 검토된 Goal Graph·키워드/벡터 결합·역할별 근거·3라벨 로직과 Fake Client 테스트를 구현한다.
+3. GPU/WSL2/vLLM 호환성·모델 리비전을 확인하고 실제 Qwen3 4B·FP16 임베딩 API를 연결한다.
+4. 합성 평가 CLI를 구현해 모델 없는 테스트와 real 측정을 분리하고 개발 세트 조정 후 독립 평가한다.
+5. 백엔드 필드 9개·실제 출력 Schema·최근 흐름/추가 LLM의 미합의 항목을 확인하고 결과와 제한을 기록한다.
+
+문서에 제시한 테스트·CLI 명령은 해당 구현 파일을 만든 뒤 검증한다. 이 기록을 기능 구현 완료로 보지 않는다.

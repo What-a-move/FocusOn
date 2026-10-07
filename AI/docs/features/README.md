@@ -18,3 +18,7 @@ relevance-analysis-REPORT.md
 4. `external-content-analysis`: YouTube 자막·PDF 추출 텍스트 등 외부 콘텐츠 연결
 
 각 기능은 별도 문서와 분석 모듈로 관리한다. 관련성 분석 PLAN에 체류 시간이나 MediaPipe 상태 판단을 함께 구현하지 않는다.
+
+## 학교 캡스톤 구현 지침
+
+- [입력 검증·전처리와 Hybrid 6번 관련성 구현·테스트 지침](learning-goal-content-relevance-evaluation-PLAN.md): 이재빈 노션 두 문서 기준. 모델 없는 테스트와 실제 Qwen3 4B 평가를 구분한다.
