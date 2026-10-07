@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FocusOn 관련성 판정 더미 실험</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #19302e; background: #f3f6f5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 36px auto 72px; }
+    h1 { font-size: clamp(28px, 4vw, 42px); margin: 8px 0 10px; letter-spacing: -.04em; }
+    h2 { font-size: 22px; margin: 0 0 8px; }
+    p { line-height: 1.55; }
+    .eyebrow { color: #08766a; font-size: 13px; font-weight: 800; letter-spacing: .14em; }
+    .lead { color: #526865; max-width: 850px; margin-bottom: 24px; }
+    .notice { padding: 15px 18px; background: #fff8e8; border: 1px solid #ead9aa; border-radius: 14px; line-height: 1.55; }
+    .panel { background: white; border: 1px solid #dce6e2; border-radius: 17px; padding: 22px; margin: 18px 0; box-shadow: 0 6px 24px #19302e08; }
+    .muted { color: #627571; font-size: 14px; }
+    .row { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+    .grow { flex: 1 1 320px; }
+    label { display: block; font-size: 13px; font-weight: 750; margin-bottom: 7px; }
+    input, textarea { width: 100%; font: inherit; color: inherit; border: 1px solid #bfcfc9; border-radius: 10px; padding: 10px 12px; background: white; }
+    textarea { min-height: 310px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.5; }
+    button { font: inherit; border: 0; border-radius: 10px; background: #08766a; color: white; padding: 11px 16px; font-weight: 750; cursor: pointer; }
+    button:hover { background: #055a51; }
+    a { color: #08766a; }
+    .summary { display: flex; gap: 9px; flex-wrap: wrap; margin: 14px 0; }
+    .methodChoices { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .methodChoice { background: #eaf3ef; color: #235d53; border: 1px solid #c8dcd3; }
+    .methodChoice[aria-pressed="true"] { background: #08766a; color: white; border-color: #08766a; }
+    .secondary { background: #edf1ef; color: #28584e; }
+    [hidden] { display: none !important; }
+    .chip { border-radius: 99px; background: #eaf3ef; color: #235d53; padding: 7px 11px; font-size: 13px; font-weight: 700; }
+    .cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; margin-top: 14px; }
+    .case { border: 1px solid #dce6e2; border-radius: 12px; padding: 16px; background: #fcfefd; }
+    .case h3 { margin: 0 0 8px; font-size: 17px; }
+    .case p { margin: 7px 0; font-size: 14px; }
+    .badge { display: inline-block; padding: 5px 9px; border-radius: 99px; font-size: 12px; font-weight: 800; }
+    .RELATED { color: #006b57; background: #ddf3ea; }
+    .OFF_TASK { color: #9b4614; background: #fff0dd; }
+    .SUPPORTING { color: #3453a2; background: #e6ebff; }
+    .UNCERTAIN, .UNAVAILABLE { color: #5c666a; background: #e9eeee; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid #e4ece8; text-align: left; vertical-align: top; font-size: 13px; }
+    th { color: #5e706c; font-size: 12px; }
+    tr:last-child td { border-bottom: 0; }
+    .method { font-weight: 750; white-space: nowrap; }
+    .number { font-variant-numeric: tabular-nums; font-weight: 750; white-space: nowrap; }
+    .good { color: #08766a; font-weight: 750; }
+    .bad { color: #ad4a31; font-weight: 750; }
+    .error { color: #ad4a31; min-height: 20px; }
+    .tiny { font-size: 12px; color: #687a76; }
+    @media (max-width: 700px) { main { margin-top: 24px; } .panel { padding: 17px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">FOCUSON · LOCAL EVALUATION</div>
+    <h1>학습 화면과 게임 화면 비교</h1>
+    <p class="lead">동일한 두 개의 JSON 입력을 1~7번 관련성 판정 방식에 넣어 내부 콘텐츠 판정, 공개 <code>relevanceLabel</code>, 점수, 반환 텍스트와 브라우저 실행 시간을 확인합니다.</p>
+    <div class="notice"><strong>실험용 계산:</strong> 3·4·6·7번의 벡터는 글자 조각으로 만든 대역이며 실제 임베딩·재정렬 모델을 호출하지 않습니다. 5~7번의 Graph도 JSON 개념 목록으로 흉내 낸 관계입니다. 점수는 방식별 유사도 신호이며 정답 확률이나 신뢰도가 아닙니다. 두 사례의 정답률과 브라우저 실행 시간으로 방식을 확정할 수 없습니다. 게임 화면의 내부 <code>OFF_TASK</code>는 한 번의 화면 관찰만으로 공개 <code>UNRELATED</code>나 이탈 알림이 되지 않습니다.</div>
+
+    <section class="panel">
+      <h2>입력 JSON</h2>
+      <p class="muted">평가용 구조입니다. <code>expectedContentRelation</code>은 내부 콘텐츠 판정의 정답이고 <code>expectedRelevanceLabel</code>은 공개 값의 기대값입니다. 두 필드는 평가용이며 실제 분석 입력에는 들어가지 않습니다. 목표와 개념, 사례를 아래에서 수정할 수 있습니다.</p>
+      <div class="row">
+        <div class="grow"><label for="goalInput">내 학습 목표</label><input id="goalInput" maxlength="120" aria-describedby="goalHelp"></div>
+        <a href="./similarity-dummy-cases.json" download>JSON 파일 받기</a>
+      </div>
+      <p class="tiny" id="goalHelp">목표를 바꾼 뒤에는 JSON의 directTerms, supportTerms와 기대 판정도 새 목표에 맞게 수정하세요.</p>
+      <label for="fixture">더미 데이터 JSON</label>
+      <textarea id="fixture" spellcheck="false" aria-label="더미 데이터 JSON"></textarea>
+      <p id="error" class="error" role="alert"></p>
+    </section>
+
+    <section class="panel">
+      <h2>두 가지 사례</h2>
+      <div id="caseCards" class="cases"></div>
+    </section>
+
+    <section class="panel">
+      <h2>방식별 결과</h2>
+      <p class="muted">정답 일치는 내부 콘텐츠 판정 기준이며 이 두 더미 사례에만 적용됩니다. 점수는 각 방식의 규칙이 달라 방식 간 크기를 직접 비교할 수 없습니다. 시간은 모델 호출 없이 이 브라우저에서 반복 실행한 중앙값입니다.</p>
+      <div id="methodChoices" class="methodChoices" aria-label="비교할 유사도 방식"></div>
+      <div class="row"><button id="selectAll" class="secondary" type="button">전체 선택</button><button id="compare" type="button">비교하기</button></div>
+      <p id="resultPrompt" class="muted" role="status">방식을 선택하고 비교하기를 누르면 결과가 나옵니다.</p>
+      <div id="summary" class="summary"></div>
+      <div id="resultTable" class="scroll" hidden><table>
+        <thead><tr><th>방식</th><th>사례</th><th>점수</th><th>내부 콘텐츠 판정</th><th>relevanceLabel</th><th>내부 정답 일치</th><th>반환 텍스트</th><th>속도</th></tr></thead>
+        <tbody id="results"></tbody>
+      </table></div>
+      <p class="tiny">8번은 목표 개념을 사람·템플릿·LLM·외부 지식베이스로 확장하는 방법입니다. 독립적인 관련성 판정기가 아니므로 이 표의 점수·속도 대상에서 제외했습니다.</p>
+    </section>
+  </main>
+  <script>
+    "use strict";
+    const METHOD_NAMES = [
+      ["basic", "1. 단순 키워드"],
+      ["expanded", "2. 키워드 확장"],
+      ["single", "3. 단일 목표 임베딩 대역"],
+      ["multi", "4. 다중 개념 임베딩 대역"],
+      ["graph", "5. Graph + 키워드 대역"],
+      ["hybrid", "6. Graph + 키워드 + 벡터 대역"],
+      ["rerank", "7. Hybrid + 재정렬 대역"]
+    ];
+    const INTERNAL_LABELS = new Set(["RELATED", "SUPPORTING", "OFF_TASK", "UNCERTAIN"]);
+    const $ = id => document.getElementById(id);
+    const norm = value => String(value).normalize("NFKC").toLocaleLowerCase().trim();
+    const clamp = value => Math.max(0, Math.min(1, value));
+    const termHits = (text, terms) => terms.filter(term => term && norm(text).includes(norm(term)));
+    const eligible = item => ["SUCCESS", "PARTIAL"].includes(item.extractionStatus) && (item.pageTitle + item.text).trim().length >= 20;
+    function ngrams(value) {
+      const counts = new Map();
+      const words = norm(value).match(/[\p{L}\p{N}]+/gu) || [];
+      for (const word of words) {
+        for (let size = 2; size <= 3; size++) {
+          for (let i = 0; i + size <= word.length; i++) {
+            const fragment = word.slice(i, i + size);
+            counts.set(fragment, (counts.get(fragment) || 0) + 1);
+          }
+        }
+      }
+      return counts;
+    }
+    function cosine(left, right) {
+      const a = ngrams(left), b = ngrams(right);
+      let dot = 0, aa = 0, bb = 0;
+      for (const [key, value] of a) { aa += value * value; dot += value * (b.get(key) || 0); }
+      for (const value of b.values()) bb += value * value;
+      return aa && bb ? dot / Math.sqrt(aa * bb) : 0;
+    }
+    function publicLabelOf(contentRelation) {
+      if (contentRelation === "RELATED" || contentRelation === "SUPPORTING") return "RELATED";
+      if (contentRelation === "UNAVAILABLE") return null;
+      return "UNCERTAIN";
+    }
+    function output(score, contentRelation, reason) {
+      return { score: clamp(score), contentRelation, relevanceLabel: publicLabelOf(contentRelation), returnedText: reason };
+    }
+    const inputOf = item => ({ extractionStatus: item.extractionStatus, pageTitle: item.pageTitle, text: item.text });
+    function predict(method, goal, item) {
+      if (!eligible(item)) return output(0, "UNAVAILABLE", "추출 상태 또는 텍스트 품질 때문에 관련성을 판단하지 않았습니다.");
+      const content = item.pageTitle + " " + item.text;
+      const direct = termHits(content, goal.directTerms);
+      const support = termHits(content, goal.supportTerms);
+      const strongestDirect = Math.max(0, ...goal.directTerms.map(term => cosine(term, content)));
+      const strongestSupport = Math.max(0, ...goal.supportTerms.map(term => cosine(term, content)));
+      const leading = goal.directTerms[0];
+      if (method === "basic") {
+        const hit = termHits(content, [leading]);
+        return hit.length ? output(1, "RELATED", "목표의 기본 키워드 '" + leading + "'가 발견됐습니다.") : output(0, "UNCERTAIN", "기본 키워드가 없어 관련성을 확정하지 못했습니다.");
+      }
+      if (method === "expanded") {
+        if (direct.length) return output(clamp(.6 + .1 * direct.length), "RELATED", "직접 관련 표현 발견: " + direct.join(", "));
+        if (support.length) return output(clamp(.4 + .1 * support.length), "SUPPORTING", "보조 개념 표현 발견: " + support.join(", "));
+        return output(0, "UNCERTAIN", "확장 키워드 근거가 없습니다.");
+      }
+      if (method === "single") {
+        const score = cosine(goal.text + " " + goal.directTerms.join(" "), content);
+        return score >= .12 ? output(score, "RELATED", "단일 목표 글자 벡터 유사도가 실험 임계값을 넘었습니다.")
+          : score <= .035 ? output(score, "OFF_TASK", "충분한 본문에서 목표 글자 벡터 유사도가 매우 낮습니다.")
+          : output(score, "UNCERTAIN", "단일 목표 벡터만으로 관계를 확정하지 못했습니다.");
+      }
+      if (method === "multi") {
+        if (strongestDirect >= .14 && strongestDirect >= strongestSupport) return output(strongestDirect, "RELATED", "직접 개념 글자 벡터와 가장 가깝습니다.");
+        if (strongestSupport >= .16) return output(strongestSupport, "SUPPORTING", "보조 개념 글자 벡터와 가장 가깝습니다.");
+        const score = Math.max(strongestDirect, strongestSupport);
+        return score <= .035 ? output(score, "OFF_TASK", "직접·보조 개념과의 글자 벡터 유사도가 모두 낮습니다.")
+          : output(score, "UNCERTAIN", "다중 개념 근거가 임계값에 못 미칩니다.");
+      }
+      if (method === "graph") {
+        if (direct.length) return output(1, "RELATED", "목표 Graph의 직접 개념 경로: " + direct.join(", "));
+        if (support.length) return output(.6, "SUPPORTING", "목표 Graph의 보조 개념 경로: " + support.join(", "));
+        return output(0, "UNCERTAIN", "목표 Graph 안에서 연결된 키워드를 찾지 못했습니다.");
+      }
+      const lexical = direct.length ? clamp(.6 + .1 * direct.length) : support.length ? clamp(.4 + .1 * support.length) : 0;
+      const vector = Math.max(strongestDirect, strongestSupport);
+      const hybridScore = clamp(.55 * lexical + .45 * vector);
+      if (method === "hybrid") {
+        if (direct.length && hybridScore >= .3) return output(hybridScore, "RELATED", "Graph 직접 개념과 벡터 근거가 함께 확인됐습니다.");
+        if (support.length && hybridScore >= .25) return output(hybridScore, "SUPPORTING", "Graph 보조 개념과 벡터 근거가 함께 확인됐습니다.");
+        return hybridScore <= .04 ? output(hybridScore, "OFF_TASK", "충분한 본문에서 Graph·벡터 근거가 모두 약합니다.")
+          : output(hybridScore, "UNCERTAIN", "Graph와 벡터 근거가 판정 경계에 있습니다.");
+      }
+      if (method === "rerank") {
+        const titleScore = cosine(goal.text + " " + goal.directTerms.join(" "), item.pageTitle);
+        const score = clamp(.8 * hybridScore + .2 * titleScore);
+        if (direct.length && score >= .29) return output(score, "RELATED", "제목과 본문을 다시 비교해 직접 관련 근거를 확인했습니다.");
+        if (support.length && score >= .24) return output(score, "SUPPORTING", "제목과 본문을 다시 비교해 보조 관계를 확인했습니다.");
+        return score <= .04 ? output(score, "OFF_TASK", "제목 재비교 후에도 목표 관련 근거가 약합니다.")
+          : output(score, "UNCERTAIN", "재비교 후에도 관계가 모호합니다.");
+      }
+      throw new Error("지원하지 않는 방식");
+    }
+    function validate(data) {
+      if (!data || !data.goal || typeof data.goal.text !== "string" || !data.goal.text.trim()) throw new Error("goal.text를 입력하세요.");
+      for (const key of ["directTerms", "supportTerms"]) {
+        if (!Array.isArray(data.goal[key]) || data.goal[key].some(term => typeof term !== "string")) throw new Error("goal." + key + "는 문자열 배열이어야 합니다.");
+      }
+      if (!data.goal.directTerms.length || !data.goal.directTerms[0].trim()) throw new Error("직접 개념을 하나 이상 입력하세요.");
+      if (!Array.isArray(data.cases) || !data.cases.length) throw new Error("cases를 하나 이상 입력하세요.");
+      for (const item of data.cases) {
+        if (!item.id || typeof item.pageTitle !== "string" || typeof item.text !== "string" || !item.extractionStatus || !INTERNAL_LABELS.has(item.expectedContentRelation) || item.expectedRelevanceLabel !== publicLabelOf(item.expectedContentRelation)) {
+          throw new Error("각 사례에는 id, pageTitle, text, extractionStatus, expectedContentRelation과 그에 맞는 expectedRelevanceLabel이 필요합니다.");
+        }
+      }
+    }
+    function cell(row, value, className) {
+      const element = document.createElement("td");
+      element.textContent = value;
+      if (className) element.className = className;
+      row.append(element);
+    }
+    function median(values) {
+      const sorted = values.slice().sort((a, b) => a - b);
+      return sorted[Math.floor(sorted.length / 2)];
+    }
+    function timePerCase(method, data) {
+      const repetitions = 200;
+      let checksum = 0;
+      const inputs = data.cases.map(inputOf);
+      for (const item of inputs) checksum += predict(method, data.goal, item).score;
+      const samples = [];
+      for (let trial = 0; trial < 3; trial++) {
+        const start = performance.now();
+        for (let i = 0; i < repetitions; i++) {
+          for (const item of inputs) checksum += predict(method, data.goal, item).score;
+        }
+        samples.push((performance.now() - start) * 1000 / (repetitions * data.cases.length));
+      }
+      if (!Number.isFinite(checksum)) throw new Error("점수를 계산하지 못했습니다.");
+      return median(samples);
+    }
+    const selectedMethods = new Set();
+    function clearResults() {
+      $("results").replaceChildren();
+      $("summary").replaceChildren();
+      $("resultTable").hidden = true;
+      $("resultPrompt").textContent = "방식을 선택하고 비교하기를 누르면 결과가 나옵니다.";
+    }
+    function renderCases(data) {
+      $("caseCards").replaceChildren();
+      for (const item of data.cases) {
+        const card = document.createElement("article");
+        card.className = "case";
+        const title = document.createElement("h3");
+        title.textContent = item.pageTitle;
+        const meta = document.createElement("p");
+        meta.textContent = item.id + " · " + item.contentSource + " · extractionStatus=" + item.extractionStatus;
+        const body = document.createElement("p");
+        body.textContent = item.text;
+        const expected = document.createElement("span");
+        expected.className = "badge " + item.expectedContentRelation;
+        expected.textContent = "기대 내부 판정: " + item.expectedContentRelation + " · 기대 relevanceLabel: " + item.expectedRelevanceLabel;
+        card.append(title, meta, body, expected);
+        $("caseCards").append(card);
+      }
+    }
+    function renderResults(data) {
+      clearResults();
+      for (const [method, name] of METHOD_NAMES.filter(([id]) => selectedMethods.has(id))) {
+        let correct = 0;
+        const speed = timePerCase(method, data);
+        for (const item of data.cases) {
+          const result = predict(method, data.goal, inputOf(item));
+          const match = result.contentRelation === item.expectedContentRelation;
+          if (match) correct++;
+          const row = document.createElement("tr");
+          cell(row, name, "method");
+          cell(row, item.id);
+          cell(row, result.score.toFixed(3), "number");
+          cell(row, result.contentRelation);
+          cell(row, result.relevanceLabel ?? "—");
+          cell(row, match ? "일치" : "불일치", match ? "good" : "bad");
+          cell(row, result.returnedText);
+          cell(row, speed.toFixed(1) + " µs/건", "number");
+          $("results").append(row);
+        }
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = name + ": " + correct + "/" + data.cases.length + " 일치";
+        $("summary").append(chip);
+      }
+      $("resultTable").hidden = false;
+      $("resultPrompt").textContent = selectedMethods.size + "개 방식의 비교 결과입니다.";
+    }
+    function updateMethodButtons() {
+      for (const button of $("methodChoices").children) {
+        button.setAttribute("aria-pressed", selectedMethods.has(button.dataset.method) ? "true" : "false");
+      }
+      $("selectAll").textContent = selectedMethods.size === METHOD_NAMES.length ? "전체 해제" : "전체 선택";
+    }
+    for (const [id, name] of METHOD_NAMES) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "methodChoice";
+      button.dataset.method = id;
+      button.textContent = name;
+      button.addEventListener("click", () => {
+        if (selectedMethods.has(id)) selectedMethods.delete(id);
+        else selectedMethods.add(id);
+        updateMethodButtons();
+        clearResults();
+      });
+      $("methodChoices").append(button);
+    }
+    updateMethodButtons();
+    $("selectAll").addEventListener("click", () => {
+      if (selectedMethods.size === METHOD_NAMES.length) selectedMethods.clear();
+      else for (const [id] of METHOD_NAMES) selectedMethods.add(id);
+      updateMethodButtons();
+      clearResults();
+    });
+    $("goalInput").addEventListener("change", () => {
+      try {
+        const data = JSON.parse($("fixture").value);
+        data.goal.text = $("goalInput").value.trim();
+        $("fixture").value = JSON.stringify(data, null, 2);
+        clearResults();
+        renderCases(data);
+        $("error").textContent = "목표가 바뀌었습니다. 개념과 기대 판정도 새 목표에 맞게 수정하세요.";
+      } catch (error) { $("error").textContent = "JSON을 먼저 올바르게 수정하세요: " + error.message; }
+    });
+    $("fixture").addEventListener("input", () => {
+      clearResults();
+      $("caseCards").textContent = "JSON을 수정했습니다. 비교하기를 누르면 사례를 갱신합니다.";
+    });
+    $("compare").addEventListener("click", () => {
+      try {
+        if (!selectedMethods.size) throw new Error("비교할 유사도 방식을 하나 이상 선택하세요.");
+        const data = JSON.parse($("fixture").value);
+        validate(data);
+        $("goalInput").value = data.goal.text;
+        renderCases(data);
+        renderResults(data);
+        $("error").textContent = "";
+      } catch (error) {
+        $("error").textContent = error.message;
+        $("resultPrompt").textContent = error.message;
+      }
+    });
+    fetch("./similarity-dummy-cases.json").then(response => {
+      if (!response.ok) throw new Error("JSON 파일을 불러오지 못했습니다.");
+      return response.json();
+    }).then(data => {
+      validate(data);
+      $("fixture").value = JSON.stringify(data, null, 2);
+      $("goalInput").value = data.goal.text;
+      renderCases(data);
+      clearResults();
+    }).catch(error => { $("error").textContent = error.message + " 로컬 HTTP 서버로 열어 주세요."; });
+  </script>
+</body>
+</html>

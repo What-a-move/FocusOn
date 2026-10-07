@@ -84,6 +84,8 @@ AI/docs/
 | `prompt_guide.md` | 모델 신뢰 경계와 구조화 출력 | 최종 알림·차단 결정 |
 | `evaluation_spec.md` | 데이터 세트·지표·출시 차단 조건 | 실제 사용자 원문 |
 
+RTX A4000에서 유사도 방식별 기준·결과 양식·평가 절차를 확인하려면 [유사도 평가 지침](../evaluation/SIMILARITY_EVALUATION_GUIDE.md)을 읽는다.
+
 ## 기본 분석 경로
 
 ```text

@@ -3,9 +3,9 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안, 미구현
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
-- 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
+- 버전: `0.2.0`
+- 기준일: 2026-09-30
+- 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3), [#11](https://github.com/What-a-move/FocusOn/issues/11)
 - 관련 규칙: `AI-PRIV-001`, `AI-PRIV-002`, `AI-PIPE-001`, `AI-FAIL-001`, `AI-STALE-001`, `AI-VISION-001`, `AI-VISION-002`, `AI-VISION-003`
 
 이 문서는 Chrome Extension, macOS 네이티브 OCR 프로그램, Server와 AI 사이의 콘텐츠 수집 경계를 정의한다. 현재 Extension의 Content Script와 Service Worker는 진입 파일만 있고 이 계약은 아직 구현되지 않았다.
@@ -68,7 +68,8 @@
 
 - 탐색마다 증가하는 `navigationId`를 발급한다.
 - DOM 변경은 짧은 안정화 구간으로 묶되 대기 시간은 설정으로 관리한다.
-- 같은 정제 콘텐츠 해시와 추출기 버전이면 콘텐츠 분석을 재사용할 수 있다.
+- 콘텐츠 분석은 사용자 범위, `goalVersion`, 정제 콘텐츠 해시, 추출기·전처리·모델·정책 버전이 모두 같은 경우에만 재사용한다.
+- 정제 콘텐츠 해시만 같으면 이전 분석 결과를 재사용하지 않는다.
 - 체류 시간 변화는 콘텐츠 임베딩 재생성 없이 흐름 정책만 재계산한다.
 - 새 이벤트가 생기면 이전 탐색의 대기 작업을 취소하거나 결과를 무시한다.
 
@@ -125,7 +126,28 @@ AI로 전달하는 최소 단위는 전체 HTML이나 평문 덩어리가 아니
 }
 ```
 
-### 6.1 문단 규칙
+### 6.1 분석 요청 필드
+
+Client와 Server가 AI에 전달할 입력 후보는 다음과 같다. 최종 필드명과 enum은 소비 주체 계약에서 확정한다.
+
+Issue #10의 Client·Server 계약이 확정되면 세 구성요소가 사용하는 JSON 필드명과 enum을 하나로 통일한다. 통일 전까지 아래 이름을 영구 API 계약이나 구현 상수로 고정하지 않는다.
+
+| 구분 | 필드 |
+| --- | --- |
+| 식별·버전 | `sessionId`, `runId`, `goalId`, `goalVersion`, `eventId`, `navigationId`, `observedAt` |
+| 실행 상태 | `sessionStatus`, `exclusionMode` |
+| 콘텐츠 메타데이터 | `contentSource`, `contentType`, `appName`, `pageTitle`, `urlHost` |
+| 정제 입력 | `text`, `extractionStatus`, `qualityScore`, `isSensitive`, `isExcluded` |
+| OCR 선택 필드 | `ocr.confidence`, `ocr.captureStatus` |
+
+- `contentSource` 후보는 `APP_META`, `TAB_META`, `CHROME_DOM`, `CHROME_VIEWPORT_OCR`, `DESKTOP_APP_OCR`다.
+- `extractionStatus`는 `SUCCESS`, `PARTIAL`, `FAILED`, `EXCLUDED`, `UNSUPPORTED`만 사용한다.
+- `DUPLICATE`, `BLACK_SCREEN`, `EMPTY_CAPTURE`, `OCR_FAILED`, `DOM_UNAVAILABLE`, `LOW_CONFIDENCE`, `PRIVACY_BLOCKED`는 실패·제외 사유나 조건이며 `extractionStatus`에 추가하지 않는다.
+- `EXCLUDED` 또는 `PRIVACY_BLOCKED`이면 AI를 호출하지 않는다.
+- 추출 실패나 낮은 품질은 `UNCERTAIN` 또는 무알림으로 처리하며 `UNRELATED`나 이탈 판정으로 변환하지 않는다.
+- AI는 Client가 DOM 또는 OCR로 추출하고 정제한 텍스트와 최소 메타데이터만 받는다. Server는 인증과 소유권을 검증한다.
+
+### 6.2 문단 규칙
 
 - `id`는 현재 요청 안에서 고유하고 응답 근거 검증에 사용한다.
 - `kind`는 제목·본문·코드·표·자막·OCR 등 제한 enum으로 관리한다.
@@ -133,7 +155,19 @@ AI로 전달하는 최소 단위는 전체 HTML이나 평문 덩어리가 아니
 - 목표 키워드가 있는 부분만 남기지 않고 대표 문단을 일부 포함한다.
 - 제목과 Domain은 개인정보 검사 후 필요한 최소 형태만 사용한다.
 - 전체 URL, 쿼리, Fragment, 폼 입력값과 `contenteditable` 값은 제외한다.
-- 문단 수·개별 길이·전체 요청 크기는 평가 후 설정으로 확정한다.
+- 대표 문단은 최대 8개, 문단당 최대 800자, 전체 요청은 최대 6,000자를 초기 실험값으로 사용한다.
+- 위 수치는 평가 전 확정 상수가 아니며 설정으로 관리한다.
+
+### 6.3 텍스트 전처리 순서
+
+1. 앞뒤 공백을 제거한다.
+2. 불필요한 공백과 연속 줄바꿈을 정리하되 코드와 표의 줄 구조는 보존한다.
+3. 완전히 동일한 문장만 중복 제거한다.
+4. `닫기`, `확인`, `공유`처럼 문맥이 없는 짧은 UI 조각을 제거한다.
+5. 문단 경계를 기준으로 분리한다.
+6. 긴 문단은 1,000~1,500자 단위로 나누고 100~200자를 겹친다.
+
+전처리 수치는 초기 실험값이다. 현재 순수 전처리 모듈은 더 엄격한 외부 요청 상한인 문단당 최대 800자를 설정 기본값으로 사용한다. 긴 문단 청크 1,000~1,500자 기준은 Issue #10의 JSON 계약과 출력 단위가 확정될 때까지 구현 상수로 고정하지 않는다. 짧은 코드, 오류 메시지, 제목은 길이만으로 제거하지 않는다.
 
 ## 7. 개인정보와 민감정보 검사
 
@@ -148,6 +182,10 @@ AI로 전달하는 최소 단위는 전체 HTML이나 평문 덩어리가 아니
 ### 7.2 문자열 검사
 
 이메일·전화번호·주소·JWT·Bearer Token·알려진 API Key Prefix·결제 카드 후보를 제거하거나 전송을 중지한다. 마스킹만으로 안전하다고 단정하지 않는다. 안전하게 분리할 수 없으면 `PRIVACY_BLOCKED`로 종료하고 발견한 문자열은 로그에 남기지 않는다.
+
+- 원본 DOM, OCR 원문, 전체 URL, 검색어와 화면 이미지는 DB, 로그, 큐와 체크포인트에 저장하지 않는다.
+- 추론에는 개인정보 검사를 통과한 정제 텍스트와 청크만 사용한다.
+- 외부 모델 전송은 별도 합의와 사용자 고지 없이 활성화하지 않는다.
 
 ## 8. Apple Vision OCR 계약
 
@@ -242,6 +280,16 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 
 문자 수 하나로 품질을 정하지 않는다. 유형별 필수 영역, 메뉴 비율, 중복률, 언어, OCR 품질, 코드·표 순서 보존과 대표 문단 존재를 함께 평가한다.
 
+초기 실험 기준은 다음과 같다.
+
+- 정제 텍스트가 존재한다.
+- 일반 텍스트 길이가 30자 이상이다.
+- `qualityScore`가 0.70 이상이다.
+- 깨진 문자 비율이 20% 이하다.
+- 유효 청크가 1개 이상이다.
+
+이 기준은 단독 판정 조건이 아니다. 짧은 코드, 오류 메시지와 제목은 길이가 짧아도 유효할 수 있으며, 기준 미달을 곧바로 `UNRELATED`나 이탈로 해석하지 않는다.
+
 ## 11. 취소와 오래된 결과
 
 다음 이벤트는 진행 중인 추출·OCR·AI 요청을 취소하거나 결과 적용을 금지한다.
@@ -254,6 +302,8 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 - 개인정보 Gate 실패
 
 취소가 실제 연산을 즉시 멈추지 못하더라도 결과 적용 전 버전을 다시 확인한다. 늦은 결과는 캐시에 넣기 전에도 유효 범위를 검사한다.
+
+결과를 적용하기 직전에 현재 `runId`, `goalVersion`, `eventId`, `navigationId`, 세션 상태와 제외 상태를 다시 검증한다. 같은 `eventId`의 재전송은 중복 처리하지 않는다.
 
 ## 12. 오류와 Fallback
 

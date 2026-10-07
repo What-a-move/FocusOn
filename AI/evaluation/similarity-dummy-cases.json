@@ -1,0 +1,37 @@
+{
+  "fixtureType": "LOCAL_SYNTHETIC_RELEVANCE_DEMO",
+  "goal": {
+    "text": "파인튜닝 학습",
+    "directTerms": [
+      "파인튜닝",
+      "미세조정",
+      "LoRA",
+      "PEFT"
+    ],
+    "supportTerms": [
+      "어댑터 학습",
+      "Transformer",
+      "경사하강법"
+    ]
+  },
+  "cases": [
+    {
+      "id": "study-01",
+      "contentSource": "CHROME_DOM",
+      "extractionStatus": "SUCCESS",
+      "pageTitle": "LoRA로 언어 모델 파인튜닝하기",
+      "text": "사전 학습된 언어 모델에 LoRA 어댑터를 적용하고 PEFT로 미세조정하는 예제입니다. 학습 데이터 준비와 학습 설정을 설명합니다.",
+      "expectedRelevanceLabel": "RELATED",
+      "expectedContentRelation": "RELATED"
+    },
+    {
+      "id": "game-01",
+      "contentSource": "CHROME_DOM",
+      "extractionStatus": "SUCCESS",
+      "pageTitle": "온라인 레이싱 게임 플레이",
+      "text": "레이싱 게임에 접속해 차량을 선택하고 실시간 대전에 참가합니다. 랩타임 기록과 아이템 보상을 확인합니다.",
+      "expectedRelevanceLabel": "UNCERTAIN",
+      "expectedContentRelation": "OFF_TASK"
+    }
+  ]
+}

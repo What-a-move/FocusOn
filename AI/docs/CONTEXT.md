@@ -27,9 +27,14 @@
 - 목표·논리 세션·회차·이벤트·시간 집계 계약을 `goal_session_spec.md`로 분리했다.
 - 콘텐츠 감지·DOM·Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
+- Issue #11의 DOM·OCR 공통 입력 모델, 텍스트 정제·청크 분할, 품질·개인정보·중복·stale 검증과 단위 테스트를 구현했다.
+- RTX A4000 유사도 비교용 실험 지침과 방식별 결과 양식을 `AI/evaluation/SIMILARITY_EVALUATION_GUIDE.md`에 작성했다. 실제 임베딩·재정렬 평가 결과는 아직 없다.
+- GoalProfile/DOM/OCR 텍스트를 붙여넣어 1~7번 후보를 비교하는 로컬 Streamlit 실험 화면을 `AI/evaluation/similarity_streamlit.py`에 구현했다. 임베딩·재정렬 모델의 실제 성능 측정과 임계값 보정은 아직 없다.
+- 실험 화면의 2번은 GoalProfile 확장 키워드, 4번은 개념별 임베딩 점수, 5번은 GoalProfile 직접·보조 관계 경로를 사용한다. 별도 선수 관계가 없어 5번 Graph는 제한된 실험형이다.
 
 ### 진행 중인 작업
 
+- Issue #10 확정 후 Client·Server·AI의 JSON 필드명과 enum 통일 및 외부 입력 Adapter 연결
 - 루트 `docs/ARCHITECTURE.md`의 Desktop 중심 흐름과 Notion의 Extension 중심 기본안 차이 검토
 - Server·Extension·공유 타입 담당자와 다중 상태 및 API 경로 검토
 - 목표·세션·회차·이벤트 관계와 사용자당 동시 활성 회차 정책 검토
@@ -42,7 +47,6 @@
 
 - 실행 가능한 AI 서버 진입점 구현
 - Pydantic 요청·응답 Schema 구현
-- OCR·페이지 텍스트 정제와 품질 판단 구현
 - 규칙 기반 관련성 판단 구현
 - 임베딩 기반 유사도 판단 구현
 - LLM Fallback 구현
@@ -61,7 +65,8 @@
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
-- AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
+- AI의 실행 서버·관련성 분석·평가 자동화는 골격 상태지만 Issue #11의 순수 전처리 모듈과 단위 테스트는 구현되어 있다.
+- Issue #11의 외부 요청 필드와 enum은 Issue #10 및 Client·Server 계약 확정 전까지 제안이다. 순수 모듈은 문단당 최대 800자를 기본값으로 사용하며 다른 길이·품질 수치는 설정 가능한 초기 실험값이다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·로컬 OCR을 기본으로 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
@@ -139,3 +144,11 @@ Extension 사전 제외·권한 검사
 - 전처리와 관련성은 한 Issue에서 개발하되 모듈·테스트는 분리한다. 최신 요구사항과 기존 출력 계약은 유지한다.
 - 로컬 미커밋 전처리·실험 작업은 백업·복원해 보존하고 문서 통합 커밋에 포함하지 않는다. 원격 문서 준비와 실제 코드 구현·게시·GPU 검증을 구분한다.
 - #14는 #11로 통합한 이력으로 남기며 완료 구현으로 닫지 않는다.
+
+## 2026-10-07 기존 전처리·실험 코드 게시 검증
+
+- 기존 로컬 전처리 순수 모듈과 유사도 실험 소스를 #11 통합 Branch에 게시한다.
+- 모델 없는 관련 테스트는 30 passed, 6 subtests passed. 실제 모델/GPU/네트워크 측정은 이번 검증에 포함하지 않았다.
+- 현재 내부 품질 검사는 입력 quality_score를 사용하며 최종 qualityScore 산출·실제 입력 Adapter·전체 현재 문맥 검증은 후속 구현이다.
+- 기존 Streamlit은 E5-small/BGE reranker 실험형이고 현재 MVP Qwen3 4B·FP16·Hybrid 6번 운영 구현과 구분한다.
+- 범위·검증·남은 제한은 [부분 구현 게시 결과](features/learning-goal-content-relevance-evaluation-REPORT.md)를 따른다.
