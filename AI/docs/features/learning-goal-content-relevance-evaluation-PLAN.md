@@ -10,8 +10,8 @@
 - 기능 ID: relevance-analysis
 - 작성자/담당: 이재빈
 - 우선순위: MVP - 핵심
-- 관련 Issue: [#14](https://github.com/What-a-move/FocusOn/issues/14), 전처리 선행 작업 [#11](https://github.com/What-a-move/FocusOn/issues/11)
-- 작업 Branch: `feat/14-ai-relevance-evaluation` — 기존 Branch를 재사용한다.
+- 관련 Issue: [#11 통합 기능](https://github.com/What-a-move/FocusOn/issues/11). 기존 [#14](https://github.com/What-a-move/FocusOn/issues/14)의 관련성 구현·평가 범위를 #11로 통합한다.
+- 통합 작업 Branch: `feat/11-ai-preprocessing-relevance`. 전처리·관련성을 이 Branch에서 함께 개발하고 내부 모듈과 테스트는 분리한다.
 - 기획 원본:
   - [입력 테스트 검증 전처리](https://app.notion.com/p/3e1357537c3180b0ba22f17c5fdb8694): 2절 입력, 4~6절 검증·정제·품질, 7절 후속 전달
   - [학습 목표와 콘텐츠 관련성 판단](https://app.notion.com/p/3e1357537c31807ba146ebda318f025a): 4절 실행 환경, 5절 입력, 7.2절 Graph·점수·판정, 8~12절 출력·예외·평가
@@ -20,9 +20,9 @@
 
 ### 현재 상태와 학교에서 확인할 것
 
-문서 작성 시 원격 #14 Branch의 AI 코드·requirements·테스트는 골격이었다. 본 문서만 받아서는 관련성 API나 평가 CLI가 실행되지 않는다. 아래 구현 파일과 테스트 명령을 실제로 만들어 검증해야 한다.
+최초 문서 작성 시 원격 AI 코드·requirements·테스트는 골격이었다. 이슈·Branch 통합만으로 기능 구현 완료가 되는 것은 아니다. 본 문서만 받아서는 관련성 API나 평가 CLI가 실행되지 않는다. 아래 구현 파일과 테스트 명령을 실제로 만들어 검증해야 한다.
 
-개인 컴퓨터의 #11 작업 공간에는 전처리 코드·테스트의 미커밋 변경이 있다. 이를 #14나 학교 컴퓨터에 자동 복사하거나 이미 통합됐다고 가정하지 않는다. 먼저 #11의 원격 반영·테스트 상태를 확인하고 승인된 변경을 통합한다. 기존 전처리가 없다면 해당 책임은 #11에서 먼저 구현하고 #14는 결과를 소비한다. 중복 구현하지 않는다.
+개인 컴퓨터에는 전처리 코드·테스트와 유사도 실험 파일의 미커밋 변경이 있다. 통합 과정에서 이 작업은 보존하며 문서 통합 커밋에 섞어 게시하지 않는다. 학교에서는 원격에 반영된 코드와 개인 컴퓨터의 미커밋 코드를 구분한다. 기존 전처리를 먼저 검토·재사용하고 같은 통합 이슈 안에서 관련성 단계로 연결한다. 실제 코드가 아직 원격에 없으면 학교에서 구현 또는 승인된 코드 반영이 필요하다.
 
 이번 작성 작업은 문서만 변경한다. 새 기능 개발을 실제 시작할 때 AI 영역 템플릿에 따라 같은 기능의 ERROR 문서를 준비하고, REPORT는 실제 구현·평가 결과를 기록할 때 작성한다. 미실행 테스트를 통과로 쓰지 않는다.
 
@@ -194,13 +194,13 @@ MVP는 검토된 목표별 템플릿으로 시작한다. Graph 개념은 사용�
 
 ## 기능 책임 분리
 
-- #11: 검증·전처리·최종 qualityScore·contentHash. 기존 모듈과 테스트를 먼저 확인한다.
-- #14: 전처리 결과 소비·Graph·Hybrid·관련성 결과·관련성 캐시·평가 실행기.
+- #11의 전처리 모듈: 검증·정제·최종 qualityScore·contentHash. 기존 모듈과 테스트를 먼저 확인한다.
+- #11의 관련성 모듈: 전처리 결과 소비·Graph·Hybrid·관련성 결과·관련성 캐시·평가 실행기.
 - 김성현: 원천 추출 데이터 Adapter·목표 설정 보조·관련성 결과 이후 이탈/복귀 정책.
 - Server: 인증·소유권·목표 조회·현재 실행 상태·기록.
 - Client: 실제 DOM/OCR·캡처 권한·원천 중복·알림 UI.
 
-전체적으로 한 기능이지만 모듈·테스트·Issue 책임은 분리한다. #14에서 #11 전체 코드를 복제하지 않는다.
+Issue와 작업 Branch는 #11 하나로 통합한다. 검증·전처리와 관련성 판단은 별도 모듈·테스트로 연결하며 기존 전처리 코드를 복제하지 않는다.
 
 ## 모델·외부 연동
 
@@ -235,7 +235,7 @@ MVP는 검토된 목표별 템플릿으로 시작한다. Graph 개념은 사용�
 
 | 단계 | 최소 작업 | 대상 |
 | --- | --- | --- |
-| 1 | 입력 Adapter·현재 문맥·출력 Schema 확인, #11 소비 | `AI/src/preprocessing/`, `AI/src/api/schemas.py` |
+| 1 | 입력 Adapter·현재 문맥·출력 Schema 확인, 기존 전처리 재사용 | `AI/src/preprocessing/`, `AI/src/api/schemas.py` |
 | 2 | 목표 템플릿·개념 역할·관계 근거 | `AI/src/analysis/goal_graph.py` |
 | 3 | 순수 키워드·cosine·결합·라벨 근거 함수 | `AI/src/analysis/hybrid_scoring.py`, `relevance_analyzer.py` |
 | 4 | 가짜 Client로 모델 경계와 파이프라인 테스트 | `AI/tests/test_relevance_pipeline.py`, `test_hybrid_scoring.py` |
@@ -245,7 +245,7 @@ MVP는 검토된 목표별 템플릿으로 시작한다. Graph 개념은 사용�
 
 Agent에게 요청할 때는 다음 지시를 함께 준다.
 
-> 이 PLAN과 두 노션 원본의 범위만 구현한다. 기존 미커밋 변경을 지우지 않는다. 입력 계약 9개는 검증 문맥으로 분리하고 미합의 값을 운영 상수로 확정하지 않는다. #11 전처리는 재사용하며 Graph·키워드·벡터·최종 라벨을 순수 함수와 주입 가능한 Client로 분리한다. 외부 모델 없는 테스트를 먼저 만든다. 실제 Qwen 모드는 별도로 실행한다. 제외·민감·실패·stale에서 모델이 호출되지 않는지 검증한다. 기존 출력 계약을 임의 변경하지 않는다. 성공·실패 원문을 로그나 LangSmith/APM/checkpoint에 남기지 않는다. 실제 구현된 명령·테스트 결과만 REPORT에 남긴다.
+> 이 PLAN과 두 노션 원본의 범위만 구현한다. 기존 미커밋 변경을 지우지 않는다. 입력 계약 9개는 검증 문맥으로 분리하고 미합의 값을 운영 상수로 확정하지 않는다. 통합 #11의 기존 전처리는 재사용하며 Graph·키워드·벡터·최종 라벨을 순수 함수와 주입 가능한 Client로 분리한다. 외부 모델 없는 테스트를 먼저 만든다. 실제 Qwen 모드는 별도로 실행한다. 제외·민감·실패·stale에서 모델이 호출되지 않는지 검증한다. 기존 출력 계약을 임의 변경하지 않는다. 성공·실패 원문을 로그나 LangSmith/APM/checkpoint에 남기지 않는다. 실제 구현된 명령·테스트 결과만 REPORT에 남긴다.
 
 ## 평가 계획
 
@@ -293,7 +293,7 @@ Agent에게 요청할 때는 다음 지시를 함께 준다.
 새 폴더에서 아래처럼 받는다. 기존 clone에 미커밋 변경이 있으면 먼저 확인하며 자동 stash·reset·덮어쓰기를 하지 않는다.
 
 ```bash
-git clone --branch feat/14-ai-relevance-evaluation --single-branch https://github.com/What-a-move/FocusOn.git FocusOn
+git clone --branch feat/11-ai-preprocessing-relevance --single-branch https://github.com/What-a-move/FocusOn.git FocusOn
 cd FocusOn
 git status --short --branch
 ```
@@ -339,7 +339,7 @@ CLI 출력/보고서에는 caseId·정답 라벨·예측 라벨·상태·안전�
 ### 학교 시간에 확인할 최소 완료
 
 - [ ] 노션 공통 입력을 읽고 검증된 실행 문맥과 분리했다.
-- [ ] #11 전처리와 실제 연결했거나 선행 미완료 상태를 명시했다.
+- [ ] 통합 #11의 전처리와 관련성 모듈을 실제 연결했거나 미완료 상태를 명시했다.
 - [ ] 검토된 목표 템플릿·직접/선수/보조 Graph를 사용한다.
 - [ ] 키워드·벡터·역할별 결합과 기본 3라벨 로직이 테스트 가능하다.
 - [ ] 제외·민감·추출 실패·stale 경로에서 모델 호출/본문 노출이 없다.

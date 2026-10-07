@@ -21,4 +21,4 @@ relevance-analysis-REPORT.md
 
 ## 학교 캡스톤 구현 지침
 
-- [입력 검증·전처리와 Hybrid 6번 관련성 구현·테스트 지침](learning-goal-content-relevance-evaluation-PLAN.md): 이재빈 노션 두 문서 기준. 모델 없는 테스트와 실제 Qwen3 4B 평가를 구분한다.
+- [입력 검증·전처리와 Hybrid 6번 관련성 구현·테스트 지침](learning-goal-content-relevance-evaluation-PLAN.md): 통합 #11의 이재빈 노션 두 문서 기준. 모델 없는 테스트와 실제 Qwen3 4B 평가를 구분한다.

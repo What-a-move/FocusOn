@@ -312,11 +312,23 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 - 영향: #14 PLAN, CONTEXT, NEXT_TASK. 공통 API·공유 타입은 별도 합의 없이 변경하지 않는다.
 - 관련 Issue: [#14](https://github.com/What-a-move/FocusOn/issues/14), [#11](https://github.com/What-a-move/FocusOn/issues/11)
 
+## 결정 016 - 입력 전처리와 관련성 구현 Issue·Branch 통합
+
+- 결정일: 2026-10-07
+- 담당 영역: AI / 이재빈
+- 상태: 확정 — 사용자 요청에 따른 작업 단위 통합
+- 결정 내용: #14의 Graph·Hybrid·관련성 구현·평가를 #11의 입력 검증·전처리 범위에 통합한다. 작업 Branch는 `feat/11-ai-preprocessing-relevance` 하나를 사용한다.
+- 유지 사항: 전처리와 관련성 모듈·테스트 분리, 노션 요구사항·출력 계약·개인정보·미합의 9개 필드 정책은 유지한다.
+- 보존 사항: 로컬 미커밋 전처리·실험 파일은 백업 후 복원한다. 통합 문서 커밋은 해당 코드를 구현 완료 또는 원격 게시로 표시하지 않는다.
+- 이력: #14는 #11로 통합됐음을 표시하고 중복 이슈로 닫는다. 기존 커밋은 통합 Branch의 조상으로 보존한다.
+- 영향: 학교 PLAN, 이슈 #11/#14, Branch·CONTEXT·NEXT_TASK·문서 안내 링크.
+- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11), [#14 통합 이력](https://github.com/What-a-move/FocusOn/issues/14)
+
 ## 새 결정 기록
 
-다음 결정은 `결정 016`부터 추가한다.
+다음 결정은 `결정 017`부터 추가한다.
 
-### 결정 016
+### 결정 017
 
 - 결정일:
 - 주제:
