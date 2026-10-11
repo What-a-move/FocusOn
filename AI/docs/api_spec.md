@@ -65,7 +65,7 @@ Extension / macOS 네이티브 모듈
 | --- | --- | --- |
 | 목표 구조화 | `POST /api/v1/goals/profile` | `POST /internal/v1/goals/clarify` | 제안 |
 | 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
-| 피드백 저장·무효화 | `POST /api/v1/feedback` | Server가 검증 후 무효화 이벤트 전달 | 제안 |
+| 화면 판정 피드백 저장·무효화 | `POST /api/v1/feedback` | Server가 검증 후 무효화 이벤트 전달 | 후속 기능 제안, MVP 제외 |
 | 학습 노트 생성 | `POST /api/v1/session-notes/generate` | `POST /internal/v1/learning-summaries` | 후속 제안 |
 
 기존 `/api/v1/analyze/relevance`는 레거시 경로 후보로만 기록하며 최신 `/api/v1/sessions/{sessionId}/analysis-runs`와 동시에 최종 경로로 구현하지 않는다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
@@ -78,8 +78,7 @@ Extension / macOS 네이티브 모듈
 {
   "requestId": "550e8400-e29b-41d4-a716-446655440002",
   "originalText": "Spring Security JWT 인증 구현",
-  "previousGoalProfile": null,
-  "feedbackVersion": null
+  "previousGoalProfile": null
 }
 ```
 
@@ -92,8 +91,8 @@ Extension / macOS 네이티브 모듈
   "data": {
     "clarityStatus": "NEEDS_SUGGESTION",
     "confidence": 0.74,
-    "interpretedGoal": "React 상태 관리 학습",
-    "recommendedGoals": ["useState 상태 갱신", "Context 상태 공유"],
+    "interpretedGoal": "Spring Security JWT 인증 구현",
+    "recommendedGoals": ["JWT 인증 필터 구현", "JWT 토큰 검증 구현"],
     "questions": [],
     "requiresUserConfirmation": true,
     "goalId": "550e8400-e29b-41d4-a716-446655440000",
@@ -111,6 +110,8 @@ Extension / macOS 네이티브 모듈
 ```
 
 허용 `clarityStatus`는 `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM`이다. 추천 목표는 기본 2~3개, 질문은 기본 1~2개로 제한한다. 사용자 확인·수정 후 Server가 `confirmedByUser`를 관리한다. AI 실패·Timeout·무응답이어도 사용자가 직접 작성한 목표를 확인한 뒤 시작할 수 있다. AI가 방문한 콘텐츠만으로 사용자 목표를 자동 확장하지 않는다.
+
+MVP의 목표 문장은 2~40자, 명확화 질문은 전체 대화에서 최대 2회다. 여러 목표가 입력되면 최종적으로 하나만 선택하도록 돕는다. 목표 문장 확인·수정은 화면 관련성 결과 정정·삭제나 개인화 피드백과 별개다. Issue #12의 구현 Branch와 이 계약의 차이는 통합 전 확인한다.
 
 ## 5. 페이지 관련성 분석
 
@@ -144,16 +145,11 @@ Extension / macOS 네이티브 모듈
     "supportingTopics": ["인증 오류 해결"]
   },
   "content": {
-    "contentHash": "sanitized-content-hash",
     "pageType": "QA",
     "domain": "example.com",
     "title": "JWT 인증 오류 해결",
-    "passages": [
-      {
-        "id": "passage-001",
-        "text": "인증 필터 설정을 확인하는 공개 예제"
-      }
-    ],
+    "text": "인증 필터 설정을 확인하는 공개 예제",
+    "ocr": null,
     "extractionMethod": "DOM",
     "extractionStatus": "SUCCESS",
     "extractorVersion": "proposal-1"
@@ -169,12 +165,14 @@ Extension / macOS 네이티브 모듈
 ### 5.2 요청 규칙
 
 - `goalVersion`은 Server가 저장한 최신 버전과 일치해야 한다.
-- `contentHash`는 개인정보 검사를 통과한 정제 콘텐츠로 계산한다.
-- `passages[].id`는 응답 근거를 현재 요청의 문단과 연결한다.
+- `content.text`와 `content.ocr`는 [콘텐츠 수집 계약](content_acquisition_spec.md)의 제안형 AI 전달 형식이다. OCR 경로의 `ocr`는 인식 상태·품질 메타데이터이며 원본 이미지나 차단된 OCR 원문을 넣지 않는다. 공개 `contentPayload`와 내부 제안형을 혼동하지 않는다.
+- 최종 `qualityScore`와 정제 `contentHash`는 AI 전처리에서 계산한다. Client의 OCR 신뢰도·1차 품질값을 최종값으로 복사하지 않는다. 두 값의 Server 전달·저장 위치와 Backend 검토 예정 9개 컬럼은 미확정이다.
+- 근거 문단 ID가 필요한 분석 응답은 AI 전처리에서 허용된 `text`를 분할해 부여한다. 입력 `passages` 유지 여부는 Server와 합의한다.
 - 전체 URL, URL 쿼리, 사용자 ID, 이메일, Authorization Header를 포함하지 않는다.
 - `EXCLUDED`이면 AI 요청을 만들지 않는다.
 - `FAILED` 또는 `UNSUPPORTED`는 콘텐츠 판정 대신 처리 상태 기록을 우선한다.
 - `activeDurationSeconds`는 흐름 정책 입력이며 AI가 학습 시간으로 확정하지 않는다.
+- 체류·카메라 신호는 관련성 분석의 최종 라벨이나 `confidence`를 덮어쓰지 않는다. 이탈 정책 입력과 관련성 모델 입력의 분리 방식은 Server와 합의한다.
 
 ### 5.3 성공 응답 예시
 
@@ -198,7 +196,7 @@ Extension / macOS 네이티브 모듈
     "confidence": 0.84,
     "confidenceType": "HEURISTIC",
     "reasonCode": "GOAL_RELATED",
-    "reason": "현재 자료는 목표를 진행하는 데 필요한 보조 학습 자료입니다.",
+    "reason": "현재 자료는 목표의 인증 필터 설정과 직접 관련됩니다.",
     "evidenceIds": ["passage-001"],
     "decisionStage": "FINAL",
     "versions": {
@@ -214,6 +212,8 @@ Extension / macOS 네이티브 모듈
 ```
 
 `confidence`는 설명용 판단 지표다. 임베딩 유사도, OCR 인식 점수 또는 LLM 자기평가를 그대로 정답 확률로 반환하지 않는다. 의미와 보정 방법은 평가 후 `confidenceType`과 함께 확정한다.
+
+MVP에서 `RELATED`·`UNRELATED` 후보의 confidence가 `0.75` 미만이면 `UNCERTAIN`으로 반환한다. 목표 이탈·복귀 정책은 최종 `relevanceLabel`·`confidence`를 그대로 소비하며 OCR `qualityScore`, 중복 여부, 임베딩 유사도로 다시 계산하지 않는다. `RELATED` 복귀는 이탈 구간과 대기 알림 후보를 초기화하고 `UNCERTAIN`은 시간을 누적하지 않는다.
 
 ### 5.4 상태 필드
 
@@ -255,13 +255,13 @@ AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태�
 | `personalizedBreakEnabled` | 개인화 휴식 제안 동의·사용 여부 |
 | `settingsVersion` | 세션 설정 변경 감지를 위한 버전 |
 
-`ANALYSIS_ONLY`는 콘텐츠 수집·OCR·AI·카메라를 중지하지만 타이머는 계속한다. `ANALYSIS_AND_TIME`은 학습 기록과 타이머도 중지하며, `resumeRequired=true`이면 사용자 확인 전 재개하지 않는다. 두 모드 모두 콘텐츠 payload를 AI에 보내지 않는다.
+`ANALYSIS_ONLY`는 해당 화면의 콘텐츠 수집·OCR·AI를 중지하지만 타이머는 계속한다. 공개 화면 결과 `EXCLUDED`에서는 별도 동의된 카메라 분석을 계속할 수 있다. `PRIVACY_BLOCKED`나 동의 철회에서는 카메라까지 중단한다. `ANALYSIS_AND_TIME`은 학습 기록과 타이머도 중지하며, `resumeRequired=true`이면 사용자 확인 전 재개하지 않는다. 두 모드 모두 콘텐츠 payload를 AI에 보내지 않는다.
 
 ### 5.7 피드백 Endpoint
 
-`POST /api/v1/feedback`은 Client가 직접 AI를 호출하는 경로가 아니다. Client는 Server에 피드백을 저장하고, Server가 검증된 사용자·목표·콘텐츠 범위와 무효화 이벤트를 AI에 전달한다.
+`POST /api/v1/feedback`은 **후속 기능 제안**이며 MVP에서 화면 판정 수정·삭제·저장을 제공하지 않는다. 후속 승인 시 Client는 AI를 직접 호출하지 않고 Server가 소유권을 검증한 뒤 AI 무효화 이벤트를 전달한다.
 
-한 페이지의 수정이 Domain 전체 허용으로 확대되지 않으며, 수정 결과는 동일 목표·콘텐츠 범위의 캐시와 대기 알림을 우선 무효화한다.
+후속 기능에서 한 페이지의 수정이 Domain 전체 허용으로 확대되지 않도록 별도 합의한다. 목표 문장 확인·수정은 이 Endpoint의 피드백이 아니다.
 
 ## 6. 처리된 비분석 결과
 
@@ -340,7 +340,7 @@ AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태�
 - `requestId` 재사용 시 요청 Fingerprint가 다르면 충돌 오류로 처리한다.
 - Fingerprint와 캐시 키에 입력 원문이나 인증 정보를 넣지 않는다.
 - 콘텐츠 관련성 캐시와 시간 기반 `driftState`를 분리한다.
-- 목표·피드백·모델·Prompt·추출기·정책 버전이 바뀌면 관련 캐시를 무효화한다.
+- 목표·모델·Prompt·추출기·정책 버전이 바뀌면 관련 캐시를 무효화한다. 화면 판정 피드백 버전은 후속 기능에서만 적용한다.
 - 고정 `24시간` TTL은 미확정이다. 데이터별 보존 목적과 삭제 전파를 검토한 뒤 결정한다.
 
 상세 기준은 `data_lifecycle.md`를 따른다.
@@ -356,7 +356,7 @@ AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태�
 - 확정된 목표와 목표 버전
 - Server가 계산한 직접·보조·무관·미확인·중지 시간
 - 저장이 허용된 활동 요약과 `sourceRef`
-- 사용자 수정·메모·미해결 표시
+- 사용자 메모·미해결 표시 (화면 판정 수정은 후속 기능, MVP 제외)
 
 출력에는 각 학습 주장과 연결된 근거 참조를 포함한다. 자료를 열었다는 사실만으로 이해하거나 해결했다고 쓰지 않는다.
 
@@ -397,6 +397,7 @@ Server가 실제 집계와 허용된 근거 Snapshot을 구성한다. Client가 
 - `FAILED`, `UNSUPPORTED`, 모델 오류에서 `NO_ACTION`을 반환하거나 실패 envelope를 사용한다.
 - 목표 수정·탭 전환·회차 종료 후 오래된 결과가 폐기된다.
 - 같은 이벤트 재전송으로 결과와 시간이 중복되지 않는다.
-- 사용자 수정 직후 오래된 캐시와 대기 알림이 무효화된다.
+- 목표 문장 수정 직후 오래된 `goalVersion` 결과와 대기 알림이 무효화된다.
+- MVP에서 화면 판정 수정·저장 Endpoint를 노출하지 않는다.
 - 요청·응답·로그에 원본 화면, 전체 URL, 비밀 값이 남지 않는다.
 - 모델 출력이 허용 Schema를 벗어나면 사용하지 않는다.

@@ -393,17 +393,34 @@ Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있�
 - `AI/docs/DEVELOPMENT_RULES.md`
 - `AI/docs/features/personalized-break-recommendation-PLAN.md`
 
+## 결정 020 - MVP 관련성·이탈·카메라 계약과 후속 피드백 분리
+
+- 결정일: 2026-10-12
+- 담당 영역: AI·Server·Client
+- 상태: 제안 (Notion AI 분석 계약 `REVIEW`, 팀 승인 전)
+
+### 결정 내용
+
+목표 문장 확인·수정과 화면 관련성 결과 정정·삭제는 별도 기능이다. 후자와 수정 결과 저장 기반 개인화는 MVP에서 제외한다. 목표가 모호할 때 AI 질문은 대화당 최대 2회이고, 복수 목표는 하나만 확정한다.
+
+관련성 결과 `UNRELATED`는 콘텐츠 관계를 나타내며 시간 기반 `driftState`와 분리한다. 유효 이탈은 15초 미만 화면 전환을 제외하고 `GENTLE` 120초 연속, `NORMAL` 최근 10분 내 30초 이상 2회, `ACTIVE` 30초 연속으로 판정한다. `RELATED`는 현재 구간을 초기화하고 `UNCERTAIN`은 누적하지 않는다. 카메라는 60초에 후보만 만들고 90초에 최신 화면·권한을 다시 확인한다. 최신 화면이 `RELATED`면 억제한다. 화면 `EXCLUDED`에서는 별도 동의된 카메라 분석이 가능하지만 `PRIVACY_BLOCKED`에서는 카메라까지 중단한다.
+
+팀원 보고의 120건 비교에서 Hybrid는 99건 정답·Macro F1 0.732로 가장 높았지만 원자료와 결합식은 미확인이다. 우선 평가 후보일 뿐 구현·배포 결정이 아니다. AI 전처리는 허용된 `text`·`ocr` 입력에서 최종 `qualityScore`·`contentHash`를 생성하며, 이탈 정책은 관련성 최종 라벨·confidence를 덮어쓰지 않는다. Backend 저장 컬럼 9개는 협의 전이다.
+
+### 결정 이유
+
+PR #15의 최신 문서 계약을 유지하면서 팀원 평가 보고와 현행 MVP 분석 정책을 구분하고, 관련성·시간·카메라·개인화 상태를 혼동하지 않기 위해서다.
+
+### 영향받는 파일
+
+- `AI/docs/analysis_rules.md`, `AI/docs/state_model.md`, `AI/docs/api_spec.md`
+- `AI/docs/content_acquisition_spec.md`, `AI/docs/evaluation_spec.md`
+- `AI/docs/feedback_personalization_spec.md`, `AI/docs/goal_session_spec.md`
+
+### 관련 Issue·PR
+
+- Issue: [#16](https://github.com/What-a-move/FocusOn/issues/16)
+
 ## 새 결정 기록
 
-다음 결정은 `결정 020`부터 추가한다.
-
-### 결정 020
-
-- 결정일:
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 고려한 대안:
-- 영향받는 파일:
-- 관련 Issue·PR:
+다음 결정은 `결정 021`부터 추가한다.

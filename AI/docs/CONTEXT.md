@@ -28,13 +28,14 @@
 - 목표·논리 세션·회차·이벤트·시간 집계 계약을 `goal_session_spec.md`로 분리했다.
 - 콘텐츠 감지·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
+- Issue #16에서 PR #15의 최신 문서를 기준으로 MVP 이탈·카메라 정책, OCR `text`·`ocr` 입력, Hybrid 120건 팀원 보고를 문서에 반영했다. 이 문서화는 관련성·카메라 기능 구현 또는 팀의 최종 승인이 아니다.
 
 ### 진행 중인 작업
 
 - 루트 `docs/ARCHITECTURE.md`의 Desktop 중심 흐름과 Notion의 Extension 중심 기본안 차이 검토
 - Server·Extension·공유 타입 담당자와 다중 상태 및 API 경로 검토
 - 목표·세션·회차·이벤트 관계와 사용자당 동시 활성 회차 정책 검토
-- Agent 도구 Schema·예산·Checkpoint 저장소와 피드백 적용 범위 검토
+- Agent 도구 Schema·예산·Checkpoint 저장소 검토; 화면 판정 피드백 적용은 MVP 밖의 후속 기능
 - 학습 노트 Queue·근거 Schema·재생성·삭제 정책 검토
 - 기능별 PLAN·ERROR·REPORT와 GitHub Issue·PR 역할 정리
 - ColPali 실행 위치와 개인정보·자원 예산 검토
@@ -52,7 +53,7 @@
 - 성능·정확도 평가 자동화
 - 목표·세션·회차·이벤트·집계 Schema 구현
 - FocusSessionAgent 상태 그래프와 제한 도구 구현
-- 피드백 저장·캐시·알림·집계 무효화 구현
+- 화면 판정 피드백 저장·캐시·알림·집계 무효화 구현 (후속 기능, MVP 제외)
 - 비동기 학습 노트 작업과 근거 검증 구현
 - 페이지 이동·체류 시간 기반 학습 흐름 분석
 - MediaPipe 상태값 보조 분석
@@ -64,6 +65,8 @@
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
 - AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
+- 목표 보조 코드는 Issue #12의 별도 미병합 Branch에 있다. 이 `dev` 기반 문서 Branch는 그 코드 변경을 포함하지 않는다. 목표 2~40자·질문 최대 2회 등 문서 계약은 #12 통합 전 코드·테스트와 맞춰야 한다.
+- 팀원 보고 Hybrid 99/120, Macro F1 0.732의 원자료·결합식·독립 holdout은 확인되지 않았다. 현재 `dev`에는 Hybrid 관련성 구현이 없다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR을 Client별로 분리해 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
@@ -112,7 +115,7 @@ Client별 사전 제외·권한 검사
 - 분석 결과에는 최소한 상태값과 신뢰도 기준을 포함한다.
 - 오래된 목표·회차·탭 결과는 적용 전에 폐기한다.
 - 같은 이벤트·세션 명령·노트 작업의 중복 처리는 멱등해야 한다.
-- 명시적 사용자 수정은 정확히 일치하는 목표·콘텐츠 범위에서 캐시보다 우선한다.
+- 목표 문장 수정은 화면 판정 정정 피드백으로 저장하지 않는다. 화면 판정 수정·삭제·개인화는 MVP에서 제공하지 않는다.
 - 학습 시간은 Server가 계산하고 LLM이 추정하지 않는다.
 - 학습 노트는 관찰 근거 없이 이해·해결 완료를 주장하지 않는다.
 - 회차 종료와 시간 저장은 학습 노트 생성 성공에 의존하지 않는다.
