@@ -80,6 +80,8 @@ GET /api/v1/users/me/consents
 PUT /api/v1/users/me/consents/{consentType}
 GET /api/v1/users/me/focus-settings
 PUT /api/v1/users/me/focus-settings
+GET /api/v1/users/me/analysis-excluded-domains
+PUT /api/v1/users/me/analysis-excluded-domains
 ```
 
 ### 목표
@@ -120,6 +122,7 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 ```text
 GET /api/v1/reports/daily
+GET /api/v1/reports/calendar?month=YYYY-MM
 GET /api/v1/reports/weekly                     # P1
 GET /api/v1/sessions/{sessionId}/summary
 GET /api/v1/sessions/{sessionId}/learning-summary
@@ -131,10 +134,15 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 
 - 상태: `DRAFT`, `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED`
 - `ENDED`와 `ABANDONED`는 최종 상태다.
-- 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION` 중인 활성 세션은 하나만 허용한다.
+- 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING` 중인 활성 세션은 하나만 허용한다.
 - 시간은 `targetDurationMs`와 `accumulatedActiveMs`를 기준으로 계산한다.
+- `targetDurationMs = null`은 시간 기준 자동 종료 없이 사용자가 직접 종료하는 무기한 세션을 뜻한다.
 - Heartbeat는 10초 간격으로 보낸다. 과거 `clientObservedAt`은 무시하고, 감소한 `accumulatedActiveMs`는 거절한다.
+- 현재 RUNNING 구간의 첫 유효 heartbeat를 받기 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
 - 마지막 heartbeat 뒤 60초 동안 신호가 없으면 `ABANDONED` 후보로 처리한다.
+- 마지막 유효 heartbeat 뒤 3분까지 정상 신호가 복구되지 않으면 `ABANDONED`로 원자적 자동 종료한다. 3분 안에 복구되면 후보를 해제한다.
+- 자동 종료는 마지막 서버 확정 `accumulatedActiveMs`만 사용하고 `endReason: HEARTBEAT_TIMEOUT`을 기록한다. 확정 뒤 도착한 heartbeat는 세션을 되살리지 않는다.
+- Desktop 재실행으로 로컬 monotonic 기준점이 사라지면 서버의 마지막 확정 누적 시간만 사용하고 `AUTO_PAUSED`, `pauseReason: APP_RESTART`로 복구한다. 사용자가 명시적으로 재개하기 전에는 `RUNNING`으로 바꾸지 않는다.
 - 세션 종료 후 학습 요약 상태는 `QUEUED`, `GENERATING`, `READY`, `INSUFFICIENT_DATA`, `FAILED`를 사용한다.
 
 ## 분석 결과 규칙
@@ -143,6 +151,29 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 분석 상태이며 오류 코드가 아니다.
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
+- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
+- `UNCERTAIN` 시간은 이탈 시간에 합산하지 않는다. 30초 이하는 기존 이탈 구간을 보류하고, 30초를 초과하면 기존 구간을 종료한다.
+- `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
+- 개입 임계값은 `GENTLE` 연속 120초, `NORMAL` 최근 10분 안의 30초 이상 이탈 구간 2회, `ACTIVE` 연속 30초다.
+- 개입 cooldown은 `sessionId + interventionType`별 5분이다.
+- `policyVersion`은 세션 시작 시 `interventionPolicyVersion`으로 고정하고 분석 기록과 개입 이벤트에 같은 값을 저장한다.
+
+## 분석 제외 도메인
+
+- 제외 목록에는 URL 전체가 아니라 정규화한 `host`만 저장한다. path, query, fragment, 페이지 내용은 저장하지 않는다.
+- 온보딩에서 빈 배열로 건너뛸 수 있고 설정에서 전체 목록을 조회·교체할 수 있다.
+- `PUT /api/v1/users/me/analysis-excluded-domains`는 전체 교체 방식이며 빈 배열은 목록 전체 삭제를 뜻한다.
+- 제외 목록은 사용자별 최대 50개다.
+- 제외 도메인에서는 화면 DOM·OCR·AI 콘텐츠 분석을 중단하지만 타이머는 유지한다. 카메라 동의와 권한이 유효하면 로컬 카메라 분석은 계속할 수 있다.
+
+## 학습 정리와 리포트
+
+- 학습 정리는 세션 종료와 분리된 비동기 작업이다. 생성 실패가 `ENDED` 확정이나 세션 리포트 조회를 막지 않는다.
+- 학습 정리 응답과 저장 JSON은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용한다. `reviewQuestions`와 자동 퀴즈는 MVP에서 사용하지 않는다.
+- `learningSummaryStatus`는 HTTP 오류 코드가 아니라 정상 응답의 업무 상태다.
+- 집중 달력은 세션 시작 시 확정한 `studyDate`를 기준으로 집계한다. 자정을 넘긴 세션도 시작일 하나에 귀속한다.
+- 달력 집계에는 종료가 확정된 `ENDED`, `ABANDONED` 세션만 포함하고, `ABANDONED`는 마지막 서버 확정 누적 시간만 사용한다.
+- `totalActiveMs >= 60000`인 날짜만 학습 활동일로 표시한다.
 
 ## 재시도와 속도 제한
 
@@ -190,6 +221,8 @@ SESSION_VERSION_CONFLICT
 SESSION_NOT_FOUND
 SESSION_START_REQUIREMENT_MISSING
 SESSION_IDEMPOTENCY_REQUIRED
+SESSION_HEARTBEAT_INVALID
+SESSION_ABANDONED
 ANALYSIS_SERVICE_UNAVAILABLE
 VALIDATION_ERROR
 IDEMPOTENCY_CONFLICT

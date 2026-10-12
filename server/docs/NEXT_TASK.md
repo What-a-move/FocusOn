@@ -15,11 +15,11 @@
 
 1. 기능 기획서에 공통 응답·예외 처리 범위를 기록한다.
 2. 공통 성공 응답, 오류 응답, requestId, validation 예외 처리를 구현한다.
-3. Notion ERD와 API 필드를 대조해 V1 migration을 작성한다.
+3. Notion ERD와 API 필드를 대조해 V1 migration을 작성한다. 제외 도메인, heartbeat 기준 시각, 종료 사유, 개입 정책 버전, `studyDate`, 학습 정리 테이블을 포함한다.
 4. 사용자, 기기, 목표, 세션 핵심 Entity와 Repository를 구현한다.
 5. Google 로그인 교환과 token 정책을 구현한다.
 6. 목표와 세션 MVP API를 구현한다.
-7. 분석·리포트 API를 연결한다.
+7. 분석·개입 정책과 일간 리포트·집중 달력·학습 정리 API를 연결한다.
 8. P1인 세션 목록과 주간 리포트는 MVP 안정화 뒤 구현한다.
 
 ## 완료 조건

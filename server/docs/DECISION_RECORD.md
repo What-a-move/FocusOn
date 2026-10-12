@@ -188,7 +188,7 @@ Notion `FocusOn API 명세서`를 엔드포인트 계약의 원본으로 사용�
 
 ### 결정 내용
 
-세션 생성·일시정지·재개·연장·종료는 `Idempotency-Key`를 사용하고 기존 세션 상태 명령은 `If-Match-Version`도 사용한다. Heartbeat에는 두 헤더를 사용하지 않으며 10초 주기와 60초 무신호 기준을 적용한다.
+세션 생성·일시정지·재개·연장·종료는 `Idempotency-Key`를 사용하고 기존 세션 상태 명령은 `If-Match-Version`도 사용한다. Heartbeat에는 두 헤더를 사용하지 않으며 10초 주기와 60초 무신호 후보 기준을 적용한다. 현재 RUNNING 구간의 첫 유효 heartbeat 전에는 `lastResumedAt`을 기준으로 사용하고, 최초 시작에서는 `lastResumedAt = startedAt`이다. 마지막 유효 heartbeat 뒤 3분까지 복구되지 않으면 마지막 서버 확정 누적 시간과 `HEARTBEAT_TIMEOUT` 사유로 `ABANDONED` 자동 종료한다.
 
 ## 결정 012 - MVP와 P1
 
@@ -208,9 +208,27 @@ Notion `FocusOn API 명세서`를 엔드포인트 계약의 원본으로 사용�
 
 PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한다. 애플리케이션과 DB 시간대는 UTC를 사용한다.
 
+## 결정 014 - 제외 도메인·개입 정책·학습 정리
+
+- 결정일: 2026-10-12
+- 상태: 확정
+
+### 결정 내용
+
+- 분석 제외 목록은 사용자별 별도 저장 모델로 관리하고 정규화한 `host`만 저장한다. 온보딩에서 빈 목록을 허용하며 설정 API의 `PUT`은 전체 교체 방식으로 동작한다.
+- 개입 정책 버전은 세션 시작 시 고정하고 분석 기록과 개입 이벤트에 함께 저장한다. `UNCERTAIN`은 30초까지 기존 이탈 구간을 보류하고 초과 시 종료하며, `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
+- 학습 정리는 `overview`, `keyConcepts`, `nextStartPrompt`만 제공한다. 자동 복습 질문과 퀴즈는 MVP에서 제외한다.
+- 집중 달력은 `studyDate`와 종료 확정 세션의 검증된 누적 시간을 사용하고, 하루 `60,000ms` 이상이면 활동일로 표시한다.
+
+### 영향받는 API·Entity
+
+- `GET`, `PUT /api/v1/users/me/analysis-excluded-domains`
+- `GET /api/v1/reports/calendar?month=YYYY-MM`
+- `user_analysis_excluded_domains`, `learning_sessions`, `analysis_runs`, `intervention_events`, `learning_review_evidences`, `learning_summaries`
+
 ## 새 결정 기록
 
-### 결정 014
+### 결정 015
 
 - 결정일:
 - 주제:
