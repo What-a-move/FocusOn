@@ -42,7 +42,7 @@ Electron API가 반환하는 `not-determined`, `granted`, `denied`, `restricted`
 - Main에서 `systemPreferences.getMediaAccessStatus('camera')`로 먼저 확인하고 `not-determined`일 때만 `askForMediaAccess('camera')`를 호출한다.
 - 사용자가 이미 거부했다면 OS Prompt를 반복하지 않고 System Settings 안내를 표시한다.
 - Packaging 설정의 Camera Usage Description을 실제 기능 설명과 일치시킨다.
-- 분석 중지·세션 종료·제외 앱 또는 제외 도메인 진입 시 Camera Track을 중지한다.
+- 세션 일시정지·종료, 카메라 동의·권한 철회 또는 민감 화면 `PRIVACY_BLOCKED` 진입 시 Camera Track을 중지한다. 사용자 제외 앱·도메인 `EXCLUDED`만으로는 동의된 카메라 분석을 중지하지 않는다.
 - 원본 영상을 기본 저장하거나 Server에 전송하지 않는다.
 
 ### Screen Recording
@@ -78,7 +78,7 @@ Electron API가 반환하는 `not-determined`, `granted`, `denied`, `restricted`
 ## 제외 상태 연동
 
 - Extension이 제외 도메인을 감지하면 페이지 수집을 즉시 멈추고 Server에 제외 상태를 전달한다.
-- Desktop이 제외 상태를 받으면 화면 캡처·OCR·AI·Camera 분석을 모두 중지한다.
+- Desktop이 제외 상태를 받으면 화면 캡처·OCR·AI 콘텐츠 분석을 중지하고 타이머와 동의된 Camera 분석은 유지한다. 민감 화면 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다.
 - Server 연결이 끊겨 최신 제외 상태를 확인할 수 없으면 안전한 상태가 다시 확인될 때까지 분석을 중지한다.
 - 제외 도메인을 벗어났다는 상태와 활성 세션을 다시 확인한 뒤에만 분석을 재개한다.
 - Server 동기화 방식이 구현되기 전에는 제외 도메인 연동 기능을 완료로 처리하지 않는다.

@@ -8,7 +8,7 @@
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 적용 범위: `AI/`의 코드, 테스트, 평가 데이터, Prompt와 AI API 문서
 
-이 문서는 AI 담당자가 모든 작업에서 반복 확인할 기준을 Rule ID로 정의한다. Notion의 `FocusPath AI 최종 기획서`는 설계 입력이지만 구현 완료나 전원 합의를 뜻하지 않는다. 아래에서 `확정`으로 표시한 규칙만 현재 결정 기록과 공통 개인정보 기준에 근거한 불변 조건이며, `제안`과 `실험`은 관련 담당자 검토 전까지 구현 계약으로 간주하지 않는다.
+이 문서는 AI 담당자가 모든 작업에서 반복 확인할 기준을 Rule ID로 정의한다. 현재 MVP의 원본은 Notion `FocusOn` 기능·공통 정책과 `FocusOn API 명세서`다. 과거 `FocusPath AI 최종 기획서`는 참고 초안이며, 아래 `제안`과 `실험`은 구현 계약으로 간주하지 않는다.
 
 ## 1. 기준 문서와 충돌 처리
 
@@ -60,8 +60,8 @@
 | `AI-EVAL-001` | MUST | 제안 | 모델, Prompt, 임계값, 전처리, 추출기 또는 상태 의미가 바뀌면 동일 고정 평가 세트로 회귀 평가한다. | 평가 실행 기록 |
 | `AI-VERSION-001` | MUST | 제안 | API, 분석기, 모델, Prompt, 추출기, 정책 버전을 분리해 기록하고 호환되지 않는 의미 변경은 Major Version으로 관리한다. | 응답 필드·릴리스 리뷰 |
 | `AI-LABEL-001` | MUST | 제안 | AI 내부 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE`과 제품 공개 `RELATED`, `UNRELATED`, `UNCERTAIN`을 명시적으로 매핑하며 내부 라벨을 공개 상태로 그대로 노출하지 않는다. | 상태 매핑 계약 테스트 |
-| `AI-EXCLUSION-001` | MUST | 제안 | `ANALYSIS_ONLY`와 `ANALYSIS_AND_TIME`을 구분하고 두 상태 모두 콘텐츠 payload를 AI에 보내지 않는다. `resumeRequired`가 있으면 사용자 확인 전 재개하지 않는다. | 제외·재개 통합 테스트 |
-| `AI-GOAL-002` | MUST | 제안 | 목표 보조는 `clarityStatus` 6개 상태를 사용하고 사용자 확인 전 목표를 확정하지 않으며, AI 장애 시 직접 입력 fallback을 제공한다. | 목표 보조 계약 테스트 |
+| `AI-EXCLUSION-001` | MUST | 확정 | `EXCLUDED`와 `PRIVACY_BLOCKED`에서 콘텐츠 payload를 AI에 보내지 않는다. `EXCLUDED`는 동의된 로컬 카메라·타이머 유지, `PRIVACY_BLOCKED`는 카메라 중지·타이머 유지다. | 제외·민감 화면 통합 테스트 |
+| `AI-GOAL-002` | MUST | 확정 | 목표 보조는 Notion의 4개 `decision`과 질문 최대 2회를 사용한다. 사용자 확인 전 목표를 확정하지 않으며 AI 장애 시 수동 확정 경로를 제공한다. | 목표 보조 계약 테스트 |
 
 ## 3. 작업 시작 확인
 

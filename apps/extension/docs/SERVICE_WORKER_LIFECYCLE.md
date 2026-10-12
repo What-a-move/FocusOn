@@ -22,13 +22,13 @@ Idempotent는 같은 작업을 여러 번 실행해도 결과가 한 번 실행�
 | 데이터 | 저장 위치 방향 | 이유 |
 | --- | --- | --- |
 | Event 처리 중 임시 값 | 함수 지역 변수 | 처리 종료 후 불필요 |
-| 제외 Domain | `chrome.storage.local` | 기기별 개인정보 설정을 유지 |
+| 제외 Domain | Server 정본 + `chrome.storage.local` 캐시 | 사용자별 설정을 동기화하고 Worker 재시작 때 빠르게 차단 |
 | 현재 Tab·Navigation 식별값 | `chrome.storage.session` | Worker 재시작 후 복구하고 Browser 종료 시 제거 |
 | 학습 세션 기준 상태 | Server | 여러 Client의 공통 기준 |
 | 세션·연결 상태의 짧은 Cache | `chrome.storage.session` | Popup 표시와 Worker 복구 보조 |
 | Popup 조회 Cache | TanStack Query | Popup UI의 Server 상태 관리 |
 
-- 제외 Domain은 `chrome.storage.local`에 저장하고 `setAccessLevel()`로 신뢰된 Extension Context에서만 접근한다.
+- 제외 Domain의 정본은 사용자별 Server 목록이다. `GET /api/v1/users/me/analysis-excluded-domains`로 동기화하고, 변경은 `PUT` 전체 교체 성공 뒤 캐시한다. `chrome.storage.local` 캐시는 `setAccessLevel()`로 신뢰된 Extension Context에서만 접근하며, 목록이 확인되지 않으면 콘텐츠 수집을 보류한다.
 - Server가 학습 세션과 연결 상태의 최종 기준이며 Local Cache를 기준 상태로 승격하지 않는다.
 - Token과 Page 본문을 `local` 또는 `sync`에 저장하지 않는다.
 - 로그인 Token 저장 방식은 인증·기기 연결 흐름을 확정할 때 별도로 결정한다.
@@ -69,7 +69,7 @@ Idempotent는 같은 작업을 여러 번 실행해도 결과가 한 번 실행�
 - Worker가 현재 Domain을 정규화한 뒤 `hostname === excluded` 또는 `hostname.endsWith('.' + excluded)` 방식으로 정확한 Domain과 하위 Domain을 확인한다.
 - 단순 `endsWith(excluded)`만 사용해 `not-example.com` 같은 다른 Domain이 잘못 제외되지 않게 한다.
 - 제외 Domain에서는 Content Script에 Page 본문을 요청하지 않는다.
-- 제외 상태만 Server에 보내고 Desktop이 받으면 화면·OCR·AI·Camera 분석을 모두 중지한다.
+- 제외 상태만 Server에 보내고 Desktop이 받으면 화면·OCR·AI 콘텐츠 분석을 중지한다. 타이머와 동의된 Camera 분석은 유지하며 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다.
 - Server 전송에 실패하면 제외 상태를 성공으로 오해하지 않으며 Desktop은 최신 상태를 확인할 수 없는 동안 분석을 중지한다.
 - 제외 Domain을 벗어나면 새로운 Navigation ID와 Server 세션 상태를 확인한 뒤 Tracking을 다시 시작한다.
 

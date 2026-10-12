@@ -25,8 +25,8 @@ Server와 AI 사이 호출 경로·Schema·상태 투영을 확정하고 Issue #
 - 원본 화면·카메라 영상 미저장 원칙 확인
 - Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로, AI 서버의 원본 이미지 비수신 경계 확인
 - Chrome Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로를 분리 확인
-- 목표 보조 6개 `clarityStatus`, 추천·질문·직접 입력 장애 대안 확인
-- `ANALYSIS_ONLY`와 `ANALYSIS_AND_TIME`, `sessionStatus`, `resumeRequired` 계약 확인
+- 목표 보조 4개 `decision`, 최대 2회 질문·수동 확정 경로 확인
+- `EXCLUDED`와 `PRIVACY_BLOCKED`, `sessionStatus` 계약 확인
 - AI 내부 라벨과 제품 표시 라벨 매핑 확인
 - 개인화 휴식의 최근 7일 규칙과 카메라 비필수 경로 확인
 - ColPali는 기본 서버 구조에 바로 포함하지 않고 별도 PoC·평가로 분리
@@ -35,10 +35,10 @@ Server와 AI 사이 호출 경로·Schema·상태 투영을 확정하고 Issue #
 
 ## 예상 작업 순서
 
-1. 현재 공개 관련성 경로 `/api/v1/sessions/{sessionId}/analysis-runs`와 내부 AI 경계를 Server·Client 담당자와 확정한다. `/api/v1/feedback`은 후속 기능으로 유지한다.
+1. 현재 공개 관련성 경로 `/api/v1/sessions/{sessionId}/analysis-runs`와 내부 AI 경계를 Server·Client 담당자와 확정한다. Notion `POST /api/v1/goals/clarify`의 네 판정값·최대 2회 질문·장애 시 수동 확정도 확인한다. `/api/v1/feedback`은 공개 MVP 경로가 없는 후속 제안으로 유지한다.
 2. AI 내부 라벨과 제품 표시 라벨, 기존 `FocusState` 호환 전략을 공유 타입 담당자와 확정한다.
-3. `goalId`, `sessionId`, `runId`, `eventId`, `navigationId`와 `sessionStatus`, `exclusionMode`, `resumeRequired`의 필수 범위를 확정한다.
-4. 목표 보조 6개 상태와 AI 장애 시 직접 목표 시작 경로를 확정한다.
+3. `goalId`, `sessionId`, `eventId`, `navigationId`와 `sessionStatus`, `analysisStatus`의 필수 범위를 확인한다.
+4. 목표 보조 4개 판정값과 AI 장애 시 직접 목표 확정 경로를 확인한다.
 5. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.
 6. Health Check, 공통 성공·실패 envelope, Schema 검증 테스트를 구현한다.
 7. 로그에 원문·비밀 값이 남지 않는지 검사한다.

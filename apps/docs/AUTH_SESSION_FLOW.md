@@ -28,7 +28,7 @@ Google 로그인
 | `EXPIRED` | 인증 만료 | 인증 복구 또는 재로그인 안내 |
 | `OFFLINE` | Server 연결 불가 | 마지막 확인 시각과 재연결 안내 |
 
-상태 이름은 API 계약 확정 시 `packages/shared-types`의 타입과 일치시킨다.
+이 표는 앱의 **인증 UI 상태**다. Notion 온보딩 흐름의 프로필 완료·Extension 연결·필수 권한 상태와는 별도이며, 한 상태로 합치지 않는다. API의 인증 오류는 아래 만료·오류 규칙에 따라 처리한다.
 
 ## Token 처리
 
@@ -36,26 +36,31 @@ Google 로그인
 - 인증 정보를 URL Query에 장기간 유지하지 않는다.
 - React Component와 Zustand Store에 Token 원문을 저장하지 않는다.
 - Desktop Renderer와 Content Script에 장기 인증 정보를 직접 노출하지 않는다.
-- Desktop과 Extension의 실제 저장 방식은 보안 검토 후 `DECISION_RECORD.md`에서 확정한다.
+- Access Token은 메모리에만 둔다. 유효 시간은 15분이다.
+- Refresh Token은 30일 유효하며 사용할 때마다 rotation한다. Desktop은 macOS Keychain, Extension은 각자의 안전 저장 영역에 보관한다.
+- Desktop과 Extension은 서로 독립된 token family를 사용한다. Desktop은 최대 3대까지 연결한다.
+- `POST /api/v1/auth/refresh`는 JSON body의 `refreshToken`으로 호출하며 `Authorization` 헤더는 보내지 않는다.
 
 ## Desktop·Extension 연결
 
-- 연결 Code는 짧은 유효시간과 일회성 사용을 기본 방향으로 검토한다.
+- 연결 Code는 5분 유효·3회 실패 제한·1회 사용이다. 새 코드를 발급하면 이전 코드는 즉시 폐기한다.
 - 연결 성공 전에는 다른 사용자의 세션 정보를 표시하지 않는다.
 - 연결 해제 시 저장된 연결 정보와 Cache를 정리한다.
 - 한쪽 앱의 연결 실패가 다른 앱이나 Chrome Page 동작을 멈추게 하지 않는다.
+- Desktop 인증 상태가 없거나 Refresh Token이 만료·폐기되면 기존 코드 `AUTH_RELOGIN_REQUIRED`로 인증 정보를 정리하고 Desktop 로그인 화면으로 이동한다. 별도 `LINK_005` 오류 코드는 사용하지 않는다.
 
 ## 만료와 오류
 
-- 인증 만료 응답을 일반 Server 오류로 표시하지 않는다.
-- 안전하게 재실행할 수 있는 조회만 자동 복구한다.
+- `AUTH_ACCESS_TOKEN_EXPIRED`는 single-flight refresh 1회 후 원 요청을 1회만 재시도한다.
+- refresh token이 없거나 만료·폐기됐으면 `AUTH_RELOGIN_REQUIRED`로 token을 지우고 로그인 화면으로 이동한다. Google OAuth 재인증 오류와 구분하고 refresh 무한 루프를 만들지 않는다.
+- 인증 만료 응답을 일반 Server 오류로 표시하지 않는다. 안전하게 재실행할 수 있는 조회만 자동 복구한다.
 - 세션 시작·종료처럼 상태를 바꾸는 요청은 성공 여부를 확인하기 전 중복 전송하지 않는다.
 - 로그아웃 후 TanStack Query Cache와 사용자별 Zustand 상태를 정리한다.
 
-## 확정이 필요한 항목
+## Notion 확정 기준
 
-- Google 로그인 구현 방식
-- Desktop 인증 정보 저장 위치
-- Extension 인증 정보 저장 위치
-- Desktop·Extension 최초 연결 방식
-- Access Token 갱신 방식과 만료 시간
+- Google OAuth 2.0 Authorization Code + PKCE를 사용한다.
+- Access Token은 15분, Refresh Token은 30일이며 refresh 때마다 rotation한다.
+- Desktop은 macOS Keychain, Extension은 각자 안전 저장 영역에 Refresh Token을 보관한다.
+- Desktop과 Extension은 독립된 token family를 사용한다.
+- 상세 계약은 Notion `인증 · 토큰 · 디바이스 정책`과 `FocusOn API 명세서`를 따른다.
