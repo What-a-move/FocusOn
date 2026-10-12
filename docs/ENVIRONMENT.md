@@ -10,7 +10,7 @@
 | Server | Java 25, Spring Boot 4.1.1, Gradle |
 | Database | PostgreSQL 17, Flyway |
 | AI | Python 서비스 scaffold, 실행 환경 미구현 |
-| 카메라 분석 | 클라이언트 MediaPipe |
+| 카메라 분석 | macOS 클라이언트 AVFoundation + Apple Vision |
 
 ## 프론트엔드
 

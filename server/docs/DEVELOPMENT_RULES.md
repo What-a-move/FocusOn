@@ -36,17 +36,29 @@ Controller에 상태 전이와 정책 판단을 작성하지 않는다.
 
 - 서버가 세션 상태와 기준 시간을 관리한다.
 - 활성 시간은 `accumulatedActiveMs`, 목표 시간은 `targetDurationMs`로 표현한다.
-- Heartbeat는 10초 간격, 무신호 60초를 `ABANDONED` 후보 기준으로 사용한다.
-- 한 사용자에게 활성 세션은 하나만 허용한다.
+- `targetDurationMs = null`은 시간 기준 자동 종료 없이 사용자가 직접 종료하는 무기한 세션이다.
+- Heartbeat는 10초 간격, 무신호 60초를 `ABANDONED` 후보 기준으로 사용한다. 마지막 유효 heartbeat 뒤 3분까지 복구되지 않으면 `HEARTBEAT_TIMEOUT` 사유로 원자적 자동 종료한다.
+- 현재 RUNNING 구간의 첫 유효 heartbeat 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
+- 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING` 상태 세션은 하나만 허용한다.
+- Desktop 재실행 시 마지막 서버 확정 `accumulatedActiveMs`만 인정하고 `AUTO_PAUSED`, `pauseReason: APP_RESTART`로 복구한다. 사용자 확인 없는 자동 재개는 금지한다.
 
-## BE-006 재시도와 속도 제한
+## BE-006 분석·개입 정책
+
+- `confidence < 0.75`는 `UNCERTAIN`으로 정규화한다.
+- `UNCERTAIN`은 이탈 시간에 합산하지 않는다. 30초 이하는 기존 구간을 보류하고, 30초를 초과하면 기존 구간을 종료한다.
+- `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
+- 개입 임계값은 `GENTLE` 120초 연속, `NORMAL` 최근 10분 안의 30초 이상 구간 2회, `ACTIVE` 30초 연속이다.
+- cooldown은 `sessionId + interventionType`별 5분이다.
+- 정책 버전은 세션 시작 시 `interventionPolicyVersion`으로 고정하고 `analysis_runs.policy_version`, `intervention_events.policy_version`에 같은 값을 저장한다.
+
+## BE-007 재시도와 속도 제한
 
 - 상태 명령은 동일한 idempotency key가 있을 때만 재시도한다.
 - 분석 요청은 `clientRunId`로 중복을 막는다.
 - `429`에는 `Retry-After`를 반환한다.
 - 수치는 `docs/API_CONTRACT.md`의 표와 Notion 계약을 따른다.
 
-## BE-007 개인정보와 로그
+## BE-008 개인정보와 로그
 
 - `docs/DATA_PRIVACY.md`를 따른다.
 - 토큰, API key, 연결 코드, 원본 화면·카메라 데이터, 원문 콘텐츠를 로그·오류 details·개발 오류 문서에 남기지 않는다.
@@ -61,5 +73,6 @@ Controller에 상태 전이와 정책 판단을 작성하지 않는다.
 | BE-003 | 계층 책임과 트랜잭션 경계 |
 | BE-004 | 인증·기기·idempotency·version 헤더 |
 | BE-005 | 세션 전이와 시간 누적 |
-| BE-006 | 재시도 가능 조건과 rate limit |
-| BE-007 | 민감 정보 비노출 |
+| BE-006 | 개입 임계값·구간 처리·정책 버전 |
+| BE-007 | 재시도 가능 조건과 rate limit |
+| BE-008 | 민감 정보 비노출 |
