@@ -59,6 +59,17 @@ Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청
 
 ## 4. 정본과 읽는 순서
 
+새 채팅에서 노션 페이지를 다시 찾을 때는 아래 주소를 사용한다. 세부 정책이 필요한 작업에서는 링크의 현재 내용을 직접 읽는다.
+
+| Notion 정본 바로가기 | 주소 |
+| --- | --- |
+| FocusOn 프로젝트 허브 | https://app.notion.com/p/FocusOn-3dc0b6e5e64c80db8224e86c188e7d67 |
+| 문서 인덱스 | https://app.notion.com/p/3de0b6e5e64c80cd95cff031038ff972 |
+| FocusOn API 명세서 | https://app.notion.com/p/3e00b6e5e64c80e89eb1e64017029210 |
+| ERD | https://app.notion.com/p/ERD-3de0b6e5e64c80a4bf5ef7ff3ac01f17 |
+| 세션 상태 전이 정책 | https://app.notion.com/p/3de0b6e5e64c80cc8140f659abd82371 |
+| AI 분석 계약 | https://app.notion.com/p/AI-3de0b6e5e64c80fbb0bccb985e38002c |
+
 | 필요한 정보 | 우선 확인할 곳 |
 | --- | --- |
 | 제품 목표·MVP 사용자 경험 | Notion `FocusOn` 프로젝트 허브와 기능별 설계서 |
