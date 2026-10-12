@@ -1,5 +1,9 @@
 # FocusOn 작업 지침
 
+## 새 채팅에서 프로젝트 학습 요청
+
+사용자가 `FocusOn 학습해`처럼 짧게 요청하면 추가 설명을 요구하지 말고 이 저장소의 시작 문서를 읽는다. `docs/PROJECT_CONTEXT.md`에서 전체 흐름과 Notion 정본 링크를 확인하고, `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, `docs/DATA_PRIVACY.md`, `docs/WORKFLOW.md` 및 각 영역의 `CONTEXT.md`, `NEXT_TASK.md`, `DECISION_RECORD.md`를 읽는다. 관련 Notion에 접근할 수 있으면 현재 내용을 확인한다. 확정 정책·제안·실제 구현 상태를 구분하고, 접근하지 못한 정본은 확인했다고 말하지 않는다. 학습 요청만 받은 경우 파일은 수정하지 않고 핵심 내용과 남은 충돌을 짧게 보고한다.
+
 ## 모든 작업 시작 전
 
 1. 새 채팅을 포함해 모든 작업에서 `docs/PROJECT_CONTEXT.md`, `docs/README.md`, `docs/WORKFLOW.md`를 먼저 읽고 프로젝트 목적·문서 정본·현재 상태를 파악한다. `PROJECT_CONTEXT.md`는 시작용 요약이므로 세부 계약과 구현 여부는 해당 정본·코드에서 다시 확인한다.
