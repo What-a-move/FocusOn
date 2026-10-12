@@ -393,7 +393,7 @@ Server가 실제 집계와 허용된 근거 Snapshot을 구성한다. Client가 
 ## 11. 검증 시나리오
 
 - 정상 `RELATED`와 `SUPPORTING` 결과가 서로 구분된다.
-- 짧은 `OFF_TASK`가 즉시 `UNRELATED`나 차단으로 변환되지 않는다.
+- 짧은 `OFF_TASK`도 관련성 근거와 confidence가 충분하면 제품 `UNRELATED`로 표시되지만, 15초 미만 전환은 이탈 시간·알림 조건에 포함하지 않고 차단하지 않는다.
 - `FAILED`, `UNSUPPORTED`, 모델 오류에서 `NO_ACTION`을 반환하거나 실패 envelope를 사용한다.
 - 목표 수정·탭 전환·회차 종료 후 오래된 결과가 폐기된다.
 - 같은 이벤트 재전송으로 결과와 시간이 중복되지 않는다.
