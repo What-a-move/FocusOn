@@ -37,8 +37,7 @@ Controller에 상태 전이와 정책 판단을 작성하지 않는다.
 - 서버가 세션 상태와 기준 시간을 관리한다.
 - 활성 시간은 `accumulatedActiveMs`, 목표 시간은 `targetDurationMs`로 표현한다.
 - `targetDurationMs = null`은 시간 기준 자동 종료 없이 사용자가 직접 종료하는 무기한 세션이다.
-- Heartbeat는 10초 간격, 무신호 60초를 `ABANDONED` 후보 기준으로 사용한다. 마지막 유효 heartbeat 뒤 3분까지 복구되지 않으면 `HEARTBEAT_TIMEOUT` 사유로 원자적 자동 종료한다.
-- 현재 RUNNING 구간의 첫 유효 heartbeat 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
+- Heartbeat는 10초 간격, 무신호 60초를 `ABANDONED` 후보 기준으로 사용한다. 마지막 유효 heartbeat(첫 heartbeat 전은 `lastResumedAt`, 최초 시작은 `startedAt`) 뒤 총 3분까지 복구되지 않으면 마지막 서버 확정 누적 시간과 `HEARTBEAT_TIMEOUT` 사유로 원자적 자동 종료한다. 3분 전에 신호가 복구되면 후보를 해제한다.
 - 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING` 상태 세션은 하나만 허용한다.
 - Desktop 재실행 시 마지막 서버 확정 `accumulatedActiveMs`만 인정하고 `AUTO_PAUSED`, `pauseReason: APP_RESTART`로 복구한다. 사용자 확인 없는 자동 재개는 금지한다.
 

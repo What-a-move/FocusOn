@@ -15,7 +15,7 @@
 - PostgreSQL 17과 Backend를 함께 실행하는 Docker Compose 구성
 - local·docker 프로필과 환경 변수 예제
 - Flyway migration 위치와 작성 규칙
-- Notion `FocusOn API 명세서` 정본 엔드포인트 및 공통 정책 확정
+- Notion `FocusOn API 명세서`의 42개 정본 엔드포인트 및 공통 정책 확정
 - 로컬 API 계약과 Backend 불변 규칙 최신화
 - 분석 제외 도메인, 세션별 개입 정책 버전, 집중 달력, 학습 정리 저장 계약 반영
 

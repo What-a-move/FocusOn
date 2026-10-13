@@ -34,7 +34,7 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 
 ### 결정 내용
 
-사용자가 설정한 제외 도메인과 하위 도메인은 페이지 본문 수집과 분석 전송을 즉시 중지한다. Extension은 제외 상태만 Server에 전달하고, Desktop은 해당 상태를 받으면 화면·OCR·AI·Camera 분석을 모두 중지한다.
+사용자가 설정한 제외 도메인과 하위 도메인은 페이지 본문 수집과 분석 전송을 즉시 중지한다. Extension은 제외 상태만 Server에 전달하고, Desktop은 확인된 `EXCLUDED` 상태에서 화면·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. 별도 카메라 동의와 권한이 유효하면 로컬 카메라 분석만 허용한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 모두 중지한다.
 
 ### 결정 이유
 
@@ -43,10 +43,10 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 ### 확정 기준
 
 - `example.com`을 제외하면 `www.example.com` 같은 하위 도메인도 제외한다.
-- 제외 목록은 `chrome.storage.local`에 저장하고 Content Script에서 직접 접근하지 않는다.
+- 제외 목록의 정본은 사용자별 Server `analysis_excluded_domains`다. Extension은 최신 정규화 host 목록만 `chrome.storage.local`에 캐시하고 Content Script에서 직접 접근하지 않는다. 변경은 `PUT /api/v1/users/me/analysis-excluded-domains`의 전체 교체 결과를 기준으로 반영한다.
 - 제외 상태는 Server를 통해 Desktop에 전달한다.
 - 원본 URL·본문 대신 정규화한 Domain과 제외 여부만 전달한다.
-- Desktop이 Server에서 최신 제외 상태를 확인할 수 없으면 확인될 때까지 화면·OCR·AI·Camera 분석을 중지한다.
+- Desktop이 Server에서 최신 제외 상태를 확인할 수 없으면 확인될 때까지 화면·OCR·AI 콘텐츠 분석과 카메라 분석을 모두 중지한다. 확인된 `EXCLUDED`에서는 별도 카메라 동의와 권한이 유효할 때 로컬 카메라 분석만 허용하며, `PRIVACY_BLOCKED`에서는 카메라 분석도 중지한다.
 
 ### 결정 003 - Desktop 학습 세션 조회·제어
 
@@ -108,7 +108,7 @@ Server에서 활성 학습 세션이 확인된 동안 사용자가 보고 있는
 
 ### 결정 내용
 
-- 제외 Domain은 `chrome.storage.local`에 저장한다.
+- 제외 Domain의 정본은 Server 사용자 설정이며, `chrome.storage.local`에는 빠른 차단·오프라인 복구용 최신 목록만 캐시한다. 동기화 실패 시 콘텐츠 수집을 시작하지 않는다.
 - 현재 Navigation과 짧은 연결 Cache는 `chrome.storage.session`에 저장한다.
 - 학습 세션과 Desktop 연결 상태의 최종 기준은 Server다.
 - Page 본문과 인증 Token은 `chrome.storage.local` 또는 `sync`에 저장하지 않는다.
@@ -164,11 +164,22 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 - 사이트별 권한 모드도 함께 제공할지
 - 권한을 거부하거나 철회했을 때의 Popup 문구
 
+## 결정 010 - 제외 도메인 정본과 로컬 캐시
+
+- 결정일: 2026-10-12
+- 담당 영역: Frontend(`apps`)·Server
+- 대상 앱: Chrome Extension·Desktop
+- 상태: 확정 — Notion 사용자 설정 API와 DR-019 반영
+
+### 결정 내용
+
+사용자별 제외 도메인 목록의 정본은 Server `analysis_excluded_domains`다. Extension의 `chrome.storage.local`은 최신 정규화 host 목록의 캐시다. 목록 확인에 실패하면 화면·카메라 분석을 모두 보류한다. 확인된 `EXCLUDED`에서는 화면 분석을 중단하고 타이머를 유지한다. 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용하며, `PRIVACY_BLOCKED`에서는 카메라도 중단한다.
+
 ## 새 결정 기록
 
-다음 결정은 `결정 010`부터 추가한다.
+다음 결정은 `결정 011`부터 추가한다.
 
-### 결정 010
+### 결정 011
 
 - 결정일:
 - 담당 영역: Frontend(`apps`)

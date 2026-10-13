@@ -154,7 +154,7 @@ Desktop이 발급한 일회용 연결 코드를 Extension이 입력해 같은 �
 - IPC 실패 응답은 `code`와 `retryable`만 전달하며 Renderer가 사용자 안전 문구로 변환한다.
 - Camera·Screen Recording·Notification은 실제 사용 직전에 각각 이유를 설명하고 요청한다.
 - 권한 거부 시 Timer와 앱은 유지하고 해당 분석 기능만 중지한다.
-- 제외 앱 또는 제외 도메인 상태에서는 화면·OCR·AI·Camera 분석을 모두 중지한다.
+- 제외 앱 또는 제외 도메인 상태에서는 화면·OCR·AI 콘텐츠 분석을 중지하고 타이머와 동의된 Camera 분석은 유지한다. 민감 화면 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다. Notion DR-019 정책을 따른다.
 
 ### 결정 이유
 

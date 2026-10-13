@@ -90,19 +90,12 @@ Notion `공통 Error Code`가 확정되었으므로 이 초안은 사용하지 �
 
 - 결정일: 2026-09-12
 - 담당 영역: Backend
-- 상태: 해결됨
+- 상태: 폐기 (Notion API 계약으로 대체)
 - 관련 Issue: #4
 
 ### 결정 내용
 
-미정. Notion `AUTH_001` 응답 스펙이 비어 있다. Google 로그인 성공 시 반환할 필드(FocusOn 토큰, 만료 시간, 최초 로그인 여부 등)를 확정해야 한다.
-
-최신 계약은 `POST /api/v1/auth/google/exchange` Notion 행에서 관리한다.
-
-### 후속 확인
-
-- [ ] AUTH_001 응답 필드 확정
-- [ ] Notion 및 `docs/API_CONTRACT.md`에 반영
+이 기록의 미정 초안은 더 이상 사용하지 않는다. Google 로그인 교환의 요청·응답은 Notion `FocusOn API 명세서`의 `POST /api/v1/auth/google/exchange` 계약을 기준으로 한다. 로컬 엔드포인트 요약은 `docs/API_CONTRACT.md`를 함께 갱신한다.
 
 ## 결정 006 - notifications.triggerSource
 
@@ -188,7 +181,7 @@ Notion `FocusOn API 명세서`를 엔드포인트 계약의 원본으로 사용�
 
 ### 결정 내용
 
-세션 생성·일시정지·재개·연장·종료는 `Idempotency-Key`를 사용하고 기존 세션 상태 명령은 `If-Match-Version`도 사용한다. Heartbeat에는 두 헤더를 사용하지 않으며 10초 주기와 60초 무신호 후보 기준을 적용한다. 현재 RUNNING 구간의 첫 유효 heartbeat 전에는 `lastResumedAt`을 기준으로 사용하고, 최초 시작에서는 `lastResumedAt = startedAt`이다. 마지막 유효 heartbeat 뒤 3분까지 복구되지 않으면 마지막 서버 확정 누적 시간과 `HEARTBEAT_TIMEOUT` 사유로 `ABANDONED` 자동 종료한다.
+세션 생성·일시정지·재개·연장·종료는 `Idempotency-Key`를 사용하고 기존 세션 상태 명령은 `If-Match-Version`도 사용한다. Heartbeat에는 두 헤더를 사용하지 않으며 10초 주기로 보낸다. 무신호 60초는 `ABANDONED` 후보 기준이다. 현재 RUNNING 구간의 첫 유효 heartbeat 전에는 `lastResumedAt`(최초 시작은 `startedAt`)을 기준으로 삼고, 마지막 유효 신호 뒤 총 3분(180초)까지 복구되지 않으면 마지막 서버 확정 누적 시간과 `HEARTBEAT_TIMEOUT` 사유로 `ABANDONED` 자동 종료한다. 그 전에 신호가 복구되면 후보를 해제한다.
 
 ## 결정 012 - MVP와 P1
 

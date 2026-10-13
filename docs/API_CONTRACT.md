@@ -47,12 +47,14 @@
 
 | 헤더 | 적용 |
 | --- | --- |
-| `Authorization: Bearer {accessToken}` | 인증 API |
-| `X-Device-Id: {deviceId}` | Desktop·Extension의 인증 요청 |
+| `Authorization: Bearer {accessToken}` | Notion 명세에서 인증이 필요한 API |
+| `X-Device-Id: {deviceId}` | 해당 Notion endpoint의 필수 헤더에 기재된 요청 |
 | `Idempotency-Key: {key}` | 세션 생성·일시정지·재개·연장·종료 |
 | `If-Match-Version: {version}` | 기존 세션의 일시정지·재개·연장·종료 |
 
 Heartbeat에는 `Authorization`과 `X-Device-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
+
+`POST /api/v1/auth/refresh`는 `Authorization` 헤더 대신 JSON body의 `refreshToken`으로 인증한다. 각 endpoint의 실제 필수 헤더는 Notion API DB 항목을 따른다. 성공 시 Access·Refresh Token을 모두 회전하고, 클라이언트는 single-flight로 1회 호출한 뒤 원 요청을 1회만 재시도한다.
 
 ## 엔드포인트 목록
 
@@ -128,7 +130,7 @@ GET /api/v1/sessions/{sessionId}/summary
 GET /api/v1/sessions/{sessionId}/learning-summary
 ```
 
-`GET /api/v1/sessions`와 `GET /api/v1/reports/weekly`만 P1이며 나머지는 MVP 범위다.
+`GET /api/v1/sessions`와 `GET /api/v1/reports/weekly`만 P1이며 나머지는 MVP 범위다. 제외 도메인 API는 현재 사용자 목록을 조회하고 전체 교체한다. 빈 배열은 전체 삭제이며, host는 소문자·IDNA ASCII·후행 점 제거 기준으로 정규화한다. 사용자당 최대 50개를 저장하고 scheme·port·path·query·fragment·페이지 내용은 저장하지 않는다.
 
 ## 세션 규칙
 
@@ -140,10 +142,11 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - Heartbeat는 10초 간격으로 보낸다. 과거 `clientObservedAt`은 무시하고, 감소한 `accumulatedActiveMs`는 거절한다.
 - 현재 RUNNING 구간의 첫 유효 heartbeat를 받기 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
 - 마지막 heartbeat 뒤 60초 동안 신호가 없으면 `ABANDONED` 후보로 처리한다.
-- 마지막 유효 heartbeat 뒤 3분까지 정상 신호가 복구되지 않으면 `ABANDONED`로 원자적 자동 종료한다. 3분 안에 복구되면 후보를 해제한다.
-- 자동 종료는 마지막 서버 확정 `accumulatedActiveMs`만 사용하고 `endReason: HEARTBEAT_TIMEOUT`을 기록한다. 확정 뒤 도착한 heartbeat는 세션을 되살리지 않는다.
+- 마지막 유효 heartbeat 뒤 3분까지 정상 신호가 복구되지 않으면 마지막 서버 확정 `accumulatedActiveMs`와 `endReason: HEARTBEAT_TIMEOUT`으로 `ABANDONED`를 원자적으로 확정한다. 첫 heartbeat 전에는 현재 실행 구간의 `lastResumedAt`(최초 시작은 `startedAt`)을 기준으로 삼는다. 3분 안에 복구되면 후보를 해제하고, 확정 후 heartbeat는 세션을 되살리지 않는다.
 - Desktop 재실행으로 로컬 monotonic 기준점이 사라지면 서버의 마지막 확정 누적 시간만 사용하고 `AUTO_PAUSED`, `pauseReason: APP_RESTART`로 복구한다. 사용자가 명시적으로 재개하기 전에는 `RUNNING`으로 바꾸지 않는다.
 - 세션 종료 후 학습 요약 상태는 `QUEUED`, `GENERATING`, `READY`, `INSUFFICIENT_DATA`, `FAILED`를 사용한다.
+
+일간 리포트와 홈 집중 달력은 세션 생성 시 고정한 `studyDate`에 `ENDED` 및 서버 확정 `ABANDONED`의 마지막 검증된 `accumulatedActiveMs`를 귀속한다. 자정을 넘어도 분할하지 않으며, 같은 날짜 합계가 60,000ms 이상일 때 달력에 포키를 표시한다. 진행 중 세션은 집계하지 않는다.
 
 ## 분석 결과 규칙
 

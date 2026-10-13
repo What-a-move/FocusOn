@@ -25,7 +25,7 @@
 - Extension production build 결과물에 manifest와 스크립트가 포함되는 것을 확인했다.
 - Next.js App Router와 Tailwind CSS v4 기반 화면 구조를 확인했다.
 - 활성 학습 세션 중 현재 Tab을 자동 추적하고 `tabs`와 `webNavigation`을 함께 사용하는 기준을 확정했다.
-- 제외 Domain은 `chrome.storage.local`, Navigation 임시 상태는 `chrome.storage.session`, 세션·연결 기준은 Server로 확정했다.
+- 제외 Domain은 Server의 사용자별 정규화 host 목록이 정본이고 `chrome.storage.local`은 캐시다. Navigation 임시 상태는 `chrome.storage.session`, 세션·연결 기준은 Server로 확정했다.
 - Content Script Timer와 Service Worker 재검증을 조합한 15초 체류 흐름과 Message 계약을 확정했다.
 - 최소 Chrome 120과 HTTP Page 분석 지원을 확정했다.
 
@@ -72,7 +72,7 @@ Chrome 탭
 ## 반드시 지켜야 하는 조건
 
 - Manifest 권한은 필요한 범위만 요청한다.
-- 사용자가 지정한 제외 도메인에서는 본문 분석과 전송을 중지하고 Desktop의 화면·OCR·AI·Camera 분석도 중지한다.
+- 사용자가 지정한 제외 도메인에서는 본문 분석과 전송 및 Desktop의 화면·OCR·AI 콘텐츠 분석을 중지한다. 타이머와 동의된 Desktop Camera 분석은 유지하며 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다.
 - 비밀번호, 결제 정보, 개인 메시지 등 민감한 본문을 기본 수집하지 않는다.
 - 페이지 이동이나 탭 변경이 발생해도 중복 이벤트를 최소화한다.
 - Desktop 연결 실패가 Chrome 페이지 동작을 막지 않아야 한다.

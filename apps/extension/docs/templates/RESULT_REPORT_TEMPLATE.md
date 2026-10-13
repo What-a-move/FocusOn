@@ -34,7 +34,8 @@
 - [ ] 현재 탭 확인
 - [ ] 페이지 이동 기록
 - [ ] 15초 체류 재분석
-- [ ] 제외 도메인에서 Page 수집과 Desktop의 Screen·OCR·AI·Camera 분석 중지
+- [ ] 제외 도메인에서 Page 수집과 Desktop의 Screen·OCR·AI 콘텐츠 분석 중지, 타이머·동의된 Camera 분석 유지
+- [ ] 민감 화면 `PRIVACY_BLOCKED`에서 Camera 분석도 중지
 - [ ] 권한 거부
 - [ ] Desktop 연결 실패
 - [ ] Service Worker 재시작

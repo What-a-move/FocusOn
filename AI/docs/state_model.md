@@ -108,14 +108,14 @@ MVP의 화면 이탈 정책은 `analysis_rules.md`의 15초 미만 전환 제외
 
 | 필드 | 값 | 의미 |
 | --- | --- | --- |
-| `sessionStatus` | `ACTIVE` | 타이머와 회차가 진행 중이며 분석 가능 |
-| `sessionStatus` | `PAUSED` | 타이머·학습 기록이 중지됨 |
-| `sessionStatus` | `ENDED` | 회차 종료; 결과를 현재 상태에 적용하지 않음 |
-| `exclusionMode` | `NONE` | 일반 분석 가능 |
-| `exclusionMode` | `ANALYSIS_ONLY` | 해당 화면의 콘텐츠 수집·OCR·AI를 중지하고 타이머는 계속; 카메라 처리 여부는 동의·차단 사유와 별도 게이트로 결정 |
-| `exclusionMode` | `ANALYSIS_AND_TIME` | 분석·수집·학습 기록·타이머를 모두 중지 |
+| `sessionStatus` | `RUNNING` | 타이머가 진행 중이며 분석 조건 확인 |
+| `sessionStatus` | `PAUSED`·`AUTO_PAUSED` | 타이머·분석 중지 |
+| `sessionStatus` | `AWAITING_END_CONFIRMATION`·`ENDING` | 종료 확인·처리 중; 타이머·분석 중지 |
+| `sessionStatus` | `ENDED`·`ABANDONED` | 최종 상태; 결과를 현재 상태에 적용하지 않음 |
+| 공개 `relation` | `EXCLUDED` | 화면 콘텐츠 분석 중지, 타이머 유지. 확인된 제외 상태에서 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용 |
+| 공개 `relation` | `PRIVACY_BLOCKED` | 화면·카메라 분석 중지, 타이머 유지 |
 
-`ANALYSIS_AND_TIME`에서 `resumeRequired=true`이면 사용자 확인 전 자동 재개하지 않는다. 두 제외 모드 모두 콘텐츠 payload와 원문을 AI에 보내지 않는다. 공개 화면 결과 `EXCLUDED`만으로 동의된 카메라 분석을 중단하지 않는다. `PRIVACY_BLOCKED`는 화면과 카메라를 모두 중단한다.
+`EXCLUDED`와 `PRIVACY_BLOCKED`는 공개 `relation` 값이며 `analysisStatus` 값이 아니다. 둘 다 세션 상태를 바꾸지 않고 콘텐츠 payload와 원문을 AI에 보내지 않는다. 제외 상태가 최신인지 확인할 수 없으면 확인될 때까지 화면·카메라 분석을 중지한다. 필수 권한 유실로 `AUTO_PAUSED`가 되면 사용자가 복구 후 명시적으로 재개한다.
 
 ## 8. 조합 불변 조건
 
