@@ -139,6 +139,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING` 중인 활성 세션은 하나만 허용한다.
 - 시간은 `targetDurationMs`와 `accumulatedActiveMs`를 기준으로 계산한다.
 - `targetDurationMs = null`은 시간 기준 자동 종료 없이 사용자가 직접 종료하는 무기한 세션을 뜻한다.
+- MVP 온보딩은 `30분`, `1시간`, `2시간`, `직접 입력(5~300분)`만 선택지로 제공한다. 무기한 세션은 API 계약으로 남지만 온보딩 UI에는 노출하지 않는다.
 - Heartbeat는 10초 간격으로 보낸다. 과거 `clientObservedAt`은 무시하고, 감소한 `accumulatedActiveMs`는 거절한다.
 - 현재 RUNNING 구간의 첫 유효 heartbeat를 받기 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
 - 마지막 heartbeat 뒤 60초 동안 신호가 없으면 `ABANDONED` 후보로 처리한다.
@@ -150,8 +151,9 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 
 ## 분석 결과 규칙
 
-- 목표 관련성 값은 `RELATED`, `UNRELATED`, `UNCERTAIN`을 사용한다.
-- `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 분석 상태이며 오류 코드가 아니다.
+- 공개 `relation`은 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. AI 관련성 판정값은 `RELATED`, `UNRELATED`, `UNCERTAIN`이며 `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전에 적용되는 정책 차단 상태다.
+- AI 내부 `SUPPORTING`은 목표에 필요한 보조 학습 활동을 뜻하며 공개 `relation`에서는 `RELATED`로 매핑한다. `SUPPORTING`은 공개 상태 enum을 확장하지 않는다.
+- `EXCLUDED`, `PRIVACY_BLOCKED`, `UNCERTAIN`은 HTTP 오류가 아닌 정상 분석 상태다.
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
 - `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
@@ -164,7 +166,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 ## 분석 제외 도메인
 
 - 제외 목록에는 URL 전체가 아니라 정규화한 `host`만 저장한다. path, query, fragment, 페이지 내용은 저장하지 않는다.
-- 온보딩에서 빈 배열로 건너뛸 수 있고 설정에서 전체 목록을 조회·교체할 수 있다.
+- 온보딩에서 분석 제외 사이트 설정 단계를 반드시 거친다. 사이트를 등록하거나 빈 배열로 건너뛰기를 선택하면 단계가 완료되고, 온보딩 뒤에도 설정에서 전체 목록을 조회·교체할 수 있다.
 - `PUT /api/v1/users/me/analysis-excluded-domains`는 전체 교체 방식이며 빈 배열은 목록 전체 삭제를 뜻한다.
 - 제외 목록은 사용자별 최대 50개다.
 - 제외 도메인에서는 화면 DOM·OCR·AI 콘텐츠 분석을 중단하지만 타이머는 유지한다. 카메라 동의와 권한이 유효하면 로컬 카메라 분석은 계속할 수 있다.

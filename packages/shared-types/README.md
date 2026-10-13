@@ -31,6 +31,7 @@ const page: PageInfo = {
 ## 현재 타입
 
 - `FocusState`: 공개 API의 `relation` 값(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`). 처리 결과는 별도의 `analysisStatus`로 표현한다.
+- AI 내부 `SUPPORTING`은 목표 달성에 필요한 보조 활동이며 공개 `FocusState`에서는 `RELATED`로 매핑한다. 공개 enum에 별도 `SUPPORTING` 값을 추가하지 않는다.
 - `AnalysisReasonCode`: 분석 판단 근거 코드
 - `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
 - `AnalysisResult`: 현재 구현 타입. 최신 계약의 `relation`·`analysisStatus` 분리를 반영해야 한다.

@@ -303,13 +303,13 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 
 ## 결정 015 - 제품 표시 상태와 AI 내부 상태 매핑
 
-- 결정일: 2026-09-22
+- 결정일: 2026-10-13
 - 담당 영역: AI·Server·Client
-- 상태: 제안
+- 상태: 확정
 
 ### 결정 내용
 
-AI 내부는 `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`, `UNAVAILABLE`을 유지한다. 제품 표시에서는 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. `SUPPORTING`은 `RELATED`의 보조 유형, `OFF_TASK`는 `UNRELATED`, `UNAVAILABLE`은 `UNCERTAIN`과 처리 실패 상세 상태로 투영한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 관련성 결과가 아닌 비분석 결과다.
+AI 내부는 `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`, `UNAVAILABLE`을 유지한다. 제품 공개 `relation`에서는 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. AI 관련성 판정은 앞의 세 값만 반환하며 `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 차단 결과다. `SUPPORTING`은 `RELATED`의 보조 유형이고 별도 공개 상태로 노출하지 않는다. `OFF_TASK`는 `UNRELATED`, `UNAVAILABLE`은 `UNCERTAIN`과 처리 실패 상세 상태로 투영한다.
 
 ### 결정 이유
 

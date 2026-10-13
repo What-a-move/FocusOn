@@ -95,6 +95,8 @@
 
 공개 API는 위 값을 `relation` 필드로 표현한다. `analysisStatus`는 AI 실행 결과를 별도로 나타내며 `COMPLETED`, `NEEDS_CONFIRMATION`, `SKIPPED`, `ERROR`를 사용한다. 정책 제외·개인정보 차단은 오류 코드가 아니며 관련성 판단과 처리 상태를 혼합하지 않는다.
 
+AI 관련성 판정은 `RELATED`, `UNRELATED`, `UNCERTAIN`만 반환한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 결과다. AI 내부 `SUPPORTING`은 목표에 필요한 보조 학습 활동이며 공개 `relation`에는 별도 값으로 추가하지 않고 `RELATED`로 매핑한다.
+
 ## 분석 작동 상태 (`AnalysisActivityState`)
 
 | 상태 | 의미 |

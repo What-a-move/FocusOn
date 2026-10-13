@@ -7,7 +7,8 @@
 FocusOn은 macOS Desktop 앱과 Chrome Extension으로 사용자의 학습 활동을 관찰하고, 세션 시작 전에 정한 **하나의 학습 목표**와 현재 활동의 관련성을 판단해 지속적인 이탈을 알려주는 학습 보조 서비스다. 목표 달성 여부나 집중력 점수를 채점하지 않는다.
 
 ```text
-Google 로그인 → 동의·권한·Extension 연결 → 목표 설정
+Google 로그인 → 동의·권한·Extension 연결 → 분석 제외 사이트 설정(등록 또는 빈 목록 건너뛰기)
+→ 목표 설정
 → 집중 세션 시작 → 화면 관련성 분석·개입
 → 사용자 종료 또는 시간 연장 → 세션 리포트·일간 리포트·학습 정리
 ```
@@ -34,6 +35,7 @@ Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청
 
 - 세션의 활성 상태는 사용자당 하나다. `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`이 활성 세션 제약에 포함된다. `ENDED`와 `ABANDONED`는 최종 상태다.
 - Desktop은 로컬 monotonic clock으로 진행 시간을 계산하고, Backend는 상태와 마지막으로 검증한 `accumulatedActiveMs`를 저장한다.
+- MVP의 첫 세션 시간 선택지는 `30분`, `1시간`, `2시간`, `직접 입력`이다. 직접 입력은 `5~300분`이며, 무기한 세션은 `targetDurationMs = null` API 계약으로 유지하지만 온보딩 선택지로 제공하지 않는다.
 - `targetDurationMs = null`은 종료 시간 없는 세션이다. 시간이 찼다는 이유로 자동 종료하지 않고 사용자가 직접 종료한다.
 - 세션 생성·일시정지·재개·연장·종료에는 `Idempotency-Key`를 사용한다. 기존 세션 상태 명령에는 `If-Match-Version`도 사용한다.
 - `RUNNING` 중 heartbeat는 10초마다 보낸다. 헤더는 `Authorization`, `X-Device-Id`만 사용한다. 과거 `clientObservedAt`은 무시하고 감소한 `accumulatedActiveMs`는 거절한다.
@@ -42,12 +44,12 @@ Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청
 
 ### 분석과 개인정보
 
-- 공개 관련성은 `RELATED`, `UNRELATED`, `UNCERTAIN`을 사용한다. `EXCLUDED`, `PRIVACY_BLOCKED`, `UNCERTAIN`은 HTTP 오류가 아닌 분석 상태다.
+- 공개 `relation`은 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED` 5개 값을 사용한다. AI 관련성 판정은 앞의 3개만 반환하며 `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 차단 결과다. AI 내부 `SUPPORTING`은 공개 상태를 늘리지 않고 `RELATED`로 매핑한다.
 - 신뢰도 `0.75` 미만은 `UNCERTAIN`으로 정규화한다. `UNCERTAIN`은 이탈 시간에 더하지 않고 30초까지 기존 구간을 보류하며, 30초를 넘으면 그 구간을 종료한다.
 - 현재 로컬 API 요약과 Backend 규칙은 `RELATED` 확인 시 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만 화면 전환은 이탈 구간으로 집계하지 않는다.
 - 개입 기준은 `GENTLE` 연속 120초, `NORMAL` 최근 10분 안의 30초 이상 이탈 구간 2회, `ACTIVE` 연속 30초다. 같은 세션·개입 유형의 cooldown은 5분이다.
 - 개입 정책 버전은 세션 시작 시 `interventionPolicyVersion`으로 고정하고 분석·개입 이력에 같은 `policyVersion`을 기록한다.
-- 분석 제외 목록에는 정규화된 도메인 `host`만 저장한다. 경로·query·페이지 내용은 저장하지 않는다. 빈 목록으로 온보딩을 건너뛸 수 있고 설정에서 추가·삭제할 수 있다. 제외 화면에서는 콘텐츠 분석을 중단하고 타이머는 유지한다.
+- 분석 제외 목록에는 정규화된 도메인 `host`만 저장한다. 경로·query·페이지 내용은 저장하지 않는다. 온보딩에서 제외 사이트 설정 단계를 반드시 거치며, 사이트를 등록하거나 빈 목록으로 건너뛰면 해당 단계와 온보딩이 완료된다. 완료 후 설정에서 추가·삭제할 수 있다. 제외 화면에서는 콘텐츠 분석을 중단하고 타이머는 유지한다.
 - DOM·OCR 원문, URL 전문, 스크린샷, 카메라 프레임, token·비밀번호 같은 비밀값은 DB·로그·오프라인 큐에 보관하지 않는다. 민감 화면은 콘텐츠 추출과 AI 요청 전에 차단한다.
 
 ### 리포트와 데이터 수명
