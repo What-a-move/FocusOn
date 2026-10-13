@@ -18,7 +18,7 @@
 - Notion `FocusOn API 명세서`의 42개 정본 엔드포인트 및 공통 정책 확정
 - 로컬 API 계약과 Backend 불변 규칙 최신화
 - 분석 제외 도메인, 세션별 개입 정책 버전, 집중 달력, 학습 정리 저장 계약 반영
-- Issue #27: Backend PR용 GitHub Actions CI와 AI 리뷰 가이드 (dev 반영 전)
+- Issue #27: Backend PR용 GitHub Actions CI와 AI 리뷰 가이드
 
 ### 다음 구현 범위
 

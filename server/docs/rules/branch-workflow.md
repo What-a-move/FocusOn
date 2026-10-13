@@ -2,7 +2,7 @@
 
 > `docs/WORKFLOW.md`, `docs/BRANCH_STRATEGY.md`(루트, 팀 전체 공통 규칙)를 대체하지 않는다. 이 문서는 그 두 문서를 Backend(Server) 작업에 맞춰 단계별로 더 상세히 풀어쓴 것이다. 두 문서와 내용이 어긋나면 루트 문서를 우선한다.
 > FocusOn 저장소의 실제 브랜치는 `main`/`dev` 2단계다(GONE의 `main`/`dev`/`staging` 3단계 구조와 다르다). `staging` 관련 규칙은 이 프로젝트에 적용하지 않는다.
-> Backend CI는 `.github/workflows/backend-ci.yml`에서 `dev` 대상 Server PR과 `dev` 반영 시 Gradle 빌드·Checkstyle·기존 테스트를 실행한다. 다른 영역의 CI는 별도 구성이다.
+> Backend CI는 `.github/workflows/backend-ci.yml`에서 모든 `dev` 대상 PR과 `dev`의 Server 변경 시 Gradle 빌드·Checkstyle·기존 테스트를 실행한다. 다른 영역의 CI는 별도 구성이다.
 
 ## 🚨 한 번에 하나의 기능만 + 진행 상태 추적
 
