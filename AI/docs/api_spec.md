@@ -237,13 +237,13 @@ AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태�
 | 필드 | 허용 값·의미 |
 | --- | --- |
 | `sessionStatus` | Notion의 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED` |
-| `analysisStatus` | `EXCLUDED`, `PRIVACY_BLOCKED` 등 분석 상태. 세션 상태와 분리 |
+| `relation` | 공개 상태 `EXCLUDED` 또는 `PRIVACY_BLOCKED`; 내부 `analysisStatus`와 분리 |
 | `pauseReason` | `USER`, `REQUIRED_PERMISSION`, `EXTENSION_UNLINKED`, `APP_RESTART`, `SYSTEM` 등 Server enum |
 | `recordOnly` | 기록만 허용하고 알림·콘텐츠 노트를 만들지 않는지 여부 |
 | `personalizedBreakEnabled` | 개인화 휴식 제안 동의·사용 여부 |
 | `settingsVersion` | 세션 설정 변경 감지를 위한 버전 |
 
-`EXCLUDED`에서는 화면 콘텐츠 수집·OCR·AI를 중지하고 타이머와 동의된 로컬 카메라 분석을 유지한다. `PRIVACY_BLOCKED`에서는 화면·카메라 분석을 중지하고 타이머는 유지한다. 타이머를 멈추는 것은 `PAUSED`·`AUTO_PAUSED` 같은 세션 전이로만 처리한다. 비분석 상태에서 콘텐츠 payload를 AI에 보내지 않는다.
+확인된 `EXCLUDED`에서는 화면 콘텐츠 수집·OCR·AI를 중지하고 타이머를 유지한다. 별도 카메라 동의와 권한이 유효하면 로컬 카메라 분석만 허용하며 카메라 집계·전송은 별도 승인 전 금지한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 중지한다. 타이머를 멈추는 것은 `PAUSED`·`AUTO_PAUSED` 같은 세션 전이로만 처리한다. 비분석 상태에서 콘텐츠 payload를 AI에 보내지 않는다.
 
 ### 5.7 피드백 Endpoint
 
@@ -318,7 +318,7 @@ AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태�
 | `NOTE_OUTPUT_INVALID` | 노트 Schema·근거 검증 실패 | 노트 미저장, 시간 기록 유지 |
 | `INTERNAL_ERROR` | 예상하지 못한 내부 오류 | 안전한 오류 코드와 요청 ID만 기록 |
 
-위 코드는 AI 내부 진단용 후보이며 외부 Client에 그대로 노출하지 않는다. Server는 Notion `공통 Error Code`의 `ANALYSIS_SERVICE_UNAVAILABLE`, `REQUEST_TIMEOUT`, `VALIDATION_ERROR` 등으로 변환한다. 개인정보 차단은 오류 대신 정상 `analysisStatus = PRIVACY_BLOCKED`로 처리한다.
+위 코드는 AI 내부 진단용 후보이며 외부 Client에 그대로 노출하지 않는다. Server는 Notion `공통 Error Code`의 `ANALYSIS_SERVICE_UNAVAILABLE`, `REQUEST_TIMEOUT`, `VALIDATION_ERROR` 등으로 변환한다. 개인정보 차단은 오류 대신 공개 `relation = PRIVACY_BLOCKED`, 내부 `analysisStatus = SKIPPED`로 처리한다.
 
 오류 메시지에 입력 원문, 모델 원본 출력, 비밀 값과 내부 Stack Trace를 포함하지 않는다.
 

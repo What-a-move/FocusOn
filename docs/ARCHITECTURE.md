@@ -53,7 +53,7 @@
 - 활성 학습 세션 중 현재 활성 탭, URL, 페이지 제목 자동 추적
 - `tabs`와 `webNavigation`을 이용한 페이지 이동 이벤트 수집
 - 일정 시간 머문 페이지의 재분석 요청
-- 분석 제외 도메인에서는 Page·Screen·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. `EXCLUDED`에서 별도 동의·권한이 유효하면 로컬 카메라 분석은 계속한다. `PRIVACY_BLOCKED` 또는 동의 철회에서는 카메라 분석도 중지한다.
+- 확인된 분석 제외 도메인에서는 Page·Screen·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. `EXCLUDED`에서 별도 동의·권한이 유효하면 로컬 카메라 분석만 계속할 수 있다. 최신 제외 상태 확인 불가·`PRIVACY_BLOCKED`·동의 철회에서는 카메라 분석도 중지한다.
 - Desktop 세션 조회와 타이머 표시
 - 일시정지·재개·종료 명령을 Server에 요청
 - Desktop 연결·인증 상태 안내
@@ -90,8 +90,10 @@
 | `RELATED` | 목표와 관련된 활동이 확인됨 |
 | `UNRELATED` | 목표와 관련성이 낮은 활동이 확인됨 |
 | `UNCERTAIN` | 판단할 정보가 부족함 |
+| `EXCLUDED` | 정책상 콘텐츠 분석을 수행하지 않음 |
+| `PRIVACY_BLOCKED` | 개인정보·권한 정책으로 분석을 차단함 |
 
-관련성은 공개 API의 `relation` 필드로 표현한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 `analysisStatus`이며 오류 코드가 아니다. 개인정보 차단·제외처럼 관련성 판정을 하지 않은 상태와 `RELATED`·`UNRELATED` 관계값을 한 enum으로 합치지 않는다.
+공개 API는 위 값을 `relation` 필드로 표현한다. `analysisStatus`는 AI 실행 결과를 별도로 나타내며 `COMPLETED`, `NEEDS_CONFIRMATION`, `SKIPPED`, `ERROR`를 사용한다. 정책 제외·개인정보 차단은 오류 코드가 아니며 관련성 판단과 처리 상태를 혼합하지 않는다.
 
 ## 분석 작동 상태 (`AnalysisActivityState`)
 

@@ -30,7 +30,7 @@ const page: PageInfo = {
 
 ## 현재 타입
 
-- `FocusState`: 현재 구현에서 관련성과 처리 상태를 함께 담은 임시 타입. 최신 계약에 맞춰 `relation`과 `analysisStatus` 타입으로 분리해야 한다.
+- `FocusState`: 공개 API의 `relation` 값(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`). 처리 결과는 별도의 `analysisStatus`로 표현한다.
 - `AnalysisReasonCode`: 분석 판단 근거 코드
 - `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
 - `AnalysisResult`: 현재 구현 타입. 최신 계약의 `relation`·`analysisStatus` 분리를 반영해야 한다.
@@ -44,7 +44,7 @@ const page: PageInfo = {
 - `StudySessionCommand`: 시작·일시정지·재개·연장·종료 명령
 - `AnalysisActivityState`: 분석 작동 상태(`RUNNING`, `PAUSED`, `EXCLUDED`). 실제 공유 Type 추가는 세션 API 계약 구현 시 진행한다.
 - `AnalysisRelation`: 목표 관련성(`RELATED`, `UNRELATED`, `UNCERTAIN`)
-- `AnalysisStatus`: `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN` 등을 오류와 구분하는 분석 처리 상태
+- `AnalysisStatus`: AI 실행 결과(`COMPLETED`, `NEEDS_CONFIRMATION`, `SKIPPED`, `ERROR`). 공개 `FocusState`와 분리한다.
 - `DevicePairing`: Desktop과 Extension 연결 상태
 
 ## 넣지 않는 것

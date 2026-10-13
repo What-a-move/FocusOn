@@ -34,7 +34,7 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 
 ### 결정 내용
 
-사용자가 설정한 제외 도메인과 하위 도메인은 페이지 본문 수집과 분석 전송을 즉시 중지한다. Extension은 제외 상태만 Server에 전달하고, Desktop은 해당 상태를 받으면 화면·OCR·AI 콘텐츠 분석을 중지한다. 타이머와 동의된 Camera 분석은 유지하며 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다.
+사용자가 설정한 제외 도메인과 하위 도메인은 페이지 본문 수집과 분석 전송을 즉시 중지한다. Extension은 제외 상태만 Server에 전달하고, Desktop은 확인된 `EXCLUDED` 상태에서 화면·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. 별도 카메라 동의와 권한이 유효하면 로컬 카메라 분석만 허용한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 모두 중지한다.
 
 ### 결정 이유
 
@@ -46,7 +46,7 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 - 제외 목록의 정본은 사용자별 Server `analysis_excluded_domains`다. Extension은 최신 정규화 host 목록만 `chrome.storage.local`에 캐시하고 Content Script에서 직접 접근하지 않는다. 변경은 `PUT /api/v1/users/me/analysis-excluded-domains`의 전체 교체 결과를 기준으로 반영한다.
 - 제외 상태는 Server를 통해 Desktop에 전달한다.
 - 원본 URL·본문 대신 정규화한 Domain과 제외 여부만 전달한다.
-- Desktop이 Server에서 최신 제외 상태를 확인할 수 없으면 확인될 때까지 화면·OCR·AI 콘텐츠 분석을 중지한다. 동의된 Camera 분석은 유지하되 민감 화면 `PRIVACY_BLOCKED`가 확인되면 즉시 중지한다.
+- Desktop이 Server에서 최신 제외 상태를 확인할 수 없으면 확인될 때까지 화면·OCR·AI 콘텐츠 분석과 카메라 분석을 모두 중지한다. 확인된 `EXCLUDED`에서는 별도 카메라 동의와 권한이 유효할 때 로컬 카메라 분석만 허용하며, `PRIVACY_BLOCKED`에서는 카메라 분석도 중지한다.
 
 ### 결정 003 - Desktop 학습 세션 조회·제어
 
@@ -173,7 +173,7 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 
 ### 결정 내용
 
-사용자별 제외 도메인 목록의 정본은 Server `analysis_excluded_domains`다. Extension의 `chrome.storage.local`은 최신 정규화 host 목록의 캐시다. 목록 확인에 실패하면 화면 콘텐츠 수집을 보류한다. `EXCLUDED`에서는 화면 분석만 중단하고 타이머·동의된 카메라 분석은 유지한다. `PRIVACY_BLOCKED`에서는 카메라도 중단한다.
+사용자별 제외 도메인 목록의 정본은 Server `analysis_excluded_domains`다. Extension의 `chrome.storage.local`은 최신 정규화 host 목록의 캐시다. 목록 확인에 실패하면 화면·카메라 분석을 모두 보류한다. 확인된 `EXCLUDED`에서는 화면 분석을 중단하고 타이머를 유지한다. 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용하며, `PRIVACY_BLOCKED`에서는 카메라도 중단한다.
 
 ## 새 결정 기록
 

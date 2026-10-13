@@ -69,7 +69,7 @@ Idempotent는 같은 작업을 여러 번 실행해도 결과가 한 번 실행�
 - Worker가 현재 Domain을 정규화한 뒤 `hostname === excluded` 또는 `hostname.endsWith('.' + excluded)` 방식으로 정확한 Domain과 하위 Domain을 확인한다.
 - 단순 `endsWith(excluded)`만 사용해 `not-example.com` 같은 다른 Domain이 잘못 제외되지 않게 한다.
 - 제외 Domain에서는 Content Script에 Page 본문을 요청하지 않는다.
-- 제외 상태만 Server에 보내고 Desktop이 받으면 화면·OCR·AI 콘텐츠 분석을 중지한다. 타이머와 동의된 Camera 분석은 유지하며 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다.
+- 확인된 `EXCLUDED` 상태만 Server에 보내고 Desktop은 화면·OCR·AI 콘텐츠 분석을 중지하며 타이머를 유지한다. 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 모두 중지한다.
 - Server 전송에 실패하면 제외 상태를 성공으로 오해하지 않으며 Desktop은 최신 상태를 확인할 수 없는 동안 분석을 중지한다.
 - 제외 Domain을 벗어나면 새로운 Navigation ID와 Server 세션 상태를 확인한 뒤 Tracking을 다시 시작한다.
 

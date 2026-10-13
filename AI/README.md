@@ -21,7 +21,7 @@ FocusOn AI는 사용자의 학습 목표와 현재 화면·페이지 정보를 �
 - YouTube 자막, PDF 추출 텍스트 등 외부 콘텐츠 분석
 - PDF·Canvas·이미지·슬라이드 대상 ColPali 비교 실험
 
-카메라 로컬 분석은 Notion 기준 선택 동의 기반 MVP 기능이다. AI는 원본 영상·프레임·랜드마크를 받지 않고, 클라이언트가 만든 최소 상태 결과만 사용할 수 있다.
+카메라 로컬 분석은 Notion 기준 선택 동의 기반 MVP 후보이며 출시 전 별도 승인이 필요하다. 승인된 경우 AI에는 ON·유효 세션·비제외 상태에서 생성한 5분 버킷 또는 세션 종료 최소 요약의 집계값(`activeStudySeconds`, `cameraEnabledSeconds`, `validSignalSeconds`, `sustainedAwayEventCount`, `localNudgeShownCount`, `cameraState`, `signalQuality`, `consentVersion`, `sourceVersion`)만 전달한다. `EXCLUDED`의 카메라 집계·전송은 별도 승인 전 금지하고, `PRIVACY_BLOCKED`에서는 카메라 분석·집계·전송을 중단한다. 원본 영상·프레임·랜드마크·연속 시선·얼굴 방향 좌표는 전달하지 않는다.
 
 관련성, 학습 흐름, 사용자 상태는 하나의 판단으로 섞지 않고 별도 분석 모듈과 API로 분리한다. `SUPPORTING`은 AI 내부의 보조 학습 라벨이며 제품 표시에서는 `RELATED`의 보조 유형으로 매핑한다. `OFF_TASK`는 제품의 `UNRELATED`, `UNAVAILABLE`은 제품의 `UNCERTAIN`과 상세 처리 실패 상태로 매핑한다.
 

@@ -112,10 +112,10 @@ MVP의 화면 이탈 정책은 `analysis_rules.md`의 15초 미만 전환 제외
 | `sessionStatus` | `PAUSED`·`AUTO_PAUSED` | 타이머·분석 중지 |
 | `sessionStatus` | `AWAITING_END_CONFIRMATION`·`ENDING` | 종료 확인·처리 중; 타이머·분석 중지 |
 | `sessionStatus` | `ENDED`·`ABANDONED` | 최종 상태; 결과를 현재 상태에 적용하지 않음 |
-| `analysisStatus` | `EXCLUDED` | 화면 콘텐츠 분석 중지, 타이머·동의된 카메라 유지 |
-| `analysisStatus` | `PRIVACY_BLOCKED` | 화면·카메라 분석 중지, 타이머 유지 |
+| 공개 `relation` | `EXCLUDED` | 화면 콘텐츠 분석 중지, 타이머 유지. 확인된 제외 상태에서 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용 |
+| 공개 `relation` | `PRIVACY_BLOCKED` | 화면·카메라 분석 중지, 타이머 유지 |
 
-`EXCLUDED`와 `PRIVACY_BLOCKED`는 세션 상태를 바꾸지 않는다. 필수 권한 유실로 `AUTO_PAUSED`가 되면 사용자가 복구 후 명시적으로 재개한다. 두 비분석 상태 모두 콘텐츠 payload와 원문을 AI에 보내지 않는다.
+`EXCLUDED`와 `PRIVACY_BLOCKED`는 공개 `relation` 값이며 `analysisStatus` 값이 아니다. 둘 다 세션 상태를 바꾸지 않고 콘텐츠 payload와 원문을 AI에 보내지 않는다. 제외 상태가 최신인지 확인할 수 없으면 확인될 때까지 화면·카메라 분석을 중지한다. 필수 권한 유실로 `AUTO_PAUSED`가 되면 사용자가 복구 후 명시적으로 재개한다.
 
 ## 8. 조합 불변 조건
 

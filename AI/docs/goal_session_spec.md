@@ -144,7 +144,7 @@ Notion 제품 계약의 `sessionStatus`는 Server가 소유하며 AI는 아래 �
 | `AWAITING_END_CONFIRMATION`·`ENDING` | 종료 확인 또는 처리 중; 타이머·분석 중지 |
 | `ENDED`·`ABANDONED` | 최종 상태; 현재 화면에 결과 적용 금지 |
 
-`EXCLUDED`와 `PRIVACY_BLOCKED`는 세션 상태가 아닌 분석 상태다. `EXCLUDED`에서는 화면 콘텐츠 분석을 중지하고 타이머·동의된 로컬 카메라 분석을 유지한다. `PRIVACY_BLOCKED`에서는 화면·카메라 분석을 중지하고 타이머는 유지한다. 타이머 중지는 세션의 `PAUSED`·`AUTO_PAUSED` 전이로만 처리한다.
+`EXCLUDED`와 `PRIVACY_BLOCKED`는 세션 상태가 아닌 공개 `relation` 값이며 내부 `analysisStatus`와 분리한다. 확인된 `EXCLUDED`에서는 화면 콘텐츠 분석을 중지하고 타이머를 유지한다. 별도 동의·권한이 유효하면 로컬 카메라 분석만 허용하지만 카메라 집계·전송은 별도 승인 전 금지한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 중지한다. 타이머 중지는 세션의 `PAUSED`·`AUTO_PAUSED` 전이로만 처리한다.
 
 세션 설정 Snapshot에는 `durationMode`, `durationMinutes`, `interventionLevel`, `notificationChannels`, `soundEnabled`, `recordOnly`, `breakReminderEnabled`, `breakReminderAtMinutes`, `expectedBreakMinutes`, `personalizedBreakEnabled`, `settingsVersion`을 포함할 수 있다. AI는 설정을 실행하지 않고 분석·제안 조건에만 사용한다.
 

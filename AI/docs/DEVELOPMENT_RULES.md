@@ -14,12 +14,14 @@
 
 작업 시작 시 다음 순서로 문서를 확인한다.
 
-1. 루트 `docs/DATA_PRIVACY.md`와 승인된 공통 API·공유 타입
-2. `DECISION_RECORD.md`의 `확정` 결정
+1. 현재 MVP 기준 Notion `FocusOn` 정책과 `FocusOn API 명세서`
+2. 승인된 로컬 결정 기록(`DECISION_RECORD.md`), Notion 정책을 미러링한 `docs/DATA_PRIVACY.md`, 공통 API·공유 타입
 3. 이 문서의 `확정` 규칙
 4. 현재 GitHub Issue의 범위와 완료 조건
-5. `api_spec.md`, `state_model.md`, `analysis_rules.md` 등 검토 중인 상세 초안
-6. Notion 기획서와 조사 자료
+5. `api_spec.md`, `state_model.md`, `analysis_rules.md` 등 승인되지 않은 로컬 상세 초안
+6. Notion 기획서와 조사 자료 중 구현 계약으로 승인되지 않은 내용
+
+승인된 로컬 결정은 Notion 기준을 보완하는 명시적 예외로만 적용한다. 승인되지 않은 로컬 초안은 Notion 계약을 덮어쓰지 않는다.
 
 상위 기준과 하위 초안이 충돌하면 하위 초안을 자동 적용하지 않는다. 충돌을 Issue 또는 PR에 기록하고 담당자 합의 후 `DECISION_RECORD.md`에 새 결정을 추가한다. 기존 확정 결정을 조용히 수정하거나 삭제하지 않는다.
 
@@ -60,7 +62,7 @@
 | `AI-EVAL-001` | MUST | 제안 | 모델, Prompt, 임계값, 전처리, 추출기 또는 상태 의미가 바뀌면 동일 고정 평가 세트로 회귀 평가한다. | 평가 실행 기록 |
 | `AI-VERSION-001` | MUST | 제안 | API, 분석기, 모델, Prompt, 추출기, 정책 버전을 분리해 기록하고 호환되지 않는 의미 변경은 Major Version으로 관리한다. | 응답 필드·릴리스 리뷰 |
 | `AI-LABEL-001` | MUST | 제안 | AI 내부 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE`과 제품 공개 `RELATED`, `UNRELATED`, `UNCERTAIN`을 명시적으로 매핑하며 내부 라벨을 공개 상태로 그대로 노출하지 않는다. | 상태 매핑 계약 테스트 |
-| `AI-EXCLUSION-001` | MUST | 확정 | `EXCLUDED`와 `PRIVACY_BLOCKED`에서 콘텐츠 payload를 AI에 보내지 않는다. `EXCLUDED`는 동의된 로컬 카메라·타이머 유지, `PRIVACY_BLOCKED`는 카메라 중지·타이머 유지다. | 제외·민감 화면 통합 테스트 |
+| `AI-EXCLUSION-001` | MUST | 확정 | 콘텐츠 payload를 AI에 보내지 않는다. 확인된 `EXCLUDED`는 타이머를 유지하고 별도 동의·권한이 유효할 때 로컬 카메라 분석만 허용한다. 최신 제외 상태 확인 불가 또는 `PRIVACY_BLOCKED`는 화면·카메라 분석을 중지하고 타이머를 유지한다. `EXCLUDED` 카메라 집계·전송은 별도 승인 전 금지한다. | 제외·민감 화면 통합 테스트 |
 | `AI-GOAL-002` | MUST | 확정 | 목표 보조는 Notion의 4개 `decision`과 질문 최대 2회를 사용한다. 사용자 확인 전 목표를 확정하지 않으며 AI 장애 시 수동 확정 경로를 제공한다. | 목표 보조 계약 테스트 |
 
 ## 3. 작업 시작 확인
