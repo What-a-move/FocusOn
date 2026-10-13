@@ -18,18 +18,19 @@
 - Notion `FocusOn API 명세서`의 42개 정본 엔드포인트 및 공통 정책 확정
 - 로컬 API 계약과 Backend 불변 규칙 최신화
 - 분석 제외 도메인, 세션별 개입 정책 버전, 집중 달력, 학습 정리 저장 계약 반영
+- Issue #25: 15분 Access JWT 발급·서명/클레임 검증 서비스와 환경 변수 설정
 
 ### 다음 구현 범위
 
 - 공통 응답·예외·requestId 처리
 - 사용자·기기·목표·세션 Entity 및 V1 migration
-- Google ID token 교환과 FocusOn token 발급
+- Google ID token 교환과 인증된 사용자·기기를 Access JWT 서비스에 연결
 - MVP API를 도메인 단위로 구현
 
 ### 미구현
 
-- Controller, Service, Repository, Entity
-- 인증·사용자·기기 연결 API
+- Controller, Repository, Entity 및 Access JWT 외 도메인 Service
+- 인증·사용자·기기 연결 API와 Refresh Token 수명주기
 - 목표·세션·분석·리포트 API
 - 보관 기간 cleanup worker와 학습 정리 worker
 - AI 서비스 연동

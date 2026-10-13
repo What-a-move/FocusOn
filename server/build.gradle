@@ -23,6 +23,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0'
@@ -56,7 +57,10 @@ checkstyle {
 }
 
 tasks.withType(Checkstyle).configureEach {
-    config = resources.text.fromArchiveEntry(project.configurations.checkstyle.singleFile, 'google_checks.xml')
+    def checkstyleJar = project.configurations.checkstyle.files.find {
+        it.name.startsWith('checkstyle-')
+    }
+    config = resources.text.fromArchiveEntry(checkstyleJar, 'google_checks.xml')
     reports {
         xml.required = false
         html.required = true
