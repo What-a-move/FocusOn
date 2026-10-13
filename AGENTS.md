@@ -1,5 +1,9 @@
 # FocusOn 작업 지침
 
+## 백엔드 PR 리뷰 요청
+
+사용자가 영역을 따로 지정하지 않고 `PR 확인해줘` 또는 비슷하게 요청하면 백엔드 PR 리뷰 요청으로 처리한다. `server/docs/PR_REVIEW_GUIDE.md`를 읽고 대상 PR을 찾은 뒤 검토와 GitHub 댓글까지 진행한다. 다른 영역을 명시한 요청에는 이 규칙을 적용하지 않는다.
+
 ## 새 채팅에서 프로젝트 학습 요청
 
 사용자가 `FocusOn 학습해`처럼 짧게 요청하면 추가 설명을 요구하지 말고 이 저장소의 시작 문서를 읽는다. `docs/PROJECT_CONTEXT.md`에서 전체 흐름과 Notion 정본 링크를 확인하고, `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, `docs/DATA_PRIVACY.md`, `docs/WORKFLOW.md` 및 각 영역의 `CONTEXT.md`, `NEXT_TASK.md`, `DECISION_RECORD.md`를 읽는다. 관련 Notion에 접근할 수 있으면 현재 내용을 확인한다. 확정 정책·제안·실제 구현 상태를 구분하고, 접근하지 못한 정본은 확인했다고 말하지 않는다. 학습 요청만 받은 경우 파일은 수정하지 않고 핵심 내용과 남은 충돌을 짧게 보고한다.

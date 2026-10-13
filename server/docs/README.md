@@ -20,6 +20,7 @@ server/docs/
 ├── NEXT_TASK.md
 ├── DECISION_RECORD.md
 ├── DEVELOPMENT_RULES.md
+├── PR_REVIEW_GUIDE.md
 ├── rules/
 │   ├── api-design.md
 │   ├── branch-workflow.md
@@ -58,6 +59,7 @@ server/docs/
 - [테스트 코드 규칙](rules/test-convention.md)
 - [Flyway 마이그레이션 규칙](rules/migration-convention.md)
 - [코드 리뷰 컨텍스트 격리](rules/code-review-isolation.md)
+- [백엔드 PR 리뷰 가이드](PR_REVIEW_GUIDE.md)
 - [코드 리뷰 결과 문서 템플릿](rules/code-review-template.md)
 - [Notion API 명세서 작성 규칙](rules/notion-api-spec.md)
 

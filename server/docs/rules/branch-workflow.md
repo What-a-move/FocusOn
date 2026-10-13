@@ -2,7 +2,7 @@
 
 > `docs/WORKFLOW.md`, `docs/BRANCH_STRATEGY.md`(루트, 팀 전체 공통 규칙)를 대체하지 않는다. 이 문서는 그 두 문서를 Backend(Server) 작업에 맞춰 단계별로 더 상세히 풀어쓴 것이다. 두 문서와 내용이 어긋나면 루트 문서를 우선한다.
 > FocusOn 저장소의 실제 브랜치는 `main`/`dev` 2단계다(GONE의 `main`/`dev`/`staging` 3단계 구조와 다르다). `staging` 관련 규칙은 이 프로젝트에 적용하지 않는다.
-> CI(GitHub Actions)는 현재 이 저장소에 구성되어 있지 않다. 도입되기 전까지 "CI 통과 확인" 단계는 로컬 빌드·테스트 확인으로 대체한다.
+> Backend CI는 `.github/workflows/backend-ci.yml`에서 `dev` 대상 Server PR과 `dev` 반영 시 Gradle 빌드·Checkstyle·기존 테스트를 실행한다. 다른 영역의 CI는 별도 구성이다.
 
 ## 🚨 한 번에 하나의 기능만 + 진행 상태 추적
 
@@ -64,7 +64,7 @@
 ## 10. QA
 
 - `./server/gradlew -p server build test` 로컬 통과를 확인한다(`docs/ENVIRONMENT.md` 실행 명령 기준).
-- CI가 도입되면 CI 통과 여부도 함께 확인한다(현재는 로컬 통과로 대체).
+- PR의 Backend CI 통과 여부를 확인한다. CI가 실행되지 않았으면 통과했다고 기록하지 않는다.
 - 기획서에 정의된 엔드포인트별 정상·에러 케이스를 직접 검증한다. 체크리스트는 `docs/QA_CONVENTION.md`(공통) + `server/docs/templates/RESULT_REPORT_TEMPLATE.md`를 따른다.
 - 발견된 문제는 심각도별로 정리해 `server/docs/features/{기능명}-QA.md`에 기록한다: Critical(데이터 유실·보안/인증 우회) / High(핵심 플로우 실패) / Medium(예외 케이스 미처리) / Low(사소한 개선).
 
