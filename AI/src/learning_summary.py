@@ -123,9 +123,14 @@ def prepare_payload(request: SummaryRequest) -> dict[str, object] | None:
         raise SummaryContractError("GOAL_SNAPSHOT_INVALID")
 
     unique: dict[str, ReviewEvidence] = {}
+    seen_texts: set[str] = set()
     for evidence in request.evidences:
         if isinstance(evidence, ReviewEvidence) and _eligible(evidence):
-            unique.setdefault(evidence.content_hash.lower(), evidence)
+            content_hash = evidence.content_hash.lower()
+            normalized_text = " ".join(evidence.text.split()).casefold()
+            if content_hash not in unique and normalized_text not in seen_texts:
+                unique[content_hash] = evidence
+                seen_texts.add(normalized_text)
 
     # Prefer the latest observed evidence, then send it in chronological order.
     candidates = sorted(unique.values(), key=lambda item: item.observed_at)[-MAX_EVIDENCE_COUNT:]

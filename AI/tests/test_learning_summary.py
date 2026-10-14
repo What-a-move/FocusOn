@@ -64,7 +64,12 @@ class LearningSummaryTests(unittest.TestCase):
         self.assertEqual("JWT 인증 흐름 학습", calls[0][1]["goalSnapshot"])
 
     def test_insufficient_and_duplicate_evidence_never_call_model(self) -> None:
-        for items in ((), (evidence(1),), (evidence(1), evidence(2, content_hash=evidence(1).content_hash))):
+        for items in (
+            (),
+            (evidence(1),),
+            (evidence(1), evidence(2, content_hash=evidence(1).content_hash)),
+            (evidence(1), evidence(2, concept=evidence(1).concept, observation=evidence(1).observation)),
+        ):
             with self.subTest(items=items):
                 called = []
                 result = generate_summary(request(*items), lambda *_: called.append(True))
