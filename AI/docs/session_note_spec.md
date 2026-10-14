@@ -8,7 +8,17 @@
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-NOTE-001`, `AI-NOTE-002`, `AI-TIME-001`, `AI-PRIV-002`, `AI-STALE-001`
 
-이 문서는 후속 기능의 회차 노트, 근거, 재생성과 삭제 방안을 탐색한다. MVP에서는 세션 종료 후 학습 정리만 제공하고 자동 복습 질문, 사용자 편집·삭제·재생성은 제공하지 않는다. 노트 생성기와 Server 작업 Queue는 아직 구현되지 않았다.
+이 문서는 후속 기능의 회차 노트, 근거, 재생성과 삭제 방안을 탐색한다. MVP에서는 세션 종료 후 학습 정리만 제공하고 자동 복습 질문, 사용자 편집·삭제·재생성은 제공하지 않는다. Issue #29에서 AI의 독립 검증 코어를 구현 중이며 Server 작업 Queue와 제품 연동은 아직 구현되지 않았다.
+
+### MVP 계약과 이 문서의 경계
+
+Issue [#29](https://github.com/What-a-move/FocusOn/issues/29)의 MVP 계약은 [기능 PLAN](features/learning-summary-PLAN.md)과 Notion `집중 기록 · 학습 정리 · 리포트`를 따른다. 아래 2~16절의 `PENDING`/`COMPLETED`/`STALE`/`CANCELLED`/`DELETED`, 노트 버전·사용자 메모·재생성·삭제·시간 요약·복습 질문은 **MVP 구현 계약이 아닌 후속 탐색안**이다.
+
+- MVP 입력: 확정 `goalSnapshot`과 최종 `RELATED`의 최소 `reviewEvidence`만 사용한다. 서로 다른 근거가 2개 미만이면 모델을 호출하지 않는다. 근거는 각 120자·최대 20개, 모델 입력은 2,400자 이하다.
+- MVP 출력: `overview`, `keyConcepts`(최대 5개), `nextStartPrompt`만 사용하며 전체 1,200자 이하다. 자료 열람을 이해·해결·구현 완료로 단정하지 않는다.
+- MVP 상태: `QUEUED` → `GENERATING` → `READY`/`INSUFFICIENT_DATA`/`FAILED`. 종료·시간 기록은 생성 성공과 독립적이다.
+- MVP 작업: 종료 후 최대 30초 동안 이미 진행 중인 분석 결과만 수용해 입력을 고정하고, 세션당 정리 1개만 생성한다. 20초 모델 Timeout, 일시 실패의 1분·5분 간격 최대 2회 재시도, 늦은 결과의 `READY` 자동 덮어쓰기 금지는 Server 소유다.
+- MVP 보존: 루트 `docs/DATA_PRIVACY.md`의 정리·노트 1년, 분석 실행·정리 근거 90일 기준을 따른다. 원본 DOM/OCR/URL/이미지는 저장하지 않는다.
 
 ## 1. 노트의 목적
 

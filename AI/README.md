@@ -44,7 +44,7 @@ Client별 제외·권한 검사
 
 ## 현재 상태
 
-- Python 디렉터리와 모듈 파일만 구성되어 있으며 실행 가능한 코드는 아직 없다.
+- `dev` 기준 목표·관련성 AI 서비스는 아직 골격이다. Issue #29 브랜치에는 외부 모델·실사용자 데이터 없이 검증 가능한 학습 정리 코어와 단위 테스트가 있다. FastAPI·Server·Client 연결은 미구현이다.
 - 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
 - 목표 보조와 세션·분석 상태 계약은 Notion MVP 기준으로 갱신했다. 개인화 휴식은 P1 후보 초안이다.
 - FastAPI, Pydantic, 임베딩 모델, LLM 공급자, 캐시 저장소는 구현 전 검토·확정한다.
@@ -52,6 +52,12 @@ Client별 제외·권한 검사
 - ColPali는 정식 기본 경로가 아니라 시각 구조 콘텐츠의 실험 경로다.
 
 ## 문서
+
+Issue #29 학습 정리 독립 검증 코어의 단위 테스트는 저장소 루트에서 다음 명령으로 실행한다. 이 테스트는 실제 LLM이나 Server를 호출하지 않는다.
+
+```bash
+PYTHONPATH=AI python3 -m unittest discover -s AI/tests -p 'test_learning_summary.py' -v
+```
 
 - [AI 문서 안내](docs/README.md)
 - [현재 컨텍스트](docs/CONTEXT.md)
