@@ -32,6 +32,7 @@ export default function Page() {
         <article className="flex min-h-24 flex-col justify-between gap-4 rounded-2xl border border-[#d5e3de] bg-white p-[18px]"><span className="text-xs font-bold text-[#7c8d89]">타이머</span><strong className="text-sm">00:00:00</strong></article>
         <article className="flex min-h-24 flex-col justify-between gap-4 rounded-2xl border border-[#d5e3de] bg-white p-[18px]"><span className="text-xs font-bold text-[#7c8d89]">분석</span><strong className="text-sm">대기 중</strong></article>
       </section>
+      {process.env.NODE_ENV === 'development' && <p className="mt-7 max-w-[760px] text-sm"><a className="font-bold text-teal-800 underline underline-offset-4" href="/learning-summary-demo/">#29 학습 정리 가짜 데이터 시연 열기</a></p>}
     </main>
   )
 }

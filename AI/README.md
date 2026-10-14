@@ -44,7 +44,7 @@ Client별 제외·권한 검사
 
 ## 현재 상태
 
-- `dev` 기준 목표·관련성 AI 서비스는 아직 골격이다. Issue #29 브랜치의 선행 학습 정리 코드는 새 커밋에서 되돌렸으며, 실제 모델·FastAPI·Server·Client 연결은 미구현이다.
+- `dev` 기준 목표·관련성 AI 서비스는 아직 골격이다. Issue #29 브랜치의 선행 학습 정리 코드는 새 커밋에서 되돌렸고, 현재는 합성 데이터만 사용하는 Streamlit 시연과 단위 테스트가 있다. 실제 모델·FastAPI·Server·Client 연결은 미구현이다.
 - 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
 - 목표 보조와 세션·분석 상태 계약은 Notion MVP 기준으로 갱신했다. 개인화 휴식은 P1 후보 초안이다.
 - FastAPI, Pydantic, 임베딩 모델, LLM 공급자, 캐시 저장소는 구현 전 검토·확정한다.
@@ -52,6 +52,23 @@ Client별 제외·권한 검사
 - ColPali는 정식 기본 경로가 아니라 시각 구조 콘텐츠의 실험 경로다.
 
 ## 문서
+
+### #29 로컬 시연
+
+합성 데이터로 종료 후 정리 흐름과 근거 부족·중복·제외·실패를 직접 확인한다. 실제 화면 분석·OpenAI·Server·저장소는 연결되지 않았으며 제품 데이터는 입력하지 않는다.
+
+```bash
+python3 -m venv /tmp/focuson-summary-demo-venv
+/tmp/focuson-summary-demo-venv/bin/python -m pip install -r AI/demos/requirements.txt
+/tmp/focuson-summary-demo-venv/bin/python -m streamlit run AI/demos/learning_summary_streamlit.py
+```
+
+단위 테스트:
+
+```bash
+PYTHONPATH=AI python3 -m unittest discover -s AI/tests -p 'test_learning_summary*.py' -v
+```
+
 
 - [AI 문서 안내](docs/README.md)
 - [현재 컨텍스트](docs/CONTEXT.md)

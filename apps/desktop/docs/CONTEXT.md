@@ -26,6 +26,7 @@
 - Main·Preload TypeScript Build, Next.js Static Export, `app://` Production Loading 방향을 확정했다.
 - Single Instance, Main Window 닫기, Settings Route, Floating Window 위치·Drag 기준을 확정했다.
 - IPC Channel·오류 형식과 macOS 권한 요청 UX를 확정했다.
+- Issue #29에서 개발 환경 전용 학습 정리 합성 데이터 화면을 추가해 종료·진행·결과·복사, 근거 부족·실패를 브라우저에서 확인했다. 운영 빌드에서는 시연 Route가 비활성화되고 합성 Fixture가 번들에 포함되지 않는다. 실제 Server/AI 연동은 아직 없다.
 
 ### 진행 중인 작업
 
@@ -33,6 +34,7 @@
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
 - 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.
+- 학습 정리 #29는 합성 데이터 시연까지만 끝났다. #11 최종 `RELATED`, Server 세션·인증·조회 API, 개인정보 승인이 있어야 제품 조회를 연결한다.
 
 ### 아직 진행하지 않은 작업
 

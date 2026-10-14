@@ -88,6 +88,7 @@ AI/docs/
 
 - [학습 목표 설정 보조](features/goal-assistance-PLAN.md)
 - [개인화 휴식 추천](features/personalized-break-recommendation-PLAN.md)
+- [세션 종료 후 학습 정리 #29](features/learning-summary-PLAN.md) — 합성 데이터 시연 단계, 실제 연동 미완료
 
 ## 기본 분석 경로
 
