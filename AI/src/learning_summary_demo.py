@@ -26,10 +26,25 @@ class DemoEvidence:
     concept: str
     observation: str
     label: str = "RELATED"
+    page_type: str = "DOCUMENTATION"
 
     @property
     def text(self) -> str:
         return f"{self.concept.strip()}: {self.observation.strip()}"
+
+
+@dataclass(frozen=True)
+class SyntheticDOMPage:
+    """Editable fake page shaped like the proposed DOM extraction contract."""
+
+    page_type: str
+    title: str
+    text: str
+    extraction_method: str = "DOM"
+    extraction_status: str = "SUCCESS"
+    extractor_version: str = "synthetic-fixture-v1"
+    relation: str = "RELATED"
+    ocr: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -54,15 +69,69 @@ def eligible_evidence(evidences: list[DemoEvidence], record_consent: bool) -> li
             continue
         if not evidence.concept.strip() or not evidence.observation.strip():
             continue
-        if len(evidence.text) > MAX_EVIDENCE_CHARS or _has_sensitive_value(evidence.text):
+        if len(evidence.observation.strip()) > MAX_EVIDENCE_CHARS or _has_sensitive_value(evidence.text):
             continue
-        normalized = " ".join(evidence.text.split()).casefold()
+        normalized = " ".join(evidence.observation.split()).casefold()
         if normalized not in seen:
             accepted.append(evidence)
             seen.add(normalized)
         if len(accepted) == MAX_EVIDENCE_COUNT:
             break
     return accepted
+
+
+def evidence_from_dom_pages(
+    pages: list[SyntheticDOMPage], *, record_consent: bool = True
+) -> list[DemoEvidence]:
+    """Turn allowed DOM text paragraphs into distinct note evidence.
+
+    This is a local demo preprocessor, not the production quality scorer. It
+    accepts only successful DOM extraction marked RELATED and treats separate
+    paragraphs on one page as separate observations.
+    """
+    if not record_consent:
+        return []
+    candidates: list[DemoEvidence] = []
+    for page in pages:
+        if page.relation != "RELATED" or page.extraction_status != "SUCCESS":
+            continue
+        if page.extraction_method != "DOM" or page.ocr is not None:
+            continue
+        if (
+            not page.page_type.strip()
+            or not page.title.strip()
+            or _has_sensitive_value(page.page_type)
+            or _has_sensitive_value(page.title)
+        ):
+            continue
+        if _has_sensitive_value(page.text):
+            continue
+        for raw_paragraph in re.split(r"\n+", page.text):
+            paragraph = " ".join(raw_paragraph.split())
+            if len(paragraph) < 12:
+                continue
+            # Keep short paragraphs intact; split only oversized paragraphs.
+            chunks = [paragraph]
+            if len(paragraph) > MAX_EVIDENCE_CHARS:
+                chunks = []
+                current = ""
+                for sentence in re.split(r"(?<=[.!?。！？])\s+", paragraph):
+                    sentence = sentence.strip()
+                    if not sentence:
+                        continue
+                    candidate = f"{current} {sentence}".strip()
+                    if current and len(candidate) > MAX_EVIDENCE_CHARS:
+                        chunks.append(current)
+                        current = sentence
+                    else:
+                        current = candidate
+                if current:
+                    chunks.append(current)
+            for chunk in chunks:
+                if len(chunk) < 12 or len(chunk) > MAX_EVIDENCE_CHARS:
+                    continue
+                candidates.append(DemoEvidence(page.title.strip(), chunk, page_type=page.page_type.strip()))
+    return eligible_evidence(candidates, record_consent=True)
 
 
 def make_demo_summary(
@@ -86,8 +155,8 @@ def make_demo_summary(
     concepts = [
         {
             "name": item.concept.strip(),
-            "briefExplanation": f"{item.concept.strip()} 관련 자료를 살펴봤습니다.",
-            "sessionEvidence": item.text,
+            "briefExplanation": "이 문단에서 확인된 내용을 다시 살펴볼 수 있습니다.",
+            "sessionEvidence": item.observation.strip(),
         }
         for item in selected
     ]

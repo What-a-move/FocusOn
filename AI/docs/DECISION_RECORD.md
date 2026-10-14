@@ -433,9 +433,20 @@ PR #15의 최신 문서 계약을 유지하면서 Notion 제품·API 정합성�
 
 - 결정일: 2026-10-14
 - 주제: #29 실제 화면 데이터 연동 전 생성 검증
-- 상태: #29 로컬 실험 기준 (제품 모델·개인정보 승인 아님)
+- 상태: 변경됨 — 결정 022 참조
 - 결정 내용: Streamlit 기본 시연은 외부 호출이 없는 모의 로직을 유지한다. 별도 버튼은 코드에 고정된 합성 목표·근거만 `gpt-5-mini` 기본 모델로 구조화 생성 시험한다. UI의 편집 가능한 입력은 공급자 호출에 들어가지 않는다. `store=false`, 20초 Timeout, SDK 자동 재시도 0회로 시험한다. 구조·길이·근거·민감값·성취 단정 표현을 사후 검사하고 부적합 출력은 `FAILED`로 처리한다.
 - 결정 이유: 현재 DOM 추출과 실제 사용자 화면 데이터가 없어 제품 개인정보 결정을 선행할 필요 없이 생성 품질과 계약을 가짜 근거로 검증할 수 있다.
 - 고려한 대안: 실사용자 입력을 받는 범용 호출은 승인 전 데이터 전송 위험으로 보류했다. 완전 모의 시연만 유지하면 실제 생성 호출·검증 경로를 시험할 수 없다.
 - 영향받는 파일: `AI/src/learning_summary_openai.py`, `AI/demos/learning_summary_streamlit.py`, `AI/docs/features/learning-summary-PLAN.md`
+- 관련 Issue·PR: [#29](https://github.com/What-a-move/FocusOn/issues/29); PR 없음
+
+### 결정 022 - Streamlit 입력을 DOM 추출 제안 형식에 맞춤
+
+- 결정일: 2026-10-14
+- 주제: #29 합성 입력 및 최소 근거 계산
+- 상태: #29 시연 구현 기준 (실제 추출기 계약 확정 아님)
+- 결정 내용: Streamlit 시연은 제안된 DOM 추출 객체 pageType, title, text, ocr, extractionMethod, extractionStatus, extractorVersion를 입력받는다. 최종 관련성은 별도 필드로 흉내 낸다. 성공한 DOM·RELATED·비민감 콘텐츠를 줄 단위 문단으로 분리하고 중복을 제거한다. 한 페이지 안의 서로 다른 문단도 각각 근거로 세며 두 개 미만이면 OpenAI를 호출하지 않는다. 버튼을 명시적으로 누른 때만 합성 입력의 정제 근거를 전송한다.
+- 결정 이유: 사용자가 지적한 기존 직접 개념·관찰 입력은 실제 DOM 추출 흐름을 재현하지 못했다. 실제 추출기 구현 전에도 제안 입력 형식부터 정리 생성까지 검증할 수 있도록 하기 위함이다.
+- 고려한 대안: 전체 DOM 텍스트를 생성 모델에 바로 보내는 방식은 제외했다. 원본·노이즈 대신 로컬에서 고른 짧은 RELATED 문단만 정리 입력으로 사용한다.
+- 영향받는 파일: AI/demos/learning_summary_streamlit.py, AI/src/learning_summary_demo.py, AI/src/learning_summary_openai.py, AI/tests/test_learning_summary_openai.py
 - 관련 Issue·PR: [#29](https://github.com/What-a-move/FocusOn/issues/29); PR 없음

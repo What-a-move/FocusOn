@@ -44,7 +44,7 @@ Client별 제외·권한 검사
 
 ## 현재 상태
 
-- `dev` 기준 목표·관련성 AI 서비스는 아직 골격이다. Issue #29 브랜치의 선행 학습 정리 코드는 새 커밋에서 되돌렸다. 현재는 합성 데이터 Streamlit 시연과 **고정된 가짜 근거만 전송하는 선택적 OpenAI 생성 테스트**가 있다. 실제 화면 데이터·FastAPI·Server·Client 제품 연결은 미구현이다.
+- `dev` 기준 목표·관련성 AI 서비스는 아직 골격이다. Issue #29 브랜치에는 문서의 DOM 추출 제안 필드를 흉내 낸 Streamlit 시연이 있다. 입력된 합성 `text`를 문단 근거로 나눈 뒤, RELATED·중복·민감 정보 검사를 거쳐 사용자가 버튼을 눌렀을 때만 OpenAI 생성 테스트를 한다. 실제 DOM 추출기·FastAPI·Server·Client 제품 연결은 미구현이다.
 - 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
 - 목표 보조와 세션·분석 상태 계약은 Notion MVP 기준으로 갱신했다. 개인화 휴식은 P1 후보 초안이다.
 - FastAPI, Pydantic, 임베딩 모델, LLM 공급자, 캐시 저장소는 구현 전 검토·확정한다.
@@ -55,7 +55,7 @@ Client별 제외·권한 검사
 
 ### #29 로컬 시연
 
-합성 데이터로 종료 후 정리 흐름과 근거 부족·중복·제외·실패를 직접 확인한다. 기본 시연은 외부 모델을 호출하지 않는다. 별도 OpenAI 테스트 버튼은 **코드에 고정된 가짜 목표와 근거만** 전송하며 편집한 입력은 보내지 않는다. 실제 화면 분석·Server·저장소는 연결되지 않았으며 제품 데이터는 입력하지 않는다.
+합성 데이터로 종료 후 정리 흐름과 근거 부족·중복·제외·실패를 직접 확인한다. 입력 형식은 `pageType`, `title`, `text`, `ocr`, `extractionMethod`, `extractionStatus`, `extractorVersion`이다. 별도 최종 관련성 판정은 추출 객체와 분리해 선택한다. 같은 페이지의 서로 다른 문단도 각각 근거로 인정한다. OpenAI 버튼은 편집한 합성 DOM 입력 중 필터를 통과한 문단만 전송한다. 실제 화면 데이터는 입력하지 않는다.
 
 ```bash
 python3 -m venv /tmp/focuson-summary-demo-venv
@@ -63,7 +63,7 @@ python3 -m venv /tmp/focuson-summary-demo-venv
 /tmp/focuson-summary-demo-venv/bin/python -m streamlit run AI/demos/learning_summary_streamlit.py
 ```
 
-선택적 OpenAI 시험은 로컬 실행 환경에 `OPENAI_API_KEY`가 있을 때만 버튼이 활성화된다. 실제 호출은 버튼을 눌렀을 때에만 일어난다. 기본 시험 모델은 `gpt-5-mini`이고 `FOCUSON_SUMMARY_MODEL`로 바꿀 수 있다. API 응답 저장은 끄고(`store=false`), 요청은 20초 제한·자동 재시도 없이 실행한다. 실제 사용자 화면 데이터의 제공자·보존·고지 승인은 DOM 추출 연동 시점에 별도로 진행한다.
+선택적 OpenAI 시험은 실행 환경에 `OPENAI_API_KEY`가 있을 때만 버튼이 활성화된다. 실제 호출은 버튼을 눌렀을 때에만 일어난다. 기본 시험 모델은 `gpt-5-mini`이고 `FOCUSON_SUMMARY_MODEL`로 바꿀 수 있다. API 응답 저장은 끄고(`store=false`), 요청은 20초 제한·자동 재시도 없이 실행한다. 실제 사용자 화면 데이터의 제공자·보존·고지 승인은 DOM 추출 연동 시점에 별도로 진행한다.
 
 단위 테스트:
 

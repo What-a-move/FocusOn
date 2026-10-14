@@ -1,8 +1,4 @@
-"""Opt-in OpenAI experiment using only a fixed, synthetic #29 fixture.
-
-No caller-supplied goal or evidence can reach this provider boundary. Real
-screen data requires a separately reviewed product integration.
-"""
+"""Opt-in OpenAI experiment for synthetic DOM-shaped #29 fixtures."""
 
 from __future__ import annotations
 
@@ -17,17 +13,24 @@ from .learning_summary_demo import (
     DemoEvidence,
     DemoOutcome,
     MAX_SUMMARY_CHARS,
+    SyntheticDOMPage,
     _has_sensitive_value,
     _render_summary,
-    eligible_evidence,
+    evidence_from_dom_pages,
 )
 
 
 SYNTHETIC_GOAL = "React Query의 캐시와 쿼리 키 공부"
-SYNTHETIC_EVIDENCE = (
-    DemoEvidence("React Query 캐시", "캐시와 갱신 개념을 다룬 가상 자료 확인"),
-    DemoEvidence("쿼리 키", "쿼리 키 구성 예시를 다룬 가상 자료 확인"),
-)
+SYNTHETIC_DOM_PAGES = [
+    SyntheticDOMPage(
+        page_type="DOCUMENTATION",
+        title="React Query 캐시 가이드",
+        text=(
+            "useQuery는 queryKey를 기준으로 데이터를 캐시에 저장합니다. 같은 queryKey는 기존 캐시를 재사용합니다.\n"
+            "staleTime 동안 데이터는 신선한 것으로 취급됩니다. 시간이 지나면 쿼리가 다시 실행될 수 있습니다."
+        ),
+    )
+]
 DEFAULT_MODEL = "gpt-5-mini"
 
 _UNSUPPORTED_ACHIEVEMENT = re.compile(
@@ -65,9 +68,13 @@ def _validated_summary(output: Any, evidence: list[DemoEvidence]) -> dict[str, o
         return None
     if len(re.findall(r"[.!?](?=\s|$)", parsed.nextStartPrompt)) > 1:
         return None
-    allowed = {item.text for item in evidence}
-    concepts = {item.concept for item in evidence}
-    if any(item.sessionEvidence not in allowed or item.name not in concepts for item in parsed.keyConcepts):
+    allowed = {item.observation for item in evidence}
+    anchors = {f"{item.concept} {item.observation}".casefold() for item in evidence}
+    if any(
+        item.sessionEvidence not in allowed
+        or not any(item.name.casefold() in anchor for anchor in anchors)
+        for item in parsed.keyConcepts
+    ):
         return None
     fields = [parsed.overview, parsed.nextStartPrompt]
     for item in parsed.keyConcepts:
@@ -82,19 +89,26 @@ def _validated_summary(output: Any, evidence: list[DemoEvidence]) -> dict[str, o
     return summary
 
 
-def generate_fixed_synthetic_summary(*, client: Any = None, model: str | None = None) -> DemoOutcome:
-    """Generate a note from immutable fake evidence; never accepts UI text.
-
-    The optional client enables offline contract tests. Provider failures are
-    deliberately reduced to FAILED so responses and exceptions are not logged.
-    """
-    evidence = eligible_evidence(list(SYNTHETIC_EVIDENCE), record_consent=True)
+def generate_synthetic_dom_summary(
+    goal: str,
+    pages: list[SyntheticDOMPage],
+    *,
+    client: Any = None,
+    model: str | None = None,
+) -> DemoOutcome:
+    """Generate from fake DOM pages after local RELATED/paragraph filtering."""
+    if not 2 <= len(goal.strip()) <= 40 or _has_sensitive_value(goal):
+        return DemoOutcome("FAILED")
+    evidence = evidence_from_dom_pages(pages)
     if len(evidence) < 2:
         return DemoOutcome("INSUFFICIENT_DATA", accepted_count=len(evidence))
     payload = {
-        "goalSnapshot": SYNTHETIC_GOAL,
-        "reviewEvidence": [item.text for item in evidence],
-        "dataOrigin": "FIXED_SYNTHETIC_FIXTURE",
+        "goalSnapshot": goal.strip(),
+        "reviewEvidence": [
+            {"pageType": item.page_type, "sourceTitle": item.concept, "text": item.observation}
+            for item in evidence
+        ],
+        "dataOrigin": "SYNTHETIC_DOM_FIXTURE",
     }
     serialized = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     if len(serialized) > 2400:
@@ -110,15 +124,15 @@ def generate_fixed_synthetic_summary(*, client: Any = None, model: str | None = 
             model=model or os.environ.get("FOCUSON_SUMMARY_MODEL", DEFAULT_MODEL),
             store=False,
             timeout=20.0,
-            max_output_tokens=1400,
+            max_output_tokens=2500,
             text_format=LearningSummary,
             instructions=(
-                "You write a short Korean study-session review using ONLY the provided fixed synthetic observations. "
+                "You write a short Korean study-session review using ONLY the provided synthetic DOM-derived excerpts. "
                 "Return overview (2-3 sentences), 1-5 keyConcepts, and one nextStartPrompt. "
-                "Every keyConcept.name must exactly match a concept before ':' in an observation; "
-                "sessionEvidence must exactly copy one complete observation. "
+                "Each keyConcept.name must be a term appearing in a sourceTitle or excerpt; "
+                "sessionEvidence must exactly copy one complete excerpt. "
                 "Describe what was observed, never claim the learner understood, implemented, completed, "
-                "or solved anything. Do not add URLs, personal data, or facts not in the observations."
+                "or solved anything. Do not add URLs, personal data, or facts not in the excerpts."
             ),
             input=[{"role": "user", "content": serialized}],
         )
@@ -128,3 +142,13 @@ def generate_fixed_synthetic_summary(*, client: Any = None, model: str | None = 
     if summary is None:
         return DemoOutcome("FAILED", accepted_count=len(evidence))
     return DemoOutcome("READY", summary, len(evidence))
+
+
+def generate_fixed_synthetic_summary(*, client: Any = None, model: str | None = None) -> DemoOutcome:
+    """Backward-compatible helper using the built-in fake DOM page."""
+    return generate_synthetic_dom_summary(
+        SYNTHETIC_GOAL,
+        list(SYNTHETIC_DOM_PAGES),
+        client=client,
+        model=model,
+    )

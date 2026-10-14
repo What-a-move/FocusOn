@@ -29,7 +29,7 @@
 - 콘텐츠 감지·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
 - Issue #16에서 PR #15의 최신 문서를 기준으로 MVP 이탈·카메라 정책, OCR `text`·`ocr` 입력, Hybrid 120건 팀원 보고를 문서에 반영했다. 이 문서화는 관련성·카메라 기능 구현 또는 팀의 최종 승인이 아니다.
-- Issue #29의 별도 Branch에서 선행 학습 정리 코드·테스트·Prompt를 복구 가능한 새 커밋으로 되돌렸다. 합성 데이터 Streamlit 시연과 고정된 가짜 근거만 허용하는 선택적 OpenAI 구조화 생성·결과 검증 경로가 동작한다. API 키가 없어 실제 제공자 호출은 아직 검증하지 못했다. 실제 화면 데이터·FastAPI·Server Queue·Desktop 제품 조회와 연결되지 않았다.
+- Issue #29 Branch에는 문서의 DOM 추출 제안 필드를 입력받는 Streamlit 시연이 있다. 합성 text를 문단별로 분리하고 최종 RELATED·중복·민감 필터를 거쳐 OpenAI에 전달하는 선택적 생성 경로를 구현했다. 같은 페이지의 서로 다른 문단 두 개를 근거로 인정한다. 앞선 3회 형식 탐색 호출에서는 유효 출력을 얻지 못했지만, 출력 한도를 조정한 뒤 기본 합성 DOM 입력으로 OpenAI 결과 READY를 확인했다. 실제 추출기·FastAPI·Server Queue·Desktop 제품 조회는 미연결이다.
 
 ### 진행 중인 작업
 
@@ -65,7 +65,7 @@
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
-- AI의 목표·관련성 `src/`, `tests/`, `evaluation/` 파일은 `dev` 기준 골격이다. #29 Branch의 `learning_summary_demo.py`는 완전 로컬 시연이며, `learning_summary_openai.py`는 코드에 고정된 합성 입력만 OpenAI에 보낼 수 있는 분리된 시험 경로다. 제품 AI 입력·저장 계약은 아직 구현되지 않았다.
+- AI의 목표·관련성 src/, tests/, evaluation/ 파일은 dev 기준 골격이다. #29 Branch의 learning_summary_demo.py는 DOM 모양 합성 입력을 로컬에서 문단 근거로 바꾸고, learning_summary_openai.py는 Streamlit의 명시적 버튼 입력에 한해 합성 근거만 OpenAI에 보낸다. 제품 AI 입력·저장 계약은 아직 구현되지 않았다.
 - 목표 보조 코드는 Issue #12의 별도 미병합 Branch에 있다. 이 `dev` 기반 문서 Branch는 그 코드 변경을 포함하지 않는다. 목표 2~40자·질문 최대 2회 등 문서 계약은 #12 통합 전 코드·테스트와 맞춰야 한다.
 - 팀원 보고 Hybrid 99/120, Macro F1 0.732의 원자료·결합식·독립 holdout은 확인되지 않았다. 현재 `dev`에는 Hybrid 관련성 구현이 없다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR을 Client별로 분리해 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.

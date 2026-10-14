@@ -14,7 +14,7 @@ class LearningSummaryDemoTests(unittest.TestCase):
         result = make_demo_summary("React Query 공부", self.two)
         self.assertEqual(result.status, "READY")
         self.assertEqual(result.accepted_count, 2)
-        self.assertIn(self.two[0].text, copy_text(result))
+        self.assertIn(self.two[0].observation, copy_text(result))
         self.assertNotIn("구현했습니다", copy_text(result))
 
     def test_zero_one_and_duplicate_are_insufficient(self):
