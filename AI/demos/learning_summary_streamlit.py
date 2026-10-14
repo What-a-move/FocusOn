@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 import time
@@ -10,6 +11,11 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.learning_summary_demo import DemoEvidence, copy_text, make_demo_summary
+from src.learning_summary_openai import (
+    SYNTHETIC_EVIDENCE,
+    SYNTHETIC_GOAL,
+    generate_fixed_synthetic_summary,
+)
 
 
 SCENARIOS = {
@@ -39,7 +45,7 @@ def clear_previous_result() -> None:
 
 st.set_page_config(page_title="FocusOn 학습 정리 시연", page_icon="📝", layout="centered")
 st.title("학습 정리 로컬 시연")
-st.warning("개발용 합성 데이터만 사용하세요. 실제 사이트·화면을 분석하지 않고 OpenAI·Server·저장소에 전송하지 않습니다.")
+st.warning("개발용 합성 데이터만 사용하세요. 실제 사이트·화면을 분석하거나 Server·저장소에 보내지 않습니다. 아래 별도 버튼은 고정된 가짜 예시만 OpenAI에 전송합니다.")
 st.caption("#29 시연 — 제품 기능 완료 아님 · Notion 기획 REVIEW")
 
 scenario = st.selectbox("테스트 시나리오", list(SCENARIOS), on_change=clear_previous_result)
@@ -88,3 +94,25 @@ if outcome is not None:
         st.info("관련 근거가 2개 미만이라 정리를 만들지 않았습니다. 세션 종료·시간 기록에는 영향이 없습니다.")
     else:
         st.error("가상 생성에 실패했습니다. 세션 종료·시간 기록은 유지됩니다.")
+
+st.divider()
+st.subheader("OpenAI 생성 테스트 · 고정 합성 예시만")
+st.caption("위에서 수정한 목표·근거·라벨은 이 테스트에 사용되지 않습니다. 실제 화면 데이터 연결은 아직 없습니다.")
+st.write(f"고정 목표: {SYNTHETIC_GOAL}")
+for item in SYNTHETIC_EVIDENCE:
+    st.caption(f"고정 가상 근거: {item.text}")
+has_api_key = bool(os.environ.get("OPENAI_API_KEY"))
+if not has_api_key:
+    st.info("OPENAI_API_KEY가 없어 실제 호출 버튼을 사용할 수 없습니다. 로컬 모의 시연과 자동 테스트는 계속 가능합니다.")
+if st.button("고정 가짜 근거로 OpenAI 생성", disabled=not has_api_key):
+    with st.spinner("고정 합성 근거로 생성 중 · 최대 20초"):
+        st.session_state["openai_outcome"] = generate_fixed_synthetic_summary()
+
+openai_outcome = st.session_state.get("openai_outcome")
+if openai_outcome is not None:
+    st.subheader(f"OpenAI 테스트 결과: {openai_outcome.status}")
+    if openai_outcome.status == "READY" and openai_outcome.summary is not None:
+        st.code(copy_text(openai_outcome), language=None)
+        st.caption("AI 생성 결과입니다. 실제 사용자 화면·세션·저장소와 연결되지 않았습니다.")
+    else:
+        st.error("생성 또는 검증에 실패했습니다. 원본 모델 응답은 표시하거나 저장하지 않습니다.")

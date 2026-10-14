@@ -30,6 +30,10 @@ class LearningSummaryStreamlitTests(unittest.TestCase):
         self.app.button[0].click().run()
         self.assertEqual(self.app.session_state["demo_outcome"].status, "INSUFFICIENT_DATA")
 
+    def test_openai_button_is_disabled_without_key(self):
+        self.assertEqual(len(self.app.button), 2)
+        self.assertTrue(self.app.button[1].disabled)
+
 
 if __name__ == "__main__":
     unittest.main()
