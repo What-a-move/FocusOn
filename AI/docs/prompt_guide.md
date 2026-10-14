@@ -9,6 +9,8 @@
 
 이 문서는 규칙과 임베딩만으로 판단하기 어려운 경우 사용하는 LLM 및 FocusSessionAgent의 입력·출력·도구 제한을 정의한다. 모델은 관련성 후보와 근거를 제안하지만 최종 알림, 차단, 시간 집계와 저장을 실행하지 않는다.
 
+MVP에서는 화면 판정 수정·저장·개인화가 제외되므로 관련 사용자 피드백을 Prompt나 도구 입력으로 넣지 않는다. 목표 명확화 질문은 전체 대화에서 최대 2회이고 복수 목표는 하나만 최종 확정한다.
+
 ## 1. 역할 분리
 
 ```text
@@ -58,11 +60,11 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 
 - 제외·민감 화면·권한 실패
 - 추출 실패 또는 판단 가능한 텍스트 없음
-- 사용자 수정이 동일 목표·콘텐츠 범위에 명확히 적용됨
+- 화면 판정 사용자 수정 적용 (후속 기능, MVP 제외)
 - 규칙과 임베딩의 강한 근거가 충돌 없이 같은 결론을 지지함
 - 캐시가 현재 모든 버전과 일치함
 
-목표 보조 요청에서는 콘텐츠 분석 Prompt를 사용하지 않고, `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM` 중 하나의 `clarityStatusCandidate`를 반환한다. 추천 목표는 2~3개, 질문은 1~2개를 넘기지 않는다.
+목표 보조 요청에서는 콘텐츠 분석 Prompt를 사용하지 않고, `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM` 중 하나의 `decisionCandidate`를 반환한다. 추천 목표는 2~3개, 질문은 한 응답에 1개·대화 전체에 2회를 넘기지 않는다. 빈 입력은 모델 호출 전 `GOAL_TEXT_INVALID`로 처리한다.
 
 다음 경우에만 호출을 검토한다.
 
@@ -145,19 +147,19 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 
 ```json
 {
-  "clarityStatusCandidate": "NEEDS_QUESTION",
+  "decisionCandidate": "AMBIGUOUS",
   "confidence": 0.61,
-  "interpretedGoal": null,
-  "recommendedGoals": [],
-  "questions": ["어떤 방식으로 영어를 공부하려고 하나요?"],
-  "requiresUserConfirmation": true
+  "normalizedGoalText": null,
+  "suggestions": [],
+  "goalCandidates": [],
+  "question": "어떤 방식으로 영어를 공부하려고 하나요?"
 }
 ```
 
 | 필드 | 허용 값·조건 |
 | --- | --- |
 | `relevanceLabelCandidate` | `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK` |
-| `clarityStatusCandidate` | 목표 보조 요청에서 `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM` |
+| `decisionCandidate` | 목표 보조 요청에서 `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM` |
 | `confidence` | `0.0~1.0`; 의미와 보정 방식은 평가 후 확정 |
 | `contextStatus` | `SUFFICIENT`, `INSUFFICIENT`, `AMBIGUOUS` |
 | `evidenceIds` | 입력에 실제로 존재하는 passage ID만 허용 |
@@ -218,7 +220,7 @@ Agent 상태에는 최소 식별자와 허용된 요약·참조만 둔다. 페�
 
 - `goalId`, `goalVersion`, `sessionId`, `runId`, `eventId`, `navigationId`
 - 정제 콘텐츠 참조와 근거 ID
-- 최근 활동 요약과 피드백 버전
+- 최근 활동 요약과 정책 버전 (화면 판정 피드백 버전은 후속 기능)
 - 호출 횟수, 재시도, 전체 시간 예산
 - 모델·Prompt·추출기·정책 버전
 

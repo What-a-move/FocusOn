@@ -462,14 +462,24 @@ Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있�
 ## 결정 025 - 학교 모델 연결을 Tailscale 사설 HTTPS로 진행
 
 - 결정일: 2026-10-13
-- 상태: 사용자 선택에 따른 연결·테스트 방향. 실제 설치·로그인·모델 연결 완료를 뜻하지 않는다.
+- 상태: 연결 경로 및 실제 검증 기록. 공개 Client 연동·정확도 검증 완료를 뜻하지 않는다.
 - 근거: 학교 LAN HTTP 연결 timeout 진단 이후 사용자의 Tailscale 선택.
 - 내용: Mac과 학교 Windows PC를 같은 tailnet에 연결한다. 학교의 기존 로컬 FastAPI `127.0.0.1:8000`을 Tailscale Serve로 사설 HTTPS에 연결하고 `/health`·합성 `/api/embed` 순서로 확인한다.
 - 경계: HTTPS 인증서·tailnet 로그인과 접근 규칙을 사용한다. 기존 LAN 방화벽 허용 범위를 임의로 넓히지 않는다. 원문·토큰·키는 문서나 로그에 남기지 않는다.
 - Client: 학교 FastAPI는 두 경로만 제공하므로 기존 Ollama metadata 검증 경로와는 다르다. 실제 health 응답을 받은 뒤 필요한 Client 연동을 검토하며 TLS·모델 리비전·벡터 검증을 조용히 제거하지 않는다.
-- 준비: Mac 공식 설치 패키지 다운로드·체크섬·개발자 서명·Apple 공증을 확인했다. 설치 화면의 Computer Use 권한은 대기 상태이며 계정 로그인·VPN 허용·학교 Serve 주소는 아직 확보하지 못했다.
+- 검증: 같은 tailnet에서 학교 Serve `/health`·`/api/embed`에 접근해 실제 Qwen 벡터를 받았다. 모델 digest·정밀도·차원은 REPORT에 기록했다. 실제 속도·GPU telemetry·독립 정답 정확도는 별도 검증한다.
 - 영향: 학교 SETUP·CONTEXT·NEXT_TASK. Hybrid 산식·입력/출력 컬럼·더미 데이터는 이번 연결 선택으로 변경하지 않는다.
+
+## 결정 026 - 학교 Qwen 시험 결과와 Client 연동 경계
+
+- 결정일: 2026-10-14
+- 상태: 관측된 시험 결과 및 후속 작업 기록. 모델 정확도·성능 승인이나 공개 API 확정을 뜻하지 않는다.
+- 근거: 학교 `qwen3-embedding:4b-fp16` `/health`·`/api/embed` 실측과 임시 Adapter 합성 실행.
+- 내용: 실제 벡터 반환은 확인했다. 표준 Ollama Client는 `/api/tags`·`/api/show`·`/api/version`을 요구하지만 학교 FastAPI는 `/health`·`/api/embed`만 제공해 직접 연결되지 않는다. Client가 health metadata를 검증하도록 API 계약을 맞춘 뒤 real 평가를 진행한다.
+- 검증 경계: 임시 Adapter 개발 8개 중 2개 skipped, 6개 분석 중 예상값 일치 3개·불일치 3개였다. 예상값은 독립 검수 전이라 정확도 지표가 아니다. GPU 사용률·VRAM도 수집하지 않았다. Mac 왕복과 Ollama 내부 지연은 REPORT에 따로 기록한다.
+- 영향: 학교 SETUP·REPORT·CONTEXT·NEXT_TASK와 다음 Client 작업.
+- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
 
 ## 새 결정 기록
 
-다음 결정은 `결정 026`부터 추가한다.
+다음 결정은 `결정 027`부터 추가한다.

@@ -8,7 +8,7 @@
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-GOAL-001`, `AI-SESSION-001`, `AI-EVENT-001`, `AI-STALE-001`, `AI-TIME-001`
 
-이 문서는 사용자가 세운 목표, 목표를 이어 가는 논리 세션, 실제 공부 회차와 관찰 이벤트의 관계를 정의한다. 데이터베이스 Entity나 API가 구현됐다는 뜻은 아니다. 필드와 상태는 Server·Shared·Client 담당자 합의 후 확정한다.
+이 문서는 사용자가 세운 목표, 목표를 이어 가는 논리 세션, 실제 공부 회차와 관찰 이벤트의 관계를 탐색한다. 여기의 `LearningSession`·`SessionRun` 계층과 논리 세션 `ACTIVE`는 후속 모델 제안이며 Notion의 현재 `learning_sessions.status`나 공개 API 계약이 아니다. MVP 구현에는 Notion `ERD`와 `세션 상태 전이 정책`을 먼저 적용한다.
 
 ## 1. 해결하려는 문제
 
@@ -63,18 +63,18 @@ User
 | `clarificationNeeded` | Boolean | 예 | 사용자 확인 질문이 필요한지 나타낸다. |
 | `confirmedByUser` | Boolean | 예 | Server가 사용자 확인 이벤트로 관리한다. |
 
-확정 전 목표 보조 응답은 `clarityStatus`로 세분화한다.
+확정 전 목표 보조 응답은 Notion의 `decision`으로 세분화한다.
 
-| `clarityStatus` | 의미 | 기본 Client 동작 |
+| `decision` | 의미 | 기본 Client 동작 |
 | --- | --- | --- |
 | `CLEAR` | 목표와 예상 활동이 비교적 명확함 | 해석 결과 확인 |
-| `NEEDS_SELECTION` | 여러 목표가 포함됨 | 추천 목표 2~3개 중 하나 선택 |
-| `NEEDS_SUGGESTION` | 주제는 알지만 범위가 넓음 | 구체 목표 2~3개 제안 |
-| `NEEDS_QUESTION` | 의미·대상·활동 확인 필요 | 질문 1~2개 표시 |
-| `INVALID` | 비어 있거나 분석 불가 | 다시 입력 |
-| `UNRECOGNIZED_TERM` | 약어·오타 의미 불확실 | 후보 확인 후 사용자 선택 |
+| `AMBIGUOUS` | 범위·목적이 모호함 | 목표 제안 2~3개 또는 질문 1개 |
+| `MULTI_GOAL` | 여러 목표가 포함됨 | `goalCandidates` 중 하나를 고르는 질문 1개 |
+| `UNKNOWN_TERM` | 약어·오타 의미 불확실 | 추측하지 않고 질문 1개 |
 
-`recommendedGoals`, `questions`, `requiresUserConfirmation`은 확정 전 응답에 사용한다. `confirmedByUser`는 AI가 반환한 값이 아니라 Server가 사용자 확인 이벤트를 기록한 결과다.
+`normalizedGoalText`, `question`, `suggestions`, `goalCandidates`, `conversationTurn`을 명확화 응답에 사용한다. 질문은 최대 2회다. 빈 입력은 `GOAL_TEXT_INVALID`로 검증한다. `confirmedByUser`는 AI가 반환한 값이 아니라 Server가 사용자 확인 이벤트를 기록한 결과다.
+
+MVP 명확화 질문은 전체 대화에서 최대 2회이며, 여러 목표가 입력되면 최종적으로 하나만 선택한다. 목표 문장 확인·수정은 GoalProfile·버전 변경이고 화면 관련성 결과의 수정·삭제나 피드백 저장과는 별개다.
 
 ### 3.2 생성과 확인
 
@@ -94,7 +94,7 @@ User
 | 보조 주제 추가·삭제 | 같은 `goalId`, `goalVersion + 1` | 관련성 범위가 달라짐 |
 | 목적 변경 | 같은 ID 유지 여부 검토, 기본은 버전 증가 | 판단 정책이 달라짐 |
 | 중심 주제가 바뀜 | 새 `goalId` | 과거 기록과 의미가 달라짐 |
-| 목표 삭제 | 관련 캐시·피드백·노트 파생 참조 삭제 전파 | 삭제 후 복원 방지 |
+| 목표 삭제 | 관련 캐시·노트 파생 참조 삭제 전파; 화면 판정 피드백은 MVP에서 미수집 | 삭제 후 복원 방지 |
 
 AI는 방문한 페이지나 반복 검색을 근거로 `supportingTopics`를 자동 추가하지 않는다.
 
@@ -139,11 +139,12 @@ Notion 제품 계약의 `sessionStatus`는 Server가 소유하며 AI는 아래 �
 
 | 입력 | 의미 |
 | --- | --- |
-| `ACTIVE` | `RUNNING` 회차에서 분석 가능 |
-| `PAUSED` | 수동 휴식·제외·권한 복구 대기 등으로 타이머와 학습 기록 중지 |
-| `ENDED` | `COMPLETED`·`ABORTED` 등 회차 종료 상태; 현재 화면에 결과 적용 금지 |
+| `RUNNING` | 활성 세션에서 분석 가능 |
+| `PAUSED`·`AUTO_PAUSED` | 사용자 선택 또는 필수 조건 유실로 타이머·분석 중지 |
+| `AWAITING_END_CONFIRMATION`·`ENDING` | 종료 확인 또는 처리 중; 타이머·분석 중지 |
+| `ENDED`·`ABANDONED` | 최종 상태; 현재 화면에 결과 적용 금지 |
 
-제외 모드는 `NONE`, `ANALYSIS_ONLY`, `ANALYSIS_AND_TIME`으로 구분한다. `ANALYSIS_ONLY`는 타이머를 계속하지만 콘텐츠 수집·OCR·AI·카메라 분석을 중지한다. `ANALYSIS_AND_TIME`은 타이머와 학습 기록도 중지하고 사용자 재개 확인을 요구한다.
+`EXCLUDED`와 `PRIVACY_BLOCKED`는 세션 상태가 아닌 공개 `relation` 값이며 내부 `analysisStatus`와 분리한다. 확인된 `EXCLUDED`에서는 화면 콘텐츠 분석을 중지하고 타이머를 유지한다. 별도 동의·권한이 유효하면 로컬 카메라 분석만 허용하지만 카메라 집계·전송은 별도 승인 전 금지한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 중지한다. 타이머 중지는 세션의 `PAUSED`·`AUTO_PAUSED` 전이로만 처리한다.
 
 세션 설정 Snapshot에는 `durationMode`, `durationMinutes`, `interventionLevel`, `notificationChannels`, `soundEnabled`, `recordOnly`, `breakReminderEnabled`, `breakReminderAtMinutes`, `expectedBreakMinutes`, `personalizedBreakEnabled`, `settingsVersion`을 포함할 수 있다. AI는 설정을 실행하지 않고 분석·제안 조건에만 사용한다.
 
@@ -182,7 +183,7 @@ Notion 제품 계약의 `sessionStatus`는 Server가 소유하며 AI는 아래 �
 | `PAUSED`·휴식 | 비활성 시간 | 학습 시간 제외 |
 | `EXCLUDED` | 정책에 따른 내용 없는 구간 또는 미기록 | 콘텐츠를 저장하지 않음 |
 
-`ANALYSIS_ONLY` 구간은 타이머가 진행되어도 직접·보조 학습 시간에 합산하지 않는다. `ANALYSIS_AND_TIME` 구간은 타이머·학습 기록에서 모두 제외한다. 두 구간 모두 원문·제목·URL을 학습 기록에 남기지 않는다.
+`EXCLUDED`·`PRIVACY_BLOCKED` 구간은 타이머가 진행되어도 관련 활동 시간에는 합산하지 않는다. `PAUSED`·`AUTO_PAUSED` 구간은 활성 시간에서 제외한다. 비분석 구간의 원문·제목·URL은 학습 기록에 남기지 않는다.
 
 추정 학습 시간은 직접 학습 구간과 보조 학습 구간의 합이다. 이 값은 관찰 가능한 브라우저 활동의 추정치이며 실제 이해 시간을 의미하지 않는다.
 
@@ -191,7 +192,7 @@ Notion 제품 계약의 `sessionStatus`는 Server가 소유하며 AI는 아래 �
 - 시작·일시정지·재개·종료·탭 포커스·heartbeat를 기준으로 겹치지 않는 구간을 만든다.
 - heartbeat가 끊기면 마지막 확인 이후를 무한 체류로 계산하지 않는다.
 - 늦게 도착한 관련성 판정은 원래 구간만 재분류한다.
-- 사용자 수정은 명시된 활동 구간만 다시 집계한다.
+- 화면 판정 사용자 수정에 따른 구간 재집계는 후속 기능이며 MVP에서 수행하지 않는다.
 - 브라우저 밖 활동은 관찰 공백으로 남기고 추정으로 채우지 않는다.
 - 집계 변경마다 `aggregationVersion`을 증가시키고 노트 재생성 여부를 판단한다.
 
@@ -205,7 +206,7 @@ AI 결과 적용 전 확인 순서:
 2. 회차가 종료·삭제되지 않았는지
 3. `goalVersion`이 요청 당시와 같은지
 4. `navigationId`와 `eventId`가 현재 또는 원래 구간과 일치하는지
-5. 정책·피드백 버전이 결과 생성 뒤 바뀌지 않았는지
+5. 정책 버전이 결과 생성 뒤 바뀌지 않았는지 (화면 판정 피드백 버전은 후속 기능)
 
 실패하면 현재 상태와 알림을 갱신하지 않는다.
 
@@ -217,13 +218,13 @@ AI 결과 적용 전 확인 순서:
 - 직전 회차의 시간·상태 요약
 - 사용자가 저장을 허용한 최근 자료 참조
 - 사용자가 표시한 미해결 항목
-- 같은 목표·콘텐츠 범위의 유효한 피드백
+- 같은 목표·콘텐츠 범위의 유효한 피드백 (후속 기능 제안, MVP 제외)
 
 이전 페이지 원문, OCR 원문, 전체 방문 기록과 모델의 숨은 추론은 재개 문맥에 넣지 않는다.
 
 ## 9. 삭제와 보존
 
-- 목표 삭제는 세션·회차·피드백·캐시·임베딩·체크포인트·노트의 파생 참조까지 전파한다.
+- 목표 삭제는 세션·회차·캐시·임베딩·체크포인트·노트의 파생 참조까지 전파한다. 화면 판정 피드백 삭제 전파는 후속 기능 승인 전 적용하지 않는다.
 - 회차 기록만 삭제할 때 목표 Profile과 다른 회차를 자동 삭제하지 않는다.
 - 콘텐츠 근거가 삭제되면 연결된 노트의 해당 주장을 제거하거나 재생성 필요 상태로 바꾼다.
 - 삭제 중인 목표·회차를 비동기 분석이나 노트 작업이 다시 생성하지 못하게 Tombstone 또는 동등한 상태를 확인한다.
@@ -237,7 +238,7 @@ AI 결과 적용 전 확인 순서:
 - 목표 수정 뒤 이전 버전 캐시와 임베딩을 사용하지 않는다.
 - heartbeat 단절 뒤 무한한 학습 시간이 생기지 않는다.
 - 회차 종료를 재시도해도 노트 작업이 하나만 생성된다.
-- 사용자 피드백으로 한 구간을 수정해도 다른 목표의 기록이 바뀌지 않는다.
+- 화면 판정 피드백으로 한 구간을 수정해도 다른 목표의 기록이 바뀌지 않는다 (후속 기능 평가, MVP 제외).
 - 삭제된 회차를 늦은 작업이나 재시도가 복원하지 않는다.
 
 ## 11. 팀 합의 필요

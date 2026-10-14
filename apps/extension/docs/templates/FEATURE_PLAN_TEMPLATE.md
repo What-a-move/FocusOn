@@ -42,7 +42,7 @@
 - 활성 학습 세션 중 현재 활성 Tab 자동 추적
 - `tabs.onActivated`와 `webNavigation.onCommitted` 역할 분리
 - Content Script 15초 Timer와 Service Worker 재검증
-- 제외 Domain은 `chrome.storage.local`, Navigation 임시 상태는 `chrome.storage.session`
+- 제외 Domain은 Server 정본과 `chrome.storage.local` 캐시, Navigation 임시 상태는 `chrome.storage.session`
 - 세션·연결 상태의 최종 기준은 Server
 - 최소 Chrome 120, HTTP Page 분석 지원, Server 통신은 HTTPS
 

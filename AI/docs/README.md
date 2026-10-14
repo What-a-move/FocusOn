@@ -34,7 +34,7 @@ AI 작업은 다음 문서를 순서대로 확인한다.
 - `실험`: 기준선 비교와 자원·개인정보 검증 후 편입 여부를 결정한다.
 - `현재 상태`: 코드와 테스트에서 실제 확인한 사실이다.
 
-Notion의 `FocusPath AI 최종 기획서`는 설계 입력이지만 구현 완료나 전원 합의를 뜻하지 않는다. 기획서의 API 경로, 임계값, TTL, 모델은 승인 전까지 확정값으로 사용하지 않는다.
+현재 MVP 계약은 Notion `FocusOn`의 기능·공통 정책과 `FocusOn API 명세서`를 따른다. 과거 `FocusPath AI 최종 기획서`는 참고용 설계 입력이며, 그 API 경로·임계값·TTL·모델은 현재 계약으로 사용하지 않는다.
 
 ## 문서 구조
 
@@ -80,8 +80,8 @@ AI/docs/
 | `api_spec.md` | Server와 AI 사이 요청·응답 계약 | 내부 모델 선택 과정 |
 | `analysis_rules.md` | 단계적 분석과 판정 정책 | 데이터 보존 기간 상세 |
 | `focus_session_agent_spec.md` | Agent 진입·상태·도구·예산·실패 계약 | 자유로운 도구 실행 |
-| `feedback_personalization_spec.md` | 사용자 수정 의미·적용 범위·무효화·삭제 | 사용자별 모델 자동 재학습 |
-| `session_note_spec.md` | 회차 노트 입력·근거·비동기 작업·재생성 | 학습 성취 추정 |
+| `feedback_personalization_spec.md` | 후속 기능 보류 및 P1 이후 사용자 수정·무효화 탐색 | MVP 공개 피드백 API·사용자별 모델 자동 재학습 |
+| `session_note_spec.md` | 회차 노트·근거·비동기 작업·재생성의 후속 탐색 | MVP 학습 정리 계약·복습 질문 |
 | `data_lifecycle.md` | 수집·전송·저장·삭제 경계 | 사용자 UI 상세 |
 | `prompt_guide.md` | 모델 신뢰 경계와 구조화 출력 | 최종 알림·차단 결정 |
 | `evaluation_spec.md` | 데이터 세트·지표·출시 차단 조건 | 실제 사용자 원문 |
@@ -108,6 +108,8 @@ Client별 사전 제외·권한 검사
 
 PDF·Canvas·이미지·슬라이드처럼 시각 구조가 중요한 콘텐츠에는 ColPali를 비교 실험한다. ColPali는 OCR 대체나 단독 이탈 판정기가 아니며, 정식 편입 기준은 `evaluation_spec.md`를 따른다.
 
+2026-10-11 팀원 보고의 120건 비교에서 Hybrid가 가장 높은 정확도·Macro F1을 보였다. 평가 데이터와 결합식은 재현 전이므로 후속 관련성 구현의 우선 평가 후보일 뿐, `dev`에 구현됐거나 운영 임계값이 승인된 것은 아니다. MVP의 이탈·카메라 시간 기준은 `analysis_rules.md`, 상태 투영은 `state_model.md`, OCR `text`·`ocr` 입력과 최종 품질·해시 책임은 `content_acquisition_spec.md`를 따른다. ColPali는 MVP 밖의 PoC다.
+
 ## AI 전용 확인 항목
 
 - 제외 검사가 캡처·추출·모델 호출보다 먼저 실행되는가
@@ -115,7 +117,8 @@ PDF·Canvas·이미지·슬라이드처럼 시각 구조가 중요한 콘텐츠�
 - 추출 실패·모델 실패·목표 무관·이탈이 서로 구분되는가
 - `SUPPORTING` 활동을 정상 학습 흐름으로 인정하는가
 - `OFF_TASK` 한 번으로 알림·차단을 실행하지 않는가
-- 사용자 피드백과 목표 버전 변경이 캐시·대기 알림을 무효화하는가
+- 목표 버전 변경이 캐시·대기 알림을 무효화하는가
+- 화면 판정 수정·삭제·저장 기반 개인화가 MVP에 노출되지 않는가
 - 오래된 `goalVersion`, `runId`, `navigationId` 결과를 폐기하는가
 - LLM과 Agent의 입력·출력·도구·시간 예산이 제한되는가
 - 모델·Prompt·임계값 변경 시 같은 데이터로 회귀 평가하는가

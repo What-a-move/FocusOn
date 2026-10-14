@@ -47,12 +47,14 @@
 
 | 헤더 | 적용 |
 | --- | --- |
-| `Authorization: Bearer {accessToken}` | 인증 API |
-| `X-Device-Id: {deviceId}` | Desktop·Extension의 인증 요청 |
+| `Authorization: Bearer {accessToken}` | Notion 명세에서 인증이 필요한 API |
+| `X-Device-Id: {deviceId}` | 해당 Notion endpoint의 필수 헤더에 기재된 요청 |
 | `Idempotency-Key: {key}` | 세션 생성·일시정지·재개·연장·종료 |
 | `If-Match-Version: {version}` | 기존 세션의 일시정지·재개·연장·종료 |
 
 Heartbeat에는 `Authorization`과 `X-Device-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
+
+`POST /api/v1/auth/refresh`는 `Authorization` 헤더 대신 JSON body의 `refreshToken`으로 인증한다. 각 endpoint의 실제 필수 헤더는 Notion API DB 항목을 따른다. 성공 시 Access·Refresh Token을 모두 회전하고, 클라이언트는 single-flight로 1회 호출한 뒤 원 요청을 1회만 재시도한다.
 
 ## 엔드포인트 목록
 
@@ -80,6 +82,8 @@ GET /api/v1/users/me/consents
 PUT /api/v1/users/me/consents/{consentType}
 GET /api/v1/users/me/focus-settings
 PUT /api/v1/users/me/focus-settings
+GET /api/v1/users/me/analysis-excluded-domains
+PUT /api/v1/users/me/analysis-excluded-domains
 ```
 
 ### 목표
@@ -120,29 +124,61 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 ```text
 GET /api/v1/reports/daily
+GET /api/v1/reports/calendar?month=YYYY-MM
 GET /api/v1/reports/weekly                     # P1
 GET /api/v1/sessions/{sessionId}/summary
 GET /api/v1/sessions/{sessionId}/learning-summary
 ```
 
-`GET /api/v1/sessions`와 `GET /api/v1/reports/weekly`만 P1이며 나머지는 MVP 범위다.
+`GET /api/v1/sessions`와 `GET /api/v1/reports/weekly`만 P1이며 나머지는 MVP 범위다. 제외 도메인 API는 현재 사용자 목록을 조회하고 전체 교체한다. 빈 배열은 전체 삭제이며, host는 소문자·IDNA ASCII·후행 점 제거 기준으로 정규화한다. 사용자당 최대 50개를 저장하고 scheme·port·path·query·fragment·페이지 내용은 저장하지 않는다.
 
 ## 세션 규칙
 
 - 상태: `DRAFT`, `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED`
 - `ENDED`와 `ABANDONED`는 최종 상태다.
-- 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION` 중인 활성 세션은 하나만 허용한다.
+- 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING` 중인 활성 세션은 하나만 허용한다.
 - 시간은 `targetDurationMs`와 `accumulatedActiveMs`를 기준으로 계산한다.
+- `targetDurationMs = null`은 시간 기준 자동 종료 없이 사용자가 직접 종료하는 무기한 세션을 뜻한다.
+- MVP 온보딩은 `30분`, `1시간`, `2시간`, `직접 입력(5~300분)`만 선택지로 제공한다. 무기한 세션은 API 계약으로 남지만 온보딩 UI에는 노출하지 않는다.
 - Heartbeat는 10초 간격으로 보낸다. 과거 `clientObservedAt`은 무시하고, 감소한 `accumulatedActiveMs`는 거절한다.
+- 현재 RUNNING 구간의 첫 유효 heartbeat를 받기 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
 - 마지막 heartbeat 뒤 60초 동안 신호가 없으면 `ABANDONED` 후보로 처리한다.
+- 마지막 유효 heartbeat 뒤 3분까지 정상 신호가 복구되지 않으면 마지막 서버 확정 `accumulatedActiveMs`와 `endReason: HEARTBEAT_TIMEOUT`으로 `ABANDONED`를 원자적으로 확정한다. 첫 heartbeat 전에는 현재 실행 구간의 `lastResumedAt`(최초 시작은 `startedAt`)을 기준으로 삼는다. 3분 안에 복구되면 후보를 해제하고, 확정 후 heartbeat는 세션을 되살리지 않는다.
+- Desktop 재실행으로 로컬 monotonic 기준점이 사라지면 서버의 마지막 확정 누적 시간만 사용하고 `AUTO_PAUSED`, `pauseReason: APP_RESTART`로 복구한다. 사용자가 명시적으로 재개하기 전에는 `RUNNING`으로 바꾸지 않는다.
 - 세션 종료 후 학습 요약 상태는 `QUEUED`, `GENERATING`, `READY`, `INSUFFICIENT_DATA`, `FAILED`를 사용한다.
+
+일간 리포트와 홈 집중 달력은 세션 생성 시 고정한 `studyDate`에 `ENDED` 및 서버 확정 `ABANDONED`의 마지막 검증된 `accumulatedActiveMs`를 귀속한다. 자정을 넘어도 분할하지 않으며, 같은 날짜 합계가 60,000ms 이상일 때 달력에 포키를 표시한다. 진행 중 세션은 집계하지 않는다.
 
 ## 분석 결과 규칙
 
-- 목표 관련성 값은 `RELATED`, `UNRELATED`, `UNCERTAIN`을 사용한다.
-- `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 분석 상태이며 오류 코드가 아니다.
+- 공개 `relation`은 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. AI 관련성 판정값은 `RELATED`, `UNRELATED`, `UNCERTAIN`이며 `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전에 적용되는 정책 차단 상태다.
+- AI 내부 `SUPPORTING`은 목표에 필요한 보조 학습 활동을 뜻하며 공개 `relation`에서는 `RELATED`로 매핑한다. `SUPPORTING`은 공개 상태 enum을 확장하지 않는다.
+- `EXCLUDED`, `PRIVACY_BLOCKED`, `UNCERTAIN`은 HTTP 오류가 아닌 정상 분석 상태다.
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
+- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
+- `UNCERTAIN` 시간은 이탈 시간에 합산하지 않는다. 30초 이하는 기존 이탈 구간을 보류하고, 30초를 초과하면 기존 구간을 종료한다.
+- `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
+- 개입 임계값은 `GENTLE` 연속 120초, `NORMAL` 최근 10분 안의 30초 이상 이탈 구간 2회, `ACTIVE` 연속 30초다.
+- 개입 cooldown은 `sessionId + interventionType`별 5분이다.
+- `policyVersion`은 세션 시작 시 `interventionPolicyVersion`으로 고정하고 분석 기록과 개입 이벤트에 같은 값을 저장한다.
+
+## 분석 제외 도메인
+
+- 제외 목록에는 URL 전체가 아니라 정규화한 `host`만 저장한다. path, query, fragment, 페이지 내용은 저장하지 않는다.
+- 온보딩에서 분석 제외 사이트 설정 단계를 반드시 거친다. 사이트를 등록하거나 빈 배열로 건너뛰기를 선택하면 단계가 완료되고, 온보딩 뒤에도 설정에서 전체 목록을 조회·교체할 수 있다.
+- `PUT /api/v1/users/me/analysis-excluded-domains`는 전체 교체 방식이며 빈 배열은 목록 전체 삭제를 뜻한다.
+- 제외 목록은 사용자별 최대 50개다.
+- 제외 도메인에서는 화면 DOM·OCR·AI 콘텐츠 분석을 중단하지만 타이머는 유지한다. 카메라 동의와 권한이 유효하면 로컬 카메라 분석은 계속할 수 있다.
+
+## 학습 정리와 리포트
+
+- 학습 정리는 세션 종료와 분리된 비동기 작업이다. 생성 실패가 `ENDED` 확정이나 세션 리포트 조회를 막지 않는다.
+- 학습 정리 응답과 저장 JSON은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용한다. `reviewQuestions`와 자동 퀴즈는 MVP에서 사용하지 않는다.
+- `learningSummaryStatus`는 HTTP 오류 코드가 아니라 정상 응답의 업무 상태다.
+- 집중 달력은 세션 시작 시 확정한 `studyDate`를 기준으로 집계한다. 자정을 넘긴 세션도 시작일 하나에 귀속한다.
+- 달력 집계에는 종료가 확정된 `ENDED`, `ABANDONED` 세션만 포함하고, `ABANDONED`는 마지막 서버 확정 누적 시간만 사용한다.
+- `totalActiveMs >= 60000`인 날짜만 학습 활동일로 표시한다.
 
 ## 재시도와 속도 제한
 
@@ -190,6 +226,8 @@ SESSION_VERSION_CONFLICT
 SESSION_NOT_FOUND
 SESSION_START_REQUIREMENT_MISSING
 SESSION_IDEMPOTENCY_REQUIRED
+SESSION_HEARTBEAT_INVALID
+SESSION_ABANDONED
 ANALYSIS_SERVICE_UNAVAILABLE
 VALIDATION_ERROR
 IDEMPOTENCY_CONFLICT

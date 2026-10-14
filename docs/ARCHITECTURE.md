@@ -13,7 +13,7 @@
        │             ├─ 학습 세션 시작·일시정지·재개·종료
        │             ├─ macOS 활성 앱 확인
        │             ├─ 화면 캡처 및 학습 분석 연결
-       │             ├─ MediaPipe 카메라 분석 결과 수신
+       │             ├─ AVFoundation + Apple Vision 카메라 로컬 분석
        │             └─ 화면 부유형 두더지·알림·리포트 표시
        │
        └──────── Chrome Extension (Next.js + React)
@@ -45,7 +45,7 @@
 - macOS 활성 앱 확인
 - 분석 제외 앱 처리
 - 화면 캡처 권한과 캡처 생명주기 관리
-- 카메라 권한 요청 및 MediaPipe 결과 표시
+- 카메라 권한 요청 및 AVFoundation + Apple Vision 결과 표시
 - 서버 세션 상태 변경 시 부유형 창과 화면 상태 갱신
 
 ### Chrome Extension
@@ -53,7 +53,7 @@
 - 활성 학습 세션 중 현재 활성 탭, URL, 페이지 제목 자동 추적
 - `tabs`와 `webNavigation`을 이용한 페이지 이동 이벤트 수집
 - 일정 시간 머문 페이지의 재분석 요청
-- 분석 제외 도메인에서는 Page·Screen·OCR·AI·Camera 분석 중지
+- 확인된 분석 제외 도메인에서는 Page·Screen·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. `EXCLUDED`에서 별도 동의·권한이 유효하면 로컬 카메라 분석만 계속할 수 있다. 최신 제외 상태 확인 불가·`PRIVACY_BLOCKED`·동의 철회에서는 카메라 분석도 중지한다.
 - Desktop 세션 조회와 타이머 표시
 - 일시정지·재개·종료 명령을 Server에 요청
 - Desktop 연결·인증 상태 안내
@@ -66,6 +66,8 @@
 - Desktop·Extension 기기 연결과 세션 동기화
 - 이벤트 저장과 리포트 조회
 - 개인정보 및 보존 기간 정책의 서버 측 적용
+- 세션 시작 시 개입 정책 버전 고정 및 분석·개입 이력 일관성 관리
+- 종료 세션의 일간 리포트·집중 달력 집계와 비동기 학습 정리 작업 관리
 
 ### AI Service
 
@@ -73,6 +75,7 @@
 - 사용자의 학습 목표와 현재 활동의 관련성 판단
 - 판단 결과와 신뢰도 반환
 - 원본 화면이나 카메라 영상을 기본 저장하지 않음
+- 알림·타이머·세션 상태를 직접 바꾸지 않고 Backend Policy Engine이 판단할 입력만 반환
 
 ### `packages/shared-types`
 
@@ -87,8 +90,12 @@
 | `RELATED` | 목표와 관련된 활동이 확인됨 |
 | `UNRELATED` | 목표와 관련성이 낮은 활동이 확인됨 |
 | `UNCERTAIN` | 판단할 정보가 부족함 |
+| `EXCLUDED` | 정책상 콘텐츠 분석을 수행하지 않음 |
+| `PRIVACY_BLOCKED` | 개인정보·권한 정책으로 분석을 차단함 |
 
-관련성은 공개 API의 `relation` 필드로 표현한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 `analysisStatus`이며 오류 코드가 아니다. 개인정보 차단·제외처럼 관련성 판정을 하지 않은 상태와 `RELATED`·`UNRELATED` 관계값을 한 enum으로 합치지 않는다.
+공개 API는 위 값을 `relation` 필드로 표현한다. `analysisStatus`는 AI 실행 결과를 별도로 나타내며 `COMPLETED`, `NEEDS_CONFIRMATION`, `SKIPPED`, `ERROR`를 사용한다. 정책 제외·개인정보 차단은 오류 코드가 아니며 관련성 판단과 처리 상태를 혼합하지 않는다.
+
+AI 관련성 판정은 `RELATED`, `UNRELATED`, `UNCERTAIN`만 반환한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 결과다. AI 내부 `SUPPORTING`은 목표에 필요한 보조 학습 활동이며 공개 `relation`에는 별도 값으로 추가하지 않고 `RELATED`로 매핑한다.
 
 ## 분석 작동 상태 (`AnalysisActivityState`)
 
@@ -107,6 +114,9 @@
 - Extension의 일시정지·재개·종료 요청은 Server가 검증한 뒤 상태를 변경한다.
 - Desktop과 Extension은 상태 변경 응답 또는 동기화 이벤트를 받아 화면을 갱신한다.
 - 매초 서버에 시간을 요청하지 않고 `targetDurationMs`와 Server가 확정한 `accumulatedActiveMs`를 이용해 클라이언트에서 남은 시간을 계산한다.
+- `targetDurationMs = null`이면 시간 기준 종료 제안을 만들지 않고 사용자의 명시적 종료를 기다린다.
+- Desktop은 `RUNNING`에서 10초마다 heartbeat를 보내며, 60초 무신호 후보와 3분 자동 종료는 Server가 원자적으로 처리한다.
+- 앱 재실행으로 monotonic 기준점이 사라지면 서버 확정값으로 `AUTO_PAUSED` 복구하고 사용자 재개 뒤 새 기준점을 만든다.
 
 ## 화면 부유형 두더지 피드백 원칙
 

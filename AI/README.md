@@ -47,7 +47,8 @@ Client별 제외·권한 검사
 - 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
 - 목표 보조, 세션 설정, 두 분석 제외 모드와 개인화 휴식의 입력 계약은 기획 반영 초안까지 작성했다.
 - 학교 내부 입력 Pydantic Schema, 전처리→Goal Graph→Hybrid 판정, Qwen3 Ollama HTTP Client, 메모리 TTL/LRU 캐시와 합성 평가 CLI를 구현했다.
-- 공개 FastAPI·Server 응답 계약·실제 GPU 평가·추가 LLM·vLLM 전환은 후속 작업이다.
+- 학교 Qwen API의 실제 벡터 반환과 임시 Adapter 기반 합성 Hybrid 실행을 확인했다. 표준 Client 계약 연결, 공개 FastAPI·Server 연동, GPU 자원 및 독립 정답 정확도 평가는 후속 작업이다.
+- 최신 dev의 MVP 이탈·카메라 정책과 API 문서 동기화는 계약 문서 반영이며 관련 분석 기능의 구현 완료나 팀 최종 승인을 뜻하지 않는다.
 - 원본 화면과 원본 카메라 영상은 AI 입력·저장 대상으로 사용하지 않는다.
 - ColPali는 정식 기본 경로가 아니라 시각 구조 콘텐츠의 실험 경로다.
 

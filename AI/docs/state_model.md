@@ -66,7 +66,7 @@
 | `OBSERVING` | 무관 가능성이 있으나 체류가 짧거나 근거가 부족하다. |
 | `POSSIBLE_DRIFT` | 무관 콘텐츠의 체류 또는 반복 신호가 누적되고 있다. |
 | `DRIFT_RISK` | 충분한 지속·반복 근거로 복귀 제안을 검토할 수 있다. |
-| `RECOVERED` | 관련 자료 복귀 또는 사용자 수정으로 정상 흐름을 회복했다. |
+| `RECOVERED` | 관련 자료 복귀로 정상 흐름을 회복했다. |
 | `UNKNOWN` | 추출 실패, 미관찰 구간 또는 문맥 부족으로 판단할 수 없다. |
 
 기본 상태 전이는 다음과 같다.
@@ -81,13 +81,13 @@ POSSIBLE_DRIFT
 DRIFT_RISK
 
 OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
-   └─ 관련 자료 복귀 또는 사용자 수정 → RECOVERED → LEARNING
+   └─ 관련 자료 복귀 → RECOVERED → LEARNING
 
 추출·모델 실패 또는 미관찰 → UNKNOWN
 제외·휴식·일시정지 → 흐름 판단 중지
 ```
 
-체류 기준은 평가 전까지 실험 설정이다. `5초`, `30초`, `60초` 같은 기획서의 값은 가설이며 확정 상수가 아니다.
+MVP의 화면 이탈 정책은 `analysis_rules.md`의 15초 미만 전환 제외, `GENTLE` 120초 연속, `NORMAL` 최근 10분 내 30초 이상 2회, `ACTIVE` 30초 연속을 따른다. `RELATED`는 현재 이탈 구간을 초기화하고 `UNCERTAIN`은 누적하지 않는다. 구버전 기획서의 5초·60초 화면 이탈값은 적용하지 않는다.
 
 ## 6. 권장 행동
 
@@ -108,14 +108,14 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 
 | 필드 | 값 | 의미 |
 | --- | --- | --- |
-| `sessionStatus` | `ACTIVE` | 타이머와 회차가 진행 중이며 분석 가능 |
-| `sessionStatus` | `PAUSED` | 타이머·학습 기록이 중지됨 |
-| `sessionStatus` | `ENDED` | 회차 종료; 결과를 현재 상태에 적용하지 않음 |
-| `exclusionMode` | `NONE` | 일반 분석 가능 |
-| `exclusionMode` | `ANALYSIS_ONLY` | 콘텐츠 수집·OCR·AI·카메라 분석을 중지하고 타이머는 계속 |
-| `exclusionMode` | `ANALYSIS_AND_TIME` | 분석·수집·학습 기록·타이머를 모두 중지 |
+| `sessionStatus` | `RUNNING` | 타이머가 진행 중이며 분석 조건 확인 |
+| `sessionStatus` | `PAUSED`·`AUTO_PAUSED` | 타이머·분석 중지 |
+| `sessionStatus` | `AWAITING_END_CONFIRMATION`·`ENDING` | 종료 확인·처리 중; 타이머·분석 중지 |
+| `sessionStatus` | `ENDED`·`ABANDONED` | 최종 상태; 결과를 현재 상태에 적용하지 않음 |
+| 공개 `relation` | `EXCLUDED` | 화면 콘텐츠 분석 중지, 타이머 유지. 확인된 제외 상태에서 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용 |
+| 공개 `relation` | `PRIVACY_BLOCKED` | 화면·카메라 분석 중지, 타이머 유지 |
 
-`ANALYSIS_AND_TIME`에서 `resumeRequired=true`이면 사용자 확인 전 자동 재개하지 않는다. 두 제외 모드 모두 콘텐츠 payload와 원문을 AI에 보내지 않는다.
+`EXCLUDED`와 `PRIVACY_BLOCKED`는 공개 `relation` 값이며 `analysisStatus` 값이 아니다. 둘 다 세션 상태를 바꾸지 않고 콘텐츠 payload와 원문을 AI에 보내지 않는다. 제외 상태가 최신인지 확인할 수 없으면 확인될 때까지 화면·카메라 분석을 중지한다. 필수 권한 유실로 `AUTO_PAUSED`가 되면 사용자가 복구 후 명시적으로 재개한다.
 
 ## 8. 조합 불변 조건
 
@@ -124,10 +124,10 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 | `extractionStatus = EXCLUDED` | AI 미호출, `analysisStatus = SKIPPED` |
 | `extractionStatus = FAILED/UNSUPPORTED` | `relevanceLabel = UNAVAILABLE`, `driftState = UNKNOWN`, `recommendedAction = NO_ACTION` |
 | `analysisStatus = ERROR` | 현재 판정 적용 금지, `recommendedAction = NO_ACTION` |
-| `relevanceLabel = RELATED/SUPPORTING` | 기본 `driftState = LEARNING`; 대기 중 복귀 경고 취소 |
+| `relevanceLabel = RELATED/SUPPORTING` | 기본 `driftState = LEARNING`; 현재 이탈 구간·대기 중 카메라 후보 초기화 |
 | `relevanceLabel = UNCERTAIN` | `ASK_USER` 가능, 이탈 확정 금지 |
 | `relevanceLabel = OFF_TASK` 단독 | 최대 `OBSERVING`; 즉시 차단·이탈 알림 금지 |
-| 사용자 관련성 수정 | 캐시·대기 알림 무효화 후 `RECOVERED` 처리 |
+| 화면 관련성 판정 수정·삭제 | MVP 미지원; 목표 문장 확인·수정과 별도 기능 |
 | 목표·탭·회차 버전 불일치 | 결과 폐기, 현재 상태 변경 금지 |
 | 민감정보 2차 검사 실패 | `PRIVACY_BLOCKED`, AI 미호출, 원문 미저장 |
 
@@ -138,12 +138,14 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 | 내부 상태 | 공개 `FocusState` 매핑 |
 | --- | --- |
 | `RELATED` 또는 `SUPPORTING` + `LEARNING/RECOVERED` | `RELATED` |
-| `OFF_TASK` + `DRIFT_RISK` | `UNRELATED` |
-| `UNCERTAIN`, 짧은 `OFF_TASK`, `OBSERVING`, `POSSIBLE_DRIFT` | `UNCERTAIN` |
+| `OFF_TASK` + 충분한 관련성 근거·confidence `≥ 0.75` | `UNRELATED` (`driftState`와 무관) |
+| `UNCERTAIN`, confidence 미달, 의미 판단 보류 | `UNCERTAIN` |
 | 정책 제외 | `EXCLUDED` |
 | 개인정보·권한 차단 또는 분석 입력 차단 | `PRIVACY_BLOCKED` |
 
 내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
+
+`UNRELATED`는 현재 콘텐츠와 목표의 관계다. 15초 미만 전환에서도 충분한 관련성 근거가 있으면 유지하며, 개입 임계값 충족 전에는 `driftState`와 알림만 보류한다. OCR 품질·임베딩 유사도는 최종 `relevanceLabel`·`confidence`를 다시 쓰지 않는다.
 
 ## 10. 응답 적용 전 확인
 

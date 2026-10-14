@@ -29,8 +29,7 @@
 - 콘텐츠 감지·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
 - Issue #11의 DOM·OCR 공통 입력 모델, 텍스트 정제·청크 분할, 품질·개인정보·중복·stale 검증과 단위 테스트를 구현했다.
-- RTX A4000 유사도 비교용 실험 지침과 방식별 결과 양식을 `AI/evaluation/SIMILARITY_EVALUATION_GUIDE.md`에 작성했다. 실제 임베딩·재정렬 평가 결과는 아직 없다.
-- GoalProfile/DOM/OCR 텍스트를 붙여넣어 1~7번 후보를 비교하는 로컬 Streamlit 실험 화면을 `AI/evaluation/similarity_streamlit.py`에 구현했다. 임베딩·재정렬 모델의 실제 성능 측정과 임계값 보정은 아직 없다.
+- RTX A4000 유사도 비교 지침과 기존 방식별 Streamlit 실험 화면은 후보 비교 이력으로 보존했다. 현재 MVP 운영 방식은 Qwen3 4B·FP16 기반 Hybrid 6번이며 기존 실험 화면은 해당 운영 파이프라인이 아니다.
 - 실험 화면의 2번은 GoalProfile 확장 키워드, 4번은 개념별 임베딩 점수, 5번은 GoalProfile 직접·보조 관계 경로를 사용한다. 별도 선수 관계가 없어 5번 Graph는 제한된 실험형이다.
 
 ### 진행 중인 작업
@@ -55,7 +54,7 @@
 - 학교 GPU 성능·독립 정답 세트 정확도 평가 (합성 평가 CLI는 구현됨)
 - 목표·세션·회차·이벤트·집계 Schema 구현
 - FocusSessionAgent 상태 그래프와 제한 도구 구현
-- 피드백 저장·캐시·알림·집계 무효화 구현
+- 화면 판정 피드백 저장·캐시·알림·집계 무효화 구현 (후속 기능, MVP 제외)
 - 비동기 학습 노트 작업과 근거 검증 구현
 - 페이지 이동·체류 시간 기반 학습 흐름 분석
 - MediaPipe 상태값 보조 분석
@@ -68,6 +67,7 @@
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
 - AI 실행 서버·공개 API 연결은 골격 상태다. Issue #11의 순수 전처리·학교 내부 Schema·Graph·Hybrid 판정·Ollama Client·합성 평가 CLI는 구현되어 있다. 실제 Qwen API/벡터 생성과 임시 Adapter를 통한 합성 Hybrid 실행은 확인했지만 GPU 사용률·VRAM·정확도는 검증하지 않았다.
 - Issue #11의 외부 요청 필드와 enum은 Issue #10 및 Client·Server 계약 확정 전까지 제안이다. 순수 모듈은 문단당 최대 800자를 기본값으로 사용하며 다른 길이·품질 수치는 설정 가능한 초기 실험값이다.
+- 최신 dev 문서에는 목표 명확화 경로와 판정값, 시간 기반 이탈 정책 및 카메라 게이트가 반영되어 있다. 이는 문서 계약 상태이며 해당 분석 코드의 구현 완료를 뜻하지 않는다. 팀원 보고 Hybrid 120건 결과도 원자료·결합식·독립 holdout 미확인 상태다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR을 Client별로 분리해 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술

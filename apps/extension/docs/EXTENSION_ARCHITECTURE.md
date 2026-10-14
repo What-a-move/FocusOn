@@ -73,8 +73,8 @@ apps/extension/
 ## 상태 원칙
 
 - Popup이 닫혀도 학습 세션 기준 상태는 Server에 남는다.
-- Service Worker가 종료되어도 현재 Navigation 식별값은 `chrome.storage.session`에서 복구한다.
-- 제외 Domain은 `chrome.storage.local`에 저장하고 Extension의 신뢰된 Context에서만 접근한다.
+- Service Worker가 종료되어도 현재 Navigation 식별값은 `chrome.storage.session`에서 복구한다. `chrome.storage.session`과 `chrome.storage.local` 모두 `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })`를 적용해 Content Script의 직접 접근을 차단한다.
+- 제외 Domain은 Server의 사용자별 목록이 정본이다. `chrome.storage.local`에는 최신 정규화 host 목록만 캐시한다. 목록을 확인할 수 없으면 콘텐츠 수집을 보류한다.
 - TanStack Query는 Popup의 Server 상태 UI에 사용하고 Service Worker 생존 수단으로 사용하지 않는다.
 - Content Script는 Extension의 인증 Token과 전체 설정을 보관하지 않는다.
 
@@ -82,7 +82,7 @@ apps/extension/
 
 - Page 본문은 명시된 기능 범위에서 최소한으로 수집한다.
 - 제외 Domain에서는 본문 수집과 전송을 즉시 중지하고 Server에 제외 상태만 전달한다.
-- Server를 통해 제외 상태를 받은 Desktop은 화면·OCR·AI·Camera 분석을 모두 중지한다.
+- Server를 통해 확인된 `EXCLUDED` 상태에서 Desktop은 화면·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. 별도 카메라 동의와 권한이 유효하면 로컬 카메라 분석만 허용한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 모두 중지한다.
 - 비밀번호, 결제 정보, 개인 메시지를 기본 수집하지 않는다.
 - 외부 Page에서 Extension 내부 Message를 호출할 수 있게 열지 않는다.
 - Remote Hosted Code를 사용하지 않는다.
@@ -92,7 +92,7 @@ apps/extension/
 - 자동 추적: 활성 학습 세션 중 현재 활성 Tab만 추적
 - 이동 감지: `tabs`와 `webNavigation`을 역할을 나눠 함께 사용
 - 15초 체류: Content Script Timer와 Service Worker 재검증 조합
-- 제외 Domain: `chrome.storage.local`
+- 제외 Domain: Server `analysis_excluded_domains` 정본, `chrome.storage.local` 캐시
 - 세션·연결 상태 기준: Server
 - 지원 최소 Version: Chrome 120
 - HTTP Page: 분석 지원. FocusOn Server 통신은 HTTPS만 사용

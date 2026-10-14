@@ -26,7 +26,7 @@
 1. Host 권한 승인 방식을 확정하고 Manifest 변경 범위를 PLAN에 기록한다.
 2. `tabs.onActivated`와 `webNavigation.onCommitted` Listener를 구현한다.
 3. Navigation ID와 `chrome.storage.session` 기반 중복 제거를 구현한다.
-4. 제외 Domain의 `chrome.storage.local` 저장과 전체 분석 중지 신호를 구현한다.
+4. Server 제외 도메인 GET/PUT과 `chrome.storage.local` 캐시 동기화, 화면 콘텐츠 분석 중지 신호를 구현한다. 목록 확인 전에는 콘텐츠 수집을 보류한다.
 5. Content Script 15초 Timer와 확정 Message를 구현한다.
 6. Server 세션 확인과 분석 요청을 연결한다.
 7. Chrome 개발자 모드에서 정상·예외 흐름을 확인한다.

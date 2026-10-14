@@ -14,7 +14,7 @@
 | 권한 | 예상 목적 | 현재 상태 | 검토 사항 |
 | --- | --- | --- | --- |
 | `tabs` | 활성 Tab 전환과 URL·Title 확인 | 사용 확정 | `tabs.onActivated` 중심으로 사용 |
-| `storage` | 제외 Domain과 Worker 복구 상태 | 사용 확정 | 제외 Domain은 local, 임시 Navigation은 session |
+| `storage` | Server 제외 Domain의 로컬 캐시와 Worker 복구 상태 | 사용 확정 | 제외 Domain 캐시는 local, 임시 Navigation은 session |
 | `webNavigation` | 최상위 Frame의 Page 이동 확인 | 사용 확정 | `onCommitted` 중심으로 사용 |
 | `https://*/*` | HTTPS Page Content Script | 범위 검토 중 | 필수 또는 Optional 승인 방식 결정 필요 |
 | `http://*/*` | 오래된 HTTP 학습 Page 분석 | Scheme 지원 확정 | 필수 또는 Optional 승인 방식 결정 필요 |

@@ -34,8 +34,9 @@
 - Server의 AI 요청·결과 저장 범위 확인
 - 원본 화면·카메라 영상 미저장 원칙 확인
 - Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로, AI 서버의 원본 이미지 비수신 경계 확인
+- 공개 관련성 경로 `/api/v1/sessions/{sessionId}/analysis-runs`와 내부 AI 경계 확인; `/api/v1/feedback`은 MVP에 없는 후속 계약으로 유지
 - Chrome Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로를 분리 확인
-- 목표 보조 6개 `clarityStatus`, 추천·질문·직접 입력 장애 대안 확인
+- 목표 보조 4개 `clarityStatus`, 추천·질문·직접 입력 장애 대안 확인
 - `ANALYSIS_ONLY`와 `ANALYSIS_AND_TIME`, `sessionStatus`, `resumeRequired` 계약 확인
 - AI 내부 라벨과 제품 표시 라벨 매핑 확인
 - 개인화 휴식의 최근 7일 규칙과 카메라 비필수 경로 확인
@@ -45,19 +46,19 @@
 
 ## 예상 작업 순서
 
-1. Issue #10의 확정 JSON 예시와 공유 enum을 확인한다.
-2. 외부 요청 Schema에서 내부 `PreprocessingRequest`로 변환하는 Adapter를 구현한다.
-3. 알 수 없는 필드·enum·잘못된 식별자와 범위를 안전하게 거부한다.
-4. Adapter가 원문 값을 오류 메시지나 로그에 포함하지 않는지 확인한다.
-5. Issue #2의 API 경계에 연결하고 계약 테스트를 실행한다.
+1. 루트 `docs/API_CONTRACT.md`와 현재 sessions 분석 run 경로를 기준으로 확정 필드·상태를 대조한다.
+2. 학교 검증 FastAPI `/health` 메타데이터와 `/api/embed`를 기존 Embedding Client가 안전하게 검증·호출하도록 연결한다.
+3. 내부 Schema·Adapter의 필수값과 외부 계약 간 불일치를 안전하게 거부하고 원문 비노출을 확인한다.
+4. 임시 Adapter의 실제 호출을 표준 Client·평가 CLI 회귀 테스트로 연결한다.
+5. 독립 검수 정답 세트와 학교 GPU 측정값을 준비해 개발·평가 split을 분리한 real 평가를 수행한다.
 
 ### Server·Client 공통 계약 작업
 
 
-1. `/api/v1/analyze/relevance`, `/api/v1/feedback`, `/api/v1/goals/profile`의 AI 경계를 Server·Client 담당자와 확정한다.
+1. 공개 관련성 경로 `/api/v1/sessions/{sessionId}/analysis-runs`와 내부 AI 경계를 Server·Client 담당자와 확정한다. `/api/v1/feedback`은 MVP에 없는 후속 계약으로 유지한다.
 2. AI 내부 라벨과 제품 표시 라벨, 기존 `FocusState` 호환 전략을 공유 타입 담당자와 확정한다.
-3. `goalId`, `sessionId`, `runId`, `eventId`, `navigationId`와 `sessionStatus`, `exclusionMode`, `resumeRequired`의 필수 범위를 확정한다.
-4. 목표 보조 6개 상태와 AI 장애 시 직접 목표 시작 경로를 확정한다.
+3. `goalId`, `sessionId`, `eventId`, `navigationId`와 `sessionStatus`, `analysisStatus`의 필수 범위를 확인한다.
+4. 목표 보조 `clarityStatus` 4개 값, 질문 최대 2회, 복수 목표 단일 선택 및 AI 장애 시 직접 목표 확정 경로를 확인한다.
 5. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.
 6. Health Check, 공통 성공·실패 envelope, Schema 검증 테스트를 구현한다.
 7. 로그에 원문·비밀 값이 남지 않는지 검사한다.

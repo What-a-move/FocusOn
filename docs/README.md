@@ -7,6 +7,7 @@ FocusOn은 macOS 데스크톱 앱과 Chrome Extension을 연결해 사용자의 
 ```text
 docs/
 ├── README.md
+├── PROJECT_CONTEXT.md
 ├── WORKFLOW.md
 ├── DOCUMENTATION_RULES.md
 ├── ARCHITECTURE.md
@@ -21,11 +22,12 @@ docs/
 
 ## 먼저 읽을 문서
 
-1. `WORKFLOW.md` - 작업 시작부터 PR까지의 전체 흐름
-2. `BRANCH_STRATEGY.md` - Branch 이름과 작업 분리 규칙
-3. `COMMIT_CONVENTION.md` - Commit 메시지 규칙
-4. `DOCUMENTATION_RULES.md` - 문서 작성 위치와 갱신 시점
-5. Frontend 작업이면 `apps/docs/README.md`와 작업 대상 앱의 문서, Server·AI 작업이면 해당 영역의 `docs/README.md`, `docs/CONTEXT.md`, `docs/NEXT_TASK.md`, `docs/DECISION_RECORD.md`
+1. `PROJECT_CONTEXT.md` - 새 채팅에서 프로젝트 목적·MVP·정본·현재 상태를 파악하는 시작점
+2. `WORKFLOW.md` - 작업 시작부터 PR까지의 전체 흐름
+3. `BRANCH_STRATEGY.md` - Branch 이름과 작업 분리 규칙
+4. `COMMIT_CONVENTION.md` - Commit 메시지 규칙
+5. `DOCUMENTATION_RULES.md` - 문서 작성 위치와 갱신 시점
+6. Frontend 작업이면 `apps/docs/README.md`와 작업 대상 앱의 문서, Server·AI 작업이면 해당 영역의 `docs/README.md`, `docs/CONTEXT.md`, `docs/NEXT_TASK.md`, `docs/DECISION_RECORD.md`
 
 ## 문서 운영 원칙
 

@@ -56,7 +56,10 @@ checkstyle {
 }
 
 tasks.withType(Checkstyle).configureEach {
-    config = resources.text.fromArchiveEntry(project.configurations.checkstyle.singleFile, 'google_checks.xml')
+    def checkstyleJar = project.configurations.checkstyle.files.find {
+        it.name.startsWith('checkstyle-')
+    }
+    config = resources.text.fromArchiveEntry(checkstyleJar, 'google_checks.xml')
     reports {
         xml.required = false
         html.required = true

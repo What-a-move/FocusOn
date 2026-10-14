@@ -32,7 +32,7 @@
 - Manifest Permission과 Host Permission은 필요한 범위만 선언한다.
 - Content Script는 인증 정보와 Extension 내부 Store에 직접 접근하지 않는다.
 - Message의 발신자와 데이터 모양을 확인한다.
-- 제외 Domain에서는 Page 본문 수집과 전송을 중지하고 Desktop의 화면·OCR·AI·Camera 분석도 중지한다.
+- 제외 Domain에서는 Page 본문 수집·전송과 Desktop의 화면·OCR·AI 콘텐츠 분석을 중지한다. 타이머와 동의된 로컬 Camera 분석은 유지하며 `PRIVACY_BLOCKED`에서는 Camera 분석도 중지한다.
 - `http://*/*`, `https://*/*` 범위는 필요하지만 필수 또는 Optional Host Permission으로 요청할지는 사용자와 확정한다.
 
 구체적인 권한과 Message 검증은 Extension 전용 문서에서 확정한다.
