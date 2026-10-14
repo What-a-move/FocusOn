@@ -29,7 +29,7 @@
 - 콘텐츠 감지·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
 - Issue #16에서 PR #15의 최신 문서를 기준으로 MVP 이탈·카메라 정책, OCR `text`·`ocr` 입력, Hybrid 120건 팀원 보고를 문서에 반영했다. 이 문서화는 관련성·카메라 기능 구현 또는 팀의 최종 승인이 아니다.
-- Issue #29의 별도 Branch에서 MVP 학습 정리용 순수 Python 검증 코어와 Fake 생성기 단위 테스트를 추가했다. 최종 `RELATED` 근거·동의·중복·길이·출력 근거·민감값을 방어하며 실제 모델, FastAPI, Server Queue, Desktop UI와 연결되지 않았다.
+- Issue #29의 별도 Branch에서 선행 학습 정리 코드·테스트·Prompt를 복구 가능한 새 커밋으로 되돌렸다. 현재 실제 모델, FastAPI, Server Queue, Desktop UI와 연결되지 않았다.
 
 ### 진행 중인 작업
 
@@ -55,7 +55,7 @@
 - 목표·세션·회차·이벤트·집계 Schema 구현
 - FocusSessionAgent 상태 그래프와 제한 도구 구현
 - 화면 판정 피드백 저장·캐시·알림·집계 무효화 구현 (후속 기능, MVP 제외)
-- 비동기 학습 정리 작업과 Server 영속화·소유권 검증 구현. AI 쪽 독립 근거·출력 검증 코어만 #29 Branch에서 시작했다.
+- 비동기 학습 정리 작업과 Server 영속화·소유권 검증 구현. #29 Branch의 선행 AI 검증 코어는 초기화했다.
 - 페이지 이동·체류 시간 기반 학습 흐름 분석
 - MediaPipe 상태값 보조 분석
 - YouTube 자막·PDF 추출 텍스트 연동
@@ -65,7 +65,7 @@
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
 - Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
-- AI의 목표·관련성 `src/`, `tests/`, `evaluation/` 파일은 `dev` 기준 골격이다. #29 Branch에는 학습 정리 검증 코어·테스트만 추가되며 제품 계약 전체가 구현된 것은 아니다.
+- AI의 목표·관련성 `src/`, `tests/`, `evaluation/` 파일은 `dev` 기준 골격이다. #29 Branch의 학습 정리 AI 코드는 초기화되었으며 제품 계약은 구현되지 않았다.
 - 목표 보조 코드는 Issue #12의 별도 미병합 Branch에 있다. 이 `dev` 기반 문서 Branch는 그 코드 변경을 포함하지 않는다. 목표 2~40자·질문 최대 2회 등 문서 계약은 #12 통합 전 코드·테스트와 맞춰야 한다.
 - 팀원 보고 Hybrid 99/120, Macro F1 0.732의 원자료·결합식·독립 holdout은 확인되지 않았다. 현재 `dev`에는 Hybrid 관련성 구현이 없다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR을 Client별로 분리해 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.

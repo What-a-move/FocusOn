@@ -12,7 +12,7 @@
 ## 병행 진행: 학습 정리 Issue #29
 
 - Branch: `feat/29-ai-learning-summary` (최신 `origin/dev`에서 분리; #12의 미커밋 변경과 격리)
-- 완료된 독립 단위: Fake 생성기 기반 학습 정리 입력 선별·중복 제거·2개 근거 최소값·출력 Schema/근거/PII/길이 검증
+- 현재 상태: 선행 AI 코드·테스트·Prompt는 복구 가능한 커밋으로 되돌렸다. #29 PLAN을 새 흐름에 맞게 정리하고, Desktop·Streamlit의 분리된 가짜 데이터 시연부터 만든다.
 - 다음 단계: Server·AI 내부 요청 Schema와 서비스 인증을 담당자와 확정한 뒤 FastAPI 어댑터를 연결한다. Server 세션 `ENDED`/소유권/동의·30초 입력 마감·단일 Worker·20초 Timeout·1분/5분 재시도·보존/삭제를 구현하고 Desktop 조회 UI를 연결한다.
 - 선행: #11 최종 관련성 결과, Server 세션/인증, Extension/Desktop 제외·추출 경로. Notion 기획은 `REVIEW`이며 미합의 API/ERD를 확정으로 취급하지 않는다.
 - 후속 모델 선택: 외부 제공자·지역·보존·학습 이용·사용자 고지 승인 전 제품 데이터를 외부 모델에 보내지 않는다.

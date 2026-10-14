@@ -66,7 +66,7 @@ Extension / macOS 네이티브 모듈
 | 목표 명확화 | `POST /api/v1/goals/clarify` | `POST /internal/v1/goals/clarify` | 공개 경로는 Notion 확정, 내부 경로 제안 |
 | 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
 | 사용자 관련성 판정 수정·무효화 | MVP 공개 경로 없음 | Server 소유권 검증 후 후속 검토 | P1 이후 제안; Notion API 계약 변경 전 구현 금지 |
-| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안·미구현; Issue #29의 독립 검증 코어만 구현 중. MVP 응답은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용 |
+| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안·미구현; Issue #29의 선행 코드는 초기화됨. MVP 응답은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용 |
 
 기존 `/api/v1/analyze/relevance`는 레거시 경로 후보로만 기록하며 최신 `/api/v1/sessions/{sessionId}/analysis-runs`와 동시에 최종 경로로 구현하지 않는다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
