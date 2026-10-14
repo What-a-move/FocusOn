@@ -23,6 +23,7 @@ class ExtractionStatus(str, Enum):
 
 class PassageKind(str, Enum):
     TITLE = "TITLE"
+    HEADING = "HEADING"
     BODY = "BODY"
     CODE = "CODE"
     TABLE = "TABLE"
@@ -196,6 +197,8 @@ class QualityMetrics:
     character_count: int
     broken_character_ratio: float
     input_quality_score: float
+    final_quality_score: float = 0.0
+    truncated: bool = False
 
 
 @dataclass(frozen=True, slots=True)

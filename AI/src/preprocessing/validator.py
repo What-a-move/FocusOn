@@ -61,8 +61,15 @@ def validate_and_preprocess(
         )
 
     parsed = parse_content(request, settings)
+    if any(contains_sensitive_data(passage.text) for passage in parsed.passages):
+        return _rejected(PreprocessingStatus.BLOCKED, RejectionReason.PRIVACY_BLOCKED)
     broken_ratio = _broken_character_ratio(_raw_text(request))
     character_count = sum(len(passage.text) for passage in parsed.passages)
+    # Experimental extraction quality, never a relevance/confidence score.
+    removed = parsed.removed_duplicate_count + parsed.removed_ui_fragment_count
+    retained = len(parsed.passages)
+    usable_ratio = retained / max(1, retained + removed)
+    final_quality = float(request.quality_score) * (1 - broken_ratio) * usable_ratio
     quality = QualityMetrics(
         original_passage_count=parsed.original_passage_count,
         cleaned_passage_count=len(parsed.passages),
@@ -71,6 +78,8 @@ def validate_and_preprocess(
         character_count=character_count,
         broken_character_ratio=broken_ratio,
         input_quality_score=float(request.quality_score),
+        final_quality_score=final_quality,
+        truncated=parsed.truncated,
     )
 
     quality_reasons = _quality_reasons(request, parsed.passages, quality, settings)
@@ -78,7 +87,6 @@ def validate_and_preprocess(
         return PreprocessingResult(
             status=PreprocessingStatus.LOW_QUALITY,
             should_analyze=False,
-            passages=parsed.passages,
             reasons=quality_reasons,
             quality=quality,
         )
@@ -110,7 +118,13 @@ def validate_and_preprocess(
 def contains_sensitive_data(text: str) -> bool:
     if not text:
         return False
-    text = unicodedata.normalize("NFKC", html.unescape(text))
+    for _ in range(3):
+        decoded = html.unescape(text)
+        if decoded == text:
+            break
+        text = decoded
+    text = unicodedata.normalize("NFKC", text)
+    text = "".join(character for character in text if unicodedata.category(character) != "Cf")
     if any(
         pattern.search(text)
         for pattern in (_BEARER_RE, _JWT_RE, _API_KEY_RE, _EMAIL_RE, _PHONE_RE)
@@ -159,7 +173,7 @@ def _quality_reasons(
         and not has_short_form_content
     ):
         reasons.append(RejectionReason.TOO_SHORT)
-    if float(request.quality_score) < config.min_quality_score:
+    if quality.final_quality_score < config.min_quality_score:
         reasons.append(RejectionReason.LOW_CONFIDENCE)
     if quality.broken_character_ratio > config.max_broken_character_ratio:
         reasons.append(RejectionReason.BROKEN_CONTENT)

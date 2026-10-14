@@ -31,8 +31,12 @@ def clean_text(
     kind: PassageKind,
     ui_fragments: FrozenSet[str],
 ) -> CleanedText:
-    normalized = html.unescape(_normalize_characters(text))
-    if kind in {PassageKind.CODE, PassageKind.TABLE}:
+    normalized = _normalize_characters(text)
+    if kind is PassageKind.CODE:
+        # Source text can intentionally contain HTML entities inside literals.
+        return CleanedText(text=_clean_structured_text(normalized))
+    normalized = html.unescape(normalized)
+    if kind is PassageKind.TABLE:
         return CleanedText(text=_clean_structured_text(normalized))
 
     normalized = _HTML_BLOCK_RE.sub("\n", normalized)

@@ -23,7 +23,14 @@ class TextCleanerTest(unittest.TestCase):
             frozenset(),
         )
 
-        self.assertEqual(result.text, "if value < limit:\n    run()\n\n    finish()")
+        self.assertEqual(result.text, "if value &lt; limit:\n    run()\n\n    finish()")
+
+    def test_preserves_html_entities_inside_code_literals(self) -> None:
+        source = 'const escaped = "&lt; &amp; &#64;";\nconst actual = "< & @";'
+
+        result = clean_text(source, PassageKind.CODE, frozenset())
+
+        self.assertEqual(result.text, source)
 
     def test_chunks_text_with_hard_size_limit(self) -> None:
         text = " ".join(f"token-{index}" for index in range(100))

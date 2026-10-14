@@ -46,15 +46,19 @@ Client별 제외·권한 검사
 - Issue #11의 DOM·OCR 입력 검증·전처리 순수 모듈과 단위 테스트를 구현했다.
 - 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
 - 목표 보조, 세션 설정, 두 분석 제외 모드와 개인화 휴식의 입력 계약은 기획 반영 초안까지 작성했다.
-- FastAPI, Pydantic, 임베딩 모델, LLM 공급자, 캐시 저장소는 구현 전 검토·확정한다.
+- 학교 내부 입력 Pydantic Schema, 전처리→Goal Graph→Hybrid 판정, Qwen3 Ollama HTTP Client, 메모리 TTL/LRU 캐시와 합성 평가 CLI를 구현했다.
+- 공개 FastAPI·Server 응답 계약·실제 GPU 평가·추가 LLM·vLLM 전환은 후속 작업이다.
 - 원본 화면과 원본 카메라 영상은 AI 입력·저장 대상으로 사용하지 않는다.
 - ColPali는 정식 기본 경로가 아니라 시각 구조 콘텐츠의 실험 경로다.
 
-전처리 테스트는 `AI/`에서 다음 명령으로 실행한다.
+저장소 루트에서 다음 명령으로 실행한다. Python 3.11.6 기준이며 기존 가상환경에 `AI/requirements.txt` 의존성이 필요하다.
 
 ```bash
-python3 -m unittest discover -s tests -v
+PYTHONPATH=AI:. python3 -m pytest AI/tests -q --ignore=AI/tests/langsmith_test.py
+python3 -m AI.evaluation.relevance_eval --mode fake --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
 ```
+
+`langsmith_test.py`는 기존 로컬 외부 호출 스크립트로 회귀 테스트에 포함하지 않는다. fake 평가는 합성 벡터의 로직 검사이며 Qwen 정확도나 GPU 성능을 측정하지 않는다. 실제 학교 연결은 [Ollama 설치·실행 지침](docs/features/school-ollama-embedding-SETUP.md)을 따른다.
 
 ## 문서
 

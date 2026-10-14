@@ -1,0 +1,18 @@
+{
+  "version": "school-experimental-v1",
+  "status": "uncalibrated; development tuning and human review pending",
+  "instruction": "Retrieve passages useful for the given learning goal and concept.",
+  "hybrid": {
+    "keyword_weight": 0.35,
+    "vector_weight": 0.65,
+    "direct_threshold": 0.72,
+    "prerequisite_threshold": 0.76,
+    "supporting_threshold": 0.76,
+    "min_cosine": 0.55,
+    "related_coverage": 0.6,
+    "unrelated_coverage": 0.7,
+    "unrelated_threshold": 0.8
+  },
+  "cache_capacity": 128,
+  "cache_ttl_seconds": 300.0
+}

@@ -21,6 +21,7 @@ class ParsedContent:
     original_passage_count: int
     removed_duplicate_count: int
     removed_ui_fragment_count: int
+    truncated: bool = False
 
 
 def parse_content(
@@ -34,8 +35,9 @@ def parse_content(
     removed_duplicates = 0
     removed_ui_fragments = 0
     total_chars = 0
+    truncated = False
 
-    for raw_passage in raw_passages:
+    for raw_index, raw_passage in enumerate(raw_passages):
         cleaned = clean_text(raw_passage.text, raw_passage.kind, settings.ui_fragments)
         removed_duplicates += cleaned.removed_duplicate_count
         removed_ui_fragments += cleaned.removed_ui_fragment_count
@@ -56,11 +58,15 @@ def parse_content(
         )
         for chunk in chunks:
             if len(cleaned_passages) >= settings.max_passages:
+                truncated = True
                 break
             remaining = settings.max_total_chars - total_chars
             if remaining <= 0:
+                truncated = True
                 break
             bounded_chunk = chunk[:remaining].rstrip()
+            if len(chunk) > remaining:
+                truncated = True
             if not bounded_chunk:
                 continue
             cleaned_passages.append(
@@ -77,6 +83,8 @@ def parse_content(
             len(cleaned_passages) >= settings.max_passages
             or total_chars >= settings.max_total_chars
         ):
+            if raw_index < len(raw_passages) - 1:
+                truncated = True
             break
 
     return ParsedContent(
@@ -84,6 +92,7 @@ def parse_content(
         original_passage_count=len(raw_passages),
         removed_duplicate_count=removed_duplicates,
         removed_ui_fragment_count=removed_ui_fragments,
+        truncated=truncated,
     )
 
 

@@ -422,17 +422,54 @@ Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있�
 - 영향: 학교 PLAN, 이슈 #11/#14, Branch·CONTEXT·NEXT_TASK·문서 안내 링크.
 - 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11), [#14 통합 이력](https://github.com/What-a-move/FocusOn/issues/14)
 
+## 결정 022 - 학교 Ollama 초기 테스트와 Mac 개발 분리
+
+- 결정일: 2026-10-07
+- 담당 영역: AI / 이재빈
+- 상태: 확정 — 사용자 요청에 따른 개발·테스트 환경 방향. 실제 장비 검증·배포 완료를 뜻하지 않는다.
+- 근거: 최신 이재빈 관련성 노션 4.1절과 학교 PC 설치·테스트 지침서 작성 요청.
+- 결정 내용: Mac에서 검증·전처리·Graph·Hybrid 판정을 개발하고 학교 Windows GPU PC에서는 Ollama로 Qwen3 Embedding 4B·FP16 임베딩 API를 먼저 테스트한다. 추후 WSL2·Linux·vLLM으로 전환한다.
+- 기존 결정과의 관계: 결정 020의 모델·정밀도·Hybrid 방식을 유지하며 vLLM 운영 전 초기 Ollama 테스트 단계를 추가한다. 최종 출력 계약과 임계값은 이번 작업에서 변경하지 않는다.
+- 검증 경계: 합성 입력으로 벡터·GPU 사용·학교 로컬 warm 측정·Mac 왕복을 구분한다. 실제 설치와 Mac 접근은 학교 PC에서 검증해야 한다.
+- 영향: 학교 SETUP 지침, CONTEXT, NEXT_TASK, 기능 문서 안내. 원문·이미지·비밀 정보·모델 가중치는 저장소에 올리지 않는다.
+- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
+
+## 결정 023 - 통합 #11 학교 내부 실행 경계와 실험 정책
+
+- 결정일: 2026-10-07
+- 상태: 구현 선택 기록. 숫자 정책·Graph 템플릿·공개 API의 팀 확정을 뜻하지 않는다.
+- 결정 내용: 결정 022에 따라 Ollama 초기 Client와 내부 전처리→Graph→Hybrid 파이프라인·합성 평가 CLI를 먼저 구현한다. 입력 콘텐츠·확정 목표·Server 검증 문맥을 분리하며 공개 API 경로·envelope·confidence는 새로 정의하지 않는다.
+- 품질 산식: 원천 품질 × (1 - 깨진 문자 비율) × 정제 문단 수 / (정제 문단 수 + 중복 제거 수 + UI 제거 수). DOM 원천 품질은 1, OCR은 capture 성공 시 인식 confidence다. Client qualityScore는 최종 품질로 신뢰하지 않는다. 이 산식은 단위 기반 초기 실험 정책이다.
+- Hybrid: 키워드는 동의어 2개 이상 일치 시 1, 1개면 0.5, 없으면 0. cosine은 [-1,1]에서 max(0,cosine)로 변환해 결합한다. 역할별 임계값·본문 커버리지·결합 비율은 `relevance_calibration.json`에 기록한 미보정 실험값이다.
+- 캐시: 목표군·사용자·run·모델 digest·Graph·정책·전처리/추출기·instruction·설정과 정제 해시를 분리한 메모리 TTL/LRU. 기본 128개/300초는 실험 설정이며 영속 멱등 처리는 Server 책임이다.
+- 안전: 제목만 있거나 본문을 입력 상한으로 잘라 대표성을 확인할 수 없으면 모델 미호출·UNCERTAIN. 응답 직전 최신 문맥을 다시 조회하고 stale/제외 결과에는 근거를 남기지 않는다.
+- 모델 확인: `qwen3-embedding:4b-fp16` 이름·정확한 manifest digest·F16·embedding capability·2560차원을 확인한다. real 모드의 digest가 없거나 모델/연결이 틀리면 fake로 대체하지 않는다. GPU 실제 사용·메모리·속도는 학교에서 별도 확인한다.
+- 영향받는 파일: `AI/src/`, `AI/evaluation/relevance_*`, 테스트·CONTEXT·NEXT_TASK·PLAN·REPORT.
+- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
+
+## 결정 024 - 기존 제목·본문 입력의 누락 정보 반영
+
+- 결정일: 2026-10-11
+- 상태: 사용자 요청에 따른 구현 선택 기록. 새 공개 계약 또는 점수 정확도 확정을 뜻하지 않는다.
+- 근거: 김성현 OCR 입력 계약의 `pageTitle`·`appName`·`urlHost`·`text`, 이재빈 관련성 계획의 제목·대표 본문·충돌 검사.
+- 내용: 제목과 명시된 Markdown 소제목을 기존 Hybrid 방식으로 비교한다. 관련·무관 통과 근거가 함께 있으면 보류하며 제목·소제목은 본문 커버리지에서 제외한다. 본문 근거로 판정된 경우 같은 방향의 제목·소제목 ID를 함께 반환한다.
+- 전처리: 내부 `HEADING` 종류로 소제목을 구분하고 코드 fence의 언어·설명·코드 문자열을 보존한다. 공개 입력 컬럼을 추가하거나 제공되지 않은 정보를 생성하지 않는다.
+- 메타데이터: 앱·도메인은 개인정보 검사와 결과 캐시 구분에 사용한다. 임의 점수 가중치를 추가하지 않는다.
+- 버전: `school-text-v2`, `school-hybrid-v2`. 판정 버전을 캐시 범위에 포함해 구 정책 결과를 재사용하지 않는다.
+- 검증 경계: 기존 결합 비율·임계값은 미보정 실험값이다. 제목/본문 충돌 정책과 코드 입력 변경은 학교의 실제 Qwen 평가가 필요하다.
+- 영향: 통합 #11 전처리·Hybrid·파이프라인·관련 테스트와 PLAN/REPORT/CONTEXT/NEXT_TASK.
+
+## 결정 025 - 학교 모델 연결을 Tailscale 사설 HTTPS로 진행
+
+- 결정일: 2026-10-13
+- 상태: 사용자 선택에 따른 연결·테스트 방향. 실제 설치·로그인·모델 연결 완료를 뜻하지 않는다.
+- 근거: 학교 LAN HTTP 연결 timeout 진단 이후 사용자의 Tailscale 선택.
+- 내용: Mac과 학교 Windows PC를 같은 tailnet에 연결한다. 학교의 기존 로컬 FastAPI `127.0.0.1:8000`을 Tailscale Serve로 사설 HTTPS에 연결하고 `/health`·합성 `/api/embed` 순서로 확인한다.
+- 경계: HTTPS 인증서·tailnet 로그인과 접근 규칙을 사용한다. 기존 LAN 방화벽 허용 범위를 임의로 넓히지 않는다. 원문·토큰·키는 문서나 로그에 남기지 않는다.
+- Client: 학교 FastAPI는 두 경로만 제공하므로 기존 Ollama metadata 검증 경로와는 다르다. 실제 health 응답을 받은 뒤 필요한 Client 연동을 검토하며 TLS·모델 리비전·벡터 검증을 조용히 제거하지 않는다.
+- 준비: Mac 공식 설치 패키지 다운로드·체크섬·개발자 서명·Apple 공증을 확인했다. 설치 화면의 Computer Use 권한은 대기 상태이며 계정 로그인·VPN 허용·학교 Serve 주소는 아직 확보하지 못했다.
+- 영향: 학교 SETUP·CONTEXT·NEXT_TASK. Hybrid 산식·입력/출력 컬럼·더미 데이터는 이번 연결 선택으로 변경하지 않는다.
+
 ## 새 결정 기록
 
-다음 결정은 `결정 022`부터 추가한다.
-
-### 결정 022
-
-- 결정일:
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 고려한 대안:
-- 영향받는 파일:
-- 관련 Issue·PR:
+다음 결정은 `결정 026`부터 추가한다.
