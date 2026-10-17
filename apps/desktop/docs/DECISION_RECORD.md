@@ -188,3 +188,30 @@ Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막�
 - `docs/API_CONTRACT.md`
 - `apps/desktop/docs/DECISION_RECORD.md`
 - Notion 로그인·기능 카탈로그·Figma 화면 가이드
+
+## 결정 009 - Google 로그인 callback과 인증 IPC 경계
+
+- 결정일: 2026-10-17
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- Google 인증은 macOS 기본 시스템 브라우저에서 진행하고, Desktop Main이 임시 loopback listener(`http://127.0.0.1:<임시 포트>`)로 authorization code를 받는다.
+- Main이 OAuth `state`와 PKCE verifier를 생성·검증하고, code 교환과 토큰 저장을 담당한다. 앱 내부 BrowserView/WebView와 커스텀 URI scheme callback은 사용하지 않는다.
+- Renderer는 Preload가 제공하는 이름 있는 인증 함수만 호출한다. 범용 IPC Channel 전송 API는 노출하지 않는다.
+- 로그인 상태 조회·로그인 시작·로그아웃은 `auth:session:get`, `auth:google-login:start`, `auth:logout`을 사용한다. 로그아웃은 기존 `POST /api/v1/auth/logout` 계약을 호출한다.
+- 로그인 시작은 요청·응답 IPC로 접수하고, 완료·취소·실패·인증 상태 변화는 `auth:session:changed` Event와 `auth:session:get` Snapshot으로 전달한다.
+- Renderer에는 화면에 필요한 인증 상태, 사용자 요약, `onboardingStatus`만 전달한다. Token과 OAuth 임시 비밀값은 전달하지 않는다.
+- Access Token과 인증된 서버 요청은 Main에서 관리한다. Refresh Token은 macOS Keychain에 저장한다.
+
+### 결정 이유
+
+설치형 앱의 Google 인증을 기본 브라우저로 분리하고, Node.js·macOS 권한을 가진 Main과 웹 UI인 Renderer 사이에 최소 권한 경계를 유지하기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/docs/IPC_CONTRACT.md`
+- `apps/desktop/docs/ELECTRON_ARCHITECTURE.md`
+- `apps/desktop/docs/features/login-onboarding-auth-flow-PLAN.md`

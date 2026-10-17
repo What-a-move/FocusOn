@@ -26,10 +26,11 @@
 - Main·Preload TypeScript Build, Next.js Static Export, `app://` Production Loading 방향을 확정했다.
 - Single Instance, Main Window 닫기, Settings Route, Floating Window 위치·Drag 기준을 확정했다.
 - IPC Channel·오류 형식과 macOS 권한 요청 UX를 확정했다.
+- Google OAuth 기본 브라우저·loopback callback 방식과 로그인용 Main·Preload IPC 계약을 확정했다. 실제 Main·Preload 및 인증 코드는 아직 구현하지 않았다.
 
 ### 진행 중인 작업
 
-- 확정한 Electron Main·Preload·Renderer 구조를 실제 코드와 실행 Script로 구현해야 한다.
+- 확정한 Electron Main·Preload·Renderer 구조와 로그인 IPC를 실제 코드와 실행 Script로 구현해야 한다.
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
 - 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.

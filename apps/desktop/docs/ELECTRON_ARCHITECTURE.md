@@ -20,8 +20,8 @@ Next.js Renderer
 
 | 영역 | 담당 | 금지 |
 | --- | --- | --- |
-| Main | 앱 생명주기, Window, Menu, 권한, 활성 앱, 화면 캡처 | React UI 상태 직접 관리 |
-| Preload | 허용된 IPC 함수를 좁은 API로 노출 | `ipcRenderer` 전체 노출 |
+| Main | 앱 생명주기, Window, Menu, 권한, 활성 앱, 화면 캡처, OAuth·Token·인증 API 요청 | React UI 상태 직접 관리 |
+| Preload | 허용된 IPC 함수와 인증 상태 구독 API를 좁게 노출 | `ipcRenderer` 전체 노출 |
 | Renderer | React 화면, 사용자 입력, TanStack Query, UI 상태 | Node.js·File System·Electron API 직접 접근 |
 
 ## 권장 파일 구조
@@ -74,6 +74,8 @@ app.whenReady()
 - Main은 필요한 최소 결과만 Preload를 통해 전달한다.
 - Renderer가 요청하지 않은 Event를 무제한 전송하지 않는다.
 - Listener는 Window와 Component 종료 시 해제할 수 있어야 한다.
+- OAuth callback, PKCE 임시값, Access Token과 Refresh Token은 Main 안에서만 처리한다. Renderer에는 `auth:session:get`과 `auth:session:changed`를 통해 화면용 인증 상태·사용자 요약만 전달한다.
+- 인증이 필요한 Server 요청도 Main이 보유한 Token으로 수행하며 Renderer에는 임의 URL·Header를 전달받는 범용 API를 제공하지 않는다.
 
 ## 확정한 Build와 배포 기준
 

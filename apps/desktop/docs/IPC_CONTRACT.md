@@ -70,6 +70,23 @@ type FloatingPosition = {
   xRatio: number
   yRatio: number
 }
+
+type AuthUiStatus =
+  | 'SIGNED_OUT'
+  | 'AUTHENTICATING'
+  | 'SIGNED_IN'
+  | 'LINK_REQUIRED'
+  | 'EXPIRED'
+  | 'OFFLINE'
+
+type AuthSessionSnapshot = {
+  /** Main이 상태를 갱신할 때마다 증가한다. 오래된 Event가 뒤늦게 와도 무시할 수 있다. */
+  revision: number
+  status: AuthUiStatus
+  user: { userId: string; nickname: string | null } | null
+  onboardingStatus: 'INCOMPLETE' | 'COMPLETED' | null
+  error: { code: string; retryable: boolean } | null
+}
 ```
 
 모든 입력은 위치 인자 대신 이름이 있는 Object를 사용한다. `xRatio`와 `yRatio`는 `0`부터 `1` 사이인지 Main에서 다시 검증한다.
@@ -89,8 +106,26 @@ type FloatingPosition = {
 | `window:floating:set-position` | Renderer → Main | `FloatingPosition` | `FloatingPosition` |
 | `app:settings:open` | Renderer → Main | `void` | `{ route: '/settings' }` |
 | `notification:show` | Renderer → Main | `{ titleCode: string; bodyCode: string }` | `{ shown: boolean }` |
+| `auth:session:get` | Renderer → Main | `void` | `AuthSessionSnapshot` |
+| `auth:google-login:start` | Renderer → Main | `void` | `{ started: boolean }` |
+| `auth:logout` | Renderer → Main | `void` | `{ loggedOut: true }` |
 
 실제 Channel을 추가하면 입력·출력 Type을 `electron/shared/`에 정의하고 이 표를 갱신한다.
+
+Google 로그인은 브라우저 왕복이 필요하므로 `auth:google-login:start`는 흐름을 시작한 직후 `{ started: true }`를 반환한다. 이미 `AUTHENTICATING`이면 새 OAuth 흐름을 열지 않고 `{ started: false }`를 반환한다. 완료·취소·실패 뒤 상태는 `auth:session:changed` Event로 알린다.
+
+```ts
+type AuthSessionChangedPayload = AuthSessionSnapshot
+```
+
+- `auth:session:get`은 현재 인증 상태의 화면용 Snapshot만 반환한다. Access Token, Refresh Token, authorization code, PKCE verifier, `state`는 포함하지 않는다.
+- `auth:google-login:start`는 입력값을 받지 않는다. Main이 브라우저 URL, loopback listener, `state`, PKCE verifier를 직접 만든다.
+- `auth:logout`은 Main이 `POST /api/v1/auth/logout`을 호출한다. 성공 `204` 또는 계약상 `401`이면 Access Token과 Keychain Refresh Token을 지우고 `{ loggedOut: true }`와 `SIGNED_OUT` Event를 반환한다. 네트워크·서버 오류면 세션은 유지하고 재시도 가능한 오류를 반환한다.
+- OAuth 사용자가 취소하면 `SIGNED_OUT` Snapshot을 보내고 오류로 취급하지 않는다. 네트워크 오류나 서버 오류는 기존 오류 `code`와 `retryable`만 전달한다.
+- Event를 구독한 뒤 Snapshot을 조회한다. Renderer는 `revision`이 현재 값보다 큰 Snapshot만 반영해 초기 조회와 Event 도착 순서가 바뀌어도 오래된 상태로 되돌아가지 않게 한다.
+- Refresh Token은 Main이 macOS Keychain에서 관리하고 Access Token은 Main 메모리에만 둔다. 인증이 필요한 서버 요청도 Main이 처리하며 토큰 원문을 Renderer로 넘기지 않는다.
+- Preload는 `window.focusOn.auth.getSession()`, `startGoogleLogin()`, `logout()`, `onSessionChanged(callback)`처럼 기능별 API만 노출한다. Event 구독 함수는 해제 함수를 반환한다.
+- 구현 전 공통 Type을 `electron/shared/`에 정의하고 Main에서 `sender`, 입력값, 인증 전이 상태를 검증한다. OAuth·IPC 전용 오류 코드를 새로 만들 필요가 생기면 공통 Error Code 계약과 함께 먼저 확정한다.
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 
@@ -109,7 +144,7 @@ Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Ma
 - 같은 Window 재실행으로 Listener가 중복 등록되지 않게 한다.
 - Main은 닫히거나 파괴된 Window에 Event를 보내지 않는다.
 
-초기 Event 이름은 `permission:changed`, `session:changed`, `analysis:activity-changed`, `window:floating:visibility-changed`로 사용한다. Event Payload도 `electron/shared/`의 Type으로 제한한다.
+초기 Event 이름은 `permission:changed`, `session:changed`, `analysis:activity-changed`, `window:floating:visibility-changed`, `auth:session:changed`로 사용한다. Event Payload도 `electron/shared/`의 Type으로 제한한다.
 
 ## 공식 참고
 

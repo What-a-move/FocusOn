@@ -29,6 +29,8 @@ MVP의 조회 범위는 세션 상세, 일간 리포트, 집중 달력, 학습 �
 
 Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청을 보낸다. 최초 연결에만 일회용 pairing code를 사용한다. AI 판단은 Backend의 검증과 Policy Engine을 거친 뒤 개입으로 이어진다. AI가 직접 타이머나 세션 상태를 변경하지 않는다.
 
+Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback callback을 사용한다. Electron Main이 OAuth·Token·인증 API 요청을 담당하고, Renderer에는 Preload의 타입이 정해진 IPC를 통해 Token 없는 인증 상태와 사용자 요약만 전달한다. 실제 구현은 후속 작업이다.
+
 ## 3. 구현할 때 놓치기 쉬운 확정 계약
 
 ### 세션과 시간
