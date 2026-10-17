@@ -26,11 +26,13 @@
 - Main·Preload TypeScript Build, Next.js Static Export, `app://` Production Loading 방향을 확정했다.
 - Single Instance, Main Window 닫기, Settings Route, Floating Window 위치·Drag 기준을 확정했다.
 - IPC Channel·오류 형식과 macOS 권한 요청 UX를 확정했다.
-- Google OAuth 기본 브라우저·loopback callback 방식과 로그인용 Main·Preload IPC 계약을 확정했다. 실제 Main·Preload 및 인증 코드는 아직 구현하지 않았다.
+- Google OAuth 기본 브라우저·loopback callback 방식과 로그인용 Main·Preload IPC 계약을 확정했다.
+- Electron Main·Preload 진입점과 전용 TypeScript Build를 추가했다. 개발 `127.0.0.1:3000` 및 정적 `app://focuson/` 화면을 실제 앱에서 확인했다.
+- Main Window 닫기 시 숨김, 두 번째 실행 시 기존 창 재표시, 외부 Navigation·새 Window 차단과 기본 권한 거부를 구현했다.
 
 ### 진행 중인 작업
 
-- 확정한 Electron Main·Preload·Renderer 구조와 로그인 IPC를 실제 코드와 실행 Script로 구현해야 한다.
+- 로그인 IPC, Sender·Payload 검증, OAuth와 Token 처리, 서버 연동은 다음 단계에서 구현해야 한다.
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
 - 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.
@@ -51,8 +53,9 @@
 - 언어: TypeScript
 - 스타일: Tailwind CSS v4, PostCSS, `app/globals.css`
 - 패키지 관리: pnpm Workspace, 작업 실행: Turborepo
-- 실행: `pnpm dev:desktop` 또는 `pnpm turbo run dev --filter=@focuson/desktop`
+- 실행: Renderer는 `pnpm dev:desktop`, Electron은 별도 터미널에서 `pnpm --filter @focuson/desktop dev:electron`
 - 빌드: `pnpm build:desktop` 또는 `pnpm turbo run build --filter=@focuson/desktop`
+- 정적 앱 미리보기: `pnpm --filter @focuson/desktop preview:electron`
 - 확정한 Build 방향: Main·Preload는 `dist-electron/`, Renderer는 Next.js `out/`, Packaging은 electron-builder
 
 ## 현재 데이터 흐름

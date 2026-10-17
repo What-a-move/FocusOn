@@ -88,7 +88,7 @@ Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback 
 ## 5. 현재 개발 상태와 검토 필요 항목
 
 - Backend는 Spring Boot·PostgreSQL·Docker Compose·Flyway 기반이 마련됐지만 Controller·Service·Repository·Entity와 도메인 API는 아직 구현 전이다. 우선순위는 공통 응답·오류 처리, 첫 migration, 인증, 세션 MVP API다.
-- Desktop·Extension은 기본 UI와 빌드 골격이 있고, Electron Main·Preload, 현재 탭 추적, pairing, 세션 동기화와 실제 분석 연결은 후속 구현 대상이다.
+- Desktop은 기본 UI, Electron Main·Preload 실행 기반, 개발·정적 화면 로딩과 기본 Window 생명주기가 있다. 로그인 IPC와 OAuth, Extension의 현재 탭 추적, pairing, 세션 동기화와 실제 분석 연결은 후속 구현 대상이다.
 - AI는 설계 문서와 scaffold 중심이다. 최근 AI v1.1 문서에는 목표 보조 상태, 분석 제외 모드, 개인화 휴식, 학습 노트 등 추가 제안이 있다. API 정본과 합의되지 않은 항목을 기존 MVP 계약으로 취급하지 않는다.
 - **검토 필요:** 카메라의 출시 범위와 구현 기술 표기가 문서마다 다르다. 공통 정책·제품 기획은 선택 동의 카메라를 MVP에 포함하고 macOS 로컬 분석을 설명한다. 일부 앱·AI 문서는 MediaPipe 또는 출시 보류를 적고 있다. 카메라 구현 작업 전에 해당 정본과 팀 결정을 다시 확인한다.
 - **검토 필요:** AI v1.1의 `ANALYSIS_AND_TIME` 제외 모드, 학습 노트 재생성, 사용자 피드백 개인화와 공개 세션 모델은 현재 로컬 공통 API 요약과 차이가 있다. 관련 작업에서는 AI 초안을 그대로 공개 API나 ERD에 반영하지 않는다.

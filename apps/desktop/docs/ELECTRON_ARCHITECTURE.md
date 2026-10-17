@@ -1,6 +1,6 @@
 # Desktop Electron 아키텍처
 
-> 결정 상태: 구조와 Build·Loading·배포 방향은 확정했다. Electron Package와 electron-builder는 설치되어 있지만 Main·Preload 진입점과 Packaging 연결은 아직 구현하지 않았다.
+> 결정 상태: 구조와 Build·Loading·배포 방향은 확정했다. Main·Preload 진입점과 개발·정적 화면 Loading을 구현했다. electron-builder Packaging 연결은 후속 작업이다.
 
 ## 목적
 
@@ -37,7 +37,7 @@ apps/desktop/
 └── docs/
 ```
 
-Main·Preload는 현재 설치된 TypeScript Compiler와 전용 `tsconfig.electron.json`으로 `dist-electron/`에 Build한다. Renderer는 Next.js의 `output: 'export'` 결과인 `out/`을 사용한다. 구현 전에는 빈 폴더를 만들지 않는다.
+Main·Preload는 TypeScript Compiler와 전용 `tsconfig.electron.json`으로 `dist-electron/`에 Build한다. Renderer는 Next.js의 `output: 'export'` 결과인 `out/`을 사용한다. 샌드박스 Preload에서도 실행되도록 Electron 진입점은 `.cts`에서 `.cjs`로 컴파일한다.
 
 ## 실행 흐름
 
@@ -54,6 +54,7 @@ app.whenReady()
 - Production의 `app://` Scheme은 `standard`와 `secure`만 활성화하고 `bypassCSP`를 사용하지 않는다.
 - `app://` Scheme 권한은 `app.whenReady()` 전에 등록하고 실제 Handler는 앱 준비 후 연결한다.
 - `app://` Handler는 Package의 `out/` 아래 파일만 반환하고 경로 이탈을 차단한다.
+- 개발 서버는 `127.0.0.1`에만 바인딩한다. 개발 실행은 Renderer 서버와 Electron을 별도 터미널에서 시작한다.
 - Production에서 외부 Remote Code를 앱 코드처럼 실행하지 않는다.
 - `app.requestSingleInstanceLock()`으로 하나의 Instance만 유지하며 두 번째 실행은 기존 Main Window를 앞으로 가져온다.
 - macOS에서 모든 Window가 닫힌 것과 앱 종료를 같은 동작으로 단정하지 않는다.
@@ -67,6 +68,8 @@ app.whenReady()
 - 외부 Navigation과 새 Window 제한
 - 신뢰되지 않은 URL을 `shell.openExternal`로 바로 열지 않음
 - IPC Sender와 Payload 검증
+- 현재 Preload는 Desktop 식별값만 노출한다. 인증 IPC와 Sender 검증은 다음 단계에서 추가한다.
+- 현재 구현된 권한 Request·Check는 모두 거부한다. Camera·Screen Recording·Notification은 각 기능의 안내·동의 흐름과 함께 허용 범위를 추가한다.
 
 ## 데이터 경계
 
@@ -92,6 +95,19 @@ app.whenReady()
 - Main Process Log: Logger 도구를 정할 때 Electron Log 경로·보존 기간을 함께 확정
 
 Apple Developer 계정, Bundle ID, 인증서와 CI 비밀값은 실제 배포 작업의 선행 조건이다. 인증 정보는 저장소와 문서에 기록하지 않는다.
+
+## 현재 실행 명령
+
+```bash
+# 터미널 1: 개발 Renderer
+pnpm dev:desktop
+
+# 터미널 2: 개발 Electron
+pnpm --filter @focuson/desktop dev:electron
+
+# 정적 Build를 Electron에서 미리보기
+pnpm --filter @focuson/desktop preview:electron
+```
 
 ## 공식 참고
 

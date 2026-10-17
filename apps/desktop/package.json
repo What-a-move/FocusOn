@@ -3,9 +3,14 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "main": "dist-electron/main/index.cjs",
     "scripts": {
-        "dev": "next dev -p 3000",
-        "build": "tsc --noEmit && next build --webpack",
+        "dev": "next dev -H 127.0.0.1 -p 3000",
+        "dev:electron": "pnpm build:electron && electron .",
+        "preview:electron": "pnpm build && FOCUSON_RENDERER_MODE=production electron .",
+        "build:electron": "tsc -p tsconfig.electron.json",
+        "build": "tsc --noEmit && pnpm build:electron && next build --webpack",
+        "test:electron": "pnpm build:electron && node --test tests/electron/*.test.cjs",
         "lint": "eslint ."
     },
     "dependencies": {

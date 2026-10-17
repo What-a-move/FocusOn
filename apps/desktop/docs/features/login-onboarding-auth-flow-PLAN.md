@@ -84,10 +84,10 @@
 ## 선행 확인 및 의존성
 
 - Notion의 로그인 기능 문서는 현재 `REVIEW` 상태다. API 항목은 `READY`지만 서버 API 구현 완료를 뜻하지 않는다.
-- 현재 Desktop에는 로그인 화면과 인증 로직이 없고 Main·Preload도 아직 구현되지 않았다.
+- 현재 Desktop에는 로그인 화면과 인증 로직이 없다. Main·Preload 실행 기반, 정적 화면 Loading, Window 생명주기는 구현됐다.
 - OAuth 시작·callback 방식은 macOS 기본 시스템 브라우저와 임시 loopback listener(`http://127.0.0.1:<임시 포트>`)로 확정했다. Desktop Main이 listener와 `state` 검증을 담당하고, 응답을 받은 뒤 listener를 닫는다. 앱 내부 BrowserView/WebView와 커스텀 URI scheme은 사용하지 않는다. Google Cloud OAuth 클라이언트와 개발 환경에는 이 데스크톱 loopback 흐름에 맞는 값을 등록한다.
 - Backend는 `POST /api/v1/auth/google/exchange`, refresh, auth/me 구현 일정을 인증 담당자와 맞춘다. CI 추가만으로 로그인 API가 구현된 것은 아니다.
-- Google OAuth callback과 인증 IPC 경계는 `apps/desktop/docs/DECISION_RECORD.md` 결정 009 및 `IPC_CONTRACT.md`에 확정했다. 실제 Main·Preload 코드와 공유 Type은 아직 구현하지 않았다.
+- Google OAuth callback과 인증 IPC 경계는 `apps/desktop/docs/DECISION_RECORD.md` 결정 009 및 `IPC_CONTRACT.md`에 확정했다. 실제 인증 IPC 코드와 공유 Type은 아직 구현하지 않았다.
 - 현재 `dev` 최신 커밋은 `427ff19`이며, 이 계획서는 그 커밋에서 분기했다.
 
 ## 예외 처리
@@ -112,7 +112,7 @@
 ## 완료 조건
 
 - [x] OAuth 시작·callback·Redirect URI 방식을 결정 기록에 확정했다.
-- [ ] Main·Preload 인증 IPC와 Keychain 저장 경계를 구현했다.
+- [ ] Main·Preload 인증 IPC와 Keychain 저장 경계를 구현했다. 실행·Window 기반은 완료했다.
 - [ ] Google code 교환과 로그인 후 사용자·온보딩 상태 라우팅을 구현했다.
 - [ ] Access Token 만료, refresh 실패, 네트워크 단절, OAuth 취소를 계약에 맞게 처리했다.
 - [ ] 로그인·로그아웃·기기 제한 흐름에서 Token이 Renderer·로그·URL에 노출되지 않는다.
