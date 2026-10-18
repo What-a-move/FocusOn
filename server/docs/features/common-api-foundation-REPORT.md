@@ -2,6 +2,7 @@
 
 - 작성일: 2026-10-19
 - 관련 Issue: [#30](https://github.com/What-a-move/FocusOn/issues/30)
+- 관련 PR: [#31](https://github.com/What-a-move/FocusOn/pull/31)
 - Branch: `feat/30-server-common-api`
 - 기획서: [common-api-foundation-PLAN.md](common-api-foundation-PLAN.md)
 
@@ -16,8 +17,9 @@
 
 ## 검증
 
-- `./gradlew compileJava checkstyleMain --no-daemon`: 성공
-- HTTP 통합 동작, 인증 필터, DB, 실제 rate limiter: 구현·실행 검증 범위 밖
+- `./gradlew build --no-daemon`: 성공 (기존 테스트와 새 공통 API HTTP 테스트 포함)
+- 독립 MockMvc 테스트에서 성공 응답, Bean Validation·잘못된 JSON의 400, 429의 `Retry-After`, 예상 밖 오류의 500과 내부 메시지 비노출, 허용하지 않은 메서드의 405를 확인했다.
+- 실제 인증 필터, DB, rate limiter와 연결된 통합 동작은 구현·실행 검증 범위 밖이다.
 - 관련 오류 기록: [common-api-foundation-ERROR.md](common-api-foundation-ERROR.md)
 
 ## 후속 연결

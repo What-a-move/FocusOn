@@ -23,7 +23,7 @@
 
 ### 진행 중
 
-- Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 완료. `dev` 대상 PR 준비 중
+- Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 및 [PR #31](https://github.com/What-a-move/FocusOn/pull/31) 검토 중
 
 ### 다음 구현 범위
 

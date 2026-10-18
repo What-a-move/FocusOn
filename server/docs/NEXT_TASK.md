@@ -15,7 +15,7 @@
 
 1. Notion ERD와 API 필드를 대조해 V1 migration 범위를 나눈다. 제외 도메인, heartbeat 기준 시각, 종료 사유, 개입 정책 버전, `studyDate`, 학습 정리 테이블을 포함한다.
 2. 사용자, 기기, 목표, 세션 핵심 Entity와 Repository를 구현한다.
-3. Google 로그인 교환과 Refresh Token 정책을 구현하고 기존 Access JWT 서비스에 연결한다.
+3. Google 로그인 교환과 Refresh Token 정책을 구현하고 기존 Access JWT 서비스에 연결한다. Spring Security 필터의 401·403도 공통 오류 응답에 연결한다.
 4. 목표와 세션 MVP API를 구현한다.
 5. 분석·개입 정책과 일간 리포트·집중 달력·학습 정리 API를 연결한다.
 6. P1인 세션 목록과 주간 리포트는 MVP 안정화 뒤 구현한다.
