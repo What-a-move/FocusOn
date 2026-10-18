@@ -116,7 +116,7 @@ GitHub 저장소에서 `Settings → Branches` 또는 `Settings → Rules → Ru
 -   `main`: PR 없이 직접 Merge 금지, Review 후 Merge, 직접 Push 금지
 -   `dev`: Issue Branch에서 PR로만 반영, Review 후 Merge, 직접 Push 금지
 -   두 Branch 모두 관리자 우회 금지를 권장한다.
--   CI가 준비되면 테스트 통과를 필수 상태 검사로 추가한다.
+-   Backend CI를 구성한 뒤 GitHub Ruleset에서 해당 상태 검사를 필수로 지정한다.
 
 ### 일상 작업
 
@@ -171,6 +171,6 @@ Issue에는 아래 3종류의 Label을 적용한다.
 3. `Require a pull request before merging`을 켜고 승인 인원을 1명 이상으로 설정한다.
 4. `Block force pushes`, `Restrict deletions`, 관리자 우회 금지를 설정한다.
 5. `dev`에도 같은 방식으로 보호 규칙을 적용한다.
-6. CI가 준비되면 통과해야 하는 상태 검사도 필수로 지정한다.
+6. Backend CI 상태 검사를 필수로 지정한다. 다른 영역은 CI 구성 후 적용한다.
 
 최종 규칙은 `main`과 `dev` 모두 PR을 통해서만 변경되도록 한다.

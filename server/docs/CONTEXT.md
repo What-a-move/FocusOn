@@ -19,6 +19,7 @@
 - 로컬 API 계약과 Backend 불변 규칙 최신화
 - 분석 제외 도메인, 세션별 개입 정책 버전, 집중 달력, 학습 정리 저장 계약 반영
 - Issue #25: 15분 Access JWT 발급·서명/클레임 검증 서비스와 환경 변수 설정
+- Issue #27: Backend PR용 GitHub Actions CI와 AI 리뷰 가이드
 
 ### 다음 구현 범위
 

@@ -24,7 +24,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
 
-/** Issues and verifies short-lived FocusOn access tokens. */
+/** FocusOn의 단기 Access Token을 발급하고 검증한다. */
 @Service
 public class AccessJwtService {
   private static final Duration ACCESS_TOKEN_LIFETIME = Duration.ofMinutes(15);
@@ -37,7 +37,7 @@ public class AccessJwtService {
   private final String issuer;
   private final NimbusJwtDecoder decoder;
 
-  /** Creates the service with the server signing key and fixed JWT contract. */
+  /** 서버 서명 키와 고정된 JWT 계약으로 서비스를 생성한다. */
   public AccessJwtService(
       @Value("${focuson.jwt.secret-base64}") String secretBase64,
       @Value("${focuson.jwt.issuer}") String issuer,
@@ -73,7 +73,7 @@ public class AccessJwtService {
         new JwtAudienceValidator(audience)));
   }
 
-  /** Issues a 15-minute access token after the caller has authenticated the user and device. */
+  /** 호출자가 사용자와 기기를 인증한 뒤 15분짜리 Access Token을 발급한다. */
   public IssuedAccessToken issue(long userId, long deviceId, long tokenFamilyId) {
     requirePositiveId(userId);
     requirePositiveId(deviceId);
@@ -97,7 +97,7 @@ public class AccessJwtService {
     return new IssuedAccessToken(token, expiresAt);
   }
 
-  /** Verifies the signature and mandatory access token claims. */
+  /** 서명과 Access Token의 필수 클레임을 검증한다. */
   public AccessTokenClaims verify(String token) {
     if (token == null || token.isBlank()) {
       throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
@@ -127,6 +127,7 @@ public class AccessJwtService {
     }
   }
 
+  /** JWT의 문자열 식별자를 양수인 서버 식별자로 변환한다. */
   private static long parseId(String value) {
     try {
       long id = Long.parseLong(value);
@@ -134,22 +135,24 @@ public class AccessJwtService {
         return id;
       }
     } catch (NumberFormatException exception) {
-      // Invalid IDs use the same public error as malformed or expired tokens.
+      // 잘못된 식별자는 형식 오류나 만료된 토큰과 같은 공개 오류로 처리한다.
     }
     throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
   }
 
+  /** 발급할 토큰에 포함되는 식별자가 양수인지 확인한다. */
   private static void requirePositiveId(long id) {
     if (id <= 0) {
       throw new IllegalArgumentException("JWT IDs must be positive");
     }
   }
 
-  /** Verified identity claims carried by an access token. */
+  /** 검증된 Access Token의 식별 클레임이다. */
   public record AccessTokenClaims(long userId, long deviceId, long tokenFamilyId) {}
 
-  /** An issued token and its expiry, with a redacted string representation. */
+  /** 발급된 토큰과 만료 시각이다. 문자열 표현에서는 토큰을 가린다. */
   public record IssuedAccessToken(String token, Instant expiresAt) {
+    /** 토큰 값을 노출하지 않는 문자열을 반환한다. */
     @Override
     public String toString() {
       return "IssuedAccessToken[token=<redacted>, expiresAt=" + expiresAt + "]";
