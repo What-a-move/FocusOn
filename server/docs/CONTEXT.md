@@ -21,16 +21,19 @@
 - Issue #25: 15분 Access JWT 발급·서명/클레임 검증 서비스와 환경 변수 설정
 - Issue #27: Backend PR용 GitHub Actions CI와 AI 리뷰 가이드
 
+### 진행 중
+
+- Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 완료. `dev` 대상 PR 준비 중
+
 ### 다음 구현 범위
 
-- 공통 응답·예외·requestId 처리
 - 사용자·기기·목표·세션 Entity 및 V1 migration
 - Google ID token 교환과 인증된 사용자·기기를 Access JWT 서비스에 연결
 - MVP API를 도메인 단위로 구현
 
 ### 미구현
 
-- Controller, Repository, Entity 및 Access JWT 외 도메인 Service
+- 도메인 Controller, Repository, Entity 및 Access JWT 외 Service
 - 인증·사용자·기기 연결 API와 Refresh Token 수명주기
 - 목표·세션·분석·리포트 API
 - 보관 기간 cleanup worker와 학습 정리 worker
