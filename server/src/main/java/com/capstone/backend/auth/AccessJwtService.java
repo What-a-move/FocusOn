@@ -24,7 +24,13 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
 
-/** FocusOn의 단기 Access Token을 발급하고 검증한다. */
+/**
+ * FocusOn의 15분 Access JWT를 발급하고 서명·클레임을 검증한다.
+ *
+ * <p>이 서비스는 사용자 인증 또는 기기·토큰 패밀리의 활성 상태를 조회하지 않는다.
+ * 로그인 흐름은 인증된 식별자로 {@link #issue(long, long, long)}를 호출하고,
+ * 요청 인증 흐름은 {@link #verify(String)} 이후 저장소에서 활성 상태를 확인해야 한다.
+ */
 @Service
 public class AccessJwtService {
   private static final Duration ACCESS_TOKEN_LIFETIME = Duration.ofMinutes(15);
@@ -37,13 +43,17 @@ public class AccessJwtService {
   private final String issuer;
   private final NimbusJwtDecoder decoder;
 
-  /** 서버 서명 키와 고정된 JWT 계약으로 서비스를 생성한다. */
+  /** 설정된 서명 키와 issuer·audience로 발급기와 검증기를 생성한다. */
   public AccessJwtService(
       @Value("${focuson.jwt.secret-base64}") String secretBase64,
       @Value("${focuson.jwt.issuer}") String issuer,
       @Value("${focuson.jwt.audience}") String audience) {
     if (issuer == null || issuer.isBlank() || audience == null || audience.isBlank()) {
       throw new IllegalArgumentException("JWT issuer and audience must be configured");
+    }
+
+    if (secretBase64 == null || secretBase64.isBlank()) {
+      throw new IllegalArgumentException("JWT signing key must be valid Base64");
     }
 
     byte[] keyBytes;
@@ -65,6 +75,7 @@ public class AccessJwtService {
         .macAlgorithm(MacAlgorithm.HS256)
         .build();
 
+    // Access Token은 짧게 사용하므로 만료 시각의 허용 오차를 두지 않는다.
     JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ZERO);
     timestampValidator.setAllowEmptyExpiryClaim(false);
     this.decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
@@ -73,7 +84,11 @@ public class AccessJwtService {
         new JwtAudienceValidator(audience)));
   }
 
-  /** 호출자가 사용자와 기기를 인증한 뒤 15분짜리 Access Token을 발급한다. */
+  /**
+   * 로그인 또는 갱신 흐름에서 인증·활성 상태 확인을 마친 식별자로 토큰을 발급한다.
+   *
+   * <p>이 메서드는 식별자의 양수 여부만 확인하며 DB 상태를 검증하지 않는다.
+   */
   public IssuedAccessToken issue(long userId, long deviceId, long tokenFamilyId) {
     requirePositiveId(userId);
     requirePositiveId(deviceId);
@@ -97,7 +112,13 @@ public class AccessJwtService {
     return new IssuedAccessToken(token, expiresAt);
   }
 
-  /** 서명과 Access Token의 필수 클레임을 검증한다. */
+  /**
+   * 서명, 발급자, 대상, 시간과 필수 식별 클레임을 검증한다.
+   *
+   * <p>반환된 식별자를 권한 부여에 사용하기 전에 사용자·기기·토큰 패밀리의
+   * 현재 활성 상태를 저장소에서 확인해야 한다. 실패 시 토큰 내용을 노출하지 않는
+   * {@link IllegalArgumentException}을 던진다.
+   */
   public AccessTokenClaims verify(String token) {
     if (token == null || token.isBlank()) {
       throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
@@ -107,6 +128,7 @@ public class AccessJwtService {
       Jwt jwt = decoder.decode(token);
       Instant issuedAt = jwt.getIssuedAt();
       Instant expiresAt = jwt.getExpiresAt();
+      // 서명 검증만으로는 다른 종류의 토큰이나 비정상적인 유효 기간을 걸러낼 수 없다.
       if (!ACCESS_TOKEN_TYPE.equals(jwt.getClaimAsString("tokenType"))
           || issuedAt == null
           || issuedAt.isAfter(clock.instant())
@@ -127,7 +149,6 @@ public class AccessJwtService {
     }
   }
 
-  /** JWT의 문자열 식별자를 양수인 서버 식별자로 변환한다. */
   private static long parseId(String value) {
     try {
       long id = Long.parseLong(value);
@@ -140,19 +161,17 @@ public class AccessJwtService {
     throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
   }
 
-  /** 발급할 토큰에 포함되는 식별자가 양수인지 확인한다. */
   private static void requirePositiveId(long id) {
     if (id <= 0) {
       throw new IllegalArgumentException("JWT IDs must be positive");
     }
   }
 
-  /** 검증된 Access Token의 식별 클레임이다. */
+  /** 서명과 필수 클레임 검증을 통과한 식별자다. 활성 상태 검사는 별도로 수행한다. */
   public record AccessTokenClaims(long userId, long deviceId, long tokenFamilyId) {}
 
-  /** 발급된 토큰과 만료 시각이다. 문자열 표현에서는 토큰을 가린다. */
+  /** 발급된 토큰과 만료 시각이다. 로그에 객체가 찍혀도 원문 토큰을 노출하지 않는다. */
   public record IssuedAccessToken(String token, Instant expiresAt) {
-    /** 토큰 값을 노출하지 않는 문자열을 반환한다. */
     @Override
     public String toString() {
       return "IssuedAccessToken[token=<redacted>, expiresAt=" + expiresAt + "]";
