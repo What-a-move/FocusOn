@@ -8,6 +8,8 @@ import {
   isAllowedNavigation,
   resolveRendererFile,
 } from './renderer-path.cjs'
+import { AuthSessionStore, registerAuthIpc } from './auth-ipc.cjs'
+import { AUTH_CHANNELS } from '../shared/auth-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -24,6 +26,11 @@ if (!hasSingleInstanceLock) {
 } else {
   let mainWindow: BrowserWindow | null = null
   let isQuitting = false
+  const authStore = new AuthSessionStore((snapshot) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(AUTH_CHANNELS.sessionChanged, snapshot)
+    }
+  })
 
   function showMainWindow(): void {
     if (!mainWindow || mainWindow.isDestroyed()) {
@@ -135,6 +142,7 @@ if (!hasSingleInstanceLock) {
     })
 
     installMenu()
+    registerAuthIpc(() => mainWindow, rendererUrl, authStore)
     createMainWindow()
   })
 }

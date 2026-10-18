@@ -29,10 +29,12 @@
 - Google OAuth 기본 브라우저·loopback callback 방식과 로그인용 Main·Preload IPC 계약을 확정했다.
 - Electron Main·Preload 진입점과 전용 TypeScript Build를 추가했다. 개발 `127.0.0.1:3000` 및 정적 `app://focuson/` 화면을 실제 앱에서 확인했다.
 - Main Window 닫기 시 숨김, 두 번째 실행 시 기존 창 재표시, 외부 Navigation·새 Window 차단과 기본 권한 거부를 구현했다.
+- `window.focusOn.auth`의 상태 조회·로그인 시작·로그아웃·상태 Event 구독 경계와 공통 Type을 구현했다. Main은 현재 창의 Main Frame과 입력값을 검증한다.
+- 현재 인증 정보 저장소와 Backend API는 없으므로 상태 조회는 `SIGNED_OUT`, 로그인 시작·로그아웃은 `SERVICE_UNAVAILABLE`을 반환한다. 실제 앱에서 IPC 왕복을 확인했다.
 
 ### 진행 중인 작업
 
-- 로그인 IPC, Sender·Payload 검증, OAuth와 Token 처리, 서버 연동은 다음 단계에서 구현해야 한다.
+- Google OAuth·Token·macOS Keychain·Backend API 연결과 인증 상태 전이 검증은 다음 단계에서 구현해야 한다.
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
 - 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.

@@ -1,6 +1,6 @@
 # Desktop IPC 계약
 
-> 결정 상태: Channel 이름, 방향, 기본 Payload와 오류 형식은 확정했다. 실제 IPC 구현은 아직 진행하지 않았다.
+> 결정 상태: Channel 이름, 방향, 기본 Payload와 오류 형식은 확정했다. 인증 IPC 3개 채널과 상태 Event의 Main·Preload 경계를 구현했다. OAuth·Backend·Keychain 동작은 후속 작업이다.
 
 ## 목적
 
@@ -112,6 +112,10 @@ type AuthSessionSnapshot = {
 
 실제 Channel을 추가하면 입력·출력 Type을 `electron/shared/`에 정의하고 이 표를 갱신한다.
 
+현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`에 있다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
+
+OAuth·Backend가 아직 연결되지 않아 `auth:google-login:start`와 `auth:logout`은 현재 `SERVICE_UNAVAILABLE`, `retryable: false`를 반환한다. `{ started: true }` 또는 `{ loggedOut: true }`를 임의로 반환하지 않는다. `auth:session:get`은 현재 저장된 인증 정보가 없는 상태의 `SIGNED_OUT` Snapshot을 반환한다. 실제 토큰 복구가 추가되면 Main이 이 Snapshot을 갱신해야 한다.
+
 Google 로그인은 브라우저 왕복이 필요하므로 `auth:google-login:start`는 흐름을 시작한 직후 `{ started: true }`를 반환한다. 이미 `AUTHENTICATING`이면 새 OAuth 흐름을 열지 않고 `{ started: false }`를 반환한다. 완료·취소·실패 뒤 상태는 `auth:session:changed` Event로 알린다.
 
 ```ts
@@ -125,7 +129,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 - Event를 구독한 뒤 Snapshot을 조회한다. Renderer는 `revision`이 현재 값보다 큰 Snapshot만 반영해 초기 조회와 Event 도착 순서가 바뀌어도 오래된 상태로 되돌아가지 않게 한다.
 - Refresh Token은 Main이 macOS Keychain에서 관리하고 Access Token은 Main 메모리에만 둔다. 인증이 필요한 서버 요청도 Main이 처리하며 토큰 원문을 Renderer로 넘기지 않는다.
 - Preload는 `window.focusOn.auth.getSession()`, `startGoogleLogin()`, `logout()`, `onSessionChanged(callback)`처럼 기능별 API만 노출한다. Event 구독 함수는 해제 함수를 반환한다.
-- 구현 전 공통 Type을 `electron/shared/`에 정의하고 Main에서 `sender`, 입력값, 인증 전이 상태를 검증한다. OAuth·IPC 전용 오류 코드를 새로 만들 필요가 생기면 공통 Error Code 계약과 함께 먼저 확정한다.
+- 공통 Type은 `electron/shared/`에 정의했다. Main은 `sender`와 입력값을 검증한다. 인증 전이 검증은 실제 OAuth·Token 갱신을 연결할 때 추가한다. OAuth·IPC 전용 오류 코드를 새로 만들 필요가 생기면 공통 Error Code 계약과 함께 먼저 확정한다.
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 

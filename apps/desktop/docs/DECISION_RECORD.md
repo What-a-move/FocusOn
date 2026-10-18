@@ -215,3 +215,24 @@ Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막�
 - `apps/desktop/docs/IPC_CONTRACT.md`
 - `apps/desktop/docs/ELECTRON_ARCHITECTURE.md`
 - `apps/desktop/docs/features/login-onboarding-auth-flow-PLAN.md`
+
+## 결정 010 - Sandbox Preload 단일 파일 Build
+
+- 결정일: 2026-10-18
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+결정 005의 Main·Preload Build 방향 중 Preload 부분을 구체화한다. Main은 TypeScript Compiler로 컴파일하고, `sandbox: true`인 Preload는 TypeScript 타입 검사 후 esbuild로 공유 런타임 코드를 단일 `.cjs` 파일에 묶는다. 두 결과는 모두 `dist-electron/`에 둔다.
+
+### 결정 이유
+
+TypeScript Compiler만 사용하면 Preload의 상대 경로 import가 런타임에 남아 실제 Electron Sandbox에서 로딩되지 않았다. 단일 파일로 묶으면 Sandbox 보안 설정을 유지하면서 공유 계약 코드를 사용할 수 있다.
+
+### 영향받는 파일
+
+- `apps/desktop/package.json`
+- `apps/desktop/scripts/build-electron-preload.cjs`
+- `apps/desktop/docs/ELECTRON_ARCHITECTURE.md`

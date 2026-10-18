@@ -37,7 +37,7 @@ apps/desktop/
 └── docs/
 ```
 
-Main·Preload는 TypeScript Compiler와 전용 `tsconfig.electron.json`으로 `dist-electron/`에 Build한다. Renderer는 Next.js의 `output: 'export'` 결과인 `out/`을 사용한다. 샌드박스 Preload에서도 실행되도록 Electron 진입점은 `.cts`에서 `.cjs`로 컴파일한다.
+Main은 TypeScript Compiler와 전용 `tsconfig.electron.json`으로 `dist-electron/`에 Build한다. 샌드박스 Preload는 상대 경로 모듈을 직접 불러올 수 없으므로 esbuild로 의존 코드를 단일 `.cjs` 파일에 묶는다. Renderer는 Next.js의 `output: 'export'` 결과인 `out/`을 사용한다.
 
 ## 실행 흐름
 
@@ -68,7 +68,7 @@ app.whenReady()
 - 외부 Navigation과 새 Window 제한
 - 신뢰되지 않은 URL을 `shell.openExternal`로 바로 열지 않음
 - IPC Sender와 Payload 검증
-- 현재 Preload는 Desktop 식별값만 노출한다. 인증 IPC와 Sender 검증은 다음 단계에서 추가한다.
+- 현재 Preload는 `window.focusOn.auth`의 이름이 정해진 함수만 노출한다. Main은 인증 IPC Sender와 입력값을 검증한다. 실제 OAuth·Token 처리는 다음 단계에서 추가한다.
 - 현재 구현된 권한 Request·Check는 모두 거부한다. Camera·Screen Recording·Notification은 각 기능의 안내·동의 흐름과 함께 허용 범위를 추가한다.
 
 ## 데이터 경계
@@ -82,7 +82,8 @@ app.whenReady()
 
 ## 확정한 Build와 배포 기준
 
-- Main·Preload: TypeScript Compiler와 전용 설정을 사용해 `dist-electron/`에 Build
+- Main: TypeScript Compiler와 전용 설정을 사용해 `dist-electron/`에 Build
+- Preload: 같은 설정으로 타입 검사한 뒤 esbuild로 단일 `.cjs` 파일에 묶어 `dist-electron/`에 Build
 - Renderer: Next.js Static Export 결과인 `out/` 사용
 - Packaging: 현재 설치된 electron-builder 사용
 - 개발 Loading: `http://127.0.0.1:3000`

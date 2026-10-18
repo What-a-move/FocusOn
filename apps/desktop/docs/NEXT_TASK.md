@@ -4,15 +4,15 @@
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: 로그인 IPC와 Google 인증 흐름 구현
+- 작업명: Google OAuth와 Backend 인증 연동
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Desktop
 - 우선순위: 높음
-- 상태: Electron 실행·Window 기반 완료, 로그인 IPC 예정
+- 상태: Electron 실행·Window·인증 IPC 경계 완료, 실제 인증 연동 예정
 
 ## 작업 목적
 
-구현된 Electron Main·Preload·Window 기반 위에 로그인 계약에 맞는 안전한 IPC 경계와 Google 인증을 연결한다.
+구현된 Electron 인증 IPC 경계 위에 Google 브라우저 인증, 토큰 보관 및 Backend API를 연결한다.
 
 ## 선행 조건
 
@@ -26,8 +26,8 @@
 1. [x] Main·Preload TypeScript 진입점과 전용 Build 설정을 만든다.
 2. [x] 개발 `127.0.0.1` Loading과 Production `app://` Loading을 구현한다.
 3. [x] Single Instance와 Main Window 숨김·재실행 흐름을 구현한다.
-4. [ ] 공통 IPC 결과, Main sender 검증, 인증 `getSession`·`google-login:start`·`logout`·상태 Event를 구현한다.
-5. [ ] Google OAuth 기본 브라우저·임시 loopback callback과 Main 내부 토큰 처리 경계를 연결한다.
+4. [x] 공통 IPC 결과, Main sender 검증, 인증 `getSession`·`google-login:start`·`logout`·상태 Event 경계를 구현한다. 로그인 시작·로그아웃의 실제 동작은 5번에서 연결한다.
+5. [ ] Google OAuth 기본 브라우저·임시 loopback callback, macOS Keychain 및 Backend 인증 API를 Main에 연결한다.
 6. [x] 현재 범위의 Desktop Build와 개발·정적 실행을 확인한다.
 
 ## 이후 작업 후보
