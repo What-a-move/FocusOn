@@ -5,7 +5,7 @@
 최초 PostgreSQL 스키마와 핵심 DB 모델 구현
 
 - 우선순위: 높음
-- 상태: Issue #30 공통 API 기반 PR 이후 착수
+- 상태: Issue #30 공통 API 기반이 `dev`에 반영된 뒤 착수
 
 ## 목적
 

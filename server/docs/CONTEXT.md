@@ -21,9 +21,9 @@
 - Issue #25: 15분 Access JWT 발급·서명/클레임 검증 서비스와 환경 변수 설정
 - Issue #27: Backend PR용 GitHub Actions CI와 AI 리뷰 가이드
 
-### 진행 중
+### 최근 구현
 
-- Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 및 [PR #31](https://github.com/What-a-move/FocusOn/pull/31) 검토 중
+- Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 ([PR #31](https://github.com/What-a-move/FocusOn/pull/31))
 
 ### 다음 구현 범위
 
