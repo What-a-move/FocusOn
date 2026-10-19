@@ -16,7 +16,7 @@
 
 Google 로그인, 기기 식별, Refresh Token 회전을 구현할 수 있도록 인증 도메인의 영속 저장 기반을 만든다. PostgreSQL 17과 Flyway 설정은 이미 있으므로 새 DB 제품이나 별도 설치는 필요하지 않다.
 
-이번 작업은 `V1__create_initial_schema.sql`과 이에 대응하는 JPA Entity·Repository까지만 다룬다. HTTP 엔드포인트, Google token endpoint 연동, Access JWT 필터, Refresh Token 발급·회전, 기기 연결 API는 후속 Issue에서 구현한다. 목표·세션·분석·리포트 테이블도 후속 migration으로 나눈다.
+이번 작업은 인증 테이블을 만드는 `V1__create_initial_schema.sql`, 적용된 V1의 소유 관계를 보강하는 `V2__enforce_auth_ownership.sql`, 이에 대응하는 JPA Entity·Repository까지만 다룬다. HTTP 엔드포인트, Google token endpoint 연동, Access JWT 필터, Refresh Token 발급·회전, 기기 연결 API는 후속 Issue에서 구현한다. 목표·세션·분석·리포트 테이블도 후속 migration으로 나눈다.
 
 ## API 정의
 
@@ -30,21 +30,23 @@ Google 로그인, 기기 식별, Refresh Token 회전을 구현할 수 있도록
 | 테이블 | 이 작업에서 저장할 핵심 값 | 핵심 관계·제약 |
 | --- | --- | --- |
 | `users` | `id`, `nickname`, `onboarding_status`, `user_time_zone`, `created_at`, `updated_at`, `deleted_at` | `id BIGINT` PK; 닉네임은 값이 있을 때 유일; 온보딩 상태는 `INCOMPLETE`, `COMPLETED` |
-| `oauth_identities` | `id`, `user_id`, `provider`, `provider_subject`, `linked_at`, `unlinked_at` | `users` FK; `(provider, provider_subject)` 유일; `provider=GOOGLE` |
+| `oauth_identities` | `id`, `user_id`, `provider`, `provider_subject`, `linked_at`, `unlinked_at` | `users` FK; `(provider, provider_subject)` 유일; `provider=GOOGLE`; 로그인 조회는 `unlinked_at IS NULL` |
 | `user_devices` | `id`, `user_id`, `device_type`, `installation_id_hash`, `display_name`, `linked_desktop_device_id`, `status`, `last_used_at`, `revoked_at`, `created_at` | `users` FK; Desktop 연결 FK; `(user_id, device_type, installation_id_hash)` 유일; 기기 종류 `DESKTOP`, `CHROME_EXTENSION`; 상태 `ACTIVE`, `REVOKED`, `LOGGED_OUT` |
-| `token_families` | `id`, `user_id`, `device_id`, `status`, `revoked_reason`, `expires_at`, `revoked_at`, `created_at` | 사용자·기기 FK; `ACTIVE`, `REVOKED`, `EXPIRED`; 종료 사유 `LOGOUT`, `UNLINK`, `TOKEN_REUSE`, `DEVICE_REVOKED` |
+| `token_families` | `id`, `user_id`, `device_id`, `status`, `revoked_reason`, `expires_at`, `revoked_at`, `created_at` | 사용자·기기 FK와 `(device_id, user_id)` 복합 FK로 같은 사용자 소유 보장; `ACTIVE`, `REVOKED`, `EXPIRED`; 종료 사유 `LOGOUT`, `UNLINK`, `TOKEN_REUSE`, `DEVICE_REVOKED` |
 | `refresh_token_records` | `id`, `token_family_id`, `token_hash`, `parent_token_id`, `status`, `issued_at`, `expires_at`, `used_at`, `revoked_at` | family FK·선행 토큰 자기 FK; `token_hash` 유일; `ACTIVE`, `ROTATED`, `REVOKED`, `EXPIRED` |
 
 - PK와 FK는 ERD 기준 `BIGINT`, 시간은 UTC 기준 `TIMESTAMPTZ`를 사용한다. Java 모델은 `Instant`로 매핑한다.
 - `installation_id_hash`와 `token_hash`는 ERD 기준 `CHAR(64)` SHA-256 해시다. 원본 installation ID, Google token, Access·Refresh Token 평문을 저장하지 않는다.
 - `nickname`, `unlinked_at`, `linked_desktop_device_id`, `last_used_at`, `revoked_at`, `parent_token_id`, `used_at` 등 선택 값의 nullability를 ERD와 맞춘다.
 - 한 기기의 활성 token family는 최대 하나다. 동시 로그인 경합을 막기 위해 `device_id`의 `ACTIVE` 행에 부분 유니크 인덱스를 둔다. Refresh Token 회전 시에도 family당 활성 record를 하나로 제한한다.
+- V1은 로컬 DB에 적용되었으므로 변경하지 않는다. V2에서 Token Family의 사용자와 기기 소유자가 같다는 불변식을 복합 FK로 추가한다.
+- Google 계정의 `(provider, provider_subject)` 전체 유일성은 ERD 기준으로 유지한다. MVP에는 Google 계정 연결 해제 API가 없으며, 해제된 이력은 로그인 조회에서 제외한다. 향후 Google 계정 재연결 정책은 해당 API 작업에서 별도로 확정한다.
 - 활성 Desktop은 사용자당 최대 3대다. 이 제한과 Extension의 Desktop 소유·종류 검증, Desktop 해제 시 Extension 연쇄 해제는 후속 인증 서비스 트랜잭션에서 처리한다.
 - `token_families`와 만료·폐기된 인증 기록은 정책상 30일 뒤 정리 대상이다. 실제 cleanup worker는 별도 Issue로 둔다.
 
 ## 처리 흐름
 
-1. Flyway `V1__create_initial_schema.sql`에서 테이블을 FK 의존 순서로 생성한다.
+1. Flyway V1에서 테이블을 FK 의존 순서로 생성하고 V2에서 Token Family의 기기 소유 관계를 보강한다.
 2. 유니크 제약, 상태값 제약, 조회 인덱스를 ERD와 대조해 추가한다.
 3. 동일 컬럼·관계를 표현하는 JPA Entity와 Repository를 작성한다.
 4. 후속 로그인 Issue가 Repository를 이용해 OAuth 계정과 기기를 찾고 token family를 관리한다.
@@ -68,6 +70,7 @@ Google 로그인, 기기 식별, Refresh Token 회전을 구현할 수 있도록
 
 ```text
 server/src/main/resources/db/migration/V1__create_initial_schema.sql
+server/src/main/resources/db/migration/V2__enforce_auth_ownership.sql
 server/src/main/java/com/capstone/backend/auth/... (Entity·Repository)
 server/docs/features/auth-persistence-PLAN.md
 server/docs/features/auth-persistence-ERROR.md

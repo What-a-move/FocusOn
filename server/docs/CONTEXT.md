@@ -24,7 +24,7 @@
 ### 최근 구현
 
 - Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 ([PR #31](https://github.com/What-a-move/FocusOn/pull/31))
-- Issue #32: 인증 5개 테이블의 Flyway V1과 Entity·Repository를 `feat/#32-auth-persistence`에 구현했다. PostgreSQL 17.11 적용과 Hibernate 스키마 검증을 확인했다. 독립 코드 리뷰에서 `issuedAt` 자동 설정 누락을 찾아 수정했다. QA와 PR은 아직 진행하지 않았다.
+- Issue #32: 인증 5개 테이블의 Flyway V1과 Entity·Repository를 `feat/#32-auth-persistence`에 구현했다. PostgreSQL 17.11에서 V1 적용과 Hibernate 스키마 검증을 확인했다. 리뷰에서 `issuedAt` 누락, Token Family의 사용자·기기 소유 관계, 해제된 Google identity 조회를 찾아 수정했다. 소유 관계 보강 V2의 적용을 포함한 QA와 PR은 아직 진행하지 않았다.
 
 ### 다음 구현 범위
 
