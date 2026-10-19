@@ -17,6 +17,8 @@ Google 로그인
 
 학습 세션의 상태와 기준 시간은 Server가 확정한다. Desktop과 Extension은 인증된 동일 사용자의 Server 상태를 조회해 화면을 갱신한다.
 
+Desktop Google 로그인에서는 Main이 임시 loopback callback을 열고 `state`와 PKCE verifier를 만든다. callback의 `state` 일치를 확인한 뒤 받은 code, verifier, state, 인증 요청에 사용한 정확한 `redirectUri`, 기기 정보를 `POST /api/v1/auth/google/exchange`에 보낸다. Backend는 `redirectUri`를 `http://127.0.0.1:<임시 포트>`로 제한하고 같은 값으로 Google token endpoint에서 code를 교환한다. `state` 일치 검증의 책임은 Main에 있다.
+
 ## 상태 구분
 
 | 상태 | 의미 | UI 처리 |

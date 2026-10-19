@@ -54,7 +54,7 @@
 
 Heartbeat에는 `Authorization`과 `X-Device-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
 
-`POST /api/v1/auth/refresh`는 `Authorization` 헤더 대신 JSON body의 `refreshToken`으로 인증한다. 각 endpoint의 실제 필수 헤더는 Notion API DB 항목을 따른다. 성공 시 Access·Refresh Token을 모두 회전하고, 클라이언트는 single-flight로 1회 호출한 뒤 원 요청을 1회만 재시도한다.
+`POST /api/v1/auth/refresh`는 `Authorization` 헤더 대신 JSON body의 `refreshToken`으로 인증한다. 각 endpoint의 실제 필수 헤더는 Notion API DB 항목을 따른다. 성공 응답의 `data`에는 새 `accessToken`, 새 `refreshToken`, UTC ISO 8601 `accessTokenExpiresAt`을 담는다. 클라이언트는 single-flight로 1회 호출한 뒤 원 요청을 1회만 재시도한다.
 
 ## 엔드포인트 목록
 
@@ -71,6 +71,8 @@ POST   /api/v1/pairing-codes
 POST   /api/v1/extension-pairings
 DELETE /api/v1/extension-pairings/{extensionDeviceId}
 ```
+
+`POST /api/v1/auth/google/exchange` 요청에는 `authorizationCode`, `codeVerifier`, `state`, `redirectUri`, `device`를 포함한다. `redirectUri`는 Desktop Main이 Google 인증 요청에 사용한 `http://127.0.0.1:<임시 포트>` 주소 그대로다. Main이 callback의 `state` 일치를 먼저 확인한다. Backend는 `redirectUri`의 scheme·host·port·경로를 엄격히 검증한 뒤 서버 설정의 Desktop Google Client ID, code, verifier, 동일한 `redirectUri`로 Google token endpoint에 요청하고 Google ID token을 검증한다. Backend가 사전에 `state`를 저장하지 않았다면 요청에 포함된 값만으로 일치 여부를 검증했다고 간주하지 않는다. [Notion API 정본](https://app.notion.com/p/00f3391cae454614bf51bffbe995f0dc)
 
 ### 사용자·설정
 

@@ -24,7 +24,7 @@
 
 - 공통 응답·예외·requestId 처리
 - 사용자·기기·목표·세션 Entity 및 V1 migration
-- Google ID token 교환과 FocusOn token 발급
+- Google authorization code·PKCE·redirectUri 교환, Google ID token 검증과 FocusOn token 발급
 - MVP API를 도메인 단위로 구현
 
 ### 미구현

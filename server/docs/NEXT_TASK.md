@@ -17,7 +17,7 @@
 2. 공통 성공 응답, 오류 응답, requestId, validation 예외 처리를 구현한다.
 3. Notion ERD와 API 필드를 대조해 V1 migration을 작성한다. 제외 도메인, heartbeat 기준 시각, 종료 사유, 개입 정책 버전, `studyDate`, 학습 정리 테이블을 포함한다.
 4. 사용자, 기기, 목표, 세션 핵심 Entity와 Repository를 구현한다.
-5. Google 로그인 교환과 token 정책을 구현한다.
+5. Google 로그인 교환과 token 정책을 구현한다. Desktop이 보낸 `authorizationCode`, `codeVerifier`, `state`, `redirectUri`, `device`를 Notion [exchange API 정본](https://app.notion.com/p/00f3391cae454614bf51bffbe995f0dc)에 맞게 받는다. `redirectUri`는 `http://127.0.0.1:<임시 포트>` 기본 경로로 제한하고, 서버 설정의 Desktop Google Client ID와 함께 동일한 값으로 Google token endpoint에 code·PKCE verifier를 전달한다. 반환된 Google ID token을 검증한 뒤 FocusOn 토큰을 발급한다. callback의 `state` 일치 여부는 Desktop Main이 검증하며 Backend가 이전 state를 보관하지 않았다면 입력값만으로 일치 여부를 검증했다고 간주하지 않는다. [Refresh API 정본](https://app.notion.com/p/bacabe41fdc543f9a2575fc05e2e1f81)의 성공 응답에는 새 `accessToken`, 새 `refreshToken`, `accessTokenExpiresAt`을 담는다.
 6. 목표와 세션 MVP API를 구현한다.
 7. 분석·개입 정책과 일간 리포트·집중 달력·학습 정리 API를 연결한다.
 8. P1인 세션 목록과 주간 리포트는 MVP 안정화 뒤 구현한다.

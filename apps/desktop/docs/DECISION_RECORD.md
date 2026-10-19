@@ -236,3 +236,99 @@ TypeScript Compiler만 사용하면 Preload의 상대 경로 import가 런타임
 - `apps/desktop/package.json`
 - `apps/desktop/scripts/build-electron-preload.cjs`
 - `apps/desktop/docs/ELECTRON_ARCHITECTURE.md`
+
+## 결정 011 - Issue #22의 온보딩 완료 경계
+
+- 결정일: 2026-10-19
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- Issue #22는 Desktop Google 로그인, 인증 상태 복구·갱신·로그아웃, 로그인 성공 후 온보딩 시작 화면 또는 홈 화면 진입까지 구현한다.
+- 닉네임 저장, Extension 연결, 권한·동의, 분석 제외 사이트 설정과 온보딩 완료 처리는 별도 Issue에서 구현한다.
+- Notion의 전체 온보딩 순서·필수 단계·완료 조건은 바꾸지 않는다. 이번 결정은 Issue의 작업 종료 지점만 정한다.
+
+### 결정 이유
+
+인증을 끝낸 사용자를 올바른 화면으로 보내는 작업과, 이후 여러 온보딩 단계를 구현하는 작업의 완료 기준을 분리하기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/docs/features/login-onboarding-auth-flow-PLAN.md`
+- `apps/desktop/docs/NEXT_TASK.md`
+
+## 결정 012 - Google callback 수신의 실패 경계
+
+- 결정일: 2026-10-19
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- Google 데스크톱 Client ID는 Electron Main의 `FOCUSON_GOOGLE_CLIENT_ID` 환경 변수로 받는다. 값이 없으면 브라우저를 열지 않고 `SERVICE_UNAVAILABLE`을 반환한다.
+- Main은 `127.0.0.1` 임시 포트의 기본 주소만 받고 Host·`state`를 검증한다. PKCE verifier와 `state`는 시도마다 새로 만든다. listener는 완료·취소·5분 timeout·앱 종료에 정리한다.
+- `{ started: true }`는 브라우저 인증 시작만 뜻한다. Backend code 교환이 없으므로 callback을 받아도 인증 상태를 `SIGNED_IN`으로 만들지 않는다.
+
+### 결정 이유
+
+서버가 준비되기 전에 OAuth 수신 경계를 검증하면서도 실제 로그인 성공이나 Token 발급을 가장하지 않기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/google-oauth.cts`
+- `apps/desktop/electron/main/auth-ipc.cts`
+- `apps/desktop/docs/IPC_CONTRACT.md`
+
+## 결정 013 - Google code 교환의 redirectUri 계약
+
+- 결정일: 2026-10-19
+- 담당 영역: Frontend(`apps`)·Backend(`server`)
+- 대상 앱: Desktop·Backend
+- 상태: 확정
+
+### 결정 내용
+
+- Desktop Main은 Google 인증 요청에 사용한 `http://127.0.0.1:<임시 포트>` 주소를 `redirectUri`로 보관하고, callback의 `state` 일치를 검증한다.
+- `POST /api/v1/auth/google/exchange`에는 `authorizationCode`, `codeVerifier`, `state`, `redirectUri`, `device`를 보낸다.
+- Backend는 `redirectUri`를 loopback 기본 주소로 제한하고 서버 설정의 Desktop Google Client ID, code, verifier, 동일한 `redirectUri`를 Google token endpoint에 전달한다. 반환된 Google ID token을 검증한 뒤 FocusOn 토큰을 발급한다.
+- Backend가 이전 `state`를 저장하지 않았다면 요청에 담긴 `state`만으로 일치 여부를 검증했다고 간주하지 않는다.
+
+### 결정 이유
+
+Google token endpoint는 code 교환에 최초 인증 요청의 `redirect_uri`를 요구한다. Desktop의 임시 포트는 시도마다 달라지므로 Desktop이 정확한 주소를 Backend에 전달해야 한다.
+
+### 영향받는 문서
+
+- Notion `POST /api/v1/auth/google/exchange`, `인증 · 토큰 · 디바이스 정책`
+- `docs/API_CONTRACT.md`
+- `apps/docs/AUTH_SESSION_FLOW.md`
+- `apps/desktop/docs/features/login-onboarding-auth-flow-PLAN.md`
+- `server/docs/CONTEXT.md`, `server/docs/NEXT_TASK.md`
+
+## 결정 014 - Desktop 인증 토큰 저장과 서버 요청 경계
+
+- 결정일: 2026-10-19
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- `@napi-rs/keyring`의 비동기 API로 Refresh Token 원문을 macOS Keychain에 직접 저장한다. Backend origin별로 Keychain 항목을 분리한다.
+- Access Token은 Electron Main 메모리에만 둔다. 인증 API 요청과 응답 검증도 Main에서 처리하며 Renderer에는 `AuthSessionSnapshot`만 전달한다.
+- `FOCUSON_API_BASE_URL`은 HTTPS 또는 로컬 개발용 loopback HTTP origin만 허용한다. 설정이 없으면 Google 브라우저 인증을 시작하지 않는다.
+- Google code 교환 성공이라도 Keychain 저장이 실패하면 `SIGNED_IN`으로 전이하지 않는다. 앱 재실행 때 저장된 Refresh Token을 1회 회전하고 `auth/me`를 조회한다.
+- 로그아웃은 Backend 응답 `204` 또는 계약상 `401`을 받은 뒤 Keychain을 비운다. 네트워크·서버 오류라면 토큰을 유지한다.
+
+### 결정 이유
+
+Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토큰을 노출하지 않는 IPC 계약을 지키면서, 서버 인증 API가 없는 동안에도 성공을 가장하지 않기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/auth-api.cts`, `auth-service.cts`, `auth-keychain.cts`, `desktop-identity.cts`
+- `apps/desktop/electron/main/index.cts`, `auth-ipc.cts`
+- `apps/desktop/.env.example`, `apps/desktop/package.json`
