@@ -68,7 +68,7 @@ app.whenReady()
 - 외부 Navigation과 새 Window 제한
 - 신뢰되지 않은 URL을 `shell.openExternal`로 바로 열지 않음
 - IPC Sender와 Payload 검증
-- 현재 Preload는 `window.focusOn.auth`의 이름이 정해진 함수만 노출한다. Main은 인증 IPC Sender와 입력값을 검증한다. 실제 OAuth·Token 처리는 다음 단계에서 추가한다.
+- 현재 Preload는 `window.focusOn.auth`의 이름이 정해진 함수만 노출한다. Main은 인증 IPC Sender와 입력값을 검증하고 Google 브라우저·loopback callback, Backend code 교환·Token·Keychain 보관을 처리한다. 실제 Google 계정과 Backend API를 통한 왕복 검증은 서버 구현 병합 후 진행한다.
 - 현재 구현된 권한 Request·Check는 모두 거부한다. Camera·Screen Recording·Notification은 각 기능의 안내·동의 흐름과 함께 허용 범위를 추가한다.
 
 ## 데이터 경계

@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, Menu, net, protocol } from 'electron'
+import { app, BrowserWindow, Menu, net, protocol, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -10,6 +10,11 @@ import {
 } from './renderer-path.cjs'
 import { AuthSessionStore, registerAuthIpc } from './auth-ipc.cjs'
 import { AUTH_CHANNELS } from '../shared/auth-contract.cjs'
+import { GoogleOAuthFlow } from './google-oauth.cjs'
+import { AuthApiClient, resolveAuthApiBaseUrl } from './auth-api.cjs'
+import { MacKeychainRefreshTokenVault } from './auth-keychain.cjs'
+import { getDesktopDeviceName, getInstallationId } from './desktop-identity.cjs'
+import { AuthService } from './auth-service.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -31,6 +36,23 @@ if (!hasSingleInstanceLock) {
       mainWindow.webContents.send(AUTH_CHANNELS.sessionChanged, snapshot)
     }
   })
+  let authService: AuthService | null = null
+  const googleClientId = process.env.FOCUSON_GOOGLE_CLIENT_ID?.trim()
+  const oauthFlow = googleClientId ? new GoogleOAuthFlow({
+    clientId: googleClientId,
+    openBrowser: (url) => shell.openExternal(url),
+    onOutcome: (outcome) => {
+      if (authService) {
+        void authService.handleOAuthOutcome(outcome)
+      } else {
+        // [주의] API 설정이 없으면 callback 수신만으로 로그인 성공을 만들지 않는다.
+        authStore.publish({
+          status: 'SIGNED_OUT', user: null, onboardingStatus: null,
+          error: outcome.type === 'cancelled' ? null : { code: 'SERVICE_UNAVAILABLE', retryable: false },
+        })
+      }
+    },
+  }) : null
 
   function showMainWindow(): void {
     if (!mainWindow || mainWindow.isDestroyed()) {
@@ -117,11 +139,27 @@ if (!hasSingleInstanceLock) {
     ]))
   }
 
-  app.on('before-quit', () => { isQuitting = true })
+  app.on('before-quit', () => {
+    isQuitting = true
+    oauthFlow?.dispose()
+  })
   app.on('second-instance', () => showMainWindow())
   app.on('activate', () => showMainWindow())
 
   void app.whenReady().then(() => {
+    const apiBaseUrl = resolveAuthApiBaseUrl(process.env.FOCUSON_API_BASE_URL)
+    if (apiBaseUrl && process.platform === 'darwin') {
+      authService = new AuthService(
+        authStore,
+        new AuthApiClient(apiBaseUrl),
+        new MacKeychainRefreshTokenVault(apiBaseUrl),
+        async () => ({
+          installationId: await getInstallationId(app.getPath('userData')),
+          deviceName: getDesktopDeviceName(),
+          platform: 'MACOS',
+        }),
+      )
+    }
     const outDirectory = path.join(app.getAppPath(), 'out')
 
     protocol.handle('app', async (request) => {
@@ -142,7 +180,8 @@ if (!hasSingleInstanceLock) {
     })
 
     installMenu()
-    registerAuthIpc(() => mainWindow, rendererUrl, authStore)
+    registerAuthIpc(() => mainWindow, rendererUrl, authStore, oauthFlow, authService)
     createMainWindow()
+    void authService?.restore()
   })
 }

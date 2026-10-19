@@ -1,5 +1,6 @@
 export const AUTH_CHANNELS = {
   getSession: 'auth:session:get',
+  retrySession: 'auth:session:retry',
   startGoogleLogin: 'auth:google-login:start',
   logout: 'auth:logout',
   sessionChanged: 'auth:session:changed',
@@ -30,6 +31,7 @@ export type AuthSessionSnapshot = {
 export type FocusOnApi = {
   auth: {
     getSession(): Promise<IpcResult<AuthSessionSnapshot>>
+    retrySession(): Promise<IpcResult<AuthSessionSnapshot>>
     startGoogleLogin(): Promise<IpcResult<{ started: boolean }>>
     logout(): Promise<IpcResult<{ loggedOut: true }>>
     onSessionChanged(callback: (snapshot: AuthSessionSnapshot) => void): () => void

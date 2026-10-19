@@ -3,6 +3,8 @@ import { ipcMain } from 'electron'
 import { AUTH_CHANNELS, parseAuthSessionSnapshot } from '../shared/auth-contract.cjs'
 import type { AuthSessionSnapshot, IpcResult } from '../shared/auth-contract.cjs'
 import { isAllowedNavigation } from './renderer-path.cjs'
+import type { GoogleOAuthFlow } from './google-oauth.cjs'
+import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
 const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: false } } as const
@@ -58,29 +60,63 @@ export class AuthSessionStore {
   }
 }
 
+export async function beginGoogleLogin(
+  store: AuthSessionStore,
+  oauthFlow: Pick<GoogleOAuthFlow, 'start'> | null,
+): Promise<IpcResult<{ started: boolean }>> {
+  if (!oauthFlow) return SERVICE_UNAVAILABLE
+  if (store.getSnapshot().status === 'AUTHENTICATING') return { success: true, data: { started: false } }
+
+  store.publish({ status: 'AUTHENTICATING', user: null, onboardingStatus: null, error: null })
+  let started = false
+  try {
+    started = await oauthFlow.start()
+  } catch {
+    // [주의] 브라우저·포트의 내부 오류 메시지는 Renderer에 전달하지 않는다.
+  }
+  if (!started) {
+    store.publish({ status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: SERVICE_UNAVAILABLE.error })
+    return SERVICE_UNAVAILABLE
+  }
+  return { success: true, data: { started: true } }
+}
+
 export function registerAuthIpc(
   getMainWindow: () => BrowserWindow | null,
   rendererUrl: string,
   store: AuthSessionStore,
+  oauthFlow: Pick<GoogleOAuthFlow, 'start' | 'dispose'> | null = null,
+  authService: AuthService | null = null,
 ): void {
   function accepts(event: IpcMainInvokeEvent, args: unknown[]): boolean {
     return isValidAuthRequest(event, args, getMainWindow(), rendererUrl)
   }
 
-  ipcMain.handle(AUTH_CHANNELS.getSession, (event, ...args: unknown[]): IpcResult<AuthSessionSnapshot> => {
+  ipcMain.handle(AUTH_CHANNELS.getSession, async (event, ...args: unknown[]): Promise<IpcResult<AuthSessionSnapshot>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
+    // [유지보수] 앱 시작 직후 Keychain 복구가 끝난 상태를 첫 Snapshot으로 보낸다.
+    await authService?.ready()
     return { success: true, data: store.getSnapshot() }
   })
 
-  ipcMain.handle(AUTH_CHANNELS.startGoogleLogin, (event, ...args: unknown[]): IpcResult<{ started: boolean }> => {
+  ipcMain.handle(AUTH_CHANNELS.retrySession, async (event, ...args: unknown[]): Promise<IpcResult<AuthSessionSnapshot>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
-    // [주의] OAuth·Backend 연결 전에는 브라우저를 열지 않고 성공을 가장하지 않는다.
-    return SERVICE_UNAVAILABLE
+    if (!authService) return SERVICE_UNAVAILABLE
+    await authService.restore()
+    return { success: true, data: store.getSnapshot() }
   })
 
-  ipcMain.handle(AUTH_CHANNELS.logout, (event, ...args: unknown[]): IpcResult<{ loggedOut: true }> => {
+  ipcMain.handle(AUTH_CHANNELS.startGoogleLogin, async (event, ...args: unknown[]): Promise<IpcResult<{ started: boolean }>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
-    // [주의] 서버의 토큰 폐기 없이 로컬 상태만 지우면 로그아웃 완료로 취급할 수 없다.
-    return SERVICE_UNAVAILABLE
+    if (!authService) return SERVICE_UNAVAILABLE
+    await authService?.ready()
+    return beginGoogleLogin(store, oauthFlow)
+  })
+
+  ipcMain.handle(AUTH_CHANNELS.logout, async (event, ...args: unknown[]): Promise<IpcResult<{ loggedOut: true }>> => {
+    if (!accepts(event, args)) return INVALID_REQUEST
+    if (!authService) return SERVICE_UNAVAILABLE
+    oauthFlow?.dispose()
+    return authService.logout()
   })
 }

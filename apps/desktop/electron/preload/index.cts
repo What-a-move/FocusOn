@@ -6,6 +6,7 @@ import type { AuthSessionSnapshot, FocusOnApi } from '../shared/auth-contract.cj
 const focusOnApi: FocusOnApi = {
   auth: {
     getSession: () => ipcRenderer.invoke(AUTH_CHANNELS.getSession),
+    retrySession: () => ipcRenderer.invoke(AUTH_CHANNELS.retrySession),
     startGoogleLogin: () => ipcRenderer.invoke(AUTH_CHANNELS.startGoogleLogin),
     logout: () => ipcRenderer.invoke(AUTH_CHANNELS.logout),
     onSessionChanged(callback: (snapshot: AuthSessionSnapshot) => void): () => void {
