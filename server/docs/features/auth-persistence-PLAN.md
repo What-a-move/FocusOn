@@ -1,6 +1,6 @@
-# 인증 저장 모델 기획서 (검토 초안)
+# 인증 저장 모델 기획서
 
-> 현재 상태: 승인됨. Issue #32 기준으로 구현한다. 구현 전에는 이 문서와 Notion ERD를 다시 대조한다.
+> 현재 상태: 승인 및 구현 완료. Issue #32의 코드 리뷰와 QA를 진행한다.
 
 ## 기본 정보
 
@@ -76,16 +76,16 @@ server/docs/CONTEXT.md
 server/docs/NEXT_TASK.md
 ```
 
-`ERROR`와 `REPORT`는 Backend 템플릿 규칙에 따라 작업 시작 시 생성하되, 결과는 실제 구현 뒤 기록한다. 현재는 기획서 검토 단계다.
+`ERROR`와 `REPORT`는 Backend 템플릿 규칙에 따라 작성했고, 실제 구현·실행 결과를 기록했다.
 
 ## 완료 조건
 
-- [ ] Notion ERD의 인증 5개 테이블과 컬럼·상태·관계가 일치한다.
-- [ ] Flyway V1과 Entity의 컬럼 타입·nullability·관계가 일치한다.
-- [ ] 사용자·Google 계정·기기·token family·Refresh Token의 유일성 및 FK가 저장 계층에서 보장된다.
-- [ ] 원본 인증 비밀값을 저장하거나 로그에 남기지 않는다.
-- [ ] 빈 PostgreSQL에서 migration 적용 결과를 확인하고 결과를 `REPORT`에 기록한다.
-- [ ] 실제 변경과 남은 후속 범위를 `CONTEXT.md`, `NEXT_TASK.md`에 반영한다.
+- [x] Notion ERD의 인증 5개 테이블과 컬럼·상태·관계가 일치한다.
+- [x] Flyway V1과 Entity의 컬럼 타입·nullability·관계가 일치한다.
+- [x] 사용자·Google 계정·기기·token family·Refresh Token의 유일성 및 FK가 저장 계층에서 보장된다.
+- [x] 원본 인증 비밀값을 저장하거나 로그에 남기지 않는다.
+- [x] 빈 PostgreSQL에서 migration 적용 결과를 확인하고 결과를 `REPORT`에 기록한다.
+- [x] 실제 변경과 남은 후속 범위를 `CONTEXT.md`, `NEXT_TASK.md`에 반영한다.
 
 ## 정본 참고
 

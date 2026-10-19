@@ -21,8 +21,10 @@
 - Hibernate `ddl-auto=validate`와 Backend 기동: 성공. 기동에는 일회성 임시 JWT 키와 임의 로컬 포트를 사용했고, 확인 뒤 Backend 프로세스를 종료했다.
 - 테스트 코드는 추가하거나 실행하지 않았다.
 - 관련 오류 기록: [auth-persistence-ERROR.md](auth-persistence-ERROR.md)
+- 독립 코드 리뷰에서 Refresh Token의 `issuedAt` 자동 설정 누락을 찾아 `@CreationTimestamp`를 추가했다. 상세: [auth-persistence-code-review.md](auth-persistence-code-review.md).
+- 해당 수정 후 `./gradlew compileJava checkstyleMain --no-daemon`을 다시 실행해 성공했다.
 
 ## 남은 작업
 
-- 구현 diff 자체 검토와 Issue 체크리스트 갱신.
+- 코드 리뷰 후 변경분 컴파일 확인과 QA.
 - PR 초안은 사용자에게 먼저 보여준 뒤 별도 승인 시 생성.

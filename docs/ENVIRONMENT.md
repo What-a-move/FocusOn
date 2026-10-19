@@ -28,13 +28,18 @@ pnpm lint
 
 ## Server와 PostgreSQL
 
-최초 1회 `server/.env.example`을 `server/.env`로 복사하고 로컬 비밀번호를 설정한다. `.env`는 Git에 올리지 않는다.
+최초 1회 `server/.env.example`을 `server/.env`로 복사하고 로컬 PostgreSQL 비밀번호를 설정한다. `openssl rand -base64 32`로 생성한 값을 `JWT_SECRET_BASE64`에도 넣는다. Docker Compose는 PostgreSQL만 시작할 때도 Backend의 필수 환경 변수인 이 값을 확인한다. `.env`는 Git에 올리지 않는다.
 
 ```bash
 cd server
 docker compose up -d postgres
+set -a
+. ./.env
+set +a
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
+
+Gradle에서 직접 Backend를 실행할 때는 위처럼 `.env`를 현재 셸에 읽어야 한다. Spring Boot는 `.env` 파일을 자동으로 읽지 않는다. `.env` 값은 셸에서 읽을 수 있는 형식으로 작성한다.
 
 Backend까지 Docker로 실행할 때:
 

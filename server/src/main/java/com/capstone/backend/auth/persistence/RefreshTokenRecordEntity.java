@@ -15,6 +15,7 @@ import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -54,6 +55,7 @@ public class RefreshTokenRecordEntity {
   @Column(nullable = false, length = 16)
   private Status status = Status.ACTIVE;
 
+  @CreationTimestamp
   @Column(name = "issued_at", nullable = false, updatable = false)
   private Instant issuedAt;
 
