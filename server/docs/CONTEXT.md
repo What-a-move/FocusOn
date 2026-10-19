@@ -24,11 +24,12 @@
 ### 최근 구현
 
 - Issue #30: 공통 API 성공·오류 응답, requestId, Controller 예외 처리 구현 ([PR #31](https://github.com/What-a-move/FocusOn/pull/31))
+- Issue #32: 인증 5개 테이블의 Flyway V1과 Entity·Repository를 `feat/#32-auth-persistence`에 구현했다. PostgreSQL 17.11 적용과 Hibernate 스키마 검증을 확인했다. PR은 아직 생성하지 않았다.
 
 ### 다음 구현 범위
 
-- 사용자·기기·목표·세션 Entity 및 V1 migration
-- Google ID token 교환과 인증된 사용자·기기를 Access JWT 서비스에 연결
+- Issue #32의 코드 리뷰와 PR 절차를 마무리한다. 목표·세션 Entity는 후속 migration으로 분리한다.
+- Desktop Authorization Code + PKCE 기반 Google 교환과 인증된 사용자·기기를 Access JWT 서비스에 연결한다.
 - MVP API를 도메인 단위로 구현
 
 ### 미구현

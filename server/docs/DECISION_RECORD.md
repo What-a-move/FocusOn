@@ -219,14 +219,12 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - `GET /api/v1/reports/calendar?month=YYYY-MM`
 - `user_analysis_excluded_domains`, `learning_sessions`, `analysis_runs`, `intervention_events`, `learning_review_evidences`, `learning_summaries`
 
-## 새 결정 기록
+## 결정 015 - 첫 migration의 인증 범위
 
-### 결정 015
-
-- 결정일:
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 영향받는 API·Entity:
-- 관련 Issue·PR:
+- 결정일: 2026-10-19
+- 주제: 로그인용 PostgreSQL 저장 모델
+- 상태: 확정
+- 결정 내용: Flyway V1은 인증에 필요한 `users`, `oauth_identities`, `user_devices`, `token_families`, `refresh_token_records`로 범위를 한정한다. 기기당 활성 token family 최대 1개와 family당 활성 Refresh Token record 최대 1개는 PostgreSQL 부분 유니크 인덱스로 보장한다. 목표·세션 등 다른 도메인은 후속 migration에서 추가한다.
+- 결정 이유: 첫 로그인 작업에 필요한 저장 모델을 하나의 Issue에서 ERD와 대조하고, 동시 로그인·토큰 회전의 중복 활성화를 DB에서 막기 위해서다.
+- 영향받는 API·Entity: 인증 저장 모델; 공개 API 계약 변경 없음.
+- 관련 Issue·PR: [#32](https://github.com/What-a-move/FocusOn/issues/32), PR은 아직 없음.

@@ -2,10 +2,10 @@
 
 ## 작업명
 
-최초 PostgreSQL 스키마와 핵심 DB 모델 구현
+Issue #32 로그인용 PostgreSQL 저장 모델 구현
 
 - 우선순위: 높음
-- 상태: Issue #30 공통 API 기반이 `dev`에 반영된 뒤 착수
+- 상태: `feat/#32-auth-persistence`에서 구현 완료. PostgreSQL 적용 확인 완료, 코드 리뷰와 PR 전 검토가 남음.
 
 ## 목적
 
@@ -13,9 +13,9 @@
 
 ## 순서
 
-1. Notion ERD와 API 필드를 대조해 V1 migration 범위를 나눈다. 제외 도메인, heartbeat 기준 시각, 종료 사유, 개입 정책 버전, `studyDate`, 학습 정리 테이블을 포함한다.
-2. 사용자, 기기, 목표, 세션 핵심 Entity와 Repository를 구현한다.
-3. Google 로그인 교환과 Refresh Token 정책을 구현하고 기존 Access JWT 서비스에 연결한다. Spring Security 필터의 401·403도 공통 오류 응답에 연결한다.
+1. Issue #32의 독립 코드 리뷰와 PR 초안 검토를 마무리한다.
+2. 후속 Issue에서 Google Authorization Code + PKCE 교환과 Refresh Token 정책을 구현하고 기존 Access JWT 서비스에 연결한다. Spring Security 필터의 401·403도 공통 오류 응답에 연결한다.
+3. 목표·세션·분석 제외 도메인·heartbeat·개입 정책 버전·`studyDate`·학습 정리는 각 도메인 작업의 migration과 Entity로 분리한다.
 4. 목표와 세션 MVP API를 구현한다.
 5. 분석·개입 정책과 일간 리포트·집중 달력·학습 정리 API를 연결한다.
 6. P1인 세션 목록과 주간 리포트는 MVP 안정화 뒤 구현한다.
