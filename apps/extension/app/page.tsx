@@ -32,6 +32,8 @@ export default function Page() {
         <article className="flex items-center justify-between gap-3 rounded-xl border border-[#ddd] bg-white px-4 py-3.5"><span className="text-[11px] font-bold text-[#888]">학습 목표</span><strong className="text-xs">설정되지 않음</strong></article>
         <article className="flex items-center justify-between gap-3 rounded-xl border border-[#ddd] bg-white px-4 py-3.5"><span className="text-[11px] font-bold text-[#888]">분석 상태</span><strong className="text-xs">{isStudying ? '진행 중' : '대기 중'}</strong></article>
       </section>
+
+      <p className="mt-4 text-xs text-[#555]"><a className="underline focus-visible:outline-2" href="capture/permissions.html" target="_blank" rel="noreferrer">현재 탭 OCR 권한 설정</a></p>
     </main>
   )
 }

@@ -188,3 +188,13 @@ Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막�
 - `docs/API_CONTRACT.md`
 - `apps/desktop/docs/DECISION_RECORD.md`
 - Notion 로그인·기능 카탈로그·Figma 화면 가이드
+
+## 결정 009 - 단일 창 로컬 수집 모듈
+
+- 결정일: 2026-10-19
+- 상태: 사용자 요청에 따른 로컬 구현 선택, 공개 계약 변경 없음
+- foreground 앱은 NSWorkspace, 창은 Accessibility의 focused window로 확인한다. Chrome은 Extension으로 위임하며 도메인 정책을 확인할 수 없는 다른 브라우저는 보류한다.
+- macOS 14 이상 ScreenCaptureKit의 desktopIndependentWindow 필터로 대상 창 하나만 캡처하고 Apple Vision으로 로컬 OCR한다. 다른 창과 Floating Poki를 합성하지 않는다. 화면 밖/여러 화면에 걸친 창은 현재 구현에서 보류한다.
+- 현재 CLT의 SwiftBridging/SDK 충돌을 피하기 위해 Objective-C·clang helper를 사용한다. 시스템 SDK 파일을 변경하지 않는다.
+- helper는 고정 실행 파일·stdin/stdout JSON만 사용한다. 본문·이미지 파일·로그·Renderer 원문 전송을 만들지 않는다. Main의 최신 세션·정책 공급과 Server API 연결은 후속 3번이다.
+- 근거: 사용자 제공 허재원 화면 분석 기획서 3·6절, [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), [Vision](https://developer.apple.com/documentation/vision/recognizing-text-in-images).

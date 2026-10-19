@@ -26,6 +26,7 @@
 - Main·Preload TypeScript Build, Next.js Static Export, `app://` Production Loading 방향을 확정했다.
 - Single Instance, Main Window 닫기, Settings Route, Floating Window 위치·Drag 기준을 확정했다.
 - IPC Channel·오류 형식과 macOS 권한 요청 UX를 확정했다.
+- `electron/main/screen-acquisition.ts`와 native `ScreenCapture.m`에 foreground 앱·focused window 선택, APP_META→Apple Vision OCR 모듈을 구현했다. 같은 대상·최신 정책을 재검증하고 제외·민감·권한 없음은 수집하지 않는다. native 빌드와 합성 테스트를 확인했으며 Electron Main 부팅·Server 연결·실제 권한/화면 검증은 남아 있다.
 
 ### 진행 중인 작업
 
@@ -36,9 +37,8 @@
 
 ### 아직 진행하지 않은 작업
 
-- macOS 활성 앱 감지
-- 화면 캡처 권한 및 캡처 처리
-- 분석 제외 앱 처리
+- macOS 활성 앱·화면 수집 모듈의 Electron Main 연결 및 실제 권한·화면 검증
+- 분석 제외 앱 정책 공급과 실제 동작 검증
 - MediaPipe 카메라 분석 연동
 - Server API 연결
 - 화면 부유형 마스코트 표시 및 사용자 문구 설정

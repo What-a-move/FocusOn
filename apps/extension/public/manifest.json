@@ -3,10 +3,13 @@
   "name": "FocusOn Extension",
   "version": "0.1.0",
   "description": "Chrome 브라우저의 학습 흐름을 분석합니다.",
-  "permissions": ["tabs", "storage", "webNavigation"],
+  "minimum_chrome_version": "120",
+  "permissions": ["tabs", "storage", "webNavigation", "offscreen"],
+  "optional_host_permissions": ["<all_urls>"],
   "host_permissions": ["https://*/*", "http://*/*"],
   "background": {
-    "service_worker": "service-worker.js"
+    "service_worker": "service-worker.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -14,6 +17,13 @@
       "js": ["content-script.js"]
     }
   ],
+  "web_accessible_resources": [{
+    "resources": ["capture/dom.js", "capture/policy.js"],
+    "matches": ["https://*/*", "http://*/*"]
+  }],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self'; connect-src 'self'"
+  },
   "action": {
     "default_title": "FocusOn",
     "default_popup": "index.html"

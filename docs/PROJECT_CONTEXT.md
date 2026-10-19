@@ -1,6 +1,6 @@
 # FocusOn 프로젝트 컨텍스트
 
-이 문서는 새 채팅이나 새 담당자가 FocusOn의 목적과 문서 구조를 빠르게 파악하기 위한 시작점이다. 현재 상태는 2026-10-12 저장소 문서를 기준으로 요약했다. 상세 요청·응답, DB 컬럼, 화면 흐름은 각 정본 문서에서 확인한다. 설계 문서에 적혀 있어도 코드로 구현됐다고 간주하지 않는다.
+이 문서는 새 채팅이나 새 담당자가 FocusOn의 목적과 문서 구조를 빠르게 파악하기 위한 시작점이다. 현재 상태는 2026-10-19 저장소 문서를 기준으로 요약했다. 상세 요청·응답, DB 컬럼, 화면 흐름은 각 정본 문서에서 확인한다. 설계 문서에 적혀 있어도 코드로 구현됐다고 간주하지 않는다.
 
 ## 1. 서비스와 MVP 흐름
 
@@ -86,7 +86,7 @@ Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청
 ## 5. 현재 개발 상태와 검토 필요 항목
 
 - Backend는 Spring Boot·PostgreSQL·Docker Compose·Flyway 기반이 마련됐지만 Controller·Service·Repository·Entity와 도메인 API는 아직 구현 전이다. 우선순위는 공통 응답·오류 처리, 첫 migration, 인증, 세션 MVP API다.
-- Desktop·Extension은 기본 UI와 빌드 골격이 있고, Electron Main·Preload, 현재 탭 추적, pairing, 세션 동기화와 실제 분석 연결은 후속 구현 대상이다.
+- Desktop은 현재 foreground/focused window 확인, 단일 창 캡처, Apple Vision OCR 모듈을 구현했다. Extension은 focused 창의 활성 탭 확인, 단계별 DOM·OCR 수집 모듈을 구현했다. 각 수집기는 Server 세션·제외 정책을 연결하는 어댑터 없이 자동 실행되지 않는다. 수집 결과의 API 분석 연결, 실제 macOS/Chrome 권한 검증과 학교 모델 속도·정확도 검증은 후속 작업이다.
 - AI는 설계 문서와 scaffold 중심이다. 최근 AI v1.1 문서에는 목표 보조 상태, 분석 제외 모드, 개인화 휴식, 학습 노트 등 추가 제안이 있다. API 정본과 합의되지 않은 항목을 기존 MVP 계약으로 취급하지 않는다.
 - **검토 필요:** 카메라의 출시 범위와 구현 기술 표기가 문서마다 다르다. 공통 정책·제품 기획은 선택 동의 카메라를 MVP에 포함하고 macOS 로컬 분석을 설명한다. 일부 앱·AI 문서는 MediaPipe 또는 출시 보류를 적고 있다. 카메라 구현 작업 전에 해당 정본과 팀 결정을 다시 확인한다.
 - **검토 필요:** AI v1.1의 `ANALYSIS_AND_TIME` 제외 모드, 학습 노트 재생성, 사용자 피드백 개인화와 공개 세션 모델은 현재 로컬 공통 API 요약과 차이가 있다. 관련 작업에서는 AI 초안을 그대로 공개 API나 ERD에 반영하지 않는다.

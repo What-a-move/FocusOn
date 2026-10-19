@@ -2,6 +2,8 @@
 
 > 현재 상태: Manifest에는 `tabs`, `storage`, `webNavigation`, 모든 HTTP·HTTPS Host 권한이 선언되어 있다. 자동 추적과 HTTP 지원은 확정했지만, 전체 Host 권한의 사용자 승인 방식은 아직 확정하지 않았으므로 Manifest는 변경하지 않는다.
 
+> 2026-10-19 수집 구현: 기존 DOM Host 권한은 유지했다. 로컬 OCR Worker용 `offscreen`과 사용자가 별도로 승인하는 optional `<all_urls>`를 추가했다. 최소 Chrome 120을 선언하고 WASM만 허용하는 CSP를 적용했다. OCR 권한은 `capture/permissions.html`에서 요청하며, 승인 전에는 자동 viewport 캡처를 실행하지 않는다. 기존 DOM Host 승인 방식의 미확정 상태와는 별도다.
+
 ## 기본 원칙
 
 - 권한은 구현한 기능에 필요한 최소 범위만 요청한다.

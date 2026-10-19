@@ -22,6 +22,7 @@
 - Next.js 기본 화면을 FocusOn 브라우저 분석 화면으로 교체했다.
 - Manifest V3 기본 파일을 `public/manifest.json`으로 정리했다.
 - Content Script와 Service Worker 진입 파일을 추가했다.
+- `public/capture/`와 실제 Service Worker·Content Script에 focused Chrome 창의 활성 탭 선택, 메타데이터→DOM→viewport OCR 수집 모듈을 구현했다. 세션·정책 공급 전에는 수집을 차단한다. Tesseract.js·한/영 모델·WASM은 로컬 빌드에 포함하며 optional OCR 권한 화면을 추가했다. Server API 연결과 실제 Chrome 화면 검증은 남아 있다.
 - Extension production build 결과물에 manifest와 스크립트가 포함되는 것을 확인했다.
 - Next.js App Router와 Tailwind CSS v4 기반 화면 구조를 확인했다.
 - 활성 학습 세션 중 현재 Tab을 자동 추적하고 `tabs`와 `webNavigation`을 함께 사용하는 기준을 확정했다.
@@ -31,16 +32,16 @@
 
 ### 진행 중인 작업
 
-- 확정한 현재 Tab 자동 추적과 Message 구조를 실제 코드로 구현해야 한다.
-- 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
+- 구현된 현재 Tab 수집·Message 모듈을 Server 상태·분석 API와 자동 스케줄러에 연결해야 한다.
+- 구현한 주요 본문 수집 범위와 개인정보 후보 탐지를 실제 페이지에서 검증해야 한다.
 - 전체 HTTP·HTTPS Host 권한을 필수 또는 Optional 권한으로 요청할지 확정해야 한다.
 - 일회용 연결 코드 pairing과 token 저장 정책을 구현해야 하며 Server 실시간 동기화 방식은 추가 확정이 필요하다.
 
 ### 아직 진행하지 않은 작업
 
-- 현재 탭 정보 수집 API 연결
+- 현재 탭 수집 모듈의 Server 세션·분석 API 연결
 - 페이지 이동 이벤트 저장
-- 15초 체류 후 재분석
+- 15초 체류 조건 이후의 실제 분석 API 호출 및 자동 재분석 연결
 - 분석 제외 도메인 적용
 - Desktop 연결 및 상태 동기화
 - Server API 연결

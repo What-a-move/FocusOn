@@ -6,7 +6,9 @@
     "scripts": {
         "dev": "next dev -p 3000",
         "build": "tsc --noEmit && next build --webpack",
-        "lint": "eslint ."
+        "lint": "eslint .",
+        "build:screen": "tsc -p tsconfig.screen-acquisition.json && node scripts/build-screen-capture.mjs",
+        "test:screen": "tsc -p tsconfig.screen-acquisition.json && node --test tests/screen-acquisition.test.mjs"
     },
     "dependencies": {
         "@focuson/shared-types": "workspace:*",

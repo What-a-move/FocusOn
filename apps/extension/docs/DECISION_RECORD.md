@@ -175,19 +175,13 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 
 사용자별 제외 도메인 목록의 정본은 Server `analysis_excluded_domains`다. Extension의 `chrome.storage.local`은 최신 정규화 host 목록의 캐시다. 목록 확인에 실패하면 화면·카메라 분석을 모두 보류한다. 확인된 `EXCLUDED`에서는 화면 분석을 중단하고 타이머를 유지한다. 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용하며, `PRIVACY_BLOCKED`에서는 카메라도 중단한다.
 
-## 새 결정 기록
+## 결정 011 - 활성 탭 단계 수집과 로컬 OCR
 
-다음 결정은 `결정 011`부터 추가한다.
-
-### 결정 011
-
-- 결정일:
-- 담당 영역: Frontend(`apps`)
-- 대상 앱: Desktop / Extension / 공통
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 고려한 대안:
-- 영향받는 파일:
-- 관련 Issue·PR:
+- 결정일: 2026-10-19
+- 상태: 사용자 요청에 따른 로컬 구현 선택, 공개 API 변경 없음
+- `getLastFocused().focused`와 그 창의 active tab을 함께 확인한다. 마지막 Chrome 창이라는 이유만으로 분석하지 않는다.
+- 기존 정적 Content Script·HTTP/HTTPS host 권한은 유지한다. 민감 화면 구조 사전 확인 후 메타데이터를 수집하고, 허용된 UNCERTAIN인 경우에만 DOM→OCR을 요청한다.
+- 브라우저 OCR은 offscreen document의 Tesseract.js 7.0.0·한국어/영어 로컬 모델을 사용한다. Worker·모델·코어를 패키지 내부에 포함하고 OCR 뒤 종료한다. tesseract.js postinstall은 후원 메시지 출력용이므로 실행하지 않는다.
+- 자동 captureVisibleTab의 `<all_urls>` 권한은 optional로만 추가하고 사용자 클릭에서 요청한다. 이 선택은 결정 009의 기존 DOM host 승인 방식을 확정하지 않는다.
+- FocusOn DOM overlay 영역을 가리고, 원문·이미지를 저장하지 않는다. 정책/탭 변경은 OCR context도 닫는다. 정책 lease 60초는 로컬 안전장치다.
+- 근거: 사용자 제공 화면 분석 기획서, [Chrome tabs](https://developer.chrome.com/docs/extensions/reference/api/tabs#method-captureVisibleTab), [offscreen](https://developer.chrome.com/docs/extensions/reference/api/offscreen), [Tesseract local installation](https://github.com/naptha/tesseract.js/blob/master/docs/local-installation.md).

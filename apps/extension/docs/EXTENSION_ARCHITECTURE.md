@@ -1,6 +1,6 @@
 # Chrome Extension 아키텍처
 
-> 현재 상태: Manifest V3, Popup 정적 Build, Service Worker·Content Script 진입 파일만 존재한다. 실제 탭 수집과 Message 처리는 아직 구현하지 않았다.
+> 현재 상태: Manifest V3·Popup 정적 Build에 활성 탭 단계 수집과 Message 처리 모듈을 추가했다. Server의 검증된 세션·제외 정책 공급과 실제 분석 API 연결은 아직 구현하지 않았다.
 > 결정 상태: 자동 추적 범위, 저장 위치, 15초 체류 처리, Message 계약과 최소 Chrome Version은 확정했다. 전체 Host 권한을 필수 또는 선택 권한으로 요청할지는 검토 중이다.
 
 ## 목적

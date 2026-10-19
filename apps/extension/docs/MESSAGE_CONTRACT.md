@@ -91,4 +91,6 @@ type TrackingCancelReason =
 
 ## 공식 참고
 
+2026-10-19 로컬 수집 모듈은 신뢰된 Extension 페이지에서 Worker로 `SCREEN_ANALYSIS_OBSERVE`, `SCREEN_ANALYSIS_COLLECT`를 받는다. 후자는 이전 관측의 `clientRunId`, `navigationId`, `contentSource`, `relation`, `reasonCode`가 맞아야 한다. 이는 내부 메시지이며 공개 API에 다음 수집 필드를 추가하지 않는다. `SCREEN_PROBE`는 Worker→Content Script 구조·포커스·문서 검사로 원문 입력 값을 읽지 않는다. `LOCAL_OCR`은 Worker→해당 Extension의 offscreen document에서만 처리하며 원본 이미지는 이 로컬 경로 밖으로 전송하지 않는다.
+
 - [Chrome Extension Message Passing](https://developer.chrome.com/docs/extensions/develop/concepts/messaging)

@@ -1,6 +1,6 @@
 # Chrome Extension Service Worker 생명주기
 
-> 현재 상태: `public/service-worker.js`는 안내 주석만 있는 진입 파일이다. Event Listener, 상태 복구, Server 연결은 아직 구현하지 않았다.
+> 현재 상태: `public/service-worker.js`는 수집 모듈과 무효화 Event Listener를 등록한다. 최소 관측 식별값·정책 lease는 session storage에 보관하며, Server 상태 동기화와 분석 요청은 후속 작업이다.
 > 결정 상태: 자동 추적 Event, 저장 위치와 15초 체류 처리 방식은 확정했다.
 
 ## 핵심 원칙
