@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'FocusOn Desktop',
+  title: 'FocusOn',
   description: 'FocusOn macOS 학습 세션 앱',
 }
 

@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, Menu, net, protocol, shell } from 'electron'
+import { app, BrowserWindow, Menu, nativeTheme, net, protocol, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -77,7 +77,8 @@ if (!hasSingleInstanceLock) {
       minWidth: 800,
       minHeight: 600,
       show: false,
-      backgroundColor: '#ffffff',
+      // [디자인] 화면을 읽기 전에도 macOS의 라이트·다크 배경색을 맞춰 깜빡임을 줄인다.
+      backgroundColor: nativeTheme.shouldUseDarkColors ? '#141416' : '#ffffff',
       webPreferences: {
         preload: path.join(__dirname, '../preload/index.cjs'),
         contextIsolation: true,
