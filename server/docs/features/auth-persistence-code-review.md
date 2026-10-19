@@ -37,4 +37,4 @@ Google 계정의 `(provider, provider_subject)` 전체 유일성은 [Notion ERD]
 
 - 확인된 저장 계층 결함 3건의 대응을 반영했다. 전체 유일성 제약 변경 제안은 현재 정본과 MVP 범위에 맞지 않아 보류했다.
 - 테이블·Entity 매핑, FK·유일성·상태 제약, 인증 원문 비저장 여부, 기획서 범위, 기존 계층 규칙을 정적으로 확인했다.
-- Repository 수정 후 컴파일·Checkstyle은 통과했다. V2의 PostgreSQL 적용 검증은 QA에 남긴다.
+- Repository 수정 후 컴파일·Checkstyle을 통과했다. V2의 PostgreSQL 적용과 저장 제약은 [QA](auth-persistence-QA.md)에서 확인했다.
