@@ -2,6 +2,7 @@
 
 - 작성일: 2026-10-19
 - 관련 Issue: [#32](https://github.com/What-a-move/FocusOn/issues/32)
+- 관련 PR: [#35](https://github.com/What-a-move/FocusOn/pull/35)
 - Branch: `feat/#32-auth-persistence`
 - 기획서: [auth-persistence-PLAN.md](auth-persistence-PLAN.md)
 
@@ -32,4 +33,4 @@
 
 ## 남은 작업
 
-- PR 생성 뒤 Backend CI 통과 확인과 PR 문서 연결.
+- PR #35의 Backend CI 통과 확인. `dev` 병합과 Issue 종료는 별도 승인 후 진행한다.
