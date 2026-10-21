@@ -14,7 +14,8 @@ function errorMessage(error: IpcError | null): string | null {
   switch (error.code) {
     case 'LOCAL_NETWORK_UNAVAILABLE': return '인터넷 연결을 확인하고 다시 시도해 주세요.'
     case 'AUTH_RELOGIN_REQUIRED':
-    case 'AUTH_TOKEN_REUSE_DETECTED': return '로그인 정보가 만료됐어요. Google로 다시 로그인해 주세요.'
+    case 'AUTH_TOKEN_REUSE_DETECTED':
+    case 'AUTH_OAUTH_REAUTH_REQUIRED': return '로그인 정보가 만료됐어요. Google로 다시 로그인해 주세요.'
     case 'AUTH_DEVICE_LIMIT_EXCEEDED': return '로그인 가능한 Desktop 3대를 모두 사용 중이에요. 기존 기기를 해제한 뒤 다시 시도해 주세요.'
     case 'SERVICE_UNAVAILABLE': return '로그인 서비스를 사용할 수 없어요. 잠시 후 다시 시도해 주세요.'
     default: return error.retryable ? '요청을 마치지 못했어요. 잠시 후 다시 시도해 주세요.' : '로그인을 마치지 못했어요. 다시 시도해 주세요.'

@@ -153,3 +153,18 @@ test('로그아웃은 서버가 실패하면 Keychain 토큰을 보존한다', a
   assert.equal(result.success, false)
   assert.equal(vault.peek(), 'refresh-secret-new')
 })
+
+test('Google 재인증이 필요하면 저장된 토큰을 지우고 로그아웃 상태로 돌아간다', async () => {
+  const store = new AuthSessionStore(() => {})
+  const vault = createVault('saved-refresh')
+  const api = {
+    refresh: async () => ({ success: true, data: tokens }),
+    me: async () => ({ success: false, error: { code: 'AUTH_OAUTH_REAUTH_REQUIRED', retryable: false } }),
+  }
+  const service = new AuthService(store, api, vault, async () => { throw new Error('unused') })
+  await service.restore()
+
+  assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
+  assert.equal(store.getSnapshot().error.code, 'AUTH_OAUTH_REAUTH_REQUIRED')
+  assert.equal(vault.peek(), null)
+})

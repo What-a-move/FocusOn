@@ -121,7 +121,7 @@ if (!hasSingleInstanceLock) {
     window.webContents.session.setPermissionCheckHandler(() => false)
 
     void window.loadURL(rendererUrl).catch((error: unknown) => {
-      console.error('Renderer를 열지 못했어.', error)
+      console.error('Renderer를 열지 못했어요.', error)
     })
   }
 

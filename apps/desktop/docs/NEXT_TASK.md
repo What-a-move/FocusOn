@@ -33,7 +33,7 @@ Backend의 exchange·refresh·auth/me·logout 구현이 병합되면 실제 Goog
 5. [x] Google OAuth 기본 브라우저·임시 loopback callback, PKCE·state 검증을 Main에 연결한다. Client ID는 `FOCUSON_GOOGLE_CLIENT_ID`로 받는다.
 6. [x] macOS Keychain과 Backend code 교환·refresh·auth/me·logout 요청을 Main에 연결했다. 서버 API가 준비되기 전에는 code callback을 로그인 성공으로 처리하지 않는다. 실제 Google 계정 왕복과 Keychain 수동 QA는 서버 병합 뒤 확인한다.
 7. [x] 로그인 화면과 인증 상태에 따른 온보딩 시작 화면·홈 진입, 오프라인 재시도, 로그아웃 버튼을 연결했다. `FocusOn-Design` HTML의 레이아웃·색·포키 에셋으로 시안을 맞췄다.
-8. [x] Desktop lint·Build와 인증 테스트 23개를 확인했다. 전체 OAuth callback 테스트는 loopback을 허용하는 환경에서 실행했다. 실제 Google 계정 왕복은 Client ID·Backend 준비 뒤 확인한다.
+8. [x] Desktop lint·Build와 인증 테스트 24개를 확인했다. Google 재인증 필요(`AUTH_OAUTH_REAUTH_REQUIRED`)도 재로그인으로 처리한다. 전체 OAuth callback 테스트는 loopback을 허용하는 환경에서 실행했다. 실제 Google 계정 왕복은 Client ID·Backend 준비 뒤 확인한다.
 
 ## Backend 병합 뒤 실제 계정 QA 순서
 

@@ -8,7 +8,8 @@ const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryab
 const RELOGIN_REQUIRED: AuthApiError = { code: 'AUTH_RELOGIN_REQUIRED', retryable: false }
 
 function isReloginError(code: string): boolean {
-  return code === 'AUTH_RELOGIN_REQUIRED' || code === 'AUTH_TOKEN_REUSE_DETECTED'
+  // [주의] Google 재인증이 필요한 경우도 저장된 토큰으로 복구할 수 없으므로 다시 로그인하게 한다.
+  return code === 'AUTH_RELOGIN_REQUIRED' || code === 'AUTH_TOKEN_REUSE_DETECTED' || code === 'AUTH_OAUTH_REAUTH_REQUIRED'
 }
 
 export class AuthService {
