@@ -4,29 +4,35 @@
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: Electron Main·Preload 기본 구조 구현
+- 작업명: Desktop 온보딩 단계 구현과 대시보드 진입
 - 담당 영역: Frontend(`apps`)
-- 대상 앱: Desktop
+- 대상 앱: Desktop (Extension pairing UI 연동 포함)
 - 우선순위: 높음
-- 상태: 예정
+- 상태: 공통 온보딩 틀, 닉네임(`/onboarding`), Extension 연결 안내(`/onboarding/extension`), 필수 권한·동의 UI(`/onboarding/permissions`)를 구현했다. 권한·동의 선택은 화면 안에서만 동작하며, macOS 권한 확인과 동의 저장은 아직 연결하지 않았다. 코드 발급·연결 확인 및 실제 계정 QA는 Backend API 구현 뒤 진행한다.
 
 ## 작업 목적
 
-확정된 구조에 따라 React 화면과 Electron의 macOS 기능을 실제 코드로 분리해 이후 활성 앱 확인, 화면 캡처, 권한 처리를 연결할 수 있도록 한다.
+로그인 뒤 닉네임, Extension 연결, 필수 권한·동의, 분석 제외 사이트 설정을 구현하고 모든 필수 단계를 완료하면 대시보드로 이동한다. 목표·시간·개입은 온보딩에서 설정하지 않고 대시보드의 `오늘 학습` 흐름으로 분리한다.
 
 ## 선행 조건
 
-- Desktop 기본 화면이 실행되어야 한다.
+- 인증 기반과 로그인 화면이 `dev`에 반영되어 있어야 한다 (Issue #22).
 - `ELECTRON_ARCHITECTURE.md`, `IPC_CONTRACT.md`, `WINDOW_LIFECYCLE.md`의 확정 기준을 따라야 한다.
-- 관련 기획서를 `features/`에 작성해야 한다.
+- 기획서 [`onboarding-flow-PLAN.md`](./features/onboarding-flow-PLAN.md)와 Frontend [Issue #36](https://github.com/What-a-move/FocusOn/issues/36)를 확인한다. Backend API 구현은 담당 Backend 작업에서 진행한다.
+- 닉네임·pairing·consent·analysis-excluded-domains API 정본을 따른다.
+- 앱 시작·복귀 때 Desktop Main이 로컬 필수 권한을 다시 확인한다. 서버 응답만으로 OS 권한 허용을 가정하지 않는다.
+- 사용자가 제외 도메인을 저장하거나 빈 목록 건너뛰기를 명시적으로 선택한 뒤에만 완료 marker를 기록한다.
+- 서버 API 구현 전에는 저장·온보딩 완료 성공을 임의로 처리하지 않는다.
 
 ## 예상 작업 순서
 
-1. Main·Preload TypeScript 진입점과 전용 Build 설정을 만든다.
-2. 개발 `127.0.0.1` Loading과 Production `app://` Loading을 구현한다.
-3. Single Instance와 Main Window 숨김·재실행 흐름을 구현한다.
-4. 확정한 IPC 공통 결과와 최소 Channel을 구현한다.
-5. 로컬에서 Desktop Build와 실행을 확인한다.
+1. 로그인 뒤 `GET /api/v1/users/me/onboarding-readiness`로 `currentStep`을 조회해 중단 지점부터 여는 흐름을 연결한다.
+2. 완료: 공통 온보딩 틀과 닉네임 입력 UI, 클라이언트 형식 검증을 구현했다. 닉네임 저장·중복 검증은 API 연결 뒤 이어서 구현한다.
+3. Desktop 연결 안내 및 코드 자리·대기·완료·오류 표시 UI를 구현했다. 실제 코드 발급과 상태 확인 API 연결은 후속 작업이다.
+4. 권한·동의 UI를 구현했다. 다음은 분석 제외 사이트 UI를 만든다. 이후 Main/Preload에서 macOS 화면 기록 권한 확인을 연결하고 필수 동의 API를 연동한다. 카메라 동의와 알림은 선택으로 두고 거부해도 온보딩을 막지 않는다.
+5. 제외 사이트 등록·저장 또는 빈 목록 건너뛰기를 제공하고 완료 marker를 기록한다.
+6. 서버가 `COMPLETED`를 반환하면 대시보드로 이동한다. 목표·시간·개입은 후속 대시보드 Issue에 남긴다.
+7. 백엔드 API 병합 뒤 신규 계정, 앱 재실행, 권한 변경, 네트워크 오류, Extension 연결을 실제 계정으로 검증한다.
 
 ## 이후 작업 후보
 

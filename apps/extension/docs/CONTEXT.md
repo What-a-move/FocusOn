@@ -31,10 +31,12 @@
 
 ### 진행 중인 작업
 
+- Desktop 온보딩용 코드 입력 UI와 형식 검증을 기본 Popup(`/`)과 `/connect`에 추가했다. `FocusOn-design/extension-popup.html`의 시각 디자인을 적용했다. API를 호출하지 않으며 형식이 맞아도 연결 성공을 표시하지 않는다. 설치 ID 발급, pairing API, Extension token 안전 저장은 미구현이다.
 - 확정한 현재 Tab 자동 추적과 Message 구조를 실제 코드로 구현해야 한다.
 - 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
 - 전체 HTTP·HTTPS Host 권한을 필수 또는 Optional 권한으로 요청할지 확정해야 한다.
 - 일회용 연결 코드 pairing과 token 저장 정책을 구현해야 하며 Server 실시간 동기화 방식은 추가 확정이 필요하다.
+- Desktop 온보딩에서 Extension 연결은 필수 단계다. Extension pairing UI는 코드 입력과 연결 결과 표시까지만 담당하며, 온보딩 완료 뒤의 목표·시간 설정은 Desktop 대시보드에서 진행한다.
 
 ### 아직 진행하지 않은 작업
 

@@ -29,7 +29,10 @@
 
 ### 진행 중인 작업
 
+- Issue #36에서 공통 온보딩 단계 표시, 닉네임 화면, Extension 연결 안내 UI와 권한 안내·동의 선택 UI를 구현했다. 권한과 동의는 같은 온보딩 단계 안의 두 화면으로 나눴다. 동의 선택은 Renderer의 임시 UI 상태이며, 실제 macOS 권한 확인과 동의 API 저장은 연결 전이다. 닉네임 API 저장·중복 검증, 연결 코드 발급과 실제 pairing도 아직 연결하지 않았다.
 - 확정한 Electron Main·Preload·Renderer 구조를 실제 코드와 실행 Script로 구현해야 한다.
+- 로그인 후 온보딩은 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정 순서로 진행하며, 완료 뒤 대시보드에 진입한다. 목표·시간·개입 설정은 대시보드 `오늘 학습`의 별도 흐름이다.
+- 온보딩 재개는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 결정한다. 앱 시작·복귀 때 Desktop Main이 OS 권한을 다시 확인하고 준비 상태를 갱신한다. API 구현은 Backend 담당 범위다.
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
 - 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.

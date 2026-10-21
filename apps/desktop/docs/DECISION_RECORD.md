@@ -170,8 +170,8 @@ Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막�
 ### 결정 내용
 
 - 온보딩에서 분석 제외 사이트 설정 단계를 반드시 보여준다. 사용자가 사이트를 등록하거나 빈 목록으로 건너뛰기를 선택하면 이 단계를 완료하고 온보딩을 끝낼 수 있다. 이후 설정에서 목록을 수정할 수 있다.
-- 첫 세션 시간 선택지는 `30분`, `1시간`, `2시간`, `직접 입력`이다. 직접 입력은 `5~300분`으로 제한한다.
-- `종료 시간 없이 시작`은 MVP 온보딩 선택지로 제공하지 않는다. 저수준 API의 `targetDurationMs = null` 계약은 유지한다.
+- 대시보드 `오늘 학습`의 첫 세션 시간 선택지는 `30분`, `1시간`, `2시간`, `직접 입력`이다. 직접 입력은 `5~300분`으로 제한한다.
+- `종료 시간 없이 시작`은 MVP 대시보드 선택지로 제공하지 않는다. 저수준 API의 `targetDurationMs = null` 계약은 유지한다.
 
 ### 결정 이유
 
@@ -188,3 +188,32 @@ Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막�
 - `docs/API_CONTRACT.md`
 - `apps/desktop/docs/DECISION_RECORD.md`
 - Notion 로그인·기능 카탈로그·Figma 화면 가이드
+
+## 결정 009 - 온보딩 완료와 대시보드 목표 설정 경계
+
+- 결정일: 2026-10-21
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop·Extension
+- 상태: 확정
+
+### 결정 내용
+
+- 온보딩 순서는 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정이다.
+- 분석 제외 사이트는 저장하거나 빈 목록 건너뛰기를 선택할 수 있다. 두 경우 모두 설정 단계를 완료한 것으로 기록한다.
+- 필수 단계 완료 후 대시보드로 이동한다. 목표 입력·AI 명확성 확인·시간·개입 설정은 대시보드 `오늘 학습`에서 시작하며 온보딩 완료 상태에 포함하지 않는다.
+- 앱 재실행 뒤 이어갈 단계는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 복구한다. 앱 시작·복귀 때 Desktop Main은 로컬 필수 권한을 다시 확인하고 서버에 갱신한다.
+- Extension 연결 상태는 서버 pairing, 필수 동의는 서버 consent 기록으로 판정한다. 클라이언트가 완료 상태를 임의로 표시하지 않는다.
+- 카메라 동의와 알림 권한은 선택 사항이며 온보딩 완료를 막지 않는다.
+
+### 결정 이유
+
+필수 계정·기기·권한 준비와 학습 세션 구성을 분리하고, 앱이 종료된 뒤에도 사용자가 마지막 미완료 단계부터 이어갈 수 있게 한다. 빈 제외 목록은 미방문과 건너뛰기를 나타내므로 완료 marker를 별도로 보관한다.
+
+### 영향받는 문서
+
+- Notion `로그인 → 학습 목표 설정`
+- Notion `GET /api/v1/users/me/onboarding-readiness`
+- Notion `PUT /api/v1/users/me/onboarding-readiness`
+- `docs/PROJECT_CONTEXT.md`, `docs/API_CONTRACT.md`
+- `apps/desktop/docs/CONTEXT.md`, `NEXT_TASK.md`
+- `apps/extension/docs/CONTEXT.md`, `NEXT_TASK.md`
