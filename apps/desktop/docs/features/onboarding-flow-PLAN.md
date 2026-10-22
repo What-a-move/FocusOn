@@ -67,12 +67,12 @@
 - 분석 제외 사이트는 `/onboarding/sites`다. host만 정규화해 최대 50개, 목록이 비면 버튼이 `건너뛰기`가 되며 저장 성공 시 완료 화면(`/onboarding/done`)을 거쳐 `홈으로 가기`로 대시보드(`/`)에 들어간다. 완료 화면의 닉네임·요약은 서버가 확정한 값만 보여 주고, 불러오지 못하면 요약 없이 완료 안내만 둔다.
 - 다크 모드는 macOS 설정(`prefers-color-scheme`)을 따르며 `fo-base.css` 다크 토큰과 같은 값을 쓴다.
 - 서버·OS 호출은 `features/onboarding/onboarding-api.ts` → `window.focusOn`(Main IPC)을 거친다(2026-10-22 연결, `IPC_CONTRACT.md` 온보딩 Channel, 결정 017). Backend origin이 없거나 응답이 실패하면 실제 오류 상태(재시도 안내)를 보여준다. 성공을 꾸미지 않는다.
-- **Backend 확인 필요 (실제 왕복 QA 전):**
-  - 닉네임 중복 확인 전용 API가 없어 `PUT /users/me/profile` 저장으로 확인한다. 전용 API를 만들 계획이면 알려 달라.
-  - `POST /extension-pairings` 성공 응답 필드 이름(현재 `accessToken`·`refreshToken`·`accessTokenExpiresAt`으로 해석)과 틀린 코드의 오류 code·남은 시도 횟수.
-  - 동의 `consentVersion` 값의 정본(현재 `2026-09-17`).
-  - Extension 연결 완료를 Desktop이 알 방법(현재 3초 polling).
-  - `GET /users/me/consents` 응답이 배열인지 `{ consents: [...] }`인지(둘 다 해석).
+- **Backend 합의안 (2026-10-22, Frontend 제안 → Backend 확인 대기):**
+  1. 닉네임 중복 확인 전용 API는 만들지 않는다. `PUT /users/me/profile`의 409 `PROFILE_NICKNAME_DUPLICATE`로 판단한다(확인과 저장 사이 경합 없음).
+  2. `POST /extension-pairings` 201 `data`: `accessToken`, `refreshToken`, `accessTokenExpiresAt`, `device: { deviceId, deviceType }`. 틀린 코드는 400 `LINK_006_CODE_MISMATCH` + `details.remainingAttempts`, 3번째 실패는 410 `LINK_004_ATTEMPTS_EXCEEDED`.
+  3. 동의 버전은 `GET /users/me/consents`의 `currentVersion`을 그대로 저장 요청에 쓴다(없으면 `2026-09-17`).
+  4. Extension 연결 완료는 코드 화면에서 3초마다 `GET onboarding-readiness`의 `extensionLinked`로 확인한다(최대 5분).
+  5. `GET /users/me/consents` 응답은 `{ "data": { "currentVersion": "...", "consents": [{ consentType, isGranted, consentVersion, grantedAt, withdrawnAt }] } }`.
 - 오류 상태: 중복 닉네임, 잘못된/만료/사용된 pairing code, 3회 시도 초과, 권한 거부, API 오류 및 네트워크 단절을 계약에 맞게 보여준다.
 - 접근성: 키보드 이동, 입력 라벨, 오류 메시지 연결, Focus 표시, 상태의 텍스트 표현을 제공한다.
 

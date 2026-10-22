@@ -1,6 +1,6 @@
 import { getInstallationId, saveTokens, storage, type TokenPair } from './extension-auth'
 
-export type PairingError = { code: string; retryAfterSeconds?: number }
+export type PairingError = { code: string; retryAfterSeconds?: number; remainingAttempts?: number }
 export type PairingResult = { success: true } | { success: false; error: PairingError }
 
 // Backend origin은 빌드할 때 NEXT_PUBLIC_FOCUSON_API_BASE_URL로 넣는다. HTTPS 또는 로컬 개발 loopback HTTP만 허용한다.
@@ -19,14 +19,16 @@ export function resolveApiBase(value: string | undefined): string | null {
 function parseTokens(payload: unknown): TokenPair | null {
   const data = typeof payload === 'object' && payload !== null ? (payload as { data?: unknown }).data : null
   if (typeof data !== 'object' || data === null) return null
-  const { accessToken, refreshToken, accessTokenExpiresAt } = data as Record<string, unknown>
-  if (typeof accessToken !== 'string' || !accessToken || typeof refreshToken !== 'string' || !refreshToken || typeof accessTokenExpiresAt !== 'string') return null
+  // 계약(2026-10-22): data = { accessToken, refreshToken, accessTokenExpiresAt, device: { deviceId, deviceType } }
+  const { accessToken, refreshToken, accessTokenExpiresAt, device } = data as Record<string, unknown>
+  const deviceId = typeof device === 'object' && device !== null ? (device as { deviceId?: unknown }).deviceId : undefined
+  if (typeof accessToken !== 'string' || !accessToken || typeof refreshToken !== 'string' || !refreshToken || typeof accessTokenExpiresAt !== 'string' || typeof deviceId !== 'string' || !deviceId) return null
   const expiresAt = Date.parse(accessTokenExpiresAt)
   if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return null
-  return { accessToken, refreshToken, accessTokenExpiresAt }
+  return { accessToken, refreshToken, accessTokenExpiresAt, deviceId }
 }
 
-const fail = (code: string, retryAfterSeconds?: number): PairingResult => ({ success: false, error: { code, retryAfterSeconds } })
+const fail = (code: string, retryAfterSeconds?: number, remainingAttempts?: number): PairingResult => ({ success: false, error: { code, retryAfterSeconds, remainingAttempts } })
 
 // POST /api/v1/extension-pairings: { pairingCode: "ABC123", installationId } → 201 Extension 전용 토큰
 export async function submitPairing(codeDisplay: string, baseUrl = resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), request: typeof fetch = fetch): Promise<PairingResult> {
@@ -56,7 +58,9 @@ export async function submitPairing(codeDisplay: string, baseUrl = resolveApiBas
       ? (payload as { code: string }).code
       : response.status === 429 ? 'TOO_MANY_REQUESTS' : 'SERVICE_UNAVAILABLE'
     const retryAfter = Number(response.headers.get('Retry-After'))
-    return fail(code, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined)
+    const details = typeof payload === 'object' && payload !== null ? (payload as { details?: { remainingAttempts?: unknown } }).details : undefined
+    const remaining = typeof details?.remainingAttempts === 'number' && details.remainingAttempts >= 0 ? details.remainingAttempts : undefined
+    return fail(code, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined, remaining)
   }
 
   const tokens = parseTokens(payload)
@@ -84,7 +88,7 @@ export function describePairingError(error: PairingError): PairingNotice {
     case 'EXTENSION_CONTEXT_REQUIRED': return { title: 'Chrome 확장 프로그램에서 열어 주세요', lines: ['Chrome 오른쪽 위의 FocusOn 아이콘을 눌러 연결해 주세요.'] }
     case 'STORAGE_UNAVAILABLE': return { title: '연결 정보를 저장하지 못했어요', lines: ['Chrome을 다시 연 뒤 새 코드로 연결해 주세요.'] }
     case 'SERVICE_UNAVAILABLE': return { title: '연결하지 못했어요', lines: ['잠시 후 다시 시도해 주세요.'] }
-    // ponytail: 틀린 코드의 오류 code·남은 횟수는 API 명세에 아직 없다. Backend 확정 뒤 이 분기를 맞춘다.
-    default: return { title: '코드가 맞지 않아요', lines: ['글자를 다시 확인해 주세요.'] }
+    case 'LINK_006_CODE_MISMATCH': return { title: '코드가 맞지 않아요', lines: ['글자를 다시 확인해 주세요.', ...(error.remainingAttempts !== undefined ? [`${error.remainingAttempts}번 더 시도할 수 있어요.`] : [])] }
+    default: return { title: '연결하지 못했어요', lines: ['잠시 후 다시 시도해 주세요.'] }
   }
 }

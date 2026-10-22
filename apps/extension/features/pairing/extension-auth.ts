@@ -4,12 +4,13 @@
 // - installationId: chrome.storage.local (비밀값 아님, 기기 식별용)
 // Desktop 토큰과 공유하지 않으며 Content Script에는 전달하지 않는다.
 
-export type TokenPair = { accessToken: string; refreshToken: string; accessTokenExpiresAt: string }
+export type TokenPair = { accessToken: string; refreshToken: string; accessTokenExpiresAt: string; deviceId: string }
 
 const KEYS = {
   installationId: 'focuson.installationId',
   refreshToken: 'focuson.auth.refreshToken',
   access: 'focuson.auth.access',
+  deviceId: 'focuson.deviceId',
 } as const
 
 export function storage() {
@@ -31,7 +32,8 @@ export async function saveTokens(tokens: TokenPair): Promise<void> {
   if (!area) throw new Error('Extension storage unavailable')
   // [주의] Content Script가 session 저장소를 읽지 못하도록 신뢰된 Extension 화면으로만 제한한다.
   await area.session.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' })
-  await area.local.set({ [KEYS.refreshToken]: tokens.refreshToken })
+  // deviceId는 연결 해제(DELETE /extension-pairings/{extensionDeviceId})에 쓴다. 비밀값이 아니다.
+  await area.local.set({ [KEYS.refreshToken]: tokens.refreshToken, [KEYS.deviceId]: tokens.deviceId })
   await area.session.set({ [KEYS.access]: { accessToken: tokens.accessToken, expiresAt: tokens.accessTokenExpiresAt } })
 }
 
@@ -45,6 +47,6 @@ export async function isLinked(): Promise<boolean> {
 export async function clearTokens(): Promise<void> {
   const area = storage()
   if (!area) return
-  await area.local.remove(KEYS.refreshToken)
+  await area.local.remove([KEYS.refreshToken, KEYS.deviceId])
   await area.session.remove(KEYS.access)
 }

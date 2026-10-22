@@ -21,9 +21,10 @@ Desktop이 발급한 일회용 코드를 Extension Popup에 입력해 같은 계
 - 코드는 대문자·숫자 6자리이며 Desktop 화면에는 `ABC-123`처럼 표시한다. 유효 시간은 5분, 최대 실패 횟수는 3회다.
 - Extension은 `POST /api/v1/extension-pairings`에 `pairingCode` (`ABC123`처럼 하이픈 제외)와 `installationId`를 보낸다. 이 endpoint는 인증 헤더를 요구하지 않는다.
 - 성공하면 Extension 전용 Access Token과 Refresh Token을 받는다. Desktop token과 공유하지 않는다.
-- 오류 코드는 `LINK_001_INVALID_FORMAT`, `LINK_002_EXPIRED`, `LINK_003_ALREADY_USED`, `LINK_004_ATTEMPTS_EXCEEDED`, `LINK_005_CANCELLED`다. HTTP 429는 재시도 대기 안내를 제공한다.
+- 오류 코드는 `LINK_001_INVALID_FORMAT`, `LINK_006_CODE_MISMATCH`, `LINK_002_EXPIRED`, `LINK_003_ALREADY_USED`, `LINK_004_ATTEMPTS_EXCEEDED`, `LINK_005_CANCELLED`다. HTTP 429는 재시도 대기 안내를 제공한다.
 - Token 저장 위치는 `DECISION_RECORD.md` 결정 011을 따른다: Refresh Token은 `chrome.storage.local`, Access Token은 `chrome.storage.session`(TRUSTED_CONTEXTS), installationId는 `chrome.storage.local`.
-- 성공 응답 `data`는 `accessToken`, `refreshToken`, `accessTokenExpiresAt`으로 해석한다. **Backend 확인 필요:** Notion 응답 명세가 "Extension 전용 access token + refresh token"으로만 적혀 있어 필드 이름과 틀린 코드(남은 시도 횟수) 오류 code를 확정해야 한다.
+- 성공 응답(201) `data`: `accessToken`, `refreshToken`, `accessTokenExpiresAt`(UTC ISO 8601), `device: { deviceId, deviceType: "EXTENSION" }`. `deviceId`는 연결 해제에 쓰도록 `chrome.storage.local`에 둔다. (2026-10-22 확정, Notion 반영)
+- 틀린 코드(1~2번째 실패): `400 LINK_006_CODE_MISMATCH` + `details.remainingAttempts`. 3번째 실패는 `410 LINK_004_ATTEMPTS_EXCEEDED`. (2026-10-22 확정)
 - Popup은 Next.js 정적 Export다. Manifest V3 CSP 때문에 `pnpm build`가 인라인 스크립트를 외부 파일로 옮긴다(`pairing-flow-inline-script-csp-ERROR.md`).
 
 ## 사용자 흐름

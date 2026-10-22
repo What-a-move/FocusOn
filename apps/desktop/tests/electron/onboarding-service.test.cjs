@@ -102,8 +102,9 @@ test('제외 사이트 저장이 실패하면 완료 marker를 보내지 않는�
   assert.equal(calls.length, 1)
 })
 
-test('권한·동의 단계는 필수 3개와 카메라 동의를 항목별로 저장하고 화면 기록 상태를 기록한다', async () => {
+test('권한·동의 단계는 서버의 현재 동의 버전으로 필수 3개와 카메라 동의를 항목별로 저장하고 화면 기록 상태를 기록한다', async () => {
   const { auth, calls } = signedIn({
+    'GET /api/v1/users/me/consents': { success: true, data: { currentVersion: '2026-10-01', consents: [] } },
     'PUT /api/v1/users/me/consents/TERMS_OF_SERVICE': { success: true, data: {} },
     'PUT /api/v1/users/me/consents/PRIVACY_POLICY': { success: true, data: {} },
     'PUT /api/v1/users/me/consents/SCREEN_ANALYSIS': { success: true, data: {} },
@@ -113,9 +114,10 @@ test('권한·동의 단계는 필수 3개와 카메라 동의를 항목별로 �
   await auth.restore()
   const result = await new OnboardingService(auth, () => true).savePermissionsStep(['TERMS_OF_SERVICE', 'PRIVACY_POLICY', 'SCREEN_ANALYSIS'], false)
   assert.equal(result.success, true)
-  assert.equal(calls.length, 5)
-  assert.deepEqual(calls[3].body, { isGranted: false, consentVersion: '2026-09-17', consentSource: 'ONBOARDING' })
-  assert.deepEqual(calls[4].body, { screenAnalysisReady: true })
+  assert.equal(calls.length, 6)
+  assert.equal(calls[0].path, '/api/v1/users/me/consents')
+  assert.deepEqual(calls[4].body, { isGranted: false, consentVersion: '2026-10-01', consentSource: 'ONBOARDING' })
+  assert.deepEqual(calls[5].body, { screenAnalysisReady: true })
 })
 
 test('닉네임 저장이 성공하면 화면의 닉네임도 서버 값으로 바뀐다', async () => {
