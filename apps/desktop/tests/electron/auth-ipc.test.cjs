@@ -60,17 +60,21 @@ test('현재 창의 Main Frame과 허용 주소에서 온 요청만 신뢰한다
   assert.equal(isTrustedAuthSender(validEvent, null, 'app://focuson/'), false)
 })
 
-test('Google 로그인 시작과 중복 요청은 계약대로 상태를 바꾼다', async () => {
+test('Google 로그인 시작과 다시 시작은 계약대로 상태를 바꾼다', async () => {
   const events = []
   const store = new AuthSessionStore((snapshot) => events.push(snapshot))
   let calls = 0
-  const flow = { start: async () => { calls += 1; return true } }
+  let disposed = 0
+  const flow = { start: async () => { calls += 1; return true }, dispose: () => { disposed += 1 } }
 
   assert.deepEqual(await beginGoogleLogin(store, flow), { success: true, data: { started: true } })
   assert.equal(store.getSnapshot().status, 'AUTHENTICATING')
-  assert.deepEqual(await beginGoogleLogin(store, flow), { success: true, data: { started: false } })
-  assert.equal(calls, 1)
-  assert.equal(events.length, 1)
+  assert.equal(disposed, 0)
+  // 진행 중에 다시 누르면 이전 시도를 정리하고 새로 시작한다 (브라우저 탭을 닫은 경우)
+  assert.deepEqual(await beginGoogleLogin(store, flow), { success: true, data: { started: true } })
+  assert.equal(disposed, 1)
+  assert.equal(calls, 2)
+  assert.equal(store.getSnapshot().status, 'AUTHENTICATING')
 })
 
 test('설정 누락 또는 브라우저 실패를 로그인 성공으로 취급하지 않는다', async () => {

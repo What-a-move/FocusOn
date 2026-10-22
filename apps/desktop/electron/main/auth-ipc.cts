@@ -62,10 +62,12 @@ export class AuthSessionStore {
 
 export async function beginGoogleLogin(
   store: AuthSessionStore,
-  oauthFlow: Pick<GoogleOAuthFlow, 'start'> | null,
+  oauthFlow: Pick<GoogleOAuthFlow, 'start' | 'dispose'> | null,
 ): Promise<IpcResult<{ started: boolean }>> {
   if (!oauthFlow) return SERVICE_UNAVAILABLE
-  if (store.getSnapshot().status === 'AUTHENTICATING') return { success: true, data: { started: false } }
+  // [유지보수] 브라우저 탭을 닫아 callback이 오지 않아도 바로 다시 시도할 수 있게 이전 시도를 정리하고 새로 시작한다.
+  // 새 시도는 state·verifier가 새로 만들어지므로 이전 callback은 더 이상 받지 않는다.
+  if (store.getSnapshot().status === 'AUTHENTICATING') oauthFlow.dispose()
 
   store.publish({ status: 'AUTHENTICATING', user: null, onboardingStatus: null, error: null })
   let started = false
@@ -109,7 +111,9 @@ export function registerAuthIpc(
   ipcMain.handle(AUTH_CHANNELS.startGoogleLogin, async (event, ...args: unknown[]): Promise<IpcResult<{ started: boolean }>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
     if (!authService) return SERVICE_UNAVAILABLE
-    await authService?.ready()
+    await authService.ready()
+    // [주의] 이미 진행 중인 code 교환이 늦게 끝나도 새 시도를 덮어쓰지 않도록 이전 시도를 무효화한다.
+    if (store.getSnapshot().status === 'AUTHENTICATING') authService.invalidatePendingLogin()
     return beginGoogleLogin(store, oauthFlow)
   })
 

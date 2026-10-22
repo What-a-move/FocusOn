@@ -29,7 +29,7 @@ MVP의 조회 범위는 세션 상세, 일간 리포트, 집중 달력, 학습 �
 
 Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청을 보낸다. 최초 연결에만 일회용 pairing code를 사용한다. AI 판단은 Backend의 검증과 Policy Engine을 거친 뒤 개입으로 이어진다. AI가 직접 타이머나 세션 상태를 변경하지 않는다.
 
-Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback callback을 사용한다. Electron Main이 OAuth·Token·인증 API 요청을 담당하고, Renderer에는 Preload의 타입이 정해진 IPC를 통해 Token 없는 인증 상태와 사용자 요약만 전달한다. 실제 구현은 후속 작업이다.
+Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback callback을 사용한다. Electron Main이 OAuth·Token·인증 API 요청을 담당하고, Renderer에는 Preload의 타입이 정해진 IPC를 통해 Token 없는 인증 상태와 사용자 요약만 전달한다. Main의 OAuth·Backend 인증 요청·Keychain 보관과 Renderer의 로그인·온보딩 시작·홈 화면 전환은 구현했으며, 실제 Google 계정·Backend 왕복 검증은 Backend 인증 API 병합 후 진행한다.
 
 ## 3. 구현할 때 놓치기 쉬운 확정 계약
 
@@ -88,7 +88,7 @@ Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback 
 ## 5. 현재 개발 상태와 검토 필요 항목
 
 - Backend는 Spring Boot·PostgreSQL·Docker Compose·Flyway 기반이 마련됐지만 Controller·Service·Repository·Entity와 도메인 API는 아직 구현 전이다. 우선순위는 공통 응답·오류 처리, 첫 migration, 인증, 세션 MVP API다.
-- Desktop은 기본 UI, Electron Main·Preload 실행 기반, 개발·정적 화면 로딩, 기본 Window 생명주기와 인증 IPC 경계가 있다. 실제 Google OAuth·Token·Backend 연동, Extension의 현재 탭 추적, pairing, 세션 동기화와 분석 연결은 후속 구현 대상이다.
+- Desktop은 기본 UI, Electron Main·Preload 실행 기반, 개발·정적 화면 로딩, 기본 Window 생명주기, 인증 IPC, Google OAuth·Token·Backend 인증 클라이언트와 로그인·온보딩 시작·홈 화면이 있다. 실제 계정 왕복 QA, Extension의 현재 탭 추적, pairing, 세션 동기화와 분석 연결은 후속 구현 대상이다.
 - AI는 설계 문서와 scaffold 중심이다. 최근 AI v1.1 문서에는 목표 보조 상태, 분석 제외 모드, 개인화 휴식, 학습 노트 등 추가 제안이 있다. API 정본과 합의되지 않은 항목을 기존 MVP 계약으로 취급하지 않는다.
 - **검토 필요:** 카메라의 출시 범위와 구현 기술 표기가 문서마다 다르다. 공통 정책·제품 기획은 선택 동의 카메라를 MVP에 포함하고 macOS 로컬 분석을 설명한다. 일부 앱·AI 문서는 MediaPipe 또는 출시 보류를 적고 있다. 카메라 구현 작업 전에 해당 정본과 팀 결정을 다시 확인한다.
 - **검토 필요:** AI v1.1의 `ANALYSIS_AND_TIME` 제외 모드, 학습 노트 재생성, 사용자 피드백 개인화와 공개 세션 모델은 현재 로컬 공통 API 요약과 차이가 있다. 관련 작업에서는 AI 초안을 그대로 공개 API나 ERD에 반영하지 않는다.

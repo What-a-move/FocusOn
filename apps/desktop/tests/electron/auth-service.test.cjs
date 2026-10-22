@@ -168,3 +168,25 @@ test('Google 재인증이 필요하면 저장된 토큰을 지우고 로그아�
   assert.equal(store.getSnapshot().error.code, 'AUTH_OAUTH_REAUTH_REQUIRED')
   assert.equal(vault.peek(), null)
 })
+
+test('다시 로그인을 시작하면 늦게 끝난 이전 교환 결과는 저장하지 않고 서버 토큰을 폐기한다', async () => {
+  const store = new AuthSessionStore(() => {})
+  const vault = createVault()
+  let finishExchange
+  const loggedOut = []
+  const api = {
+    exchange: () => new Promise((resolve) => { finishExchange = resolve }),
+    logout: async (token) => { loggedOut.push(token); return { success: true, data: { loggedOut: true } } },
+  }
+  const service = new AuthService(store, api, vault, async () => ({ installationId: 'i', deviceName: 'Mac', platform: 'MACOS' }))
+  const code = { authorizationCode: 'old-code', codeVerifier: 'v', state: 's', redirectUri: 'http://127.0.0.1:49152' }
+  const pending = service.handleOAuthOutcome({ type: 'code', data: code })
+  await new Promise((resolve) => setImmediate(resolve))
+  service.invalidatePendingLogin()
+  finishExchange({ success: true, data: { ...tokens, ...identity } })
+  await pending
+
+  assert.equal(vault.peek(), null)
+  assert.deepEqual(loggedOut, ['access-secret'])
+  assert.notEqual(store.getSnapshot().status, 'SIGNED_IN')
+})

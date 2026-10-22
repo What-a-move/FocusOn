@@ -21,7 +21,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseTokenPair(value: unknown): TokenPair | null {
   if (!isRecord(value) || typeof value.accessToken !== 'string' || !value.accessToken
     || typeof value.refreshToken !== 'string' || !value.refreshToken
-    || typeof value.accessTokenExpiresAt !== 'string' || Date.parse(value.accessTokenExpiresAt) <= Date.now()) return null
+    || typeof value.accessTokenExpiresAt !== 'string') return null
+  // [주의] 형식이 깨진 시각은 NaN이 되어 만료 비교를 통과해 버리므로 먼저 걸러 낸다.
+  const expiresAt = Date.parse(value.accessTokenExpiresAt)
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return null
   return { accessToken: value.accessToken, refreshToken: value.refreshToken, accessTokenExpiresAt: value.accessTokenExpiresAt }
 }
 

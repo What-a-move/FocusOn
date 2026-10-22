@@ -121,6 +121,11 @@ export class AuthService {
     return this.refreshPromise
   }
 
+  // 다시 로그인을 시작하면 진행 중이던 교환 결과는 버린다 (늦게 와도 저장·성공 표시하지 않고 서버 토큰을 폐기).
+  invalidatePendingLogin(): void {
+    this.generation += 1
+  }
+
   async handleOAuthOutcome(outcome: GoogleOAuthOutcome): Promise<void> {
     if (outcome.type === 'cancelled') {
       this.publish('SIGNED_OUT')

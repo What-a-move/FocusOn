@@ -41,8 +41,8 @@ function LoadingScreen() {
   </main>
 }
 
-function LoginScreen({ onLogin, onRetry, busy, message, available, offline }: {
-  onLogin: () => void; onRetry: () => void; busy: boolean; message: string | null; available: boolean; offline: boolean
+function LoginScreen({ onLogin, onRetry, busy, authenticating, message, available, offline }: {
+  onLogin: () => void; onRetry: () => void; busy: boolean; authenticating: boolean; message: string | null; available: boolean; offline: boolean
 }) {
   return <main className="fo-auth-window">
     <div className="fo-auth-brand"><Logo /></div>
@@ -52,11 +52,11 @@ function LoginScreen({ onLogin, onRetry, busy, message, available, offline }: {
         <p className="fo-auth-sub">목표 하나만 정하면 포키가 곁에서 도와드려요.</p>
         <button className="fo-google-button" type="button" onClick={offline ? onRetry : onLogin} disabled={busy || !available}>
           <Image src="/design/google-mark.svg" alt="" width={22} height={22} />
-          <span>{busy ? '연결하는 중…' : offline ? '연결 다시 확인하기' : 'Google로 계속하기'}</span>
+          <span>{busy ? '연결하는 중…' : offline ? '연결 다시 확인하기' : authenticating ? 'Google 로그인 다시 열기' : 'Google로 계속하기'}</span>
         </button>
         <div className="fo-login-state" aria-live="polite">
           {offline ? <div className="fo-notice" role="alert"><strong>인터넷에 연결되어 있지 않아요.</strong><span>{message ?? '연결을 확인한 뒤 다시 시도해 주세요.'}</span></div> : <Alert message={message} />}
-          {busy && <div className="fo-notice" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
+          {(busy || authenticating) && <div className="fo-notice" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
           {!available && <p className="fo-app-only">Google 로그인은 FocusOn 데스크톱 앱에서 사용할 수 있어요.</p>}
         </div>
         <p className="fo-legal"><span>이용약관 · 개인정보 처리방침</span><span>화면 원본과 카메라 영상은 저장하지 않아요.</span></p>
@@ -214,5 +214,5 @@ export default function Page() {
   if (view === 'loading') return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingScreen reconnect={snapshot.status === 'LINK_REQUIRED'} onLogout={() => { void logout() }} busy={busy} message={message} />
   if (view === 'home' && snapshot?.user) return <HomeScreen name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
-  return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy || snapshot?.status === 'AUTHENTICATING'} message={message} available={available} offline={view === 'offline'} />
+  return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} available={available} offline={view === 'offline'} />
 }
