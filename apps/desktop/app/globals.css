@@ -1,14 +1,225 @@
 @import 'tailwindcss';
 
+/* FocusOn-Design/fo-base.css의 화면 색과 버튼 깊이를 Desktop 화면에 맞춰 사용한다. */
 :root {
-  font-family: Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --fo-surface: #fff;
+  --fo-ink: #171717;
+  --fo-muted: #6b6f76;
+  --fo-line: #e5e5e5;
+  --fo-field: #f7f7f7;
+  --fo-brand: #593828;
+  --fo-brand-edge: #3b2419;
+  --fo-on-brand: #fff;
+  --fo-gold: #e3bd88;
+  --fo-gold-soft: #fff4e3;
+  --fo-ghost-edge: #e2ddd5;
+  --fo-track: #efefef;
+  --fo-faint: #a3a3a3;
+  --fo-danger: #d92d20;
+  --fo-danger-line: #f5b5ae;
+  --fo-danger-soft: #fef2f1;
+  --fo-focus: rgba(89, 56, 40, .35);
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
-*,
-*::before,
-*::after { box-sizing: border-box; }
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --fo-surface: #141416;
+    --fo-ink: #f4f2ee;
+    --fo-muted: #a5a29c;
+    --fo-line: #2b2b30;
+    --fo-field: #1f1f23;
+    --fo-brand: #cda577;
+    --fo-brand-edge: #a17f55;
+    --fo-on-brand: #1a1408;
+    --fo-gold-soft: #2b2418;
+    --fo-ghost-edge: #34343b;
+    --fo-track: #29292e;
+    --fo-faint: #6f6d69;
+    --fo-danger: #ff7a6e;
+    --fo-danger-line: #7d2e26;
+    --fo-danger-soft: #3a1915;
+    --fo-focus: rgba(205, 165, 119, .5);
+  }
+}
 
-body { margin: 0; min-width: 320px; }
-button { font: inherit; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-width: 320px; }
+body { background: var(--fo-surface); color: var(--fo-ink); word-break: keep-all; -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 3px; }
+
+.fo-logo { display: inline-block; line-height: 0; }
+.fo-logo img { display: block; width: 100%; height: auto; }
+.fo-logo-dark { display: none !important; }
+@media (prefers-color-scheme: dark) {
+  .fo-logo-light { display: none !important; }
+  .fo-logo-dark { display: block !important; }
+}
+
+.fo-button { min-width: 120px; height: 52px; padding: 0 28px; border: 0; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s, background .2s; }
+.fo-button-primary { background: var(--fo-brand); color: var(--fo-on-brand); box-shadow: 0 4px 0 var(--fo-brand-edge); }
+.fo-button-ghost { border: 1.5px solid var(--fo-ghost-edge); background: var(--fo-surface); color: var(--fo-ink); box-shadow: 0 4px 0 var(--fo-ghost-edge); }
+.fo-button:not(:disabled):active { transform: translateY(4px); box-shadow: none; }
+.fo-button:disabled { background: var(--fo-field); color: var(--fo-faint); border-color: var(--fo-line); box-shadow: 0 4px 0 var(--fo-ghost-edge); cursor: not-allowed; }
+.fo-text-button { padding: 8px 12px; border: 0; background: transparent; color: var(--fo-muted); font-size: 14px; cursor: pointer; }
+.fo-text-button:hover:not(:disabled) { color: var(--fo-ink); }
+.fo-notice { padding: 14px 16px; border: 1px solid var(--fo-danger-line); border-radius: 12px; background: var(--fo-danger-soft); color: var(--fo-danger); font-size: 14px; line-height: 1.6; text-align: left; }
+.fo-notice strong, .fo-notice span { display: block; }
+.fo-notice span { margin-top: 4px; color: var(--fo-ink); }
+
+/* 로그인: 중앙의 문구와 오른쪽 포키 배치를 원본 시안의 480/460 열에 맞춘다. */
+.fo-auth-window { display: flex; flex-direction: column; min-height: 100dvh; overflow: auto; background: var(--fo-surface); }
+.fo-auth-brand { display: flex; justify-content: center; flex: 0 0 118px; padding-top: 20px; }
+.fo-auth-brand .fo-logo { width: 168px; }
+.fo-auth-content { flex: 1; display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 460px); justify-content: center; align-items: center; gap: clamp(40px, 8vw, 120px); padding: 0 48px 76px; }
+.fo-auth-copy { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.fo-auth-copy h1 { margin: 0; font-size: clamp(40px, 4.2vw, 52px); font-weight: 700; line-height: 1.3; letter-spacing: -.03em; }
+.fo-auth-sub { margin: 16px 0 0; color: var(--fo-muted); font-size: clamp(17px, 1.6vw, 20px); line-height: 1.6; }
+.fo-google-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: min(100%, 420px); height: 62px; margin-top: 40px; border: 1.5px solid var(--fo-ghost-edge); border-radius: 16px; background: var(--fo-surface); color: var(--fo-ink); box-shadow: 0 4px 0 var(--fo-ghost-edge); font-size: 18px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s, background .2s; }
+.fo-google-button:hover:not(:disabled) { background: var(--fo-field); }
+.fo-google-button:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+.fo-google-button:disabled { cursor: not-allowed; opacity: .7; }
+.fo-google-button img { flex: 0 0 22px; }
+.fo-login-state { width: min(100%, 420px); }
+.fo-login-state .fo-notice { margin-top: 16px; }
+.fo-app-only { margin: 16px 0 0; color: var(--fo-muted); font-size: 14px; }
+.fo-legal { display: grid; gap: 4px; width: min(100%, 420px); margin: 28px 0 0; color: var(--fo-muted); font-size: 13px; line-height: 1.7; }
+.fo-legal span:first-child { color: var(--fo-ink); font-weight: 600; }
+.fo-auth-poki { display: flex; justify-content: center; }
+.fo-auth-poki img { display: block; width: min(100%, 460px); height: auto; max-height: min(52vh, 401px); object-fit: contain; animation: fo-rise .55s both; }
+.fo-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 100dvh; }
+.fo-loading > img { width: 170px; height: 170px; object-fit: contain; animation: fo-rise .7s both; }
+.fo-loading .fo-logo { width: 220px; }
+.fo-loading p { color: var(--fo-muted); font-size: 14px; }
+
+/* 온보딩 첫 화면: 5칸 진행 바, 포키 대사, 닉네임 입력, 하단 버튼. */
+.fo-onboarding-window { display: flex; flex-direction: column; min-height: 100dvh; }
+.fo-onboarding-top { display: flex; align-items: center; gap: 16px; width: min(980px, calc(100% - 64px)); height: 56px; margin: 20px auto 0; }
+.fo-back-placeholder { width: 36px; flex: 0 0 36px; visibility: hidden; }
+.fo-progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; flex: 1; }
+.fo-progress span { height: 6px; border-radius: 99px; background: var(--fo-track); }
+.fo-progress span.active { background: var(--fo-gold); }
+.fo-step-count { min-width: 48px; color: var(--fo-muted); font-size: 14px; font-weight: 600; text-align: right; }
+.fo-onboarding-body { display: flex; flex: 1; min-height: 0; overflow-y: auto; }
+.fo-onboarding-step { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: center; gap: 56px; width: min(980px, calc(100% - 64px)); min-height: 100%; margin: 0 auto; padding: 32px 0; }
+.fo-speaker { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
+.fo-speaker img { display: block; width: 200px; height: 200px; object-fit: contain; }
+.fo-bubble { position: relative; width: max-content; max-width: 100%; margin: 0; padding: 16px 22px; border: 1.5px solid var(--fo-line); border-radius: 18px; background: var(--fo-surface); font-size: 18px; font-weight: 700; line-height: 1.45; letter-spacing: -.02em; }
+.fo-bubble::before, .fo-bubble::after { position: absolute; content: ''; border-style: solid; }
+.fo-bubble::before { top: -14px; left: 48px; border-width: 0 10px 14px; border-color: transparent transparent var(--fo-line); }
+.fo-bubble::after { top: -10px; left: 50px; border-width: 0 8px 11px; border-color: transparent transparent var(--fo-surface); }
+.fo-onboarding-panel { min-width: 0; }
+.fo-onboarding-panel .fo-notice { margin-top: 20px; }
+.fo-field-label { display: block; margin-bottom: 10px; font-size: 16px; font-weight: 700; }
+.fo-name-row { display: flex; gap: 8px; }
+.fo-input-wrap { position: relative; flex: 1; min-width: 0; }
+.fo-input-wrap input { width: 100%; height: 60px; padding: 0 64px 0 20px; border: 1.5px solid var(--fo-line); border-radius: 14px; background: var(--fo-field); color: var(--fo-ink); font-size: 18px; font-weight: 600; }
+.fo-input-wrap input::placeholder { color: var(--fo-faint); font-weight: 400; }
+.fo-input-wrap input:focus { border-color: var(--fo-ink); background: var(--fo-surface); outline: none; }
+.fo-input-wrap span { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); color: var(--fo-muted); font-size: 13px; }
+.fo-name-row .fo-button { min-width: 112px; height: 60px; padding: 0 18px; }
+.fo-field-hint { margin: 10px 0 0; color: var(--fo-muted); font-size: 15px; line-height: 1.5; }
+.fo-reconnect-panel strong { font-size: 18px; }
+.fo-reconnect-panel p { color: var(--fo-muted); font-size: 16px; line-height: 1.6; }
+.fo-onboarding-footer { flex: 0 0 117px; border-top: 1px solid var(--fo-line); }
+.fo-onboarding-footer > div { display: flex; align-items: flex-start; justify-content: space-between; width: min(980px, calc(100% - 64px)); margin: 0 auto; padding-top: 20px; }
+.fo-onboarding-footer .fo-button { width: 140px; height: 56px; }
+
+/* 홈: 사이드바와 달력 배치까지 원본 시안에 맞추고, 기록 값은 실제 데이터 전까지 비워 둔다. */
+.fo-home-window { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100dvh; }
+.fo-sidebar { display: flex; flex-direction: column; min-height: 100dvh; padding: 16px 16px 20px; border-right: 1px solid var(--fo-line); }
+.fo-sidebar-logo { align-self: center; width: 136px; margin: 4px 0 clamp(28px, 5vh, 48px); }
+.fo-nav { display: grid; gap: clamp(4px, 1.4vh, 12px); }
+.fo-nav-item { position: relative; display: flex; align-items: center; gap: 16px; min-height: 54px; padding: 0 14px 0 22px; border-radius: 14px; font-size: 16px; font-weight: 600; }
+.fo-nav-item.active { font-weight: 700; }
+.fo-nav-item.active::before { position: absolute; top: 50%; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--fo-gold); content: ''; transform: translateY(-50%); }
+.fo-nav-item img { flex: 0 0 28px; object-fit: contain; }
+.fo-sidebar-spacer { flex: 1; }
+.fo-profile { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; }
+.fo-profile-avatar { flex: 0 0 36px; width: 36px; height: 36px; border: 1.5px solid var(--fo-line); border-radius: 50%; background: var(--fo-gold-soft) url('/design/poki-floating-logo-base-v1.png') 50% 62% / 165% no-repeat; }
+.fo-profile strong { display: block; overflow: hidden; max-width: 138px; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.fo-profile small { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 12px; }
+.fo-sidebar-logout { align-self: flex-start; margin-left: 12px; border: 0; background: transparent; color: var(--fo-muted); font-size: 12px; cursor: pointer; }
+.fo-home-content { min-width: 0; overflow-y: auto; }
+.fo-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 26px 48px 0; }
+.fo-topbar > div > span { color: var(--fo-muted); font-size: 14px; }
+.fo-topbar p { margin: 2px 0 0; font-size: 16px; font-weight: 600; }
+.fo-topbar ul { display: flex; gap: 22px; margin: 0; padding: 0; list-style: none; }
+.fo-topbar li { display: flex; align-items: center; gap: 8px; color: var(--fo-muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
+.fo-topbar li strong { color: var(--fo-ink); font-size: 20px; }
+.fo-dashboard { display: flex; flex-direction: column; gap: 36px; max-width: 1180px; margin: 0 auto; padding: 8px 48px 40px; }
+.fo-hero { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: center; gap: 40px; padding: 12px 0 4px; }
+.fo-poki-stage { position: relative; display: grid; place-items: center; height: 220px; }
+.fo-poki-stage::before { position: absolute; width: 196px; height: 196px; border-radius: 50%; background: var(--fo-gold-soft); content: ''; }
+.fo-poki-stage img { position: relative; z-index: 1; width: 220px; height: 220px; object-fit: contain; }
+.fo-hero h1 { margin: 0; font-size: 40px; font-weight: 700; line-height: 1.3; letter-spacing: -.035em; }
+.fo-hero h1 span { position: relative; isolation: isolate; white-space: nowrap; }
+.fo-hero h1 span::after { position: absolute; right: -2px; bottom: 3px; left: -2px; z-index: -1; height: 10px; border-radius: 99px; background: var(--fo-gold); content: ''; opacity: .6; }
+.fo-goal-button { min-width: 196px; height: 56px; margin-top: 26px; font-size: 17px; }
+.fo-goal-button span { margin-left: 8px; }
+.fo-home-notice { margin: 14px 0 0; color: var(--fo-muted); font-size: 14px; }
+.fo-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+.fo-dashboard-block { min-width: 0; }
+.fo-dashboard-block + .fo-dashboard-block { margin-left: 48px; padding-left: 48px; border-left: 1px solid var(--fo-line); }
+.fo-panel-head h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.fo-month-controls { display: flex; align-items: center; justify-content: flex-end; gap: 2px; min-height: 34px; margin-top: -31px; }
+.fo-month-controls button { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 10px; background: transparent; color: var(--fo-ink); font-size: 18px; font-weight: 700; cursor: pointer; }
+.fo-month-controls button:disabled { color: var(--fo-faint); cursor: default; }
+.fo-month-controls span { min-width: 100px; font-size: 15px; font-weight: 700; text-align: center; }
+.fo-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px 4px; margin-top: 22px; }
+.fo-weekday { padding-bottom: 4px; color: var(--fo-muted); font-size: 13px; font-weight: 600; text-align: center; }
+.fo-calendar-day { display: grid; place-items: center; justify-self: center; width: 40px; height: 40px; border-radius: 50%; font-size: 14px; font-weight: 600; }
+.fo-calendar-day.today { border: 1.5px solid var(--fo-ink); font-weight: 700; }
+.fo-calendar-empty { margin-top: 36px; color: var(--fo-muted); font-size: 14px; }
+.fo-records-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 12px; color: var(--fo-muted); font-size: 15px; text-align: center; }
+.fo-records-empty strong { color: var(--fo-ink); font-size: 17px; }
+
+@keyframes fo-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (max-width: 900px) {
+  .fo-auth-content { grid-template-columns: minmax(0, 360px) minmax(0, 320px); gap: 32px; padding: 0 32px 48px; }
+  .fo-auth-copy h1 { font-size: 36px; }
+  .fo-auth-sub { font-size: 17px; }
+  .fo-home-window { grid-template-columns: 76px minmax(0, 1fr); }
+  .fo-sidebar { align-items: center; padding: 16px 10px; }
+  .fo-sidebar-logo { width: 52px; }
+  .fo-nav-item { width: 52px; justify-content: center; padding: 0; }
+  .fo-nav-item span, .fo-profile > div { display: none; }
+  .fo-nav-item.active::before { left: -6px; }
+  .fo-sidebar-logout { align-self: center; margin-left: 0; padding: 8px 0; }
+  .fo-topbar, .fo-dashboard { padding-right: 28px; padding-left: 28px; }
+  .fo-hero { grid-template-columns: 190px minmax(0, 1fr); gap: 28px; }
+  .fo-poki-stage { height: 180px; }
+  .fo-poki-stage img { width: 180px; height: 180px; }
+  .fo-poki-stage::before { width: 160px; height: 160px; }
+  .fo-hero h1 { font-size: 32px; }
+  .fo-dashboard-block + .fo-dashboard-block { margin-left: 28px; padding-left: 28px; }
+}
+@media (max-width: 760px) {
+  .fo-dashboard-grid { grid-template-columns: 1fr; gap: 32px; }
+  .fo-dashboard-block + .fo-dashboard-block { margin: 0; padding: 32px 0 0; border-top: 1px solid var(--fo-line); border-left: 0; }
+  .fo-hero { grid-template-columns: 1fr; }
+  .fo-poki-stage { display: none; }
+  .fo-topbar ul { gap: 12px; }
+}
+@media (max-width: 680px) {
+  .fo-auth-content { grid-template-columns: minmax(0, 400px); align-content: center; gap: 16px; padding: 8px 24px 32px; }
+  .fo-auth-poki { order: -1; }
+  .fo-auth-poki img { width: auto; height: 150px; }
+  .fo-onboarding-step { grid-template-columns: 1fr; gap: 28px; }
+  .fo-speaker { flex-direction: row; align-items: center; }
+  .fo-speaker img { width: 96px; height: 96px; }
+  .fo-bubble::before, .fo-bubble::after { display: none; }
+}
+@media (max-height: 640px) {
+  .fo-auth-brand { flex-basis: 80px; padding-top: 8px; }
+  .fo-auth-brand .fo-logo { width: 132px; }
+  .fo-auth-content { padding-bottom: 32px; }
+  .fo-google-button { margin-top: 24px; }
+  .fo-legal { margin-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

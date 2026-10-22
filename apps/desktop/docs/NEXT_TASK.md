@@ -29,10 +29,20 @@
 1. 로그인 뒤 `GET /api/v1/users/me/onboarding-readiness`로 `currentStep`을 조회해 중단 지점부터 여는 흐름을 연결한다.
 2. 완료: 공통 온보딩 틀과 닉네임 입력 UI, 클라이언트 형식 검증을 구현했다. 닉네임 저장·중복 검증은 API 연결 뒤 이어서 구현한다.
 3. Desktop 연결 안내 및 코드 자리·대기·완료·오류 표시 UI를 구현했다. 실제 코드 발급과 상태 확인 API 연결은 후속 작업이다.
-4. 완료: 권한·동의 UI(동의 → 권한 확인)를 구현했다. 남은 일은 Main/Preload의 macOS 화면 기록 확인·시스템 설정 열기·카메라/알림 요청 연결과 필수 동의 API 연동이다. 이후 Main/Preload에서 macOS 화면 기록 권한 확인을 연결하고 필수 동의 API를 연동한다. 카메라 동의와 알림은 선택으로 두고 거부해도 온보딩을 막지 않는다.
+4. 완료: 권한·동의 UI(동의 → 권한 확인)를 구현했다. 남은 일은 Main/Preload의 macOS 화면 기록 확인·시스템 설정 열기·카메라/알림 요청 연결과 필수 동의 API 연동이다. 카메라 동의와 알림은 선택으로 두고 거부해도 온보딩을 막지 않는다.
 5. 화면 완료: 제외 사이트 등록·빈 목록 건너뛰기 UI(`/onboarding/sites`). 남은 일은 저장 API와 완료 marker 기록 연결이다.
 6. 서버가 `COMPLETED`를 반환하면 대시보드로 이동한다. 목표·시간·개입은 후속 대시보드 Issue에 남긴다.
 7. 백엔드 API 병합 뒤 신규 계정, 앱 재실행, 권한 변경, 네트워크 오류, Extension 연결을 실제 계정으로 검증한다.
+
+## Issue #22 로그인: Backend 병합 뒤 실제 계정 QA 순서 (PR #39 병합 완료)
+
+1. 최신 `dev`에서 exchange·refresh·auth/me·logout 네 API와 Google code + PKCE + `redirectUri` 계약이 구현됐는지 확인한다. 요청·응답 필드가 다르면 Notion 정본과 대조해 Backend 담당자와 맞춘다.
+2. Google Cloud의 **데스크톱 앱** Client ID와 실행할 Backend origin을 준비하고, Electron 실행 셸에 `FOCUSON_GOOGLE_CLIENT_ID`, `FOCUSON_API_BASE_URL`을 설정한다. 예시는 `apps/desktop/.env.example`을 따른다.
+3. 신규 계정으로 `Google로 계속하기`를 누른다. 기본 브라우저 인증 뒤 앱으로 돌아왔을 때 exchange 요청이 성공하고 Refresh Token이 Keychain에 저장되며 온보딩 시작 화면에 진입하는지 확인한다.
+4. `onboardingStatus: COMPLETED`인 기존 계정은 홈으로, `INCOMPLETE`인 계정은 온보딩 시작 화면으로 가는지 확인한다. `LINK_REQUIRED` 응답이면 재연결 안내를 확인한다.
+5. 앱을 종료·재실행해 Keychain의 Refresh Token으로 refresh rotation과 auth/me 조회가 이루어지는지 확인한다. 네트워크가 끊기면 오프라인 안내와 재시도가 동작하는지 확인한다.
+6. 취소·잘못된 callback·만료된 토큰·기기 한도·서버 오류를 재현해 인증 상태와 사용자 안내를 확인한다. 로그아웃 뒤 서버 토큰 폐기와 Keychain 삭제를 확인하고, Token·code·PKCE verifier가 Renderer나 로그에 노출되지 않았는지 점검한다.
+7. 결과와 남은 제한을 기능 REPORT에 기록하고 Issue #22 완료 조건을 확인한 뒤 `dev` 대상 PR을 만든다. 온보딩 단계 진행·완료와 홈의 목표·기록 연결은 별도 Issue로 진행한다.
 
 ## 이후 작업 후보
 
@@ -49,8 +59,8 @@
 
 - [ ] 기능 기획서를 먼저 작성했다.
 - [ ] Electron 영역별 책임을 문서화했다.
-- [ ] 정상 실행과 종료를 확인했다.
-- [ ] 권한 거부 상황을 확인했다.
+- [x] 현재 범위의 정상 실행, 숨김·재표시를 확인했다.
+- [ ] 로그인 권한 거부 상황을 확인했다.
 - [ ] 새 기능을 완료했다면 결과 리포트를 작성했다.
 
 ## 작업 시작 전 확인
