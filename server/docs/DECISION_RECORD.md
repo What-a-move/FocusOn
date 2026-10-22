@@ -219,14 +219,22 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - `GET /api/v1/reports/calendar?month=YYYY-MM`
 - `user_analysis_excluded_domains`, `learning_sessions`, `analysis_runs`, `intervention_events`, `learning_review_evidences`, `learning_summaries`
 
-## 새 결정 기록
+## 결정 015 - 첫 migration의 인증 범위
 
-### 결정 015
+- 결정일: 2026-10-19
+- 주제: 로그인용 PostgreSQL 저장 모델
+- 상태: 확정
+- 결정 내용: Flyway V1은 인증에 필요한 `users`, `oauth_identities`, `user_devices`, `token_families`, `refresh_token_records`로 범위를 한정한다. 기기당 활성 token family 최대 1개와 family당 활성 Refresh Token record 최대 1개는 PostgreSQL 부분 유니크 인덱스로 보장한다. 목표·세션 등 다른 도메인은 후속 migration에서 추가한다.
+- 결정 이유: 첫 로그인 작업에 필요한 저장 모델을 하나의 Issue에서 ERD와 대조하고, 동시 로그인·토큰 회전의 중복 활성화를 DB에서 막기 위해서다.
+- 영향받는 API·Entity: 인증 저장 모델; 공개 API 계약 변경 없음.
+- 관련 Issue·PR: [#32](https://github.com/What-a-move/FocusOn/issues/32), [PR #35](https://github.com/What-a-move/FocusOn/pull/35).
 
-- 결정일:
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 영향받는 API·Entity:
-- 관련 Issue·PR:
+## 결정 016 - 인증 저장 모델 리뷰 반영
+
+- 결정일: 2026-10-19
+- 주제: Token Family 소유 관계와 Google 계정 조회
+- 상태: 확정
+- 결정 내용: 로컬 DB에 적용된 V1은 그대로 두고 V2에서 `token_families(device_id, user_id)`가 같은 사용자 소유의 `user_devices(id, user_id)`를 참조하도록 복합 FK를 추가한다. Google 계정의 `(provider, provider_subject)` 전체 유일성은 Notion ERD대로 유지한다. 로그인 조회 Repository는 `unlinked_at IS NULL` 행만 반환한다.
+- 결정 이유: 서로 다른 사용자와 기기를 묶은 Token Family를 DB에서 막고, 연결 해제 이력이 로그인 대상으로 조회되지 않게 한다. Google 계정 해제·재연결 API는 MVP의 현재 범위에 없으므로 이 Issue에서 활성 행만 유일하게 만드는 정책 변경은 하지 않는다.
+- 후속 확인: Google 계정 해제·재연결 API를 도입할 때 기존 identity 재활성화·계정 이전·이력 보존 정책을 별도 Issue에서 확정한다.
+- 관련 Issue: [#32](https://github.com/What-a-move/FocusOn/issues/32).

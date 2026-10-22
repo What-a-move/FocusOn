@@ -1,0 +1,25 @@
+package com.capstone.backend.auth.persistence;
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+/** 사용자 소유 기기와 활성 Desktop 수를 조회한다. */
+public interface UserDeviceRepository extends JpaRepository<UserDeviceEntity, Long> {
+  /** 사용자와 설치 해시로 기존 기기를 찾는다. */
+  @Query("select d from UserDeviceEntity d where d.user.id = :userId "
+      + "and d.deviceType = :deviceType and d.installationIdHash = :hash")
+  Optional<UserDeviceEntity> findByInstallation(
+      @Param("userId") Long userId,
+      @Param("deviceType") UserDeviceEntity.DeviceType deviceType,
+      @Param("hash") String installationIdHash);
+
+  /** 사용자별 특정 종류와 상태의 기기 수를 센다. */
+  @Query("select count(d) from UserDeviceEntity d where d.user.id = :userId "
+      + "and d.deviceType = :deviceType and d.status = :status")
+  long countDevices(
+      @Param("userId") Long userId,
+      @Param("deviceType") UserDeviceEntity.DeviceType deviceType,
+      @Param("status") UserDeviceEntity.Status status);
+}

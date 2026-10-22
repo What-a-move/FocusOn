@@ -1,6 +1,6 @@
 # Flyway 마이그레이션 규칙
 
-FocusOn Server는 PostgreSQL(`server/docker-compose.yml`의 `postgres:17.11-alpine3.24`)과 Flyway(`server/build.gradle`의 `flyway-core`, `flyway-database-postgresql`)를 사용한다. `spring.flyway.locations=classpath:db/migration`(`application.properties`)에 따라 마이그레이션 파일은 `server/src/main/resources/db/migration/`에 둔다.
+FocusOn Server는 PostgreSQL(`server/docker-compose.yml`의 `postgres:17.11-alpine3.24`)과 Flyway(`server/build.gradle`의 `spring-boot-starter-flyway`, `flyway-database-postgresql`)를 사용한다. `spring.flyway.locations=classpath:db/migration`(`application.properties`)에 따라 마이그레이션 파일은 `server/src/main/resources/db/migration/`에 둔다.
 
 이 문서는 `server/src/main/resources/db/migration/README.md`(이미 존재)를 대체하지 않고, 그 내용을 팀 전체 규칙 수준으로 보강한다. 두 문서가 어긋나면 실제 폴더의 README.md를 우선 확인하고 둘 다 갱신한다.
 
@@ -10,10 +10,11 @@ FocusOn Server는 PostgreSQL(`server/docker-compose.yml`의 `postgres:17.11-alpi
 
 ```text
 V1__create_initial_schema.sql
-V2__add_device_pairing.sql
+V2__enforce_auth_ownership.sql
+V3__add_device_pairing.sql
 ```
 
-- API 계약과 PostgreSQL 기준이 확정되었으므로 다음 Backend 작업에서 `V1__create_initial_schema.sql`을 작성한다.
+- Issue #32에서 `V1__create_initial_schema.sql`은 인증 5개 테이블을 만들고, 이미 로컬 DB에 적용된 V1은 유지한 채 `V2__enforce_auth_ownership.sql`로 사용자·기기 소유 제약을 보강한다. 목표·세션 등 다른 도메인은 후속 버전으로 추가한다.
 - 여러 브랜치가 동시에 마이그레이션을 추가하는 상황이 잦아지면 순번 충돌 위험이 커진다. 그 경우 타임스탬프 버전(`V{yyyyMMddHHmmss}__{설명}.sql`, KST 기준)으로 전환할지 팀 논의 후 이 문서를 갱신한다 — 지금은 순번 방식을 유지한다.
 
 ## 기본 원칙
