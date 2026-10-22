@@ -54,9 +54,12 @@ class Observation(InternalSchema):
     run_id: Identifier = Field(alias="runId")
     goal_id: Identifier = Field(alias="goalId")
     goal_version: Annotated[int, Field(ge=1)] = Field(alias="goalVersion")
-    event_id: Identifier = Field(alias="eventId")
+    client_run_id: Identifier = Field(alias="clientRunId")
+    sequence: Annotated[int, Field(ge=0)] = Field(alias="sequence")
     navigation_id: Identifier = Field(alias="navigationId")
     observed_at: datetime = Field(alias="observedAt")
+    content_source: ContentSource = Field(alias="contentSource")
+    is_active_target: bool = Field(alias="isActiveTarget")
     session_status: SessionStatus = Field(alias="sessionStatus")
     exclusion_mode: ExclusionMode = Field(alias="exclusionMode")
 
@@ -74,12 +77,12 @@ class OCRMetadata(InternalSchema):
 
 
 class ContentInput(Observation):
-    content_source: ContentSource = Field(alias="contentSource")
     content_type: Literal["DOCUMENT", "WEB_PAGE", "CODE", "TABLE", "ERROR", "UNKNOWN"] = Field(alias="contentType")
     app_name: Annotated[str, Field(max_length=256)] = Field(default="", alias="appName", repr=False)
+    window_title: Annotated[str, Field(max_length=800)] = Field(default="", alias="windowTitle", repr=False)
     page_title: Annotated[str, Field(max_length=800)] = Field(default="", alias="pageTitle", repr=False)
     url_host: Annotated[str, Field(max_length=253)] = Field(default="", alias="urlHost", repr=False)
-    text: Annotated[str, Field(max_length=64_000)] = Field(repr=False)
+    text: Annotated[str, Field(max_length=64_000)] = Field(default="", repr=False)
     extraction_status: ExtractionStatus = Field(alias="extractionStatus")
     is_sensitive: bool = Field(alias="isSensitive")
     is_excluded: bool = Field(alias="isExcluded")
@@ -96,7 +99,7 @@ class ContentInput(Observation):
 
 
 class VerifiedContext(Observation):
-    """Caller must supply Server-verified ownership/current state, or a synthetic fixture."""
+    """Server state plus the Client coordinator's currently selected screen target."""
     user_id: Identifier = Field(alias="userId")
     resume_required: bool = Field(alias="resumeRequired")
     policy_version: Identifier = Field(alias="policyVersion")
@@ -108,12 +111,33 @@ class VerifiedContext(Observation):
         return self.session_status in {SessionStatus.ACTIVE, SessionStatus.RUNNING} and not self.resume_required
 
 
+GoalTopic = Annotated[str, Field(min_length=1, max_length=200)]
+
+
+class GoalProfile(InternalSchema):
+    """User-confirmed semantic scope. Page content must never mutate this value."""
+    main_topic: GoalTopic = Field(alias="mainTopic")
+    purpose: Literal["LEARNING", "IMPLEMENTATION", "PROBLEM_SOLVING", "DEBUGGING", "PRACTICE", "OTHER"]
+    core_topics: Annotated[list[GoalTopic], Field(min_length=1, max_length=12)] = Field(alias="coreTopics")
+    supporting_topics: Annotated[list[GoalTopic], Field(max_length=12)] = Field(default_factory=list, alias="supportingTopics")
+    expected_activities: Annotated[list[GoalTopic], Field(max_length=8)] = Field(default_factory=list, alias="expectedActivities")
+
+    @field_validator("core_topics", "supporting_topics", "expected_activities")
+    @classmethod
+    def unique_topics(cls, values: list[str]) -> list[str]:
+        normalized = [value.strip() for value in values]
+        if any(not value for value in normalized) or len({value.casefold() for value in normalized}) != len(normalized):
+            raise ValueError("GOAL_TOPICS_INVALID")
+        return normalized
+
+
 class ConfirmedGoal(InternalSchema):
     goal_id: Identifier = Field(alias="goalId")
     goal_version: Annotated[int, Field(ge=1)] = Field(alias="goalVersion")
     text: Annotated[str, Field(min_length=1, max_length=2_000)] = Field(repr=False)
     confirmed: bool
-    template_id: Identifier = Field(alias="templateId")
+    template_id: Identifier | None = Field(default=None, alias="templateId")
+    profile: GoalProfile | None = Field(default=None, alias="goalProfile", repr=False)
 
     @field_validator("confirmed")
     @classmethod

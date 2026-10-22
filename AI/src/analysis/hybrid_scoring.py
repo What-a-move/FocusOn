@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from .goal_graph import Concept, ContentRole, GoalGraph, keyword_match
+from .passage_grouping import CodeContextGroup
 from ..preprocessing.models import CleanedPassage, PassageKind
 
 
@@ -37,13 +38,13 @@ class HybridConfig:
     # All numbers are an uncalibrated experimental policy, not release criteria.
     keyword_weight: float = 0.35
     vector_weight: float = 0.65
-    direct_threshold: float = 0.72
-    prerequisite_threshold: float = 0.76
-    supporting_threshold: float = 0.76
+    direct_threshold: float = 0.62
+    prerequisite_threshold: float = 0.65
+    supporting_threshold: float = 0.65
     min_cosine: float = 0.55
     related_coverage: float = 0.60
     unrelated_coverage: float = 0.70
-    unrelated_threshold: float = 0.80
+    unrelated_threshold: float = 0.75
 
     def __post_init__(self) -> None:
         values = tuple(getattr(self, name) for name in self.__dataclass_fields__)
@@ -92,9 +93,12 @@ def match_passage(passage: CleanedPassage, concept: Concept,
 
 def decide_relevance(passages: tuple[CleanedPassage, ...], graph: GoalGraph,
                      passage_vectors: Sequence[Sequence[float]],
-                     concept_vectors: Sequence[Sequence[float]], config: HybridConfig) -> Decision:
+                     concept_vectors: Sequence[Sequence[float]], config: HybridConfig, *,
+                     context_groups: tuple[CodeContextGroup, ...] = (),
+                     context_vectors: Sequence[Sequence[float]] = ()) -> Decision:
     concepts = graph.concepts + graph.unrelated_topics
-    if len(passage_vectors) != len(passages) or len(concept_vectors) != len(concepts):
+    if (len(passage_vectors) != len(passages) or len(concept_vectors) != len(concepts)
+            or len(context_vectors) != len(context_groups)):
         raise VectorError("VECTOR_COUNT_INVALID")
     # Titles/headings describe context; they do not increase body coverage.
     main = tuple(p for p in passages if p.kind not in {PassageKind.TITLE, PassageKind.HEADING})
@@ -104,14 +108,19 @@ def decide_relevance(passages: tuple[CleanedPassage, ...], graph: GoalGraph,
     matches = tuple(match_passage(passage, concept, passage_vectors[index], concept_vectors[node], config)
                     for index, passage in enumerate(passages)
                     for node, concept in enumerate(concepts))
+    # Keep individual evidence so a related explanation cannot hide unrelated code.
+    matches += tuple(match_passage(group.passage, concept, context_vectors[index], concept_vectors[node], config)
+                     for index, group in enumerate(context_groups)
+                     for node, concept in enumerate(concepts))
     related = tuple(match for match in matches if match.role is not None
                     and match.keyword_score > 0 and match.cosine >= config.min_cosine
                     and match.hybrid_score >= config.threshold(match.role))
     unrelated = tuple(match for match in matches if match.role is None
                       and match.keyword_score == 1 and match.cosine >= config.min_cosine
                       and match.hybrid_score >= config.unrelated_threshold)
-    related_ids = {match.passage_id for match in related}
-    unrelated_ids = {match.passage_id for match in unrelated}
+    sources = {group.passage.id: group.source_ids for group in context_groups}
+    related_ids = {source for match in related for source in sources.get(match.passage_id, (match.passage_id,))}
+    unrelated_ids = {source for match in unrelated for source in sources.get(match.passage_id, (match.passage_id,))}
     related_coverage = sum(len(p.text) for p in main if p.id in related_ids) / total
     unrelated_coverage = sum(len(p.text) for p in main if p.id in unrelated_ids) / total
     # Competing themes in the same content need additional context, not a score sum.

@@ -30,17 +30,20 @@ def clean_text(
     text: str,
     kind: PassageKind,
     ui_fragments: FrozenSet[str],
+    *,
+    strip_html: bool = True,
 ) -> CleanedText:
     normalized = _normalize_characters(text)
     if kind is PassageKind.CODE:
         # Source text can intentionally contain HTML entities inside literals.
         return CleanedText(text=_clean_structured_text(normalized))
-    normalized = html.unescape(normalized)
     if kind is PassageKind.TABLE:
-        return CleanedText(text=_clean_structured_text(normalized))
+        return CleanedText(text=_clean_structured_text(html.unescape(normalized)))
 
-    normalized = _HTML_BLOCK_RE.sub("\n", normalized)
-    normalized = _HTML_TAG_RE.sub("", normalized)
+    if strip_html:
+        normalized = html.unescape(normalized)
+        normalized = _HTML_BLOCK_RE.sub("\n", normalized)
+        normalized = _HTML_TAG_RE.sub("", normalized)
 
     cleaned_lines: list[str] = []
     seen_lines: set[str] = set()

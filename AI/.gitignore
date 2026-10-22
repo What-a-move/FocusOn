@@ -1,5 +1,14 @@
 .env
+.chroma/
 __pycache__/
 *.pyc
 .venv/
 
+
+/scripts/langsmith.py
+
+/evaluation/AI/
+
+/evaluation/AI 2/
+
+/evaluation/*.zip

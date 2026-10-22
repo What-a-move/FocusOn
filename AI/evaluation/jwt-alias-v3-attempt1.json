@@ -1,0 +1,1613 @@
+{
+  "synthetic": true,
+  "annotationStatus": "development examples; not independent accuracy validation",
+  "cohortHash": "3fa88b61d16c17aabf618b14b5e503c4642b5f6fdf77e30ff4199493b5241071",
+  "goal": {
+    "goalId": "lab-goal",
+    "goalVersion": 1,
+    "text": "JWT 인증 구현",
+    "confirmed": true
+  },
+  "promptVersion": "goal-graph-v3",
+  "promptHash": "f3fc2293a0133fa4b59f226bf00b99cf504e13a721b4f5f2d798eed62dff01a6",
+  "generationCalls": 1,
+  "generationMs": 16283.16,
+  "llmCallMs": [
+    16281.3
+  ],
+  "cases": [
+    {
+      "caseId": "jwt-original",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "WEB_PAGE",
+      "pageTitle": "Spring Security로 JWT 인증 구현하기",
+      "text": "## JWT 인증 필터 구현\n\nJWT 인증 필터는 요청의 Authorization 헤더에서 Bearer 토큰을 추출합니다. 토큰 검증 단계에서는 서명과 만료 시간을 확인하고, 검증에 성공한 경우 사용자 인증 정보를 SecurityContext에 등록합니다.\n\n## 인증 오류와 필터 순서 확인\n\nSpring Security에서 인증 오류가 발생하면 인증 필터의 실행 순서를 확인합니다. JWT 토큰 검증에 실패한 요청은 인증되지 않은 요청으로 처리하고, 인증된 사용자의 접근 권한이 부족한 경우에는 403 응답을 반환합니다."
+    },
+    {
+      "caseId": "jwt-alternative-wording",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "서명과 만료 확인으로 인증 요청 검증",
+      "text": "JWT 토큰 검증에서는 서버가 서명의 유효성과 만료 시간을 확인합니다. 변조된 토큰은 거절하며 검증된 사용자 정보만 인증 처리에 사용합니다.\n\n인증 필터에서 토큰 검증 실패를 처리합니다. 인증 오류가 발생한 요청은 보호된 API를 실행하지 않고 인증 실패 응답을 반환합니다."
+    },
+    {
+      "caseId": "unrelated-cooking",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "주말 요리와 레시피",
+      "text": "오늘은 요리 레시피에 따라 채소와 고기를 준비합니다. 재료를 손질하고 조리 시간을 맞추며 맛있는 음식을 만드는 요리 과정을 연습합니다."
+    },
+    {
+      "caseId": "insufficient-loading",
+      "expectedLabel": "UNCERTAIN",
+      "contentSource": "CHROME_DOM",
+      "contentType": "WEB_PAGE",
+      "pageTitle": "처리 중",
+      "text": "잠시만 기다려 주세요. 화면을 준비하고 있습니다."
+    }
+  ],
+  "before": {
+    "graph": {
+      "template_id": "generated:lab-goal:v1",
+      "version": "llm-goal-graph-v1:llm:e3f96005fcbe9efa",
+      "goal_text": "JWT 인증 구현",
+      "concepts": [
+        {
+          "id": "jwt-authentication",
+          "description": "JWT 기반 인증 구현: 토큰을 발급하고 검증해 요청자의 인증 상태와 신원을 확인하는 웹·API 보안 기능입니다.",
+          "aliases": [
+            "JWT 인증",
+            "JWT authentication",
+            "JSON Web Token authentication",
+            "토큰 인증",
+            "JWT 로그인"
+          ],
+          "role": "DIRECT",
+          "connection": "확인된 목표인 JWT 인증 기능을 구현하는 핵심 주제입니다."
+        },
+        {
+          "id": "jwt-token-structure",
+          "description": "JWT는 헤더, 페이로드, 서명으로 구성된 토큰 형식입니다. 페이로드는 암호화가 기본 적용되지 않으므로 비밀 정보를 넣지 않습니다.",
+          "aliases": [
+            "JWT 구조",
+            "JWT parts",
+            "JWT header",
+            "JWT payload",
+            "JWT signature"
+          ],
+          "role": "DIRECT",
+          "connection": "JWT 인증에 사용할 토큰의 구성과 각 부분의 역할을 다룹니다."
+        },
+        {
+          "id": "jwt-issuance-validation",
+          "description": "JWT 발급과 검증은 서명 생성·확인, 만료 시각 및 필수 클레임 검사로 토큰의 유효성을 판단하는 과정입니다.",
+          "aliases": [
+            "JWT 발급",
+            "JWT 검증",
+            "token signing",
+            "token verification",
+            "JWT expiration",
+            "JWT claims"
+          ],
+          "role": "DIRECT",
+          "connection": "인증 구현에서 토큰을 만들고 요청마다 안전하게 확인하는 동작입니다."
+        },
+        {
+          "id": "bearer-token-requests",
+          "description": "Bearer 토큰 전달은 클라이언트가 보통 Authorization 헤더에 액세스 토큰을 포함하고 서버가 이를 인증 미들웨어에서 처리하는 방식입니다.",
+          "aliases": [
+            "Bearer token",
+            "Authorization 헤더",
+            "Bearer 인증",
+            "액세스 토큰 전달",
+            "인증 미들웨어"
+          ],
+          "role": "DIRECT",
+          "connection": "발급된 JWT를 API 요청에 전달하고 서버에서 인증 처리하는 흐름을 구현합니다."
+        },
+        {
+          "id": "refresh-token-lifecycle",
+          "description": "리프레시 토큰 수명 관리는 액세스 토큰 갱신, 토큰 회전 및 폐기 같은 절차로 재인증과 탈취 위험을 다룹니다.",
+          "aliases": [
+            "refresh token",
+            "리프레시 토큰",
+            "토큰 갱신",
+            "refresh-token rotation",
+            "토큰 폐기"
+          ],
+          "role": "DIRECT",
+          "connection": "JWT 로그인 세션을 유지하고 종료하는 데 필요한 선택적 생명주기 기능입니다."
+        },
+        {
+          "id": "web-http-fundamentals",
+          "description": "HTTP 요청·응답, 헤더, 상태 코드와 클라이언트-서버 구조에 관한 기초 지식입니다.",
+          "aliases": [
+            "HTTP 기초",
+            "HTTP request",
+            "HTTP response",
+            "웹 클라이언트 서버",
+            "HTTP headers"
+          ],
+          "role": "PREREQUISITE",
+          "connection": "JWT가 API 요청에서 전달되고 인증 결과가 응답되는 방식을 이해하는 기반입니다."
+        },
+        {
+          "id": "cryptographic-signatures",
+          "description": "전자서명은 비밀 키로 서명을 생성하고 대응 키로 검증해 메시지의 무결성과 발급자를 확인하는 암호학적 기법입니다.",
+          "aliases": [
+            "전자서명",
+            "digital signatures",
+            "HMAC",
+            "RSA 서명",
+            "ECDSA 서명"
+          ],
+          "role": "PREREQUISITE",
+          "connection": "JWT 서명이 위변조를 탐지하는 원리를 이해하고 알고리즘과 키를 올바르게 선택하는 데 필요합니다."
+        },
+        {
+          "id": "jwt-debugging-tools",
+          "description": "JWT 디버깅 도구는 토큰의 헤더·클레임을 확인하고 만료, 서명 오류, 요청 헤더 누락을 점검하는 보조 수단입니다.",
+          "aliases": [
+            "JWT 디코더",
+            "JWT debugger",
+            "토큰 디코딩",
+            "jwt.io",
+            "JWT 테스트"
+          ],
+          "role": "SUPPORTING",
+          "connection": "인증 구현과 문제 해결 과정에서 토큰과 요청을 검사하는 데 도움을 줍니다."
+        }
+      ],
+      "unrelated_topics": [
+        {
+          "id": "entertainment-viewing",
+          "description": "학습 목표와 무관한 영화·드라마·예능 시청 활동입니다.",
+          "aliases": [
+            "영화 감상",
+            "드라마 시청",
+            "예능 시청",
+            "TV 시청"
+          ],
+          "role": null,
+          "connection": "JWT 인증 구현과 직접 관련 없는 여가 활동입니다."
+        },
+        {
+          "id": "gaming",
+          "description": "게임을 플레이하거나 게임 방송을 시청하는 오락 활동입니다.",
+          "aliases": [
+            "비디오 게임 플레이",
+            "온라인 게임",
+            "게임 방송 시청",
+            "모바일 게임"
+          ],
+          "role": null,
+          "connection": "게임 개발이나 인증 구현이 아닌 별도의 오락 활동입니다."
+        },
+        {
+          "id": "cooking",
+          "description": "식사 준비를 위한 조리법 탐색과 요리 활동입니다.",
+          "aliases": [
+            "요리하기",
+            "레시피 검색",
+            "식사 준비",
+            "베이킹"
+          ],
+          "role": null,
+          "connection": "웹 인증 기능 구현과 무관한 생활 활동입니다."
+        },
+        {
+          "id": "shopping",
+          "description": "상품 탐색, 가격 비교 및 구매를 위한 쇼핑 활동입니다.",
+          "aliases": [
+            "온라인 쇼핑",
+            "상품 비교",
+            "가격 검색",
+            "구매하기"
+          ],
+          "role": null,
+          "connection": "JWT 인증을 구현하는 목표와 무관한 소비 활동입니다."
+        }
+      ]
+    },
+    "results": [
+      {
+        "caseId": "jwt-original",
+        "expected": "RELATED",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": false,
+        "coverage": 0.49606299212598426,
+        "bodyChars": 254,
+        "relatedChars": 126,
+        "elapsedMs": 8261.17,
+        "embeddingCalls": 2,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.6549801043720966,
+            "hybrid_score": 0.6007370678418629
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6854231161762198,
+            "hybrid_score": 0.44552502551454287
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6256821214595534,
+            "hybrid_score": 0.4066933789487097
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6523699044723493,
+            "hybrid_score": 0.42404043790702706
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5652246849568577,
+            "hybrid_score": 0.36739604522195757
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6450775634428632,
+            "hybrid_score": 0.4193004162378611
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6437886732663751,
+            "hybrid_score": 0.41846263762314384
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.665228602355291,
+            "hybrid_score": 0.4323985915309392
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.28844852753465955,
+            "hybrid_score": 0.1874915428975287
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.19540646639774878,
+            "hybrid_score": 0.1270142031585367
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16046190786073772,
+            "hybrid_score": 0.10430024010947953
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.23441994549551598,
+            "hybrid_score": 0.15237296457208538
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.7158731368692459,
+            "hybrid_score": 0.6403175389650099
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.7358891344986201,
+            "hybrid_score": 0.4783279374241031
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6864541155725347,
+            "hybrid_score": 0.44619517512214757
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.7073829027025998,
+            "hybrid_score": 0.4597988867566899
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6095371005473921,
+            "hybrid_score": 0.3961991153558049
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.7012092930108639,
+            "hybrid_score": 0.45578604045706156
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6855857734188745,
+            "hybrid_score": 0.44563075272226843
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.7297434021733269,
+            "hybrid_score": 0.4743332114126625
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2556667174137777,
+            "hybrid_score": 0.16618336631895553
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.17787118622726825,
+            "hybrid_score": 0.11561627104772436
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14719146122784274,
+            "hybrid_score": 0.09567444979809779
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.21709562709785415,
+            "hybrid_score": 0.1411121576136052
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.7123286086320544,
+            "hybrid_score": 0.6380135956108354
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6961878266561796,
+            "hybrid_score": 0.4525220873265168
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.7252924584717192,
+            "hybrid_score": 0.4714400980066175
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.7327814729456764,
+            "hybrid_score": 0.6513079574146896
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6142480327080487,
+            "hybrid_score": 0.39926122126023167
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6761943027175189,
+            "hybrid_score": 0.4395262967663873
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6656871404120883,
+            "hybrid_score": 0.4326966412678574
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.717017316092284,
+            "hybrid_score": 0.4660612554599846
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1475007151792232,
+            "hybrid_score": 0.09587546486649508
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.13058555086148563,
+            "hybrid_score": 0.08488060805996567
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.10713874352892823,
+            "hybrid_score": 0.06964018329380335
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.19205796992799398,
+            "hybrid_score": 0.1248376804531961
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4315632120656246,
+            "hybrid_score": 0.28051608784265597
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4397880182661834,
+            "hybrid_score": 0.28586221187301925
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.411163461333825,
+            "hybrid_score": 0.26725624986698626
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.44578196750767546,
+            "hybrid_score": 0.28975827887998906
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.3762729337674839,
+            "hybrid_score": 0.24457740694886454
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.42119116628903885,
+            "hybrid_score": 0.27377425808787526
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.40786427387654217,
+            "hybrid_score": 0.26511177801975244
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.49633934230087934,
+            "hybrid_score": 0.3226205724955716
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.24054828753344457,
+            "hybrid_score": 0.15635638689673897
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12286572023203461,
+            "hybrid_score": 0.0798627181508225
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14736394434510555,
+            "hybrid_score": 0.09578656382431862
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22735252844046502,
+            "hybrid_score": 0.14777914348630228
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6037160413616762,
+            "hybrid_score": 0.39241542688508957
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.54956555837167,
+            "hybrid_score": 0.3572176129415855
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.575388575173309,
+            "hybrid_score": 0.37400257386265084
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5613762575886307,
+            "hybrid_score": 0.36489456743261
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5184703739190464,
+            "hybrid_score": 0.3370057430473802
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5870828724726385,
+            "hybrid_score": 0.381603867107215
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5398806724361286,
+            "hybrid_score": 0.3509224370834836
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6326273952173949,
+            "hybrid_score": 0.41120780689130665
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.19199644013181116,
+            "hybrid_score": 0.12479768608567726
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12285141016728268,
+            "hybrid_score": 0.07985341660873374
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.08681796817750162,
+            "hybrid_score": 0.05643167931537606
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.17839447365667216,
+            "hybrid_score": 0.1159564078768369
+          }
+        ]
+      },
+      {
+        "caseId": "jwt-alternative-wording",
+        "expected": "RELATED",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": false,
+        "coverage": 0.0,
+        "bodyChars": 151,
+        "relatedChars": 0,
+        "elapsedMs": 3128.41,
+        "embeddingCalls": 1,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.48421720389785583,
+            "hybrid_score": 0.3147411825336063
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.42426818531141774,
+            "hybrid_score": 0.27577432045242156
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5526599513149796,
+            "hybrid_score": 0.3592289683547367
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4019289519947353,
+            "hybrid_score": 0.26125381879657794
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4310038171816036,
+            "hybrid_score": 0.2801524811680423
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4139368361781795,
+            "hybrid_score": 0.26905894351581666
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5197210395988499,
+            "hybrid_score": 0.3378186757392524
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5071927118694329,
+            "hybrid_score": 0.3296752627151314
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.231426405200606,
+            "hybrid_score": 0.1504271633803939
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14151475729547533,
+            "hybrid_score": 0.09198459224205897
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16573060878355791,
+            "hybrid_score": 0.10772489570931265
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.26973933689218144,
+            "hybrid_score": 0.17533056897991794
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.6344948450261945,
+            "hybrid_score": 0.4124216492670264
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5943372554851334,
+            "hybrid_score": 0.3863192160653367
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.71253856523701,
+            "hybrid_score": 0.4631500674040565
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5933394268984931,
+            "hybrid_score": 0.3856706274840205
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5610897987968332,
+            "hybrid_score": 0.3647083692179416
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5711793227265185,
+            "hybrid_score": 0.37126655977223705
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.615917064811179,
+            "hybrid_score": 0.4003460921272664
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6538873045422873,
+            "hybrid_score": 0.42502674795248674
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12295981481133866,
+            "hybrid_score": 0.07992387962737013
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1493411883398093,
+            "hybrid_score": 0.09707177242087606
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.09188818874319518,
+            "hybrid_score": 0.05972732268307687
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.19267138864512012,
+            "hybrid_score": 0.12523640261932809
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5744396649605992,
+            "hybrid_score": 0.37338578222438945
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4707678894669419,
+            "hybrid_score": 0.30599912815351227
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5128417554098456,
+            "hybrid_score": 0.3333471410163996
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5106880368172222,
+            "hybrid_score": 0.3319472239311944
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4496436274031793,
+            "hybrid_score": 0.29226835781206656
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.49376854410799326,
+            "hybrid_score": 0.3209495536701956
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4642672604193949,
+            "hybrid_score": 0.3017737192726067
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5585660865666426,
+            "hybrid_score": 0.3630679562683177
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11095532052384463,
+            "hybrid_score": 0.07212095834049902
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.07501966017030406,
+            "hybrid_score": 0.048762779110697645
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.06142216693714179,
+            "hybrid_score": 0.03992440850914216
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11700424107579806,
+            "hybrid_score": 0.07605275669926874
+          }
+        ]
+      },
+      {
+        "caseId": "unrelated-cooking",
+        "expected": "UNRELATED",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": false,
+        "coverage": 0.0,
+        "bodyChars": 75,
+        "relatedChars": 0,
+        "elapsedMs": 1223.03,
+        "embeddingCalls": 1,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.1756349935724569,
+            "hybrid_score": 0.114162745822097
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.19674824613025702,
+            "hybrid_score": 0.12788635998466708
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.16945901712080463,
+            "hybrid_score": 0.11014836112852301
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.1784709766207271,
+            "hybrid_score": 0.11600613480347263
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.15611894507409693,
+            "hybrid_score": 0.10147731429816301
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.17110011342144882,
+            "hybrid_score": 0.11121507372394174
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1772159173699686,
+            "hybrid_score": 0.1151903462904796
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.19662542771265146,
+            "hybrid_score": 0.12780652801322345
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.30143612080536425,
+            "hybrid_score": 0.19593347852348678
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.24162714170763025,
+            "hybrid_score": 0.15705764210995968
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.45656124661901354,
+            "hybrid_score": 0.2967648103023588
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22553586300168668,
+            "hybrid_score": 0.14659831095109635
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.18225675233029942,
+            "hybrid_score": 0.11846688901469463
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.16822321845889635,
+            "hybrid_score": 0.10934509199828263
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.17789996191017307,
+            "hybrid_score": 0.1156349752416125
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.15966264031322316,
+            "hybrid_score": 0.10378071620359507
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.16946371262675444,
+            "hybrid_score": 0.11015141320739039
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.16874498049391246,
+            "hybrid_score": 0.1096842373210431
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.16826212124903883,
+            "hybrid_score": 0.10937037881187524
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.17336817214463132,
+            "hybrid_score": 0.11268931189401037
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.32726919548269034,
+            "hybrid_score": 0.21272497706374874
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2732177475227126,
+            "hybrid_score": 0.1775915358897632
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.6279811694626674,
+            "hybrid_score": 0.40818776015073377
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2738419735385853,
+            "hybrid_score": 0.17799728280008045
+          }
+        ]
+      },
+      {
+        "caseId": "insufficient-loading",
+        "expected": "UNCERTAIN",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": true,
+        "coverage": 0.0,
+        "bodyChars": 27,
+        "relatedChars": 0,
+        "elapsedMs": 880.93,
+        "embeddingCalls": 1,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.24396701307867513,
+            "hybrid_score": 0.15857855850113883
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.25069015508922227,
+            "hybrid_score": 0.16294860080799448
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.23759807316781645,
+            "hybrid_score": 0.15443874755908069
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.284057301194969,
+            "hybrid_score": 0.18463724577672988
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.2035610400408881,
+            "hybrid_score": 0.13231467602657726
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.24322436344744205,
+            "hybrid_score": 0.15809583624083734
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.2479307656087255,
+            "hybrid_score": 0.1611549976456716
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.2536112074707485,
+            "hybrid_score": 0.16484728485598654
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2703357953374337,
+            "hybrid_score": 0.1757182669693319
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22276632279609979,
+            "hybrid_score": 0.14479810981746485
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.24752144168273507,
+            "hybrid_score": 0.1608889370937778
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.27733500960189017,
+            "hybrid_score": 0.18026775624122862
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-authentication",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.2488586460503547,
+            "hybrid_score": 0.16175811993273057
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-token-structure",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.2455956785654971,
+            "hybrid_score": 0.15963719106757313
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-issuance-validation",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.23321824618670547,
+            "hybrid_score": 0.15159186002135858
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bearer-token-requests",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.23573612059486726,
+            "hybrid_score": 0.15322847838666373
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "refresh-token-lifecycle",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.19244087015079933,
+            "hybrid_score": 0.12508656559801956
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "web-http-fundamentals",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.25295163037809715,
+            "hybrid_score": 0.16441855974576317
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cryptographic-signatures",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.23719143053688105,
+            "hybrid_score": 0.1541744298489727
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "jwt-debugging-tools",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.2534540052445754,
+            "hybrid_score": 0.16474510340897403
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "entertainment-viewing",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2860146420228345,
+            "hybrid_score": 0.18590951731484243
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gaming",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2371142186448857,
+            "hybrid_score": 0.1541242421191757
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "cooking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.28787561706688647,
+            "hybrid_score": 0.1871191510934762
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "shopping",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2664433068805262,
+            "hybrid_score": 0.17318814947234204
+          }
+        ]
+      }
+    ],
+    "totalMs": 13495.16,
+    "embeddingMs": 13117.17,
+    "embeddingCalls": 5
+  },
+  "after": {
+    "graph": {
+      "template_id": "generated:lab-goal:v1",
+      "version": "confirmed-goal-profile-v1",
+      "goal_text": "JWT 인증 구현",
+      "concepts": [
+        {
+          "id": "direct-1",
+          "description": "JWT 인증 구현",
+          "aliases": [
+            "JWT 인증 구현"
+          ],
+          "role": "DIRECT",
+          "connection": "confirmed-goal:lab-goal:v1:direct-1"
+        }
+      ],
+      "unrelated_topics": []
+    },
+    "results": [
+      {
+        "caseId": "jwt-original",
+        "expected": "RELATED",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": false,
+        "coverage": 0.0,
+        "bodyChars": 254,
+        "relatedChars": 0,
+        "elapsedMs": 2482.99,
+        "embeddingCalls": 2,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.7172744243027102,
+            "hybrid_score": 0.6412283757967616
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.785545746787673,
+            "hybrid_score": 0.5106047354119875
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.7079484291146295,
+            "hybrid_score": 0.4601664789245092
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4499170257876816,
+            "hybrid_score": 0.2924460667619931
+          },
+          {
+            "passage_id": "passage-005",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5806772907853159,
+            "hybrid_score": 0.37744023901045537
+          }
+        ]
+      },
+      {
+        "caseId": "jwt-alternative-wording",
+        "expected": "RELATED",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": false,
+        "coverage": 0.0,
+        "bodyChars": 151,
+        "relatedChars": 0,
+        "elapsedMs": 680.1,
+        "embeddingCalls": 1,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4237650966760566,
+            "hybrid_score": 0.2754473128394368
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5798401632327839,
+            "hybrid_score": 0.3768961061013095
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5071120265798086,
+            "hybrid_score": 0.3296228172768756
+          }
+        ]
+      },
+      {
+        "caseId": "unrelated-cooking",
+        "expected": "UNRELATED",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": false,
+        "coverage": 0.0,
+        "bodyChars": 75,
+        "relatedChars": 0,
+        "elapsedMs": 475.3,
+        "embeddingCalls": 1,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.1717001269281056,
+            "hybrid_score": 0.11160508250326864
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.16708842484979006,
+            "hybrid_score": 0.10860747615236355
+          }
+        ]
+      },
+      {
+        "caseId": "insufficient-loading",
+        "expected": "UNCERTAIN",
+        "actual": "UNCERTAIN",
+        "status": "SUCCEEDED",
+        "reasonCode": "INSUFFICIENT_EVIDENCE",
+        "matchesExpected": true,
+        "coverage": 0.0,
+        "bodyChars": 27,
+        "relatedChars": 0,
+        "elapsedMs": 601.13,
+        "embeddingCalls": 1,
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.23585569946306156,
+            "hybrid_score": 0.15330620465099
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "direct-1",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.23373375735682506,
+            "hybrid_score": 0.1519269422819363
+          }
+        ]
+      }
+    ],
+    "totalMs": 4240.66,
+    "embeddingMs": 4186.09,
+    "embeddingCalls": 5
+  }
+}

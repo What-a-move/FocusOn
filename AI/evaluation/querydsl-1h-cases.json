@@ -1,0 +1,154 @@
+{
+  "goal": {
+    "goalId": "goal-querydsl-1h",
+    "goalVersion": 1,
+    "text": "QueryDSL로 검색 조건에 따라 JPA 동적 조회 쿼리 구현하기",
+    "confirmed": true
+  },
+  "cases": [
+    {
+      "caseId": "querydsl-00m",
+      "purpose": "00분 시점의 가상 화면: 직접 학습: QueryDSL 기본 구조",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "QueryDSL과 Q 타입의 역할",
+      "text": "QueryDSL은 자바 코드로 타입을 확인하면서 쿼리를 구성할 수 있도록 도와줍니다. JPA 엔티티에 대응하는 Q 타입을 이용하여 속성과 조건식을 표현합니다. 문자열로 작성한 속성 이름에만 의존하는 방식과 비교하면서 엔티티 필드가 변경될 때 어떤 오류를 개발 단계에서 발견할 수 있는지 살펴봅니다. 생성된 Q 타입을 사용할 수 있도록 프로젝트의 빌드 설정도 확인합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-05m",
+      "purpose": "05분 시점의 가상 화면: 직접 학습: 기본 조회 쿼리 작성",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "QueryDSL 기본 조회와 조건식",
+      "text": "QueryDSL의 JPAQueryFactory에서 조회 대상을 선택하고 where 절에 조건을 전달합니다. 이름이 일치하는 회원을 조회하는 조건과 나이가 특정 값 이상인 회원을 조회하는 조건을 각각 작성합니다. 조건식을 조합하면 여러 필터를 동시에 적용할 수 있습니다. 조회 결과가 한 건인지 여러 건인지에 맞춰 결과를 받는 메서드를 선택하고 실제 생성된 SQL도 확인합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-10m",
+      "purpose": "10분 시점의 가상 화면: 선수 지식: 동적 조회에 필요한 조건식 논리",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "조건 조합과 AND·OR 우선순위",
+      "text": "이름 조건과 나이 조건을 모두 만족하는 행을 찾으려면 두 조건을 AND로 연결합니다. 어느 하나만 만족해도 되는 경우에는 OR로 연결합니다. 여러 조건을 섞을 때 괄호의 위치에 따라 결과가 달라질 수 있으므로 각 조건 묶음의 의미를 먼저 정의합니다. 검색 화면에서 필터를 선택하지 않은 경우와 빈 문자열을 입력한 경우도 구분하여 조건을 구성해야 합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-15m",
+      "purpose": "15분 시점의 가상 화면: 딴짓: 게임 플레이",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "게임 보스 공략과 아이템 파밍",
+      "text": "새로운 보스를 처치하기 위해 공격 패턴과 회피 시점을 외웁니다. 친구와 파티를 구성하고 부족한 장비를 얻기 위해 같은 던전을 반복해서 진행합니다. 희귀 아이템이 나오면 현재 장비와 능력치를 비교하고 어떤 캐릭터에게 줄지 결정합니다. 다음 도전에 사용할 회복 물약을 준비하고 오늘 안에 목표 등급까지 캐릭터를 성장시킬 계획입니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-20m",
+      "purpose": "20분 시점의 가상 화면: 직접 학습: 선택적 검색 조건 구현",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "QueryDSL BooleanBuilder로 동적 검색",
+      "text": "QueryDSL에서 검색 조건이 선택적으로 들어오면 BooleanBuilder에 필요한 조건만 추가할 수 있습니다. 이름이 비어 있지 않을 때 이름 조건을 연결하고 최소 나이가 입력되었을 때 범위 조건을 연결합니다. 모든 검색 항목이 비어 있는 경우에 전체 조회를 허용할지도 결정합니다. 조건마다 별도 쿼리를 복사하지 않고 조합한 조건을 where 절에 전달하여 결과를 확인합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-25m",
+      "purpose": "25분 시점의 가상 화면: 혼합 화면: 동적 조회 구현과 음악 콘텐츠가 함께 존재",
+      "expectedLabel": "UNCERTAIN",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "현재 브라우저에서 읽은 내용",
+      "text": "QueryDSL로 회원 검색 기능을 구현합니다. 이름과 나이 조건이 전달되었는지 검사한 뒤 BooleanBuilder에 각각 추가합니다. 생성한 조건을 where 절에 전달하고 검색 결과에 필터가 적용되었는지 확인합니다. 조건이 없는 경우의 처리 방식도 함께 정리합니다.\n\n인기 가수의 새 앨범 수록곡을 듣고 뮤직비디오를 재생합니다. 댓글에서 가장 반응이 좋은 노래를 찾아보고 공연 일정과 좌석 배치를 확인합니다. 친구와 함께 갈 수 있는 회차를 고른 뒤 응원봉과 기념 상품의 디자인을 비교하며 다른 공연 영상도 이어서 봅니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-30m",
+      "purpose": "30분 시점의 가상 화면: 관련 활동: 검색 쿼리의 조인 오류 점검",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "QueryDSL 조인과 필터 위치",
+      "text": "QueryDSL로 회원과 주문 데이터를 함께 조회하면서 조인 조건과 검색 조건을 나누어 작성합니다. 왼쪽 외부 조인을 사용해도 오른쪽 테이블의 조건을 where 절에 두면 연결된 데이터가 없는 행이 결과에서 제외될 수 있습니다. 주문이 없는 회원도 결과에 포함해야 하는지 요구사항을 확인하고 조건을 on 또는 where 중 어디에 둘지 판단합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-35m",
+      "purpose": "35분 시점의 가상 화면: 딴짓: 의류 쇼핑",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "가을 재킷 코디와 중고 거래",
+      "text": "가을에 입을 재킷을 고르기 위해 색상별 착용 사진을 살펴봅니다. 중고 판매자가 올린 제품의 상태와 실측 사이즈를 확인하고 비슷한 디자인의 새 상품 가격도 비교합니다. 신발과 바지 조합을 생각하며 마음에 드는 상품을 관심 목록에 담습니다. 주말 약속에 입고 갈 옷을 정한 뒤 다른 액세서리의 배송 날짜도 확인합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-40m",
+      "purpose": "40분 시점의 가상 화면: 관련 활동: 동적 조회의 정렬·페이징",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "QueryDSL 정렬과 페이지 조회",
+      "text": "QueryDSL 검색 결과에 orderBy를 적용하고 offset과 limit으로 조회 범위를 지정합니다. 정렬 값이 같은 행이 여러 개일 때는 고유 식별자를 추가 정렬 기준으로 사용하여 결과 순서를 명확하게 만듭니다. 전체 건수를 보여주려면 조건에 맞는 개수 조회가 필요할 수 있습니다. 데이터 조회와 개수 조회의 조건이 일치하는지 각각 확인합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-45m",
+      "purpose": "45분 시점의 가상 화면: 관련 활동: 구현 결과와 경계 조건 확인",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "QueryDSL 검색 조건별 결과 검증",
+      "text": "QueryDSL로 구현한 회원 검색에서 이름만 입력한 경우, 나이만 입력한 경우, 둘 다 입력한 경우를 비교합니다. 각 요청에서 생성된 조건과 반환된 행을 확인하고 경계 나이의 회원이 포함되는지도 살펴봅니다. 빈 문자열이 불필요한 조건으로 추가되지 않는지 점검하고 결과가 없는 검색에서는 빈 목록을 정상적으로 반환하는지 확인합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-50m",
+      "purpose": "50분 시점의 가상 화면: 딴짓: 예능과 여행 콘텐츠",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "예능 프로그램 명장면 모음",
+      "text": "지난주 방송된 예능 프로그램에서 출연자들이 게임을 하는 장면을 다시 봅니다. 가장 재미있는 벌칙 장면과 즉흥 노래 장면을 찾아 친구에게 보여줄 목록에 담습니다. 이어서 다른 방송의 짧은 영상도 재생하고 다음 회차의 예고편을 확인합니다. 출연자가 방문한 식당의 메뉴 사진과 주변 관광지를 찾아보며 주말에 가 볼 곳을 고릅니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "querydsl-55m",
+      "purpose": "55분 시점의 가상 화면: 혼합 화면: QueryDSL 복습과 게임 공략이 함께 존재",
+      "expectedLabel": "UNCERTAIN",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "함께 표시된 학습 문서와 게임 공략",
+      "text": "QueryDSL의 동적 조회 쿼리를 정리합니다. 선택적 검색 조건을 조합하는 방식과 조인 조건의 위치를 설명하고, 정렬과 페이지 조회가 적용된 결과를 확인합니다. 이름 조건과 나이 조건을 따로 함수로 분리했을 때 쿼리 작성 코드가 어떻게 바뀌는지도 비교합니다.\n\n게임 캐릭터의 공격력과 방어력을 올리는 장비 조합을 검색합니다. 전투에서 사용할 스킬 순서를 확인하고 던전 보스의 공격을 피하는 타이밍을 연습합니다. 파티원과 함께 도전할 난이도를 정한 다음 보상으로 얻을 수 있는 장신구와 무기의 외형을 살펴봅니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    }
+  ]
+}

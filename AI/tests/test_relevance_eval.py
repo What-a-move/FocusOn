@@ -5,7 +5,9 @@ import sys
 from pathlib import Path
 
 import pytest
+import httpx
 
+from AI.evaluation import relevance_eval
 from AI.evaluation.relevance_eval import fixture_input, metrics
 from AI.src.preprocessing.adapter import adapt_content, preprocessing_context
 from AI.src.preprocessing.models import PassageKind
@@ -80,6 +82,40 @@ def test_real_requires_revision_and_does_not_fallback():
     report = json.loads(completed.stdout)
     assert completed.returncode == 2 and report["fakeFallback"] is False
     assert report["mode"] == "real" and report["status"] == "FAILED"
+
+
+def test_real_cli_works_with_embedding_only_proxy(monkeypatch, capsys):
+    paths = []
+
+    def service(request):
+        paths.append((request.method, request.url.path))
+        assert request.method == "POST" and request.url.path == "/api/embed"
+        body = json.loads(request.content)
+        return httpx.Response(200, json={
+            "model": body["model"],
+            "embeddings": [[1] + [0] * 2559 for _ in body["input"]],
+        })
+
+    class ProxyClient(relevance_eval.OllamaEmbeddingClient):
+        def __init__(self, settings):
+            super().__init__(settings, transport=httpx.MockTransport(service))
+
+    monkeypatch.setattr(relevance_eval, "OllamaEmbeddingClient", ProxyClient)
+    monkeypatch.setenv("FOCUSON_EMBEDDING_URL", "https://school.example.invalid")
+    monkeypatch.setenv("FOCUSON_EMBEDDING_REVISION", "synthetic-digest")
+    monkeypatch.setenv("GOAL_GRAPH_LLM_API_KEY", "")
+    monkeypatch.setenv("GOAL_GRAPH_LLM_MODEL", "")
+    code = relevance_eval.main([
+        "--mode", "real", "--split", "development",
+        "--cases", str(ROOT / "AI/evaluation/relevance_cases.json"),
+        "--config", str(ROOT / "AI/evaluation/relevance_calibration.json"),
+    ])
+    report = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert report["serviceVersion"] is None
+    assert len(report["cases"]) == 8
+    assert paths and paths == [("POST", "/api/embed")] * report["embeddingCalls"]
+    # Scripted vectors verify the transport contract, not model accuracy.
 
 
 def test_metric_math_uses_all_expected_labels():

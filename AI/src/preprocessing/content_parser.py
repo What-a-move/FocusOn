@@ -38,14 +38,22 @@ def parse_content(
     truncated = False
 
     for raw_index, raw_passage in enumerate(raw_passages):
-        cleaned = clean_text(raw_passage.text, raw_passage.kind, settings.ui_fragments)
+        cleaned = clean_text(
+            raw_passage.text,
+            raw_passage.kind,
+            settings.ui_fragments,
+            strip_html=not settings.preserve_extracted_markup,
+        )
         removed_duplicates += cleaned.removed_duplicate_count
         removed_ui_fragments += cleaned.removed_ui_fragment_count
         if not cleaned.text:
             continue
 
         passage_key = (raw_passage.kind, cleaned.text)
-        if passage_key in seen_passages:
+        structural_heading = (
+            settings.preserve_extracted_markup and raw_passage.kind is PassageKind.HEADING
+        )
+        if passage_key in seen_passages and not structural_heading:
             removed_duplicates += 1
             continue
         seen_passages.add(passage_key)

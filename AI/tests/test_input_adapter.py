@@ -9,15 +9,18 @@ from src.preprocessing.validator import validate_and_preprocess
 
 def prepare(text, **changes):
     observation = dict(sessionId="session-1", runId="run-1", goalId="goal-1", goalVersion=1,
-                       eventId="event-1", navigationId="nav-1", observedAt="2026-10-11T01:00:00Z",
-                       sessionStatus="ACTIVE", exclusionMode="NONE")
+                       clientRunId="event-1", sequence=1, navigationId="nav-1",
+                       observedAt="2026-10-11T01:00:00Z", contentSource="CHROME_DOM",
+                       isActiveTarget=True, sessionStatus="ACTIVE", exclusionMode="NONE")
     content = ContentInput.parse_safe({
-        **observation, "contentSource": "CHROME_DOM", "contentType": "DOCUMENT",
+        **observation, "contentType": "DOCUMENT",
         "text": text, "extractionStatus": "SUCCESS", "isSensitive": False,
         "isExcluded": False, **changes,
     })
+    content_data = content.model_dump(mode="json", by_alias=True)
+    context_observation = {key: content_data[key] for key in observation}
     context = VerifiedContext.parse_safe({
-        **observation, "userId": "user-1", "resumeRequired": False,
+        **context_observation, "userId": "user-1", "resumeRequired": False,
         "policyVersion": "policy-1", "extractorVersion": "extractor-1", "stateVersion": 1,
     })
     return adapt_content(content, context), context

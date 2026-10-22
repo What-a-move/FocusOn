@@ -47,14 +47,17 @@
   "runId": "run-456",
   "goalId": "goal-789",
   "goalVersion": 1,
-  "eventId": "event-012",
+  "clientRunId": "event-012",
+  "sequence": 12,
   "navigationId": "navigation-034",
   "observedAt": "2026-10-07T01:00:00Z",
+  "isActiveTarget": true,
   "sessionStatus": "ACTIVE",
   "exclusionMode": "NONE",
   "contentSource": "DESKTOP_APP_OCR",
   "contentType": "DOCUMENT",
   "appName": "Preview",
+  "windowTitle": "React 학습 자료 — Preview",
   "pageTitle": "React 학습 자료",
   "urlHost": "",
   "text": "useState로 객체 상태를 갱신할 때 이전 객체를 직접 변경하지 않고 새로운 객체를 생성합니다.",
@@ -74,9 +77,9 @@
 - 기존 노션 내부 입력 예시에 `qualityScore`가 있어도 이를 최종 품질로 무조건 신뢰하지 않는다. 원천 품질을 참고하되 최종 품질은 전처리에서 산출한다. 품질 산식은 설정 가능한 실험 정책이며 아직 확정 수치가 아니다.
 - 원본 HTML·이미지·Base64·캡처 파일·카메라 프레임은 입력으로 받지 않는다.
 
-### 백엔드와 추후 합의할 컬럼 9개
+### 실행 문맥·중복·순서 합의 컬럼
 
-현재 내부 예시에는 유지한다. 전부 Client 추출 JSON의 필수 값으로 고정하지 않고 Server가 검증한 문맥으로 결합할 수 있게 입력 콘텐츠와 실행 문맥을 구분한다.
+기존 합의 대상 9개 중 `eventId`는 허재원 화면 기획의 `clientRunId` 의미로 교체해 내부 event key에 매핑한다. 여기에 출처별 역순 방지용 `sequence`가 추가로 필요하다. 전부 Client 추출 JSON의 필수 값으로 단정하지 않고 Client가 만든 관측 정보와 Server 검증 문맥을 결합한다.
 
 | 컬럼 | 사용 목적 | 협의할 것 |
 | --- | --- | --- |
@@ -84,13 +87,16 @@
 | runId | 실행 구간 식별 | 구간 경계·현재 run 검증 |
 | goalId | 확정 목표 조회 | run에서 조회하면 별도 전달이 필요한지 |
 | goalVersion | 오래된 목표 분석 구분 | run 안 목표 고정과 버전 필요성 |
-| eventId | 결과 귀속·멱등 처리 | 발급·중복 검증 범위 |
+| clientRunId | 같은 관측의 결과 귀속·멱등 처리 | Client 발급·재시도 시 유지·`UNIQUE(sessionId, clientRunId)` |
+| sequence | 같은 `sessionId + contentSource` 안의 증가 순서 | 발급 주체·재시도 시 유지·최신값 조회 |
 | navigationId | 페이지·창 이동 구분 | 앱/Chrome별 변경 규칙 |
 | observedAt | 원래 관찰 시각 | 시각 형식·시간대·역순 처리 |
 | sessionStatus | 분석 가능한 실행 상태 | enum·Server 검증 문맥 |
 | exclusionMode | 제외 정책 확인 | enum·적용·검증 책임 |
 
 학교 테스트에서는 합성된 현재 실행 문맥을 주입한다. 이것은 실제 인증·소유권 검증이 아니다. 운영에서 Client가 준 상태만 믿지 않는다. 값이 없는데 임의로 현재 값으로 채우거나 stale 검사를 우회하지 않는다.
+
+`contentSource`는 순서 비교 범위이며, `isActiveTarget`은 Client 조정자가 실제 foreground 앱·창과 Chrome foreground/active tab을 확인한 결과다. AI는 false이거나 최신 문맥과 불일치하면 `UNCERTAIN/INACTIVE_TARGET`으로 보류한다. Chrome의 active tab이라는 사실만으로 Chrome이 현재 foreground 앱이라고 간주하지 않는다.
 
 ### 목표 입력과 전처리 출력
 
@@ -135,11 +141,22 @@ MVP는 검토된 목표별 템플릿으로 시작한다. Graph 개념은 사용�
 
 개념은 ID·설명·동의어·역할·목표 연결 근거·템플릿/관계 버전을 내부에서 관리한다. 이는 구현용 내부 구조이며 공개 응답 필드 추가가 아니다.
 
-같은 개념도 목표에 따라 역할이 바뀐다. 임베딩 모델에 직접/선수/보조 라벨을 생성하게 하지 않는다. 문단을 Graph 개념과 매칭한 뒤 목표 기준 역할을 조회한다. 새로운 목표의 자동 Graph 생성은 추후 보완한다.
+같은 개념도 목표에 따라 역할이 바뀐다. 임베딩 모델에 직접/선수/보조 라벨을 생성하게 하지 않는다. 문단을 Graph 개념과 매칭한 뒤 목표 기준 역할을 조회한다. `templateId`가 없는 확정 목표는 확인된 목표 문장·GoalProfile로 최소 Graph를 만들며, 생성형 LLM Client가 연결되면 같은 Graph Schema의 후보를 목표 버전별로 한 번 생성·검증·캐시한다.
+
+생성형 LLM 입력에는 확정 목표와 확인된 GoalProfile만 넣고 현재 페이지·검색·OCR 본문은 넣지 않는다. 출력은 기존 Graph 구조의 concepts와 `role: null`인 `unrelated_topics`만 허용한다. 최소 DIRECT 1개, 최대 개념/aliases/문자 길이, ID·aliases 중복과 민감정보를 검증한다. LLM 실패·미연결 시 확정 범위만 사용하는 최소 Graph로 내려가며 이 fallback은 무관 주제를 추측하지 않는다. 프로세스 캐시는 Server 영속 저장을 대체하지 않는다.
 
 대상이 있는 넓은 목표를 임의로 좁히지 않는다. 목표·관계 근거가 부족할 때는 가능한 판단만 하고 `UNCERTAIN`을 유지한다. 모든 넓은 목표를 무조건 보류하지 않는다.
 
-### Hybrid 6번 점수와 기본 판정
+### 메타데이터 우선 경로와 Hybrid 6번 판정
+
+- `APP_META`·`TAB_META`는 `appName`, `windowTitle`, `pageTitle`, `urlHost`를 먼저 검사한다.
+- 같은 Graph 개념의 aliases가 2개 이상 명확히 일치하고 반대 근거가 없을 때만 임베딩 없이 판정한다.
+- 한 단어만 일치하거나 관련·무관 메타데이터가 충돌하면 `UNCERTAIN`이다. 이 경우 Client가 Chrome DOM, 그다음 필요한 경우 현재 viewport OCR을 새 관측으로 제출한다.
+- 내부 분석 결과의 `next_content_source`는 이 단계 전환만 지시한다. `TAB_META → CHROME_DOM → CHROME_VIEWPORT_OCR`, `APP_META → DESKTOP_APP_OCR` 순서이며 OCR 뒤에는 추가 원문 수집을 요구하지 않는다.
+- 각 단계는 새 `clientRunId`와 해당 `contentSource`의 증가한 `sequence`를 가진 새 관측이다. 이전 `clientRunId`의 본문만 바꿔 재사용하지 않는다.
+- 제외·민감·비활성 대상·stale·목표 Graph 부재·모델 장애는 추가 DOM/OCR 수집으로 우회하지 않는다. `next_content_source`는 내부 조정 신호이며 합의되지 않은 공개 응답 필드로 확정하지 않는다.
+- 비활성 창·탭, FocusOn 자체 UI, 활성 대상 불명 입력은 관련·무관 근거로 사용하지 않는다.
+- DOM·OCR 본문이 필요한 요청은 기존 Hybrid 6번을 유지한다.
 
 #### 2026-10-11 제목·소제목·코드 정보 반영
 
@@ -147,9 +164,9 @@ MVP는 검토된 목표별 템플릿으로 시작한다. Graph 개념은 사용�
 - 제목·소제목에도 기존 키워드·cosine·Hybrid 계산을 적용한다. 본문과 상반된 통과 근거가 있으면 `UNCERTAIN`으로 보류하며, 제목·소제목 길이는 본문 커버리지 분자·분모에서 제외한다. 제목·소제목만으로 최종 관련·무관을 확정하지 않는다.
 - 본문으로 판정이 성립하면 같은 방향의 제목·소제목 근거 ID도 함께 반환한다. 제목·소제목만으로 본문 근거가 부족한 결과를 승격하지 않는다. 이 결합 방식은 현재 보수적 실험 정책이며 실제 Qwen 평가가 필요하다.
 - `text`에 이미 포함된 코드 fence의 언어·설명과 코드 들여쓰기·문자열 값을 보존한다. 추출기가 보내지 않은 소제목·코드 언어·창 제목은 추측하지 않는다.
-- 기존 `appName`·`urlHost`는 개인정보 검사와 결과 캐시 구분에 사용한다. 앱·도메인을 새 점수나 목표 개념으로 만들지 않는다. 목표 벡터 캐시는 앱·도메인 변경으로 불필요하게 분리하지 않는다.
+- DOM·OCR Hybrid 경로의 `appName`·`urlHost`는 개인정보 검사와 결과 캐시 구분에 사용하며 새 점수나 목표 개념으로 만들지 않는다. 2026-10-17 메타데이터 우선 경로에서는 aliases의 명확한 일치 여부만 검사한다. 목표 벡터 캐시는 앱·도메인 변경으로 불필요하게 분리하지 않는다.
 - 검증: 제목/본문 일치·충돌·제목만 있는 입력·제목 없는 OCR, 제목 길이와 커버리지, 코드 언어·literal 보존, 민감 제목/코드의 모델 미호출, 제목·앱·도메인 변경 시 캐시를 검사한다.
-- `windowTitle`·포커스·구조화 소제목/코드 메타데이터 전달 계약과 메타데이터만으로 판단하는 경로는 별도 합의 대상으로 유지한다.
+- `windowTitle`·`isActiveTarget`은 현재 내부 학교 Schema에 반영했다. 공개 Client·Server 계약과 실제 foreground 선택 구현은 담당자 합의가 필요하다.
 
 ```text
 개념·문단 매칭 점수 = α × 키워드 매칭 점수 + β × 벡터 유사도
@@ -214,8 +231,10 @@ Issue와 작업 Branch는 #11 하나로 통합한다. 검증·전처리와 관�
 
 ## 모델·외부 연동
 
+- 2026-10-21 사용자 지시: 임베딩 Client와 real CLI는 `POST /api/embed`만 호출한다. `/health`, `/api/tags`, `/api/show`, `/api/version`의 자동 조회를 제거하고 응답의 모델명·벡터 개수·차원·유한값·0벡터를 로컬에서 검증한다. revision·정밀도는 자동 원격 검증값이 아닌 설정이며, 서버 모델 교체 시 설정을 갱신하고 프로세스를 재시작한다.
+
 - Python 3.11.6, FastAPI, Pydantic, pytest, HTTPX.
-- 임베딩 모델: `Qwen/Qwen3-Embedding-4B`, FP16. 추가 LLM은 필수가 아니며 제공자·예산 미정.
+- 임베딩 모델: `Qwen/Qwen3-Embedding-4B`, FP16. 임의 목표 Graph 생성용 OpenAI 호환 LLM Client·Schema 검증·로컬 ChromaDB 재사용을 구현했다. 모델·API Key가 비어 있어 실제 호출과 생성 품질 검증은 비활성이며 외부 전송 고지·운영 저장 계약은 미정이다.
 - Windows GPU 서버는 WSL2·Linux 방향이다. 학교의 GPU·VRAM·드라이버·CUDA·WSL2 GPU 접근·vLLM 버전은 실측 전에 확인한다.
 - 모델은 시작 시 한 번 로드해 상주시킨다. 목표 개념 벡터를 버전별로 재사용하고 필요한 문단을 묶어 요청한다.
 - vLLM 임베딩 API를 HTTPX Client로 호출한다. 생성/chat endpoint를 임베딩 계산에 사용하지 않는다.
@@ -272,9 +291,13 @@ Agent에게 요청할 때는 다음 지시를 함께 준다.
 | 제목 없는 충분한 OCR 본문 | 제목 부재만으로 탈락 금지 |
 | 한 줄의 유효 코드·오류 메시지 | 길이만으로 탈락 금지 |
 | 새 탭·메뉴만 남음·깨진 OCR | UNCERTAIN, 무관 근거로 쓰지 않음 |
+| 메타데이터 aliases 2개 이상·반대 근거 없음 | 모델 미호출, 메타데이터 판정 |
+| 메타데이터 한 단어·관련/무관 충돌 | UNCERTAIN, 필요한 경우 DOM/OCR로 진행 |
+| 비활성 탭·창 또는 활성 대상 불명 | 모델 미호출, UNCERTAIN/INACTIVE_TARGET |
 | BLACK_SCREEN/EMPTY_CAPTURE/OCR_FAILED 신호 | 모델 미호출, 실패 상세 상태 |
 | PARTIAL이지만 의미 충분/부족 | 분석 가능 범위 유지/UNCERTAIN |
-| 동일 eventId의 중복/내용 변경 | 멱등/잘못된 재사용 금지 |
+| 동일 clientRunId의 중복/내용 변경 | 멱등/잘못된 재사용 금지 |
+| 같은 출처의 낮은 sequence가 늦게 도착 | stale 폐기, 현재 결과 미변경 |
 | 같은 내용·다른 사용자/목표/정책 | 캐시 교차 사용 금지 |
 | 모델 timeout·잘못된 차원·NaN·0벡터 | 안전 실패, UNRELATED 금지 |
 | 분석 중 탭 전환·목표 변경·제외 진입 | 늦은 결과 현재 UI 적용 금지 |
@@ -331,7 +354,7 @@ AI 앱은 Python 3.11.6을 사용한다. 기존 pyenv 환경이 있으면 해당
 
 ```bash
 # 먼저 모델·네트워크 없는 테스트
-PYTHONPATH=AI:. python -m pytest AI/tests -q --ignore=AI/tests/langsmith_test.py
+PYTHONPATH=AI:. python -m pytest AI/tests -q
 
 # Fake Client 결과: 로직 검증 전용
 python -m AI.evaluation.relevance_eval --mode fake --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
@@ -377,3 +400,25 @@ CLI 출력/보고서에는 caseId·정답 라벨·예측 라벨·상태·안전�
 - [ ] CONTEXT·NEXT_TASK·필요한 결정 기록을 실제 상태로 갱신했다.
 
 적용 Rule ID: AI-PRIV-001/002, AI-PIPE-001, AI-FAIL-001, AI-STATE-001, AI-STALE-001, AI-LLM-001, AI-EVAL-001, AI-VERSION-001. 사용자 수정 우선 규칙 등 오래된 제안은 이번 구현 근거로 사용하지 않는다.
+
+### 2026-10-21 사용자 요청: Graph 품질 지침과 임계값 하향
+
+- 범위: 생성 지침의 역할·별칭·무관 활동 범주 보강, Prompt 변경 시 Graph 캐시 분리, DIRECT 0.62·선수/보조 0.65·무관 0.75 실험 기준 적용.
+- 유지: 기존 JSON 계약, 키워드 산식·가중치·최소 코사인·본문 커버리지·충돌 보류·민감/품질/실패 처리.
+- 검증: 기존 합성 14건은 개발용으로 유지하고 별도 합성 20건의 기대 라벨을 실행 전에 고정한다. 같은 실제 학교 벡터로 이전/하향 기준을 비교하며 평가 결과를 보고 기대 라벨이나 텍스트를 바꾸지 않는다. 사람 검수된 독립 최종 평가를 대신하지 않는다.
+- 결과와 제한은 [트랜스포머 평가 및 Graph 품질 리포트](transformer-decoder-1h-evaluation-REPORT.md)에 누적한다. 외부 프로젝트·공개 API·수집 구현 변경은 포함하지 않는다.
+
+### 2026-10-21 사용자 요청: 설명·명시 코드의 문맥 묶음
+
+- 기존 개별 비교에 같은 입력의 인접 설명+코드 묶음을 추가하고, 원문 인접 관계와 UTF-8 크기를 확인한다. 키워드와 임베딩은 동일 묶음 텍스트로 계산한다.
+- 개별 반대 근거는 유지하고 원래 ID·길이로 근거와 커버리지를 환산한다. 제목·표·소제목 경계를 넘거나 표식 없는 OCR의 코드 경계를 추측하지 않는다.
+- 검증 완료: 235 passed·8 subtests passed, 실제 학교 API의 기존 causal mask 합성 사례에서 묶음 미사용 UNCERTAIN → 사용 RELATED. 전체 정확도·무관 검출 검증은 별도다.
+- 별칭 생성 방식은 정식 기본형·자연스러운 표현 변형·실제 코드 표기와 중복 부풀림 방지 기준을 제안한다. 이번 구현에서 Graph 생성 Prompt 자체는 변경하지 않았다.
+
+## 2026-10-21 현재 기능용 Streamlit 비교 화면
+
+사용자 요청에 따라 기존 `similarity_streamlit.py`를 교체한다. 적용 규칙: AI-PRIV-002, AI-FAIL-001, AI-EVAL-001. 현재 6번 분석기를 직접 재사용하고 다른 후보는 기존 비교 방식으로 구분한다. JSON 컬럼과 판정 기준은 변경하지 않는다. 입력·기대 라벨 분리, OCR 실패·민감정보 모델 호출 차단, 명시적 비교 버튼, 결과·근거·시간 표시를 검증한다. 실제 수집·공개 API·독립 정확도는 범위에 포함하지 않는다. 실행법과 제한은 AI/README.md, 결과는 같은 기능 REPORT의 최신 절을 따른다.
+
+## 2026-10-21 사용자 요청: 목표 기반 별칭 생성 보강만 재테스트
+
+1번 방식만 적용한다. 목표에서 개념별 검색 가능한 별칭을 생성하는 Prompt를 보강하고 기존 버전과 캐시를 분리한다. 추가 검증 LLM·키워드 매칭 함수·점수 기준은 변경하지 않는다. 생성에는 현재 본문/기대 라벨을 넣지 않고, 기존 JWT와 고정 대조 사례로 실제 학교 API를 재평가한다. 적용·실패·검증 결과는 동일 기능 REPORT에 기록한다.

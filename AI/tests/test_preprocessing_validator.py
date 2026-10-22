@@ -6,6 +6,7 @@ from src.preprocessing.models import (
     CurrentAnalysisContext,
     ExtractionStatus,
     PassageKind,
+    PreprocessingConfig,
     PreprocessingRequest,
     PreprocessingStatus,
     RawPassage,
@@ -21,6 +22,7 @@ def make_request(**overrides: object) -> PreprocessingRequest:
         "goal_id": "goal-1",
         "goal_version": 1,
         "event_id": "event-1",
+        "sequence": 1,
         "navigation_id": "navigation-1",
         "content_source": ContentSource.CHROME_DOM,
         "extraction_status": ExtractionStatus.SUCCESS,
@@ -36,12 +38,66 @@ def make_context(**overrides: object) -> CurrentAnalysisContext:
         "run_id": "run-1",
         "goal_version": 1,
         "navigation_id": "navigation-1",
+        "content_source": ContentSource.CHROME_DOM,
+        "latest_sequence": 1,
     }
     values.update(overrides)
     return CurrentAnalysisContext(**values)
 
 
 class PreprocessingValidatorTest(unittest.TestCase):
+    def test_extracted_mode_quality_does_not_penalize_removed_ui_or_duplicates(self) -> None:
+        body = "React 객체 상태 변경은 기존 객체를 수정하지 않고 새 객체를 생성하는 방식으로 수행합니다."
+        request = make_request(text=body + "\n닫기\n공유\n확인\n" + body)
+        result = validate_and_preprocess(
+            request, make_context(), PreprocessingConfig(penalize_removed_fragments=False)
+        )
+        self.assertTrue(result.should_analyze)
+        self.assertEqual(result.passages[0].text, body)
+        self.assertEqual(result.quality.final_quality_score, 0.9)
+        self.assertEqual(result.quality.removed_ui_fragment_count, 3)
+        self.assertEqual(result.quality.removed_duplicate_count, 1)
+        legacy = validate_and_preprocess(request, make_context())
+        self.assertFalse(legacy.should_analyze)
+        self.assertIn(RejectionReason.LOW_CONFIDENCE, legacy.reasons)
+
+    def test_extracted_mode_menu_only_is_still_empty(self) -> None:
+        result = validate_and_preprocess(
+            make_request(text="닫기\n공유\n확인"), make_context(),
+            PreprocessingConfig(min_text_chars=0, penalize_removed_fragments=False),
+        )
+        self.assertFalse(result.should_analyze)
+        self.assertIn(RejectionReason.EMPTY_CONTENT, result.reasons)
+        self.assertEqual(result.quality.final_quality_score, 0)
+
+    def test_extracted_mode_still_checks_ocr_confidence_and_broken_content(self) -> None:
+        config = PreprocessingConfig(min_text_chars=0, penalize_removed_fragments=False)
+        low_ocr = validate_and_preprocess(
+            make_request(content_source=ContentSource.DESKTOP_APP_OCR, quality_score=0.1),
+            make_context(content_source=ContentSource.DESKTOP_APP_OCR), config,
+        )
+        self.assertFalse(low_ocr.should_analyze)
+        self.assertIn(RejectionReason.LOW_CONFIDENCE, low_ocr.reasons)
+        broken = validate_and_preprocess(
+            make_request(text="\ufffd" * 20 + "본문"), make_context(), config,
+        )
+        self.assertFalse(broken.should_analyze)
+        self.assertIn(RejectionReason.BROKEN_CONTENT, broken.reasons)
+
+    def test_extracted_markup_mode_keeps_sensitive_data_blocked(self) -> None:
+        result = validate_and_preprocess(
+            make_request(text='<Counter label="user&#64;example.com" />'), make_context(),
+            PreprocessingConfig(preserve_extracted_markup=True, penalize_removed_fragments=False),
+        )
+        self.assertFalse(result.should_analyze)
+        self.assertEqual(result.reasons, (RejectionReason.PRIVACY_BLOCKED,))
+
+    def test_preprocessing_mode_flags_require_booleans(self) -> None:
+        for values in ({"penalize_removed_fragments": "false"},
+                       {"preserve_extracted_markup": 1}):
+            with self.subTest(values=values), self.assertRaises(TypeError):
+                PreprocessingConfig(**values)
+
     def test_returns_ready_content_and_deterministic_hash(self) -> None:
         first = validate_and_preprocess(make_request(), make_context())
         second = validate_and_preprocess(make_request(event_id="event-2"), make_context())
@@ -123,7 +179,7 @@ class PreprocessingValidatorTest(unittest.TestCase):
                 quality_score=0.4,
                 text="OCR로 인식했지만 신뢰도가 낮은 충분한 길이의 입력 텍스트입니다.",
             ),
-            make_context(),
+            make_context(content_source=ContentSource.CHROME_VIEWPORT_OCR),
         )
 
         self.assertEqual(result.status, PreprocessingStatus.LOW_QUALITY)
@@ -167,6 +223,8 @@ class PreprocessingValidatorTest(unittest.TestCase):
             make_context(run_id="run-2"),
             make_context(goal_version=2),
             make_context(navigation_id="navigation-2"),
+            make_context(content_source=ContentSource.DESKTOP_APP_OCR),
+            make_context(latest_sequence=2),
         )
         for context in contexts:
             with self.subTest(context=context):

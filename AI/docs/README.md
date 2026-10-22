@@ -88,6 +88,8 @@ AI/docs/
 
 RTX A4000에서 유사도 방식별 기준·결과 양식·평가 절차를 확인하려면 [유사도 평가 지침](../evaluation/SIMILARITY_EVALUATION_GUIDE.md)을 읽는다.
 
+전달용 최신 지표와 측정 한계는 [Hybrid 관련성 판단 성능지표](features/hybrid-relevance-performance-metrics.md)를 따른다. 확정 목표 5개·합성 20건의 실제 API 테스트와 이전 JWT 4건을 구분하며 독립 정확도 검증 결과가 아니다.
+
 현재 별도 기능 PLAN:
 
 - [학습 목표 설정 보조](features/goal-assistance-PLAN.md)

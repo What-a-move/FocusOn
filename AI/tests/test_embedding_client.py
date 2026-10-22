@@ -7,15 +7,12 @@ from src.models.embedding_client import EmbeddingError, EmbeddingSettings, Ollam
 
 
 def mock_service(request):
-    if request.url.path == "/api/tags":
-        return httpx.Response(200, json={"models": [{"name": "qwen3-embedding:4b-fp16", "digest": "synthetic-digest", "details": {"quantization_level": "F16"}}]})
-    if request.url.path == "/api/show":
-        return httpx.Response(200, json={"capabilities": ["embedding"], "model_info": {"qwen3.embedding_length": 2560}})
-    if request.url.path == "/api/version":
-        return httpx.Response(200, json={"version": "test-version"})
+    assert request.method == "POST" and request.url.path == "/api/embed"
     body = json.loads(request.content)
-    assert request.url.path == "/api/embed" and body["truncate"] is False
+    assert body["model"] == "qwen3-embedding:4b-fp16" and body["truncate"] is False
+    assert body["keep_alive"] == "10m"
     assert "dimensions" not in body
+    assert "revision" not in body and "precision" not in body
     return httpx.Response(200, json={"model": body["model"], "embeddings": [[1]+[0]*2559 for _ in body["input"]], "prompt_eval_count": 12})
 
 
@@ -23,7 +20,7 @@ def settings(**changes):
     return EmbeddingSettings(**{"revision": "synthetic-digest", **changes})
 
 
-def test_batch_payload_and_metadata_verification():
+def test_batches_and_repeated_calls_only_request_embeddings():
     paths = []
     def service(request):
         paths.append(request.url.path)
@@ -31,26 +28,24 @@ def test_batch_payload_and_metadata_verification():
     with OllamaEmbeddingClient(settings(batch_size=2), transport=httpx.MockTransport(service)) as client:
         vectors = client.embed(("synthetic document", "another document", "third document"))
         assert len(vectors) == 3 and len(vectors[0]) == 2560
-        assert client.calls == 2 and client.prompt_tokens == 24
-        assert client.service_version == "test-version"
-    assert paths.count("/api/tags") == 2 and paths.count("/api/embed") == 2
+        assert len(client.embed(("fourth document",))) == 1
+        assert client.calls == 3 and client.prompt_tokens == 36
+        assert client.service_version is None
+    assert paths == ["/api/embed"] * 3
 
 
-@pytest.mark.parametrize("override,code", [({"digest": "changed"}, "REVISION"), ({"details": {"quantization_level": "Q4"}}, "PRECISION")])
-def test_rejects_wrong_model_before_text_sent(override, code):
+@pytest.mark.parametrize("model", [None, "different-model"])
+def test_rejects_wrong_model_in_embedding_response(model):
     paths = []
     def service(request):
         paths.append(request.url.path)
-        response = mock_service(request)
-        if request.url.path == "/api/tags":
-            body = response.json()
-            body["models"][0].update(override)
-            return httpx.Response(200, json=body)
-        return response
+        body = mock_service(request).json()
+        body["model"] = model
+        return httpx.Response(200, json=body)
     with OllamaEmbeddingClient(settings(), transport=httpx.MockTransport(service)) as client:
-        with pytest.raises(EmbeddingError, match=code):
+        with pytest.raises(EmbeddingError, match="MODEL_RESPONSE_MISMATCH"):
             client.embed(("synthetic text",))
-    assert "/api/embed" not in paths
+    assert paths == ["/api/embed"]
 
 
 @pytest.mark.parametrize("bad,code", [([[0]*2560], "ZERO"), ([[float("nan")]*2560], "NONFINITE"), ([[1,0]], "DIMENSION"), ([], "COUNT")])
@@ -74,6 +69,7 @@ def test_timeout_retries_are_bounded_and_error_sanitized():
         with pytest.raises(EmbeddingError) as error:
             client.embed(("private synthetic text",))
     assert len(attempts) == 2
+    assert attempts == ["/api/embed"] * 2
     assert str(error.value) == "EMBEDDING_TIMEOUT"
     assert error.value.__context__ is None
 
@@ -84,19 +80,18 @@ def test_invalid_settings(changes):
         settings(**changes)
 
 
-def test_input_limit_no_request_and_post_batch_tag_swap():
+def test_empty_and_oversized_input_make_no_request():
     paths = []
     def service(request):
         paths.append(request.url.path)
-        if request.url.path == "/api/tags" and paths.count("/api/tags") == 2:
-            return httpx.Response(200, json={"models": []})
         return mock_service(request)
     with OllamaEmbeddingClient(settings(max_input_bytes=10), transport=httpx.MockTransport(service)) as client:
+        assert client.embed(()) == ()
         with pytest.raises(EmbeddingError, match="INPUT_LIMIT"):
             client.embed(("too long synthetic document",))
         assert not paths
-        with pytest.raises(EmbeddingError, match="REVISION"):
-            client.embed(("valid",))
+        assert len(client.embed(("valid",))) == 1
+    assert paths == ["/api/embed"]
 
 
 def test_retry_is_counted_as_an_actual_embedding_call():

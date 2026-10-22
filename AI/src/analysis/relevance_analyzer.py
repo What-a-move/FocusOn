@@ -14,12 +14,35 @@ from ..preprocessing.adapter import (PREPROCESSING_VERSION, adapt_content,
                                      observation_is_current, preprocessing_context)
 from ..preprocessing.models import ContentSource, PassageKind, PreprocessingConfig, PreprocessingStatus, RejectionReason
 from ..preprocessing.validator import contains_sensitive_data, validate_and_preprocess
+from ..preprocessing.text_cleaner import clean_text
 from ..utils.cache import TTLCache
-from .goal_graph import ContentRole, GoalGraph, build_goal_graph
+from .goal_analyzer import GoalGraphResolver
+from .goal_graph import Concept, ContentRole, GoalGraph, keyword_match
 from .hybrid_scoring import Decision, HybridConfig, VectorError, decide_relevance, normalize_vector
+from .passage_grouping import build_code_context_groups
 
-ANALYZER_VERSION = "school-hybrid-v2"
+ANALYZER_VERSION = "school-hybrid-v6"
 DEFAULT_INSTRUCTION = "Retrieve passages useful for the given learning goal and concept."
+_METADATA_SOURCES = {ContentSource.APP_META, ContentSource.TAB_META}
+_NEXT_CONTENT_SOURCE = {
+    ContentSource.APP_META: ContentSource.DESKTOP_APP_OCR,
+    ContentSource.TAB_META: ContentSource.CHROME_DOM,
+    ContentSource.CHROME_DOM: ContentSource.CHROME_VIEWPORT_OCR,
+}
+_CONTENT_FALLBACK_REASONS = {
+    "METADATA_INSUFFICIENT",
+    "CONFLICTING_METADATA",
+    "EXTRACTION_FAILED",
+    "UNSUPPORTED",
+    "EMPTY_CONTENT",
+    "TOO_SHORT",
+    "LOW_CONFIDENCE",
+    "BROKEN_CONTENT",
+    "INSUFFICIENT_BODY",
+    "INCOMPLETE_REPRESENTATION",
+    "CONFLICTING_EVIDENCE",
+    "INSUFFICIENT_EVIDENCE",
+}
 
 
 def concept_queries(graph: GoalGraph, instruction: str) -> tuple[str, ...]:
@@ -39,7 +62,9 @@ class RelevanceResult:
     run_id: str
     goal_id: str
     goal_version: int
-    event_id: str
+    client_run_id: str
+    sequence: int
+    content_source: str
     navigation_id: str
     observed_at: str
     extraction_status: str
@@ -54,18 +79,65 @@ class RelevanceResult:
     analyzer_version: str = ANALYZER_VERSION
     model_version: str = ""
     policy_version: str = ""
+    next_content_source: str | None = None
+
+
+def next_content_source(source: ContentSource, label: str, reason_code: str) -> ContentSource | None:
+    """Return the next allowed acquisition stage for content ambiguity only."""
+    if label != "UNCERTAIN" or reason_code not in _CONTENT_FALLBACK_REASONS:
+        return None
+    return _NEXT_CONTENT_SOURCE.get(source)
+
+
+def decide_metadata(content: ContentInput, graph: GoalGraph) -> Decision:
+    """Return only high-precision exact metadata matches; all ambiguity falls back."""
+    fields = (
+        ("appName", content.app_name),
+        ("windowTitle", content.window_title),
+        ("pageTitle", content.page_title),
+        ("urlHost", content.url_host),
+    )
+    accepted: list[tuple[Concept, tuple[str, ...]]] = []
+    for concept in graph.concepts + graph.unrelated_topics:
+        aliases = {alias.casefold() for alias in concept.aliases
+                   if any(keyword_match(value, alias) for _, value in fields if value)}
+        if len(aliases) < 2:
+            continue
+        evidence = tuple(name for name, value in fields
+                         if value and any(keyword_match(value, alias) for alias in concept.aliases))
+        accepted.append((concept, evidence))
+
+    related = tuple(item for item in accepted if item[0].role is not None)
+    unrelated = tuple(item for item in accepted if item[0].role is None)
+    if related and unrelated:
+        return Decision("UNCERTAIN", "CONFLICTING_METADATA")
+    if related:
+        evidence = tuple(dict.fromkeys(name for _, names in related for name in names))
+        roles = tuple(role for role in ContentRole if any(concept.role is role for concept, _ in related))
+        return Decision("RELATED", "METADATA_GOAL_CONNECTED", evidence, roles)
+    if unrelated:
+        evidence = tuple(dict.fromkeys(name for _, names in unrelated for name in names))
+        return Decision("UNRELATED", "METADATA_UNRELATED_TOPIC", evidence)
+    return Decision("UNCERTAIN", "METADATA_INSUFFICIENT")
 
 
 class RelevanceAnalyzer:
     def __init__(self, client: EmbeddingClient, *, hybrid: HybridConfig | None = None,
                  preprocessing: PreprocessingConfig | None = None, instruction: str = DEFAULT_INSTRUCTION,
                  cache_capacity: int = 128, cache_ttl_seconds: float = 300,
-                 queue_timeout_seconds: float = 30):
+                 queue_timeout_seconds: float = 30,
+                 goal_graph_resolver: GoalGraphResolver | None = None):
         if not instruction or len(instruction) > 1_000 or contains_sensitive_data(instruction):
             raise ValueError("INVALID_INSTRUCTION")
         self.client, self.hybrid = client, hybrid or HybridConfig()
+        self.code_context_max_bytes = min(8_000, getattr(getattr(client, "settings", None), "max_input_bytes", 8_000))
         self.preprocessing = preprocessing or PreprocessingConfig()
         self.instruction = instruction
+        if goal_graph_resolver is None:
+            from .goal_graph_runtime import build_goal_graph_resolver
+
+            goal_graph_resolver = build_goal_graph_resolver()
+        self.goal_graph_resolver = goal_graph_resolver
         if not math.isfinite(queue_timeout_seconds) or queue_timeout_seconds <= 0:
             raise ValueError("INVALID_QUEUE_TIMEOUT")
         self.queue_timeout_seconds = queue_timeout_seconds
@@ -80,27 +152,104 @@ class RelevanceAnalyzer:
             self._results.clear()
             self._events.clear()
 
+    def clear_goal_graphs(self) -> None:
+        """Call when a confirmed goal is deleted or its stored profile is invalidated."""
+        self.goal_graph_resolver.clear()
+        self.clear_caches()
+
     def analyze(self, content: ContentInput, goal: ConfirmedGoal, context: VerifiedContext,
                 *, current_context: Callable[[], VerifiedContext]) -> RelevanceResult:
         # The callback is mandatory; never pretend the request snapshot is live state.
         if not self._lock.acquire(timeout=self.queue_timeout_seconds):
-            return RelevanceResult(content.session_id, content.run_id, content.goal_id,
-                                   content.goal_version, content.event_id, content.navigation_id,
-                                   content.observed_at.isoformat(), content.extraction_status.value,
-                                   "FAILED", "UNCERTAIN", "ANALYSIS_QUEUE_TIMEOUT")
+            return RelevanceResult(
+                content.session_id, content.run_id, content.goal_id,
+                content.goal_version, content.client_run_id, content.sequence,
+                content.content_source.value, content.navigation_id,
+                content.observed_at.isoformat(), content.extraction_status.value,
+                "FAILED", "UNCERTAIN", "ANALYSIS_QUEUE_TIMEOUT",
+            )
         try:
             return self._analyze(content, goal, context, current_context)
         finally:
             self._lock.release()
 
+    def analyze_staged(
+        self, metadata: ContentInput, goal: ConfirmedGoal, context: VerifiedContext,
+        *, current_context: Callable[[], VerifiedContext],
+        acquire_next: Callable[[ContentSource], tuple[ContentInput, VerifiedContext] | None],
+    ) -> RelevanceResult:
+        """Analyze the selected target, acquiring later stages only on demand.
+
+        The caller owns foreground selection and local DOM/OCR extraction. Each
+        acquired observation must have its own event ID and verified context.
+        """
+        if metadata.content_source not in _METADATA_SOURCES:
+            raise ValueError("METADATA_STAGE_REQUIRED")
+
+        result = self.analyze(metadata, goal, context, current_context=current_context)
+        stage_content = metadata
+        seen_event_ids = {metadata.client_run_id}
+        while result.next_content_source is not None:
+            expected = ContentSource(result.next_content_source)
+            try:
+                live = current_context()
+            except Exception:
+                live = None
+            if not isinstance(live, VerifiedContext) or not (
+                live.user_id == context.user_id
+                and live.state_version == context.state_version
+                and live.policy_version == context.policy_version
+                and live.extractor_version == context.extractor_version
+                and live.is_active_target
+                and live.exclusion_mode is ExclusionMode.NONE
+                and observation_is_current(stage_content, live)
+            ):
+                return replace(result, analysis_status="DISCARDED", relevance_label="UNCERTAIN",
+                               reason_code="STALE_EVENT", evidence_ids=(), content_roles=(),
+                               quality_score=None, content_hash=None, next_content_source=None)
+            try:
+                acquired = acquire_next(expected)
+            except Exception:
+                acquired = None
+            if acquired is None:
+                return result  # Keep UNCERTAIN and the requested stage for retry.
+            content, next_context = acquired
+            if not isinstance(content, ContentInput) or not isinstance(next_context, VerifiedContext) or not (
+                content.content_source is expected
+                and content.session_id == metadata.session_id
+                and content.run_id == metadata.run_id
+                and content.goal_id == metadata.goal_id
+                and content.goal_version == metadata.goal_version
+                and content.navigation_id == metadata.navigation_id
+                and content.client_run_id not in seen_event_ids
+                and content.observed_at >= stage_content.observed_at
+                and next_context.user_id == context.user_id
+                and next_context.state_version == context.state_version
+                and next_context.policy_version == context.policy_version
+                and next_context.extractor_version == context.extractor_version
+            ):
+                return replace(result, analysis_status="DISCARDED", relevance_label="UNCERTAIN",
+                               reason_code="STAGE_MISMATCH", evidence_ids=(), content_roles=(),
+                               quality_score=None, content_hash=None, next_content_source=None)
+            seen_event_ids.add(content.client_run_id)
+            result = self.analyze(content, goal, next_context, current_context=current_context)
+            stage_content = content
+        return result
+
     def _analyze(self, content: ContentInput, goal: ConfirmedGoal, context: VerifiedContext,
                  current_context: Callable[[], VerifiedContext]) -> RelevanceResult:
         def result(status: str, label: str, code: str, **values) -> RelevanceResult:
-            return RelevanceResult(content.session_id, content.run_id, content.goal_id,
-                                   content.goal_version, content.event_id, content.navigation_id,
-                                   content.observed_at.isoformat(), content.extraction_status.value,
-                                   status, label, code, model_version=self.client.fingerprint,
-                                   policy_version=context.policy_version, **values)
+            fallback = next_content_source(content.content_source, label, code)
+            return RelevanceResult(
+                content.session_id, content.run_id, content.goal_id,
+                content.goal_version, content.client_run_id, content.sequence,
+                content.content_source.value, content.navigation_id,
+                content.observed_at.isoformat(), content.extraction_status.value,
+                status, label, code, model_version=self.client.fingerprint,
+                policy_version=context.policy_version,
+                next_content_source=fallback.value if fallback else None,
+                **values,
+            )
 
         def gate(live: VerifiedContext) -> RelevanceResult | None:
             if not isinstance(live, VerifiedContext):
@@ -111,9 +260,16 @@ class RelevanceAnalyzer:
                 return result("SKIPPED", "EXCLUDED", "EXCLUDED")
             if content.is_sensitive:
                 return result("SKIPPED", "PRIVACY_BLOCKED", "PRIVACY_BLOCKED")
+            if not live.is_active_target:
+                return result("SKIPPED", "UNCERTAIN", "INACTIVE_TARGET")
             if not observation_is_current(content, live) or live.state_version != context.state_version or live.policy_version != context.policy_version or live.extractor_version != context.extractor_version:
                 return result("DISCARDED", "UNCERTAIN", "STALE_EVENT")
             return None
+
+        def reject(rejected: RelevanceResult) -> RelevanceResult:
+            if rejected.relevance_label in {"EXCLUDED", "PRIVACY_BLOCKED"}:
+                self.clear_caches()
+            return rejected
 
         try:
             live = current_context()
@@ -121,19 +277,64 @@ class RelevanceAnalyzer:
             return result("DISCARDED", "UNCERTAIN", "CONTEXT_UNAVAILABLE")
         rejected = gate(context) or gate(live)
         if rejected:
-            self.clear_caches()
-            return rejected
-        if contains_sensitive_data(goal.text) or contains_sensitive_data(content.app_name) or contains_sensitive_data(content.url_host):
+            return reject(rejected)
+        if any(contains_sensitive_data(value) for value in (
+            goal.text, content.app_name, content.window_title,
+            content.page_title, content.url_host,
+        )):
             self.clear_caches()
             return result("SKIPPED", "PRIVACY_BLOCKED", "PRIVACY_BLOCKED")
         if (goal.goal_id, goal.goal_version) != (context.goal_id, context.goal_version):
             return result("DISCARDED", "UNCERTAIN", "GOAL_VERSION_MISMATCH")
+        if content.extraction_status.value == "FAILED":
+            return result("FAILED", "UNCERTAIN", "EXTRACTION_FAILED")
+        if content.extraction_status.value == "UNSUPPORTED":
+            return result("FAILED", "UNCERTAIN", "UNSUPPORTED")
         if content.content_source in {ContentSource.CHROME_VIEWPORT_OCR, ContentSource.DESKTOP_APP_OCR}:
             if content.ocr is None:
                 return result("SKIPPED", "UNCERTAIN", "OCR_METADATA_REQUIRED")
             if content.ocr.capture_status != "SUCCESS":
                 return result("SKIPPED", "UNCERTAIN", content.ocr.capture_status)
-        prepared = validate_and_preprocess(adapt_content(content, context), preprocessing_context(context), self.preprocessing)
+        graph = self.goal_graph_resolver.resolve(goal)
+        if graph is None:
+            return result("SKIPPED", "UNCERTAIN", "GOAL_GRAPH_UNAVAILABLE")
+
+        scope = [context.user_id, context.session_id, context.run_id, context.goal_id,
+                 context.goal_version, graph.fingerprint, self.client.fingerprint,
+                 context.policy_version, context.extractor_version, PREPROCESSING_VERSION, ANALYZER_VERSION,
+                 asdict(self.preprocessing), asdict(self.hybrid), self.instruction, self.code_context_max_bytes]
+        event_key = _digest([context.user_id, context.session_id, content.client_run_id])
+        event_signature = _digest([content.model_dump(mode="json", by_alias=True), scope, context.state_version])
+        event = self._events.get(event_key)
+        if event:
+            if event[0] != event_signature:
+                return result("DISCARDED", "UNCERTAIN", "IDEMPOTENCY_CONFLICT")
+            try:
+                rejected = gate(current_context())
+            except Exception:
+                rejected = result("DISCARDED", "UNCERTAIN", "CONTEXT_UNAVAILABLE")
+            if rejected:
+                return reject(rejected)
+            return replace(event[1], cache_hit=True)
+
+        if content.content_source in _METADATA_SOURCES:
+            decision = decide_metadata(content, graph)
+            decision_result = result(
+                "SUCCEEDED", decision.label, decision.reason_code,
+                evidence_ids=decision.evidence_ids,
+                content_roles=decision.roles,
+            )
+            try:
+                rejected = gate(current_context())
+            except Exception:
+                rejected = result("DISCARDED", "UNCERTAIN", "CONTEXT_UNAVAILABLE")
+            if rejected:
+                return reject(rejected)
+            self._events.put(event_key, (event_signature, decision_result))
+            return decision_result
+
+        request = adapt_content(content, context)
+        prepared = validate_and_preprocess(request, preprocessing_context(context), self.preprocessing)
         if not prepared.should_analyze:
             reason = prepared.reasons[0]
             label = {RejectionReason.EXCLUDED: "EXCLUDED", RejectionReason.PRIVACY_BLOCKED: "PRIVACY_BLOCKED"}.get(reason, "UNCERTAIN")
@@ -146,75 +347,69 @@ class RelevanceAnalyzer:
             # Without upstream representative selection, clipped text cannot
             # establish what the major body of an entire page is about.
             return result("SKIPPED", "UNCERTAIN", "INCOMPLETE_REPRESENTATION")
-        graph = build_goal_graph(goal.text, goal.template_id)
-        if graph is None:
-            return result("SKIPPED", "UNCERTAIN", "GOAL_GRAPH_UNAVAILABLE")
-        scope = [context.user_id, context.session_id, context.run_id, context.goal_id,
-                 context.goal_version, graph.fingerprint, self.client.fingerprint,
-                 context.policy_version, context.extractor_version, PREPROCESSING_VERSION, ANALYZER_VERSION,
-                 asdict(self.preprocessing), asdict(self.hybrid), self.instruction]
         # Keep the source context separate even when two apps/domains show the
         # same text. Goal vectors remain reusable across these observations.
-        cache_key = _digest(scope + [prepared.content_hash, content.app_name, content.url_host])
-        event_key = _digest([context.user_id, context.session_id, context.run_id, content.event_id])
-        # Include all observation metadata. A changed duplicate must never be replayed.
-        event_signature = _digest([content.model_dump(mode="json", by_alias=True), scope, context.state_version])
-        event = self._events.get(event_key)
-        if event:
-            if event[0] != event_signature:
-                return result("DISCARDED", "UNCERTAIN", "IDEMPOTENCY_CONFLICT")
-            decision_result = replace(event[1], cache_hit=True)
-        else:
-            decision = self._results.get(cache_key)
-            cache_hit = decision is not None
-            pending_vectors = None
-            try:
-                if decision is None:
-                    vector_key = _digest(scope)
-                    vectors = self._vectors.get(vector_key)
-                    queries = concept_queries(graph, self.instruction)
-                    if vectors is None:
-                        vectors = self._validated_vectors(self.client.embed(queries), len(queries))
-                        pending_vectors = (vector_key, vectors)
-                    # State can change while goal vectors are being computed.
-                    rejected = gate(current_context())
-                    if rejected:
-                        self.clear_caches()
-                        return rejected
-                    passage_vectors = self._validated_vectors(self.client.embed(tuple(p.text for p in prepared.passages)), len(prepared.passages))
-                    decision = decide_relevance(prepared.passages, graph, passage_vectors, vectors, self.hybrid)
-            except (EmbeddingError, VectorError) as error:
-                failure_code = str(error)
-                # Do not copy arbitrary injected client exceptions into output.
-                safe_codes = {"VECTOR_DIMENSION_INVALID", "VECTOR_NONFINITE", "VECTOR_ZERO", "VECTOR_COUNT_INVALID", "EMBEDDING_TIMEOUT", "EMBEDDING_UNAVAILABLE", "EMBEDDING_HTTP_ERROR", "EMBEDDING_RESPONSE_INVALID", "EMBEDDING_RESPONSE_TOO_LARGE", "EMBEDDING_INPUT_LIMIT", "EMBEDDING_QUEUE_TIMEOUT", "MODEL_REVISION_MISMATCH", "MODEL_PRECISION_MISMATCH", "MODEL_NOT_EMBEDDING", "MODEL_DIMENSION_MISMATCH", "MODEL_RESPONSE_MISMATCH", "MODEL_METADATA_INVALID", "SERVICE_VERSION_INVALID"}
-                failure_code = failure_code if failure_code in safe_codes else "EMBEDDING_FAILED"
-                decision = None
-            except Exception:
-                failure_code, decision = "ANALYSIS_FAILED", None
+        cache_key = _digest(scope + [prepared.content_hash, content.app_name, content.window_title, content.url_host])
+        decision = self._results.get(cache_key)
+        cache_hit = decision is not None
+        pending_vectors = None
+        try:
             if decision is None:
-                try:
-                    rejected = gate(current_context())
-                except Exception:
-                    rejected = result("DISCARDED", "UNCERTAIN", "CONTEXT_UNAVAILABLE")
-                self.clear_caches()
-                return rejected or result("FAILED", "UNCERTAIN", failure_code)
-            decision_result = result("SUCCEEDED", decision.label, decision.reason_code,
-                                     evidence_ids=decision.evidence_ids, content_roles=decision.roles,
-                                     quality_score=prepared.quality.final_quality_score,
-                                     content_hash=prepared.content_hash, cache_hit=cache_hit)
+                vector_key = _digest(scope)
+                vectors = self._vectors.get(vector_key)
+                queries = concept_queries(graph, self.instruction)
+                if vectors is None:
+                    vectors = self._validated_vectors(self.client.embed(queries), len(queries))
+                    pending_vectors = (vector_key, vectors)
+                # State can change while goal vectors are being computed.
+                rejected = gate(current_context())
+                if rejected:
+                    return reject(rejected)
+                source_pairs = tuple(
+                    (clean_text(body.text, body.kind, self.preprocessing.ui_fragments).text,
+                     clean_text(code.text, code.kind, self.preprocessing.ui_fragments).text)
+                    for body, code in zip(request.passages, request.passages[1:])
+                    if body.kind in {PassageKind.BODY, PassageKind.OCR} and code.kind is PassageKind.CODE
+                )
+                context_groups = build_code_context_groups(
+                    prepared.passages, max_bytes=self.code_context_max_bytes, source_pairs=source_pairs,
+                )
+                texts = tuple(p.text for p in prepared.passages) + tuple(g.passage.text for g in context_groups)
+                embedded = self._validated_vectors(self.client.embed(texts), len(texts))
+                decision = decide_relevance(
+                    prepared.passages, graph, embedded[:len(prepared.passages)], vectors, self.hybrid,
+                    context_groups=context_groups, context_vectors=embedded[len(prepared.passages):],
+                )
+        except (EmbeddingError, VectorError) as error:
+            failure_code = str(error)
+            # Do not copy arbitrary injected client exceptions into output.
+            safe_codes = {"VECTOR_DIMENSION_INVALID", "VECTOR_NONFINITE", "VECTOR_ZERO", "VECTOR_COUNT_INVALID", "EMBEDDING_TIMEOUT", "EMBEDDING_UNAVAILABLE", "EMBEDDING_HTTP_ERROR", "EMBEDDING_RESPONSE_INVALID", "EMBEDDING_RESPONSE_TOO_LARGE", "EMBEDDING_INPUT_LIMIT", "EMBEDDING_QUEUE_TIMEOUT", "MODEL_REVISION_MISMATCH", "MODEL_PRECISION_MISMATCH", "MODEL_NOT_EMBEDDING", "MODEL_DIMENSION_MISMATCH", "MODEL_RESPONSE_MISMATCH", "MODEL_METADATA_INVALID", "SERVICE_VERSION_INVALID"}
+            failure_code = failure_code if failure_code in safe_codes else "EMBEDDING_FAILED"
+            decision = None
+        except Exception:
+            failure_code, decision = "ANALYSIS_FAILED", None
+        if decision is None:
+            try:
+                rejected = gate(current_context())
+            except Exception:
+                rejected = result("DISCARDED", "UNCERTAIN", "CONTEXT_UNAVAILABLE")
+            self.clear_caches()
+            return rejected or result("FAILED", "UNCERTAIN", failure_code)
+        decision_result = result("SUCCEEDED", decision.label, decision.reason_code,
+                                 evidence_ids=decision.evidence_ids, content_roles=decision.roles,
+                                 quality_score=prepared.quality.final_quality_score,
+                                 content_hash=prepared.content_hash, cache_hit=cache_hit)
         try:
             rejected = gate(current_context())
         except Exception:
             rejected = result("DISCARDED", "UNCERTAIN", "CONTEXT_UNAVAILABLE")
         if rejected:
-            self.clear_caches()
-            return rejected
-        if not event:
-            if pending_vectors:
-                self._vectors.put(*pending_vectors)
-            # Matches contain only IDs/scores; no text is retained.
-            self._results.put(cache_key, decision)
-            self._events.put(event_key, (event_signature, decision_result))
+            return reject(rejected)
+        if pending_vectors:
+            self._vectors.put(*pending_vectors)
+        # Matches contain only IDs/scores; no text is retained.
+        self._results.put(cache_key, decision)
+        self._events.put(event_key, (event_signature, decision_result))
         return decision_result
 
     def _validated_vectors(self, vectors, count: int) -> tuple[tuple[float, ...], ...]:

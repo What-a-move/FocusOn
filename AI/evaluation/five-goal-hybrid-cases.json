@@ -1,0 +1,262 @@
+{
+  "synthetic": true,
+  "annotationStatus": "authored expected labels frozen before run; not independently reviewed",
+  "goals": [
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-react-object",
+        "goalVersion": 1,
+        "text": "React useState로 객체 상태 변경하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "react-object-related-dom",
+          "expectedLabel": "RELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "React 객체 상태 업데이트",
+          "text": "useState로 객체 상태를 관리할 때는 기존 객체를 직접 수정하지 않습니다. 상태 변경 함수에 새 객체를 전달하면 React가 상태 변화를 확인하고 다시 렌더링합니다. 전개 구문으로 이전 필드를 복사하고 변경할 필드만 새 값으로 덮어씁니다."
+        },
+        {
+          "caseId": "react-object-related-desktop-ocr",
+          "expectedLabel": "RELATED",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "pageTitle": "React 객체 상태 업데이트 정리",
+          "text": "객체 상태 업데이트 예제에서는 이전 상태를 콜백으로 받아 새 객체를 반환합니다. React의 상태 변경 함수에 복사한 객체를 전달하고 기존 객체의 속성을 직접 바꾸지 않는 불변성을 유지합니다.",
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "react-object-unrelated-cooking",
+          "expectedLabel": "UNRELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "김치볶음밥 요리 레시피",
+          "text": "김치볶음밥 요리 레시피를 보며 저녁 식사를 준비합니다. 김치와 대파를 썰고 팬에 식용유를 두른 다음 재료를 볶습니다. 밥과 간장을 넣어 간을 맞추고 계란 프라이를 올려 음식을 완성합니다."
+        },
+        {
+          "caseId": "react-object-uncertain-loading-ocr",
+          "expectedLabel": "UNCERTAIN",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "자료 불러오는 중",
+          "text": "자료를 불러오는 중입니다. 잠시 기다려 주세요. 다시 시도하거나 창을 닫을 수 있습니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-jwt-auth",
+        "goalVersion": 1,
+        "text": "JWT 인증 구현",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "jwt-auth-related-dom",
+          "expectedLabel": "RELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "JWT 인증 요청 검증",
+          "text": "JWT 인증 구현에서는 요청의 Authorization 헤더에서 Bearer 토큰을 추출합니다. JWT 토큰 검증 과정에서 서명과 만료 시간을 확인한 뒤 유효한 사용자에게만 인증된 요청을 허용합니다. 만료되거나 변조된 토큰은 인증 실패 응답으로 처리합니다."
+        },
+        {
+          "caseId": "jwt-auth-related-desktop-ocr",
+          "expectedLabel": "RELATED",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "pageTitle": "JWT 인증 요청 검증 정리",
+          "text": "JWT 인증 필터는 토큰 서명을 검증하고 만료 여부를 확인합니다. 검증된 사용자 식별 정보를 인증 문맥에 등록합니다. 토큰 검증에 실패한 요청은 보호된 API를 실행하지 않으며 인증 실패로 처리합니다.",
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "jwt-auth-unrelated-cooking",
+          "expectedLabel": "UNRELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "김치볶음밥 요리 레시피",
+          "text": "김치볶음밥 요리 레시피를 보며 저녁 식사를 준비합니다. 김치와 대파를 썰고 팬에 식용유를 두른 다음 재료를 볶습니다. 밥과 간장을 넣어 간을 맞추고 계란 프라이를 올려 음식을 완성합니다."
+        },
+        {
+          "caseId": "jwt-auth-uncertain-loading-ocr",
+          "expectedLabel": "UNCERTAIN",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "자료 불러오는 중",
+          "text": "자료를 불러오는 중입니다. 잠시 기다려 주세요. 다시 시도하거나 창을 닫을 수 있습니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-transformer-decoder",
+        "goalVersion": 1,
+        "text": "트랜스포머 디코더의 동작 원리 공부",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "transformer-decoder-related-dom",
+          "expectedLabel": "RELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "Transformer decoder와 causal mask",
+          "text": "트랜스포머 디코더는 이전 토큰을 바탕으로 다음 토큰을 예측합니다. 마스킹된 셀프 어텐션에서는 causal mask로 미래 토큰을 가려 자기회귀 생성을 유지합니다. 각 디코더 블록은 어텐션과 피드포워드 연산 뒤 잔차 연결과 정규화를 적용합니다."
+        },
+        {
+          "caseId": "transformer-decoder-related-desktop-ocr",
+          "expectedLabel": "RELATED",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "pageTitle": "Transformer decoder와 causal mask 정리",
+          "text": "Transformer decoder의 masked self-attention은 현재 위치보다 뒤에 있는 토큰을 볼 수 없도록 causal mask를 사용합니다. 자기회귀 방식으로 다음 토큰을 생성하며, 추론 중 KV cache로 이전 토큰의 key와 value 연산을 재사용할 수 있습니다.",
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "transformer-decoder-unrelated-cooking",
+          "expectedLabel": "UNRELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "김치볶음밥 요리 레시피",
+          "text": "김치볶음밥 요리 레시피를 보며 저녁 식사를 준비합니다. 김치와 대파를 썰고 팬에 식용유를 두른 다음 재료를 볶습니다. 밥과 간장을 넣어 간을 맞추고 계란 프라이를 올려 음식을 완성합니다."
+        },
+        {
+          "caseId": "transformer-decoder-uncertain-loading-ocr",
+          "expectedLabel": "UNCERTAIN",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "자료 불러오는 중",
+          "text": "자료를 불러오는 중입니다. 잠시 기다려 주세요. 다시 시도하거나 창을 닫을 수 있습니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-sql-join",
+        "goalVersion": 1,
+        "text": "SQL INNER JOIN과 LEFT JOIN의 차이 공부",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "sql-join-related-dom",
+          "expectedLabel": "RELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "SQL 테이블 JOIN 비교",
+          "text": "INNER JOIN은 두 테이블에서 조인 조건에 일치하는 행만 반환합니다. LEFT JOIN은 왼쪽 테이블의 모든 행을 유지하고 오른쪽 테이블에 일치하는 행이 없으면 NULL을 채웁니다. 고객 테이블과 주문 테이블을 조인하면 주문이 없는 고객의 포함 여부가 달라집니다."
+        },
+        {
+          "caseId": "sql-join-related-desktop-ocr",
+          "expectedLabel": "RELATED",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "pageTitle": "SQL 테이블 JOIN 비교 정리",
+          "text": "SQL의 내부 조인은 양쪽 테이블에 대응되는 키가 있는 행만 선택합니다. 왼쪽 외부 조인은 왼쪽 테이블의 행을 모두 보존하고 연결되는 오른쪽 행이 없으면 NULL로 표시합니다. ON은 연결 조건이며 WHERE 필터 위치에 따라 LEFT JOIN 결과가 달라질 수 있습니다.",
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "sql-join-unrelated-cooking",
+          "expectedLabel": "UNRELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "김치볶음밥 요리 레시피",
+          "text": "김치볶음밥 요리 레시피를 보며 저녁 식사를 준비합니다. 김치와 대파를 썰고 팬에 식용유를 두른 다음 재료를 볶습니다. 밥과 간장을 넣어 간을 맞추고 계란 프라이를 올려 음식을 완성합니다."
+        },
+        {
+          "caseId": "sql-join-uncertain-loading-ocr",
+          "expectedLabel": "UNCERTAIN",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "자료 불러오는 중",
+          "text": "자료를 불러오는 중입니다. 잠시 기다려 주세요. 다시 시도하거나 창을 닫을 수 있습니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-process-scheduling",
+        "goalVersion": 1,
+        "text": "운영체제 프로세스 스케줄링 알고리즘 공부",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "process-scheduling-related-dom",
+          "expectedLabel": "RELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "CPU 프로세스 스케줄링",
+          "text": "운영체제의 CPU 스케줄러는 준비 큐의 프로세스 중 실행할 대상을 선택합니다. FCFS는 도착한 순서대로 실행하고 SJF는 실행 시간이 짧은 작업을 우선합니다. 라운드 로빈은 타임 퀀텀마다 프로세스를 교체하며 대기 시간과 응답 시간을 비교해 알고리즘의 특성을 평가합니다."
+        },
+        {
+          "caseId": "process-scheduling-related-desktop-ocr",
+          "expectedLabel": "RELATED",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "pageTitle": "CPU 프로세스 스케줄링 정리",
+          "text": "프로세스 스케줄링에서 선점 방식은 실행 중인 작업을 중단하고 다른 프로세스에 CPU를 넘길 수 있습니다. Round Robin은 일정한 time quantum을 사용합니다. 우선순위 스케줄링에서는 낮은 우선순위 작업의 기아를 방지하기 위해 aging을 적용할 수 있습니다.",
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "process-scheduling-unrelated-cooking",
+          "expectedLabel": "UNRELATED",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "김치볶음밥 요리 레시피",
+          "text": "김치볶음밥 요리 레시피를 보며 저녁 식사를 준비합니다. 김치와 대파를 썰고 팬에 식용유를 두른 다음 재료를 볶습니다. 밥과 간장을 넣어 간을 맞추고 계란 프라이를 올려 음식을 완성합니다."
+        },
+        {
+          "caseId": "process-scheduling-uncertain-loading-ocr",
+          "expectedLabel": "UNCERTAIN",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "pageTitle": "자료 불러오는 중",
+          "text": "자료를 불러오는 중입니다. 잠시 기다려 주세요. 다시 시도하거나 창을 닫을 수 있습니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    }
+  ],
+  "cohortHash": "0191d7b77fdf81824c20d9def98320ef27ca67cd56ea7cd7ac9928c978c2a59c"
+}

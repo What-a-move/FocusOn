@@ -55,13 +55,17 @@ class FakeEmbeddingClient:
 def fixture_input(case: dict, policy_version: str = "school-v1") -> tuple[ContentInput, ConfirmedGoal, VerifiedContext]:
     observation = {
         "sessionId": "synthetic-session", "runId": "synthetic-run", "goalId": "synthetic-goal",
-        "goalVersion": 1, "eventId": case["caseId"], "navigationId": case["caseId"],
-        "observedAt": "2026-10-07T01:00:00Z", "sessionStatus": "ACTIVE", "exclusionMode": "NONE",
+        "goalVersion": 1, "clientRunId": case["caseId"], "sequence": 1,
+        "navigationId": case["caseId"], "observedAt": "2026-10-07T01:00:00Z",
+        "contentSource": "CHROME_DOM", "isActiveTarget": True,
+        "sessionStatus": "ACTIVE", "exclusionMode": "NONE",
     }
-    content = ContentInput.parse_safe({**observation, "contentSource": "CHROME_DOM", "contentType": "DOCUMENT",
+    content = ContentInput.parse_safe({**observation, "contentType": "DOCUMENT",
                                       "text": case["text"], "extractionStatus": "SUCCESS",
                                       "isSensitive": False, "isExcluded": False, **case.get("input", {})})
-    context = VerifiedContext.parse_safe({**observation, "userId": "synthetic-user", "resumeRequired": False,
+    content_data = content.model_dump(mode="json", by_alias=True)
+    context_observation = {key: content_data[key] for key in observation}
+    context = VerifiedContext.parse_safe({**context_observation, "userId": "synthetic-user", "resumeRequired": False,
                                          "policyVersion": policy_version, "extractorVersion": "synthetic-v1", "stateVersion": 1})
     goal = ConfirmedGoal.parse_safe({"goalId": "synthetic-goal", "goalVersion": 1, "text": case["goal"],
                                     "confirmed": True, "templateId": case["templateId"]})
@@ -143,7 +147,6 @@ def main(argv: list[str] | None = None) -> int:
                 base_url=os.environ.get("FOCUSON_EMBEDDING_URL", "http://127.0.0.1:11435"),
                 revision=os.environ.get("FOCUSON_EMBEDDING_REVISION", ""),
             ))
-            client.verify_model()
         analyzer = RelevanceAnalyzer(client, hybrid=hybrid, instruction=config.instruction,
                                      cache_capacity=config.cache_capacity, cache_ttl_seconds=config.cache_ttl_seconds)
         rows = []

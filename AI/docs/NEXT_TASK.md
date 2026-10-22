@@ -1,26 +1,61 @@
 # AI 다음 작업
 
+- 원격 전달 후 새 체크아웃에서 Streamlit 실행·설정 파일 포함 여부를 확인한다. `.env`·`scripts/langsmith.py`·전달용 ZIP은 커밋 대상이 아니며 모델 연결 값은 각 실행 환경에서 설정한다.
+
+- 메타데이터 별도 경로의 합성240건은191건 일치했다. 제목 점수 미달 관련→보류49건을 확인했으며 본문 길이·커버리지 제한은 미적용이다. 접두사 없는 실제 제목·무관/공통어 함정·일반 제목을 사람 검수한 독립 자료로 평가하고, 메타데이터 기준을 보정할 때 DOM/OCR 보정값과 분리한다.
+
 > AI 담당자는 작업 시작 전에 이 문서를 확인하고, 작업 종료 후 다음 작업을 갱신한다.
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: 학교 임베딩 API 계약을 기존 Ollama Client에 연결하고 독립 평가 준비
+- 현재 Streamlit은 `body-context-hybrid-v3`, 보정값 V0.30/H0.35·무관V0.25다. 실제 Qwen 기존 React24는23/24, 다른 목표 합성평가는20/24였지만 무관1건·정보부족3건을 RELATED로 오판했다. 다음은 사람 검수한 실제 DOM/OCR의 직접/선수/보조/무관/정보부족/같은 용어의 다른 주제 평가다. 현재 평가24건으로 숫자를 다시 조정하면 개발 자료로 전환하고 별도 평가셋을 새로 준비한다. [보정·오탐 보고서](features/graphless-hybrid-calibration-REPORT.md)를 먼저 읽는다. 사이트 실행마다 기준을 바꾸거나 기대 라벨을 결과에 맞추지 않는다.
+
+- 사용자 요청으로 바탕화면으로 이동한 `/Users/lyg123d/Desktop/FocusOn더미데이터/`의 10개 JSON은 사용자가 직접 검증할 자료다. 각 파일의 `goal.text`를 Streamlit 목표 칸에 넣고 해당 파일 전체를 입력한다. 모두 RELATED 기대값인 합성 자료이므로 관련 화면 보류/누락을 확인하는 용도이며, 이번 변경에서 모델 실행은 하지 않았다.
+
+- 로컬 Streamlit의 코드 재반영 중 프로세스 종료 139가 관찰됐다. [오류 기록](features/hybrid-streamlit-reload-ERROR.md)을 참고한다. 원인은 미확정이며 현재 서버는 파일 자동 감시를 끄고 새 프로세스로 실행한다. 이후 코드를 변경하면 서버를 재시작해 검증한다.
+
+- `kiwi-core-phrases-v2`의 핵심/일반/구문 구분은 작은 명시 규칙이다. 새 목표군에서 `선택 정렬`·수학의 정리 등 일반 표현이 실제 개념의 일부인 경우와 약한 핵심 단어만 겹치는 경우를 독립 검수한다. 현재 36건 합성 기대 일치는 26/36이며 재사용한 개발 세트 결과다. TCP/UDP의 남은 관련 문단 보류 3건 등은 이번 수정으로 해결되지 않았다. 판정 임계값이나 기대 라벨은 이번 결과에 맞춰 변경하지 않는다.
+
+- `kiwi-nouns-tech-v1` 적용 후 단일 QueryDSL 합성 화면은 실제 Qwen으로 RELATED(관련 커버리지 70.22%)를 확인했다. 기존/새 목표군의 사람 검수 데이터로 일치율·오탐·보류율을 비교하고 Kiwi 최초 초기화와 예열 로컬 지연을 분리해 측정한다. 같은 사례에 맞춰 임계값이나 기대 라벨을 바꾸지 않는다. 설치는 `evaluation/requirements-streamlit.txt`를 사용한다. 현재 OpenAI 미호출 표시는 Graph 없는 실험 경로 기준이며, 이후 호출 경로를 추가하면 실제 호출 경계에서 시간을 계측해야 한다.
+
+- `goal-graph-v4.1`의 동일 개념 중심 별칭 지침은 실제 LLM 생성 품질·속도 평가가 남아 있다. 현재 Graph 없는 Streamlit의 목표 키워드 추출 개선과 별도이며, 이번 프롬프트 수정만으로 QueryDSL 불일치가 해결됐다고 간주하지 않는다.
+
+- 2026-10-22 현재 Streamlit은 사용자 요청으로 Graph 없는 키워드+벡터 Hybrid 실험으로 전환했다. 목표 키워드·문단 점수·본문 커버리지·3라벨까지 연결했다. 다음은 실제 DOM/OCR와 사람 검수 정답을 이용해 가중치·관련/무관 문단 기준·커버리지를 개발 세트에서 조정하고, 고정한 기준으로 별도 평가 세트의 Macro F1·라벨별 정밀도/재현율·혼동행렬 및 최초/예열 지연을 측정하는 것이다. 특히 키워드가 없는 보조 학습을 UNRELATED로 오판하는지 확인한다. 아래 Graph 기록은 기존 분석기와 이전 실험 이력이다.
+
+- 작업명: 임의 목표 Graph 품질·Hybrid 판정 기준 검토와 실제 입력·출력 계약 합의
 - 담당 영역: AI
 - 우선순위: 높음
-- 상태: 실제 Qwen 벡터 생성과 임시 Adapter 기반 합성 파이프라인 확인. 표준 Client와 학교 API 계약, 공개 API·Server 연동 및 정확도 검증은 미완료
+- 상태: school-hybrid-v6 설명·코드 묶음 구현 및 실제 causal mask 단건 RELATED 확인. Streamlit 비교 화면과 전체 255 passed·8 subtests passed. 직전 버전의 합성 14건 5/14·20건 7/20은 새 버전 전체 평가가 아님. 짧은 별칭·무관 근거·독립 정확도 검증은 미완료
 
 ## 작업 목적
 
-학교 검증 FastAPI의 `/health`·`/api/embed` 계약을 현재 Embedding Client가 요구하는 모델 메타데이터 검증과 연결한다. 공개 API·Server 계약은 담당 영역과 합의된 뒤 연결하고, 실제 모델 판정은 독립 검수한 평가 세트로 측정한다.
+학교 임베딩 Client는 `/api/embed`만 호출한다. 사용자의 하향 요청으로 DIRECT 0.62·선수/보조 0.65·무관 0.75를 적용하고 Graph 생성 지침·캐시 버전을 보강했다. 기존 14건은 2/14에서 5/14로 개선됐지만 별도 합성 20건은 7/20에 그쳤고 무관 검출은 0건이었다. 다음 작업은 긴/문장형 별칭이 짧은 정식 용어·명사형·코드 표현을 놓치는 문제, 무관 설명의 활동 구체성, 설명/코드 본문 커버리지를 검토하는 것이다. 추가 조정에 이미 확인한 34건을 사용하면 개발용으로 취급하고 새 사람 검수 세트로 평가한다. 과거 생성 실패 원인은 미확정이며 재발 시 진단 코드로 구분한다. 공개 API·Server 계약은 담당 영역과 합의한다.
 
 ## 확인된 근거와 남은 범위
 
+- 이전 Streamlit의 고정 기준 v1(키워드0.20/벡터0.80, 관련 H0.60·cosine0.55·커버리지0.60, 무관 H0.20·커버리지0.70·본문80자)이다. QueryDSL 실제 합성 평가 12건에서 5건의 관련 자료가 UNCERTAIN이었다. `조건에`·`따라` 같은 목표 표현, 용어 형태 차이와 관련 문단의 결합 점수 미달을 우선 검토한다. 커버리지 0은 문단 탈락의 결과이므로 커버리지 숫자부터 낮추지 않는다. 이번 분석에서는 기준·산식·라벨을 바꾸지 않았다. 향후 보정에 이 자료를 사용하면 개발 세트로 관리한다.
+
+- 새 합성 TCP/UDP·로드 밸런싱·QueryDSL 1시간 관측 자료 3개(각 12건)는 Schema·전처리를 통과했다. Streamlit 목표 칸에 각 JSON의 `goal.text`를 넣고 데이터 칸에 파일 전체를 붙여 실행한다. 파일의 goal이 목표 입력 칸을 자동 교체하지 않는다. 기대 라벨은 실행 전 고정했으며 모델 결과로 정답을 수정하지 않는다. 같은 자료로 숫자를 조정하면 개발용으로 취급하고 독립 정확도에는 별도 자료를 사용한다. 5분 간격의 합성 관측을 실제 1시간 실행·지속 이탈 측정으로 해석하지 않는다.
+
+- `goal-graph-v4` 간결한 영어 프롬프트를 동일 목표·독립 DOM/OCR 사례로 평가한다. JSON 예시와 역할 정의는 유지하고 OpenAI 입력의 `goalProfile`은 제외했다. 실제 본문으로 별칭·목표 범위를 확장하지 않는다. 입력 프롬프트 단어 수 감소를 생성 지연·최종 정확도 개선으로 보고하지 않으며 신규 Graph 생성·캐시 재사용 시간을 구분한다.
+
+- 최신 [5목표·20건 평가](features/hybrid-relevance-performance-metrics.md#7-확정-목표-5개-추가-실측)는 기대 일치 13/20·Macro F1 0.4924다. Graph 생성·벡터 요청은 성공했으나 React의 별칭 매칭과 모든 요리 무관 근거가 탈락했다. 다음 보완 대상으로 기록하며 이번 요청에서는 매칭·점수 기준을 바꾸지 않았다. 무관 주제 다양화·독립 사람 검수·반복 속도 계측이 필요하고, 이전 4건과는 데이터가 달라 개선율로 비교하지 않는다.
+
+- [전달용 Hybrid 성능지표](features/hybrid-relevance-performance-metrics.md)에 개발용 4건의 잠정 집계와 정식 평가 절차를 정리했다. 다음은 사람 검수 독립 DOM/OCR 자료로 3라벨 지표를 측정하고 Graph 생성·캐시 상태를 분리해 지연 P50/P95를 반복 측정하는 것이다. 현재 25% 일치율을 출시 정확도로 사용하지 않는다.
+
+- 사용자 요청 1번인 목표 기반 별칭 생성 보강은 v3.1로 반영했다. 별도 검증 LLM이나 매칭/점수 변경 없이 실제 JWT를 다시 평가했으나 최종 UNCERTAIN을 유지했다. 두 번째 본문은 키워드가 잡히지만 H=0.5444로 미달하며 커버리지 49.6%다. 추가 변경은 별도 범위를 정한 뒤 독립 사례로 검증한다.
+
+- 이전 Streamlit의 Graph Hybrid 6번 평가 기록은 보존했다. 현재 화면은 2026-10-22 Graph 없는 실험 경로이며, 기존 Graph 방식과 비교할 때 같은 고정 입력·모델·예열 상태를 사용하고 Graph 신규 생성 시간은 별도로 기록한다.
+
+- [트랜스포머 디코더 가상 1시간 평가](features/transformer-decoder-1h-evaluation-REPORT.md): 실행 전에 기대 라벨을 고정한 합성 14건을 실제 학교 API로 분석했다. 전부 UNCERTAIN, 일치 2건·불일치 12건(14.29%)이었다. LLM 요청 후 최소 Graph로 폴백했고 관련 별칭은 목표 전체 문장 1개, 무관 주제는 0개였다. 14건 모두 별칭 일치 0으로 판정 근거를 만들 수 없었다. 임베딩 연결 성공을 임의 목표 분류 품질 검증으로 간주하지 않는다.
 - 학교 Qwen `qwen3-embedding:4b-fp16` 실제 반환 벡터는 2560차원·유한값·정규화 상태였다. 최초 warm-up 및 반복 요청 시간은 REPORT의 2026-10-14 기록 참조.
 - 임시 메모리 Adapter로 학교 `/health`·`/api/embed`를 호출해 개발용 합성 사례를 실행했다. 이는 표준 Client·공개 API 연동이나 모델 정확도 통과를 뜻하지 않는다.
-- 기존 Ollama Client는 `/api/tags`, `/api/show`, `/api/version`도 조회하지만 학교 검증 FastAPI는 해당 경로를 제공하지 않는다. 모델 revision·차원·정밀도·기능을 안전하게 전달하는 계약을 먼저 맞춘다.
-- 8개 합성 개발 사례에서 실제 분석된 6개 중 기대 라벨 일치 3개, 불일치 3개였다. 기대 라벨은 독립 검수 전이므로 정확도 지표로 사용하지 않는다.
+- 2026-10-21 기본 Client와 real CLI의 모델 정보 조회를 제거했다. 실제 학교 호출에서 `/api/embed` 2회로 `dev-state-direct`의 `RELATED / GOAL_CONNECTED`가 반환됐고, 관련 로컬 테스트 112개가 통과했다. revision·정밀도는 서버를 재조회하지 않는 로컬 설정이므로 모델 교체 시 설정 갱신과 프로세스 재시작이 필요하다.
+- 2026-10-14의 8개 합성 개발 사례에서는 실제 분석된 6개 중 기대 라벨 일치 3개, 불일치 3개였다. 기대 라벨은 독립 검수 전이므로 정확도 지표로 사용하지 않는다.
 - 학교 GPU 사용률·VRAM, 독립 정답 세트 기반 정확도, 운영 부하 성능은 미측정이다.
 - 기존 개인정보·실패·중복·stale 단위 테스트를 계속 통과시킨다.
+- DOM·Chrome OCR·Desktop OCR 단건 입력 예제는 `AI/evaluation/demo-*.json`과 학교 SETUP 10.3.2절을 사용한다. 목표 JSON은 별도이며 모든 식별자·OCR confidence·본문은 직접 작성한 더미 값이다. Schema·전처리는 통과했으나 실제 추출본·독립 정답 데이터로 쓰지 않는다.
+- 2026-10-21 위 세 입력을 Mac에서 실제 학교 API로 실행해 DOM은 UNCERTAIN/INSUFFICIENT_EVIDENCE, 두 OCR은 RELATED/GOAL_CONNECTED를 확인했다. 모두 SUCCEEDED였고 임베딩 요청 4회만 발생했다. 다음 정확도 검수에서 DOM의 근거 부족을 확인하되 이 한 사례에 맞춰 기준을 변경하지 않는다.
 
 
 ### 최신 dev 계약 확인 항목
@@ -47,9 +82,9 @@
 ## 예상 작업 순서
 
 1. 루트 `docs/API_CONTRACT.md`와 현재 sessions 분석 run 경로를 기준으로 확정 필드·상태를 대조한다.
-2. 학교 검증 FastAPI `/health` 메타데이터와 `/api/embed`를 기존 Embedding Client가 안전하게 검증·호출하도록 연결한다.
+2. 완료한 `/api/embed` 전용 Client를 사용해 사람 검수 데이터로 실제 평가를 실행한다. 자동 모델 메타데이터 조회는 추가하지 않는다.
 3. 내부 Schema·Adapter의 필수값과 외부 계약 간 불일치를 안전하게 거부하고 원문 비노출을 확인한다.
-4. 임시 Adapter의 실제 호출을 표준 Client·평가 CLI 회귀 테스트로 연결한다.
+4. 기본 Client·real CLI의 임베딩 전용 회귀 테스트와 실제 요청 경로 확인 결과를 유지한다.
 5. 독립 검수 정답 세트와 학교 GPU 측정값을 준비해 개발·평가 split을 분리한 real 평가를 수행한다.
 
 ### Server·Client 공통 계약 작업
@@ -57,12 +92,13 @@
 
 1. 공개 관련성 경로 `/api/v1/sessions/{sessionId}/analysis-runs`와 내부 AI 경계를 Server·Client 담당자와 확정한다. `/api/v1/feedback`은 MVP에 없는 후속 계약으로 유지한다.
 2. AI 내부 라벨과 제품 표시 라벨, 기존 `FocusState` 호환 전략을 공유 타입 담당자와 확정한다.
-3. `goalId`, `sessionId`, `eventId`, `navigationId`와 `sessionStatus`, `analysisStatus`의 필수 범위를 확인한다.
-4. 목표 보조 `clarityStatus` 4개 값, 질문 최대 2회, 복수 목표 단일 선택 및 AI 장애 시 직접 목표 확정 경로를 확인한다.
-5. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.
-6. Health Check, 공통 성공·실패 envelope, Schema 검증 테스트를 구현한다.
-7. 로그에 원문·비밀 값이 남지 않는지 검사한다.
-8. 현재 관련성 분석은 통합 #11에서 진행하고, Agent·노트·ColPali 등 범위 밖 작업은 별도 Issue로 관리한다.
+3. `goalId`, `sessionId`, `clientRunId`, `sequence`, `contentSource`, `navigationId`와 `sessionStatus`, `analysisStatus`의 필수 범위와 `UNIQUE(sessionId, clientRunId)` 저장 제약을 확인한다.
+4. Client 조정자가 Desktop foreground 앱과 Chrome foreground/active tab을 결합해 `isActiveTarget`을 만드는 주체·갱신 시점을 확정한다.
+5. 목표 보조 `clarityStatus` 4개 값, 질문 최대 2회, 복수 목표 단일 선택 및 AI 장애 시 직접 목표 확정 경로를 확인한다.
+6. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.
+7. Health Check, 공통 성공·실패 envelope, Schema 검증 테스트를 구현한다.
+8. 로그에 원문·비밀 값이 남지 않는지 검사한다.
+9. 현재 관련성 분석은 통합 #11에서 진행하고, Agent·노트·ColPali 등 범위 밖 작업은 별도 Issue로 관리한다.
 
 ## 이후 작업 후보
 
@@ -126,6 +162,9 @@
 4. 팀 합의 공개 응답 Schema·confidence 의미와 Server의 9개 문맥 필드 책임을 확보해 내부 결과를 공개 계약에 매핑한다. `VerifiedContext` 공급·현재 상태 조회·종료/삭제 시 `clear_caches()`를 Server에 연결한다.
 5. 대표 입력 상한을 넘는 요청은 현재 `INCOMPLETE_REPRESENTATION`으로 보류한다. Client의 대표 문단 선정 계약을 확인한 후 순서와 본문 대표성을 보존하는 개선을 검토한다.
 6. 최근 3~5개 활동 요약·추가 LLM은 제공자와 예산 합의 후 연결한다. vLLM 전환은 동일 모델·정밀도·instruction·평가 조건으로 별도 검증한다.
+7. AI 내부 `analyze_staged`와 Client의 foreground 선택·메타데이터/DOM/OCR 수집 모듈을 구현했다. 후속 3번에서 Client↔Server↔AI 실제 API를 연결한다. Server가 소유권·확정 목표·최신 상태를 결합하고, Client는 대응 결과를 `collectNext`로 넘겨 필요한 단계만 추가 수집한다. 재시작 시 출처별 sequence 복구·실패/UNCERTAIN 매핑도 이 경계에서 연결한다. 실제 화면·학교 모델 평가는 사용자가 보류했다.
+8. 완료: 확인된 GoalProfile의 `mainTopic`·`coreTopics`·`supportingTopics`·`expectedActivities`와 확정 목표 문장을 버전 고정 Graph로 컴파일한다. 생성형 LLM Graph 후보는 Schema 검증 뒤 사용하고 미연결·실패 시 최소 Graph로 내려간다. 현재 페이지로 목표 범위를 확장하거나 embedding 모델에 aliases·역할을 생성시키지 않는다.
+9. 완료: OpenAI 호환 `GoalGraphLLMClient.complete()` Adapter에 `.env` 기반 API Key·모델·timeout·제한 재시도와 응답 검증을 연결하고, 생성 Graph를 로컬 ChromaDB에 저장해 프로세스 재시작 때 재호출하지 않도록 했다. 남은 작업은 실제 API Key 기반 품질 검증, 외부 전송 고지 확정, Server 소유권·삭제 전파와 운영용 저장소 연결이다.
 
 학교 연결·계약 정보가 확보되기 전에도 모델 없는 테스트와 fake 개발/평가 CLI는 로컬에서 실행할 수 있다. 공개 API·GPU·독립 성능 검증을 완료로 표시하지 않는다.
 
@@ -135,7 +174,7 @@
 - 문서 정합성 반영 완료: Notion AI 최종 기획서 (2), 이재빈 전처리·관련성·유사도 6번 설명을 현재 로컬 구현과 맞추고 재조회 검증했다. 기존 입력·출력 JSON 예시와 미합의 공개 계약 경계를 유지했다.
 - 학교 실측: 같은 본문에 관련/무관/중립 제목을 각각 붙인 사례, 제목 없는 OCR, 제목만 있는 입력, 코드 언어·fence 보존 사례를 실제 Qwen3 4B·FP16으로 비교한다. 변경된 보류율과 오탐을 검수하고 기존 임계값을 확정값으로 취급하지 않는다.
 - 입력 연결: 김성현 측에서 실제 보내는 합성 JSON으로 `pageTitle`·`appName`·`urlHost`와 `text`의 구조 보존을 확인한다. `windowTitle`·포커스·별도 코드 언어/소제목 필드는 전달 위치를 합의한 뒤 반영한다.
-- 학교에는 개정한 [단일 MD 지침](features/school-ollama-embedding-SETUP.md)을 전달한다. 실행 전 실제 코드가 `school-text-v2`·`school-hybrid-v2`인지 확인하고, 지침서의 학교 벡터 확인과 fake/real 평가 순서를 따른다. MD 전달만으로 최신 코드 전송이나 실제 모델 검증이 완료됐다고 표시하지 않는다.
+- 학교에는 개정한 [단일 MD 지침](features/school-ollama-embedding-SETUP.md)을 전달한다. 실행 전 실제 코드가 `school-text-v2`·`school-hybrid-v4`인지 확인하고, 지침서의 학교 벡터 확인과 fake/real 평가 순서를 따른다. MD 전달만으로 최신 코드 전송이나 실제 모델 검증이 완료됐다고 표시하지 않는다.
 
 ## 2026-10-12 더미 데이터 갱신 이후
 
@@ -153,3 +192,10 @@
 4. 실제 health 응답으로 모델 digest·F16·capability 확인 계약을 정리하고 필요한 학교 FastAPI Client 연동 후 최신 16개 real 평가를 진행한다.
 
 공식 설치 파일과 전달용 MD는 준비했다. Computer Use 권한 대기로 설치 UI 자동 조작을 완료하지 못했으며 설치/로그인/연결 성공은 아직 미확인이다.
+
+## 2026-10-20 학교 전달 MD 보완 이후 다음 테스트
+
+1. 개정된 [학교 전달 지침](features/school-ollama-embedding-SETUP.md)과 최신 구현 파일을 학교 PC에 함께 전달하고 Python 의존성·구현 버전을 확인한다.
+2. 지침 10.4절대로 학교 PC에서 `FOCUSON_EMBEDDING_URL=http://127.0.0.1:11434`와 검증한 digest를 설정해 real 개발 split을 실행한다. 이 경로는 검증 FastAPI의 Client 계약 변경을 기다릴 필요가 없다.
+3. 개발 세트의 사람 정답 검수·설정 조정을 마친 뒤 설정을 고정해 evaluation split을 평가한다. 현 16개는 고정 템플릿 콘텐츠 단계이며 메타데이터 전체 흐름·임의 목표 Graph 품질은 별도 검증한다.
+4. Mac 원격 표준 평가는 Tailscale Serve의 `/health` 메타데이터와 기존 Client 검증 계약을 연결한 뒤 진행한다. 이 작업과 공개 API·Server 연동을 완료로 표시하지 않는다.

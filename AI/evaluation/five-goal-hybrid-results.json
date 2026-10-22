@@ -1,0 +1,5556 @@
+{
+  "synthetic": true,
+  "annotationStatus": "authored expected labels frozen before run; not independently reviewed",
+  "cohortHash": "0191d7b77fdf81824c20d9def98320ef27ca67cd56ea7cd7ac9928c978c2a59c",
+  "fixtureSha256": "6d7839c8d6bdf298579acf19a933f1af3f50cf086587b4e6ead1a9d5aca647a1",
+  "startedAt": "2026-10-21T10:52:40.248714+00:00",
+  "promptVersion": "goal-graph-v3.1",
+  "promptHash": "13c60d2b7089d086f4cdcad0659bf64c2ac60610ebf06f040a099dba542777c4",
+  "hybridConfig": {
+    "keyword_weight": 0.35,
+    "vector_weight": 0.65,
+    "direct_threshold": 0.62,
+    "prerequisite_threshold": 0.65,
+    "supporting_threshold": 0.65,
+    "min_cosine": 0.55,
+    "related_coverage": 0.6,
+    "unrelated_coverage": 0.7,
+    "unrelated_threshold": 0.75
+  },
+  "embeddingModel": "qwen3-embedding:4b-fp16",
+  "dimensions": 2560,
+  "precisionConfigured": "F16",
+  "revisionConfigured": "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc",
+  "goals": [
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-react-object",
+        "goalVersion": 1,
+        "text": "React useState로 객체 상태 변경하기",
+        "confirmed": true
+      },
+      "graphMode": "LLM_GENERATED",
+      "llmCalls": 1,
+      "llmRequests": [
+        {
+          "status": 200
+        }
+      ],
+      "llmTimings": [
+        {
+          "success": true,
+          "elapsedMs": 15754.21
+        }
+      ],
+      "embeddingRequests": [
+        {
+          "elapsedMs": 7211.02,
+          "success": true,
+          "sentTexts": 10,
+          "returnedVectors": 10,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 4.5518123,
+          "modelLoadSeconds": 4.1356009
+        },
+        {
+          "elapsedMs": 484.59,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0797805,
+          "modelLoadSeconds": 0.0054121
+        },
+        {
+          "elapsedMs": 389.19,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0760386,
+          "modelLoadSeconds": 0.0054142
+        },
+        {
+          "elapsedMs": 436.49,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0770492,
+          "modelLoadSeconds": 0.005307
+        },
+        {
+          "elapsedMs": 431.49,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0870495,
+          "modelLoadSeconds": 0.0060654
+        }
+      ],
+      "embeddingHttp": [
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        }
+      ],
+      "report": {
+        "rows": [
+          {
+            "caseId": "react-object-related-dom",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.5601479781368878,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6796248839731457,
+                "hybrid_score": 0.44175617458254474
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7316521062783997,
+                "hybrid_score": 0.47557386908095983
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7445927639624688,
+                "hybrid_score": 0.4839852965756047
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7047910023558293,
+                "hybrid_score": 0.45811415153128904
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7136554493439305,
+                "hybrid_score": 0.4638760420735549
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6986468881976309,
+                "hybrid_score": 0.45412047732846006
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.6761615024873004,
+                "hybrid_score": 0.4395049766167453
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.199853340349456,
+                "hybrid_score": 0.1299046712271464
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21858316926598367,
+                "hybrid_score": 0.1420790600228894
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.188817289499555,
+                "hybrid_score": 0.12273123817471077
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7968567694769143,
+                "hybrid_score": 0.5179569001599943
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7803834733151823,
+                "hybrid_score": 0.5072492576548685
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.844511323958035,
+                "hybrid_score": 0.5489323605727228
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7922289041950067,
+                "hybrid_score": 0.5149487877267543
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7871655538138544,
+                "hybrid_score": 0.5116576099790054
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.8617661202105965,
+                "hybrid_score": 0.5601479781368878
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.7269267351847475,
+                "hybrid_score": 0.47250237787008587
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.12314638803083079,
+                "hybrid_score": 0.08004515222004002
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.1831484052815153,
+                "hybrid_score": 0.11904646343298494
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.13841141958875977,
+                "hybrid_score": 0.08996742273269386
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": "CHROME_VIEWPORT_OCR",
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 7798.46,
+            "embeddingMs": 7710.07,
+            "localMs": 88.39,
+            "embeddingCalls": 2,
+            "matchesExpected": false,
+            "bodyChars": 136,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "react-object-related-desktop-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.5217078597806903,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6421916722628472,
+                "hybrid_score": 0.4174245869708507
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6636339797592271,
+                "hybrid_score": 0.43136208684349764
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.698145835052313,
+                "hybrid_score": 0.4537947927840035
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6393794885834552,
+                "hybrid_score": 0.41559666757924585
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6695836577776827,
+                "hybrid_score": 0.4352293775554938
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6339756884877598,
+                "hybrid_score": 0.41208419751704384
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.6328864346675799,
+                "hybrid_score": 0.41137618253392694
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21538387365848127,
+                "hybrid_score": 0.13999951787801282
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23484499647091392,
+                "hybrid_score": 0.15264924770609406
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.204789897773696,
+                "hybrid_score": 0.1331134335529024
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7365490636706873,
+                "hybrid_score": 0.47875689138594674
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7509057795206571,
+                "hybrid_score": 0.4880887566884271
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.8026274765856773,
+                "hybrid_score": 0.5217078597806903
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.720695543328822,
+                "hybrid_score": 0.4684521031637343
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7044750698363267,
+                "hybrid_score": 0.45790879539361234
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.694790987619937,
+                "hybrid_score": 0.451614141952959
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.6189976606480116,
+                "hybrid_score": 0.4023484794212076
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.14421254081883308,
+                "hybrid_score": 0.0937381515322415
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.1377456148644571,
+                "hybrid_score": 0.08953464966189713
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.09741043751684846,
+                "hybrid_score": 0.0633167843859515
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 450.35,
+            "embeddingMs": 391.97,
+            "localMs": 58.38,
+            "embeddingCalls": 1,
+            "matchesExpected": false,
+            "bodyChars": 107,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "react-object-unrelated-cooking",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNRELATED",
+            "score": 0.31331506417537225,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.15645174485653865,
+                "hybrid_score": 0.10169363415675013
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1806919494188063,
+                "hybrid_score": 0.1174497671222241
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2086686623192618,
+                "hybrid_score": 0.13563463050752017
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.223297529387214,
+                "hybrid_score": 0.1451433941016891
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19169004328931913,
+                "hybrid_score": 0.12459852813805744
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.23948655856839196,
+                "hybrid_score": 0.15566626306945477
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.2130410596913723,
+                "hybrid_score": 0.138476688799392
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23546330936013643,
+                "hybrid_score": 0.15305115108408868
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.19532580588928508,
+                "hybrid_score": 0.1269617738280353
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.39262677311204336,
+                "hybrid_score": 0.2552074025228282
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.0789732664101929,
+                "hybrid_score": 0.05133262316662538
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.09559747557774845,
+                "hybrid_score": 0.062138359125536495
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.10756486511705636,
+                "hybrid_score": 0.06991716232608663
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.13308953285375408,
+                "hybrid_score": 0.08650819635494016
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1130608445774462,
+                "hybrid_score": 0.07348954897534003
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.14338850367762299,
+                "hybrid_score": 0.09320252739045494
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.14265430128327902,
+                "hybrid_score": 0.09272529583413137
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2582533006060247,
+                "hybrid_score": 0.16786464539391605
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.17298135890418948,
+                "hybrid_score": 0.11243788328772317
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.4820231756544188,
+                "hybrid_score": 0.31331506417537225
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": "CHROME_VIEWPORT_OCR",
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 496.12,
+            "embeddingMs": 439.24,
+            "localMs": 56.88,
+            "embeddingCalls": 1,
+            "matchesExpected": false,
+            "bodyChars": 104,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "react-object-uncertain-loading-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNCERTAIN",
+            "score": 0.16639290772732598,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.15150351452862962,
+                "hybrid_score": 0.09847728444360926
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19547808983938333,
+                "hybrid_score": 0.12706075839559916
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21948542267042237,
+                "hybrid_score": 0.14266552473577454
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2451161805040033,
+                "hybrid_score": 0.15932551732760214
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17976626352801037,
+                "hybrid_score": 0.11684807129320675
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.23237666693579104,
+                "hybrid_score": 0.15104483350826417
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.24574384368857866,
+                "hybrid_score": 0.15973349839757614
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2233592057701334,
+                "hybrid_score": 0.1451834837505867
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24933558478849588,
+                "hybrid_score": 0.16206813011252233
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23851082566845705,
+                "hybrid_score": 0.15503203668449708
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-usestate-object-state",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1475012396404804,
+                "hybrid_score": 0.09587580576631226
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-state-setter",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17460190078403198,
+                "hybrid_score": 0.11349123550962079
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "immutable-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2027748022171468,
+                "hybrid_score": 0.13180362144114544
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "nested-object-update",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21017883155080058,
+                "hybrid_score": 0.13661624050802038
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-render-state-change",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.18594479070715328,
+                "hybrid_score": 0.12086411395964963
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "javascript-object-spread",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.21672970481306073,
+                "hybrid_score": 0.14087430812848947
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "react-devtools-state-inspection",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.2416647285793368,
+                "hybrid_score": 0.15708207357656892
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-entertainment",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21615504609421263,
+                "hybrid_score": 0.14050077996123822
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.25598908881127075,
+                "hybrid_score": 0.16639290772732598
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2297229664111914,
+                "hybrid_score": 0.1493199281672744
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 492.22,
+            "embeddingMs": 434.2,
+            "localMs": 58.02,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 49,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          }
+        ],
+        "summary": [
+          {
+            "방식": "6. Graph + 키워드 + 임베딩",
+            "사례 수": 4,
+            "실행 오류/미실행": 0,
+            "기대 일치": "1/4",
+            "기대 일치율 %": 25.0,
+            "평균 시간 ms": 2309.29
+          }
+        ],
+        "graph": {
+          "template_id": "generated:five-goal-20261021-react-object:v1",
+          "version": "llm-goal-graph-v1:llm:5bd63162b3750707",
+          "goal_text": "React useState로 객체 상태 변경하기",
+          "concepts": [
+            {
+              "id": "react-usestate-object-state",
+              "description": "React의 useState 훅으로 객체를 상태값으로 보관하고 갱신하는 방법. 클래스 컴포넌트의 setState 병합 동작과 달리 객체 상태를 갱신할 때 필요한 불변성 및 새 객체 반환을 다룬다.",
+              "aliases": [
+                "React useState 객체 상태",
+                "useState 객체 업데이트",
+                "객체 state 갱신",
+                "React object state update",
+                "useState object state",
+                "객체 상태 변경"
+              ],
+              "role": "DIRECT",
+              "connection": "확인된 목표의 핵심으로, React 함수 컴포넌트에서 객체 상태를 변경하고 화면 갱신에 반영한다."
+            },
+            {
+              "id": "react-state-setter",
+              "description": "useState가 반환하는 상태 설정 함수로, 다음 상태값 또는 이전 값을 받는 함수를 전달해 상태를 갱신한다.",
+              "aliases": [
+                "상태 설정 함수",
+                "useState setter",
+                "setState 함수 호출",
+                "상태 갱신 함수",
+                "functional state update",
+                "이전 상태 기반 업데이트"
+              ],
+              "role": "DIRECT",
+              "connection": "객체 상태 갱신을 실제로 요청하는 메커니즘이며, 이전 상태에 의존하는 갱신 방식도 포함한다."
+            },
+            {
+              "id": "immutable-object-update",
+              "description": "기존 객체를 직접 수정하지 않고 새 객체를 만들어 변경 사항을 표현하는 불변 갱신 방식. React 객체 상태에서 변경을 감지하고 예측 가능한 갱신을 하도록 돕는다.",
+              "aliases": [
+                "객체 불변성",
+                "불변 객체 업데이트",
+                "객체 복사 후 수정",
+                "새 객체 반환",
+                "object spread update",
+                "객체 직접 변경 방지"
+              ],
+              "role": "DIRECT",
+              "connection": "React useState 객체를 안전하게 갱신하기 위한 핵심 원칙으로, 기존 상태를 보존하면서 새 상태를 만든다."
+            },
+            {
+              "id": "nested-object-update",
+              "description": "객체 안의 중첩 속성을 갱신할 때 변경 경로의 각 객체를 복사해 새 객체 구조를 만드는 방법.",
+              "aliases": [
+                "중첩 객체 상태 업데이트",
+                "중첩 속성 갱신",
+                "nested state update",
+                "중첩 객체 복사",
+                "깊은 객체 갱신"
+              ],
+              "role": "DIRECT",
+              "connection": "객체 상태에 중첩된 필드가 있을 때 useState 갱신을 올바르게 구성하는 세부 기법이다."
+            },
+            {
+              "id": "react-render-state-change",
+              "description": "React가 상태 갱신 뒤 컴포넌트를 다시 렌더링하는 동작과, 객체 참조 변경이 갱신 반영에 미치는 영향.",
+              "aliases": [
+                "React 상태 변경 렌더링",
+                "상태 갱신 후 재렌더링",
+                "객체 참조 변경",
+                "컴포넌트 리렌더링",
+                "React render update"
+              ],
+              "role": "DIRECT",
+              "connection": "객체 상태 갱신 결과가 UI에 나타나는 과정을 확인하는 데 필요한 동작 원리다."
+            },
+            {
+              "id": "javascript-object-spread",
+              "description": "JavaScript의 객체 전개 문법으로 기존 객체의 속성을 복사하고 특정 속성을 덮어써 새 객체를 만드는 기능.",
+              "aliases": [
+                "JavaScript 객체 전개",
+                "객체 spread 문법",
+                "스프레드 연산자 객체 복사",
+                "객체 속성 덮어쓰기",
+                "object spread syntax"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "React useState에서 기존 객체를 복사하고 변경 필드를 반영하는 흔한 불변 갱신 문법의 기반이다."
+            },
+            {
+              "id": "react-devtools-state-inspection",
+              "description": "React 개발자 도구 등으로 컴포넌트의 현재 상태와 렌더링 변화를 살펴보는 점검 방법.",
+              "aliases": [
+                "React 상태 검사",
+                "컴포넌트 상태 확인",
+                "React DevTools state inspection",
+                "상태 갱신 디버깅"
+              ],
+              "role": "SUPPORTING",
+              "connection": "객체 상태가 의도대로 갱신되고 화면에 반영되는지 확인하거나 문제를 추적할 때 활용한다."
+            }
+          ],
+          "unrelated_topics": [
+            {
+              "id": "movie-entertainment",
+              "description": "학습 목표와 무관한 영화·드라마 감상 활동.",
+              "aliases": [
+                "영화 감상",
+                "드라마 시청",
+                "영화 리뷰 보기"
+              ],
+              "role": null,
+              "connection": "React 객체 상태 갱신을 배우거나 구현하는 활동이 아닌 별도의 영상 오락이다."
+            },
+            {
+              "id": "shopping",
+              "description": "제품을 둘러보고 비교하거나 구매하는 일반적인 쇼핑 활동.",
+              "aliases": [
+                "온라인 쇼핑",
+                "상품 비교",
+                "제품 구매"
+              ],
+              "role": null,
+              "connection": "프로그래밍 학습 목표와 직접 관련이 없는 소비 활동이다."
+            },
+            {
+              "id": "cooking",
+              "description": "음식을 준비하고 조리하는 일상적인 요리 활동.",
+              "aliases": [
+                "요리하기",
+                "레시피 따라 하기",
+                "식사 준비"
+              ],
+              "role": null,
+              "connection": "React 상태 관리와 관계없는 별도의 생활 활동이다."
+            }
+          ]
+        },
+        "graphMs": 15778.52,
+        "totalMs": 25017.69,
+        "embeddingMs": 8975.49,
+        "localMs": 263.68,
+        "embeddingCalls": 5
+      },
+      "elapsedMs": 25017.79
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-jwt-auth",
+        "goalVersion": 1,
+        "text": "JWT 인증 구현",
+        "confirmed": true
+      },
+      "graphMode": "LLM_GENERATED",
+      "llmCalls": 1,
+      "llmRequests": [
+        {
+          "status": 200
+        }
+      ],
+      "llmTimings": [
+        {
+          "success": true,
+          "elapsedMs": 13934.08
+        }
+      ],
+      "embeddingRequests": [
+        {
+          "elapsedMs": 2170.47,
+          "success": true,
+          "sentTexts": 11,
+          "returnedVectors": 11,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.6001073,
+          "modelLoadSeconds": 0.0066348
+        },
+        {
+          "elapsedMs": 352.62,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.075788,
+          "modelLoadSeconds": 0.0059938
+        },
+        {
+          "elapsedMs": 417.24,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0905088,
+          "modelLoadSeconds": 0.0096698
+        },
+        {
+          "elapsedMs": 418.03,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.1022132,
+          "modelLoadSeconds": 0.0060177
+        },
+        {
+          "elapsedMs": 368.12,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0885698,
+          "modelLoadSeconds": 0.0071765
+        }
+      ],
+      "embeddingHttp": [
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        }
+      ],
+      "report": {
+        "rows": [
+          {
+            "caseId": "jwt-auth-related-dom",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.6873695737550438,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6854894178936423,
+                "hybrid_score": 0.6205681216308675
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6103625170334807,
+                "hybrid_score": 0.39673563607176243
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7016240834927163,
+                "hybrid_score": 0.4560556542702656
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7300318649696458,
+                "hybrid_score": 0.47452071223026976
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6380886959429402,
+                "hybrid_score": 0.4147576523629111
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6521189687239755,
+                "hybrid_score": 0.42387732967058406
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6328672179993218,
+                "hybrid_score": 0.41136369169955916
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.7372648527080778,
+                "hybrid_score": 0.4792221542602506
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.11591917951799108,
+                "hybrid_score": 0.0753474666866942
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21326702417705107,
+                "hybrid_score": 0.1386235657150832
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2499946441331896,
+                "hybrid_score": 0.16249651868657325
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7734695296140709,
+                "hybrid_score": 0.677755194249146
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7183990454867893,
+                "hybrid_score": 0.4669593795664131
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7978141568526109,
+                "hybrid_score": 0.5185792019541972
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.8019695700811278,
+                "hybrid_score": 0.521280220552733
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7882608827000674,
+                "hybrid_score": 0.6873695737550438
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.7515349040980002,
+                "hybrid_score": 0.4884976876637001
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.7103305519812126,
+                "hybrid_score": 0.46171485878778823
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.7504081748087958,
+                "hybrid_score": 0.48776531362571734
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.11589861416622216,
+                "hybrid_score": 0.0753340992080444
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.19309360595553718,
+                "hybrid_score": 0.12551084387109918
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21326639477691806,
+                "hybrid_score": 0.13862315660499674
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-001",
+                "kind": "TITLE",
+                "text": "JWT 인증 요청 검증"
+              },
+              {
+                "id": "passage-002",
+                "kind": "BODY",
+                "text": "JWT 인증 구현에서는 요청의 Authorization 헤더에서 Bearer 토큰을 추출합니다. JWT 토큰 검증 과정에서 서명과 만료 시간을 확인한 뒤 유효한 사용자에게만 인증된 요청을 허용합니다. 만료되거나 변조된 토큰은 인증 실패 응답으로 처리합니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-001",
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 2613.1,
+            "embeddingMs": 2537.72,
+            "localMs": 75.38,
+            "embeddingCalls": 2,
+            "matchesExpected": true,
+            "bodyChars": 143,
+            "relatedChars": 143,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "jwt-auth-related-desktop-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.6243585330729857,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6748811079705136,
+                "hybrid_score": 0.6136727201808339
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6116592241558539,
+                "hybrid_score": 0.3975784957013051
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6735021624926328,
+                "hybrid_score": 0.43777640562021136
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7263266342888451,
+                "hybrid_score": 0.47211231228774936
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6521645129200037,
+                "hybrid_score": 0.4239069333980024
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6436524053891538,
+                "hybrid_score": 0.41837406350295
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.628825651220372,
+                "hybrid_score": 0.4087366732932418
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.7214358073570836,
+                "hybrid_score": 0.46893327478210434
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.15255551428707104,
+                "hybrid_score": 0.09916108428659617
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23416553066527765,
+                "hybrid_score": 0.15220759493243047
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2700483462938978,
+                "hybrid_score": 0.17553142509103356
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6913208201122858,
+                "hybrid_score": 0.6243585330729857
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6313820637908599,
+                "hybrid_score": 0.41039834146405896
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7221156755449716,
+                "hybrid_score": 0.46937518910423154
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7224354153901901,
+                "hybrid_score": 0.46958302000362356
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.703231871552463,
+                "hybrid_score": 0.457100716509101
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6213545819229369,
+                "hybrid_score": 0.403880478249909
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6196747218171461,
+                "hybrid_score": 0.402788569181145
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.6814548277927737,
+                "hybrid_score": 0.4429456380653029
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.08077550191723869,
+                "hybrid_score": 0.05250407624620515
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.16054625288618762,
+                "hybrid_score": 0.10435506437602196
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.20368962613442057,
+                "hybrid_score": 0.13239825698737337
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "OCR",
+                "text": "JWT 인증 필터는 토큰 서명을 검증하고 만료 여부를 확인합니다. 검증된 사용자 식별 정보를 인증 문맥에 등록합니다. 토큰 검증에 실패한 요청은 보호된 API를 실행하지 않으며 인증 실패로 처리합니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 484.33,
+            "embeddingMs": 420.21,
+            "localMs": 64.12,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 112,
+            "relatedChars": 112,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "jwt-auth-unrelated-cooking",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNRELATED",
+            "score": 0.3395274120094825,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20594792427986516,
+                "hybrid_score": 0.13386615078191236
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20260869496064568,
+                "hybrid_score": 0.1316956517244197
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.18765888761035932,
+                "hybrid_score": 0.12197827694673356
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19054144785825328,
+                "hybrid_score": 0.12385194110786464
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1524089091284408,
+                "hybrid_score": 0.09906579093348652
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.19304818556766096,
+                "hybrid_score": 0.12548132061897962
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.20501149377698238,
+                "hybrid_score": 0.13325747095503856
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.20767477597259165,
+                "hybrid_score": 0.13498860438218457
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.4280559180825384,
+                "hybrid_score": 0.27823634675364994
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2429959733112248,
+                "hybrid_score": 0.15794738265229613
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2214058127115937,
+                "hybrid_score": 0.1439137782625359
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1757050026021389,
+                "hybrid_score": 0.11420825169139029
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17274695617913235,
+                "hybrid_score": 0.11228552151643603
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1611283551354989,
+                "hybrid_score": 0.10473343083807428
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.15950750856817444,
+                "hybrid_score": 0.10367988056931339
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1366146126513626,
+                "hybrid_score": 0.08879949822338569
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.16855224332969698,
+                "hybrid_score": 0.10955895816430304
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.18921535232123787,
+                "hybrid_score": 0.12298997900880462
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.17659105852307777,
+                "hybrid_score": 0.11478418804000055
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.522349864629973,
+                "hybrid_score": 0.3395274120094825
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2550916758668095,
+                "hybrid_score": 0.16580958931342615
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.17987245760875661,
+                "hybrid_score": 0.1169170974456918
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": "CHROME_VIEWPORT_OCR",
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 485.85,
+            "embeddingMs": 421.61,
+            "localMs": 64.24,
+            "embeddingCalls": 1,
+            "matchesExpected": false,
+            "bodyChars": 104,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "jwt-auth-uncertain-loading-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNCERTAIN",
+            "score": 0.19515564425439355,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20743143213409465,
+                "hybrid_score": 0.13483043088716154
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.23452899663713028,
+                "hybrid_score": 0.1524438478141347
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.22712593657235025,
+                "hybrid_score": 0.14763185877202767
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2468354752467076,
+                "hybrid_score": 0.16044305891035995
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17229341848767254,
+                "hybrid_score": 0.11199072201698716
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.20897795197280516,
+                "hybrid_score": 0.13583566878232337
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.23083907663315698,
+                "hybrid_score": 0.15004539981155204
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.2502678858231497,
+                "hybrid_score": 0.1626741257850473
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2116020826662834,
+                "hybrid_score": 0.1375413537330842
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.29069826439058544,
+                "hybrid_score": 0.18895387185388055
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2754471937263666,
+                "hybrid_score": 0.1790406759221383
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-authentication",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.22448908340169013,
+                "hybrid_score": 0.1459179042110986
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-issuance",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.23703096413433977,
+                "hybrid_score": 0.15407012668732087
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-validation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.24744990553866453,
+                "hybrid_score": 0.16084243860013195
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-request-auth",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.24242871546705896,
+                "hybrid_score": 0.15757866505358833
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-failures",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.22374883933475198,
+                "hybrid_score": 0.1454367455675888
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "http-authentication-basics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.22251794014695306,
+                "hybrid_score": 0.14463666109551948
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cryptographic-signatures",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.244425044906076,
+                "hybrid_score": 0.1588762791889494
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "jwt-auth-testing",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.25926030875546013,
+                "hybrid_score": 0.1685192006910491
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.19552627067505648,
+                "hybrid_score": 0.1270920759387867
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.300239452699067,
+                "hybrid_score": 0.19515564425439355
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2631535655910295,
+                "hybrid_score": 0.17104981763416918
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 435.82,
+            "embeddingMs": 371.12,
+            "localMs": 64.7,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 49,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          }
+        ],
+        "summary": [
+          {
+            "방식": "6. Graph + 키워드 + 임베딩",
+            "사례 수": 4,
+            "실행 오류/미실행": 0,
+            "기대 일치": "3/4",
+            "기대 일치율 %": 75.0,
+            "평균 시간 ms": 1004.77
+          }
+        ],
+        "graph": {
+          "template_id": "generated:five-goal-20261021-jwt-auth:v1",
+          "version": "llm-goal-graph-v1:llm:5bd63162b3750707",
+          "goal_text": "JWT 인증 구현",
+          "concepts": [
+            {
+              "id": "jwt-authentication",
+              "description": "JWT 기반 인증: 토큰으로 사용자를 식별하고 요청의 인증 상태를 확인하는 구현 목표입니다.",
+              "aliases": [
+                "JWT 인증",
+                "JWT authentication",
+                "토큰 인증",
+                "JWT 기반 사용자 인증",
+                "JWT 로그인 인증"
+              ],
+              "role": "DIRECT",
+              "connection": "사용자 인증 흐름에서 JWT를 발급하고 요청에 제시된 토큰을 확인하는 핵심 주제입니다."
+            },
+            {
+              "id": "jwt-issuance",
+              "description": "JWT 발급: 인증된 사용자 정보를 담아 서명된 토큰을 생성하는 과정입니다.",
+              "aliases": [
+                "JWT 발급",
+                "JWT issuance",
+                "토큰 생성",
+                "JWT 서명",
+                "액세스 토큰 발급"
+              ],
+              "role": "DIRECT",
+              "connection": "로그인 성공 뒤 인증에 사용할 JWT를 생성해 클라이언트에 전달합니다."
+            },
+            {
+              "id": "jwt-validation",
+              "description": "JWT 검증: 토큰의 서명과 유효 기간 등 필요한 조건을 확인해 신뢰 여부를 판단하는 과정입니다.",
+              "aliases": [
+                "JWT 검증",
+                "JWT validation",
+                "토큰 유효성 검사",
+                "서명 검증",
+                "만료 토큰 확인"
+              ],
+              "role": "DIRECT",
+              "connection": "보호된 요청에서 제출된 JWT가 유효한지 판별하는 인증의 핵심 동작입니다."
+            },
+            {
+              "id": "jwt-request-auth",
+              "description": "요청 인증 처리: HTTP 요청에서 토큰을 읽고 검증 결과를 사용자 인증 정보로 연결하는 처리입니다.",
+              "aliases": [
+                "JWT 요청 인증",
+                "Authorization 헤더 토큰 추출",
+                "Bearer 토큰 처리",
+                "요청 토큰 파싱",
+                "인증 미들웨어 JWT"
+              ],
+              "role": "DIRECT",
+              "connection": "클라이언트의 토큰을 서버 요청 처리 흐름에 연결해 인증된 사용자로 처리합니다."
+            },
+            {
+              "id": "jwt-auth-failures",
+              "description": "JWT 인증 실패 처리: 토큰 누락, 변조, 만료 등 인증 불가 상황에 적절한 응답을 반환하는 방식입니다.",
+              "aliases": [
+                "JWT 인증 오류 처리",
+                "만료 JWT 처리",
+                "잘못된 토큰 거부",
+                "인증 실패 응답",
+                "토큰 만료 응답"
+              ],
+              "role": "DIRECT",
+              "connection": "검증에 실패한 요청을 안전하고 일관되게 거부하는 구현의 일부입니다."
+            },
+            {
+              "id": "http-authentication-basics",
+              "description": "HTTP 인증 기초: 요청·응답, 헤더, 상태 코드와 인증 정보를 주고받는 방식을 다룹니다.",
+              "aliases": [
+                "HTTP 인증",
+                "HTTP Authorization 헤더",
+                "인증 상태 코드",
+                "HTTP 요청 헤더",
+                "Bearer 인증 방식"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "JWT를 HTTP 요청에 전달하고 인증 결과를 응답으로 표현하는 데 필요한 기반입니다."
+            },
+            {
+              "id": "cryptographic-signatures",
+              "description": "암호학적 전자 서명: 비밀 키로 데이터의 출처와 변조 여부를 확인하는 기술이며, 암호화와는 구별됩니다.",
+              "aliases": [
+                "전자 서명 기초",
+                "디지털 서명 검증",
+                "서명 키와 검증 키",
+                "HMAC 서명",
+                "JWT 서명 알고리즘"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "JWT 서명의 생성·검증과 키 관리 원리를 이해하는 데 필요합니다."
+            },
+            {
+              "id": "jwt-auth-testing",
+              "description": "JWT 인증 테스트와 디버깅: 발급 및 요청 검증 흐름을 정상·실패 사례로 확인하는 작업입니다.",
+              "aliases": [
+                "JWT 인증 테스트",
+                "JWT 검증 테스트",
+                "토큰 인증 디버깅",
+                "만료 토큰 테스트",
+                "JWT 서명 오류 진단"
+              ],
+              "role": "SUPPORTING",
+              "connection": "JWT 인증 구현이 유효 토큰과 오류 상황에서 의도대로 동작하는지 확인합니다."
+            }
+          ],
+          "unrelated_topics": [
+            {
+              "id": "cooking",
+              "description": "식사 준비를 위한 조리법 선택과 음식 조리 활동입니다.",
+              "aliases": [
+                "요리하기",
+                "레시피 따라 하기",
+                "음식 조리",
+                "베이킹"
+              ],
+              "role": null,
+              "connection": "JWT 인증 구현과 무관한 일상 활동입니다."
+            },
+            {
+              "id": "sports-viewing",
+              "description": "경기나 스포츠 중계를 시청하며 관람하는 활동입니다.",
+              "aliases": [
+                "스포츠 경기 시청",
+                "축구 중계 보기",
+                "야구 경기 관람",
+                "스포츠 하이라이트 시청"
+              ],
+              "role": null,
+              "connection": "JWT 인증 구현을 수행하는 데 필요하지 않은 여가 활동입니다."
+            },
+            {
+              "id": "shopping",
+              "description": "상품을 비교하고 구매하는 소비 활동입니다.",
+              "aliases": [
+                "온라인 쇼핑",
+                "상품 비교 구매",
+                "쇼핑몰 상품 탐색",
+                "장보기"
+              ],
+              "role": null,
+              "connection": "JWT 인증 구현과 별개의 소비 활동입니다."
+            }
+          ]
+        },
+        "graphMs": 13949.17,
+        "totalMs": 17969.21,
+        "embeddingMs": 3750.66,
+        "localMs": 269.38,
+        "embeddingCalls": 5
+      },
+      "elapsedMs": 17969.29
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-transformer-decoder",
+        "goalVersion": 1,
+        "text": "트랜스포머 디코더의 동작 원리 공부",
+        "confirmed": true
+      },
+      "graphMode": "LLM_GENERATED",
+      "llmCalls": 1,
+      "llmRequests": [
+        {
+          "status": 200
+        }
+      ],
+      "llmTimings": [
+        {
+          "success": true,
+          "elapsedMs": 13923.49
+        }
+      ],
+      "embeddingRequests": [
+        {
+          "elapsedMs": 2691.84,
+          "success": true,
+          "sentTexts": 11,
+          "returnedVectors": 11,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.6868099,
+          "modelLoadSeconds": 0.0059157
+        },
+        {
+          "elapsedMs": 519.77,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0796979,
+          "modelLoadSeconds": 0.0061192
+        },
+        {
+          "elapsedMs": 466.61,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0946291,
+          "modelLoadSeconds": 0.0059993
+        },
+        {
+          "elapsedMs": 394.8,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0959389,
+          "modelLoadSeconds": 0.0064149
+        },
+        {
+          "elapsedMs": 385.59,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0850393,
+          "modelLoadSeconds": 0.0057591
+        }
+      ],
+      "embeddingHttp": [
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        }
+      ],
+      "report": {
+        "rows": [
+          {
+            "caseId": "transformer-decoder-related-dom",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.6808528722250857,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.5159169072626413,
+                "hybrid_score": 0.5103459897207168
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6581275875252363,
+                "hybrid_score": 0.4277829318914036
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5558797795111843,
+                "hybrid_score": 0.3613218566822698
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5472448781452901,
+                "hybrid_score": 0.3557091707944386
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5671187938289934,
+                "hybrid_score": 0.36862721598884574
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5941856679899101,
+                "hybrid_score": 0.3862206841934416
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5491973168028875,
+                "hybrid_score": 0.35697825592187693
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5446769008737461,
+                "hybrid_score": 0.354039985567935
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.47287917083116593,
+                "hybrid_score": 0.30737146104025787
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21514935342385155,
+                "hybrid_score": 0.1398470797255035
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23037525646625115,
+                "hybrid_score": 0.14974391670306325
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7008427717592849,
+                "hybrid_score": 0.6305478016435352
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7726827456119327,
+                "hybrid_score": 0.5022437846477563
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7605902915730245,
+                "hybrid_score": 0.6693836895224659
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6416669364010832,
+                "hybrid_score": 0.4170835086607041
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6546270719898217,
+                "hybrid_score": 0.4255075967933841
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7782351880385935,
+                "hybrid_score": 0.6808528722250857
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6486260103403314,
+                "hybrid_score": 0.4216069067212154
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.643666576651652,
+                "hybrid_score": 0.4183832748235738
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.522792319329897,
+                "hybrid_score": 0.33981500756443306
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21554356452883705,
+                "hybrid_score": 0.1401033169437441
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21166207123556996,
+                "hybrid_score": 0.13758034630312047
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "BODY",
+                "text": "트랜스포머 디코더는 이전 토큰을 바탕으로 다음 토큰을 예측합니다. 마스킹된 셀프 어텐션에서는 causal mask로 미래 토큰을 가려 자기회귀 생성을 유지합니다. 각 디코더 블록은 어텐션과 피드포워드 연산 뒤 잔차 연결과 정규화를 적용합니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 3302.18,
+            "embeddingMs": 3220.45,
+            "localMs": 81.73,
+            "embeddingCalls": 2,
+            "matchesExpected": true,
+            "bodyChars": 135,
+            "relatedChars": 135,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "transformer-decoder-related-desktop-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.6378926197036299,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.5241223838787532,
+                "hybrid_score": 0.5156795495211897
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6655974717836666,
+                "hybrid_score": 0.43263835665938327
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5715052918780698,
+                "hybrid_score": 0.37147843972074535
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5572975638978288,
+                "hybrid_score": 0.3622434165335887
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5848060054985592,
+                "hybrid_score": 0.3801239035740635
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5994672253087644,
+                "hybrid_score": 0.38965369645069686
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5603738146808707,
+                "hybrid_score": 0.36424297954256596
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5625883638989314,
+                "hybrid_score": 0.36568243653430543
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.49731012025017596,
+                "hybrid_score": 0.3232515781626144
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2306528974702468,
+                "hybrid_score": 0.14992438335566044
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24675443054360816,
+                "hybrid_score": 0.1603903798533453
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.60162251907432,
+                "hybrid_score": 0.566054637398308
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7121424918517383,
+                "hybrid_score": 0.6378926197036299
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5557019634389212,
+                "hybrid_score": 0.3612062762352988
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5832515223825895,
+                "hybrid_score": 0.3791134895486832
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5851092933354726,
+                "hybrid_score": 0.38032104066805716
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7409454846928203,
+                "hybrid_score": 0.4816145650503332
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6100832127596387,
+                "hybrid_score": 0.3965540882937652
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5652900801966009,
+                "hybrid_score": 0.3674385521277906
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.43865292753466645,
+                "hybrid_score": 0.2851244028975332
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24919226804021374,
+                "hybrid_score": 0.16197497422613893
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2153320666306176,
+                "hybrid_score": 0.13996584330990144
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "OCR",
+                "text": "Transformer decoder의 masked self-attention은 현재 위치보다 뒤에 있는 토큰을 볼 수 없도록 causal mask를 사용합니다. 자기회귀 방식으로 다음 토큰을 생성하며, 추론 중 KV cache로 이전 토큰의 key와 value 연산을 재사용할 수 있습니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 532.96,
+            "embeddingMs": 469.76,
+            "localMs": 63.2,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 162,
+            "relatedChars": 162,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "transformer-decoder-unrelated-cooking",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNRELATED",
+            "score": 0.43262383212668276,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.15784690082768796,
+                "hybrid_score": 0.10260048553799718
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1668584006851336,
+                "hybrid_score": 0.10845796044533684
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1606251903827727,
+                "hybrid_score": 0.10440637374880227
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.143944297390736,
+                "hybrid_score": 0.0935637933039784
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19986590360787584,
+                "hybrid_score": 0.1299128373451193
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1944729742216594,
+                "hybrid_score": 0.12640743324407863
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.1849355876879291,
+                "hybrid_score": 0.12020813199715391
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.14998508824412735,
+                "hybrid_score": 0.09749030735868278
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.5,
+                "cosine": 0.3963443571179735,
+                "hybrid_score": 0.43262383212668276
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23125449456486294,
+                "hybrid_score": 0.15031542146716093
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24509265744881711,
+                "hybrid_score": 0.15931022734173114
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.10550812834419013,
+                "hybrid_score": 0.06858028342372359
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.10067712092374044,
+                "hybrid_score": 0.06544012860043129
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.10161740761145288,
+                "hybrid_score": 0.06605131494744437
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.08970748787652491,
+                "hybrid_score": 0.05830986711974119
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.13876752261315559,
+                "hybrid_score": 0.09019888969855114
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1451123401032846,
+                "hybrid_score": 0.094323021067135
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.12941757423662975,
+                "hybrid_score": 0.08412142325380934
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.09824802459723939,
+                "hybrid_score": 0.0638612159882056
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.5,
+                "cosine": 0.387613954971032,
+                "hybrid_score": 0.42694907073117083
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24587453695434436,
+                "hybrid_score": 0.15981844902032383
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.18296740037591436,
+                "hybrid_score": 0.11892881024434433
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": "CHROME_VIEWPORT_OCR",
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 453.08,
+            "embeddingMs": 396.83,
+            "localMs": 56.25,
+            "embeddingCalls": 1,
+            "matchesExpected": false,
+            "bodyChars": 104,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "transformer-decoder-uncertain-loading-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNCERTAIN",
+            "score": 0.20161666853798105,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.15647751777492436,
+                "hybrid_score": 0.10171038655370084
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20094988409061168,
+                "hybrid_score": 0.13061742465889759
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17958791409574046,
+                "hybrid_score": 0.11673214416223131
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21241551427085886,
+                "hybrid_score": 0.13807008427605827
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21512916477017996,
+                "hybrid_score": 0.13983395710061697
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21176506589716806,
+                "hybrid_score": 0.13764729283315924
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2136208165489455,
+                "hybrid_score": 0.13885353075681459
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2030964835901416,
+                "hybrid_score": 0.13201271433359205
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3076342825163994,
+                "hybrid_score": 0.19996228363565963
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.27647819514978245,
+                "hybrid_score": 0.1797108268473586
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.31017949005843237,
+                "hybrid_score": 0.20161666853798105
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "transformer-decoder",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.14332637089314365,
+                "hybrid_score": 0.09316214108054338
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "causal-self-attention",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19819782868049501,
+                "hybrid_score": 0.12882858864232177
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "decoder-block-components",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1686113622717834,
+                "hybrid_score": 0.1095973854766592
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "token-embeddings-positions",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19189909724636986,
+                "hybrid_score": 0.12473441321014041
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "next-token-output",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2056667203834258,
+                "hybrid_score": 0.13368336824922677
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "autoregressive-generation",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21306573803564297,
+                "hybrid_score": 0.13849272972316792
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "attention-foundations",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.19105022452241988,
+                "hybrid_score": 0.12418264593957293
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "probability-linear-algebra",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.1789383025062637,
+                "hybrid_score": 0.1163098966290714
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3043999802978951,
+                "hybrid_score": 0.19785998719363182
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.29066680645642307,
+                "hybrid_score": 0.188933424196675
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.29785817992359975,
+                "hybrid_score": 0.19360781695033985
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 450.47,
+            "embeddingMs": 388.74,
+            "localMs": 61.73,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 49,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          }
+        ],
+        "summary": [
+          {
+            "방식": "6. Graph + 키워드 + 임베딩",
+            "사례 수": 4,
+            "실행 오류/미실행": 0,
+            "기대 일치": "3/4",
+            "기대 일치율 %": 75.0,
+            "평균 시간 ms": 1184.67
+          }
+        ],
+        "graph": {
+          "template_id": "generated:five-goal-20261021-transformer-decoder:v1",
+          "version": "llm-goal-graph-v1:llm:5bd63162b3750707",
+          "goal_text": "트랜스포머 디코더의 동작 원리 공부",
+          "concepts": [
+            {
+              "id": "transformer-decoder",
+              "description": "Transformer 디코더는 입력 문맥과 생성된 토큰을 바탕으로 다음 토큰을 예측하는 신경망 구성 요소이며, 인코더나 일반적인 소프트웨어 디코더와 구별된다.",
+              "aliases": [
+                "Transformer 디코더",
+                "transformer decoder",
+                "디코더 블록",
+                "decoder stack",
+                "트랜스포머 디코더 동작 원리"
+              ],
+              "role": "DIRECT",
+              "connection": "학습 목표의 중심 주제로, 디코더의 구성과 토큰 생성 과정을 이해한다."
+            },
+            {
+              "id": "causal-self-attention",
+              "description": "인과적 셀프 어텐션은 각 위치가 현재와 앞선 토큰만 참조하도록 제한하는 디코더 내부의 주의 메커니즘이다.",
+              "aliases": [
+                "causal self-attention",
+                "masked self-attention",
+                "인과적 셀프 어텐션",
+                "마스크드 어텐션",
+                "미래 토큰 마스킹"
+              ],
+              "role": "DIRECT",
+              "connection": "디코더가 미래 토큰을 보지 않으면서 이전 문맥을 활용하는 핵심 작동 방식을 설명한다."
+            },
+            {
+              "id": "decoder-block-components",
+              "description": "디코더 블록은 어텐션, 위치별 피드포워드 변환, 잔차 연결 및 정규화 등을 결합한 반복 구조로, 범용 디코딩 알고리즘과는 다르다.",
+              "aliases": [
+                "decoder block",
+                "디코더 레이어",
+                "feed-forward network",
+                "잔차 연결",
+                "레이어 정규화"
+              ],
+              "role": "DIRECT",
+              "connection": "디코더 내부 요소들이 블록 단위로 조합되어 표현을 갱신하는 방식을 다룬다."
+            },
+            {
+              "id": "token-embeddings-positions",
+              "description": "토큰 임베딩과 위치 정보는 이산 토큰을 벡터 표현으로 바꾸고 순서 정보를 제공하는 입력 표현 방식이다.",
+              "aliases": [
+                "token embedding",
+                "토큰 임베딩",
+                "positional encoding",
+                "위치 인코딩",
+                "토큰 위치 표현"
+              ],
+              "role": "DIRECT",
+              "connection": "디코더가 입력 토큰과 순서를 표현으로 받아들이는 첫 단계를 설명한다."
+            },
+            {
+              "id": "next-token-output",
+              "description": "출력 투영과 소프트맥스는 디코더의 최종 은닉 표현을 어휘별 다음 토큰 확률로 바꾸는 출력 단계다.",
+              "aliases": [
+                "next-token prediction",
+                "다음 토큰 예측",
+                "output projection",
+                "어휘 확률 분포",
+                "softmax 출력"
+              ],
+              "role": "DIRECT",
+              "connection": "디코더의 표현이 다음에 생성할 토큰의 점수와 확률로 변환되는 과정을 다룬다."
+            },
+            {
+              "id": "autoregressive-generation",
+              "description": "자기회귀 생성은 예측한 토큰을 다음 입력에 추가해 순차적으로 문장을 생성하는 절차다.",
+              "aliases": [
+                "autoregressive generation",
+                "자기회귀 생성",
+                "토큰별 생성",
+                "greedy decoding",
+                "temperature sampling"
+              ],
+              "role": "DIRECT",
+              "connection": "디코더의 다음 토큰 예측이 반복적인 텍스트 생성으로 이어지는 방식을 설명한다."
+            },
+            {
+              "id": "attention-foundations",
+              "description": "쿼리·키·값과 어텐션 가중치는 입력 위치 간 관련도를 계산해 정보를 섞는 기초 개념이며, 디코더 전용 구성 자체와는 구분된다.",
+              "aliases": [
+                "query key value",
+                "QKV",
+                "attention weights",
+                "어텐션 가중치",
+                "scaled dot-product attention"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "디코더 내부 어텐션이 문맥 정보를 선택하고 결합하는 원리를 이해하기 위한 기반이다."
+            },
+            {
+              "id": "probability-linear-algebra",
+              "description": "벡터·행렬 연산과 확률 분포는 신경망 표현 변환과 토큰 확률 해석에 필요한 수학적 기초다.",
+              "aliases": [
+                "벡터 행렬 연산",
+                "linear algebra",
+                "확률 분포",
+                "softmax 함수",
+                "확률적 예측"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "디코더의 어텐션 계산과 다음 토큰 확률을 따라가기 위한 기반 지식이다."
+            }
+          ],
+          "unrelated_topics": [
+            {
+              "id": "cooking",
+              "description": "조리법을 찾아 재료를 손질하고 음식을 만드는 활동으로, 트랜스포머 디코더 원리 학습과는 별개다.",
+              "aliases": [
+                "요리",
+                "조리법 찾기",
+                "재료 손질",
+                "음식 만들기"
+              ],
+              "role": null,
+              "connection": "확인된 학습 목표에 포함되지 않는 일상 활동이다."
+            },
+            {
+              "id": "sports-viewing",
+              "description": "경기 중계나 하이라이트를 시청하며 스포츠 경기를 즐기는 활동이다.",
+              "aliases": [
+                "스포츠 경기 시청",
+                "경기 중계 보기",
+                "경기 하이라이트",
+                "축구 경기 관람"
+              ],
+              "role": null,
+              "connection": "디코더 원리 학습과 무관한 여가 활동이다."
+            },
+            {
+              "id": "shopping",
+              "description": "상품을 비교하고 구매하거나 장바구니를 관리하는 소비 활동이다.",
+              "aliases": [
+                "온라인 쇼핑",
+                "상품 비교",
+                "장바구니 담기",
+                "구매 후기 확인"
+              ],
+              "role": null,
+              "connection": "확인된 기술 학습 목표와 별개인 활동이다."
+            }
+          ]
+        },
+        "graphMs": 13940.56,
+        "totalMs": 18680.48,
+        "embeddingMs": 4475.77,
+        "localMs": 264.15,
+        "embeddingCalls": 5
+      },
+      "elapsedMs": 18680.57
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-sql-join",
+        "goalVersion": 1,
+        "text": "SQL INNER JOIN과 LEFT JOIN의 차이 공부",
+        "confirmed": true
+      },
+      "graphMode": "LLM_GENERATED",
+      "llmCalls": 1,
+      "llmRequests": [
+        {
+          "status": 200
+        }
+      ],
+      "llmTimings": [
+        {
+          "success": true,
+          "elapsedMs": 11118.33
+        }
+      ],
+      "embeddingRequests": [
+        {
+          "elapsedMs": 1978.06,
+          "success": true,
+          "sentTexts": 9,
+          "returnedVectors": 9,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.6760303,
+          "modelLoadSeconds": 0.0059305
+        },
+        {
+          "elapsedMs": 344.45,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0750114,
+          "modelLoadSeconds": 0.0059583
+        },
+        {
+          "elapsedMs": 380.59,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.077066,
+          "modelLoadSeconds": 0.0060999
+        },
+        {
+          "elapsedMs": 409.42,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.093505,
+          "modelLoadSeconds": 0.0059585
+        },
+        {
+          "elapsedMs": 333.08,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0882926,
+          "modelLoadSeconds": 0.0060224
+        }
+      ],
+      "embeddingHttp": [
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        }
+      ],
+      "report": {
+        "rows": [
+          {
+            "caseId": "sql-join-related-dom",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.7257180327325261,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6190416063266909,
+                "hybrid_score": 0.4023770441123491
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6087741517809088,
+                "hybrid_score": 0.39570319865759074
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6058251251935636,
+                "hybrid_score": 0.3937863313758163
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6176708384315703,
+                "hybrid_score": 0.4014860449805207
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6012801818734803,
+                "hybrid_score": 0.3908321182177622
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.5483501239870049,
+                "hybrid_score": 0.3564275805915532
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.1993409385512366,
+                "hybrid_score": 0.1295716100583038
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.20943640513123182,
+                "hybrid_score": 0.1361336633353007
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.47460299851798243,
+                "hybrid_score": 0.3084919490366886
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.8102359819725947,
+                "hybrid_score": 0.7016533882821865
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.8472585118961938,
+                "hybrid_score": 0.7257180327325261
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.8415800629067094,
+                "hybrid_score": 0.7220270408893612
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7880384247565778,
+                "hybrid_score": 0.5122249760917756
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.7982180179707876,
+                "hybrid_score": 0.518841711681012
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.7428945021572146,
+                "hybrid_score": 0.4828814264021895
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.19045739165738187,
+                "hybrid_score": 0.12379730457729822
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21088257416373918,
+                "hybrid_score": 0.13707367320643046
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3732537891411904,
+                "hybrid_score": 0.24261496294177376
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "BODY",
+                "text": "INNER JOIN은 두 테이블에서 조인 조건에 일치하는 행만 반환합니다. LEFT JOIN은 왼쪽 테이블의 모든 행을 유지하고 오른쪽 테이블에 일치하는 행이 없으면 NULL을 채웁니다. 고객 테이블과 주문 테이블을 조인하면 주문이 없는 고객의 포함 여부가 달라집니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 2410.38,
+            "embeddingMs": 2336.53,
+            "localMs": 73.85,
+            "embeddingCalls": 2,
+            "matchesExpected": true,
+            "bodyChars": 150,
+            "relatedChars": 150,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "sql-join-related-desktop-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.8701428729523385,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6297315103931592,
+                "hybrid_score": 0.4093254817555535
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6214723869715092,
+                "hybrid_score": 0.403957051531481
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6161764655506887,
+                "hybrid_score": 0.4005147026079477
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6101710017920738,
+                "hybrid_score": 0.396611151164848
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6083016594594052,
+                "hybrid_score": 0.39539607864861337
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.5587158912709085,
+                "hybrid_score": 0.3631653293260905
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.20970221044086704,
+                "hybrid_score": 0.13630643678656357
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.22709070644394794,
+                "hybrid_score": 0.14760895918856617
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.47040502638645243,
+                "hybrid_score": 0.30576326715119406
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7456980897469278,
+                "hybrid_score": 0.48470375833550305
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7769324586821047,
+                "hybrid_score": 0.680006098143368
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 1.0,
+                "cosine": 0.8002198045420592,
+                "hybrid_score": 0.8701428729523385
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.7297828602663777,
+                "hybrid_score": 0.4743588591731455
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.7651689666774552,
+                "hybrid_score": 0.49735982834034587
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.5,
+                "cosine": 0.8231931510796037,
+                "hybrid_score": 0.7100755482017425
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.1722973030368956,
+                "hybrid_score": 0.11199324697398215
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.20158960722913047,
+                "hybrid_score": 0.13103324469893482
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.38311856810848255,
+                "hybrid_score": 0.24902706927051366
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "OCR",
+                "text": "SQL의 내부 조인은 양쪽 테이블에 대응되는 키가 있는 행만 선택합니다. 왼쪽 외부 조인은 왼쪽 테이블의 행을 모두 보존하고 연결되는 오른쪽 행이 없으면 NULL로 표시합니다. ON은 연결 조건이며 WHERE 필터 위치에 따라 LEFT JOIN 결과가 달라질 수 있습니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT",
+              "SUPPORTING"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 440.09,
+            "embeddingMs": 383.67,
+            "localMs": 56.42,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 152,
+            "relatedChars": 152,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "sql-join-unrelated-cooking",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNRELATED",
+            "score": 0.3314373183228466,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19898304868585345,
+                "hybrid_score": 0.12933898164580476
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.187284189757256,
+                "hybrid_score": 0.1217347233422164
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.19107951741121382,
+                "hybrid_score": 0.12420168631728899
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17432965888477878,
+                "hybrid_score": 0.1133142782751062
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.17738627307025676,
+                "hybrid_score": 0.1153010774956669
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.15106533366099026,
+                "hybrid_score": 0.09819246687964367
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2234866982708145,
+                "hybrid_score": 0.14526635387602943
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.4394534765575513,
+                "hybrid_score": 0.28564475976240833
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2687450052663861,
+                "hybrid_score": 0.17468425342315097
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.12115525996860319,
+                "hybrid_score": 0.07875091897959208
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1267949930724266,
+                "hybrid_score": 0.08241674549707728
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.14104161297647289,
+                "hybrid_score": 0.09167704843470738
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.11876801113234617,
+                "hybrid_score": 0.07719920723602501
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.11650113388656005,
+                "hybrid_score": 0.07572573702626403
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.10769796512779024,
+                "hybrid_score": 0.07000367733306366
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.23655832683969696,
+                "hybrid_score": 0.15376291244580303
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.5099035666505333,
+                "hybrid_score": 0.3314373183228466
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2337795147515439,
+                "hybrid_score": 0.15195668458850353
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": "CHROME_VIEWPORT_OCR",
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 465.98,
+            "embeddingMs": 411.87,
+            "localMs": 54.11,
+            "embeddingCalls": 1,
+            "matchesExpected": false,
+            "bodyChars": 104,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "sql-join-uncertain-loading-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNCERTAIN",
+            "score": 0.2089022011322765,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.22105069076219117,
+                "hybrid_score": 0.14368294899542428
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.23329475333034985,
+                "hybrid_score": 0.1516415896647274
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.24437471875902403,
+                "hybrid_score": 0.15884356719336562
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21401734022628793,
+                "hybrid_score": 0.13911127114708716
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.238106767695193,
+                "hybrid_score": 0.15476939900187547
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.19330710625946732,
+                "hybrid_score": 0.12564961906865377
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24913995422590515,
+                "hybrid_score": 0.16194097024683834
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.25039794096012613,
+                "hybrid_score": 0.16275866162408198
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.32138800174196386,
+                "hybrid_score": 0.2089022011322765
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-joins",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20075809849303455,
+                "hybrid_score": 0.13049276402047247
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "inner-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.21460072703862543,
+                "hybrid_score": 0.13949047257510652
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "left-join",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.22423258076557995,
+                "hybrid_score": 0.14575117749762698
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "join-result-comparison",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1899535314344601,
+                "hybrid_score": 0.12346979543239907
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-null-semantics",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2057528713691702,
+                "hybrid_score": 0.13373936638996065
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sql-filtering",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.17158818338551063,
+                "hybrid_score": 0.11153231920058192
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "movie-watching",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.25399788524417266,
+                "hybrid_score": 0.16509862540871223
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.25317106663441385,
+                "hybrid_score": 0.16456119331236901
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-play",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3070409249633354,
+                "hybrid_score": 0.19957660122616802
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 392.19,
+            "embeddingMs": 336.5,
+            "localMs": 55.69,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 49,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          }
+        ],
+        "summary": [
+          {
+            "방식": "6. Graph + 키워드 + 임베딩",
+            "사례 수": 4,
+            "실행 오류/미실행": 0,
+            "기대 일치": "3/4",
+            "기대 일치율 %": 75.0,
+            "평균 시간 ms": 927.16
+          }
+        ],
+        "graph": {
+          "template_id": "generated:five-goal-20261021-sql-join:v1",
+          "version": "llm-goal-graph-v1:llm:5bd63162b3750707",
+          "goal_text": "SQL INNER JOIN과 LEFT JOIN의 차이 공부",
+          "concepts": [
+            {
+              "id": "sql-joins",
+              "description": "SQL 조인은 공통 열의 값으로 여러 테이블의 행을 결합하는 연산이다. 여기서는 INNER JOIN과 LEFT JOIN을 비교하기 위한 공통 기반을 뜻한다.",
+              "aliases": [
+                "SQL JOIN",
+                "테이블 조인",
+                "행 결합",
+                "조인 조건",
+                "join predicate"
+              ],
+              "role": "DIRECT",
+              "connection": "INNER JOIN과 LEFT JOIN이 테이블을 어떻게 연결하는지 이해하는 기반이다."
+            },
+            {
+              "id": "inner-join",
+              "description": "INNER JOIN은 조인 조건을 만족하는 양쪽 테이블의 행만 반환하는 SQL 조인 방식이다.",
+              "aliases": [
+                "INNER JOIN",
+                "이너 조인",
+                "내부 조인",
+                "일치 행만 반환",
+                "inner join 결과"
+              ],
+              "role": "DIRECT",
+              "connection": "학습 목표의 한 축으로, LEFT JOIN과 반환 행의 차이를 비교한다."
+            },
+            {
+              "id": "left-join",
+              "description": "LEFT JOIN은 왼쪽 테이블의 모든 행을 보존하고, 오른쪽에서 조건에 맞는 행이 없으면 오른쪽 열을 NULL로 채우는 SQL 조인 방식이다.",
+              "aliases": [
+                "LEFT JOIN",
+                "LEFT OUTER JOIN",
+                "레프트 조인",
+                "왼쪽 외부 조인",
+                "왼쪽 행 보존",
+                "불일치 행 NULL"
+              ],
+              "role": "DIRECT",
+              "connection": "학습 목표의 다른 축으로, INNER JOIN과 왼쪽 행 보존 및 NULL 처리 차이를 비교한다."
+            },
+            {
+              "id": "join-result-comparison",
+              "description": "조인 결과 비교는 같은 입력 테이블과 조건에서 INNER JOIN과 LEFT JOIN의 결과 행 수, 불일치 행, NULL 값을 확인하는 방법이다.",
+              "aliases": [
+                "조인 결과 비교",
+                "INNER JOIN LEFT JOIN 차이",
+                "조인 행 수 비교",
+                "누락 행 확인",
+                "NULL 결과 확인"
+              ],
+              "role": "DIRECT",
+              "connection": "두 조인의 실제 차이를 결과 집합으로 판별하는 핵심 학습 활동이다."
+            },
+            {
+              "id": "sql-null-semantics",
+              "description": "SQL의 NULL은 값이 알려지지 않았거나 없는 상태를 나타내며, 일반 값과 비교 및 조건 평가 방식이 다르다.",
+              "aliases": [
+                "SQL NULL",
+                "NULL 값",
+                "NULL 의미",
+                "NULL 비교",
+                "unknown 값"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "LEFT JOIN에서 대응 행이 없을 때 오른쪽 열에 생기는 NULL 결과를 해석하는 데 필요하다."
+            },
+            {
+              "id": "sql-filtering",
+              "description": "WHERE와 ON 조건은 SQL 결과를 서로 다른 단계에서 제한할 수 있으며, LEFT JOIN에서는 조건 위치에 따라 보존되는 왼쪽 행이 달라질 수 있다.",
+              "aliases": [
+                "SQL WHERE 조건",
+                "ON 조건",
+                "조인 조건 위치",
+                "WHERE 필터",
+                "외부 조인 필터링"
+              ],
+              "role": "SUPPORTING",
+              "connection": "조인 예제를 검증하고, 조건 배치로 LEFT JOIN 결과가 달라지는 상황을 점검하는 데 쓰인다."
+            }
+          ],
+          "unrelated_topics": [
+            {
+              "id": "movie-watching",
+              "description": "학습 목표와 무관하게 영화나 드라마를 시청하며 여가를 보내는 활동이다.",
+              "aliases": [
+                "영화 감상",
+                "드라마 시청",
+                "영화 보기",
+                "TV 시청"
+              ],
+              "role": null,
+              "connection": "SQL 조인 학습과 별개의 여가 활동이다."
+            },
+            {
+              "id": "cooking",
+              "description": "음식을 조리하거나 요리법을 따라 식사를 준비하는 활동이다.",
+              "aliases": [
+                "요리하기",
+                "음식 조리",
+                "레시피 따라 하기",
+                "식사 준비"
+              ],
+              "role": null,
+              "connection": "SQL 조인 학습에 필요한 활동이 아닌 별개의 일상 활동이다."
+            },
+            {
+              "id": "sports-play",
+              "description": "SQL 학습과 별개로 운동 경기나 스포츠를 직접 즐기는 활동이다.",
+              "aliases": [
+                "스포츠 경기하기",
+                "축구하기",
+                "농구하기",
+                "운동 경기 참여"
+              ],
+              "role": null,
+              "connection": "데이터베이스 학습과 관련 없는 신체 활동이다."
+            }
+          ]
+        },
+        "graphMs": 11136.59,
+        "totalMs": 14846.49,
+        "embeddingMs": 3468.57,
+        "localMs": 241.33,
+        "embeddingCalls": 5
+      },
+      "elapsedMs": 14846.58
+    },
+    {
+      "goal": {
+        "goalId": "five-goal-20261021-process-scheduling",
+        "goalVersion": 1,
+        "text": "운영체제 프로세스 스케줄링 알고리즘 공부",
+        "confirmed": true
+      },
+      "graphMode": "LLM_GENERATED",
+      "llmCalls": 1,
+      "llmRequests": [
+        {
+          "status": 200
+        }
+      ],
+      "llmTimings": [
+        {
+          "success": true,
+          "elapsedMs": 15993.88
+        }
+      ],
+      "embeddingRequests": [
+        {
+          "elapsedMs": 3231.01,
+          "success": true,
+          "sentTexts": 10,
+          "returnedVectors": 10,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.5876392,
+          "modelLoadSeconds": 0.0058966
+        },
+        {
+          "elapsedMs": 1111.26,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.1876629,
+          "modelLoadSeconds": 0.0067547
+        },
+        {
+          "elapsedMs": 775.13,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0870556,
+          "modelLoadSeconds": 0.0069939
+        },
+        {
+          "elapsedMs": 693.62,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.1009613,
+          "modelLoadSeconds": 0.0056257
+        },
+        {
+          "elapsedMs": 665.68,
+          "success": true,
+          "sentTexts": 2,
+          "returnedVectors": 2,
+          "dimensions": [
+            2560
+          ],
+          "modelReportedSeconds": 0.0885229,
+          "modelLoadSeconds": 0.0089114
+        }
+      ],
+      "embeddingHttp": [
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        },
+        {
+          "status": 200,
+          "path": "/api/embed"
+        }
+      ],
+      "report": {
+        "rows": [
+          {
+            "caseId": "process-scheduling-related-dom",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.6231127597049986,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6484090882187357,
+                "hybrid_score": 0.5964659073421782
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5808453443113197,
+                "hybrid_score": 0.3775494738023578
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.544036526711643,
+                "hybrid_score": 0.353623742362568
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5346399068213525,
+                "hybrid_score": 0.34751593943387915
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.605452882857941,
+                "hybrid_score": 0.39354437385766167
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.6081886696876185,
+                "hybrid_score": 0.39532263529695205
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.4042736217886896,
+                "hybrid_score": 0.26277785416264826
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2857554449334362,
+                "hybrid_score": 0.18574103920673352
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2440587638195741,
+                "hybrid_score": 0.15863819648272315
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.19901766597278223,
+                "hybrid_score": 0.12936148288230845
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6983703177868517,
+                "hybrid_score": 0.4539407065614536
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6894042456999978,
+                "hybrid_score": 0.6231127597049986
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.6917281681712052,
+                "hybrid_score": 0.4496233093112834
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.5,
+                "cosine": 0.6532630491195001,
+                "hybrid_score": 0.599620981927675
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5917065726988472,
+                "hybrid_score": 0.3846092722542507
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.6663755526044286,
+                "hybrid_score": 0.4331441091928786
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3437172078613117,
+                "hybrid_score": 0.22341618510985262
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2493317753630026,
+                "hybrid_score": 0.16206565398595169
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21694227939751246,
+                "hybrid_score": 0.1410124816083831
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.1851773407766808,
+                "hybrid_score": 0.12036527150484252
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "BODY",
+                "text": "운영체제의 CPU 스케줄러는 준비 큐의 프로세스 중 실행할 대상을 선택합니다. FCFS는 도착한 순서대로 실행하고 SJF는 실행 시간이 짧은 작업을 우선합니다. 라운드 로빈은 타임 퀀텀마다 프로세스를 교체하며 대기 시간과 응답 시간을 비교해 알고리즘의 특성을 평가합니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 4451.35,
+            "embeddingMs": 4357.27,
+            "localMs": 94.08,
+            "embeddingCalls": 2,
+            "matchesExpected": true,
+            "bodyChars": 151,
+            "relatedChars": 151,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "process-scheduling-related-desktop-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "RELATED",
+            "score": 0.6372827244532697,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6511885634343039,
+                "hybrid_score": 0.5982725662322975
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5760972352897958,
+                "hybrid_score": 0.3744632029383673
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5482731966833452,
+                "hybrid_score": 0.3563775778441744
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5385488824804788,
+                "hybrid_score": 0.35005677361231125
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.6186709547821163,
+                "hybrid_score": 0.4021361206083756
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.5937233542836273,
+                "hybrid_score": 0.38592018028435776
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3874139445764405,
+                "hybrid_score": 0.25181906397468634
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.28059142559866834,
+                "hybrid_score": 0.18238442663913443
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24715353176317387,
+                "hybrid_score": 0.16064979564606302
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.19382053996200233,
+                "hybrid_score": 0.12598335097530153
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.6636388795297029,
+                "hybrid_score": 0.6063652716943069
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.5,
+                "cosine": 0.7112041914665688,
+                "hybrid_score": 0.6372827244532697
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.5509505993927735,
+                "hybrid_score": 0.3581178896053028
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5823634550847249,
+                "hybrid_score": 0.37853624580507117
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.5985371757863405,
+                "hybrid_score": 0.3890491642611213
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.5540729379682514,
+                "hybrid_score": 0.36014740967936343
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.32839153984519664,
+                "hybrid_score": 0.2134545008993778
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.21733681839284058,
+                "hybrid_score": 0.14126893195534637
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2525843899753775,
+                "hybrid_score": 0.16417985348399539
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.22485423554137637,
+                "hybrid_score": 0.14615525310189464
+              }
+            ],
+            "evidence": [
+              {
+                "id": "passage-002",
+                "kind": "OCR",
+                "text": "프로세스 스케줄링에서 선점 방식은 실행 중인 작업을 중단하고 다른 프로세스에 CPU를 넘길 수 있습니다. Round Robin은 일정한 time quantum을 사용합니다. 우선순위 스케줄링에서는 낮은 우선순위 작업의 기아를 방지하기 위해 aging을 적용할 수 있습니다."
+              }
+            ],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "RELATED",
+            "reasonCode": "GOAL_CONNECTED",
+            "contentRoles": [
+              "DIRECT"
+            ],
+            "evidenceIds": [
+              "passage-002"
+            ],
+            "cacheHit": false,
+            "elapsedMs": 840.9,
+            "embeddingMs": 779.23,
+            "localMs": 61.67,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 152,
+            "relatedChars": 152,
+            "relatedCoverage": 1.0
+          },
+          {
+            "caseId": "process-scheduling-unrelated-cooking",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNRELATED",
+            "score": 0.33001759680141396,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.23342231911837522,
+                "hybrid_score": 0.1517245074269439
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2086780175741519,
+                "hybrid_score": 0.13564071142319872
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20760111925662253,
+                "hybrid_score": 0.13494072751680464
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2254684047216717,
+                "hybrid_score": 0.14655446306908662
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2259275366731251,
+                "hybrid_score": 0.1468528988375313
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.2368091269536851,
+                "hybrid_score": 0.15392593251989534
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.29842333979370717,
+                "hybrid_score": 0.19397517086590965
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.22282946983920243,
+                "hybrid_score": 0.1448391553954816
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.4180845323891126,
+                "hybrid_score": 0.27175494605292316
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.18312799765379942,
+                "hybrid_score": 0.11903319847496963
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.17670782647117023,
+                "hybrid_score": 0.11486008720626065
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.15669497233264074,
+                "hybrid_score": 0.10185173201621649
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.1328568886301629,
+                "hybrid_score": 0.0863569776096059
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.16979019801914866,
+                "hybrid_score": 0.11036362871244663
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.17090443903807617,
+                "hybrid_score": 0.11108788537474952
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.16003939296047487,
+                "hybrid_score": 0.10402560542430866
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2928053531483575,
+                "hybrid_score": 0.19032347954643236
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.16744242347237548,
+                "hybrid_score": 0.10883757525704406
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.507719379694483,
+                "hybrid_score": 0.33001759680141396
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.18514181419096695,
+                "hybrid_score": 0.12034217922412853
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": "CHROME_VIEWPORT_OCR",
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 758.5,
+            "embeddingMs": 697.06,
+            "localMs": 61.44,
+            "embeddingCalls": 1,
+            "matchesExpected": false,
+            "bodyChars": 104,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          },
+          {
+            "caseId": "process-scheduling-uncertain-loading-ocr",
+            "method": "6",
+            "methodName": "Graph + 키워드 + 임베딩",
+            "expectedLabel": "UNCERTAIN",
+            "score": 0.2211051724616287,
+            "scoreType": "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)",
+            "matches": [
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.27109670993785673,
+                "hybrid_score": 0.17621286145960688
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.24256717832243666,
+                "hybrid_score": 0.15766866590958384
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.23426752939642476,
+                "hybrid_score": 0.15227389410767608
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.3008945712257164,
+                "hybrid_score": 0.19558147129671566
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2758689476212547,
+                "hybrid_score": 0.17931481595381554
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.27747594321824165,
+                "hybrid_score": 0.18035936309185707
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.32788770604079565,
+                "hybrid_score": 0.21312700892651718
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2936079423382982,
+                "hybrid_score": 0.19084516251989384
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3295694264274408,
+                "hybrid_score": 0.21422012717783653
+              },
+              {
+                "passage_id": "passage-001",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.2259114146096782,
+                "hybrid_score": 0.14684241949629084
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-scheduling",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20676406077277726,
+                "hybrid_score": 0.1343966395023052
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-algorithms",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.20357609956258532,
+                "hybrid_score": 0.13232446471568046
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-criteria",
+                "role": "DIRECT",
+                "keyword_score": 0.0,
+                "cosine": 0.2205038133617874,
+                "hybrid_score": 0.14332747868516182
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "process-state-and-ready-queue",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.2964327962567795,
+                "hybrid_score": 0.19268131756690668
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cpu-burst-and-context-switch",
+                "role": "PREREQUISITE",
+                "keyword_score": 0.0,
+                "cosine": 0.24522819322453424,
+                "hybrid_score": 0.15939832559594727
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "scheduling-timeline-calculation",
+                "role": "SUPPORTING",
+                "keyword_score": 0.0,
+                "cosine": 0.2400168981436432,
+                "hybrid_score": 0.15601098379336809
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "entertainment-viewing",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.30469205901009266,
+                "hybrid_score": 0.19804983835656023
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "shopping",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.27632851645418643,
+                "hybrid_score": 0.17961353569522118
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "cooking",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.3401618037871211,
+                "hybrid_score": 0.2211051724616287
+              },
+              {
+                "passage_id": "passage-002",
+                "concept_id": "sports-recreation",
+                "role": null,
+                "keyword_score": 0.0,
+                "cosine": 0.24624628500102363,
+                "hybrid_score": 0.16006008525066537
+              }
+            ],
+            "evidence": [],
+            "nextContentSource": null,
+            "status": "SUCCEEDED",
+            "relevanceLabel": "UNCERTAIN",
+            "reasonCode": "INSUFFICIENT_EVIDENCE",
+            "contentRoles": [],
+            "evidenceIds": [],
+            "cacheHit": false,
+            "elapsedMs": 721.24,
+            "embeddingMs": 668.02,
+            "localMs": 53.22,
+            "embeddingCalls": 1,
+            "matchesExpected": true,
+            "bodyChars": 49,
+            "relatedChars": 0,
+            "relatedCoverage": 0.0
+          }
+        ],
+        "summary": [
+          {
+            "방식": "6. Graph + 키워드 + 임베딩",
+            "사례 수": 4,
+            "실행 오류/미실행": 0,
+            "기대 일치": "3/4",
+            "기대 일치율 %": 75.0,
+            "평균 시간 ms": 1693.0
+          }
+        ],
+        "graph": {
+          "template_id": "generated:five-goal-20261021-process-scheduling:v1",
+          "version": "llm-goal-graph-v1:llm:5bd63162b3750707",
+          "goal_text": "운영체제 프로세스 스케줄링 알고리즘 공부",
+          "concepts": [
+            {
+              "id": "process-scheduling",
+              "description": "운영체제가 실행 가능한 프로세스에 CPU를 배정하는 방법과 그 동작을 학습한다.",
+              "aliases": [
+                "프로세스 스케줄링",
+                "process scheduling",
+                "CPU 스케줄링",
+                "CPU scheduling",
+                "프로세스 선택",
+                "CPU 할당"
+              ],
+              "role": "DIRECT",
+              "connection": "학습 목표의 핵심 주제이며, 알고리즘이 CPU 사용 기회를 배분하는 원리를 다룬다."
+            },
+            {
+              "id": "scheduling-algorithms",
+              "description": "프로세스 선택과 CPU 배정에 쓰이는 정책으로, 선점 여부나 선택 기준에 따라 동작이 달라지는 알고리즘을 다룬다.",
+              "aliases": [
+                "스케줄링 알고리즘",
+                "scheduling algorithm",
+                "FCFS 스케줄링",
+                "선점형 스케줄링",
+                "비선점형 스케줄링",
+                "우선순위 스케줄링",
+                "라운드 로빈"
+              ],
+              "role": "DIRECT",
+              "connection": "프로세스 스케줄링을 구성하는 대표적인 정책과 알고리즘을 비교하고 이해하는 내용이다."
+            },
+            {
+              "id": "scheduling-criteria",
+              "description": "스케줄링 정책의 성능을 비교하는 기준으로, 대기 시간·반환 시간·응답 시간·처리량 등을 포함한다.",
+              "aliases": [
+                "스케줄링 성능 기준",
+                "스케줄링 평가 기준",
+                "대기 시간 계산",
+                "반환 시간 계산",
+                "응답 시간 비교",
+                "CPU 처리량"
+              ],
+              "role": "DIRECT",
+              "connection": "알고리즘의 효율과 사용자 체감 성능을 평가하고 서로 비교하는 데 필요하다."
+            },
+            {
+              "id": "process-state-and-ready-queue",
+              "description": "프로세스가 실행 대기 상태로 이동하고 준비 큐에 들어가는 운영체제의 상태 및 큐 관리 개념이다.",
+              "aliases": [
+                "프로세스 상태 전이",
+                "준비 상태",
+                "준비 큐",
+                "ready queue",
+                "큐잉 동작",
+                "프로세스 대기열"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "스케줄러가 선택할 후보가 어떤 상태로 준비 큐에 놓이는지 이해하기 위한 기초다."
+            },
+            {
+              "id": "cpu-burst-and-context-switch",
+              "description": "프로세스의 CPU 실행 구간과 실행 프로세스를 바꿀 때의 상태 저장·복원 과정이다.",
+              "aliases": [
+                "CPU 버스트",
+                "CPU burst",
+                "문맥 교환",
+                "context switch",
+                "프로세스 실행 구간",
+                "레지스터 상태 저장"
+              ],
+              "role": "PREREQUISITE",
+              "connection": "스케줄링의 실행 단위와 프로세스 교체에 따른 비용을 이해하는 기반이다."
+            },
+            {
+              "id": "scheduling-timeline-calculation",
+              "description": "도착 시간과 CPU 실행 시간을 이용해 스케줄링 순서를 시간축에 표시하고 각 프로세스의 성능 지표를 계산하는 방법이다.",
+              "aliases": [
+                "간트 차트 스케줄링",
+                "스케줄링 시간표",
+                "CPU 스케줄링 계산",
+                "도착 시간 반영",
+                "버스트 시간 계산",
+                "대기 시간 산출"
+              ],
+              "role": "SUPPORTING",
+              "connection": "알고리즘의 실행 순서를 직접 추적하고 성능 기준을 검산하는 학습 도구다."
+            }
+          ],
+          "unrelated_topics": [
+            {
+              "id": "entertainment-viewing",
+              "description": "운영체제 학습과 무관하게 영화나 TV 프로그램을 시청하며 여가를 보내는 활동이다.",
+              "aliases": [
+                "영화 감상",
+                "TV 프로그램 시청",
+                "드라마 정주행",
+                "예능 시청"
+              ],
+              "role": null,
+              "connection": "프로세스 스케줄링 알고리즘을 공부하는 목표에 포함되지 않는 여가 활동이다."
+            },
+            {
+              "id": "shopping",
+              "description": "제품이나 서비스를 둘러보고 구매를 결정하거나 주문하는 소비 활동이다.",
+              "aliases": [
+                "온라인 쇼핑",
+                "상품 비교",
+                "가격 검색",
+                "구매 주문"
+              ],
+              "role": null,
+              "connection": "운영체제의 스케줄링 원리나 학습을 수행하는 활동과는 별개의 소비 활동이다."
+            },
+            {
+              "id": "cooking",
+              "description": "식재료를 준비하고 조리해 식사를 만드는 활동이다.",
+              "aliases": [
+                "요리하기",
+                "레시피 조리",
+                "식사 준비",
+                "재료 손질"
+              ],
+              "role": null,
+              "connection": "프로세스 스케줄링 알고리즘의 이해와 관계없는 일상 활동이다."
+            },
+            {
+              "id": "sports-recreation",
+              "description": "운동 경기나 신체 활동에 참여하거나 관람하는 여가 활동이다.",
+              "aliases": [
+                "스포츠 경기 관람",
+                "축구 경기 시청",
+                "운동 경기 참여",
+                "레크리에이션 운동"
+              ],
+              "role": null,
+              "connection": "운영체제 학습 목표와 구별되는 스포츠·운동 활동이다."
+            }
+          ]
+        },
+        "graphMs": 16010.92,
+        "totalMs": 22784.03,
+        "embeddingMs": 6501.59,
+        "localMs": 271.53,
+        "embeddingCalls": 5
+      },
+      "elapsedMs": 22784.13
+    }
+  ],
+  "finishedAt": "2026-10-21T10:54:19.559851+00:00",
+  "wallMs": 99311.03,
+  "embeddingHttpCalls": 25,
+  "embeddingRequests": [
+    {
+      "elapsedMs": 7211.02,
+      "success": true,
+      "sentTexts": 10,
+      "returnedVectors": 10,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 4.5518123,
+      "modelLoadSeconds": 4.1356009
+    },
+    {
+      "elapsedMs": 484.59,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0797805,
+      "modelLoadSeconds": 0.0054121
+    },
+    {
+      "elapsedMs": 389.19,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0760386,
+      "modelLoadSeconds": 0.0054142
+    },
+    {
+      "elapsedMs": 436.49,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0770492,
+      "modelLoadSeconds": 0.005307
+    },
+    {
+      "elapsedMs": 431.49,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0870495,
+      "modelLoadSeconds": 0.0060654
+    },
+    {
+      "elapsedMs": 2170.47,
+      "success": true,
+      "sentTexts": 11,
+      "returnedVectors": 11,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.6001073,
+      "modelLoadSeconds": 0.0066348
+    },
+    {
+      "elapsedMs": 352.62,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.075788,
+      "modelLoadSeconds": 0.0059938
+    },
+    {
+      "elapsedMs": 417.24,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0905088,
+      "modelLoadSeconds": 0.0096698
+    },
+    {
+      "elapsedMs": 418.03,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.1022132,
+      "modelLoadSeconds": 0.0060177
+    },
+    {
+      "elapsedMs": 368.12,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0885698,
+      "modelLoadSeconds": 0.0071765
+    },
+    {
+      "elapsedMs": 2691.84,
+      "success": true,
+      "sentTexts": 11,
+      "returnedVectors": 11,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.6868099,
+      "modelLoadSeconds": 0.0059157
+    },
+    {
+      "elapsedMs": 519.77,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0796979,
+      "modelLoadSeconds": 0.0061192
+    },
+    {
+      "elapsedMs": 466.61,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0946291,
+      "modelLoadSeconds": 0.0059993
+    },
+    {
+      "elapsedMs": 394.8,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0959389,
+      "modelLoadSeconds": 0.0064149
+    },
+    {
+      "elapsedMs": 385.59,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0850393,
+      "modelLoadSeconds": 0.0057591
+    },
+    {
+      "elapsedMs": 1978.06,
+      "success": true,
+      "sentTexts": 9,
+      "returnedVectors": 9,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.6760303,
+      "modelLoadSeconds": 0.0059305
+    },
+    {
+      "elapsedMs": 344.45,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0750114,
+      "modelLoadSeconds": 0.0059583
+    },
+    {
+      "elapsedMs": 380.59,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.077066,
+      "modelLoadSeconds": 0.0060999
+    },
+    {
+      "elapsedMs": 409.42,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.093505,
+      "modelLoadSeconds": 0.0059585
+    },
+    {
+      "elapsedMs": 333.08,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0882926,
+      "modelLoadSeconds": 0.0060224
+    },
+    {
+      "elapsedMs": 3231.01,
+      "success": true,
+      "sentTexts": 10,
+      "returnedVectors": 10,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.5876392,
+      "modelLoadSeconds": 0.0058966
+    },
+    {
+      "elapsedMs": 1111.26,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.1876629,
+      "modelLoadSeconds": 0.0067547
+    },
+    {
+      "elapsedMs": 775.13,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0870556,
+      "modelLoadSeconds": 0.0069939
+    },
+    {
+      "elapsedMs": 693.62,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.1009613,
+      "modelLoadSeconds": 0.0056257
+    },
+    {
+      "elapsedMs": 665.68,
+      "success": true,
+      "sentTexts": 2,
+      "returnedVectors": 2,
+      "dimensions": [
+        2560
+      ],
+      "modelReportedSeconds": 0.0885229,
+      "modelLoadSeconds": 0.0089114
+    }
+  ],
+  "llmCalls": 5,
+  "llmHttpResponses": [
+    {
+      "status": 200
+    },
+    {
+      "status": 200
+    },
+    {
+      "status": 200
+    },
+    {
+      "status": 200
+    },
+    {
+      "status": 200
+    }
+  ],
+  "metrics": {
+    "count": 20,
+    "correct": 13,
+    "accuracy": 0.65,
+    "macroF1": 0.4923747276688453,
+    "confusionMatrix": [
+      [
+        8,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        5
+      ],
+      [
+        0,
+        0,
+        5
+      ]
+    ],
+    "perClass": {
+      "RELATED": {
+        "support": 10,
+        "predictions": 8,
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1": 0.888888888888889
+      },
+      "UNRELATED": {
+        "support": 5,
+        "predictions": 0,
+        "precision": 0,
+        "recall": 0.0,
+        "f1": 0
+      },
+      "UNCERTAIN": {
+        "support": 5,
+        "predictions": 12,
+        "precision": 0.4166666666666667,
+        "recall": 1.0,
+        "f1": 0.5882352941176471
+      }
+    },
+    "uncertainRate": 0.6,
+    "meanMs": 1423.7785000000001,
+    "medianMs": 494.17,
+    "minMs": 392.19,
+    "maxMs": 7798.46,
+    "analysisSumMs": 28475.570000000003,
+    "graphMeanMs": 14163.152,
+    "graphSumMs": 70815.76,
+    "graphMinMs": 11136.59,
+    "graphMaxMs": 16010.92,
+    "embeddingApiSumMs": 27172.079999999998,
+    "sentTexts": 91,
+    "returnedVectors": 91,
+    "apiCalls": 25,
+    "llmCalls": 5,
+    "wallMs": 99311.03
+  }
+}

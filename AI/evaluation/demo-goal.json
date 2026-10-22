@@ -1,0 +1,7 @@
+{
+  "goalId": "goal-react-input-demo",
+  "goalVersion": 1,
+  "text": "React useState로 객체 상태 변경하기",
+  "confirmed": true,
+  "templateId": "react-object-state"
+}

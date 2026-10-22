@@ -1,5 +1,9 @@
 # FocusOn Streamlit 유사도 실험 구현·평가 지침 — Qwen3-Embedding-4B
 
+> 2026-10-22 현재 화면은 Graph 없는 키워드+벡터 Hybrid 및 본문 커버리지 실험으로 전환했다. 현재 방식·초기 실험값·제약·실행법은 [AI README](../README.md)를 따른다. 아래 Graph 기반 설명과 ZIP은 이전 실험 이력이다.
+
+> 2026-10-21 당시 코드 업데이트: 기존 Streamlit 화면은 Qwen API + 현재 Hybrid v6로 교체했다. 아래 10월 3일의 구현 전 설명은 당시 지침이다. 현재 실행법·비교 기준선 제한·실행 검증은 [AI README](../README.md)의 Streamlit 절과 [최신 REPORT](../docs/features/learning-goal-content-relevance-evaluation-REPORT.md)를 따른다. 이전 ZIP은 이 변경을 포함하지 않는다.
+
 - 작성 기준일: 2026-10-03
 - 산출물: 이 MD 한 개. 학교 컴퓨터에서 구현·실행·평가할 작업 명세다.
 - 지정 모델: **Qwen/Qwen3-Embedding-4B**.

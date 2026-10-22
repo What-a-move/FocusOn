@@ -218,14 +218,16 @@ def parse_cases(raw: str, source: str) -> tuple[Case, ...]:
 def prepare_case(case: Case) -> PreparedCase:
     request = PreprocessingRequest(
         session_id="lab-session", run_id="lab-run", goal_id="lab-goal",
-        goal_version=1, event_id="lab-event", navigation_id="lab-navigation",
+        goal_version=1, event_id="lab-event", sequence=1,
+        navigation_id="lab-navigation",
         content_source=case.source, extraction_status=case.extraction_status,
         quality_score=case.quality_score, text=case.text,
         page_title=case.page_title, is_sensitive=case.is_sensitive,
         is_excluded=case.is_excluded,
     )
     context = CurrentAnalysisContext(
-        run_id="lab-run", goal_version=1, navigation_id="lab-navigation"
+        run_id="lab-run", goal_version=1, navigation_id="lab-navigation",
+        content_source=case.source, latest_sequence=1,
     )
     result = validate_and_preprocess(request, context)
     return PreparedCase(

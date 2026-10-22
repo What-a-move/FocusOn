@@ -68,7 +68,12 @@ def validate_and_preprocess(
     # Experimental extraction quality, never a relevance/confidence score.
     removed = parsed.removed_duplicate_count + parsed.removed_ui_fragment_count
     retained = len(parsed.passages)
-    usable_ratio = retained / max(1, retained + removed)
+    if settings.penalize_removed_fragments:
+        usable_ratio = retained / max(1, retained + removed)
+    else:
+        # Removed UI lines/sentences and retained passages have different units.
+        # In extracted-text mode, assess the surviving content independently.
+        usable_ratio = float(retained > 0)
     final_quality = float(request.quality_score) * (1 - broken_ratio) * usable_ratio
     quality = QualityMetrics(
         original_passage_count=parsed.original_passage_count,
@@ -151,6 +156,8 @@ def _is_stale(
         request.run_id != context.run_id
         or request.goal_version != context.goal_version
         or request.navigation_id != context.navigation_id
+        or request.content_source is not context.content_source
+        or request.sequence != context.latest_sequence
     )
 
 

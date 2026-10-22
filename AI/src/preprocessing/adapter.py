@@ -19,9 +19,12 @@ def observation_is_current(content: ContentInput, context: VerifiedContext) -> b
         and content.run_id == context.run_id
         and content.goal_id == context.goal_id
         and content.goal_version == context.goal_version
-        and content.event_id == context.event_id
+        and content.client_run_id == context.client_run_id
+        and content.sequence == context.sequence
         and content.navigation_id == context.navigation_id
         and content.observed_at == context.observed_at
+        and content.content_source == context.content_source
+        and content.is_active_target == context.is_active_target
         and content.session_status == context.session_status
         and content.exclusion_mode == context.exclusion_mode
     )
@@ -37,7 +40,8 @@ def adapt_content(content: ContentInput, context: VerifiedContext) -> Preprocess
     return PreprocessingRequest(
         session_id=content.session_id, run_id=content.run_id,
         goal_id=content.goal_id, goal_version=content.goal_version,
-        event_id=content.event_id, navigation_id=content.navigation_id,
+        event_id=content.client_run_id, sequence=content.sequence,
+        navigation_id=content.navigation_id,
         content_source=content.content_source, extraction_status=content.extraction_status,
         quality_score=source_quality, page_title=content.page_title,
         passages=_split_passages(content), is_sensitive=content.is_sensitive,
@@ -46,7 +50,13 @@ def adapt_content(content: ContentInput, context: VerifiedContext) -> Preprocess
 
 
 def preprocessing_context(context: VerifiedContext) -> CurrentAnalysisContext:
-    return CurrentAnalysisContext(context.run_id, context.goal_version, context.navigation_id)
+    return CurrentAnalysisContext(
+        context.run_id,
+        context.goal_version,
+        context.navigation_id,
+        context.content_source,
+        context.sequence,
+    )
 
 
 def _split_passages(content: ContentInput) -> tuple[RawPassage, ...]:

@@ -1,0 +1,483 @@
+{
+  "status": "COMPLETED",
+  "createdAt": "2026-10-21T05:00:04.962793+00:00",
+  "synthetic": true,
+  "goal": {
+    "goalId": "goal-transformer-decoder-1h",
+    "goalVersion": 1,
+    "text": "트랜스포머 디코더 공부",
+    "confirmed": true
+  },
+  "simulationMinutes": 60,
+  "datasetSha256BeforeRun": "ab7b41195c3d7e20d371951e9db2db87c861a15cda76e93fb8031473c7a99289",
+  "annotationStatus": "Provisional expected labels authored before model execution; independent user review pending",
+  "graph": {
+    "mode": "LLM 요청 후 최소 Graph 폴백",
+    "version": "confirmed-goal-profile-v1",
+    "fingerprint": "70de96c1e3a098b4f3ff9888bfc701aa9a93e271c2354c699819536c236a8fb6",
+    "concepts": 1,
+    "unrelatedTopics": 0,
+    "llmConfigured": true,
+    "llmModel": "gpt-6-luna",
+    "generationRequests": 1,
+    "preparationSeconds": 4.464
+  },
+  "embedding": {
+    "model": "qwen3-embedding:4b-fp16",
+    "configuredRevision": "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc",
+    "configuredPrecision": "F16",
+    "dimensions": 2560,
+    "remoteMetadataQueried": false,
+    "calls": 14,
+    "httpRequests": [
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ],
+      [
+        "POST",
+        "/api/embed"
+      ]
+    ],
+    "metadataRequestCount": 0
+  },
+  "analyzerVersion": "school-hybrid-v4",
+  "hybrid": {
+    "keyword_weight": 0.35,
+    "vector_weight": 0.65,
+    "direct_threshold": 0.72,
+    "prerequisite_threshold": 0.76,
+    "supporting_threshold": 0.76,
+    "min_cosine": 0.55,
+    "related_coverage": 0.6,
+    "unrelated_coverage": 0.7,
+    "unrelated_threshold": 0.8
+  },
+  "instruction": "Retrieve passages useful for the given learning goal and concept.",
+  "cases": [
+    {
+      "caseId": "decoder-01-decoder-structure",
+      "startMinute": 0,
+      "endMinute": 5,
+      "activity": "Transformer Decoder 구조 정리",
+      "contentSource": "CHROME_DOM",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더의 직접 구성 요소를 공부하는 화면이다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 1.0,
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 2,
+      "elapsedMs": 10612.4,
+      "keywordDiagnostics": {
+        "preparedPassages": 4,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-02-masked-self-attention",
+      "startMinute": 5,
+      "endMinute": 10,
+      "activity": "미래 토큰을 가리는 causal mask",
+      "contentSource": "CHROME_VIEWPORT_OCR",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더의 인과적 자기주의와 미래 토큰 차단을 설명한다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 2316.0,
+      "keywordDiagnostics": {
+        "preparedPassages": 2,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-03-attention-prerequisite",
+      "startMinute": 10,
+      "endMinute": 14,
+      "activity": "Scaled dot-product attention의 Q K V",
+      "contentSource": "CHROME_DOM",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 자기주의를 이해하는 데 필요한 선수 개념이다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 1.0,
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 1275.8,
+      "keywordDiagnostics": {
+        "preparedPassages": 4,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-04-gaming-video",
+      "startMinute": 14,
+      "endMinute": 18,
+      "activity": "게임 랭크전 하이라이트",
+      "contentSource": "CHROME_VIEWPORT_OCR",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "게임 플레이 영상과 공략을 보고 있으며 디코더 학습 내용이 없다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 954.6,
+      "keywordDiagnostics": {
+        "preparedPassages": 2,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-05-cross-attention",
+      "startMinute": 18,
+      "endMinute": 24,
+      "activity": "인코더 출력을 읽는 디코더",
+      "contentSource": "DESKTOP_APP_OCR",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "원래 Transformer 디코더의 cross-attention을 공부한다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 691.0,
+      "keywordDiagnostics": {
+        "preparedPassages": 1,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-06-causal-mask-code",
+      "startMinute": 24,
+      "endMinute": 28,
+      "activity": "PyTorch에서 causal mask 연산 확인",
+      "contentSource": "CHROME_DOM",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 attention의 미래 위치 마스킹을 구현·점검하는 코드이다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 1.0,
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 2218.8,
+      "keywordDiagnostics": {
+        "preparedPassages": 4,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-07-transformers-movie",
+      "startMinute": 28,
+      "endMinute": 31,
+      "activity": "트랜스포머 영화 예고편 감상",
+      "contentSource": "DESKTOP_APP_OCR",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "같은 단어가 등장하지만 영화 감상이며 신경망 디코더 학습이 아니다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 5539.8,
+      "keywordDiagnostics": {
+        "preparedPassages": 1,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-08-kv-cache",
+      "startMinute": 31,
+      "endMinute": 36,
+      "activity": "자기회귀 생성에서 KV cache 재사용",
+      "contentSource": "CHROME_DOM",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 추론 과정과 attention 재계산을 이해하기 위한 보조 학습이다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 1.0,
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 4395.5,
+      "keywordDiagnostics": {
+        "preparedPassages": 4,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-09-shopping",
+      "startMinute": 36,
+      "endMinute": 40,
+      "activity": "겨울 옷 할인 상품 비교",
+      "contentSource": "CHROME_VIEWPORT_OCR",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "의류 쇼핑 화면이며 학습 목표와 관련된 내용이 없다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 6060.7,
+      "keywordDiagnostics": {
+        "preparedPassages": 2,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-10-next-token-training",
+      "startMinute": 40,
+      "endMinute": 45,
+      "activity": "다음 토큰 예측과 teacher forcing",
+      "contentSource": "CHROME_DOM",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 학습 입력과 출력 분포·손실 계산을 설명한다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 1.0,
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 1149.3,
+      "keywordDiagnostics": {
+        "preparedPassages": 4,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-11-mixed-screen",
+      "startMinute": 45,
+      "endMinute": 49,
+      "activity": "학습 자료와 게임 추천이 섞인 화면",
+      "contentSource": "CHROME_VIEWPORT_OCR",
+      "expectedLabel": "UNCERTAIN",
+      "expectedRationale": "학습 내용과 게임 내용이 함께 있어 현재 활동의 주제를 단정하기 어렵다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 584.6,
+      "keywordDiagnostics": {
+        "preparedPassages": 3,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-12-loading-screen",
+      "startMinute": 49,
+      "endMinute": 52,
+      "activity": "자료를 여는 중",
+      "contentSource": "DESKTOP_APP_OCR",
+      "expectedLabel": "UNCERTAIN",
+      "expectedRationale": "읽힌 글자가 로딩 안내뿐이라 관련·무관을 판단할 근거가 부족하다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SKIPPED",
+      "reasonCode": "TOO_SHORT",
+      "evidenceIds": [],
+      "qualityScore": null,
+      "nextContentSource": null,
+      "comparison": "일치",
+      "executionFailed": false,
+      "embeddingCalls": 0,
+      "elapsedMs": 0.5,
+      "keywordDiagnostics": {
+        "preparedPassages": 0,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-13-cooking",
+      "startMinute": 52,
+      "endMinute": 56,
+      "activity": "김치볶음밥 레시피 찾아보기",
+      "contentSource": "CHROME_DOM",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "음식 조리법을 찾아보는 화면이며 디코더 학습과 무관하다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 1.0,
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 2395.7,
+      "keywordDiagnostics": {
+        "preparedPassages": 4,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    },
+    {
+      "caseId": "decoder-14-decoder-review",
+      "startMinute": 56,
+      "endMinute": 60,
+      "activity": "디코더 구성과 생성 과정 복습",
+      "contentSource": "DESKTOP_APP_OCR",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "처음의 학습 목표로 복귀해 디코더 핵심 개념을 정리한다.",
+      "actualLabel": "UNCERTAIN",
+      "analysisStatus": "SUCCEEDED",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "evidenceIds": [],
+      "qualityScore": 0.93,
+      "nextContentSource": null,
+      "comparison": "불일치",
+      "executionFailed": false,
+      "embeddingCalls": 1,
+      "elapsedMs": 434.2,
+      "keywordDiagnostics": {
+        "preparedPassages": 1,
+        "maxRelatedAliasMatches": 0,
+        "unrelatedTopicCount": 0
+      }
+    }
+  ],
+  "datasetSha256AfterRun": "ab7b41195c3d7e20d371951e9db2db87c861a15cda76e93fb8031473c7a99289",
+  "summary": {
+    "total": 14,
+    "matched": 2,
+    "mismatched": 12,
+    "agreementPercent": 14.29,
+    "executionFailures": 0,
+    "expectedCounts": {
+      "RELATED": 8,
+      "UNRELATED": 4,
+      "UNCERTAIN": 2
+    },
+    "actualCounts": {
+      "UNCERTAIN": 14
+    },
+    "confusionMatrix": {
+      "RELATED": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 8
+      },
+      "UNRELATED": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 4
+      },
+      "UNCERTAIN": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 2
+      }
+    },
+    "wallSeconds": 43.124
+  },
+  "diagnostics": {
+    "zeroRelatedKeywordCases": 14,
+    "unrelatedTopicCount": 0,
+    "graphFailureDetailCaptured": false,
+    "note": "No additional model request; diagnostic checks use the saved graph and existing preprocessing/keyword code"
+  }
+}

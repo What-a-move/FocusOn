@@ -1,18 +1,20 @@
 # FocusOn 학교 전달 지침 — Qwen3 임베딩·입출력·Hybrid 6번
 
-- 개정일: 2026-10-14
+- 개정일: 2026-10-21
 - 대상: 학교 RTX A4000·RAM 128GB 컴퓨터에서 테스트하는 개발 담당자 또는 코딩 AI
 - 모델: Qwen/Qwen3-Embedding-4B·FP16, 초기 Ollama 태그 `qwen3-embedding:4b-fp16`
-- 현재 코드 기준: `feat/11-ai-preprocessing-relevance`, 전처리 `school-text-v2`, 분석기 `school-hybrid-v2`
-- 원본: 이번 대화에서 수정한 노션 4개 문서를 다시 조회하고 현재 코드와 대조했다. 출처는 14절에 있다.
+- 현재 코드 기준: `feat/11-ai-preprocessing-relevance`, 전처리 `school-text-v2`, 분석기 `school-hybrid-v6`
+- 근거: 2026-10-20에 14절의 노션 4개 문서와 현재 로컬 코드를 대조했다. 이후 구현된 메타데이터 단계·임의 목표 Graph·ChromaDB는 코드와 로컬 결정 027~030을 기준으로 구분해 적었다. 공통 공개 AI 분석 계약 페이지는 접근되지 않아 최신 공개 계약 전체의 일치를 확인한 것은 아니다.
 - 이 파일은 개발·테스트 지침이다. 임베딩 모델의 `input`에 이 MD 전체를 넣지 않는다.
 
 ## 1. 이번 개정에서 반드시 반영할 내용
 
 | 항목 | 현재 기준 |
 | --- | --- |
+| 분석 순서 | 메타데이터 우선. 콘텐츠가 더 필요하면 Chrome은 DOM→viewport OCR, Desktop은 활성 앱 OCR |
 | 비교 대상 | 제목·명시된 소제목·본문·코드 각각을 기존 Graph 개념과 비교 |
-| 개념 ID | 기존 목표 템플릿의 개념 ID 유지. 제목·소제목을 새 개념 노드로 추가하지 않음 |
+| 개념 ID | 템플릿을 선택하면 기존 개념 ID 유지. 임의 목표는 확정 목표/GoalProfile로 별도 Graph 생성. 제목·소제목을 새 노드로 추가하지 않음 |
+| Graph 준비 | 명시한 템플릿 우선. templateId 생략 시 LLM 생성·저장 Graph 재사용, 설정 없음/생성 실패 시 최소 Graph |
 | 제목 입력 | 기존 `pageTitle` 사용 |
 | 소제목 입력 | 기존 `text`에 명시된 Markdown h1~h3만 내부 `HEADING`으로 구분 |
 | 코드 정보 | `text` 안의 코드 fence·언어·설명·들여쓰기·문자열 보존 |
@@ -20,24 +22,28 @@
 | 커버리지 | 실제 분석한 BODY·OCR·CODE·TABLE 기준. TITLE·HEADING 제외 |
 | 결과 근거 | 본문으로 판정이 성립하면 같은 방향의 제목·소제목 ID도 함께 반환 |
 | 앱·도메인 | 기존 `appName`·`urlHost`로 개인정보 검사·결과 캐시 구분 |
-| 공개 컬럼 | 새 입력·출력 컬럼 추가 없음. `HEADING`은 내부 종류값 |
+| 공개 컬럼 | 새 공개 컬럼을 확정하지 않음. `HEADING`·`next_content_source`는 내부 처리값이며 공개 매핑은 별도 합의 |
 | 숫자 정책 | 기존 결합 비율·임계값 유지. 아래 숫자는 미보정 실험값 |
 
-구 지침의 “제목 충돌 미구현”, “CODE의 HTML 문자 변환 수정 필요” 설명은 이번 코드에서는 해결됐다. 학교에 있는 코드가 위 두 버전인지 먼저 확인한다. Branch 이름이 같아도 최신 로컬 변경이 학교에 전달됐다는 뜻은 아니다.
+구 지침의 “제목 충돌 미구현”, “CODE의 HTML 문자 변환 수정 필요” 설명은 이번 코드에서는 해결됐다. 학교에 있는 코드의 버전과 10.1절의 구현 파일을 함께 확인한다. 같은 버전 문자열·Branch 이름만으로 최신 로컬 변경의 전달을 보장하지 않는다.
 
 ## 2. 실행 위치와 역할
 
 | 위치 | 처리 |
 | --- | --- |
-| Client·Server | 활성 대상의 허용된 DOM/OCR 텍스트 전달, 인증·소유권·확정 목표·현재 문맥 확인 |
-| Mac의 FocusOn AI 코드 | 검증·전처리·Graph·키워드·코사인·Hybrid·커버리지·최종 라벨 |
+| Client·Server | 활성 대상 선택, 메타데이터 및 필요한 DOM/OCR 텍스트 전달, 인증·소유권·확정 목표·현재 문맥 확인 |
+| Mac의 FocusOn AI 코드 | 검증·메타데이터 우선 판단·전처리·Graph·키워드·코사인·Hybrid·커버리지·최종 라벨 |
 | 학교 Windows의 Ollama | 전달받은 목표 개념 질의와 정제 텍스트를 벡터로 변환 |
+| Graph 생성용 별도 LLM | 설정된 경우 확정 목표/GoalProfile에서 개념 초안 생성. 화면 본문을 보내지 않으며 Qwen 임베딩 API와 별도 연결 |
 | 후속 정책 계층 | 체류·최근 흐름을 통한 지속 이탈·알림 판단 |
 
 ```text
-Client 추출 JSON + 별도 확정 목표 + Server 검증 문맥
-→ Mac: 상태·개인정보·품질 검사, 제목/소제목/본문/코드 정제
-→ Mac: 목표 템플릿의 개념 목록·aliases·role 준비
+Client의 활성 앱/탭 메타데이터 + 별도 확정 목표 + Server 검증 문맥
+→ Mac: 현재 상태·제외·민감정보·최신 문맥 확인, 목표 Graph 준비
+→ Mac: 메타데이터만으로 판정 가능하면 임베딩 없이 반환
+→ 추가 콘텐츠 필요: TAB_META→CHROME_DOM→CHROME_VIEWPORT_OCR
+                    APP_META→DESKTOP_APP_OCR
+→ Mac: 받은 콘텐츠의 개인정보·품질 검사, 제목/소제목/본문/코드 정제
 → 학교 Ollama: 개념 질의 벡터 + 각 정제 단위 벡터
 → Mac: 각 단위 문자열과 aliases 비교 → 키워드 점수
 → Mac: 각 단위 벡터와 개념 벡터 비교 → 코사인 유사도
@@ -48,6 +54,14 @@ Client 추출 JSON + 별도 확정 목표 + Server 검증 문맥
 키워드 계산은 임베딩 결과에 의존하지 않는다. 현재 코드의 실행 순서는 벡터 확보 후 키워드·코사인을 함께 계산하지만, aliases는 정제 문자열과 비교한다. 벡터 두 개를 합쳐 새 벡터를 만드는 방식이 아니다.
 
 학교에 같은 Python 코드를 복사하면 CPU에서 후처리까지 학교 로컬로 검사할 수 있다. 그 경우 API 주소는 학교 localhost를 사용한다. 기본 운영 분담은 Mac의 후처리와 학교의 임베딩 API다. 추후 WSL2·Linux·vLLM 전환은 별도 단계다.
+
+### 2.1 메타데이터 단계와 콘텐츠 단계의 차이
+
+`APP_META`·`TAB_META`에서는 기존 `appName`·`windowTitle`·`pageTitle`·`urlHost`의 문자열을 Graph aliases와 비교한다. 현재 실험 규칙은 같은 개념의 서로 다른 aliases가 2개 이상 일치해야 통과한다. 관련만 통과하면 `RELATED / METADATA_GOAL_CONNECTED`, 무관만 통과하면 `UNRELATED / METADATA_UNRELATED_TOPIC`이다. 둘 다 통과하면 `UNCERTAIN / CONFLICTING_METADATA`, 근거가 없으면 `UNCERTAIN / METADATA_INSUFFICIENT`다. 이 단계에는 임베딩·본문 커버리지 계산이 없다. 단어 2개 일치가 실제 정확도를 보장한다는 뜻은 아니다.
+
+추가 콘텐츠가 필요한 결과에는 내부 `next_content_source`가 들어간다. `analyze_staged()`의 `acquire_next` callback은 Client/호출자가 구현·연결해야 하며 분석기 자체가 화면을 캡처하지 않는다. 단계가 바뀔 때 새 `clientRunId`와 해당 출처의 `sequence`, 최신 `VerifiedContext`를 공급하고 활성 대상을 다시 검증한다. 제외·민감·비활성·stale·모델 장애를 추가 추출로 우회하지 않는다.
+
+4~6절의 문단·제목·코드 점수와 본문 커버리지 규칙은 DOM/OCR **콘텐츠 단계**에 적용한다. “제목만 있으면 UNCERTAIN” 역시 콘텐츠 단계의 규칙이며, 별도의 메타데이터 단계 판정을 설명하는 문장은 아니다. 현재 16개 평가 CLI는 준비된 콘텐츠를 `analyze()`에 직접 넣으므로 `analyze_staged()` 전체 수집 흐름의 정확도까지 평가하지 않는다.
 
 ## 3. 현재 내부 입력 JSON
 
@@ -61,14 +75,17 @@ Client 추출 JSON + 별도 확정 목표 + Server 검증 문맥
   "runId": "run-001",
   "goalId": "goal-react-001",
   "goalVersion": 1,
-  "eventId": "event-dom-001",
+  "clientRunId": "event-dom-001",
+  "sequence": 1,
   "navigationId": "navigation-001",
   "observedAt": "2026-10-11T01:00:00Z",
+  "isActiveTarget": true,
   "sessionStatus": "ACTIVE",
   "exclusionMode": "NONE",
   "contentSource": "CHROME_DOM",
   "contentType": "DOCUMENT",
   "appName": "Google Chrome",
+  "windowTitle": "useState 객체 상태 업데이트 — Google Chrome",
   "pageTitle": "useState 객체 상태 업데이트",
   "urlHost": "react.dev",
   "text": "## useState 객체 상태\n\nuseState로 객체 상태 업데이트를 수행할 때 이전 객체를 직접 수정하지 않고 상태 변경 함수에 새 객체를 전달합니다.\n\n```javascript title=\"state.js\"\nsetState({...prev, count: 1});\nconst example = \"&lt;\";\n```",
@@ -90,14 +107,17 @@ Client 추출 JSON + 별도 확정 목표 + Server 검증 문맥
   "runId": "run-001",
   "goalId": "goal-react-001",
   "goalVersion": 1,
-  "eventId": "event-ocr-001",
+  "clientRunId": "event-ocr-001",
+  "sequence": 2,
   "navigationId": "navigation-001",
   "observedAt": "2026-10-11T01:00:00Z",
+  "isActiveTarget": true,
   "sessionStatus": "ACTIVE",
   "exclusionMode": "NONE",
   "contentSource": "DESKTOP_APP_OCR",
   "contentType": "DOCUMENT",
   "appName": "Preview",
+  "windowTitle": "React 학습 자료 — Preview",
   "pageTitle": "",
   "urlHost": "",
   "text": "useState로 객체 상태 업데이트를 수행할 때 이전 객체를 직접 수정하지 않고 상태 변경 함수에 새 객체를 전달합니다.",
@@ -129,6 +149,32 @@ Chrome 화면 OCR은 `CHROME_VIEWPORT_OCR`이다. `ocr.confidence`는 인식 품
 
 `templateId`는 사용할 목표별 개념 목록의 식별자다. `react-object-state` 템플릿의 개념은 `state-update`(DIRECT), `object-spread`(PREREQUISITE), `state-debug`(SUPPORTING)다. 제목·소제목은 이 개념들과 비교할 데이터다.
 
+현재 `templateId`는 선택값이다. 지원되는 값을 지정하면 검토된 템플릿을 사용하며, 지원되지 않는 값을 명시하면 `GOAL_GRAPH_UNAVAILABLE / UNCERTAIN`이다. 필드를 생략하거나 null로 보내면 다음 임의 목표 경로를 사용한다.
+
+1. 확정 목표와 선택적 `goalProfile`을 기준으로 메모리 캐시·설정된 ChromaDB의 Graph를 조회한다.
+2. 설정된 Graph 생성용 LLM이 있으면 새 Graph 후보를 만들고 개념 역할·개수·ID·aliases·민감정보 등을 검증한다. 화면·DOM·OCR 본문은 생성 입력에 포함하지 않는다.
+3. LLM 설정이 없거나 생성·검증에 실패하면 확정 목표/GoalProfile의 표현만 사용하는 최소 Graph를 만든다. 최소 Graph는 선수 개념·동의어·무관 주제를 추측해 추가하지 않으므로 판정 범위가 제한된다.
+
+임의 목표용 기존 Schema 예시:
+
+```json
+{
+  "goalId": "goal-transformer-001",
+  "goalVersion": 1,
+  "text": "트랜스포머 인코더 공부",
+  "confirmed": true,
+  "goalProfile": {
+    "mainTopic": "트랜스포머 인코더",
+    "purpose": "LEARNING",
+    "coreTopics": ["셀프 어텐션", "인코더 구조"],
+    "supportingTopics": ["위치 인코딩"],
+    "expectedActivities": ["구조 설명 읽기"]
+  }
+}
+```
+
+이 Profile은 사용자가 범위를 확인한 합성 예시이며 자동 추정한 정답이 아니다. 이 목표를 분석할 때 콘텐츠와 검증 문맥의 `goalId`·`goalVersion`도 맞춰야 한다. Graph LLM·Chroma 설정은 10.5절을 따른다. 현재 16개 CLI는 고정 templateId를 사용하므로 이 생성 경로의 품질 검증을 대신하지 않는다.
+
 ### 3.4 검증 문맥
 
 다음은 학교 테스트용 합성 `VerifiedContext`다. 실제 운영에서는 Server가 검증한 현재 상태를 공급한다.
@@ -139,26 +185,29 @@ Chrome 화면 OCR은 `CHROME_VIEWPORT_OCR`이다. `ocr.confidence`는 인식 품
   "runId": "run-001",
   "goalId": "goal-react-001",
   "goalVersion": 1,
-  "eventId": "event-dom-001",
+  "clientRunId": "event-dom-001",
+  "sequence": 1,
   "navigationId": "navigation-001",
   "observedAt": "2026-10-11T01:00:00Z",
+  "contentSource": "CHROME_DOM",
+  "isActiveTarget": true,
   "sessionStatus": "ACTIVE",
   "exclusionMode": "NONE",
   "userId": "synthetic-user-001",
   "resumeRequired": false,
-  "policyVersion": "school-experimental-v1",
+  "policyVersion": "school-experimental-v2",
   "extractorVersion": "synthetic-v1",
   "stateVersion": 1
 }
 ```
 
-실제 호출에는 콘텐츠·목표·문맥 3개 객체와 최신 문맥 조회 callback을 각각 넘긴다. OCR 예시를 호출할 때는 문맥의 eventId도 `event-ocr-001`로 맞춘다.
+실제 호출에는 콘텐츠·목표·문맥 3개 객체와 최신 문맥 조회 callback을 각각 넘긴다. OCR 예시를 호출할 때는 문맥의 `clientRunId`, `sequence`, `contentSource`도 OCR 관측과 맞춘다.
 
 ```python
 result = analyzer.analyze(content, goal, context, current_context=read_current_context)
 ```
 
-`sessionId`, `runId`, `goalId`, `goalVersion`, `eventId`, `navigationId`, `observedAt`, `sessionStatus`, `exclusionMode` 9개는 현재 내부 테스트 Schema에서는 필요하지만, Client의 최종 공개 필수 컬럼·발급 책임으로 모두 확정된 것은 아니다. 백엔드 협의 경계를 유지한다. 합성 테스트에서는 `current_context=lambda: context`를 쓸 수 있으나 운영의 최신 상태 조회를 대신하지 않는다.
+기존 9개 문맥 중 `eventId`는 현재 내부 Schema에서 `clientRunId`로 교체했고, 출처별 순서를 확인하는 `sequence`를 추가했다. `isActiveTarget`은 현재 실제 foreground 대상인지 나타내는 내부 검증 신호다. Client의 최종 공개 필수 컬럼·발급 책임은 백엔드와 합의해야 한다. 합성 테스트에서는 `current_context=lambda: context`를 쓸 수 있으나 운영의 최신 상태 조회를 대신하지 않는다.
 
 ## 4. 전처리 후 비교 단위
 
@@ -264,6 +313,8 @@ result = analyzer.analyze(content, goal, context, current_context=read_current_c
 
 ### 6.1 개념 × 비교 단위마다 계산
 
+school-hybrid-v6는 원래 문단 비교에 같은 입력의 인접 설명+명시 코드 묶음을 추가한다. 원문 인접 관계를 확인하며 묶음도 같은 키워드·벡터·점수 조건을 통과해야 한다. 기존 개별 반대 근거는 충돌 판단에 유지한다. 근거는 원래 문단 ID로 반환하고 커버리지는 원본 길이를 한 번씩만 센다. 묶음 상한은 8,000 UTF-8 바이트와 Client 입력 제한 중 작은 값이다. 표식 없는 OCR 코드 추론은 하지 않는다.
+
 비교 단위 하나를 모든 관련 개념·대조용 주제와 각각 비교한다. 3.1절의 4단위와 6개 개념/주제는 총 24개 매칭 점수를 만든다. 역할별로 반드시 하나씩 나오는 구조가 아니며 역할에 여러 개념이 있으면 각각 계산한다.
 
 ```text
@@ -282,16 +333,16 @@ H = 0.35 × K + 0.65 × max(0, C)
 | --- | --- |
 | 키워드/벡터 비율 | 0.35 / 0.65 |
 | 최소 cosine | 0.55 |
-| DIRECT 결합 점수 | 0.72 이상 |
-| PREREQUISITE 결합 점수 | 0.76 이상 |
-| SUPPORTING 결합 점수 | 0.76 이상 |
-| 무관 후보 결합 점수 | 0.80 이상 |
+| DIRECT 결합 점수 | 0.62 이상 |
+| PREREQUISITE 결합 점수 | 0.65 이상 |
+| SUPPORTING 결합 점수 | 0.65 이상 |
+| 무관 후보 결합 점수 | 0.75 이상 |
 | 관련 본문 커버리지 | 0.60 이상 |
 | 무관 본문 커버리지 | 0.70 이상 |
 
 관련 근거 조건: 관련 개념 role이 있고 K > 0, C >= 0.55, H >= 그 role의 임계값을 모두 통과한다.
 
-무관 근거 조건: 대조용 주제 role이 null이고 K = 1, C >= 0.55, H >= 0.80을 모두 통과한다.
+무관 근거 조건: 대조용 주제 role이 null이고 K = 1, C >= 0.55, H >= 0.75을 모두 통과한다.
 
 키워드가 없어도 의미가 연결될 수 있다는 기획 방향은 남아 있으나 현재 코드는 K > 0 조건을 요구한다. 그러므로 높은 벡터 유사도만으로 자동 RELATED가 되는 구현이라고 설명하지 않는다. 숫자와 Graph 관계·정답 데이터는 함께 검수한다.
 
@@ -308,7 +359,7 @@ H = 0.35 × K + 0.65 × max(0, C)
 R = 관련 근거로 통과한 본문 단위 길이 / 전체 분석 본문 단위 길이
 U = 무관 근거로 통과한 본문 단위 길이 / 전체 분석 본문 단위 길이
 
-본문 없음 → UNCERTAIN / INSUFFICIENT_BODY (모델 미호출)
+콘텐츠 단계에서 본문 없음 → UNCERTAIN / INSUFFICIENT_BODY (임베딩 미호출)
 관련·무관 통과 근거가 함께 있음 → UNCERTAIN / CONFLICTING_EVIDENCE
 그 외 R >= 0.60 → RELATED / GOAL_CONNECTED
 그 외 U >= 0.70 → UNRELATED / POSITIVE_UNRELATED_TOPIC
@@ -317,7 +368,7 @@ U = 무관 근거로 통과한 본문 단위 길이 / 전체 분석 본문 단�
 
 길이는 정제 후 문자열의 문자 수다. 현재 코드는 일치한 부분 문자열의 길이가 아니라 통과한 전체 본문 단위 길이를 센다. 한 본문이 같은 범주에서 여러 개념과 일치해도 한 번만 센다. 원래 웹사이트 전체 길이가 아니다. 두 범주가 겹치면 R+U가 1을 넘을 수 있지만 충돌 규칙으로 보류한다.
 
-제목·소제목의 점수가 높아도 부족한 본문 근거를 대신하지 않는다. 본문 근거로 RELATED/UNRELATED가 성립하면 같은 방향으로 통과한 제목·소제목 ID도 근거 ID에 포함한다. 제목 없는 충분한 OCR은 그대로 분석 가능하다.
+콘텐츠 단계에서는 제목·소제목의 점수가 높아도 부족한 본문 근거를 대신하지 않는다. 본문 근거로 RELATED/UNRELATED가 성립하면 같은 방향으로 통과한 제목·소제목 ID도 근거 ID에 포함한다. 제목 없는 충분한 OCR은 그대로 분석 가능하다. 별도의 메타데이터 우선 판정은 2.1절을 따른다.
 
 ### 6.5 캐시
 
@@ -335,7 +386,9 @@ U = 무관 근거로 통과한 본문 단위 길이 / 전체 분석 본문 단�
   "run_id": "run-001",
   "goal_id": "goal-react-001",
   "goal_version": 1,
-  "event_id": "event-dom-001",
+  "client_run_id": "event-dom-001",
+  "sequence": 1,
+  "content_source": "CHROME_DOM",
   "navigation_id": "navigation-001",
   "observed_at": "2026-10-11T01:00:00+00:00",
   "extraction_status": "SUCCESS",
@@ -354,13 +407,16 @@ U = 무관 근거로 통과한 본문 단위 길이 / 전체 분석 본문 단�
   "quality_score": 1.0,
   "content_hash": "afacccad8ebe93baecd2f64bb92cbf2bba088d436471564b79ea40e72ab5632d",
   "cache_hit": false,
-  "analyzer_version": "school-hybrid-v2",
+  "analyzer_version": "school-hybrid-v6",
   "model_version": "fake-scripted-v1",
-  "policy_version": "school-experimental-v1"
+  "policy_version": "school-experimental-v2",
+  "next_content_source": null
 }
 ```
 
-`evidence_ids`에는 현재 요청의 제목·소제목·본문·코드 ID가 들어갈 수 있다. UNCERTAIN에서는 현재 코드가 확정 근거 ID를 비워 반환한다. 내부 reason_code는 고정 사유 코드이며 자연어 설명이 아니다. 코드에 자연어 reason·공개 confidence 생성이 이미 구현됐다고 가정하지 않는다.
+`evidence_ids`에는 콘텐츠 단계에서 현재 요청의 제목·소제목·본문·코드 ID가 들어갈 수 있다. 메타데이터 판정에서는 `appName`·`windowTitle`·`pageTitle`·`urlHost` 같은 근거 필드명을 사용한다. UNCERTAIN에서는 현재 코드가 확정 근거 ID를 비워 반환한다. 내부 reason_code는 고정 사유 코드이며 자연어 설명이 아니다. 코드에 자연어 reason·공개 confidence 생성이 이미 구현됐다고 가정하지 않는다.
+
+`next_content_source`는 다음 추출이 필요할 때 `CHROME_DOM`, `CHROME_VIEWPORT_OCR`, `DESKTOP_APP_OCR` 중 하나이고, 추가 수집이 필요하지 않으면 null이다. 이미 존재하는 내부 결과 필드이며 새 공개 응답 컬럼을 확정한 것이 아니다.
 
 현재 내부 CLI의 `cases[].predicted`가 관련성 라벨이고 `reasonCode`·`evidenceIds`·`roles`가 진단 결과다. CLI 자체 종료 코드 0만으로 실제 정확도 검증을 통과했다고 보지 않는다.
 
@@ -510,58 +566,212 @@ nvidia-smi
 
 ### 10.1 코드 전달 상태 확인
 
-최신 코드가 있는 저장소 루트에서 실행한다. 아래 확인이 실패하면 이 MD만 전달된 상태 또는 구 코드이므로 최신 구현 파일도 전달받아야 한다.
+최신 코드가 있는 저장소 루트에서 실행한다. 아래 확인이 실패하면 먼저 Python 환경·의존성을 확인하고, 구현 파일 누락·구 버전이면 최신 코드를 전달받는다. 이 MD만 전달된 상태로는 구현이 갱신되지 않는다.
 
 ```bash
-python3 -c "from AI.src.preprocessing.adapter import PREPROCESSING_VERSION; from AI.src.analysis.relevance_analyzer import ANALYZER_VERSION; print(PREPROCESSING_VERSION, ANALYZER_VERSION); assert PREPROCESSING_VERSION == 'school-text-v2'; assert ANALYZER_VERSION == 'school-hybrid-v2'"
+python3 -c "from AI.src.preprocessing.adapter import PREPROCESSING_VERSION; from AI.src.analysis.relevance_analyzer import ANALYZER_VERSION; print(PREPROCESSING_VERSION, ANALYZER_VERSION); assert PREPROCESSING_VERSION == 'school-text-v2'; assert ANALYZER_VERSION == 'school-hybrid-v6'"
+python3 -c "from AI.src.analysis.relevance_analyzer import RelevanceAnalyzer, RelevanceResult; from AI.src.analysis.goal_analyzer import GoalGraphResolver; from AI.src.analysis.goal_graph_runtime import build_goal_graph_resolver; from AI.src.config import GoalGraphRuntimeSettings; from AI.src.storage.goal_graph_store import ChromaGoalGraphStore; assert hasattr(RelevanceAnalyzer, 'analyze_staged'); assert 'next_content_source' in RelevanceResult.__dataclass_fields__; print('staged/goal-graph runtime imports OK')"
 ```
 
-Python 3.11 환경과 `AI/requirements.txt`의 프로젝트 의존성을 사용한다. 필요한 경우 활성화한 가상환경에서 `python3 -m pip install -r AI/requirements.txt`를 실행한다. 기존 Streamlit 후보 비교 화면은 E5-small 기반이며 이 Qwen3 내부 CLI와 동일하지 않다.
+Python 3.11 환경과 `AI/requirements.txt`의 프로젝트 의존성을 사용한다. 필요한 경우 활성화한 가상환경에서 `python3 -m pip install -r AI/requirements.txt`를 실행한다. Windows에서는 위 두 명령의 `python3`를 `python`으로 바꾼다. 버전 문자열과 import 검사만으로 모든 파일의 동일성을 증명할 수 없으므로 전달한 코드의 commit과 미커밋 변경 포함 여부도 함께 확인한다. MD만 복사해도 코드가 갱신되는 것은 아니다.
+
+기존 Streamlit 후보 비교 화면은 E5-small 기반이며 이 Qwen3 내부 CLI와 동일하지 않다. 이 지침의 정확도 비교는 기존 평가 CLI 기준이다.
 
 ### 10.2 모델 없는 로직 확인 — Mac/Linux
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=AI:. python3 -m pytest AI/tests -q --ignore=AI/tests/langsmith_test.py -p no:cacheprovider
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=AI:. python3 -m pytest AI/tests -q -p no:cacheprovider
 python3 -m AI.evaluation.relevance_eval --mode fake --split development --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
 python3 -m AI.evaluation.relevance_eval --mode fake --split evaluation --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
 ```
 
-현재 로컬 코드에서 166개 테스트·6개 하위 테스트가 통과했다. 최신 synthetic-school-v2의 fake 개발/평가 split은 각각 8/8 기대 라벨이 일치했다. fake는 등록된 벡터로 판정 로직을 검사하며 실제 모델 정확도·GPU 시간과 구분한다.
+2026-10-20 재검토에서 Graph LLM API Key·모델 환경변수를 모두 빈 값으로 둔 로컬 실행은 **205개 테스트·8개 하위 테스트 통과**였다. 최신 synthetic-school-v2의 fake 개발/평가 split은 각각 8/8 기대 라벨이 일치했다. fake는 등록된 벡터로 판정 로직을 검사하며 실제 모델 정확도·GPU 시간과 구분한다. Graph LLM 키와 모델을 하나만 설정하면 구성 오류가 발생하므로, 둘 다 비우거나 둘 다 올바르게 설정한다.
 
 ### 10.3 Mac에서 학교 모델을 호출
 
-학교에서 이미 허용·설정한 SSH 계정·주소를 실제 값으로 바꾸고 터널을 유지한다.
+현재 연결은 SSH 터널이 아니라 Tailscale Serve의 HTTPS 주소를 사용한다. 학교 PC에서 Ollama 검증 FastAPI가 `127.0.0.1:8000`에 실행되고, Tailscale Serve가 이를 private HTTPS로 전달한다.
 
 ```bash
-ssh -N -L 11435:127.0.0.1:11434 SCHOOL_USER@SCHOOL_HOST
+curl --noproxy '*' -sS --connect-timeout 5 --max-time 15 \
+  -w '\nHTTP %{http_code} | connect %{time_connect}s | total %{time_total}s\n' \
+  https://TAILSCALE_DEVICE_NAME.tailnet-name.ts.net/health
 ```
 
-다른 Mac 터미널에서 저장소 루트로 이동해 실행한다. digest는 학교 8절에서 조회한 값이다.
+`TAILSCALE_DEVICE_NAME.tailnet-name.ts.net`은 학교 PC에서 `tailscale serve status`가 보여주는 실제 주소로 바꾼다. 현재 확인된 주소는 `https://desktop-n7o3o02.tail1023df.ts.net`이다. Ollama embedding 호출은 같은 주소의 `/api/embed`로 보낸다. 학교 LAN IP나 Tailscale IP에 직접 `:8000`을 붙이는 방식과 구분한다.
 
 ```bash
-export FOCUSON_EMBEDDING_URL='http://127.0.0.1:11435'
-export FOCUSON_EMBEDDING_REVISION='REPLACE_WITH_ACTUAL_MANIFEST_DIGEST'
+curl --noproxy '*' -sS --connect-timeout 5 --max-time 60 \
+  -w '\nHTTP %{http_code} | connect %{time_connect}s | total %{time_total}s\n' \
+  -o /tmp/focuson-embed-response.json \
+  -X POST https://desktop-n7o3o02.tail1023df.ts.net/api/embed \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"qwen3-embedding:4b-fp16","input":["React useState 객체 상태 변경을 학습하고 있다."],"truncate":false,"keep_alive":"10m"}'
+```
+
+현재 Mac에서 `/health`와 `/api/embed`가 HTTP 200으로 동작하는 것을 확인했다. 2026-10-21부터 기본 `OllamaEmbeddingClient`와 real CLI는 모델 정보를 조회하지 않고 `POST /api/embed`만 호출한다. 위 `/health` 명령은 필요할 때 사람이 실행하는 진단이며 Client가 자동 호출하지 않는다. 기본 Client로 합성 사례 `dev-state-direct`의 실제 `RELATED / GOAL_CONNECTED` 반환도 확인했다. 모델 정확도 평가는 별도다.
+
+#### 10.3.1 임베딩 요청만 사용하는 기본 Client
+
+사용자 요청에 따라 시작 시와 임베딩 전후의 자동 모델 정보 조회를 모두 제거했다. Mac의 기본 Client는 학교 검증 FastAPI에 임베딩만 요청한다. 학교 PC에서 Ollama에 직접 연결할 때도 같은 동작을 사용한다.
+
+요청 경로와 JSON:
+
+```json
+{
+  "model": "qwen3-embedding:4b-fp16",
+  "input": ["임베딩할 정제 텍스트"],
+  "truncate": false,
+  "keep_alive": "10m"
+}
+```
+
+`POST https://desktop-n7o3o02.tail1023df.ts.net/api/embed`로 위 JSON을 보낸다. `model`은 임베딩할 모델을 선택하는 필수 입력이며 모델 정보 조회가 아니다. `/health`, `/api/tags`, `/api/show`, `/api/version`은 Client와 평가 CLI에서 호출하지 않는다.
+
+응답 검증은 받은 JSON으로 로컬에서 수행하며 추가 네트워크 요청을 만들지 않는다.
+
+- 반환된 `model`이 요청 모델과 같은지 확인한다.
+- 입력 문자열 수와 반환 벡터 수가 같고 각 벡터가 설정된 2560차원인지 확인한다.
+- 유한한 숫자·0이 아닌 벡터인지 확인하고 코사인 계산용으로 정규화한다.
+- timeout·HTTP 오류·잘못된 벡터는 안전한 오류로 처리하며 가짜 벡터로 대체하지 않는다.
+
+설정의 `revision`과 F16 표기는 캐시 구분과 평가 기록에 사용하는 로컬 설정이다. 서버의 실제 revision·정밀도를 자동 검증한 값으로 취급하지 않는다. 서버에서 모델을 교체하면 revision 설정을 갱신하고 AI 프로세스를 재시작해 이전 벡터·판정 캐시를 지운다. 원격 Ollama 버전을 조회하지 않으므로 평가 출력의 `serviceVersion`은 `null`이다.
+
+완료 검증:
+
+- [x] 반복·배치 호출과 real CLI HTTP Mock에서 `POST /api/embed`만 발생했다.
+- [x] 반환 모델명·벡터 개수·차원·수치 검증과 timeout·재시도 제한을 회귀 검사했다. 관련 Client·CLI·판정 파이프라인 테스트는 112 passed다.
+- [x] Mac에서 임시 Adapter 없이 기본 Client로 실제 학교 API를 호출했다. `dev-state-direct`는 `RELATED / GOAL_CONNECTED`, HTTP 요청은 개념 질의와 콘텐츠용 `/api/embed` 2회뿐이었다. 전체 분석 경과시간은 10.499초였다.
+
+Mac의 표준 개발 평가 실행 명령은 다음과 같다. 이는 합성 사례 평가이며 독립 정답 검수와 구분한다.
+
+```bash
+export FOCUSON_EMBEDDING_URL='https://desktop-n7o3o02.tail1023df.ts.net'
+export FOCUSON_EMBEDDING_REVISION='3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc'
 python3 -m AI.evaluation.relevance_eval --mode real --split development --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
 ```
 
-검수한 개발 세트로 설정을 조정한 뒤 동결하고 같은 명령에서 `--split evaluation`으로 평가한다. Client는 real 모드에서 `/api/tags`·`/api/show`·`/api/version`으로 모델 metadata를 검사한다. 실패하면 fake로 대체하지 않는다. 학교 11434를 그대로 외부 공개하는 대신 localhost·SSH 터널 또는 합의된 TLS 경로를 사용한다.
+#### 10.3.2 DOM·OCR 단건 입력 JSON으로 직접 테스트
 
-### 10.4 학교 Windows에서 동일 후처리까지 검사하는 선택 경로
+`AI/evaluation/demo-goal.json`의 공통 목표는 `React useState로 객체 상태 변경하기`다. 아래 파일은 각자 하나의 완전한 `ContentInput` 객체이며 `cases`·`observations` 같은 평가용 묶음이 아니다.
 
-학교에도 현재 프로젝트 코드와 Python 환경이 있는 경우다. 활성 Python 명령이 python인지 먼저 확인하고 저장소 루트에서 실행한다. Python 이름이 다르면 해당 환경의 실행 파일로 바꾼다.
+| 파일 | 출처 |
+| --- | --- |
+| `AI/evaluation/demo-chrome-dom.json` | Chrome DOM, 소제목·코드 포함 |
+| `AI/evaluation/demo-chrome-ocr.json` | Chrome viewport OCR, 줄바꿈·OCR 메타데이터 포함 |
+| `AI/evaluation/demo-desktop-ocr.json` | Desktop OCR, Preview 앱·빈 urlHost·OCR 메타데이터 포함 |
+
+실제 사용자의 화면에서 수집한 데이터는 아니다. 텍스트·식별자·활성 상태·OCR confidence는 작성한 더미 값이다. 현재 AI 내부 형식인 평평한 `text`와 `clientRunId`·`sequence`·`isActiveTarget`을 사용하며, 허재원 기획의 공개 `contentPayload.text`는 Server→AI 전달 경계에서 변환을 합의해야 한다. 이 파일을 김성현의 실제 실행 출력이나 최종 공개 요청으로 간주하지 않는다.
+
+다음 명령은 기존 분석기와 기본 임베딩 Client를 사용한다. `VerifiedContext`는 테스트를 위해 주입하며 실제 인증·소유권·현재 foreground 상태를 검증하는 코드가 아니다. 스크린샷·원본 DOM을 수집하는 동작도 포함하지 않는다.
+
+```bash
+cd /Users/lyg123d/Documents/what_a_move
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=AI:. python3 - <<'PY'
+import json
+import time
+from pathlib import Path
+from AI.src.api.schemas import ContentInput, ConfirmedGoal, Observation, VerifiedContext
+from AI.src.analysis.relevance_analyzer import RelevanceAnalyzer
+from AI.src.models.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
+
+root = Path('AI/evaluation')
+goal = ConfirmedGoal.parse_safe(json.loads((root / 'demo-goal.json').read_text()))
+settings = EmbeddingSettings(
+    base_url='https://desktop-n7o3o02.tail1023df.ts.net',
+    revision='3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc',
+    timeout_seconds=60,
+)
+with OllamaEmbeddingClient(settings) as client:
+    analyzer = RelevanceAnalyzer(client)
+    for name in ('demo-chrome-dom.json', 'demo-chrome-ocr.json', 'demo-desktop-ocr.json'):
+        raw = json.loads((root / name).read_text())
+        content = ContentInput.parse_safe(raw)
+        observation = {field.alias: raw[field.alias] for field in Observation.model_fields.values()}
+        context = VerifiedContext.parse_safe({
+            **observation, 'userId': 'synthetic-user', 'resumeRequired': False,
+            'policyVersion': 'manual-test-v1', 'extractorVersion': 'synthetic-demo-v1',
+            'stateVersion': 1,
+        })
+        started, calls_before = time.perf_counter(), client.calls
+        result = analyzer.analyze(content, goal, context, current_context=lambda: context)
+        print(json.dumps({
+            'file': name, 'contentSource': content.content_source.value,
+            'analysisStatus': result.analysis_status, 'relevanceLabel': result.relevance_label,
+            'reasonCode': result.reason_code, 'evidenceIds': result.evidence_ids,
+            'embeddingCalls': client.calls - calls_before,
+            'elapsedMs': round((time.perf_counter() - started) * 1000, 1),
+        }, ensure_ascii=False))
+PY
+```
+
+세 예제 모두 같은 목표와 관련된 내용을 작성한 입력 확인용 데이터다. 코드가 반환한 라벨을 그대로 정답으로 지정하지 않는다.
+
+2026-10-21 Mac에서 위 JSON과 기본 Client·기존 분석기로 실제 학교 API를 실행한 결과:
+
+| 입력 | 분석 실행 상태 | 라벨 | 이유 | 전체 분석 시간 | 임베딩 요청 수 |
+| --- | --- | --- | --- | --- | --- |
+| Chrome DOM | SUCCEEDED | UNCERTAIN | INSUFFICIENT_EVIDENCE | 6.9315초 | 2 |
+| Chrome OCR | SUCCEEDED | RELATED | GOAL_CONNECTED | 0.6885초 | 1 |
+| Desktop OCR | SUCCEEDED | RELATED | GOAL_CONNECTED | 3.0478초 | 1 |
+
+총 경과시간은 10.670초였고 실제 HTTP 요청 4회는 모두 `POST /api/embed`였다. 모델 메타데이터 조회는 없었다. 같은 분석기에서 순서대로 실행해 첫 입력에서 만든 목표 개념 벡터를 이후 두 입력이 재사용했다. 시간에는 전처리·모델 API 왕복·판정이 포함되며 순수 네트워크 또는 GPU 처리시간을 따로 측정한 값은 아니다. DOM의 UNCERTAIN은 전송 실패가 아니라 현재 Hybrid 근거 조건을 충족하지 못한 결과다. 이 실행에서 임계값·입력 텍스트·예상 정답은 변경하지 않았다. 세 합성 사례만으로 실제 화면 정확도를 판단하지 않는다.
+
+### 10.4 학교 Windows에서 Ollama에 직접 연결해 후처리까지 검사
+
+학교 PC에서 같은 AI 분석 코드를 실행하면 **Ollama `127.0.0.1:11434`**에 직접 연결할 수 있다. 기본 Client는 이 경로에서도 `/api/embed`만 요청한다. 아래 명령은 저장소 루트의 Python 3.11 가상환경에서 실행한다.
 
 ```powershell
 python --version
 python -m pip install -r AI/requirements.txt
 $env:PYTHONDONTWRITEBYTECODE = "1"
 $env:PYTHONPATH = "AI;."
-python -m pytest AI/tests -q --ignore=AI/tests/langsmith_test.py -p no:cacheprovider
+python -m pytest AI/tests -q -p no:cacheprovider
+python -m AI.evaluation.relevance_eval --mode fake --split development --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
+```
+
+같은 PowerShell에서 기존에 기록한 모델 revision을 설정한 뒤 실제 개발 split을 실행한다. base URL에는 `/api/embed`를 붙이지 않는다.
+
+```powershell
 $env:FOCUSON_EMBEDDING_URL = "http://127.0.0.1:11434"
-$env:FOCUSON_EMBEDDING_REVISION = $schoolDigest
+$env:FOCUSON_EMBEDDING_REVISION = "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc"
 python -m AI.evaluation.relevance_eval --mode real --split development --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
 ```
 
-이때 후처리는 학교 Python에서 실행되고 Ollama는 동일 학교 GPU의 벡터 API다. Mac 왕복 지연을 측정한 결과와 구분한다. SSH 서버를 새로 설치하거나 방화벽을 변경하는 작업은 학교의 기존 허용 설정에 맞춘다.
+위 revision은 이전에 확인한 모델의 설정값이다. 실제 서버 메타데이터를 새로 조회하지 않는다. 모델을 교체했다면 해당 설정도 갱신하고 이전 모델의 평가 결과와 섞지 않는다.
+
+개발 split 확인·사람의 기대 라벨 검수·설정 조정을 마친 후 모델·Graph·설정을 고정하고 평가 split을 별도로 실행한다. 평가 split을 보면서 같은 설정을 계속 조정하지 않는다.
+
+```powershell
+python -m AI.evaluation.relevance_eval --mode real --split evaluation --cases AI/evaluation/relevance_cases.json --config AI/evaluation/relevance_calibration.json
+```
+
+위 환경변수는 평가 CLI가 Client 구성 전에 직접 읽는다. `AI/.env`에만 적어 두지 말고 real 명령 전에 현재 셸에 설정한다. Mac에서는 10.3.1절의 HTTPS base URL과 로컬 revision 설정을 사용한다.
+
+이 명령으로 실제 벡터·Hybrid 판정 경로를 실행할 수 있다는 코드 확인과 학교 PC에서 해당 명령을 실제 실행했다는 검증은 다르다. 현재 수정 작업에서 학교 PC 명령은 실행하지 않았다. CLI 종료 코드 0은 정확도 합격을 뜻하지 않으며 `cases[].status`·`predicted`·`reasonCode`와 사람 정답을 함께 확인한다. Client의 요청당 timeout 기본값은 30초이고 재시도는 1회다. 9절 수동 smoke의 120초 timeout과 다르다.
+
+### 10.5 임의 목표 Graph용 LLM·ChromaDB 설정
+
+Graph 생성 LLM은 Qwen 임베딩 연결과 별도다. 기존 로컬 `AI/.env`에 아래 이름을 사용한다. 키와 모델은 기본적으로 빈 값이며, 생성을 사용할 컴퓨터에서 사용자가 실제 값을 채운다. 이 지침에 비밀 값을 붙여 넣거나 `.env`를 Git·공유 ZIP에 포함하지 않는다.
+
+```dotenv
+GOAL_GRAPH_LLM_BASE_URL=https://api.openai.com/v1
+GOAL_GRAPH_LLM_API_KEY=
+GOAL_GRAPH_LLM_MODEL=
+GOAL_GRAPH_LLM_TIMEOUT_SECONDS=20
+GOAL_GRAPH_LLM_MAX_RETRIES=1
+GOAL_GRAPH_CHROMA_PATH=.chroma/goal_graphs
+GOAL_GRAPH_CHROMA_COLLECTION=focuson_goal_graphs
+```
+
+- API Key·모델 둘 다 설정: OpenAI 호환 `/chat/completions` Graph 생성 Client와 로컬 ChromaDB를 구성한다. 한쪽만 설정하면 `LLM_CONFIGURATION_INCOMPLETE`로 중단한다.
+- 둘 다 빈 값: LLM·Chroma를 구성하지 않고 확정 목표/GoalProfile의 최소 Graph 경로를 유지한다.
+- 잘못된 설정·ChromaDB 초기화 실패는 LLM 응답 실패와 다르다. 현재 런타임 구성 단계의 오류로 중단될 수 있으므로 의존성·경로·설정 오류를 먼저 해결한다.
+- 이미 같은 이름의 프로세스 환경변수가 있으면 `.env`보다 우선한다. 테스트용 빈 환경변수가 남아 있으면 `.env`를 채워도 활성화되지 않을 수 있다.
+- Chroma에는 생성된 파생 Graph를 정확한 키로 저장·조회한다. 화면 본문이나 코사인 검색용 문단 벡터를 저장하는 용도가 아니다. 상대 경로는 `AI/` 기준이다.
+- 동일 목표·버전·Profile·생성기 fingerprint의 저장 Graph는 재시작 후 재사용한다. LLM 실패 때 만든 최소 Graph는 해당 LLM 저장 항목으로 영속 저장하지 않고 현재 프로세스 캐시에만 둔다.
+- 현재 평가 CLI의 16개는 고정 템플릿을 사용한다. LLM Graph 생성·재사용·임의 목표 판정의 실제 품질은 별도 테스트해야 한다. Schema 통과는 개념 관계의 정확성을 보증하지 않는다.
+
+학교에 임베딩 API만 두고 Mac에서 후처리하면 Graph LLM·Chroma 설정도 Mac에 둔다. 학교 PC에서 후처리까지 테스트하면 해당 학교 Python 환경에 따로 설정한다. SSH 서버 설치나 방화벽 변경은 학교 localhost 평가나 이미 구성된 Tailscale Serve 확인의 선행 작업이 아니다.
 
 ## 11. 새로 확인할 테스트 사례
 
@@ -575,12 +785,12 @@ python -m AI.evaluation.relevance_eval --mode real --split development --cases A
 | 관련 소제목 + 무관 본문 | 소제목 근거도 충돌 검사에 참여 |
 | 긴 관련 제목 + 부족한 본문 | 제목 길이로 관련 커버리지를 높이지 않음 |
 | 긴 중립 제목 + 충분한 관련 본문 | 제목 길이로 관련 커버리지를 낮추지 않음 |
-| 제목·소제목만 있고 본문 없음 | 모델 미호출 UNCERTAIN |
+| 콘텐츠 단계에서 제목·소제목만 있고 본문 없음 | 임베딩 미호출 UNCERTAIN. 별도 메타데이터 단계와 구분 |
 | 제목 없는 충분한 OCR | 제목 부재만으로 탈락하지 않음 |
 | JavaScript fence·언어·설명·들여쓰기·entity literal | 구조·값 보존, 같은 정제 문자열이 모델에 전달 |
 | 민감 제목·본문·코드 | 모델 미호출 PRIVACY_BLOCKED |
 | 같은 본문, 제목/앱/도메인 변경 | 결과 재사용 구분, 동일 목표 벡터 재사용 |
-| 목표 템플릿 없음 | 현재 코드 GOAL_GRAPH_UNAVAILABLE·UNCERTAIN |
+| templateId 생략 / 지원되지 않는 templateId 명시 | 생략하면 LLM/최소 Graph, 지원되지 않는 ID를 명시하면 GOAL_GRAPH_UNAVAILABLE·UNCERTAIN |
 | 게임 화면 본문 | 사람 정답과 실제 결과 비교. 현재 무관 후보에는 게임 개념이 없어 UNRELATED 보장이 없음 |
 
 최신 16개는 기존 `input.pageTitle`과 `text`의 명시 소제목을 사용한다. 추가 사례를 만들 때도 같은 형식을 사용한다. 새 공개 컬럼을 만들어 해결하지 않는다. 개발/평가 목표군 분리 검사를 유지한다. fakePassageVectors가 필요한 fake 사례는 전처리 후 전체 단위 수와 순서가 맞아야 한다. real 테스트에 fake 벡터를 모델 결과처럼 사용하지 않는다.
@@ -613,18 +823,25 @@ python -m AI.evaluation.relevance_eval --mode real --split development --cases A
 | 현재 구현 | 아직 확인·연결할 것 |
 | --- | --- |
 | 내부 입력·목표·문맥 Schema, 전처리·해시 | Client/Server의 실제 JSON과 발급·검증 책임 |
+| 메타데이터 우선 판정·출처별 단계 전환 | 실제 활성 대상·DOM/OCR 공급 callback과 전체 흐름의 정확도 검증 |
 | 제목·소제목·코드 Hybrid 매칭·충돌·커버리지 | 실제 Qwen 결과로 보정 및 독립 정답 평가 |
-| Ollama Client·metadata/벡터 검증·TTL/LRU | 학교 GPU·VRAM·API·Mac 왕복 실측 |
+| 임베딩 요청 전용 Ollama Client·응답 벡터 검증·TTL/LRU·Mac Serve 실호출 | 학교 localhost real 평가 실행·GPU/VRAM 측정 |
 | 내부 라벨·고정 reason_code·근거 ID | 공개 Adapter·자연어 reason·confidence 의미·Server 연결 |
-| 템플릿 5개와 대조용 주제 3개 | 목표/무관 주제·관계 근거의 사람 검수와 범위 보완 |
+| 고정 템플릿 5개·각 템플릿의 대조용 주제 3개 | 목표/무관 주제·관계 근거의 사람 검수와 범위 보완 |
+| 임의 목표 LLM Graph·최소 Graph fallback·ChromaDB 재사용 | 실제 생성 관계 품질·사용자 범위/삭제 전파·운영 저장 계약 |
 
 최근 3~5개 활동 요약·정밀 LLM, 공개 FastAPI 실행 경로, 지속 이탈·알림 연결은 현재 내부 파이프라인에 완료되지 않았다. 이 파일의 명령은 기존 CLI 실행이며 uvicorn이나 Streamlit 공개 서버가 완성됐다는 의미가 아니다. 실패·낮은 품질·제외·민감·오래된 결과를 UNRELATED나 이탈로 바꾸지 않는다.
 
 ## 13. 학교 코딩 AI에게 전달할 지시
 
 ```text
-이 지침의 school-text-v2 / school-hybrid-v2 코드와 노션 Hybrid 6번을 기준으로 확인한다.
+이 지침의 school-text-v2 / school-hybrid-v6 코드와 노션 Hybrid 6번을 기준으로 확인한다.
 기존 입력 JSON과 공개 응답 계약을 사용하고 새 컬럼을 임의 추가하지 않는다.
+메타데이터 우선 분석과 콘텐츠 단계의 Hybrid 규칙을 구분한다.
+TAB_META→CHROME_DOM→CHROME_VIEWPORT_OCR, APP_META→DESKTOP_APP_OCR 순서로 필요한 단계만 요청한다.
+next_content_source는 기존 내부 결과이며 공개 출력 필드로 임의 확정하지 않는다.
+templateId 지정 시 검토 템플릿, 생략 시 확정 목표/GoalProfile의 LLM 또는 최소 Graph 경로를 사용한다.
+Graph 생성 LLM과 Qwen 임베딩 API는 별도이며 Graph 생성에 화면 본문을 넣지 않는다.
 제목과 소제목은 새 Graph 개념이 아니라 현재 콘텐츠의 비교 단위다.
 pageTitle과 text에 명시된 소제목/본문/코드를 각 개념과 독립 비교한다.
 aliases는 정제 문자열과 비교한다. 임베딩 모델에는 개념 질의와 정제 단위 문자열을 보낸다.
@@ -636,6 +853,8 @@ TITLE/HEADING은 점수·충돌·근거에 참여하지만 본문 커버리지�
 본문 근거가 부족하면 높은 제목 점수로 RELATED/UNRELATED를 확정하지 않는다.
 코드 fence·언어·설명·들여쓰기·문자열을 보존하고 빠진 정보를 추측하지 않는다.
 실제 GPU·vector 수/차원·digest·정밀도·cold/warm·전체 지연을 확인하고 미실행 항목은 명시한다.
+학교 자체 테스트는 127.0.0.1:11434와 FOCUSON_EMBEDDING_URL/REVISION으로 표준 real CLI를 실행한다.
+기본 임베딩 Client와 real CLI는 /api/embed만 호출한다. /health·/api/tags·/api/show·/api/version 조회를 다시 추가하지 않는다.
 검증에는 합성 데이터만 사용하고 원문·전체 URL·검색어·비밀 값·벡터를 장기 저장하거나 로그에 남기지 않는다.
 현재 기능 범위에서 기존 코드를 재사용한다. 다른 기능/모듈과 GitHub 쓰기는 별도 요청 범위다.
 ```
@@ -648,12 +867,13 @@ TITLE/HEADING은 점수·충돌·근거에 참여하지만 본문 커버리지�
 - [AI 최종 기획서 (2)](https://app.notion.com/p/3e2357537c318072821efc0028fb8436): 7.1·8.2·8.3절 개정, 15.3~15.5절 기존 공개 예시.
 - [Ollama 모델 태그](https://ollama.com/library/qwen3-embedding:4b-fp16), [embed API](https://docs.ollama.com/api/embed), [Qwen 모델 카드](https://huggingface.co/Qwen/Qwen3-Embedding-4B).
 - 코드: AI/src/api/schemas.py, preprocessing/adapter.py·models.py·text_cleaner.py·validator.py, analysis/goal_graph.py·hybrid_scoring.py·relevance_analyzer.py, models/embedding_client.py, evaluation/relevance_eval.py·relevance_calibration.json.
+- 현재 임의 목표·단계 전환: AI/src/analysis/goal_analyzer.py·goal_graph_runtime.py, src/config.py, src/models/llm_client.py, src/storage/goal_graph_store.py, AI/docs/DECISION_RECORD.md 결정 027~030. 노션의 템플릿 중심 초안과 이후 구현된 생성 경로를 동일한 합의 상태로 취급하지 않는다.
 
-개정 문서의 JSON·전처리 순서·현재 기본 설정·Python 명령을 로컬에서 확인했다. Windows PowerShell 실행·학교 Ollama/GPU·Mac SSH 연결은 이 작성 환경에서 실행하지 않았다. 실제 결과값을 추측해서 채우지 않았다.
+2026-10-20 재검토에서 개정 문서의 JSON·전처리 순서·현재 기본 설정과 Python 로직 검사를 로컬에서 확인했다. 205개 테스트·8개 하위 테스트와 fake 개발/평가 각 8/8은 모델 없는 로직 검증이다. Windows PowerShell 명령·학교 localhost real CLI·Graph LLM 실호출·학교 GPU는 이번 문서 수정에서 실행하지 않았다. 아래 실제 연결 기록은 이전에 확보한 결과이며 이번 재측정 결과가 아니다.
 
 ## 15. 현재 선택한 연결 경로: Tailscale 사설 HTTPS
 
-2026-10-13 사용자는 학교 LAN timeout 이후 Tailscale을 선택했다. 10.3절 SSH 명령은 기존 연결 방법 기록이며 현재 작업은 아래 순서로 진행한다.
+2026-10-13 사용자는 학교 LAN timeout 이후 Tailscale을 선택했다. Mac 원격 호출은 10.3절의 Tailscale Serve HTTPS를 사용하고, 학교 PC 자체의 후처리 평가는 10.4절의 Ollama localhost 직접 연결을 사용한다.
 
 1. Mac과 학교 Windows에 Tailscale을 설치하고 같은 tailnet에 로그인한다. 계정 로그인·설치 약관·VPN 권한은 사용자가 직접 확인한다.
 2. 학교 PowerShell에서 `Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health'`로 기존 FastAPI 상태를 확인한다.
@@ -667,9 +887,9 @@ tailscale serve status
 4. 실제 출력된 HTTPS 주소 전체를 Mac 쪽에 전달한다. 예시 문자열이나 이전 학교 LAN IP를 그대로 사용하지 않는다.
 5. Mac의 Tailscale 연결이 완료되면 해당 HTTPS 주소의 `/health`와 합성 `/api/embed` 반환을 확인한다.
 
-Mac과 학교 PC는 같은 tailnet에 연결됐고 학교의 Tailscale Serve HTTPS 주소로 `/health` 및 `/api/embed` 요청을 실제 확인했다. 상세 측정과 계약 한계는 아래 2026-10-14 결과를 참조한다.
+Mac과 학교 PC는 같은 tailnet에 연결됐고 학교의 Tailscale Serve HTTPS 주소로 `/health` 및 `/api/embed` 요청을 실제 확인했다. 최신 측정은 2026-10-20 결과를 참조한다.
 
-학교 FastAPI는 `/health`·`/api/embed`만 제공한다. HTTPS와 실제 벡터 반환은 확인했지만 기존 Ollama Client가 요구하는 `/api/tags`·`/api/show`·`/api/version` 경로는 제공하지 않는다. 현재 표준 `relevance_eval --mode real`을 그대로 실행할 수 없으며, Client가 health 메타데이터를 검증하도록 계약을 연결한 뒤 독립 검수한 정답 세트로 평가한다. Tailscale 연결이나 임시 Adapter 실행을 표준 Hybrid 연동 완료로 표시하지 않는다.
+학교 FastAPI는 `/health`·`/api/embed`를 제공한다. 2026-10-21 현재 기본 Client는 `/api/embed`만 호출하므로 Mac Serve 경로와 학교 localhost 경로를 모두 사용할 수 있다. 기본 Client의 실제 원격 판정은 10.3.1절에 기록했다. 공개 Client·Server API 연결과 독립 정확도 평가는 별도 미완료 항목이다.
 
 ## 2026-10-14 실제 연결 결과
 
@@ -679,5 +899,14 @@ Mac과 학교 PC는 같은 tailnet에 연결됐고 학교의 Tailscale Serve HTT
 - 메모리에서만 만든 임시 Adapter로 개발용 합성 사례 8개를 실행했다. 2개는 본문 부족·BLACK_SCREEN으로 분석 제외, 나머지 6개 중 기대 라벨 일치 3개·불일치 3개였다. 기대 라벨은 독립 검수 전이므로 정확도 결과가 아니다.
 - 전체 실행 58.39초, API 왕복 지연 p50 6.08초·p95 23.31초. Ollama 내부 시간 p50 약 0.35초, 모델 로딩 p50 약 0.013초. GPU 사용률·VRAM은 수집하지 않았다.
 - 표준 Client 연동, 공개 API·Server 연결, 독립 정답 세트의 정확도와 GPU 성능 검증은 남아 있다.
+
+## 2026-10-20 Tailscale·임베딩 확인 결과
+
+- Mac의 학교 LAN IPv4 `10.125.43.92:8000`과 Tailscale IP `100.116.183.94:8000` 직접 호출은 timeout이었다. Tailscale Serve는 HTTPS 호스트명으로 연결하고 내부 `127.0.0.1:8000`에 프록시하므로, 이 두 직접 포트 호출은 현재 공개 경로가 아니다.
+- Tailscale Serve 주소 `https://desktop-n7o3o02.tail1023df.ts.net/health`: HTTP 200, 연결 0.100초, 전체 0.524초. 응답에서 모델 `qwen3-embedding:4b-fp16`, revision `3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc`, dimension 2560, precision F16, embedding capability와 Ollama `0.40.0`을 확인했다.
+- 첫 임베딩 1건: HTTP 200, Mac 전체 7.011초, API가 보고한 모델 처리 6.360초·로드 6.314초. 첫 요청 지연의 대부분은 모델 로드였다.
+- 이후 개발 split 테스트 문단 8개를 한 `/api/embed` 요청으로 보냈다. HTTP 200, 벡터 8개 모두 2560차원, 모델 처리 0.603초·로드 0.012초, Mac 요청 전체 1.566초였다. 이는 warm 상태의 배치 임베딩 생성 확인이며, Hybrid 점수·RELATED/UNRELATED/UNCERTAIN 판정을 실행한 결과가 아니다.
+- `tailscale ping`은 `via DERP(tok)`로 약 91~104ms였고 직접 연결은 수립되지 않았다. 8개 배치 임베딩은 성공했으므로 이 측정에서는 DERP 경로도 API 왕복을 완료했다. 이 결과만으로 전 구간 성능이나 직접 연결 성능을 보증하지 않는다.
+- 다음 테스트는 학교 PC에서 10.4절의 Ollama 직접 연결로 같은 8개 개발 split의 실제 Hybrid를 실행하는 것이다. Mac 원격 표준 평가는 별도로 학교 FastAPI `/health` 메타데이터를 기존 Client가 검증하도록 연결해야 한다. synthetic expected 라벨은 독립 사람 검수 전이므로 모델 정확도 지표로 쓰지 않는다.
 
 공식 안내: [Mac](https://tailscale.com/docs/install/mac), [Windows](https://tailscale.com/docs/install/windows), [Serve 명령](https://tailscale.com/docs/reference/tailscale-cli/serve).

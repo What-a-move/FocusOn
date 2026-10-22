@@ -29,7 +29,7 @@ class EmbeddingClient(Protocol):
 class EmbeddingSettings:
     base_url: str = "http://127.0.0.1:11435"
     model: str = "qwen3-embedding:4b-fp16"
-    revision: str = ""  # Exact Ollama manifest digest, required in real mode.
+    revision: str = ""  # Configured cache namespace; not verified against the server.
     dimensions: int = 2560
     timeout_seconds: float = 30.0
     max_retries: int = 1
@@ -72,7 +72,7 @@ class OllamaEmbeddingClient:
         self._slots = BoundedSemaphore(settings.max_concurrency)
         self.calls = 0
         self.prompt_tokens = 0
-        self.service_version: str | None = None
+        self.service_version: str | None = None  # Metadata is not queried.
 
     def close(self) -> None:
         self._http.close()
@@ -116,29 +116,6 @@ class OllamaEmbeddingClient:
         # Raised outside exception handlers: provider errors/URLs/bodies are not chained.
         raise EmbeddingError(code)
 
-    def verify_model(self) -> None:
-        tags = self._request("GET", "/api/tags")
-        models = tags.get("models")
-        if not isinstance(models, list):
-            raise EmbeddingError("MODEL_METADATA_INVALID")
-        selected = next((model for model in models if isinstance(model, dict) and model.get("name") == self.settings.model), None)
-        if not selected or selected.get("digest") != self.settings.revision:
-            raise EmbeddingError("MODEL_REVISION_MISMATCH")
-        details = selected.get("details", {})
-        if not isinstance(details, dict) or details.get("quantization_level") != "F16":
-            raise EmbeddingError("MODEL_PRECISION_MISMATCH")
-        metadata = self._request("POST", "/api/show", {"model": self.settings.model})
-        capabilities, info = metadata.get("capabilities", []), metadata.get("model_info", {})
-        if not isinstance(capabilities, list) or "embedding" not in capabilities or not isinstance(info, dict):
-            raise EmbeddingError("MODEL_NOT_EMBEDDING")
-        dimension_values = [value for key, value in info.items() if key.endswith(".embedding_length")]
-        if dimension_values != [self.dimensions]:
-            raise EmbeddingError("MODEL_DIMENSION_MISMATCH")
-        version = self._request("GET", "/api/version").get("version")
-        if not isinstance(version, str) or len(version) > 64:
-            raise EmbeddingError("SERVICE_VERSION_INVALID")
-        self.service_version = version
-
     def embed(self, texts: Sequence[str]) -> tuple[tuple[float, ...], ...]:
         if not texts:
             return ()
@@ -147,8 +124,6 @@ class OllamaEmbeddingClient:
         if not self._slots.acquire(timeout=self.settings.timeout_seconds):
             raise EmbeddingError("EMBEDDING_QUEUE_TIMEOUT")
         try:
-            # Check each call: a changed model tag must not mix vector spaces/cache.
-            self.verify_model()
             output = []
             for start in range(0, len(texts), self.settings.batch_size):
                 batch = list(texts[start:start + self.settings.batch_size])
@@ -172,7 +147,6 @@ class OllamaEmbeddingClient:
                         self.prompt_tokens += tokens
                     continue
                 raise EmbeddingError(code)
-            self.verify_model()  # Detect a tag swap during a batch before accepting it.
             return tuple(output)
         finally:
             self._slots.release()

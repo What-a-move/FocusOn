@@ -86,6 +86,7 @@ class PreprocessingRequest:
     goal_id: str
     goal_version: int
     event_id: str
+    sequence: int
     navigation_id: str
     content_source: ContentSource
     extraction_status: ExtractionStatus
@@ -111,6 +112,12 @@ class PreprocessingRequest:
             or self.goal_version < 1
         ):
             raise ValueError("goal version must be a positive integer")
+        if (
+            not isinstance(self.sequence, int)
+            or isinstance(self.sequence, bool)
+            or self.sequence < 0
+        ):
+            raise ValueError("sequence must be a non-negative integer")
         if not isinstance(self.content_source, ContentSource):
             raise TypeError("content source must be a ContentSource")
         if not isinstance(self.extraction_status, ExtractionStatus):
@@ -146,6 +153,8 @@ class CurrentAnalysisContext:
     run_id: str
     goal_version: int
     navigation_id: str
+    content_source: ContentSource
+    latest_sequence: int
     processed_event_ids: FrozenSet[str] = field(default_factory=frozenset)
     seen_content_hashes: FrozenSet[str] = field(default_factory=frozenset)
 
@@ -158,6 +167,14 @@ class CurrentAnalysisContext:
             or self.goal_version < 1
         ):
             raise ValueError("goal version must be a positive integer")
+        if not isinstance(self.content_source, ContentSource):
+            raise TypeError("content source must be a ContentSource")
+        if (
+            not isinstance(self.latest_sequence, int)
+            or isinstance(self.latest_sequence, bool)
+            or self.latest_sequence < 0
+        ):
+            raise ValueError("latest sequence must be a non-negative integer")
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,8 +189,14 @@ class PreprocessingConfig:
     ui_fragments: FrozenSet[str] = field(
         default_factory=lambda: frozenset({"닫기", "확인", "공유"})
     )
+    penalize_removed_fragments: bool = True
+    preserve_extracted_markup: bool = False
 
     def __post_init__(self) -> None:
+        if not isinstance(self.penalize_removed_fragments, bool) or not isinstance(
+            self.preserve_extracted_markup, bool
+        ):
+            raise TypeError("preprocessing mode flags must be boolean")
         if self.min_text_chars < 0:
             raise ValueError("minimum text length must be non-negative")
         if not 0.0 <= self.min_quality_score <= 1.0:

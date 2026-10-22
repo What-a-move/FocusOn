@@ -1,7 +1,7 @@
 {
   "version": "synthetic-school-v2",
   "synthetic": true,
-  "annotationStatus": "Planning-derived v2 expectations for school-text-v2/school-hybrid-v2; independent human review pending; fake vectors validate logic only",
+  "annotationStatus": "Planning-derived v2 expectations for school-text-v2/school-hybrid-v4; independent human review pending; fake vectors validate logic only",
   "cases": [
     {
       "caseId": "dev-state-direct",
