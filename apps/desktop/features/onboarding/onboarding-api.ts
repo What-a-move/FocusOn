@@ -11,7 +11,11 @@ type OnboardingApi = {
   requestNotifications(): Promise<ApiResult<{ granted: boolean }>>
   savePermissionsStep(input: { consents: string[]; cameraConsent: boolean }): Promise<ApiResult<{ saved: true }>>
   saveExcludedSites(domains: string[]): Promise<ApiResult<{ saved: true }>>
+  // ponytail: 완료 화면 요약용 화면 모델. 연결 시 GET onboarding-readiness·users/me 응답을 이 모양으로 바꾼다.
+  getSummary(): Promise<ApiResult<OnboardingSummary>>
 }
+
+export type OnboardingSummary = { nickname: string | null; screenAnalysisReady: boolean; cameraConsent: boolean; excludedDomainCount: number }
 
 // ponytail: Desktop Main의 온보딩 IPC와 Backend API가 생기기 전까지 연결 지점만 둔다.
 // 서버·OS 응답을 성공으로 꾸미지 않고 "서비스를 쓸 수 없음"으로 돌려준다. 연결 시 이 객체만 교체한다.
@@ -29,6 +33,7 @@ export const onboardingApi: OnboardingApi = {
   requestNotifications: unavailable,
   savePermissionsStep: unavailable,
   saveExcludedSites: unavailable,
+  getSummary: unavailable,
 }
 
 export type Notice = { title: string; body: string }

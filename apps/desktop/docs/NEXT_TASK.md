@@ -8,7 +8,7 @@
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Desktop (Extension pairing UI 연동 포함)
 - 우선순위: 높음
-- 상태: 온보딩 4단계 UI(닉네임 → Extension 연결 → 권한·동의(동의 → 권한 확인) → 제외 사이트 `/onboarding/sites`)를 `FocusOn-design/onboarding.html` 시안대로 구현했다. 서버·OS 호출은 `onboarding-api.ts` 연결 지점만 있고 모두 `SERVICE_UNAVAILABLE`이다. #22(PR #39) 병합 뒤 Main IPC를 연결하고, Backend API 구현 뒤 실제 계정 QA를 진행한다.
+- 상태: 온보딩 4단계 UI(닉네임 → Extension 연결 → 권한·동의(동의 → 권한 확인) → 제외 사이트 `/onboarding/sites` → 완료 `/onboarding/done`)와 다크 모드를 `FocusOn-design/onboarding.html` 시안대로 구현했다. 서버·OS 호출은 `onboarding-api.ts` 연결 지점만 있고 모두 `SERVICE_UNAVAILABLE`이다. #22(PR #39) 병합 뒤 Main IPC를 연결하고, Backend API 구현 뒤 실제 계정 QA를 진행한다.
 
 ## 작업 목적
 

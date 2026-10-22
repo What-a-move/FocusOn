@@ -64,6 +64,39 @@
   overflow-wrap: break-word;
 }
 
+/* 다크 모드: macOS 설정을 따른다 (fo-base.css 다크 토큰과 같은 값) */
+@media (prefers-color-scheme: dark) {
+  .onboarding-window {
+    color-scheme: dark;
+    --surface: #141416;
+    --ink: #f4f2ee;
+    --muted: #a5a29c;
+    --line: #2b2b30;
+    --field: #1f1f23;
+    --hover: #232328;
+    --brand: #cda577;
+    --brand-edge: #a17f55;
+    --on-brand: #1a1408;
+    --gold-tint: #201c15;
+    --danger: #ff7a6e;
+    --danger-soft: #3a1915;
+    --danger-line: #7d2e26;
+    --danger-edge: #8a1d14;
+    --success: #5fcf94;
+    --success-soft: #142a1e;
+    --success-line: #2c5a40;
+    --faint: #6f6d69;
+    --dim: #404046;
+    --track: #29292e;
+    --disabled-bg: #26262b;
+    --disabled-edge: #1d1d21;
+    --ghost-edge: #34343b;
+    --focus: rgb(205 165 119 / 50%);
+    --scrim: rgb(0 0 0 / 60%);
+    --shadow: rgb(0 0 0 / 50%);
+  }
+}
+
 .onboarding-window *,
 .onboarding-window *::before,
 .onboarding-window *::after { box-sizing: border-box; }
@@ -213,6 +246,14 @@
 .onboarding-window .link-button { border: 0; background: none; color: var(--ink); font-size: 15px; font-weight: 600; text-decoration: underline; cursor: pointer; }
 .onboarding-window .link-button:disabled { color: var(--faint); cursor: default; }
 
+/* 완료 */
+.onboarding-window .step.complete { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; text-align: center; }
+.onboarding-window .complete .poki { width: auto; height: 240px; }
+.onboarding-window .complete h1 { margin: 28px 0 0; font-size: 38px; font-weight: 700; letter-spacing: -.03em; }
+.onboarding-window .complete p { margin: 12px 0 0; color: var(--muted); font-size: 18px; line-height: 1.6; }
+.onboarding-window .summary { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px 0 0; padding: 0; list-style: none; }
+.onboarding-window .summary li { padding: 9px 14px; border-radius: 99px; background: var(--field); font-size: 14px; font-weight: 600; }
+
 /* 하단 바: 막힌 이유만 버튼 옆에 */
 .onboarding-window .footer { flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--surface); }
 .onboarding-window .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(980px, calc(100% - 64px)); margin: 0 auto; padding: 20px 0 40px; }
@@ -254,6 +295,8 @@
   .onboarding-window .check-button { height: 52px; }
   .onboarding-window .code-tiles span { width: 48px; height: 58px; font-size: 26px; }
   .onboarding-window .steps-guide { line-height: 1.7; }
+  .onboarding-window .complete .poki { height: 170px; }
+  .onboarding-window .complete h1 { margin-top: 18px; font-size: 32px; }
   .onboarding-window .footer-inner { padding: 14px 0 28px; }
 }
 

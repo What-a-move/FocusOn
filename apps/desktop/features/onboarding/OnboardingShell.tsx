@@ -5,9 +5,9 @@ import './onboarding.css'
 
 type OnboardingShellProps = {
   children: ReactNode
-  /** 진행 바 칸 번호: 0 닉네임 · 1 Chrome 연결 · 2 권한·동의 · 3 제외 사이트 */
-  currentStep: 0 | 1 | 2 | 3
-  prompt: string
+  /** 진행 바 칸 번호: 0 닉네임 · 1 Chrome 연결 · 2 권한·동의 · 3 제외 사이트 · 4 완료 */
+  currentStep: 0 | 1 | 2 | 3 | 4
+  prompt?: string
   promptError?: boolean
   poki?: string
   backHref?: string
@@ -21,7 +21,7 @@ const stepCount = 4
 export function OnboardingShell({
   children,
   currentStep,
-  prompt,
+  prompt = '',
   promptError = false,
   poki = '/design/poki-floating-logo-base-v1.png',
   backHref,
@@ -44,23 +44,27 @@ export function OnboardingShell({
           ) : (
             <button className="back" type="button" aria-label="이전 단계" disabled>←</button>
           )}
-          <div className="progress" role="progressbar" aria-label="온보딩 진행" aria-valuemin={1} aria-valuemax={stepCount} aria-valuenow={currentStep + 1}>
+          <div className="progress" role="progressbar" aria-label="온보딩 진행" aria-valuemin={1} aria-valuemax={stepCount} aria-valuenow={Math.min(currentStep + 1, stepCount)}>
             {Array.from({ length: stepCount }, (_, index) => (
               <i className={index < currentStep ? 'done' : index === currentStep ? 'active' : ''} key={index} />
             ))}
           </div>
-          <span className="step-count" aria-live="polite">{currentStep + 1} / {stepCount}</span>
+          <span className="step-count" aria-live="polite">{currentStep === stepCount ? '완료' : `${currentStep + 1} / ${stepCount}`}</span>
         </div>
 
         <div className="body">
-          <section className="step" aria-labelledby="onboarding-prompt">
-            <div className="speaker">
-              <img className="poki" src={poki} alt="포키" />
-              {/* [디자인] 대사가 바뀔 때마다 말풍선을 다시 그려 살짝 떠오르게 한다. */}
-              <p className={`bubble${promptError ? ' is-error' : ''}`} id="onboarding-prompt" key={prompt}>{prompt}</p>
-            </div>
-            <div className="panel">{children}</div>
-          </section>
+          {currentStep === stepCount ? (
+            <section className="step complete" aria-labelledby="done-title">{children}</section>
+          ) : (
+            <section className="step" aria-labelledby="onboarding-prompt">
+              <div className="speaker">
+                <img className="poki" src={poki} alt="포키" />
+                {/* [디자인] 대사가 바뀔 때마다 말풍선을 다시 그려 살짝 떠오르게 한다. */}
+                <p className={`bubble${promptError ? ' is-error' : ''}`} id="onboarding-prompt" key={prompt}>{prompt}</p>
+              </div>
+              <div className="panel">{children}</div>
+            </section>
+          )}
         </div>
 
         <footer className="footer">

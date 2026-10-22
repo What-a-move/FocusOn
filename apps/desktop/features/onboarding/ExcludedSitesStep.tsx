@@ -49,7 +49,7 @@ export function ExcludedSitesStep() {
       setFeedback(describeError(result.error))
       return
     }
-    router.push('/')
+    router.push('/onboarding/done/')
   }
 
   return (
