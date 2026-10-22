@@ -28,7 +28,7 @@
 
 ### 다음 구현 범위
 
-- Issue #32의 코드 리뷰와 PR 절차를 마무리한다. 목표·세션 Entity는 후속 migration으로 분리한다.
+- Issue #32의 PR #35를 `dev`에 병합한다. 목표·세션 Entity는 후속 migration으로 분리한다.
 - Desktop Authorization Code + PKCE 기반 Google 교환과 인증된 사용자·기기를 Access JWT 서비스에 연결한다.
 - MVP API를 도메인 단위로 구현
 

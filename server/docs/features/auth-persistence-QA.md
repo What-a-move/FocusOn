@@ -9,9 +9,9 @@
 
 | 항목 | 결과 |
 | --- | --- |
-| `./gradlew build test --no-daemon` | 통과 |
+| `./gradlew build test --no-daemon` | 통과. 2026-10-22 `./gradlew clean build --no-daemon` 재확인도 통과 |
 | Backend local 기동과 Hibernate `ddl-auto=validate` | 통과 |
-| Flyway V1·V2 | `flyway_schema_history`에 `1:true`, `2:true` 확인 |
+| Flyway V1·V2 | `flyway_schema_history`에 `1:true`, `2:true` 확인. 2026-10-22 실제 PostgreSQL에서 재확인 |
 | V2 복합 FK | 사용자 A의 family와 사용자 B의 기기 조합은 `fk_token_families_device_owner` 위반으로 거부 |
 | 정상 소유 관계 | 같은 사용자의 family·기기 조합은 INSERT 허용 |
 | QA용 데이터 | 두 시나리오 모두 transaction rollback; 사용자·기기·family 행 0건 확인 |
@@ -24,7 +24,7 @@
 - Medium: 없음. 연결 해제된 Google identity 조회와 `issuedAt` 누락을 수정 후 검증했다.
 - Low: 없음.
 
-## 남은 확인
+## PR 검증과 남은 범위
 
-- PR 생성 뒤 Backend CI 통과 여부를 확인한다. PR 전에는 CI 통과라고 기록하지 않는다.
+- PR #35 최신 코드 커밋의 Backend CI 통과와 CodeRabbit 리뷰 완료를 확인했다. 2026-10-22 실제 PostgreSQL에서 복합 FK와 활성 family·token 부분 유니크 인덱스의 존재를 재확인했다.
 - Google OAuth 교환과 Refresh Token 회전의 HTTP 정상·오류 흐름은 후속 인증 API Issue에서 검증한다.
