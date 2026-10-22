@@ -5,6 +5,20 @@ import type { GoogleOAuthOutcome } from './google-oauth.cjs'
 import { AuthSessionStore } from './auth-ipc.cjs'
 
 const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryable: false }
+// 서버가 Access Token 만료를 알릴 때 쓰는 공통 code (API_CONTRACT 공통 오류 코드)
+const ACCESS_TOKEN_EXPIRED = 'AUTH_ACCESS_TOKEN_EXPIRED'
+// 만료 직전 토큰으로 요청하다 실패하지 않도록 30초 여유를 두고 미리 갱신한다.
+const EXPIRY_MARGIN_MS = 30_000
+
+export type AuthorizedRequest<T> = {
+  path: string
+  method: 'GET' | 'POST' | 'PUT'
+  expectedStatus: number
+  parse: (value: unknown) => T | null
+  body?: object
+  /** true면 로그인 때 받은 Desktop deviceId를 X-Device-Id 헤더로 보낸다. */
+  withDeviceId?: boolean
+}
 const RELOGIN_REQUIRED: AuthApiError = { code: 'AUTH_RELOGIN_REQUIRED', retryable: false }
 
 function isReloginError(code: string): boolean {
@@ -15,6 +29,7 @@ function isReloginError(code: string): boolean {
 export class AuthService {
   private accessToken: string | null = null
   private accessTokenExpiresAt = 0
+  private deviceId: string | null = null
   private refreshPromise: Promise<ApiResult<TokenPair>> | null = null
   private restoring: Promise<void> = Promise.resolve()
   private restoringInFlight = false
@@ -43,6 +58,58 @@ export class AuthService {
   private forget(): void {
     this.accessToken = null
     this.accessTokenExpiresAt = 0
+    this.deviceId = null
+  }
+
+  /**
+   * 인증이 필요한 Backend 요청. 만료가 가까우면 먼저 refresh하고, 서버가 만료(401)를 알리면
+   * single-flight refresh 1회 뒤 원 요청을 1회만 다시 보낸다 (AUTH_SESSION_FLOW.md).
+   * refresh가 재로그인 오류면 저장된 토큰을 지우고 SIGNED_OUT으로 전환한다.
+   */
+  async authorizedRequest<T>(request: AuthorizedRequest<T>): Promise<ApiResult<T>> {
+    await this.ready()
+    if (!this.accessToken || this.accessTokenExpiresAt - EXPIRY_MARGIN_MS <= Date.now()) {
+      const refreshed = await this.refreshOrSignOut()
+      if (!refreshed.success) return refreshed
+    }
+    if (request.withDeviceId && !this.deviceId) return { success: false, error: RELOGIN_REQUIRED }
+
+    const send = () => this.api.call(
+      request.path, request.method, request.expectedStatus, request.parse, request.body,
+      this.accessToken ?? undefined, request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {},
+    )
+    const first = await send()
+    if (first.success || first.error.code !== ACCESS_TOKEN_EXPIRED) return first
+    const refreshed = await this.refreshOrSignOut()
+    if (!refreshed.success) return refreshed
+    return send()
+  }
+
+  // 프로필 저장 뒤 화면의 닉네임도 서버가 확정한 값으로 바꾼다.
+  updateNickname(nickname: string): void {
+    const { revision: _revision, ...snapshot } = this.store.getSnapshot()
+    if (snapshot.status !== 'SIGNED_IN' || !snapshot.user) return
+    this.store.publish({ ...snapshot, user: { ...snapshot.user, nickname } })
+  }
+
+  // 서버 onboarding-readiness가 확정한 완료 상태를 화면 상태에도 반영한다. 반영하지 않으면 홈과 온보딩을 오갈 수 있다.
+  updateOnboardingStatus(onboardingStatus: 'INCOMPLETE' | 'COMPLETED'): void {
+    const { revision: _revision, ...snapshot } = this.store.getSnapshot()
+    if (snapshot.status !== 'SIGNED_IN' || !snapshot.user || snapshot.onboardingStatus === onboardingStatus) return
+    this.store.publish({ ...snapshot, onboardingStatus })
+  }
+
+  currentNickname(): string | null {
+    return this.store.getSnapshot().user?.nickname ?? null
+  }
+
+  private async refreshOrSignOut(): Promise<ApiResult<TokenPair>> {
+    const refreshed = await this.refresh()
+    if (!refreshed.success && isReloginError(refreshed.error.code)) {
+      this.forget()
+      this.publish('SIGNED_OUT', refreshed.error)
+    }
+    return refreshed
   }
 
   restore(): Promise<void> {
@@ -81,6 +148,7 @@ export class AuthService {
         }
         return
       }
+      this.deviceId = identity.data.device.deviceId
       this.publish('SIGNED_IN', null, identity.data)
     } catch {
       // [주의] Keychain이 잠겼다면 토큰이 없다고 단정하거나 파일 저장소로 우회하지 않는다.
@@ -164,6 +232,7 @@ export class AuthService {
         return
       }
       this.remember(result.data)
+      this.deviceId = result.data.device.deviceId
       this.publish('SIGNED_IN', null, result.data)
     } catch {
       if (generation === this.generation) this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)

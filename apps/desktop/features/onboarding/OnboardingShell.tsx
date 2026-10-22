@@ -1,5 +1,8 @@
-import type { ReactNode } from 'react'
+'use client'
+
+import { useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { Notice } from './onboarding-api'
 import './onboarding.css'
 
@@ -29,6 +32,15 @@ export function OnboardingShell({
   feedback,
   next,
 }: OnboardingShellProps) {
+  const router = useRouter()
+  useEffect(() => {
+    // [주의] 온보딩 중 로그인이 만료·해제되면 로그인 화면(/)으로 돌아간다.
+    const unsubscribe = window.focusOn?.auth.onSessionChanged((snapshot) => {
+      if (snapshot.status === 'SIGNED_OUT') router.replace('/')
+    })
+    return () => unsubscribe?.()
+  }, [router])
+
   return (
     <main className="app-window onboarding-window">
       <header className="titlebar">

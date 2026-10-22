@@ -55,7 +55,21 @@ export function ExtensionStep() {
     return () => clearInterval(timer)
   }, [status, deadline])
 
-  // ponytail: Extension 입력 결과(연결 완료·코드 틀림)는 서버 pairing 상태 구독이 생기면 status로 반영한다.
+  // [유지보수] Extension이 코드를 입력해 연결되면 서버 준비 상태의 extensionLinked가 true가 된다. 대기 중 3초마다 확인한다.
+  // ponytail: 실시간 알림 채널이 생기면 polling 대신 구독으로 바꾼다.
+  useEffect(() => {
+    if (status !== 'waiting') return
+    const timer = setInterval(() => {
+      void onboardingApi.getReadiness().then((result) => {
+        if (result.success && result.data.steps.extensionLinked) {
+          setStatus('connected')
+          setHint({ kind: 'success', text: 'Chrome 확장 프로그램이 연결됐어요.' })
+          setFeedback(null)
+        }
+      })
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [status])
 
   const left = status === 'waiting' ? Math.max(0, deadline - now) : 0
   const seconds = Math.ceil(left / 1000)

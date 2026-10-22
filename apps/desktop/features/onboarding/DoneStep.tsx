@@ -22,7 +22,7 @@ export function DoneStep() {
   ] : []
 
   return (
-    <OnboardingShell currentStep={4} next={{ label: '홈으로 가기', blocked: false, onClick: () => router.push('/') }}>
+    <OnboardingShell currentStep={4} next={{ label: '홈으로 가기', blocked: false, onClick: () => { void onboardingApi.getReadiness().finally(() => router.push('/')) } }}>
       <img className="poki" src="/design/poki-floating-cheer-v7.png" alt="응원하는 포키" />
       <h1 id="done-title">{summary?.nickname ? `${summary.nickname}님, ` : ''}준비가 끝났어요!</h1>
       <p>홈에서 오늘 목표를 정하면 바로 집중을 시작할 수 있어요.</p>

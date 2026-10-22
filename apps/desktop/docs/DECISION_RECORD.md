@@ -386,3 +386,28 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 - `apps/desktop/electron/main/permission-ipc.cts`, `electron/shared/permission-contract.cts`, `electron/preload/index.cts`, `electron/main/index.cts`
 - `apps/desktop/features/onboarding/onboarding-api.ts`, `PermissionsStep.tsx`
 - `apps/desktop/docs/IPC_CONTRACT.md`, `MACOS_PERMISSION_FLOW.md`
+
+## 결정 017 - 온보딩 Backend 연결 구조
+
+- 결정일: 2026-10-22
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (실제 Backend 왕복 QA 전)
+
+### 결정 내용
+
+- 온보딩 Backend 호출은 Renderer가 직접 하지 않고 Main `OnboardingService`가 Desktop 토큰으로 처리한다. 공통 토큰 처리는 `AuthService.authorizedRequest` 하나로 모은다.
+- Notion API에 닉네임 중복 확인 전용 endpoint가 없으므로, 화면의 `중복 확인`은 `PUT /users/me/profile` 저장 요청이며 409 `PROFILE_NICKNAME_DUPLICATE`로 중복을 알린다. 성공하면 다음 단계에서 다시 저장하지 않는다.
+- Extension 연결 완료는 별도 알림 채널이 없어 Extension 단계에서 3초마다 `onboarding-readiness`의 `extensionLinked`를 확인한다.
+- 동의 저장 버전은 Notion 예시값 `2026-09-17`, 출처는 `ONBOARDING`을 쓴다. 동의 문서 버전 관리가 정해지면 서버 값으로 바꾼다.
+- 앱 진입 시 `onboarding-readiness.currentStep`으로 이어갈 화면을 정한다. 조회 실패 시 첫 단계로 보내며, 각 저장은 서버가 다시 검증한다.
+
+### 결정 이유
+
+토큰을 Main에만 두는 기존 인증 경계를 지키면서, 서버 계약이 없는 기능(중복 확인·연결 완료 알림)을 임의 API로 만들지 않기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/auth-service.cts`, `auth-api.cts`, `onboarding-service.cts`, `onboarding-ipc.cts`, `index.cts`
+- `apps/desktop/electron/shared/onboarding-contract.cts`, `auth-contract.cts`, `electron/preload/index.cts`
+- `apps/desktop/features/onboarding/*`, `app/page.tsx`

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { AUTH_CHANNELS, parseAuthSessionSnapshot } from '../shared/auth-contract.cjs'
 import type { AuthSessionSnapshot, FocusOnApi } from '../shared/auth-contract.cjs'
 import { PERMISSION_CHANNELS } from '../shared/permission-contract.cjs'
+import { ONBOARDING_CHANNELS } from '../shared/onboarding-contract.cjs'
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -27,6 +28,15 @@ const focusOnApi: FocusOnApi = {
     getCameraStatus: () => ipcRenderer.invoke(PERMISSION_CHANNELS.cameraStatus),
     requestCamera: () => ipcRenderer.invoke(PERMISSION_CHANNELS.cameraRequest),
     showNotification: (input) => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationShow, { titleCode: input.titleCode, bodyCode: input.bodyCode }),
+  },
+  // [주의] 입력은 허용한 필드만 다시 만들어 보낸다. Main이 한 번 더 검증한다.
+  onboarding: {
+    getReadiness: () => ipcRenderer.invoke(ONBOARDING_CHANNELS.readiness),
+    saveProfile: (input) => ipcRenderer.invoke(ONBOARDING_CHANNELS.saveProfile, { nickname: input.nickname }),
+    issuePairingCode: () => ipcRenderer.invoke(ONBOARDING_CHANNELS.issuePairingCode),
+    savePermissionsStep: (input) => ipcRenderer.invoke(ONBOARDING_CHANNELS.savePermissionsStep, { consents: input.consents, cameraConsent: input.cameraConsent }),
+    saveExcludedDomains: (input) => ipcRenderer.invoke(ONBOARDING_CHANNELS.saveExcludedDomains, { domains: input.domains }),
+    getSummary: () => ipcRenderer.invoke(ONBOARDING_CHANNELS.summary),
   },
 }
 

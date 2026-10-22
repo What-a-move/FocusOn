@@ -15,7 +15,7 @@ const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABL
 // macOS 시스템 설정 › 개인정보 보호 및 보안 › 화면 기록
 const SCREEN_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
 
-function mediaStatus(media: 'screen' | 'camera'): PermissionStatus {
+export function mediaStatus(media: 'screen' | 'camera'): PermissionStatus {
   if (process.platform !== 'darwin') return 'unknown'
   return toPermissionStatus(systemPreferences.getMediaAccessStatus(media))
 }

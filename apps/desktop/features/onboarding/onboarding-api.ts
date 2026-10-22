@@ -1,34 +1,35 @@
 import type { PermissionsApi } from '../../electron/shared/permission-contract.cjs'
+import type { OnboardingApi as MainOnboardingApi, OnboardingReadiness, OnboardingStep, OnboardingSummary, RequiredConsent } from '../../electron/shared/onboarding-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
+export type { OnboardingReadiness, OnboardingSummary }
 
-type OnboardingApi = {
-  checkNickname(nickname: string): Promise<ApiResult<{ available: boolean }>>
-  saveNickname(nickname: string): Promise<ApiResult<{ nickname: string }>>
-  issuePairingCode(): Promise<ApiResult<{ code: string; expiresAt: string }>>
-  openScreenRecordingSettings(): Promise<ApiResult<{ opened: boolean }>>
-  checkScreenRecording(): Promise<ApiResult<{ granted: boolean }>>
-  requestCamera(): Promise<ApiResult<{ granted: boolean }>>
-  /** macOS는 알림 허용 상태를 조회할 수 없어 시험 알림을 보내 허용 창을 띄운다. */
-  requestNotifications(): Promise<ApiResult<{ requested: boolean }>>
-  savePermissionsStep(input: { consents: string[]; cameraConsent: boolean }): Promise<ApiResult<{ saved: true }>>
-  saveExcludedSites(domains: string[]): Promise<ApiResult<{ saved: true }>>
-  // ponytail: 완료 화면 요약용 화면 모델. 연결 시 GET onboarding-readiness·users/me 응답을 이 모양으로 바꾼다.
-  getSummary(): Promise<ApiResult<OnboardingSummary>>
+// 화면 동의 id → 서버 consentType
+const CONSENT_TYPES: Record<string, RequiredConsent> = {
+  terms: 'TERMS_OF_SERVICE',
+  privacy: 'PRIVACY_POLICY',
+  'screen-analysis': 'SCREEN_ANALYSIS',
 }
 
-export type OnboardingSummary = { nickname: string | null; screenAnalysisReady: boolean; cameraConsent: boolean; excludedDomainCount: number }
+// 서버 currentStep → 온보딩 화면 경로
+export const STEP_ROUTES: Record<OnboardingStep, string> = {
+  NICKNAME: '/onboarding/',
+  EXTENSION: '/onboarding/extension/',
+  PERMISSIONS_AND_CONSENTS: '/onboarding/permissions/',
+  EXCLUDED_SITES: '/onboarding/sites/',
+  COMPLETED: '/',
+}
 
-// ponytail: Backend 온보딩 API가 생기기 전까지 서버 호출은 연결 지점만 둔다.
-// 서버 응답을 성공으로 꾸미지 않고 "서비스를 쓸 수 없음"으로 돌려준다. 연결 시 해당 항목만 교체한다.
 async function unavailable(): Promise<ApiResult<never>> {
   return { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } }
 }
 
-// macOS 권한은 Desktop Main IPC(window.focusOn.permissions)로 확인한다. 브라우저에서 열면 연결이 없어 unavailable이다.
-async function viaPermissions<T, R>(call: (api: PermissionsApi) => Promise<ApiResult<T>>, map: (data: T) => R): Promise<ApiResult<R>> {
-  const api = typeof window === 'undefined' ? undefined : window.focusOn?.permissions
+// [유지보수] Backend 요청과 macOS 권한은 모두 Desktop Main IPC(window.focusOn)를 거친다. 토큰은 Renderer에 없다.
+// 브라우저에서 화면만 열면 연결이 없어 SERVICE_UNAVAILABLE이다. 성공을 꾸미지 않는다.
+async function via<A, T, R>(pick: (api: NonNullable<Window['focusOn']>) => A | undefined, call: (api: A) => Promise<ApiResult<T>>, map: (data: T) => R): Promise<ApiResult<R>> {
+  const bridge = typeof window === 'undefined' ? undefined : window.focusOn
+  const api = bridge ? pick(bridge) : undefined
   if (!api) return unavailable()
   try {
     const result = await call(api)
@@ -38,20 +39,29 @@ async function viaPermissions<T, R>(call: (api: PermissionsApi) => Promise<ApiRe
   }
 }
 
-export const onboardingApi: OnboardingApi = {
-  checkNickname: unavailable,
-  saveNickname: unavailable,
-  issuePairingCode: unavailable,
-  openScreenRecordingSettings: () => viaPermissions((api) => api.openScreenSettings(), (data) => data),
+const viaPermissions = <T, R>(call: (api: PermissionsApi) => Promise<ApiResult<T>>, map: (data: T) => R) => via((api) => api.permissions, call, map)
+const viaOnboarding = <T, R>(call: (api: MainOnboardingApi) => Promise<ApiResult<T>>, map: (data: T) => R) => via((api) => api.onboarding, call, map)
+const same = <T,>(data: T) => data
+
+export const onboardingApi = {
+  getReadiness: () => viaOnboarding((api) => api.getReadiness(), same),
+  /** 중복 확인 API가 없어 저장 요청 자체가 중복 확인이다 (409 PROFILE_NICKNAME_DUPLICATE). */
+  saveNickname: (nickname: string) => viaOnboarding((api) => api.saveProfile({ nickname }), same),
+  issuePairingCode: () => viaOnboarding((api) => api.issuePairingCode(), ({ codeDisplay, expiresAt }) => ({ code: codeDisplay, expiresAt })),
+  openScreenRecordingSettings: () => viaPermissions((api) => api.openScreenSettings(), same),
   checkScreenRecording: () => viaPermissions((api) => api.getScreenStatus(), ({ status }) => ({ granted: status === 'granted' })),
   requestCamera: () => viaPermissions((api) => api.requestCamera(), ({ status }) => ({ granted: status === 'granted' })),
+  /** macOS는 알림 허용 상태를 조회할 수 없어 시험 알림을 보내 허용 창을 띄운다. */
   requestNotifications: () => viaPermissions(
     (api) => api.showNotification({ titleCode: 'ONBOARDING_TEST', bodyCode: 'ONBOARDING_TEST' }),
     ({ shown }) => ({ requested: shown }),
   ),
-  savePermissionsStep: unavailable,
-  saveExcludedSites: unavailable,
-  getSummary: unavailable,
+  savePermissionsStep: (input: { consents: string[]; cameraConsent: boolean }) => viaOnboarding(
+    (api) => api.savePermissionsStep({ consents: input.consents.map((id) => CONSENT_TYPES[id]).filter(Boolean), cameraConsent: input.cameraConsent }),
+    same,
+  ),
+  saveExcludedSites: (domains: string[]) => viaOnboarding((api) => api.saveExcludedDomains({ domains }), same),
+  getSummary: () => viaOnboarding((api) => api.getSummary(), same),
 }
 
 export type Notice = { title: string; body: string }
@@ -61,6 +71,10 @@ export function describeError(error: ApiError): Notice {
     case 'PROFILE_NICKNAME_DUPLICATE': return { title: '이미 사용 중인 닉네임이에요.', body: '다른 닉네임을 입력해 주세요.' }
     case 'PROFILE_NICKNAME_INVALID': return { title: '닉네임 형식을 확인해 주세요.', body: '2~12자의 한글·영문·숫자만 쓸 수 있어요.' }
     case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '인터넷에 연결되어 있지 않아요.', body: '연결을 확인한 뒤 다시 시도해 주세요.' }
+    case 'TOO_MANY_REQUESTS': return { title: '요청이 너무 잦았어요.', body: '잠시 후 다시 시도해 주세요.' }
+    case 'AUTH_RELOGIN_REQUIRED':
+    case 'AUTH_TOKEN_REUSE_DETECTED':
+    case 'AUTH_OAUTH_REAUTH_REQUIRED': return { title: '로그인이 만료됐어요.', body: 'Google로 다시 로그인해 주세요.' }
     default: return { title: '요청을 마치지 못했어요.', body: '잠시 후 다시 시도해 주세요.' }
   }
 }

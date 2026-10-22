@@ -68,13 +68,15 @@ export function resolveAuthApiBaseUrl(value: string | undefined): string | null 
 export class AuthApiClient {
   constructor(private readonly baseUrl: string, private readonly request: typeof fetch = fetch) {}
 
-  private async call<T>(
+  // [유지보수] 인증 API와 이후 인증이 필요한 API가 같은 요청·오류 해석 규칙을 쓰도록 공개한다. 토큰 처리는 AuthService가 맡는다.
+  async call<T>(
     path: string,
-    method: 'GET' | 'POST',
+    method: 'GET' | 'POST' | 'PUT',
     expectedStatus: number,
     parse: (value: unknown) => T | null,
     body?: object,
     accessToken?: string,
+    extraHeaders: Record<string, string> = {},
   ): Promise<ApiResult<T>> {
     let response: Response
     try {
@@ -83,6 +85,7 @@ export class AuthApiClient {
         headers: {
           ...(body ? { 'Content-Type': 'application/json' } : {}),
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          ...extraHeaders,
         },
         body: body ? JSON.stringify(body) : undefined,
         redirect: 'manual',

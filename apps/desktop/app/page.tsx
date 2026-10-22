@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
 import { selectAuthView } from './lib/auth-view'
+import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
 
 const signedOut: AuthSessionSnapshot = {
   revision: 0, status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: null,
@@ -67,11 +68,15 @@ function LoginScreen({ onLogin, onRetry, busy, authenticating, message, availabl
   </main>
 }
 
-// [유지보수] 온보딩 화면은 /onboarding/ 경로에 있다. 인증 상태가 온보딩이면 해당 경로로 보낸다.
-// ponytail: 지금은 첫 단계(재연결이면 Extension 단계)로 보낸다. onboarding-readiness API가 생기면 currentStep으로 이어갈 단계를 정한다.
+// [유지보수] 온보딩 화면은 /onboarding/ 경로에 있다. 서버 onboarding-readiness의 currentStep으로 이어갈 단계를 정한다.
+// 조회에 실패하면 첫 단계(재연결이면 Extension 단계)로 보낸다. 각 단계 저장은 서버가 다시 검증한다.
 function OnboardingRedirect({ reconnect }: { reconnect: boolean }) {
   const router = useRouter()
-  useEffect(() => { router.replace(reconnect ? '/onboarding/extension/' : '/onboarding/') }, [reconnect, router])
+  useEffect(() => {
+    void onboardingApi.getReadiness().then((result) => {
+      router.replace(result.success ? STEP_ROUTES[result.data.currentStep] : reconnect ? '/onboarding/extension/' : '/onboarding/')
+    })
+  }, [reconnect, router])
   return <LoadingScreen />
 }
 

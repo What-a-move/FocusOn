@@ -16,7 +16,6 @@ export function NicknameStep() {
   const [hint, setHint] = useState<Hint>(defaultHint)
   const [checked, setChecked] = useState(false)
   const [checking, setChecking] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [prompt, setPrompt] = useState({ text: '어떻게 불러드릴까요?', error: false })
   const [feedback, setFeedback] = useState<Notice | null>(null)
 
@@ -28,10 +27,11 @@ export function NicknameStep() {
       return
     }
 
+    // [유지보수] 서버에 중복 확인 API가 따로 없어 저장 요청의 결과(성공·409 중복)로 확인한다. 성공하면 이미 저장된 상태다.
     setChecking(true)
-    const result = await onboardingApi.checkNickname(value)
+    const result = await onboardingApi.saveNickname(value)
     setChecking(false)
-    if (result.success && result.data.available) {
+    if (result.success) {
       setChecked(true)
       setHint({ kind: 'success', text: '사용할 수 있는 닉네임이에요.' })
       setPrompt({ text: `반가워요, ${value}님!`, error: false })
@@ -39,8 +39,8 @@ export function NicknameStep() {
       return
     }
 
-    const notice = result.success ? describeError({ code: 'PROFILE_NICKNAME_DUPLICATE', retryable: false }) : describeError(result.error)
-    const duplicate = result.success || result.error.code === 'PROFILE_NICKNAME_DUPLICATE'
+    const notice = describeError(result.error)
+    const duplicate = result.error.code === 'PROFILE_NICKNAME_DUPLICATE'
     setHint({ kind: 'error', text: duplicate ? '이미 사용 중인 닉네임이에요. 다른 이름을 적어 주세요.' : notice.title, field: duplicate })
     setPrompt(duplicate ? { text: '앗, 누가 벌써 쓰고 있어요!', error: true } : { text: '어떻게 불러드릴까요?', error: false })
     setFeedback(notice)
@@ -49,13 +49,6 @@ export function NicknameStep() {
   async function goNext() {
     if (!checked) {
       setFeedback({ title: '닉네임 중복 확인이 필요해요.', body: '닉네임을 입력하고 ‘중복 확인’을 눌러 주세요.' })
-      return
-    }
-    setSaving(true)
-    const result = await onboardingApi.saveNickname(nickname.trim())
-    setSaving(false)
-    if (!result.success) {
-      setFeedback(describeError(result.error))
       return
     }
     router.push('/onboarding/extension/')
@@ -67,7 +60,7 @@ export function NicknameStep() {
       prompt={prompt.text}
       promptError={prompt.error}
       feedback={feedback}
-      next={{ label: '다음', blocked: !checked, busy: saving, onClick: () => { void goNext() } }}
+      next={{ label: '다음', blocked: !checked, onClick: () => { void goNext() } }}
     >
       <label className="field-label" htmlFor="nickname">닉네임</label>
       <div className="name-row">
