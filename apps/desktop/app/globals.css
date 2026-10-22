@@ -96,39 +96,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--fo-focus); 
 .fo-loading .fo-logo { width: 220px; }
 .fo-loading p { color: var(--fo-muted); font-size: 14px; }
 
-/* 온보딩 첫 화면: 5칸 진행 바, 포키 대사, 닉네임 입력, 하단 버튼. */
-.fo-onboarding-window { display: flex; flex-direction: column; min-height: 100dvh; }
-.fo-onboarding-top { display: flex; align-items: center; gap: 16px; width: min(980px, calc(100% - 64px)); height: 56px; margin: 20px auto 0; }
-.fo-back-placeholder { width: 36px; flex: 0 0 36px; visibility: hidden; }
-.fo-progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; flex: 1; }
-.fo-progress span { height: 6px; border-radius: 99px; background: var(--fo-track); }
-.fo-progress span.active { background: var(--fo-gold); }
-.fo-step-count { min-width: 48px; color: var(--fo-muted); font-size: 14px; font-weight: 600; text-align: right; }
-.fo-onboarding-body { display: flex; flex: 1; min-height: 0; overflow-y: auto; }
-.fo-onboarding-step { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: center; gap: 56px; width: min(980px, calc(100% - 64px)); min-height: 100%; margin: 0 auto; padding: 32px 0; }
-.fo-speaker { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
-.fo-speaker img { display: block; width: 200px; height: 200px; object-fit: contain; }
-.fo-bubble { position: relative; width: max-content; max-width: 100%; margin: 0; padding: 16px 22px; border: 1.5px solid var(--fo-line); border-radius: 18px; background: var(--fo-surface); font-size: 18px; font-weight: 700; line-height: 1.45; letter-spacing: -.02em; }
-.fo-bubble::before, .fo-bubble::after { position: absolute; content: ''; border-style: solid; }
-.fo-bubble::before { top: -14px; left: 48px; border-width: 0 10px 14px; border-color: transparent transparent var(--fo-line); }
-.fo-bubble::after { top: -10px; left: 50px; border-width: 0 8px 11px; border-color: transparent transparent var(--fo-surface); }
-.fo-onboarding-panel { min-width: 0; }
-.fo-onboarding-panel .fo-notice { margin-top: 20px; }
-.fo-field-label { display: block; margin-bottom: 10px; font-size: 16px; font-weight: 700; }
-.fo-name-row { display: flex; gap: 8px; }
-.fo-input-wrap { position: relative; flex: 1; min-width: 0; }
-.fo-input-wrap input { width: 100%; height: 60px; padding: 0 64px 0 20px; border: 1.5px solid var(--fo-line); border-radius: 14px; background: var(--fo-field); color: var(--fo-ink); font-size: 18px; font-weight: 600; }
-.fo-input-wrap input::placeholder { color: var(--fo-faint); font-weight: 400; }
-.fo-input-wrap input:focus { border-color: var(--fo-ink); background: var(--fo-surface); outline: none; }
-.fo-input-wrap span { position: absolute; top: 50%; right: 16px; transform: translateY(-50%); color: var(--fo-muted); font-size: 13px; }
-.fo-name-row .fo-button { min-width: 112px; height: 60px; padding: 0 18px; }
-.fo-field-hint { margin: 10px 0 0; color: var(--fo-muted); font-size: 15px; line-height: 1.5; }
-.fo-reconnect-panel strong { font-size: 18px; }
-.fo-reconnect-panel p { color: var(--fo-muted); font-size: 16px; line-height: 1.6; }
-.fo-onboarding-footer { flex: 0 0 117px; border-top: 1px solid var(--fo-line); }
-.fo-onboarding-footer > div { display: flex; align-items: flex-start; justify-content: space-between; width: min(980px, calc(100% - 64px)); margin: 0 auto; padding-top: 20px; }
-.fo-onboarding-footer .fo-button { width: 140px; height: 56px; }
-
 /* 홈: 사이드바와 달력 배치까지 원본 시안에 맞추고, 기록 값은 실제 데이터 전까지 비워 둔다. */
 .fo-home-window { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100dvh; }
 .fo-sidebar { display: flex; flex-direction: column; min-height: 100dvh; padding: 16px 16px 20px; border-right: 1px solid var(--fo-line); }
@@ -210,10 +177,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--fo-focus); 
   .fo-auth-content { grid-template-columns: minmax(0, 400px); align-content: center; gap: 16px; padding: 8px 24px 32px; }
   .fo-auth-poki { order: -1; }
   .fo-auth-poki img { width: auto; height: 150px; }
-  .fo-onboarding-step { grid-template-columns: 1fr; gap: 28px; }
-  .fo-speaker { flex-direction: row; align-items: center; }
-  .fo-speaker img { width: 96px; height: 96px; }
-  .fo-bubble::before, .fo-bubble::after { display: none; }
 }
 @media (max-height: 640px) {
   .fo-auth-brand { flex-basis: 80px; padding-top: 8px; }
