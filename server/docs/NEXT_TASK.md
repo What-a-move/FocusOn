@@ -5,7 +5,7 @@
 Issue #32 로그인용 PostgreSQL 저장 모델 구현
 
 - 우선순위: 높음
-- 상태: `feat/#32-auth-persistence`에서 구현·독립 코드 리뷰·QA 완료. [PR #35](https://github.com/What-a-move/FocusOn/pull/35) 생성 완료, CI 확인과 리뷰가 남음.
+- 상태: `feat/#32-auth-persistence`에서 구현·독립 코드 리뷰·QA 완료. [PR #35](https://github.com/What-a-move/FocusOn/pull/35)의 Backend CI와 CodeRabbit 리뷰도 완료됐으며, `dev` 병합은 대기 중.
 
 ## 목적
 
@@ -13,7 +13,7 @@ Issue #32 로그인용 PostgreSQL 저장 모델 구현
 
 ## 순서
 
-1. Issue #32의 PR #35 Backend CI와 리뷰를 확인한다.
+1. Issue #32의 PR #35 병합 여부를 확인하고, 병합 후 Issue를 정리한다.
 2. 후속 Issue에서 Google Authorization Code + PKCE 교환과 Refresh Token 정책을 구현하고 기존 Access JWT 서비스에 연결한다. Spring Security 필터의 401·403도 공통 오류 응답에 연결한다.
 3. 목표·세션·분석 제외 도메인·heartbeat·개입 정책 버전·`studyDate`·학습 정리는 각 도메인 작업의 migration과 Entity로 분리한다.
 4. 목표와 세션 MVP API를 구현한다.
