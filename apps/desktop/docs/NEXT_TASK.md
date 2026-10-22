@@ -8,7 +8,7 @@
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Desktop (Extension pairing UI 연동 포함)
 - 우선순위: 높음
-- 상태: 공통 온보딩 틀, 닉네임(`/onboarding`), Extension 연결 안내(`/onboarding/extension`), 필수 권한·동의 UI(`/onboarding/permissions`)를 구현했다. 권한·동의 선택은 화면 안에서만 동작하며, macOS 권한 확인과 동의 저장은 아직 연결하지 않았다. 코드 발급·연결 확인 및 실제 계정 QA는 Backend API 구현 뒤 진행한다.
+- 상태: 온보딩 4단계 UI(닉네임 → Extension 연결 → 권한·동의(동의 → 권한 확인) → 제외 사이트 `/onboarding/sites`)를 `FocusOn-design/onboarding.html` 시안대로 구현했다. 서버·OS 호출은 `onboarding-api.ts` 연결 지점만 있고 모두 `SERVICE_UNAVAILABLE`이다. #22(PR #39) 병합 뒤 Main IPC를 연결하고, Backend API 구현 뒤 실제 계정 QA를 진행한다.
 
 ## 작업 목적
 
@@ -29,8 +29,8 @@
 1. 로그인 뒤 `GET /api/v1/users/me/onboarding-readiness`로 `currentStep`을 조회해 중단 지점부터 여는 흐름을 연결한다.
 2. 완료: 공통 온보딩 틀과 닉네임 입력 UI, 클라이언트 형식 검증을 구현했다. 닉네임 저장·중복 검증은 API 연결 뒤 이어서 구현한다.
 3. Desktop 연결 안내 및 코드 자리·대기·완료·오류 표시 UI를 구현했다. 실제 코드 발급과 상태 확인 API 연결은 후속 작업이다.
-4. 권한·동의 UI를 구현했다. 다음은 분석 제외 사이트 UI를 만든다. 이후 Main/Preload에서 macOS 화면 기록 권한 확인을 연결하고 필수 동의 API를 연동한다. 카메라 동의와 알림은 선택으로 두고 거부해도 온보딩을 막지 않는다.
-5. 제외 사이트 등록·저장 또는 빈 목록 건너뛰기를 제공하고 완료 marker를 기록한다.
+4. 완료: 권한·동의 UI(동의 → 권한 확인)를 구현했다. 남은 일은 Main/Preload의 macOS 화면 기록 확인·시스템 설정 열기·카메라/알림 요청 연결과 필수 동의 API 연동이다. 이후 Main/Preload에서 macOS 화면 기록 권한 확인을 연결하고 필수 동의 API를 연동한다. 카메라 동의와 알림은 선택으로 두고 거부해도 온보딩을 막지 않는다.
+5. 화면 완료: 제외 사이트 등록·빈 목록 건너뛰기 UI(`/onboarding/sites`). 남은 일은 저장 API와 완료 marker 기록 연결이다.
 6. 서버가 `COMPLETED`를 반환하면 대시보드로 이동한다. 목표·시간·개입은 후속 대시보드 Issue에 남긴다.
 7. 백엔드 API 병합 뒤 신규 계정, 앱 재실행, 권한 변경, 네트워크 오류, Extension 연결을 실제 계정으로 검증한다.
 

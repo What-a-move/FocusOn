@@ -1,250 +1,263 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
+import { describeError, onboardingApi, type ApiResult, type Notice } from './onboarding-api'
 
-type Detail = {
-  id: string
-  title: string
-  purpose: string
-  items: string
-  retention: string
-  refusal: string
-  impact: string
-  version?: string
-}
+type Detail = { title: string; rows: [string, string][] }
+type Consent = { id: string; title: string; summary?: string; detail: Detail }
 
-const requiredConsents: Detail[] = [
+const requiredConsents: Consent[] = [
   {
     id: 'terms',
     title: '서비스 이용약관',
-    purpose: '서비스 이용 조건과 책임 범위를 안내합니다.',
-    items: '동의 여부와 동의 시각',
-    retention: '동의 철회 또는 계정 삭제 후 3년 (동의 이력만)',
-    refusal: '동의하지 않을 수 있습니다.',
-    impact: 'FocusOn을 이용할 수 없습니다.',
-    version: 'v1.0',
+    detail: { title: '서비스 이용약관', rows: [
+      ['목적', '서비스 이용 조건과 책임 범위 안내'],
+      ['처리 항목', '동의 여부와 동의 시각'],
+      ['보유 기간', '철회하거나 계정을 삭제한 뒤 3년 (동의 이력만)'],
+      ['거부 권리', '동의하지 않을 수 있어요.'],
+      ['거부 시 영향', 'FocusOn을 이용할 수 없어요.'],
+      ['버전', 'v1.0'],
+    ] },
   },
   {
     id: 'privacy',
     title: '개인정보 처리방침',
-    purpose: '계정 관리, 집중 기록과 리포트를 제공합니다.',
-    items: 'Google 계정 식별자, 닉네임, 목표, 세션 기록, 연결 기기 정보',
-    retention: '집중 기록·리포트는 세션 종료 후 1년. 계정 삭제 시 30일 안에 삭제합니다.',
-    refusal: '동의하지 않을 수 있습니다.',
-    impact: '계정을 만들 수 없습니다.',
-    version: 'v1.0',
+    summary: 'Google 계정 식별자, 닉네임, 목표, 집중 기록',
+    detail: { title: '개인정보 처리방침', rows: [
+      ['목적', '계정 관리, 집중 기록과 리포트 제공'],
+      ['처리 항목', 'Google 계정 식별자, 닉네임, 목표, 세션 시간·기록, 연결한 기기 정보'],
+      ['보유 기간', '집중 기록·리포트는 세션 종료 후 1년. 계정을 삭제하면 30일 안에 삭제해요.'],
+      ['거부 권리', '동의하지 않을 수 있어요.'],
+      ['거부 시 영향', '계정을 만들 수 없어요.'],
+      ['버전', 'v1.0'],
+    ] },
   },
   {
     id: 'screen-analysis',
-    title: '화면 분석 동의',
-    purpose: '현재 활동이 학습 목표와 관련 있는지 확인합니다.',
-    items: '앱 이름, 탭 제목·도메인, 필요할 때 화면에서 읽은 글자. 화면 원문과 캡처는 저장하지 않습니다.',
-    retention: '분석 결과는 세션 종료 후 90일 보관합니다.',
-    refusal: '동의하지 않을 수 있습니다.',
-    impact: '집중 세션을 시작할 수 없습니다.',
-    version: 'v1.0',
+    title: '화면 분석',
+    summary: '지금 보는 화면이 목표와 관련 있는지만 확인해요',
+    detail: { title: '화면 분석', rows: [
+      ['목적', '집중 중에 보는 앱·페이지가 목표와 관련 있는지 확인'],
+      ['처리 항목', '앱 이름, 탭 제목·도메인, 필요할 때만 보이는 화면의 글자. 판단 결과만 저장하고 화면 원문·캡처는 저장하지 않아요.'],
+      ['보유 기간', '분석 결과는 세션 종료 후 90일 (그 뒤엔 합계만 남겨요)'],
+      ['거부 권리', '동의하지 않을 수 있어요.'],
+      ['거부 시 영향', '집중 세션을 시작할 수 없어요.'],
+      ['버전', 'v1.0'],
+    ] },
   },
 ]
 
-const cameraDetail: Detail = {
-  id: 'camera',
-  title: '카메라 분석',
-  purpose: '화면만으로 알기 어려운 자리 비움 상태를 보조적으로 확인합니다.',
-  items: '기기 안에서 분석한 얼굴·시선 상태 신호. 영상과 사진은 저장하거나 전송하지 않습니다.',
-  retention: '상태 기록은 세션 종료 후 1년 보관합니다.',
-  refusal: '선택 항목이므로 동의하지 않아도 됩니다.',
-  impact: '화면 분석만으로 이용할 수 있습니다.',
-  version: 'v1.0',
+const cameraDetail: Detail = { title: '카메라 분석', rows: [
+  ['목적', '화면만으로 알기 어려운, 오래 자리를 비운 순간을 보조로 알아차리기'],
+  ['처리 항목', '얼굴이 보이는지, 시선이 화면 쪽인지 같은 상태 신호. 영상·사진은 저장하거나 보내지 않아요.'],
+  ['보유 기간', '상태 기록은 세션 종료 후 1년'],
+  ['거부 권리', '선택 항목이라 켜지 않아도 돼요.'],
+  ['거부 시 영향', '화면 분석만으로 정상 이용할 수 있어요. 설정에서 언제든 켜고 끌 수 있어요.'],
+  ['버전', 'v1.0'],
+] }
+
+type PermName = 'screen' | 'camera' | 'notify'
+type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied'; error: string | null }
+
+const permCopy: Record<PermName, { title: string; required: boolean; idle: string; action: string }> = {
+  screen: { title: '화면 기록', required: true, idle: '보고 있는 화면이 목표와 맞는지 확인할 때만 써요', action: '설정 열기' },
+  camera: { title: '카메라', required: false, idle: '동의한 카메라 분석에 필요해요', action: '허용하기' },
+  notify: { title: '알림', required: false, idle: '집중이 흐트러졌을 때 알려 드려요', action: '허용하기' },
 }
 
-const optionalChoices = [
-  { id: 'camera', title: '카메라 분석' },
-  { id: 'notifications', title: '집중 알림' },
-] as const
+const idle: PermState = { state: 'idle', error: null }
 
-const permissionDetail: Detail = {
-  id: 'screen-permission',
-  title: '화면 기록 권한',
-  purpose: '화면이 학습 목표와 관련 있는지 확인하는 데 사용합니다.',
-  items: '앱 이름, 탭 제목·도메인, 필요할 때 화면에서 읽은 글자',
-  retention: '화면 원문과 캡처는 저장하지 않습니다.',
-  refusal: 'macOS 시스템 설정에서 언제든 변경할 수 있습니다.',
-  impact: '권한이 없으면 화면 분석을 시작할 수 없습니다.',
+// [유지보수] 화면 기록은 macOS가 앱 안에서 허용 창을 띄우지 않는다. 시스템 설정을 연 뒤 돌아와서 다시 확인한다.
+function permText(name: PermName, perm: PermState): string {
+  if (perm.error) return perm.error
+  if (name === 'screen' && perm.state === 'opened') return '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 FocusOn을 켜 주세요'
+  if (name === 'screen' && perm.state === 'denied') return '아직 꺼져 있어요. 켰다면 FocusOn을 다시 열어 주세요.'
+  if (perm.state === 'denied') return '시스템 설정에서 언제든 허용할 수 있어요.'
+  return permCopy[name].idle
 }
 
 export function PermissionsStep() {
-  const [view, setView] = useState<'permission' | 'consents'>('permission')
+  const router = useRouter()
+  const [view, setView] = useState<'consents' | 'permission'>('consents')
   const [accepted, setAccepted] = useState<Set<string>>(new Set())
-  const [optionalEnabled, setOptionalEnabled] = useState<Set<string>>(new Set())
-  const [activeDetail, setActiveDetail] = useState<Detail | null>(null)
+  const [cameraConsent, setCameraConsent] = useState(false)
+  const [perms, setPerms] = useState<Record<PermName, PermState>>({ screen: idle, camera: idle, notify: idle })
+  const [detail, setDetail] = useState<Detail | null>(null)
+  const [prompt, setPrompt] = useState({ text: '시작하려면 동의가 필요해요!', error: false })
+  const [feedback, setFeedback] = useState<Notice | null>(null)
+  const [saving, setSaving] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const allRequiredAccepted = requiredConsents.every(({ id }) => accepted.has(id))
 
-  function toggle(setter: (value: Set<string>) => void, current: Set<string>, id: string) {
-    const next = new Set(current)
-    if (next.has(id)) next.delete(id)
-    else next.add(id)
-    setter(next)
+  const allAccepted = requiredConsents.every(({ id }) => accepted.has(id))
+  const screenReady = perms.screen.state === 'granted'
+  const setPerm = (name: PermName, next: PermState) => setPerms((current) => ({ ...current, [name]: next }))
+
+  function updateConsents(next: Set<string>) {
+    setAccepted(next)
+    setFeedback(null)
+    const ready = requiredConsents.every(({ id }) => next.has(id))
+    setPrompt({ text: ready ? '좋아요, 다 됐어요!' : '시작하려면 동의가 필요해요!', error: false })
   }
 
-  function showDetail(detail: Detail) {
-    setActiveDetail(detail)
+  function showDetail(next: Detail) {
+    setDetail(next)
     dialogRef.current?.showModal()
   }
 
-  function toggleAllRequired() {
-    setAccepted(allRequiredAccepted
-      ? new Set()
-      : new Set(requiredConsents.map(({ id }) => id)))
+  async function runPerm(name: PermName) {
+    setFeedback(null)
+    const current = perms[name]
+    let result: ApiResult<{ granted: boolean } | { opened: true }>
+    if (name === 'screen' && current.state === 'idle') result = await onboardingApi.openScreenRecordingSettings()
+    else if (name === 'screen') result = await onboardingApi.checkScreenRecording()
+    else if (name === 'camera') result = await onboardingApi.requestCamera()
+    else result = await onboardingApi.requestNotifications()
+
+    if (!result.success) {
+      const notice = describeError(result.error)
+      setPerm(name, { state: current.state, error: `${notice.title} ${notice.body}` })
+      setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
+      return
+    }
+    if ('opened' in result.data) {
+      setPerm(name, { state: 'opened', error: null })
+      setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
+      return
+    }
+    const granted = result.data.granted
+    setPerm(name, { state: granted ? 'granted' : 'denied', error: null })
+    if (name === 'screen') setPrompt(granted ? { text: '좋아요, 준비됐어요!', error: false } : { text: '아직 꺼져 있는 것 같아요.', error: true })
+    else if (granted) setPrompt({ text: name === 'camera' ? '카메라도 준비됐어요!' : '알림도 켜 뒀어요!', error: false })
   }
 
-  const showingConsents = view === 'consents'
+  async function goNext() {
+    if (view === 'consents') {
+      if (!allAccepted) {
+        setFeedback({ title: '필수 항목에 동의해 주세요.', body: '필수 항목 3개에 모두 동의해야 시작할 수 있어요.' })
+        return
+      }
+      setView('permission')
+      setFeedback(null)
+      setPrompt({ text: '화면 기록 권한만 켜 주시면 돼요', error: false })
+      return
+    }
+    if (!screenReady) {
+      setFeedback({ title: '화면 기록 권한이 필요해요.', body: '시스템 설정에서 FocusOn을 켠 뒤 ‘다시 확인’을 눌러 주세요.' })
+      return
+    }
+    setSaving(true)
+    const result = await onboardingApi.savePermissionsStep({ consents: [...accepted], cameraConsent })
+    setSaving(false)
+    if (!result.success) {
+      setFeedback(describeError(result.error))
+      return
+    }
+    router.push('/onboarding/sites/')
+  }
+
+  const visiblePerms: PermName[] = cameraConsent ? ['screen', 'camera', 'notify'] : ['screen', 'notify']
 
   return (
     <OnboardingShell
       currentStep={2}
-      prompt={showingConsents ? '필수 동의 항목을 확인해 주세요.' : '화면 분석에 필요한 권한을 확인해 주세요.'}
-      backHref={showingConsents ? undefined : '/onboarding/extension/'}
-      onBack={showingConsents ? () => setView('permission') : undefined}
-      footer={showingConsents ? (
-        <button className="btn btn-primary next" type="button" disabled>
-          다음
-        </button>
-      ) : (
-        <button className="btn btn-primary next" type="button" onClick={() => setView('consents')}>
-          동의 항목 보기
-        </button>
-      )}
+      prompt={prompt.text}
+      promptError={prompt.error}
+      backHref={view === 'consents' ? '/onboarding/extension/' : undefined}
+      onBack={view === 'permission' ? () => { setView('consents'); setFeedback(null); setPrompt({ text: '시작하려면 동의가 필요해요!', error: false }) } : undefined}
+      feedback={feedback}
+      next={{ label: '다음', blocked: view === 'consents' ? !allAccepted : !screenReady, busy: saving, onClick: () => { void goNext() } }}
     >
-      {!showingConsents ? (
-        <section className="permission-page" aria-labelledby="screen-permission-title">
-          <div className="substep-heading">
-            <p className="substep-label">권한 확인</p>
-            <span className="substep-count">1 / 2</span>
-          </div>
-          <div className="permission-choice" role="group" aria-labelledby="screen-permission-title">
-            <span className="consent-check permission-mark" aria-hidden="true">!</span>
-            <span className="consent-copy">
-              <strong id="screen-permission-title">화면 기록</strong>
-              <small>화면이 학습 목표와 관련 있는지 확인할 때 사용합니다.</small>
-            </span>
-            <span className="tag required">필수</span>
-          </div>
-          <div className="permission-actions">
-            <span className="permission-status" role="status">
-              <span className="permission-status-dot" aria-hidden="true" />
-              허용 여부 확인 전
-            </span>
-            <button className="detail-link" type="button" onClick={() => showDetail(permissionDetail)}>
-              설정 방법
-            </button>
-          </div>
-        </section>
-      ) : (
-        <section className="consent-page" aria-labelledby="required-consents-title">
-          <div className="substep-heading">
-            <div className="substep-title-group">
-              <p className="substep-label" id="required-consents-title">필수 동의</p>
-              <span className="substep-count">2 / 2</span>
-            </div>
-          </div>
-          <ul className="consent-list">
+      {view === 'consents' ? (
+        <div className="consents">
+          <p className="substep">필수 동의 <span>1 / 2</span></p>
+          <ul className="choice-list">
             <li>
-              <button
-                className="consent-choice consent-choice-all"
-                type="button"
-                role="checkbox"
-                aria-checked={allRequiredAccepted}
-                onClick={toggleAllRequired}
-              >
-                <span className="consent-check" aria-hidden="true">✓</span>
-                <span className="consent-copy"><strong>모두 동의하기</strong></span>
+              <button className="choice all" type="button" role="checkbox" aria-checked={allAccepted} onClick={() => updateConsents(allAccepted ? new Set() : new Set(requiredConsents.map(({ id }) => id)))}>
+                <span className="check" aria-hidden="true">✓</span>
+                <span className="choice-text"><strong>모두 동의하기</strong></span>
               </button>
             </li>
-            {requiredConsents.map((detail) => {
-              const checked = accepted.has(detail.id)
+            <li className="divider" aria-hidden="true" />
+            {requiredConsents.map((consent) => {
+              const checked = accepted.has(consent.id)
               return (
-                <li className="consent-item" key={detail.id}>
+                <li key={consent.id}>
                   <button
-                    className="consent-choice"
+                    className="choice"
                     type="button"
                     role="checkbox"
                     aria-checked={checked}
-                    onClick={() => toggle(setAccepted, accepted, detail.id)}
+                    onClick={() => {
+                      const next = new Set(accepted)
+                      if (checked) next.delete(consent.id)
+                      else next.add(consent.id)
+                      updateConsents(next)
+                    }}
                   >
-                    <span className="consent-check" aria-hidden="true">✓</span>
-                    <span className="consent-copy">
-                      <strong>{detail.title}</strong>
-                    </span>
+                    <span className="check" aria-hidden="true">✓</span>
+                    <span className="choice-text"><strong>{consent.title}</strong>{consent.summary ? <small>{consent.summary}</small> : null}</span>
                     <span className="tag required">필수</span>
                   </button>
-                  <button className="detail-link" type="button" onClick={() => showDetail(detail)}>
-                    자세히
-                  </button>
+                  <button className="detail-link" type="button" onClick={() => showDetail(consent.detail)}>자세히</button>
+                </li>
+              )
+            })}
+            <li className="optional-label">선택 동의</li>
+            <li>
+              <button
+                className="choice"
+                type="button"
+                role="checkbox"
+                aria-checked={cameraConsent}
+                onClick={() => {
+                  const on = !cameraConsent
+                  setCameraConsent(on)
+                  if (!on) setPerm('camera', idle)
+                  setPrompt({ text: on ? '카메라도 함께 볼게요.\n다음에서 권한을 물어볼게요.' : '카메라는 안 켜도 괜찮아요!', error: false })
+                }}
+              >
+                <span className="check" aria-hidden="true">✓</span>
+                <span className="choice-text"><strong>카메라 분석</strong><small>얼굴·시선을 기기 안에서만 분석해요. 영상은 저장하지 않아요.</small></span>
+                <span className="tag">선택</span>
+              </button>
+              <button className="detail-link" type="button" onClick={() => showDetail(cameraDetail)}>자세히</button>
+            </li>
+          </ul>
+        </div>
+      ) : (
+        <>
+          <p className="substep">권한 확인 <span>2 / 2</span></p>
+          <ul className="perm-list">
+            {visiblePerms.map((name) => {
+              const perm = perms[name]
+              const copy = permCopy[name]
+              const action = name === 'screen' && perm.state !== 'idle' ? '다시 확인' : copy.action
+              return (
+                <li className="perm" data-state={perm.state} key={name}>
+                  <span className="perm-state" aria-hidden="true">{perm.state === 'denied' ? '!' : '✓'}</span>
+                  <span className="choice-text">
+                    <strong>{copy.title} <span className={`tag${copy.required ? ' required' : ''}`}>{copy.required ? '필수' : '선택'}</span></strong>
+                    <small className={`perm-desc${perm.error || (name === 'screen' && perm.state === 'denied') ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
+                  </span>
+                  {perm.state === 'granted'
+                    ? <span className="perm-done">허용됨</span>
+                    : <button className="btn btn-ghost perm-action" type="button" onClick={() => { void runPerm(name) }}>{action}</button>}
                 </li>
               )
             })}
           </ul>
-          <div className="optional-consents">
-            <div className="consent-section-heading">
-              <h2>선택 항목</h2>
-              <span className="optional-note">동의하지 않아도 계속할 수 있습니다.</span>
-            </div>
-            <ul className="consent-list optional-list">
-              {optionalChoices.map(({ id, title }) => {
-                const checked = optionalEnabled.has(id)
-                return (
-                  <li key={id}>
-                    <button
-                      className="consent-choice"
-                      type="button"
-                      role="checkbox"
-                      aria-checked={checked}
-                      onClick={() => toggle(setOptionalEnabled, optionalEnabled, id)}
-                    >
-                      <span className="consent-check" aria-hidden="true">✓</span>
-                      <span className="consent-copy">
-                        <strong>{title}</strong>
-                      </span>
-                      <span className="tag">선택</span>
-                    </button>
-                    {id === 'camera' ? (
-                      <button className="detail-link" type="button" onClick={() => showDetail(cameraDetail)}>
-                        자세히
-                      </button>
-                    ) : null}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        </section>
+          <p className="perm-note">화면 원본과 캡처는 저장하지 않아요.</p>
+        </>
       )}
 
-      <dialog
-        className="consent-dialog"
-        ref={dialogRef}
-        aria-labelledby="consent-dialog-title"
-        onClose={() => setActiveDetail(null)}
-      >
-        {activeDetail ? (
+      <dialog className="consent-dialog" ref={dialogRef} aria-labelledby="consent-dialog-title" onClose={() => setDetail(null)}>
+        {detail ? (
           <>
-            <h2 id="consent-dialog-title">{activeDetail.title}</h2>
-            {activeDetail.id === 'screen-permission' ? (
-              <p className="permission-dialog-copy">macOS 시스템 설정의 개인정보 보호 및 보안에서 FocusOn의 화면 기록을 허용해 주세요.</p>
-            ) : null}
-            <dl>
-              <dt>목적</dt><dd>{activeDetail.purpose}</dd>
-              <dt>처리 항목</dt><dd>{activeDetail.items}</dd>
-              <dt>보유 기간</dt><dd>{activeDetail.retention}</dd>
-              <dt>거부 권리</dt><dd>{activeDetail.refusal}</dd>
-              <dt>거부 시 영향</dt><dd>{activeDetail.impact}</dd>
-              {activeDetail.version ? <><dt>버전</dt><dd>{activeDetail.version}</dd></> : null}
-            </dl>
-            <form method="dialog">
-              <button className="btn btn-primary" type="submit">확인</button>
-            </form>
+            <h2 id="consent-dialog-title">{detail.title}</h2>
+            <dl>{detail.rows.map(([term, value]) => [<dt key={`${term}-t`}>{term}</dt>, <dd key={`${term}-d`}>{value}</dd>])}</dl>
+            <form method="dialog"><button className="btn btn-primary" type="submit">확인</button></form>
           </>
         ) : null}
       </dialog>
