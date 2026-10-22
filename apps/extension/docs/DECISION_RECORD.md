@@ -111,7 +111,7 @@ Server에서 활성 학습 세션이 확인된 동안 사용자가 보고 있는
 - 제외 Domain의 정본은 Server 사용자 설정이며, `chrome.storage.local`에는 빠른 차단·오프라인 복구용 최신 목록만 캐시한다. 동기화 실패 시 콘텐츠 수집을 시작하지 않는다.
 - 현재 Navigation과 짧은 연결 Cache는 `chrome.storage.session`에 저장한다.
 - 학습 세션과 Desktop 연결 상태의 최종 기준은 Server다.
-- Page 본문과 인증 Token은 `chrome.storage.local` 또는 `sync`에 저장하지 않는다.
+- Page 본문과 인증 Token은 `chrome.storage.local` 또는 `sync`에 저장하지 않는다. 단, Extension Refresh Token은 결정 011에 따라 `chrome.storage.local`에 둔다(2026-10-22 변경).
 
 ### 결정 이유
 
@@ -191,3 +191,27 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 - 고려한 대안:
 - 영향받는 파일:
 - 관련 Issue·PR:
+
+## 결정 011 - Extension 인증 Token 저장 위치
+
+- 결정일: 2026-10-22
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension
+- 상태: 확정 (사용자 결정)
+
+### 결정 내용
+
+- pairing 성공으로 받은 Extension 전용 Refresh Token은 `chrome.storage.local`에 저장한다. 브라우저를 다시 열어도 연결이 유지된다.
+- Access Token과 만료 시각은 `chrome.storage.session`(메모리)에 두고, 저장 전에 `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })`로 Content Script 접근을 막는다.
+- installationId는 비밀값이 아니므로 `chrome.storage.local`에 둔다.
+- Desktop 토큰과 공유하지 않고 Content Script·페이지로 전달하지 않는다. 저장에 실패하면 연결 완료로 표시하지 않는다.
+- Backend origin은 빌드 시 `NEXT_PUBLIC_FOCUSON_API_BASE_URL`로 넣고 HTTPS 또는 로컬 loopback HTTP만 허용한다.
+
+### 결정 이유
+
+메모리에만 두면 Chrome을 다시 열 때마다 연결 코드를 새로 받아야 한다. Refresh Token은 사용할 때마다 회전하고 재사용이 감지되면 family 전체가 폐기되므로(인증 정책), 프로필 폴더에 평문으로 남는 위험을 감수하고 연결 유지를 택했다. WebCrypto 키로 암호화하는 안은 같은 Extension 코드가 복호화할 수 있어 실제 보호 효과가 제한적이라 택하지 않았다.
+
+### 영향받는 파일
+
+- `apps/extension/features/pairing/extension-auth.ts`, `pairing-api.ts`, `PairingStep.tsx`
+- Notion `인증 · 토큰 · 디바이스 정책`의 Extension 저장 영역 항목

@@ -8,7 +8,7 @@
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Chrome Extension
 - 우선순위: 높음
-- 상태: Popup 기본 화면(`/`)과 `/connect`에 `FocusOn-design/extension-popup.html` 기반 코드 입력·형식 검증 화면을 추가했다. 실제 pairing 요청과 token 저장은 installation ID 및 안전한 Extension token 저장 정책을 구현한 뒤 연결한다. Desktop 온보딩 [Issue #36](https://github.com/What-a-move/FocusOn/issues/36)의 필수 단계다.
+- 상태: 코드 입력·형식 검증, `POST /api/v1/extension-pairings` 제출, 오류 안내, token 저장(결정 011), 연결 완료 화면을 구현했다(2026-10-22). Chromium에 실제로 불러와 테스트용 가짜 서버로 왕복을 확인했다. 남은 일은 실제 Backend로 Desktop 발급 → Extension 입력 → Desktop 연결 반영 QA다. Desktop 온보딩 [Issue #36](https://github.com/What-a-move/FocusOn/issues/36)의 필수 단계다.
 
 ## 작업 목적
 
@@ -24,9 +24,9 @@ Desktop에서 발급한 연결 코드를 Extension에 입력해 같은 계정에
 ## 예상 작업 순서
 
 1. 완료: 연결 코드 입력 화면과 `ABC-123` 형식 검증 UI를 구현했다.
-2. `POST /api/v1/extension-pairings`에 코드와 Extension installation ID를 전송한다.
-3. 만료·사용 완료·시도 초과·네트워크 오류를 계약에 맞게 표시한다.
-4. 성공 시 Extension 전용 인증 정보를 기존 보안 계약에 따라 저장하고 연결 상태를 표시한다.
+2. 완료: `POST /api/v1/extension-pairings`에 코드와 Extension installation ID를 전송한다.
+3. 완료: 만료·사용 완료·시도 초과·취소·429·네트워크 오류를 표시한다. 틀린 코드의 오류 code는 Backend 확정 뒤 맞춘다.
+4. 완료: 성공 시 Extension 전용 인증 정보를 결정 011에 따라 저장하고 연결 상태를 표시한다. Extension의 Access Token 갱신(refresh)은 이후 API를 붙일 때 구현한다.
 5. Backend API 병합 뒤 Desktop 발급 → Extension 입력 → Desktop 연결 완료 표시까지 실제 왕복을 확인한다.
 
 ## 이후 작업 후보

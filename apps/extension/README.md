@@ -15,6 +15,7 @@ Chrome 브라우저의 학습 흐름을 수집하는 Extension이다. Popup 화�
 ```bash
 pnpm dev:extension
 pnpm build:extension
+NEXT_PUBLIC_FOCUSON_API_BASE_URL=http://127.0.0.1:8080 pnpm build:extension   # Backend origin을 넣어 빌드
 pnpm turbo run lint --filter=@focuson/extension
 ```
 

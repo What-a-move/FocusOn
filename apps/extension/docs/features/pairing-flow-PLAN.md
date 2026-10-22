@@ -13,7 +13,7 @@
 
 Desktop이 발급한 일회용 코드를 Extension Popup에 입력해 같은 계정의 기기로 연결한다. Popup은 코드 입력, 형식 검증, 연결 대기·오류·완료 상태를 보여준다.
 
-이 단계에서는 UI와 형식 검증을 준비한다. Backend API 왕복과 token 저장은 별도 인증 경계 및 보안 저장 구현이 준비된 뒤 연결한다. API 응답을 받기 전에는 연결 성공을 표시하거나 완료 상태를 저장하지 않는다.
+코드 제출(`POST /api/v1/extension-pairings`)과 token 저장을 구현했다(2026-10-22). API 성공 응답과 token 저장이 모두 끝난 뒤에만 연결 완료를 표시한다. 이미 연결된 브라우저는 Popup을 열면 연결 완료 화면을 보여준다.
 
 ## 계약
 
@@ -22,7 +22,9 @@ Desktop이 발급한 일회용 코드를 Extension Popup에 입력해 같은 계
 - Extension은 `POST /api/v1/extension-pairings`에 `pairingCode` (`ABC123`처럼 하이픈 제외)와 `installationId`를 보낸다. 이 endpoint는 인증 헤더를 요구하지 않는다.
 - 성공하면 Extension 전용 Access Token과 Refresh Token을 받는다. Desktop token과 공유하지 않는다.
 - 오류 코드는 `LINK_001_INVALID_FORMAT`, `LINK_002_EXPIRED`, `LINK_003_ALREADY_USED`, `LINK_004_ATTEMPTS_EXCEEDED`, `LINK_005_CANCELLED`다. HTTP 429는 재시도 대기 안내를 제공한다.
-- Token 저장 위치는 기존 보안 결정과 일치해야 한다. 현재 문서에는 안전한 Extension token 저장 수단이 확정되어 있지 않아, token을 `chrome.storage.local` 또는 `chrome.storage.sync`에 저장하지 않는다.
+- Token 저장 위치는 `DECISION_RECORD.md` 결정 011을 따른다: Refresh Token은 `chrome.storage.local`, Access Token은 `chrome.storage.session`(TRUSTED_CONTEXTS), installationId는 `chrome.storage.local`.
+- 성공 응답 `data`는 `accessToken`, `refreshToken`, `accessTokenExpiresAt`으로 해석한다. **Backend 확인 필요:** Notion 응답 명세가 "Extension 전용 access token + refresh token"으로만 적혀 있어 필드 이름과 틀린 코드(남은 시도 횟수) 오류 code를 확정해야 한다.
+- Popup은 Next.js 정적 Export다. Manifest V3 CSP 때문에 `pnpm build`가 인라인 스크립트를 외부 파일로 옮긴다(`pairing-flow-inline-script-csp-ERROR.md`).
 
 ## 사용자 흐름
 
@@ -41,9 +43,9 @@ Desktop이 발급한 일회용 코드를 Extension Popup에 입력해 같은 계
 
 ## 완료 조건
 
-- [ ] 입력은 대문자·숫자 6자리이며 화면에는 `ABC-123` 형식으로 표시한다.
-- [ ] 잘못된 형식은 제출하지 않는다.
-- [ ] API 성공 응답 전 연결 완료 상태를 표시하지 않는다.
-- [ ] 오류 코드를 사용자 문구로 바꾸고 재시도 조건을 안내한다.
-- [ ] Extension token 저장 정책을 확정한 뒤에만 실제 API 연결을 완료한다.
+- [x] 입력은 대문자·숫자 6자리이며 화면에는 `ABC-123` 형식으로 표시한다.
+- [x] 잘못된 형식은 제출하지 않는다.
+- [x] API 성공 응답 전 연결 완료 상태를 표시하지 않는다.
+- [x] 오류 코드를 사용자 문구로 바꾸고 재시도 조건을 안내한다. (Chromium + 테스트용 가짜 서버로 만료·429·틀린 코드 확인)
+- [x] Extension token 저장 정책을 확정한 뒤에만 실제 API 연결을 완료한다. (결정 011)
 - [ ] Desktop에서 코드 발급부터 연결 완료 상태 반영까지 Backend 준비 후 검증한다.
