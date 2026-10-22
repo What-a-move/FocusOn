@@ -1,3 +1,5 @@
+import type { PermissionsApi } from './permission-contract.cjs'
+
 export const AUTH_CHANNELS = {
   getSession: 'auth:session:get',
   retrySession: 'auth:session:retry',
@@ -36,6 +38,7 @@ export type FocusOnApi = {
     logout(): Promise<IpcResult<{ loggedOut: true }>>
     onSessionChanged(callback: (snapshot: AuthSessionSnapshot) => void): () => void
   }
+  permissions: PermissionsApi
 }
 
 const AUTH_STATUSES: readonly AuthUiStatus[] = [

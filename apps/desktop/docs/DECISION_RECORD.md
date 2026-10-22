@@ -361,3 +361,28 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 - `docs/PROJECT_CONTEXT.md`, `docs/API_CONTRACT.md`
 - `apps/desktop/docs/CONTEXT.md`, `NEXT_TASK.md`
 - `apps/extension/docs/CONTEXT.md`, `NEXT_TASK.md`
+
+## 결정 016 - 온보딩 macOS 권한 IPC 구현 방식
+
+- 결정일: 2026-10-22
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- `IPC_CONTRACT.md`의 확정 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)을 그대로 구현하고 Type은 `electron/shared/permission-contract.cts`에 둔다. Sender 검증은 인증 IPC와 같은 `isTrustedAuthSender`를 쓴다.
+- 화면 기록은 가짜 요청 API를 만들지 않는다. 상태가 `not-determined`일 때만 캡처 목록을 한 번 조회해 시스템 설정 목록에 앱이 나타나게 한 뒤 설정 화면을 연다.
+- 카메라는 `not-determined`일 때만 OS 허용 창을 띄운다. 이미 거부했으면 상태만 돌려준다.
+- macOS는 알림 허용 상태를 조회할 수 없으므로 온보딩에서는 Main이 정한 code의 시험 알림을 보내 허용 창을 띄우고, 화면에는 허용 여부를 단정하지 않고 `요청했어요`로 표시한다.
+- 개발 실행에서만 `FOCUSON_DEV_START_PATH`로 첫 화면 경로를 지정할 수 있다. 같은 앱 출처 경로만 허용하고 패키징 앱에서는 무시한다.
+
+### 결정 이유
+
+실제 macOS 동작을 그대로 보여 주고, OS가 알려 주지 않는 상태(화면 기록 요청 여부·알림 허용)를 화면에서 성공으로 꾸미지 않기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/permission-ipc.cts`, `electron/shared/permission-contract.cts`, `electron/preload/index.cts`, `electron/main/index.cts`
+- `apps/desktop/features/onboarding/onboarding-api.ts`, `PermissionsStep.tsx`
+- `apps/desktop/docs/IPC_CONTRACT.md`, `MACOS_PERMISSION_FLOW.md`

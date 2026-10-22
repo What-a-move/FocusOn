@@ -1,9 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
-import { describeError, onboardingApi, type ApiResult, type Notice } from './onboarding-api'
+import { describeError, onboardingApi, type Notice } from './onboarding-api'
 
 type Detail = { title: string; rows: [string, string][] }
 type Consent = { id: string; title: string; summary?: string; detail: Detail }
@@ -59,7 +59,7 @@ const cameraDetail: Detail = { title: '카메라 분석', rows: [
 ] }
 
 type PermName = 'screen' | 'camera' | 'notify'
-type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied'; error: string | null }
+type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied' | 'requested'; error: string | null }
 
 const permCopy: Record<PermName, { title: string; required: boolean; idle: string; action: string }> = {
   screen: { title: '화면 기록', required: true, idle: '보고 있는 화면이 목표와 맞는지 확인할 때만 써요', action: '설정 열기' },
@@ -75,6 +75,7 @@ function permText(name: PermName, perm: PermState): string {
   if (name === 'screen' && perm.state === 'opened') return '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 FocusOn을 켜 주세요'
   if (name === 'screen' && perm.state === 'denied') return '아직 꺼져 있어요. 켰다면 FocusOn을 다시 열어 주세요.'
   if (perm.state === 'denied') return '시스템 설정에서 언제든 허용할 수 있어요.'
+  if (perm.state === 'requested') return '알림 창이 뜨면 ‘허용’을 눌러 주세요.'
   return permCopy[name].idle
 }
 
@@ -106,30 +107,62 @@ export function PermissionsStep() {
     dialogRef.current?.showModal()
   }
 
+  function failPerm(name: PermName, state: PermState['state'], notice: Notice) {
+    setPerm(name, { state, error: `${notice.title} ${notice.body}` })
+    setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
+  }
+
+  // [유지보수] 시스템 설정에서 돌아오면(창 포커스) 화면 기록 상태를 조용히 다시 확인한다.
+  const recheckScreen = useCallback(async (silent: boolean) => {
+    const result = await onboardingApi.checkScreenRecording()
+    const setScreen = (next: PermState) => setPerms((current) => ({ ...current, screen: next }))
+    if (!result.success) {
+      if (!silent) {
+        const notice = describeError(result.error)
+        setScreen({ state: 'opened', error: `${notice.title} ${notice.body}` })
+        setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
+      }
+      return
+    }
+    if (result.data.granted) {
+      setScreen({ state: 'granted', error: null })
+      setPrompt({ text: '좋아요, 준비됐어요!', error: false })
+    } else if (!silent) {
+      setScreen({ state: 'denied', error: null })
+      setPrompt({ text: '아직 꺼져 있는 것 같아요.', error: true })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (view !== 'permission') return
+    queueMicrotask(() => { void recheckScreen(true) })
+    const onFocus = () => { void recheckScreen(true) }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [view, recheckScreen])
+
   async function runPerm(name: PermName) {
     setFeedback(null)
     const current = perms[name]
-    let result: ApiResult<{ granted: boolean } | { opened: true }>
-    if (name === 'screen' && current.state === 'idle') result = await onboardingApi.openScreenRecordingSettings()
-    else if (name === 'screen') result = await onboardingApi.checkScreenRecording()
-    else if (name === 'camera') result = await onboardingApi.requestCamera()
-    else result = await onboardingApi.requestNotifications()
-
-    if (!result.success) {
-      const notice = describeError(result.error)
-      setPerm(name, { state: current.state, error: `${notice.title} ${notice.body}` })
-      setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
-      return
-    }
-    if ('opened' in result.data) {
+    if (name === 'screen' && current.state === 'idle') {
+      const result = await onboardingApi.openScreenRecordingSettings()
+      if (!result.success || !result.data.opened) return failPerm(name, 'idle', result.success ? describeError({ code: 'SERVICE_UNAVAILABLE', retryable: true }) : describeError(result.error))
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return
     }
-    const granted = result.data.granted
-    setPerm(name, { state: granted ? 'granted' : 'denied', error: null })
-    if (name === 'screen') setPrompt(granted ? { text: '좋아요, 준비됐어요!', error: false } : { text: '아직 꺼져 있는 것 같아요.', error: true })
-    else if (granted) setPrompt({ text: name === 'camera' ? '카메라도 준비됐어요!' : '알림도 켜 뒀어요!', error: false })
+    if (name === 'screen') return recheckScreen(false)
+    if (name === 'camera') {
+      const result = await onboardingApi.requestCamera()
+      if (!result.success) return failPerm(name, current.state, describeError(result.error))
+      setPerm(name, { state: result.data.granted ? 'granted' : 'denied', error: null })
+      if (result.data.granted) setPrompt({ text: '카메라도 준비됐어요!', error: false })
+      return
+    }
+    const result = await onboardingApi.requestNotifications()
+    if (!result.success) return failPerm(name, current.state, describeError(result.error))
+    setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
+    if (result.data.requested) setPrompt({ text: '알림 창이 뜨면 허용해 주세요!', error: false })
   }
 
   async function goNext() {
@@ -241,8 +274,8 @@ export function PermissionsStep() {
                     <strong>{copy.title} <span className={`tag${copy.required ? ' required' : ''}`}>{copy.required ? '필수' : '선택'}</span></strong>
                     <small className={`perm-desc${perm.error || (name === 'screen' && perm.state === 'denied') ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
                   </span>
-                  {perm.state === 'granted'
-                    ? <span className="perm-done">허용됨</span>
+                  {perm.state === 'granted' || perm.state === 'requested'
+                    ? <span className={`perm-done${perm.state === 'requested' ? ' is-muted' : ''}`}>{perm.state === 'granted' ? '허용됨' : '요청했어요'}</span>
                     : <button className="btn btn-ghost perm-action" type="button" onClick={() => { void runPerm(name) }}>{action}</button>}
                 </li>
               )

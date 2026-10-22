@@ -113,11 +113,11 @@ type AuthSessionSnapshot = {
 
 실제 Channel을 추가하면 입력·출력 Type을 `electron/shared/`에 정의하고 이 표를 갱신한다.
 
-현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`에 있다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
+현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Preload는 `window.focusOn.permissions`로 노출한다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
 
 Google 데스크톱 Client ID 또는 Backend origin이 없거나 브라우저·listener를 시작할 수 없으면 `auth:google-login:start`는 `SERVICE_UNAVAILABLE`, `retryable: false`를 반환한다. 둘 다 설정되면 기본 브라우저·임시 loopback listener 시작 뒤 `{ started: true }`를 반환한다. 이는 **로그인 성공**이 아니라 **인증 시도 시작**만 뜻한다. code callback 뒤 Main이 Backend에 교환을 요청하고 성공 응답의 Refresh Token을 Keychain에 저장한 경우에만 `SIGNED_IN` Event를 보낸다. 서버 API가 아직 없으면 성공 상태를 만들지 않는다. `auth:session:get`은 앱 시작 시 Keychain 복구가 끝난 Snapshot을 반환한다.
 
-Google 로그인은 브라우저 왕복이 필요하므로 `auth:google-login:start`는 흐름을 시작한 직후 `{ started: true }`를 반환한다. 이미 `AUTHENTICATING`이면 새 OAuth 흐름을 열지 않고 `{ started: false }`를 반환한다. 완료·취소·실패 뒤 상태는 `auth:session:changed` Event로 알린다.
+Google 로그인은 브라우저 왕복이 필요하므로 `auth:google-login:start`는 흐름을 시작한 직후 `{ started: true }`를 반환한다. 이미 `AUTHENTICATING`이면(브라우저 탭을 닫아 callback이 오지 않은 경우 포함) 이전 시도의 listener를 정리하고 새 `state`·verifier로 다시 시작해 `{ started: true }`를 반환한다. 진행 중이던 code 교환 결과는 버리고 서버 토큰을 폐기한다(2026-10-22). 완료·취소·실패 뒤 상태는 `auth:session:changed` Event로 알린다.
 
 ```ts
 type AuthSessionChangedPayload = AuthSessionSnapshot
