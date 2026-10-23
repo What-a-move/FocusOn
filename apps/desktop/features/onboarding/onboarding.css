@@ -221,7 +221,8 @@
 .onboarding-window .perm-desc.is-error { color: var(--danger); font-weight: 600; }
 .onboarding-window .perm-action { flex: 0 0 auto; min-width: 0; height: 44px; padding: 0 16px; font-size: 15px; }
 .onboarding-window .perm-done { flex: 0 0 auto; color: var(--success); font-size: 15px; font-weight: 700; }
-.onboarding-window .perm-done.is-muted { color: var(--muted); }
+.onboarding-window .perm-answer { display: flex; flex: 0 0 auto; gap: 6px; }
+.onboarding-window .perm-answer .perm-action { padding: 0 12px; }
 .onboarding-window .perm-note { margin: 16px 4px 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 
 /* 분석 제외 사이트 */

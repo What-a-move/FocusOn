@@ -56,6 +56,7 @@ export const onboardingApi = {
     (api) => api.showNotification({ titleCode: 'ONBOARDING_TEST', bodyCode: 'ONBOARDING_TEST' }),
     ({ shown }) => ({ requested: shown }),
   ),
+  openNotificationSettings: () => viaPermissions((api) => api.openNotificationSettings(), same),
   savePermissionsStep: (input: { consents: string[]; cameraConsent: boolean }) => viaOnboarding(
     (api) => api.savePermissionsStep({ consents: input.consents.map((id) => CONSENT_TYPES[id]).filter(Boolean), cameraConsent: input.cameraConsent }),
     same,

@@ -32,8 +32,9 @@ function signedIn(routes) {
     },
   }
   const store = new AuthSessionStore(() => {})
-  const auth = new AuthService(store, api, vault('saved-refresh'), async () => { throw new Error('unused') })
-  return { auth, store, calls, refreshes: () => refreshCount }
+  const waits = []
+  const auth = new AuthService(store, api, vault('saved-refresh'), async () => { throw new Error('unused') }, async (ms) => { waits.push(ms) })
+  return { auth, store, calls, waits, refreshes: () => refreshCount }
 }
 
 test('만료 응답을 받으면 refresh를 한 번만 하고 원 요청을 한 번만 다시 보낸다', async () => {
@@ -139,4 +140,37 @@ test('Main은 Renderer 입력 형식을 다시 검증한다', () => {
   assert.equal(isValidConsentList(['TERMS_OF_SERVICE', 'TERMS_OF_SERVICE']), false)
   assert.equal(isValidConsentList(['CAMERA_ANALYSIS']), false)
   assert.equal(parseReadiness({ ...readiness, currentStep: 'GOAL' }), null)
+})
+
+test('GET은 네트워크 오류·503에서 1초, 3초 간격으로 최대 2번 다시 시도한다', async () => {
+  let attempts = 0
+  const { auth, waits } = signedIn({
+    'GET /api/v1/users/me/onboarding-readiness': () => (++attempts < 3 ? { success: false, error: { code: attempts === 1 ? 'LOCAL_NETWORK_UNAVAILABLE' : 'SERVICE_UNAVAILABLE', retryable: true } } : { success: true, data: readiness }),
+  })
+  await auth.restore()
+  const result = await auth.authorizedRequest({ path: '/api/v1/users/me/onboarding-readiness', method: 'GET', expectedStatus: 200, parse: parseReadiness })
+  assert.equal(result.success, true)
+  assert.equal(attempts, 3)
+  assert.deepEqual(waits, [1000, 3000])
+})
+
+test('GET 재시도는 2번까지만 하고 마지막 오류를 돌려준다', async () => {
+  const { auth, calls, waits } = signedIn({ 'GET /x': { success: false, error: { code: 'REQUEST_TIMEOUT', retryable: true } } })
+  await auth.restore()
+  const result = await auth.authorizedRequest({ path: '/x', method: 'GET', expectedStatus: 200, parse: () => ({}) })
+  assert.equal(result.success, false)
+  assert.equal(calls.length, 3)
+  assert.deepEqual(waits, [1000, 3000])
+})
+
+test('상태를 바꾸는 PUT과 재시도할 수 없는 오류는 다시 보내지 않는다', async () => {
+  const { auth, calls, waits } = signedIn({
+    'PUT /api/v1/users/me/profile': { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } },
+    'GET /bad': { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } },
+  })
+  await auth.restore()
+  await auth.authorizedRequest({ path: '/api/v1/users/me/profile', method: 'PUT', expectedStatus: 200, parse: () => ({}), body: { nickname: '포커스' } })
+  await auth.authorizedRequest({ path: '/bad', method: 'GET', expectedStatus: 200, parse: () => ({}) })
+  assert.equal(calls.length, 2)
+  assert.deepEqual(waits, [])
 })

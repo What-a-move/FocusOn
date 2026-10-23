@@ -411,3 +411,27 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 - `apps/desktop/electron/main/auth-service.cts`, `auth-api.cts`, `onboarding-service.cts`, `onboarding-ipc.cts`, `index.cts`
 - `apps/desktop/electron/shared/onboarding-contract.cts`, `auth-contract.cts`, `electron/preload/index.cts`
 - `apps/desktop/features/onboarding/*`, `app/page.tsx`
+
+## 결정 018 - 알림 권한 필수와 확인 방식
+
+- 결정일: 2026-10-23
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정)
+
+### 결정 내용
+
+- 알림 권한은 필수다. 온보딩 권한 확인 화면은 화면 기록과 알림이 모두 준비되어야 다음 단계로 넘어간다.
+- macOS가 알림 허용 상태를 알려 주지 않으므로 시험 알림을 보내고 사용자가 `보였어요`를 눌렀을 때만 준비됨으로 본다. 화면에 허용 여부를 단정해 표시하지 않는다.
+- 서버 준비 상태에는 알림 필드가 없어 이 조건은 Desktop 화면에서 확인한다. 서버 기록 여부는 Backend와 정한다.
+- 결정 016의 "알림은 `요청했어요`로만 표시" 부분을 이 결정으로 대체한다.
+
+### 결정 이유
+
+알림은 집중 이탈 안내의 핵심 경로라 필수로 둔다. OS가 상태를 주지 않는 상황에서 성공을 꾸미지 않으려면 사용자의 직접 확인이 가장 정확하다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/permission-ipc.cts`, `electron/shared/permission-contract.cts`, `electron/preload/index.cts`
+- `apps/desktop/features/onboarding/PermissionsStep.tsx`, `onboarding-api.ts`, `onboarding.css`
+- `FocusOn-design/onboarding.html`, `apps/desktop/docs/MACOS_PERMISSION_FLOW.md`

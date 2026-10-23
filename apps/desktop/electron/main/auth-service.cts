@@ -9,6 +9,11 @@ const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryab
 const ACCESS_TOKEN_EXPIRED = 'AUTH_ACCESS_TOKEN_EXPIRED'
 // 만료 직전 토큰으로 요청하다 실패하지 않도록 30초 여유를 두고 미리 갱신한다.
 const EXPIRY_MARGIN_MS = 30_000
+// 공통 Error Code 정책 4.3: GET은 네트워크 오류·503·504에서 1초 → 3초 간격으로 최대 2회 재시도한다.
+// 상태를 바꾸는 요청(PUT·POST)은 자동 재전송하지 않는다.
+const GET_RETRY_DELAYS_MS = [1_000, 3_000]
+const TRANSIENT_CODES = new Set(['LOCAL_NETWORK_UNAVAILABLE', 'SERVICE_UNAVAILABLE', 'REQUEST_TIMEOUT'])
+const wait = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve, ms) })
 
 export type AuthorizedRequest<T> = {
   path: string
@@ -40,6 +45,7 @@ export class AuthService {
     private readonly api: AuthApiClient,
     private readonly vault: RefreshTokenVault,
     private readonly getDevice: () => Promise<DesktopDevice>,
+    private readonly sleep: (ms: number) => Promise<void> = wait,
   ) {}
 
   private publish(status: AuthSessionSnapshot['status'], error: AuthApiError | null = null, data?: {
@@ -78,11 +84,22 @@ export class AuthService {
       request.path, request.method, request.expectedStatus, request.parse, request.body,
       this.accessToken ?? undefined, request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {},
     )
-    const first = await send()
+    const sendWithRetry = async () => {
+      let result = await send()
+      if (request.method !== 'GET') return result
+      for (const delay of GET_RETRY_DELAYS_MS) {
+        if (result.success || !TRANSIENT_CODES.has(result.error.code)) return result
+        await this.sleep(delay)
+        result = await send()
+      }
+      return result
+    }
+
+    const first = await sendWithRetry()
     if (first.success || first.error.code !== ACCESS_TOKEN_EXPIRED) return first
     const refreshed = await this.refreshOrSignOut()
     if (!refreshed.success) return refreshed
-    return send()
+    return sendWithRetry()
   }
 
   // 프로필 저장 뒤 화면의 닉네임도 서버가 확정한 값으로 바꾼다.

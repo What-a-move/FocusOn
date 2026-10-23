@@ -7,6 +7,7 @@ export const PERMISSION_CHANNELS = {
   cameraStatus: 'permission:camera:get-status',
   cameraRequest: 'permission:camera:request',
   notificationShow: 'notification:show',
+  notificationOpenSettings: 'permission:notification:open-settings',
 } as const
 
 export type PermissionStatus = 'not-determined' | 'granted' | 'denied' | 'restricted' | 'unknown'
@@ -24,6 +25,7 @@ export type PermissionsApi = {
   getCameraStatus(): Promise<IpcResult<{ status: PermissionStatus }>>
   requestCamera(): Promise<IpcResult<{ status: PermissionStatus }>>
   showNotification(input: { titleCode: NotificationCode; bodyCode: NotificationCode }): Promise<IpcResult<{ shown: boolean }>>
+  openNotificationSettings(): Promise<IpcResult<{ opened: boolean }>>
 }
 
 const STATUSES: readonly PermissionStatus[] = ['not-determined', 'granted', 'denied', 'restricted', 'unknown']

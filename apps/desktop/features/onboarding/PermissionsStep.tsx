@@ -64,7 +64,7 @@ type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied' | 'requested'
 const permCopy: Record<PermName, { title: string; required: boolean; idle: string; action: string }> = {
   screen: { title: '화면 기록', required: true, idle: '보고 있는 화면이 목표와 맞는지 확인할 때만 써요', action: '설정 열기' },
   camera: { title: '카메라', required: false, idle: '동의한 카메라 분석에 필요해요', action: '허용하기' },
-  notify: { title: '알림', required: false, idle: '집중이 흐트러졌을 때 알려 드려요', action: '허용하기' },
+  notify: { title: '알림', required: true, idle: '집중이 흐트러졌을 때 알려 드려요', action: '허용하기' },
 }
 
 const idle: PermState = { state: 'idle', error: null }
@@ -74,8 +74,11 @@ function permText(name: PermName, perm: PermState): string {
   if (perm.error) return perm.error
   if (name === 'screen' && perm.state === 'opened') return '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 FocusOn을 켜 주세요'
   if (name === 'screen' && perm.state === 'denied') return '아직 꺼져 있어요. 켰다면 FocusOn을 다시 열어 주세요.'
+  // [유지보수] macOS가 알림 허용 여부를 알려 주지 않아 시험 알림을 보내고 사용자에게 보였는지 묻는다.
+  if (name === 'notify' && perm.state === 'requested') return '방금 보낸 알림이 보였나요?'
+  if (name === 'notify' && perm.state === 'denied') return '시스템 설정 › 알림에서 FocusOn을 허용해 주세요.'
+  if (name === 'notify' && perm.state === 'opened') return '허용한 뒤 ‘다시 보내기’를 눌러 주세요.'
   if (perm.state === 'denied') return '시스템 설정에서 언제든 허용할 수 있어요.'
-  if (perm.state === 'requested') return '알림 창이 뜨면 ‘허용’을 눌러 주세요.'
   return permCopy[name].idle
 }
 
@@ -93,6 +96,7 @@ export function PermissionsStep() {
 
   const allAccepted = requiredConsents.every(({ id }) => accepted.has(id))
   const screenReady = perms.screen.state === 'granted'
+  const notifyReady = perms.notify.state === 'granted'
   const setPerm = (name: PermName, next: PermState) => setPerms((current) => ({ ...current, [name]: next }))
 
   function updateConsents(next: Set<string>) {
@@ -159,10 +163,23 @@ export function PermissionsStep() {
       if (result.data.granted) setPrompt({ text: '카메라도 준비됐어요!', error: false })
       return
     }
+    if (current.state === 'denied') {
+      const result = await onboardingApi.openNotificationSettings()
+      if (!result.success || !result.data.opened) return failPerm(name, 'denied', result.success ? describeError({ code: 'SERVICE_UNAVAILABLE', retryable: true }) : describeError(result.error))
+      setPerm(name, { state: 'opened', error: null })
+      setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
+      return
+    }
     const result = await onboardingApi.requestNotifications()
     if (!result.success) return failPerm(name, current.state, describeError(result.error))
     setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
-    if (result.data.requested) setPrompt({ text: '알림 창이 뜨면 허용해 주세요!', error: false })
+    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림을 보내지 못했어요.', error: true })
+  }
+
+  function answerNotification(seen: boolean) {
+    setFeedback(null)
+    setPerm('notify', { state: seen ? 'granted' : 'denied', error: null })
+    setPrompt(seen ? { text: '알림도 준비됐어요!', error: false } : { text: '설정에서 알림을 켜 주세요.', error: false })
   }
 
   async function goNext() {
@@ -173,11 +190,15 @@ export function PermissionsStep() {
       }
       setView('permission')
       setFeedback(null)
-      setPrompt({ text: '화면 기록 권한만 켜 주시면 돼요', error: false })
+      setPrompt({ text: '권한 두 개만 켜 주시면 돼요', error: false })
       return
     }
     if (!screenReady) {
       setFeedback({ title: '화면 기록 권한이 필요해요.', body: '시스템 설정에서 FocusOn을 켠 뒤 ‘다시 확인’을 눌러 주세요.' })
+      return
+    }
+    if (!notifyReady) {
+      setFeedback({ title: '알림 권한이 필요해요.', body: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.' })
       return
     }
     setSaving(true)
@@ -200,7 +221,7 @@ export function PermissionsStep() {
       backHref={view === 'consents' ? '/onboarding/extension/' : undefined}
       onBack={view === 'permission' ? () => { setView('consents'); setFeedback(null); setPrompt({ text: '시작하려면 동의가 필요해요!', error: false }) } : undefined}
       feedback={feedback}
-      next={{ label: '다음', blocked: view === 'consents' ? !allAccepted : !screenReady, busy: saving, onClick: () => { void goNext() } }}
+      next={{ label: '다음', blocked: view === 'consents' ? !allAccepted : !(screenReady && notifyReady), busy: saving, onClick: () => { void goNext() } }}
     >
       {view === 'consents' ? (
         <div className="consents">
@@ -266,17 +287,26 @@ export function PermissionsStep() {
             {visiblePerms.map((name) => {
               const perm = perms[name]
               const copy = permCopy[name]
-              const action = name === 'screen' && perm.state !== 'idle' ? '다시 확인' : copy.action
+              const action = name === 'screen' && perm.state !== 'idle' ? '다시 확인'
+                : name === 'notify' && perm.state === 'denied' ? '설정 열기'
+                  : name === 'notify' && perm.state === 'opened' ? '다시 보내기' : copy.action
               return (
                 <li className="perm" data-state={perm.state} key={name}>
                   <span className="perm-state" aria-hidden="true">{perm.state === 'denied' ? '!' : '✓'}</span>
                   <span className="choice-text">
                     <strong>{copy.title} <span className={`tag${copy.required ? ' required' : ''}`}>{copy.required ? '필수' : '선택'}</span></strong>
-                    <small className={`perm-desc${perm.error || (name === 'screen' && perm.state === 'denied') ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
+                    <small className={`perm-desc${perm.error || (perm.state === 'denied' && copy.required) ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
                   </span>
-                  {perm.state === 'granted' || perm.state === 'requested'
-                    ? <span className={`perm-done${perm.state === 'requested' ? ' is-muted' : ''}`}>{perm.state === 'granted' ? '허용됨' : '요청했어요'}</span>
-                    : <button className="btn btn-ghost perm-action" type="button" onClick={() => { void runPerm(name) }}>{action}</button>}
+                  {perm.state === 'granted'
+                    ? <span className="perm-done">허용됨</span>
+                    : name === 'notify' && perm.state === 'requested'
+                      ? (
+                        <span className="perm-answer">
+                          <button className="btn btn-ghost perm-action" type="button" onClick={() => answerNotification(false)}>안 보였어요</button>
+                          <button className="btn btn-primary perm-action" type="button" onClick={() => answerNotification(true)}>보였어요</button>
+                        </span>
+                      )
+                      : <button className="btn btn-ghost perm-action" type="button" onClick={() => { void runPerm(name) }}>{action}</button>}
                 </li>
               )
             })}

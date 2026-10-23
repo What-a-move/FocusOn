@@ -14,6 +14,8 @@ const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', ret
 const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
 // macOS 시스템 설정 › 개인정보 보호 및 보안 › 화면 기록
 const SCREEN_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
+// macOS 시스템 설정 › 알림
+const NOTIFICATION_SETTINGS_URL = 'x-apple.systempreferences:com.apple.Notifications-Settings.extension'
 
 export function mediaStatus(media: 'screen' | 'camera'): PermissionStatus {
   if (process.platform !== 'darwin') return 'unknown'
@@ -52,6 +54,12 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
       await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } }).catch(() => [])
     }
     await shell.openExternal(SCREEN_SETTINGS_URL)
+    return { opened: true }
+  })
+
+  // [주의] macOS는 알림 허용 상태를 앱에 알려 주지 않는다. 온보딩은 시험 알림 + 사용자 확인으로 판단하고, 안 보이면 이 설정 화면을 연다.
+  handleVoid(PERMISSION_CHANNELS.notificationOpenSettings, async () => {
+    await shell.openExternal(NOTIFICATION_SETTINGS_URL)
     return { opened: true }
   })
 

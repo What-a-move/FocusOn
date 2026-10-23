@@ -113,7 +113,7 @@ type AuthSessionSnapshot = {
 
 실제 Channel을 추가하면 입력·출력 Type을 `electron/shared/`에 정의하고 이 표를 갱신한다.
 
-현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Preload는 `window.focusOn.permissions`로 노출한다.
+현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Preload는 `window.focusOn.permissions`로 노출한다. `permission:notification:open-settings`(입력 `void`, 성공 `{ opened: boolean }`)는 시스템 설정 › 알림을 연다(2026-10-23 추가).
 
 온보딩 Channel(2026-10-22 구현, Type은 `electron/shared/onboarding-contract.cts`, Preload는 `window.focusOn.onboarding`):
 
@@ -126,7 +126,7 @@ type AuthSessionSnapshot = {
 | `onboarding:excluded-domains:save` | `{ domains }` | `{ domains }` | `PUT /users/me/analysis-excluded-domains`(X-Device-Id) → `PUT onboarding-readiness { analysisExcludedDomainsStepCompleted: true }` |
 | `onboarding:summary:get` | `void` | `OnboardingSummary` | readiness·consents·excluded-domains `GET` |
 
-- 모든 온보딩 요청은 `AuthService.authorizedRequest`를 거친다. 만료가 가까우면 먼저 refresh하고, 서버가 `AUTH_ACCESS_TOKEN_EXPIRED`를 주면 single-flight refresh 1회 뒤 원 요청을 1회만 다시 보낸다. refresh가 재로그인 오류면 Keychain을 비우고 `SIGNED_OUT` Event를 보낸다.
+- 모든 온보딩 요청은 `AuthService.authorizedRequest`를 거친다. 만료가 가까우면 먼저 refresh하고, 서버가 `AUTH_ACCESS_TOKEN_EXPIRED`를 주면 single-flight refresh 1회 뒤 원 요청을 1회만 다시 보낸다. `GET`은 `LOCAL_NETWORK_UNAVAILABLE`·`SERVICE_UNAVAILABLE`(503)·`REQUEST_TIMEOUT`(504)에서 1초 → 3초 간격으로 최대 2회 재시도하고, `PUT`·`POST`는 자동 재전송하지 않는다(공통 Error Code 정책 4.3, 2026-10-23). 성공 상태인데 본문이 계약과 다르면 `INVALID_RESPONSE`로 구분해 재시도하지 않는다. refresh가 재로그인 오류면 Keychain을 비우고 `SIGNED_OUT` Event를 보낸다.
 - `screenAnalysisReady`는 Renderer 입력을 받지 않고 Main이 `systemPreferences`로 직접 확인한 값만 보낸다.
 - 서버가 `COMPLETED`를 반환하면 Main은 `AuthSessionSnapshot.onboardingStatus`도 갱신해 홈·온보딩 사이를 오가지 않게 한다. 닉네임 저장 성공 시 `user.nickname`도 갱신한다.
 - `FOCUSON_API_BASE_URL`이 없으면 모든 온보딩 Channel은 `SERVICE_UNAVAILABLE`이다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
