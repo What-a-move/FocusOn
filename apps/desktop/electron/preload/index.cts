@@ -5,6 +5,7 @@ import { PERMISSION_CHANNELS } from '../shared/permission-contract.cjs'
 import { ONBOARDING_CHANNELS } from '../shared/onboarding-contract.cjs'
 import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 import { GOAL_CHANNELS } from '../shared/goal-contract.cjs'
+import { SESSION_CHANNELS } from '../shared/session-contract.cjs'
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -31,6 +32,8 @@ const focusOnApi: FocusOnApi = {
     requestCamera: () => ipcRenderer.invoke(PERMISSION_CHANNELS.cameraRequest),
     showNotification: (input) => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationShow, { titleCode: input.titleCode, bodyCode: input.bodyCode }),
     openNotificationSettings: () => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationOpenSettings),
+    getNotificationStatus: () => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationStatus),
+    confirmNotification: (input) => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationConfirm, { seen: input.seen }),
   },
   // [주의] 입력은 허용한 필드만 다시 만들어 보낸다. Main이 한 번 더 검증한다.
   onboarding: {
@@ -56,6 +59,20 @@ const focusOnApi: FocusOnApi = {
       goalText: input.goalText,
       confirmationSource: input.confirmationSource,
       ...(input.clarificationSessionId ? { clarificationSessionId: input.clarificationSessionId } : {}),
+    }),
+  },
+  sessions: {
+    getFocusSettings: () => ipcRenderer.invoke(SESSION_CHANNELS.focusSettings),
+    start: (input) => ipcRenderer.invoke(SESSION_CHANNELS.start, {
+      goalId: input.goalId,
+      targetDurationMs: input.targetDurationMs,
+      timeZone: input.timeZone,
+      sessionOptions: {
+        interventionLevel: input.sessionOptions.interventionLevel,
+        notificationChannels: [...input.sessionOptions.notificationChannels],
+        cameraAnalysisEnabled: input.sessionOptions.cameraAnalysisEnabled,
+      },
+      idempotencyKey: input.idempotencyKey,
     }),
   },
 }

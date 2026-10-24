@@ -52,6 +52,8 @@
 
 - Issue #44(2026-10-24): 목표 설정(D06·D07)을 `FocusOn-design/goal-setting.html`대로 `/goal/`에 구현했다. 홈 `목표 설정하기`에서 들어오고 ✕로 홈에 돌아간다. AI 결과 4종·질문 최대 2회·AI 장애/오프라인/질문 소진 시 수동 확정·저장 성공 후 완료 화면을 Main `GoalService`(목표 IPC)로 처리한다. 목표 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 약어 확인→확정→저장, AI 장애, 추천 선택(다크)을 확인했다. 완료 화면 `집중 시간 정하기`는 세션 설정 Issue에서 연결한다.
 
+- Issue #46(2026-10-24): 세션 설정(D09)을 `FocusOn-design/session-setup.html` 레이아웃으로 `/session-setup/`에 구현했다. 시간 선택지는 Notion 계약(30분·1시간·2시간·직접 5~300분)을 따른다. 기본값은 집중 설정 API, 시작은 Main `SessionService`(Idempotency-Key·X-Device-Id·기기 시간대)로 보낸다. 목표 설정 완료 화면에서 들어오고 `홈으로`로 나간다. 세션 API가 dev에 없어 실제 시작은 미검증이며, 가짜 bridge로 키보드 이동·범위 제한·알림 0개 차단·오프라인 뒤 같은 키 재시도·시작 성공(다크)을 확인했다. 집중 화면(타이머)은 다음 Issue다.
+
 ### 아직 진행하지 않은 작업
 
 - macOS 활성 앱 감지

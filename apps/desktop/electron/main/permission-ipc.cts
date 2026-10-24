@@ -9,6 +9,7 @@ import {
 } from '../shared/permission-contract.cjs'
 import type { PermissionStatus } from '../shared/permission-contract.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
+import type { NotificationReadiness } from './notification-readiness.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
 const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
@@ -30,7 +31,7 @@ export function isValidNotificationInput(args: unknown[]): args is [{ titleCode:
   return Object.keys(rest).length === 0 && isNotificationCode(titleCode) && isNotificationCode(bodyCode)
 }
 
-export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null, rendererUrl: string): void {
+export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null, rendererUrl: string, notificationReadiness: NotificationReadiness): void {
   const trusted = (event: IpcMainInvokeEvent) => isTrustedAuthSender(event, getMainWindow(), rendererUrl)
 
   function handleVoid<T>(channel: string, run: () => Promise<T> | T): void {
@@ -61,6 +62,19 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
   handleVoid(PERMISSION_CHANNELS.notificationOpenSettings, async () => {
     await shell.openExternal(NOTIFICATION_SETTINGS_URL)
     return { opened: true }
+  })
+
+  handleVoid(PERMISSION_CHANNELS.notificationStatus, () => ({ confirmed: notificationReadiness.isConfirmed() }))
+
+  ipcMain.handle(PERMISSION_CHANNELS.notificationConfirm, async (event, ...args: unknown[]): Promise<IpcResult<{ confirmed: boolean }>> => {
+    const input = args[0] as { seen?: unknown } | undefined
+    if (!trusted(event) || args.length !== 1 || typeof input !== 'object' || input === null || Object.keys(input).length !== 1 || typeof input.seen !== 'boolean') return INVALID_REQUEST
+    try {
+      notificationReadiness.set(input.seen)
+      return { success: true, data: { confirmed: input.seen } }
+    } catch {
+      return SERVICE_UNAVAILABLE
+    }
   })
 
   handleVoid(PERMISSION_CHANNELS.cameraStatus, () => ({ status: mediaStatus('camera') }))

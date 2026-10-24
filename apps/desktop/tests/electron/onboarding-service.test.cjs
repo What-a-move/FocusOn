@@ -174,3 +174,12 @@ test('상태를 바꾸는 PUT과 재시도할 수 없는 오류는 다시 보내
   assert.equal(calls.length, 2)
   assert.deepEqual(waits, [])
 })
+
+test('요청별 헤더는 X-Device-Id와 합쳐지고 Access Token(Authorization)도 함께 보낸다', async () => {
+  const { auth, calls } = signedIn({ 'POST /api/v1/sessions': { success: true, data: {} } })
+  await auth.restore()
+  await auth.authorizedRequest({ path: '/api/v1/sessions', method: 'POST', expectedStatus: 201, parse: (value) => value, body: {}, withDeviceId: true, headers: { 'Idempotency-Key': 'key-1' } })
+  const call = calls.find(({ path }) => path === '/api/v1/sessions')
+  assert.ok(call.token, 'Authorization Bearer 토큰')
+  assert.deepEqual(call.headers, { 'Idempotency-Key': 'key-1', 'X-Device-Id': 'desktop-1' })
+})

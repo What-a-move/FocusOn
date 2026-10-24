@@ -8,6 +8,8 @@ export const PERMISSION_CHANNELS = {
   cameraRequest: 'permission:camera:request',
   notificationShow: 'notification:show',
   notificationOpenSettings: 'permission:notification:open-settings',
+  notificationStatus: 'permission:notification:get-status',
+  notificationConfirm: 'permission:notification:confirm',
 } as const
 
 export type PermissionStatus = 'not-determined' | 'granted' | 'denied' | 'restricted' | 'unknown'
@@ -26,6 +28,9 @@ export type PermissionsApi = {
   requestCamera(): Promise<IpcResult<{ status: PermissionStatus }>>
   showNotification(input: { titleCode: NotificationCode; bodyCode: NotificationCode }): Promise<IpcResult<{ shown: boolean }>>
   openNotificationSettings(): Promise<IpcResult<{ opened: boolean }>>
+  /** 사용자가 시험 알림을 보고 확인한 기록. macOS 허용 상태가 아니라 이 기기의 사용자 확인 결과다. */
+  getNotificationStatus(): Promise<IpcResult<{ confirmed: boolean }>>
+  confirmNotification(input: { seen: boolean }): Promise<IpcResult<{ confirmed: boolean }>>
 }
 
 const STATUSES: readonly PermissionStatus[] = ['not-determined', 'granted', 'denied', 'restricted', 'unknown']

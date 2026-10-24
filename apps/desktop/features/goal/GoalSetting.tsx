@@ -48,7 +48,6 @@ export function GoalSetting() {
   const [selected, setSelected] = useState(-1)
   const [scopeAnswer, setScopeAnswer] = useState('')
   const [review, setReview] = useState<Review | null>(null)
-  const [doneNote, setDoneNote] = useState<string | null>(null)
   const request = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const sayRef = useRef<HTMLParagraphElement>(null)
@@ -200,8 +199,7 @@ export function GoalSetting() {
       return
     }
     if (view === 'review') { void save(); return }
-    // 세션 설정(집중 시간) 화면은 다음 Issue에서 연결한다.
-    setDoneNote('집중 시간 설정 화면은 준비 중이에요.')
+    router.push('/session-setup/')
   }
 
   const secondaryLabel = view === 'entry' ? (manual === 'exhausted' ? '지금 문구로 정하기' : '입력한 그대로 시작')
@@ -246,7 +244,6 @@ export function GoalSetting() {
             <p className="done-label">이번 집중 목표</p>
             <h2 id="done-goal" tabIndex={-1} ref={doneRef}>{review.goal}</h2>
             <p className="done-ok"><i aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg></i>목표가 정해졌어요. 이제 시간만 정하면 돼요</p>
-            {doneNote && <p className="done-note" role="status">{doneNote}</p>}
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="poki" src={POKI.cheer} alt="응원하는 포키" />

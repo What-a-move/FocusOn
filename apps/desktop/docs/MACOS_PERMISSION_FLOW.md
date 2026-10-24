@@ -59,7 +59,7 @@ Electron API가 반환하는 `not-determined`, `granted`, `denied`, `restricted`
 
 - 필수 권한이다(2026-10-23 사용자 결정, Notion `로그인 → 학습 목표 설정` 5.1과 일치). 온보딩 권한 확인 화면을 통과하려면 화면 기록과 알림이 모두 준비되어야 한다.
 - macOS는 Electron 앱에 알림 허용 상태를 알려 주는 API가 없다. 그래서 `허용하기` → Main이 시험 알림(`notification:show`, `ONBOARDING_TEST`) 전송 → 사용자에게 `방금 보낸 알림이 보였나요?`를 묻고 `보였어요`일 때만 준비됨으로 본다. `안 보였어요`면 `설정 열기`(`permission:notification:open-settings`, 시스템 설정 › 알림) → `다시 보내기`로 반복한다.
-- 서버 `onboarding-readiness`에는 알림 필드가 없어 이 조건은 Desktop 화면에서만 확인한다. 세션 시작 때는 `SESSION_START_REQUIREMENT_MISSING`의 `NOTIFICATION_PERMISSION`으로 다시 막힌다. 서버에는 알림 필드를 두지 않는다(2026-10-24 확정, 결정 019).
+- 서버 `onboarding-readiness`에는 알림 필드가 없어 이 조건은 Desktop 화면에서만 확인한다. 서버에는 알림 필드를 두지 않고 서버는 알림을 검증하지 않는다(결정 019·022). 사용자가 누른 `보였어요`/`안 보였어요`를 Main이 `userData/notification-readiness.json`에 기록하고, 세션 시작 때 기록이 없으면 서버에 요청하지 않고 `LOCAL_NOTIFICATION_NOT_CONFIRMED`로 막는다. 세션 설정 화면에서 바로 시험 알림을 다시 받을 수 있다.
 - 앞에 띄운 앱 이름 확인은 macOS 권한이 필요 없어 권한 화면에 두지 않는다(2026-10-24, Notion 로그인 설계서 5.1).
 - 알림을 실제로 사용하려는 시점에 먼저 용도와 빈도를 설명한다.
 - Main의 Electron Notification API로 허용한 알림 Code만 표시하고 Renderer가 임의 문구를 전달하지 않는다.
