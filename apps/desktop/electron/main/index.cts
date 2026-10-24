@@ -22,6 +22,8 @@ import { ReportService, registerReportIpc } from './report-ipc.cjs'
 import { GoalService, registerGoalIpc } from './goal-ipc.cjs'
 import { SessionService, registerSessionIpc } from './session-ipc.cjs'
 import { NotificationReadiness } from './notification-readiness.cjs'
+import { SessionRuntime } from './session-runtime.cjs'
+import { SESSION_CHANNELS } from '../shared/session-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -200,7 +202,16 @@ if (!hasSingleInstanceLock) {
     registerOnboardingIpc(() => mainWindow, rendererUrl, authService ? new OnboardingService(authService, () => mediaStatus('screen') === 'granted') : null)
     registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)
     registerGoalIpc(() => mainWindow, rendererUrl, authService ? new GoalService(authService) : null)
-    registerSessionIpc(() => mainWindow, rendererUrl, authService ? new SessionService(authService, () => mediaStatus('screen') === 'granted', () => notificationReadiness.isConfirmed()) : null)
+    const sessionReady = { screen: () => mediaStatus('screen') === 'granted', notification: () => notificationReadiness.isConfirmed() }
+    const sessionRuntime = authService ? new SessionRuntime(authService, (snapshot) => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(SESSION_CHANNELS.changed, snapshot)
+    }, sessionReady) : null
+    registerSessionIpc(() => mainWindow, rendererUrl, authService && sessionRuntime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, sessionRuntime) : null, sessionRuntime)
+    // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(20초)를 계속 처리한다.
+    if (sessionRuntime) {
+      setInterval(() => sessionRuntime.tick(), 1000)
+      setInterval(() => { void sessionRuntime.heartbeat() }, 20_000)
+    }
     createMainWindow()
     void authService?.restore()
   })

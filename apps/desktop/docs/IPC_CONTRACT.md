@@ -184,6 +184,25 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 - `sessionOptions`는 focus-settings와 같은 필드 이름(`breakSuggestionEnabled` 제외), `startReadiness`는 `{ screenAnalysisReady }`다(2026-10-24 확정, 결정 021).
 - `AuthorizedRequest.headers`로 요청별 헤더를 붙인다. 토큰 만료로 한 번 다시 보낼 때도 같은 값이다.
 
+### 집중 세션 Channel (2026-10-25, Issue #48)
+
+| Channel | 입력 | 성공 data | Backend |
+| --- | --- | --- | --- |
+| `session:current:get` | `void` | `SessionSnapshot \| null` (Main에 없으면 활성 세션 복구) | `GET /api/v1/sessions/active` (204 = 없음) |
+| `session:pause` | `void` | `SessionSnapshot` | `POST /sessions/{id}/pause` `{ pauseReason: USER, accumulatedActiveMs }` |
+| `session:resume` | `void` | `SessionSnapshot` | `POST /sessions/{id}/resume` `{ readiness: { screenAnalysisReady } }` |
+| `session:extend` | `{ minutes: 5~300 }` | `SessionSnapshot` | `POST /sessions/{id}/extend` `{ additionalDurationMs }` |
+| `session:end` | `void` | `SessionSnapshot` | `POST /sessions/{id}/end` |
+| `session:changed` (Event) | — | `SessionSnapshot \| null` | — |
+
+- `SessionSnapshot = { sessionId, goalText, status, targetDurationMs, accumulatedActiveMs(정수 ms), error, busy }`. Renderer는 `RUNNING`일 때만 받은 뒤 흐른 시간을 더해 그린다.
+- Main `SessionRuntime`이 monotonic clock으로 누적 시간을 세고, 1초마다 목표 시간 도달(→ `AWAITING_END_CONFIRMATION`, 누적 멈춤)을, 20초마다 `POST /sessions/{id}/heartbeats`(`Authorization`·`X-Device-Id`, `{ clientObservedAt, accumulatedActiveMs }`)를 처리한다.
+- 상태 명령은 `Authorization`·`Idempotency-Key`·`If-Match-Version`을 붙이고 자동 재전송하지 않는다. 같은 명령을 다시 누르면 같은 키를 쓴다. `SESSION_VERSION_CONFLICT`면 `GET /sessions/{id}`로 서버 최신값에 맞춘다. `SESSION_ABANDONED`면 되살리지 않는다.
+- 앱 재실행 시 서버가 `RUNNING`이면 서버 확정 시간으로 `pauseReason: APP_RESTART` 일시정지한다(꺼져 있던 시간을 추정해 더하지 않음).
+- 재개도 알림 확인 기록이 없으면 서버에 요청하지 않는다(결정 022).
+- `GET /sessions/active`·`GET /sessions/{id}` 응답 필드는 Notion에 없어 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`로 읽는다(Frontend 제안, Backend 확인 전).
+- 공통 요청 함수는 200을 기대한 요청이 204를 받으면 `parse(null)`로 '없음'을 판단한다.
+
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 
 ## 보안 규칙

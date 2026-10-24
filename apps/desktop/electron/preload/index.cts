@@ -5,7 +5,7 @@ import { PERMISSION_CHANNELS } from '../shared/permission-contract.cjs'
 import { ONBOARDING_CHANNELS } from '../shared/onboarding-contract.cjs'
 import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 import { GOAL_CHANNELS } from '../shared/goal-contract.cjs'
-import { SESSION_CHANNELS } from '../shared/session-contract.cjs'
+import { SESSION_CHANNELS, isSessionSnapshot } from '../shared/session-contract.cjs'
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -73,7 +73,18 @@ const focusOnApi: FocusOnApi = {
         cameraAnalysisEnabled: input.sessionOptions.cameraAnalysisEnabled,
       },
       idempotencyKey: input.idempotencyKey,
+      goalText: input.goalText,
     }),
+    getCurrent: () => ipcRenderer.invoke(SESSION_CHANNELS.current),
+    onChanged(callback) {
+      const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => { callback(isSessionSnapshot(payload) ? payload : null) }
+      ipcRenderer.on(SESSION_CHANNELS.changed, listener)
+      return () => ipcRenderer.removeListener(SESSION_CHANNELS.changed, listener)
+    },
+    pause: () => ipcRenderer.invoke(SESSION_CHANNELS.pause),
+    resume: () => ipcRenderer.invoke(SESSION_CHANNELS.resume),
+    extend: (input) => ipcRenderer.invoke(SESSION_CHANNELS.extend, { minutes: input.minutes }),
+    end: () => ipcRenderer.invoke(SESSION_CHANNELS.end),
   },
 }
 
