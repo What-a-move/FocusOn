@@ -39,8 +39,11 @@ if (!hasSingleInstanceLock) {
   app.quit()
 } else {
   let mainWindow: BrowserWindow | null = null
+  let sessionRuntime: SessionRuntime | null = null
   let isQuitting = false
   const authStore = new AuthSessionStore((snapshot) => {
+    // 로그아웃하면 Main에 남은 세션 타이머를 비운다.
+    if (snapshot.status === 'SIGNED_OUT') sessionRuntime?.reset()
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send(AUTH_CHANNELS.sessionChanged, snapshot)
     }
@@ -203,14 +206,15 @@ if (!hasSingleInstanceLock) {
     registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)
     registerGoalIpc(() => mainWindow, rendererUrl, authService ? new GoalService(authService) : null)
     const sessionReady = { screen: () => mediaStatus('screen') === 'granted', notification: () => notificationReadiness.isConfirmed() }
-    const sessionRuntime = authService ? new SessionRuntime(authService, (snapshot) => {
+    sessionRuntime = authService ? new SessionRuntime(authService, (snapshot) => {
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(SESSION_CHANNELS.changed, snapshot)
     }, sessionReady) : null
-    registerSessionIpc(() => mainWindow, rendererUrl, authService && sessionRuntime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, sessionRuntime) : null, sessionRuntime)
+    const runtime = sessionRuntime
+    registerSessionIpc(() => mainWindow, rendererUrl, authService && runtime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, runtime) : null, runtime)
     // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(20초)를 계속 처리한다.
-    if (sessionRuntime) {
-      setInterval(() => sessionRuntime.tick(), 1000)
-      setInterval(() => { void sessionRuntime.heartbeat() }, 20_000)
+    if (runtime) {
+      setInterval(() => runtime.tick(), 1000)
+      setInterval(() => { void runtime.heartbeat() }, 20_000)
     }
     createMainWindow()
     void authService?.restore()

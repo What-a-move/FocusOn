@@ -132,3 +132,45 @@ test('시간이 끝난 뒤 연장하면 목표 시간이 늘고 다시 센다', 
   advance(60000)
   assert.equal(runtime.snapshot().accumulatedActiveMs, 11 * 60000)
 })
+
+test('같은 의도로 다시 보낼 때는 처음 키와 본문을 그대로 쓰고, 연장 시간이 바뀌면 새 키를 만든다', async () => {
+  let pauseTry = 0
+  const { runtime, calls, advance } = setup({
+    'POST /api/v1/sessions/901/pause': () => (++pauseTry === 1 ? { success: false, error: { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true } } : { success: true, data: { status: 'PAUSED', version: 2 } }),
+    'POST /api/v1/sessions/901/extend': { success: false, error: { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true } },
+  })
+  runtime.begin(started, '미적분 풀기')
+  advance(60000)
+  await runtime.pause()
+  advance(30000)
+  await runtime.pause()
+  assert.deepEqual(calls[1].body, calls[0].body, '시간이 흘러도 재시도 본문은 처음과 같음')
+  assert.equal(calls[1].headers['Idempotency-Key'], calls[0].headers['Idempotency-Key'])
+  await runtime.extend(10)
+  await runtime.extend(10)
+  await runtime.extend(25)
+  assert.equal(calls[3].headers['Idempotency-Key'], calls[2].headers['Idempotency-Key'])
+  assert.notEqual(calls[4].headers['Idempotency-Key'], calls[3].headers['Idempotency-Key'], '연장 시간이 바뀌면 새 키')
+  assert.deepEqual(calls[4].body, { additionalDurationMs: 25 * 60000 })
+})
+
+test('로그아웃하면 세션 상태를 비우고 빈 상태를 알린다', () => {
+  const { runtime, events } = setup({})
+  runtime.begin(started, '미적분 풀기')
+  runtime.reset()
+  assert.equal(runtime.snapshot(), null)
+  assert.equal(events.at(-1), null)
+})
+
+test('복구 조회 중 새 세션이 시작되면 늦게 온 복구 결과로 덮어쓰지 않는다', async () => {
+  let release
+  const { runtime } = setup({
+    'GET /api/v1/sessions/active': () => new Promise((resolve) => { release = () => resolve({ success: true, data: { sessionId: '700', status: 'PAUSED', version: 9, goalTextSnapshot: '이전 목표', targetDurationMs: 600000, accumulatedActiveMs: 100000 } }) }),
+  })
+  const restoring = runtime.restore()
+  runtime.begin(started, '새 목표')
+  release()
+  await restoring
+  assert.equal(runtime.snapshot().sessionId, '901')
+  assert.equal(runtime.snapshot().goalText, '새 목표')
+})
