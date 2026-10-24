@@ -2,10 +2,10 @@
 
 ## 작업명
 
-Google 로그인 교환 및 인증 사용자 조회 구현
+Issue #49 로그인 API 마무리 및 후속 인증 준비
 
 - 우선순위: 높음
-- 상태: 선행 PR #35는 `dev` 병합 완료, Issue #32는 종료 완료. `google-login-PLAN.md`와 Issue 초안을 준비했으며 생성·기획 승인 대기 중이다.
+- 상태: Issue #49의 Google 교환·auth/me·요청 인증 구현 및 검증 완료. 작업 브랜치에서 commit·push 후 PR 생성 승인 대기. dev 병합 전이다.
 
 ## 목적
 
@@ -13,7 +13,7 @@ Google 로그인 교환 및 인증 사용자 조회 구현
 
 ## 순서
 
-1. Google 로그인 기획서·Issue 초안을 확인받고 Issue·작업 브랜치를 만든다. Google Authorization Code + PKCE 교환, `auth/me`와 공통 인증 principal을 구현해 기존 Access JWT 서비스에 연결한다.
+1. #49의 구현·독립 리뷰·QA 문서를 확인하고 PR 생성 승인을 받는다. 사용자 승인 없이 merge·Issue 종료하지 않는다.
 2. 후속 Issue에서 Refresh Token 회전·재사용 감지와 로그아웃을 구현하고, 이어서 기기 목록·폐기 API를 구현한다. Issue #38 사용자·목표 API와는 인증·기기 검증 인터페이스를 공유한다.
 3. 목표·세션·분석 제외 도메인·heartbeat·개입 정책 버전·`studyDate`·학습 정리는 각 도메인 작업의 migration과 Entity로 분리한다.
 4. 목표와 세션 MVP API를 구현한다.
@@ -25,9 +25,9 @@ Google 로그인 교환 및 인증 사용자 조회 구현
 ## 완료 조건
 
 - [x] 관련 `google-login-PLAN.md` 초안이 있다.
-- [ ] Issue 생성·기획 승인을 받았다.
-- [ ] 구현 경로·필드·권한이 Notion 명세와 일치한다.
-- [ ] migration이 빈 DB와 기존 개발 DB에 적용된다.
-- [ ] 정상·검증·인증·충돌 응답을 확인했다.
-- [ ] 토큰과 민감 데이터가 로그에 없다.
-- [ ] `*-REPORT.md`에 결과와 남은 위험을 기록했다.
+- [x] Issue 생성·기획 승인을 받았다.
+- [x] 구현 경로·필드·권한이 Notion 명세와 일치한다.
+- [x] 별도 PostgreSQL QA DB에서 기존 V1·V2 적용·Hibernate validate를 확인했다. 새 migration은 없다.
+- [x] 정상·검증·인증·충돌 응답을 확인했다.
+- [x] 토큰과 민감 데이터가 로그에 없다.
+- [x] `*-REPORT.md`에 결과와 남은 위험을 기록했다.

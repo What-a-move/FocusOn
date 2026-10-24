@@ -27,18 +27,26 @@
 - Issue #32: 인증 5개 테이블의 Flyway V1·소유 관계 보강 V2와 Entity·Repository를 구현했다. PostgreSQL 17.11에서 migration 적용·Hibernate 스키마 검증·소유권 FK를 확인했고, 빌드·QA·CodeRabbit 리뷰를 마쳤다. [PR #35](https://github.com/What-a-move/FocusOn/pull/35)는 2026-10-22 `dev`에 병합됐고 Issue #32도 종료됐다.
 - 2026-10-24 Frontend 공유·최종 정정에 맞춰 동의·Extension 연결·개입 v1·시간대·리포트 계약을 로컬 문서에 반영했다. 현재 미구현 API의 완료를 뜻하지 않는다. Notion 내 이전 AI 정책과 일간 배열 항목 누락, pairing 실패 시도 문맥 등 남은 검토는 `docs/NOTION_SYNC_AUDIT.md`에 기록했다.
 
+### Issue #49 — 현재 작업 브랜치 구현
+
+- `feat/#49-google-login`에서 Google exchange·auth/me·요청 인증 필터·principal·한도·초기 Refresh Token 발급을 구현했다. 아직 dev 병합 전이다.
+- HTTP 계약·DB 소유/활성 상태·동시 최초 로그인·3대 제한·동일 설치 재로그인·만료/위조를 검증했다. 실제 Google 계정 왕복은 미실행이다.
+- 독립 리뷰의 공개 키 장애 분류·rate-limit 공간 공유 문제를 수정하고 재검토했다.
+- 기존 V1·V2 재사용, OAuth UNIQUE를 JPA metadata에도 반영. refresh·logout·pairing API는 후속이다.
+- 관련 문서: `features/google-login-{PLAN,REPORT,QA,code-review,ERROR}.md`.
+
 ### 다음 구현 범위
 
-2026-10-25 최신 `dev`(`0b88bb8`)와 Desktop 인증·목표 파서를 대조했다. MVP 세션 null 거절, 목표 대화 필드·Backend 재시도, Desktop 알림 확인 책임을 로컬 계약에 반영했다. 로그인 PLAN에는 만료 JWT 구분과 후속 family 만료 검토를 보강했다. 실제 로그인 API 구현 전 상태는 유지한다.
+2026-10-25 최신 `dev`(`0b88bb8`)와 Desktop 인증·목표 파서를 대조했다. MVP 세션 null 거절, 목표 대화 필드·Backend 재시도, Desktop 알림 확인 책임을 로컬 계약에 반영했다. 로그인 PLAN에는 만료 JWT 구분과 후속 family 만료 검토를 보강했다. 이후 같은 날 #49에서 승인된 로그인 API 범위를 구현했다. 결과는 위 작업 브랜치 절과 REPORT를 따른다.
 
-- Google 로그인 교환·인증 사용자 조회 기획서 초안의 검토와 Issue 생성 승인을 받는다. 목표·세션 Entity는 후속 migration으로 분리한다.
-- Desktop Authorization Code + PKCE 기반 Google 교환과 인증된 사용자·기기를 Access JWT 서비스에 연결한다.
+- Issue #49의 PR 생성 승인을 받고 리뷰·병합한다. 목표·세션 Entity는 후속 migration으로 분리한다.
+- 병합 후 후속 Issue에서 refresh·logout과 family 수명·폐기 범위를 구현한다.
 - MVP API를 도메인 단위로 구현
 
 ### 미구현
 
-- 도메인 HTTP Controller·Service와 요청 인증 필터. 인증 Entity·Repository 5개는 이미 구현돼 있다.
-- 인증·사용자·기기 연결 API와 Refresh Token 수명주기
+- 사용자·목표·세션 등 나머지 도메인 HTTP API. 인증 Entity·Repository와 #49 로그인 요청 인증은 구현돼 있다.
+- refresh·logout·기기 관리·Extension 연결 API와 Refresh Token rotation 수명주기
 - 목표·세션·분석·리포트 API
 - 보관 기간 cleanup worker와 학습 정리 worker
 - AI 서비스 연동

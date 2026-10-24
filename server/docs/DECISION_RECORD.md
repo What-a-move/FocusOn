@@ -270,3 +270,14 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 이전 기록 정정: 결정 018의 일간 배열 항목 누락은 현재 Notion에서 해결됐다. 목표 시간 null 허용이 남은 ERD·세션 정책은 문서 동기화 대상이다.
 - 로그인 연동: 만료 JWT와 위조 JWT의 구분은 구현 예정 인증 필터의 필수 조건이다. Access JWT 내부 서비스·인증 저장 모델은 HTTP 로그인 완료를 뜻하지 않는다. family 만료 연장 방식은 후속 refresh 구현 전 검토 항목이며 무기한 유지로 확정하지 않는다.
 - 영향: `docs/API_CONTRACT.md`, `PROJECT_CONTEXT.md`, `NOTION_SYNC_AUDIT.md`, Backend 개발 규칙·로그인 PLAN. 코드·SQL·Notion 변경 없음.
+
+## 결정 020 - 로그인 요청 인증 구현 경계
+
+- 결정일: 2026-10-25
+- 상태: 구현 반영 (Issue #49, dev 병합 전)
+- 내용: Google 외부 통신은 DB 잠금 밖에서 수행한다. 계정 최초 생성 경쟁은 DB unique와 별도 transaction 재시도로 처리하고 기기 한도·family 교체는 사용자 잠금 안에서 처리한다.
+- 요청 인증은 JWT와 DB 사용자·기기·family 소유·활성·만료를 함께 검사한다. 만료 예외는 서명·필수 클레임을 통과한 경우에만 분리한다.
+- 한도: 단일 서버의 유한 메모리 fixed window를 사용하고 익명·인증 공간을 분리한다. 포화는 429로 거절한다. 배포 proxy를 구성하기 전에는 forwarded header를 신뢰하지 않는다.
+- 개인정보: Google Desktop secret은 서버 로컬 환경에만 설정한다. DTO 문자열과 로그·오류에 인증 원문을 노출하지 않는다.
+- 저장 모델: V1·V2는 수정하지 않고 기존 provider+subject UNIQUE를 JPA metadata에도 명시한다.
+- 후속: refresh·logout·family 만료 연장·기기 관리·pairing과 실제 Google 계정 왕복은 이번 구현 결과와 구분한다.

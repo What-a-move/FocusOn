@@ -1,6 +1,6 @@
 # Google 로그인 교환 및 인증 사용자 조회 기획서
 
-> 상태: 2026-10-25 사용자 승인 완료. Issue #49에서 문서 push 후 구현을 진행한다.
+> 상태: 2026-10-25 사용자 승인 완료. Issue #49 작업 브랜치 구현·검증 완료. dev 병합·실제 Google 계정 왕복 전이다.
 
 ## 기본 정보
 
@@ -39,7 +39,7 @@ Google에서 검증한 계정을 FocusOn 사용자·Desktop 기기로 연결하�
 - [ERD](https://app.notion.com/p/ERD-3de0b6e5e64c80a4bf5ef7ff3ac01f17): 기존 V1·V2의 인증 5개 테이블을 재사용한다.
 - [Google Desktop OAuth 공식 문서](https://developers.google.com/identity/protocols/oauth2/native-app)
 - [Google ID token 검증 공식 문서](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)
-- 현재 서버에는 `AccessJwtService`, 인증 Entity·Repository와 공통 오류 응답이 있다. 로그인 Controller·Service와 Security Filter는 아직 없다.
+- 기획 시 서버에는 `AccessJwtService`, 인증 Entity·Repository와 공통 오류 응답만 있었다. 현재 #49 브랜치에는 승인 범위의 Controller·Service·요청 인증 필터를 추가했다.
 - Desktop은 `apps/desktop/electron/main/auth-api.cts`에서 실제 API 계약의 필드와 HTTP 상태를 검증한다. 임의의 성공 응답으로 대체하지 않는다.
 
 ## API 정의
@@ -122,7 +122,7 @@ Google에서 검증한 계정을 FocusOn 사용자·Desktop 기기로 연결하�
 ### 로그인 유지와 후속 refresh의 연결
 
 - Access Token 15분 만료만으로 로그아웃시키지 않는다. 정상 서명의 만료는 `AUTH_ACCESS_TOKEN_EXPIRED`로 반환해 Desktop의 single-flight refresh 경로로 연결한다.
-- 현재 `AccessJwtService.verify`는 JWT 검증 실패를 공통 `IllegalArgumentException`으로 감싼다. 요청 인증 필터를 구현할 때 검증된 만료와 위조·기타 실패를 구분하도록 내부 오류 전달을 보강해야 한다. 서명 검증 전 payload의 `exp`만 읽어 만료로 분류하지 않는다.
+- 기존 `AccessJwtService.verify`는 검증 실패를 하나의 예외로 감쌌다. 이번 구현은 서명·issuer·audience·필수 클레임을 검증한 만료만 별도 예외로 분리하고 필터가 만료 오류로 변환한다. 서명 검증 전 payload의 `exp`만 읽어 만료로 분류하지 않는다.
 - Desktop은 API 호출 시 만료 30초 전부터 갱신을 시도한다. 앱 재실행은 Keychain의 Refresh Token으로 복구하며, 로컬 타이머만으로 로그인 유효성을 보장하지 않는다. 네트워크·503·timeout은 토큰 폐기 근거로 쓰지 않는다.
 - 최초 로그인에서 Refresh Token을 발급하는 작업과 refresh HTTP API 완성을 구분한다. 첫 Issue만 끝났을 때 실제 로그인 유지·재실행 복구까지 완료했다고 표시하지 않는다.
 - `token_families.expires_at`과 개별 Refresh Token의 `expires_at`은 별도다. 후속 refresh 구현 전에 family의 고정 만료인지 갱신에 따른 연장인지 정본과 맞춘다. 단순 rotation만으로 family 수명이 자동 연장되거나 무기한 로그인된다고 가정하지 않는다. 기획 초안의 제안은 대조 기록에서 추적한다.
@@ -154,18 +154,18 @@ Google에서 검증한 계정을 FocusOn 사용자·Desktop 기기로 연결하�
 
 ## 검증 계획과 완료 조건
 
-- [ ] 기존 Desktop 요청·응답 파서와 두 API의 계약이 일치한다.
-- [ ] Google 교환 요청이 정확한 Client ID·code·verifier·redirect URI를 전송한다.
-- [ ] 허용하지 않은 redirect URI, 잘못된 서명·issuer·audience·만료·누락된 sub를 거부한다.
-- [ ] 신규·기존·동시 사용자 로그인과 동일 설치 재로그인, 4번째 Desktop 거절을 검증한다.
-- [ ] JWT principal과 DB 사용자·기기·family의 소유·활성 검증을 확인한다.
-- [ ] 인증 실패·폐기·만료·rate limit에 공통 오류와 requestId를 반환한다.
-- [ ] 정상 서명 만료 JWT와 위조 JWT가 각각 만료·재로그인 오류로 구분돼 클라이언트 갱신 경로를 깨지 않는다.
-- [ ] PostgreSQL에서 소유권 FK·활성 family/record 유일성과 트랜잭션 rollback을 확인한다.
-- [ ] 토큰·code·verifier·state·원본 installation ID가 DB·로그·예외에 남지 않는다.
-- [ ] 의미 있는 단위·HTTP·동시성 검증과 기존 테스트, Checkstyle, 빌드를 통과한다.
-- [ ] 격리된 코드 리뷰, QA 결과와 실제 Google 왕복 검증 여부를 구분해 기록한다.
-- [ ] `CONTEXT.md`, `NEXT_TASK.md`, 오류·결과 문서를 실제 상태에 맞춘다.
+- [x] 기존 Desktop 요청·응답 파서와 두 API의 계약이 일치한다.
+- [x] Google 교환 요청이 정확한 Client ID·code·verifier·redirect URI를 전송한다.
+- [x] 허용하지 않은 redirect URI, 잘못된 서명·issuer·audience·만료·누락된 sub를 거부한다.
+- [x] 신규·기존·동시 사용자 로그인과 동일 설치 재로그인, 4번째 Desktop 거절을 검증한다.
+- [x] JWT principal과 DB 사용자·기기·family의 소유·활성 검증을 확인한다.
+- [x] 인증 실패·폐기·만료·rate limit에 공통 오류와 requestId를 반환한다.
+- [x] 정상 서명 만료 JWT와 위조 JWT가 각각 만료·재로그인 오류로 구분돼 클라이언트 갱신 경로를 깨지 않는다.
+- [x] PostgreSQL에서 소유권 FK·활성 family/record 유일성과 트랜잭션 rollback을 확인한다.
+- [x] 토큰·code·verifier·state·원본 installation ID가 DB·로그·예외에 남지 않는다.
+- [x] 의미 있는 단위·HTTP·동시성 검증과 기존 테스트, Checkstyle, 빌드를 통과한다.
+- [x] 격리된 코드 리뷰, QA 결과와 실제 Google 왕복 검증 여부를 구분해 기록한다.
+- [x] `CONTEXT.md`, `NEXT_TASK.md`, 오류·결과 문서를 실제 상태에 맞춘다.
 
 자동화 테스트는 Google token/JWK 응답을 모의해 결정적으로 실행한다. 실제 계정 왕복은 서버·Desktop에 동일한 Google Client ID를 설정한 뒤 사용자 인증이 필요한 수동 QA로 확인하며, 미실행이면 성공했다고 기록하지 않는다.
 

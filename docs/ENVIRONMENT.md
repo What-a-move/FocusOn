@@ -64,4 +64,8 @@ docker compose up --build
 - 비밀 값은 `.env`에만 저장하고 `.env.example`에는 키 이름과 안전한 예시만 둔다.
 - API key, OAuth secret, token, DB password를 Issue·PR·로그에 남기지 않는다.
 - 팀 공유 값과 개인 비밀 값을 구분한다.
-- OAuth redirect URI는 실제 Desktop 로그인 방식이 확정된 뒤 Google Console과 환경 설정에 동일하게 등록한다.
+- Desktop OAuth는 기본 브라우저·PKCE와 `http://127.0.0.1:<임시 포트>` loopback을 사용한다. Desktop이 실제 사용한 redirectUri를 서버가 동일하게 Google에 전달하며 임의의 고정 웹 callback을 추가하지 않는다.
+- Desktop 실행 셸은 `FOCUSON_GOOGLE_CLIENT_ID`, `FOCUSON_API_BASE_URL`을 설정한다. `apps/desktop/.env.local`을 준비했으면 저장소 루트에서 `source apps/desktop/.env.local`로 읽는다. Electron은 해당 파일을 자동으로 읽지 않는다.
+- Backend는 같은 Desktop client ID를 `GOOGLE_DESKTOP_CLIENT_ID`로 설정한다. 발급 JSON에 secret이 있으면 `GOOGLE_DESKTOP_CLIENT_SECRET`을 서버 `.env`에만 설정하고 Desktop에 넣지 않는다.
+- Google 설정이 비어 있어도 서버 health는 동작하지만 교환은 503으로 실패한다. `.env.example`은 실제 자격 증명으로 사용하지 않는다.
+- `server.forward-headers-strategy=none`으로 직접 연결 IP만 신뢰한다. 운영 reverse proxy를 추가할 때 신뢰 proxy와 IP 한도를 별도 구성한다.

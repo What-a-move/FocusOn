@@ -6,6 +6,10 @@
 - 정본: 제품 정책은 현재 FocusOn Notion 문서, endpoint 계약은 Notion `FocusOn API 명세서` 데이터베이스다. 로컬 MD는 개발 요약·규칙·초안이다.
 - 생성물·작업 기록인 `.handoff`, `build`와 Git 메타데이터는 소스 문서 목록에서 제외했다.
 
+## Issue #49 구현 후 상태 (2026-10-25)
+
+문서 준비 이후 사용자 승인을 받아 `feat/#49-google-login`에서 Google exchange·auth/me·요청 인증·초기 토큰 발급을 구현했다. 아래 `로그인 API 구현 전` 표현은 이전 문서 대조 당시 기록이다. 현재 작업 브랜치의 실행 검증은 `server/docs/features/google-login-REPORT.md`·`google-login-QA.md`를 따른다. dev 병합과 실제 Google 계정 왕복은 아직이며 refresh·logout·pairing은 후속이다.
+
 ## 이번 재검증 요약
 
 **로컬 계약 정리와 실제 기능 구현은 별개다.** Google 로그인 API는 아직 구현 전이고, 아래 남은 항목이 해결됐다고 간주하지 않는다.

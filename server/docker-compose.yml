@@ -40,6 +40,8 @@ services:
         restart: true
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      GOOGLE_DESKTOP_CLIENT_ID: ${GOOGLE_DESKTOP_CLIENT_ID:-}
+      GOOGLE_DESKTOP_CLIENT_SECRET: ${GOOGLE_DESKTOP_CLIENT_SECRET:-}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-focuson}

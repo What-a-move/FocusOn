@@ -89,6 +89,27 @@ class AccessJwtServiceTests {
             ISSUER, AUDIENCE));
   }
 
+  @Test
+  void distinguishesVerifiedExpiryFromForgedExpiredPayload() {
+    AccessJwtService service = new AccessJwtService(KEY, ISSUER, AUDIENCE);
+    SecretKey key = new SecretKeySpec(Base64.getDecoder().decode(KEY), "HmacSHA256");
+    Instant now = Instant.now();
+    JwtClaimsSet claims = JwtClaimsSet.builder().issuer(ISSUER).audience(List.of(AUDIENCE))
+        .subject("11").issuedAt(now.minusSeconds(120)).expiresAt(now.minusSeconds(1))
+        .id("expired-jti").claim("tokenType", "ACCESS").claim("deviceId", "22")
+        .claim("tokenFamilyId", "33").build();
+    String expired = NimbusJwtEncoder.withSecretKey(key).algorithm(MacAlgorithm.HS256).build()
+        .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
+        .getTokenValue();
+    assertThrows(AccessJwtService.ExpiredAccessTokenException.class, () -> service.verify(expired));
+    int start = expired.lastIndexOf('.') + 1;
+    char replacement = expired.charAt(start) == 'A' ? 'B' : 'A';
+    String forged = expired.substring(0, start) + replacement + expired.substring(start + 1);
+    IllegalArgumentException rejected = assertThrows(IllegalArgumentException.class,
+        () -> service.verify(forged));
+    assertFalse(rejected instanceof AccessJwtService.ExpiredAccessTokenException);
+  }
+
   private static String signedToken(String issuer, String audience) {
     byte[] keyBytes = Base64.getDecoder().decode(KEY);
     SecretKey secretKey = new SecretKeySpec(keyBytes, "HmacSHA256");
