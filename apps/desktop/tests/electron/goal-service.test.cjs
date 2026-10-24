@@ -37,3 +37,8 @@ test('목표 요청은 POST로 보내고 빈 clarificationSessionId는 보내지
     { path: '/api/v1/goals', method: 'POST', expectedStatus: 201, body: { goalText: '미적분 풀기', confirmationSource: 'MANUAL_CONFIRMED' } },
   ])
 })
+
+test('보여 줄 수 없는 선택지를 빼고 나면 개수가 모자란 응답은 거부한다', () => {
+  assert.equal(parseClarifyResult({ ...base, decision: 'MULTI_GOAL', question: '어떤 걸 할까요?', goalCandidates: ['영어 단어 외우기', ' '] }), null)
+  assert.equal(parseClarifyResult({ ...base, decision: 'AMBIGUOUS', suggestions: ['가', '미적분 예제 풀기'] }), null)
+})

@@ -88,7 +88,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 
 ## 보안·개인정보
 
-- 목표 문구만 서버로 보낸다. 화면·카메라 데이터와 무관하다.
+- 서버로는 목표 문구(`goalText`), 질문과 사용자가 적은 답(`previousAnswers`), 있으면 `clarificationSessionId`만 보낸다. 화면·카메라 데이터와 무관하다.
 - AI Provider Key는 클라이언트에 없다(Backend Adapter).
 
 ## 완료 조건

@@ -149,7 +149,8 @@ export function GoalSetting() {
     const result = await goalApi.create({
       goalText: review.goal,
       confirmationSource: review.source,
-      ...(clarificationSessionId && review.source === 'AI_CONFIRMED' ? { clarificationSessionId } : {}),
+      // 수동 확정이어도 앞서 AI와 나눈 대화가 있으면 같은 id로 이어 기록한다.
+      ...(clarificationSessionId ? { clarificationSessionId } : {}),
     })
     setBusy(false)
     if (!result.success) {

@@ -68,16 +68,19 @@ export function parseClarifyResult(value: unknown): ClarifyResult | null {
   // clarificationSessionId는 2026-10-24 확정 필드다(결정 020). 첫 응답 전에는 없으므로 없으면 null로 읽는다.
   if (!(clarificationSessionId === undefined || clarificationSessionId === null || isId(clarificationSessionId))) return null
   const decision = value.decision as GoalDecision
+  // 화면에 보여 줄 수 있는(2~40자) 선택지만 남긴 뒤 개수를 센다.
+  const choices = suggestions.filter(isValidGoalText).slice(0, 3)
+  const candidates = goalCandidates.filter(isValidGoalText)
   // [주의] 결정에 필요한 값이 없으면 화면에서 할 수 있는 일이 없으므로 계약 위반으로 본다.
-  if (decision === 'MULTI_GOAL' && goalCandidates.length < 2) return null
+  if (decision === 'MULTI_GOAL' && candidates.length < 2) return null
   if ((decision === 'UNKNOWN_TERM' || decision === 'MULTI_GOAL') && !question) return null
-  if (decision === 'AMBIGUOUS' && suggestions.length < 2 && !question) return null
+  if (decision === 'AMBIGUOUS' && choices.length < 2 && !question) return null
   return {
     decision,
     normalizedGoalText: normalizedGoalText as string | null,
     question: question as string | null,
-    suggestions: suggestions.filter(isValidGoalText).slice(0, 3),
-    goalCandidates: goalCandidates.filter(isValidGoalText),
+    suggestions: choices,
+    goalCandidates: candidates,
     conversationTurn: conversationTurn as number,
     clarificationSessionId: (clarificationSessionId as string | null | undefined) ?? null,
   }
