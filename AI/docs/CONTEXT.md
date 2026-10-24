@@ -29,6 +29,7 @@
 - 콘텐츠 감지·Chrome 내부 OCR·Desktop Apple Vision OCR·ColPali 입력 경계를 `content_acquisition_spec.md`로 분리했다.
 - FocusSessionAgent, 피드백·개인화, 비동기 근거 기반 노트의 상세 계약 초안을 추가했다.
 - Issue #16에서 PR #15의 최신 문서를 기준으로 MVP 이탈·카메라 정책, OCR `text`·`ocr` 입력, Hybrid 120건 팀원 보고를 문서에 반영했다. 이 문서화는 관련성·카메라 기능 구현 또는 팀의 최종 승인이 아니다.
+- 2026-10-24 사용자 확정과 최신 화면 분석 문서를 기준으로 개입 `v1`의 연속/반복 조건·UNCERTAIN 구간 종료·5분 cooldown, 학습 정리 개념 객체 형식을 문서에 반영했다. Notion AI 분석 계약의 이전 수치와의 차이는 `docs/NOTION_SYNC_AUDIT.md`에 남겼으며 구현 완료를 뜻하지 않는다.
 
 ### 진행 중인 작업
 
@@ -63,7 +64,7 @@
 
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
-- Server에는 실행 설정과 빌드 골격만 있고 목표·세션·이벤트·AI 연동 코드가 없다.
+- Server에는 공통 응답·Access JWT·인증 5개 테이블의 Entity·Repository까지 있고 목표·세션·이벤트·AI 연동 코드는 없다. Google 로그인 HTTP API도 아직 구현 전이다.
 - AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
 - 목표 보조 코드는 Issue #12의 별도 미병합 Branch에 있다. 이 `dev` 기반 문서 Branch는 그 코드 변경을 포함하지 않는다. 목표 2~40자·질문 최대 2회 등 문서 계약은 #12 통합 전 코드·테스트와 맞춰야 한다.
 - 팀원 보고 Hybrid 99/120, Macro F1 0.732의 원자료·결합식·독립 holdout은 확인되지 않았다. 현재 `dev`에는 Hybrid 관련성 구현이 없다.

@@ -87,7 +87,7 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 제외·휴식·일시정지 → 흐름 판단 중지
 ```
 
-MVP의 화면 이탈 정책은 `analysis_rules.md`의 15초 미만 전환 제외, `GENTLE` 120초 연속, `NORMAL` 최근 10분 내 30초 이상 2회, `ACTIVE` 30초 연속을 따른다. `RELATED`는 현재 이탈 구간을 초기화하고 `UNCERTAIN`은 누적하지 않는다. 구버전 기획서의 5초·60초 화면 이탈값은 적용하지 않는다.
+MVP 화면 이탈은 `analysis_rules.md` 9.1의 정책 `v1`을 따른다. 연속·반복 중 하나를 충족하면 후보이며, `GENTLE`은 연속 180초 초과 또는 10분 내 60초 초과 구간 3회, `NORMAL`은 연속 60초 초과 또는 30초 초과 구간 2회, `ACTIVE`는 연속 30초 초과 또는 20초 초과 구간 2회다. `RELATED`는 현재 구간을 초기화하고 `UNCERTAIN`은 비누적·현재 연속 구간 종료로 처리한다. 15초 미만 전환은 제외한다. 이전 임계값과 30초 UNCERTAIN 보류 규칙을 새 세션에 적용하지 않는다. 실제 임계값·cooldown 판정은 Server가 담당한다.
 
 ## 6. 권장 행동
 

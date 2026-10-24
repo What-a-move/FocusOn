@@ -25,7 +25,7 @@ Desktop에서 발급한 연결 코드를 Extension에 입력해 같은 계정에
 
 1. 완료: 연결 코드 입력 화면과 `ABC-123` 형식 검증 UI를 구현했다.
 2. 완료: `POST /api/v1/extension-pairings`에 코드와 Extension installation ID를 전송한다.
-3. 완료: 만료·사용 완료·시도 초과·취소·429·네트워크 오류를 표시한다. 틀린 코드의 오류 code는 Backend 확정 뒤 맞춘다.
+3. 완료: 만료·사용 완료·시도 초과·취소·429·네트워크 오류를 표시한다. 틀린 코드에는 `LINK_006_CODE_MISMATCH`와 숫자 `details.remainingAttempts`를 읽어 남은 횟수를 표시한다. 서버의 실패 횟수 귀속 방식은 공통 대조 기록에서 추적한다.
 4. 완료: 성공 시 Extension 전용 인증 정보를 결정 011에 따라 저장하고 연결 상태를 표시한다. Extension의 Access Token 갱신(refresh)은 이후 API를 붙일 때 구현한다.
 5. Backend API 병합 뒤 Desktop 발급 → Extension 입력 → Desktop 연결 완료 표시까지 실제 왕복을 확인한다.
 

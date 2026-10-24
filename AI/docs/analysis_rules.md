@@ -9,6 +9,7 @@
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [Agent 계약](focus_session_agent_spec.md), [피드백 명세](feedback_personalization_spec.md), [평가 명세](evaluation_spec.md)
 - 확정 조건: AI 평가 결과를 확인하고 Server·Frontend(`apps`) 담당자와 상태값을 합의한 뒤 `DECISION_RECORD.md`에 기록한다.
 - MVP 기준 출처: [AI 분석 계약](https://app.notion.com/p/AI-3de0b6e5e64c80fbb0bccb985e38002c) (`REVIEW`; 최종 승인 전)
+- 화면 개입 시간 규칙은 2026-10-24 사용자 확정 및 최신 [화면 분석 5.2·5.3](https://app.notion.com/p/3de0b6e5e64c80c1a9e3d69db89f2ab8)의 정책 `v1`을 따른다. Notion AI 분석 계약 7장의 이전 수치·버전 예시는 새 정책을 덮지 않는다. 상세 차이는 `docs/NOTION_SYNC_AUDIT.md`에 남긴다.
 
 이 문서는 목표 구조화, 콘텐츠 품질, 관련성, 학습 흐름과 개입 제안의 처리 순서를 정의한다. 상태 enum과 허용 조합은 `state_model.md`, 평가 기준은 `evaluation_spec.md`를 단일 기준으로 사용한다.
 
@@ -209,17 +210,19 @@ JWT 강의 → 무관 영상 반복 → 지속 체류
 
 여기서 유효 이탈 구간은 최종 화면 결과가 confidence `≥ 0.75`인 `UNRELATED`이고 15초 미만 전환이 아닌 관찰 구간이다. 공개 관련성 라벨은 이 시간 조건과 독립적으로 유지한다.
 
-| 민감도 | 최종 조건 |
-| --- | --- |
-| 약하게 (`GENTLE`) | confidence `≥ 0.75`인 `UNRELATED`가 120초 연속 |
-| 보통 (`NORMAL`) | 최근 10분 안에 30초 이상 유효 이탈 구간이 2회 이상 |
-| 적극적으로 (`ACTIVE`) | confidence `≥ 0.75`인 `UNRELATED`가 30초 연속 |
+| 민감도 | 끊김 없는 UNRELATED | rolling 10분 내 서로 다른 구간 |
+| --- | --- | --- |
+| 약하게 (`GENTLE`) | 180초 초과 | 60초 초과 구간 3회 |
+| 보통 (`NORMAL`) | 60초 초과 | 30초 초과 구간 2회 |
+| 적극적으로 (`ACTIVE`) | 30초 초과 | 20초 초과 구간 2회 |
+
+각 행의 두 조건은 OR이며 `초과`는 엄격한 `>`다. 숫자는 Server Policy Engine에서만 관리하고 AI·Desktop·Extension이 별도 상수로 개입 여부를 확정하지 않는다. 현재 정책 `v1`은 서버가 세션의 `interventionPolicyVersion`에 고정하고 분석·개입 이력에는 같은 `policyVersion`을 남긴다. 진행 중 세션에는 새 버전을 덮어쓰지 않는다.
 
 - 화면 전환 후 15초 미만 체류는 이탈 시간과 반복 횟수에서 제외한다.
 - `RELATED`는 현재 이탈 구간과 대기 중인 카메라 알림 후보를 초기화한다.
-- `UNCERTAIN`은 이탈 시간을 누적하지 않는다. 연속 30초 이하는 진행 중 구간을 보류하고, 30초를 넘으면 종료한다.
+- `UNCERTAIN`은 이탈 시간을 누적하지 않고 현재 연속 구간을 끊는다. 이전 30초 보류·이어붙이기 규칙은 새 정책에 적용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED` 구간을 가로질러 연속 이탈을 잇지 않는다.
 - 모델 오류·추출 실패·미관찰 시간은 이탈로 계산하지 않는다.
-- 중복 알림에는 intervention type별 cooldown을 적용하며 구체적 기간은 사용자 테스트 후 확정한다.
+- 중복 알림은 세션·intervention type별 실제 전송 시각부터 5분 cooldown을 적용한다. cooldown 중 쌓인 후보를 만료 후 그대로 전송하지 않고 새 관측에서 재평가한다. `확인했어` 뒤 5분 재집중은 별도 Client UI 상태이며 AI 판정이나 서버 세션을 바꾸지 않는다.
 
 ### 9.2 카메라 알림 게이트
 

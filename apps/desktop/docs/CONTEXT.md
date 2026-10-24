@@ -46,7 +46,7 @@
 - 온보딩 재개는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 결정한다. 앱 시작·복귀 때 Desktop Main이 OS 권한을 다시 확인하고 준비 상태를 갱신한다. API 구현은 Backend 담당 범위다.
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
-- 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.
+- Desktop 연결 코드 발급·readiness polling과 Extension의 최초 pairing 클라이언트는 구현돼 있다. 실제 Backend 왕복 QA, 세션 상태 명령·Heartbeat와 동기화 구현은 남아 있다.
 
 - Issue #41(2026-10-24): 홈 대시보드를 `FocusOn-design/main.html`대로 `features/dashboard/`에 구현했다. 집중 달력·오늘 집중 분·이번 달 일수·지난 목표는 Main `ReportService`(리포트 IPC)로만 받고, 로딩·오류·오프라인(마지막 확인 시각)·빈 상태를 보여 준다. 리포트 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 라이트·다크·오프라인 화면을 확인했다.
 
@@ -60,9 +60,9 @@
 - 화면 캡처 권한 및 캡처 처리
 - 분석 제외 앱 처리
 - MediaPipe 카메라 분석 연동
-- 인증 외 Server API 연결
+- 인증·온보딩·리포트 외 Server API 클라이언트와 실제 Backend 왕복 QA
 - 화면 부유형 마스코트 표시 및 사용자 문구 설정
-- 일회용 연결 코드 기반 Extension pairing
+- 실제 Backend를 통한 Desktop 코드 발급·Extension 연결·readiness 반영 검증
 
 ## 현재 기술
 
