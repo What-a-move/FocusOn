@@ -3,6 +3,7 @@ import { AUTH_CHANNELS, parseAuthSessionSnapshot } from '../shared/auth-contract
 import type { AuthSessionSnapshot, FocusOnApi } from '../shared/auth-contract.cjs'
 import { PERMISSION_CHANNELS } from '../shared/permission-contract.cjs'
 import { ONBOARDING_CHANNELS } from '../shared/onboarding-contract.cjs'
+import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -38,6 +39,10 @@ const focusOnApi: FocusOnApi = {
     savePermissionsStep: (input) => ipcRenderer.invoke(ONBOARDING_CHANNELS.savePermissionsStep, { consents: input.consents, cameraConsent: input.cameraConsent }),
     saveExcludedDomains: (input) => ipcRenderer.invoke(ONBOARDING_CHANNELS.saveExcludedDomains, { domains: input.domains }),
     getSummary: () => ipcRenderer.invoke(ONBOARDING_CHANNELS.summary),
+  },
+  reports: {
+    getCalendar: (input) => ipcRenderer.invoke(REPORT_CHANNELS.calendar, { month: input.month }),
+    getDaily: (input) => ipcRenderer.invoke(REPORT_CHANNELS.daily, { date: input.date }),
   },
 }
 

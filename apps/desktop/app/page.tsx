@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
 import { selectAuthView } from './lib/auth-view'
 import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
+import { HomeDashboard } from '../features/dashboard/HomeDashboard'
 
 const signedOut: AuthSessionSnapshot = {
   revision: 0, status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: null,
@@ -80,60 +81,6 @@ function OnboardingRedirect({ reconnect }: { reconnect: boolean }) {
   return <LoadingScreen />
 }
 
-const navigation = [
-  { label: '홈', asset: 'nav-home.png' },
-  { label: '집중 시작', asset: 'nav-start.svg' },
-  { label: '집중 기록', asset: 'nav-records.png' },
-  { label: '학습 노트', asset: 'nav-notes.svg' },
-  { label: '설정', asset: 'nav-settings.png' },
-] as const
-
-function Calendar({ today }: { today: Date | null }) {
-  const [monthOffset, setMonthOffset] = useState(0)
-  if (!today) return <div className="fo-calendar-empty" role="status">달력을 준비하고 있어요.</div>
-  const month = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1)
-  const offset = (month.getDay() + 6) % 7
-  const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
-  return <>
-    <div className="fo-month-controls"><button type="button" onClick={() => setMonthOffset((value) => value - 1)} aria-label="이전 달">‹</button><span>{month.getFullYear()}년 {month.getMonth() + 1}월</span><button type="button" onClick={() => setMonthOffset((value) => value + 1)} disabled={monthOffset >= 0} aria-label="다음 달">›</button></div>
-    <div className="fo-calendar-grid" aria-label={`${month.getFullYear()}년 ${month.getMonth() + 1}월 집중 달력`}>
-      {['월', '화', '수', '목', '금', '토', '일'].map((day) => <span className="fo-weekday" key={day}>{day}</span>)}
-      {Array.from({ length: offset }, (_, index) => <span key={`blank-${index}`} />)}
-      {Array.from({ length: days }, (_, index) => {
-        const day = index + 1
-        const isToday = monthOffset === 0 && day === today.getDate()
-        return <span className={`fo-calendar-day${isToday ? ' today' : ''}`} key={day} aria-label={`${month.getMonth() + 1}월 ${day}일, 기록 없음`}>{day}</span>
-      })}
-    </div>
-  </>
-}
-
-function HomeScreen({ name, onLogout, busy, message }: { name: string; onLogout: () => void; busy: boolean; message: string | null }) {
-  const [today, setToday] = useState<Date | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
-  useEffect(() => {
-    // [유지보수] 정적 HTML 빌드 시각과 앱 실행 시각이 달라도 날짜가 어긋나지 않게 실행 후 계산한다.
-    queueMicrotask(() => setToday(new Date()))
-  }, [])
-
-  return <main className="fo-home-window">
-    <aside className="fo-sidebar" aria-label="주 메뉴">
-      <Logo className="fo-sidebar-logo" />
-      <nav className="fo-nav">{navigation.map(({ label, asset }, index) => <span className={`fo-nav-item${index === 0 ? ' active' : ''}`} aria-current={index === 0 ? 'page' : undefined} key={label}><Image src={`/design/${asset}`} alt="" width={28} height={28} /><span>{label}</span></span>)}</nav>
-      <div className="fo-sidebar-spacer" />
-      <div className="fo-profile"><span className="fo-profile-avatar" aria-hidden="true" /><div><strong>{name}</strong><small>Google 계정</small></div></div>
-      <button className="fo-sidebar-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? '로그아웃 중…' : '로그아웃'}</button>
-    </aside>
-    <div className="fo-home-content">
-      <header className="fo-topbar"><div><span>{today ? new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(today) : '오늘'}</span><p><strong>{name}</strong>님, 안녕하세요</p></div><ul aria-label="오늘 요약"><li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#f2b632"/><circle cx="12" cy="12" r="7" fill="#fff6dc"/><path d="M12 8v4.2l2.8 1.8" fill="none" stroke="#8a5a3b" strokeWidth="2" strokeLinecap="round"/></svg><span>오늘 <strong>0</strong>분</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="4" fill="#8a5a3b"/><rect x="5" y="9" width="14" height="9.5" rx="2" fill="#fff6dc"/><path d="M9 13.8l2 2 4-4" fill="none" stroke="#e0a52a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>이번 달 <strong>0</strong>일</span></li></ul></header>
-      <div className="fo-dashboard"><Alert message={message} />
-        <section className="fo-hero" aria-labelledby="focus-title"><div className="fo-poki-stage"><Image src="/design/poki-main-planning.png" alt="체크리스트를 든 포키" width={220} height={220} priority /></div><div><h1 id="focus-title">오늘은 뭐에 <span>집중</span>할까요?</h1><button className="fo-button fo-button-primary fo-goal-button" type="button" onClick={() => setNotice('목표 설정은 다음 작업에서 연결할게요.')}>목표 설정하기 <span aria-hidden="true">→</span></button>{notice && <p className="fo-home-notice" role="status">{notice}</p>}</div></section>
-        <div className="fo-dashboard-grid"><section className="fo-dashboard-block" aria-labelledby="calendar-title"><div className="fo-panel-head"><h2 id="calendar-title">집중 달력</h2></div><Calendar today={today} /></section><section className="fo-dashboard-block" aria-labelledby="recent-title"><div className="fo-panel-head"><h2 id="recent-title">지난 목표</h2></div><div className="fo-records-empty"><strong>아직 기록이 없어요</strong><span>첫 집중을 마치면 여기에 나타나요.</span></div></section></div>
-      </div>
-    </div>
-  </main>
-}
-
 export default function Page() {
   const [snapshot, setSnapshot] = useState<AuthSessionSnapshot | null>(null)
   const [requestError, setRequestError] = useState<IpcError | null>(null)
@@ -194,6 +141,6 @@ export default function Page() {
   const message = errorMessage(requestError ?? snapshot?.error ?? null)
   if (view === 'loading') return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
-  if (view === 'home' && snapshot?.user) return <HomeScreen name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
+  if (view === 'home' && snapshot?.user) return <HomeDashboard name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
   return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} available={available} offline={view === 'offline'} />
 }

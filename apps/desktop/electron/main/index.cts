@@ -18,6 +18,7 @@ import { AuthService } from './auth-service.cjs'
 import { mediaStatus, registerPermissionIpc } from './permission-ipc.cjs'
 import { OnboardingService } from './onboarding-service.cjs'
 import { registerOnboardingIpc } from './onboarding-ipc.cjs'
+import { ReportService, registerReportIpc } from './report-ipc.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -193,6 +194,7 @@ if (!hasSingleInstanceLock) {
     registerPermissionIpc(() => mainWindow, rendererUrl)
     // [주의] 화면 기록 준비 상태는 Renderer 주장이 아니라 Main이 macOS에서 직접 확인한 값으로 서버에 보낸다.
     registerOnboardingIpc(() => mainWindow, rendererUrl, authService ? new OnboardingService(authService, () => mediaStatus('screen') === 'granted') : null)
+    registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)
     createMainWindow()
     void authService?.restore()
   })
