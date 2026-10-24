@@ -50,7 +50,6 @@
 .fo-goal-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 196px; height: 56px; margin-top: 26px; font-size: 17px; }
 .fo-goal-button span { transition: transform .2s ease; }
 .fo-goal-button:hover span { transform: translateX(4px); }
-.fo-home-notice { margin: 14px 0 0; color: var(--fo-muted); font-size: 14px; }
 .fo-rise { animation: fo-up .55s var(--fo-ease) backwards; }
 
 /* 아래: 상자 없이 두 칸, 가운데 얇은 선 */

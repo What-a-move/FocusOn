@@ -158,7 +158,19 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | `report:daily:get` | `{ date: 'YYYY-MM-DD' }` | `{ date, totalActiveMs, sessions[{ sessionId, goal, startedAt, endedAt, activeMs }] }` | `GET /api/v1/reports/daily` |
 
 - Preload는 `window.focusOn.reports.getCalendar()`, `getDaily()`로 노출한다. Main은 실제로 있는 월·날짜만 받고, `AuthService.authorizedRequest`(X-Device-Id, GET 재시도)로 조회한다.
-- 일간 리포트 `sessions[]` 항목 필드는 Notion에 없어 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`로 읽는다(Frontend 제안, Backend 확인 전). 형식이 다르면 `INVALID_RESPONSE`로 실패를 보여 준다.
+- 일간 리포트 `sessions[]` 항목 필드는 Notion에 없어 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`로 읽는다(2026-10-24 확정, 결정 020). 형식이 다르면 `INVALID_RESPONSE`로 실패를 보여 준다.
+
+### 목표 Channel (2026-10-24, Issue #44)
+
+| Channel | 입력 | 성공 data | Backend |
+| --- | --- | --- | --- |
+| `goal:clarify` | `{ goalText, conversationTurn(0~2), clarificationSessionId?, previousAnswers[{ question, answer }] }` | `{ decision, normalizedGoalText, question, suggestions, goalCandidates, conversationTurn, clarificationSessionId }` | `POST /api/v1/goals/clarify` |
+| `goal:create` | `{ goalText, confirmationSource: AI_CONFIRMED \| MANUAL_CONFIRMED, clarificationSessionId? }` | `{ goalId, goalText, confirmationSource }` | `POST /api/v1/goals` |
+
+- Preload는 `window.focusOn.goals.clarify()`, `create()`로 노출한다. Main은 목표 2~40자·질문 2회·허용 필드만 받는다. POST라 자동 재전송하지 않는다(AI 재시도는 Backend).
+- `clarificationSessionId`·`previousAnswers`는 AI 분석 계약 3.2와 같은 필드다(2026-10-24 확정, 결정 020). 응답에 `clarificationSessionId`가 없으면 null로 읽는다.
+- 결정에 필요한 값이 없는 응답(예: `UNKNOWN_TERM`인데 `question` 없음, `MULTI_GOAL` 후보 1개 이하)은 `INVALID_RESPONSE`로 처리한다.
+- Renderer는 `electron/shared`에서 타입만 가져온다(`goal-setting-shared-runtime-import-ERROR.md`).
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 

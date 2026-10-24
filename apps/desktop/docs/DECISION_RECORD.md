@@ -462,3 +462,26 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 - `apps/desktop/electron/main/onboarding-service.cts` (변경 없음, 기준 확인)
 - `apps/desktop/docs/MACOS_PERMISSION_FLOW.md`, `docs/features/onboarding-flow-PLAN.md`, `docs/NEXT_TASK.md`
 - 이후 세션 시작·리포트 구현 시 이 결정을 따른다.
+
+## 결정 020 - 일간 리포트 세션 항목과 목표 확인 요청 형식
+
+- 결정일: 2026-10-24
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정, Notion API 명세 반영)
+
+### 결정 내용
+
+- `GET /api/v1/reports/daily`의 `sessions[]` 항목은 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`다. ERD `learning_sessions` 컬럼 이름을 따른다. 홈 지난 목표가 쓴다.
+- `POST /api/v1/goals/clarify` 요청은 `{ goalText, conversationTurn, clarificationSessionId?, previousAnswers: [{ question, answer }] }`, 응답은 기존 필드에 `clarificationSessionId`를 더한다(AI 분석 계약 3.2와 같은 필드). 저장(`POST /goals`)에도 같은 `clarificationSessionId`를 보낸다.
+- Desktop은 목표 확인 POST를 자동 재전송하지 않는다. AI 재시도(1초 → 3초, 최대 2회)는 Backend가 맡고, 최종 실패면 Desktop이 수동 확정을 보여 준다.
+
+### 결정 이유
+
+API 명세에 항목 필드와 질문 답 전달 방법이 없어 화면을 만들 수 없었다. 이미 정한 ERD 이름과 AI 계약 필드를 재사용해 새 이름을 만들지 않는다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/shared/report-contract.cts`, `goal-contract.cts`
+- `apps/desktop/electron/main/report-ipc.cts`, `goal-ipc.cts`
+- `apps/desktop/docs/IPC_CONTRACT.md`, `features/dashboard-home-PLAN.md`, `features/goal-setting-PLAN.md`

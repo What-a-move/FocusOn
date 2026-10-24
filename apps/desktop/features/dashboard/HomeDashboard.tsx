@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
 import './dashboard.css'
 
@@ -114,12 +115,12 @@ function RecentGoals({ view, onRetry }: { view: RecentView; onRetry: () => void 
 
 /** D05·D08 홈 (FocusOn-design/main.html). 기록 값은 서버가 확정한 값만 보여 준다. */
 export function HomeDashboard({ name, onLogout, busy, message }: { name: string; onLogout: () => void; busy: boolean; message: string | null }) {
+  const router = useRouter()
   const [today, setToday] = useState<Date | null>(null)
   const [month, setMonth] = useState<Date | null>(null)
   const [calendar, setCalendar] = useState<CalendarView>({ status: 'loading' })
   const [current, setCurrent] = useState<CalendarMonth | null | 'error'>(null)
   const [recent, setRecent] = useState<RecentView>({ status: 'loading' })
-  const [notice, setNotice] = useState<string | null>(null)
   const cache = useRef(new Map<string, { data: CalendarMonth; loadedAt: Date }>())
   const latestCalendar = useRef(0)
   const latestSummary = useRef(0)
@@ -201,9 +202,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
           <div className="fo-poki-stage"><Image src="/design/poki-main-planning.png" alt="체크리스트를 든 포키" width={220} height={220} priority /></div>
           <div>
             <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">오늘은 뭐에 <span className="fo-hl">집중</span>할까요?</h1>
-            {/* 목표 설정 화면은 다음 Issue에서 연결한다. */}
-            <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => setNotice('목표 설정 화면은 준비 중이에요.')}>목표 설정하기 <span aria-hidden="true">→</span></button>
-            {notice && <p className="fo-home-notice" role="status">{notice}</p>}
+            <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/goal/')}>목표 설정하기 <span aria-hidden="true">→</span></button>
           </div>
         </section>
         <div className="fo-dashboard-grid">

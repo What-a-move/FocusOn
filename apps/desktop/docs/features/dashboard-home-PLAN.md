@@ -60,7 +60,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 
 - Renderer 입력: 조회할 월(`YYYY-MM`)
 - Main 또는 Preload 전달값: `window.focusOn.reports.getCalendar({ month })`, 최근 목표 조회. 모두 Main에서 `AuthService.authorizedRequest`를 거친다(GET 재시도 규칙 동일).
-- Server·AI 요청 여부: `GET /api/v1/reports/calendar?month=YYYY-MM` → `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }`. 오늘 집중 분·이번 달 일수는 이번 달 달력 응답에서 계산한다. 지난 목표는 이번 달 달력에서 기록이 있는 최근 날짜부터 `GET /api/v1/reports/daily?date=`를 차례로 조회해 최대 3개를 모은다(이번 달 범위만). 일간 세션 항목 형식은 Frontend 제안 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`이며 Backend 확인 전이다.
+- Server·AI 요청 여부: `GET /api/v1/reports/calendar?month=YYYY-MM` → `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }`. 오늘 집중 분·이번 달 일수는 이번 달 달력 응답에서 계산한다. 지난 목표는 이번 달 달력에서 기록이 있는 최근 날짜부터 `GET /api/v1/reports/daily?date=`를 차례로 조회해 최대 3개를 모은다(이번 달 범위만). 일간 세션 항목 형식은 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`다(2026-10-24 확정, 결정 020).
 - 저장 데이터: 없음(메모리 캐시만, 세션 종료 시 해당 월 무효화는 세션 Issue에서)
 - 분석 제외 대상: 해당 없음
 

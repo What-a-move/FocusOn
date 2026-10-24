@@ -1,0 +1,119 @@
+/* 디자인 원본: FocusOn-design/goal-setting.html. 색 토큰·버튼·창 상단은 onboarding.css(.onboarding-window)를 그대로 쓰고,
+   목표 설정 화면만 다른 부분을 .goal-window로 덮어쓴다. */
+.onboarding-window.goal-window { --gold-tint: #fffaf2; --danger-strong: #d92d20; }
+@media (prefers-color-scheme: dark) {
+  .onboarding-window.goal-window { --gold-tint: #201c15; --danger-strong: #e5484d; }
+}
+
+.goal-window .top { width: min(680px, calc(100% - 64px)); }
+.goal-window .close { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; border-radius: 10px; color: var(--ink); font-size: 22px; line-height: 1; text-decoration: none; }
+.goal-window .close:hover { background: var(--field); }
+.goal-window .close:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+/* 진행: 온보딩의 막대 대신 점 3개 */
+.onboarding-window.goal-window .progress { display: flex; justify-content: center; gap: 8px; }
+.onboarding-window.goal-window .progress i { width: 8px; height: 8px; border-radius: 99px; background: var(--track); transition: width .3s ease, background .3s ease; }
+.onboarding-window.goal-window .progress i::after { display: none; }
+.onboarding-window.goal-window .progress i.done { background: var(--gold); }
+.onboarding-window.goal-window .progress i.active { width: 28px; background: var(--gold); }
+.goal-window .step-count { min-width: 56px; }
+
+/* 가운데 한 줄: 포키 옆 질문 → 아래 답 */
+.goal-window .view { width: min(680px, calc(100% - 64px)); min-height: 100%; margin: 0 auto; padding: 32px 0; display: flex; flex-direction: column; justify-content: center; gap: 32px; animation: onboarding-fade-in .4s var(--ease) both; }
+.onboarding-window.goal-window .speaker { flex-direction: row; align-items: center; gap: 20px; }
+.onboarding-window.goal-window .poki { width: 96px; height: 96px; flex: 0 0 96px; }
+/* 말풍선 대신 큰 질문 문장 */
+.onboarding-window.goal-window .bubble { width: auto; padding: 0; border: 0; background: none; font-size: 30px; line-height: 1.35; letter-spacing: -.03em; }
+.onboarding-window.goal-window .bubble::before,
+.onboarding-window.goal-window .bubble::after { display: none; }
+.onboarding-window.goal-window .bubble.is-error { color: var(--danger); }
+.goal-window .bubble:focus { outline: none; }
+
+/* 생각 중 점 세 개 */
+.goal-window .typing { display: inline-flex; gap: 5px; margin-left: 6px; vertical-align: middle; }
+.goal-window .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: goal-blink 1s infinite ease-in-out; }
+.goal-window .typing i:nth-child(2) { animation-delay: .15s; }
+.goal-window .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes goal-blink { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+/* 입력 */
+.goal-window .field-label { display: block; margin-bottom: 10px; font-size: 16px; font-weight: 700; }
+.goal-window .input-wrap { position: relative; }
+.goal-window .goal-input { width: 100%; height: 64px; padding: 0 76px 0 20px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--field); font-size: 19px; font-weight: 600; outline: none; transition: border-color .15s ease, background .15s ease; }
+.goal-window .goal-input::placeholder { color: var(--faint); font-weight: 400; }
+.goal-window .goal-input:focus { border-color: var(--ink); background: var(--surface); }
+.goal-window .goal-input.is-error { border-color: var(--danger); background: var(--danger-soft); }
+.goal-window .goal-input:disabled { color: var(--muted); }
+.goal-window .counter { position: absolute; top: 50%; right: 18px; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; transform: translateY(-50%); }
+.goal-window .counter.is-full { color: var(--danger); font-weight: 700; }
+.goal-window .hint { display: flex; align-items: center; gap: 6px; min-height: 24px; margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.goal-window .hint.is-error { color: var(--danger); font-weight: 600; }
+.goal-window .hint.is-error::before { content: '!'; width: 18px; height: 18px; flex: 0 0 18px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--danger-strong); color: #fff; font-size: 12px; font-weight: 700; }
+.goal-window .chips-label { margin: 28px 0 12px; font-size: 16px; font-weight: 700; }
+.goal-window .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.goal-window .chip { height: 48px; padding: 0 18px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 16px; font-weight: 600; cursor: pointer; transition: transform .08s ease, background .15s ease; }
+.goal-window .chip:hover:not(:disabled) { background: var(--hover); }
+.goal-window .chip:active:not(:disabled) { transform: scale(.97); }
+
+/* 선택 카드 */
+.goal-window .question-count { display: inline-block; margin-bottom: 14px; padding: 5px 12px; border-radius: 99px; background: var(--field); font-size: 13px; font-weight: 700; }
+.goal-window .options { display: grid; gap: 10px; }
+.goal-window .option { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 68px; padding: 16px 20px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--surface); font-size: 17px; font-weight: 700; text-align: left; cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .08s ease; }
+.goal-window .option:hover:not(:disabled) { background: var(--hover); }
+.goal-window .option:active:not(:disabled) { transform: scale(.97); }
+.goal-window .option[aria-checked='true'] { border-color: var(--gold); background: var(--gold-tint); }
+.goal-window .key { width: 22px; height: 22px; flex: 0 0 22px; border: 1.5px solid var(--dim); border-radius: 50%; }
+.goal-window .option[aria-checked='true'] .key { border: 7px solid var(--brand); }
+.goal-window .options-help { margin-top: 14px; color: var(--muted); font-size: 15px; }
+.goal-window .chip:focus-visible,
+.goal-window .option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* 확인 */
+.goal-window .goal-card { padding: 24px 28px; border: 1.5px solid var(--gold); border-radius: 18px; background: var(--gold-tint); }
+.goal-window .goal-card small { display: block; color: var(--muted); font-size: 14px; font-weight: 600; }
+.goal-window .goal-card p { margin-top: 6px; font-size: 26px; font-weight: 700; line-height: 1.45; letter-spacing: -.02em; }
+.goal-window .rules { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.goal-window .rules li { padding: 8px 12px; border-radius: 99px; background: var(--field); font-size: 14px; font-weight: 600; }
+
+/* 완료: 넓은 가로 폭, 목표를 가장 위·가장 크게 */
+.goal-window .view.done-view { width: min(1000px, calc(100% - 64px)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 56px; }
+.onboarding-window.goal-window .done-view .poki { width: auto; height: 260px; flex: none; }
+.goal-window .done-label { color: var(--muted); font-size: 15px; font-weight: 600; }
+.goal-window .done-view h2 { margin-top: 8px; font-size: clamp(32px, 3.6vw, 44px); font-weight: 700; line-height: 1.3; letter-spacing: -.03em; animation: onboarding-rise-in .55s .1s var(--ease) both; }
+.goal-window .done-view h2:focus { outline: none; }
+.goal-window .done-ok { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 17px; font-weight: 600; animation: onboarding-fade-in .4s .35s var(--ease) both; }
+.goal-window .done-ok i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--gold); color: #fff; animation: onboarding-pop-in .55s .45s var(--ease) both; }
+.goal-window .done-ok svg { width: 14px; height: 14px; }
+.goal-window .done-note { margin-top: 12px; color: var(--muted); font-size: 15px; }
+
+/* 하단 바 */
+.goal-window .footer { flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--surface); }
+.goal-window .footer-inner { display: flex; align-items: center; gap: 12px; width: min(680px, calc(100% - 64px)); margin: 0 auto; padding: 20px 0 40px; }
+.goal-window .feedback { display: flex; align-items: flex-start; gap: 10px; min-width: 0; font-size: 15px; line-height: 1.5; animation: onboarding-rise-in .55s var(--ease); }
+.goal-window .feedback strong { display: block; color: var(--danger); font-size: 16px; }
+.goal-window .feedback div span { display: block; }
+.goal-window .feedback-icon { width: 20px; height: 20px; flex: 0 0 20px; margin-top: 2px; display: grid; place-items: center; border-radius: 50%; background: var(--danger-strong); color: #fff; font-size: 13px; font-weight: 700; }
+.goal-window .spacer { flex: 1; }
+.onboarding-window.goal-window .footer .btn { height: 56px; font-size: 17px; white-space: nowrap; }
+.goal-window .primary { min-width: 140px; }
+.onboarding-window.goal-window .primary.is-blocked { background: var(--disabled-bg); color: var(--faint); filter: none; box-shadow: 0 4px 0 var(--disabled-edge); }
+.onboarding-window.goal-window .primary.is-blocked:active { transform: none; }
+
+/* 낮은 창: 스크롤 없이 들어가게 */
+@media (max-height: 680px) and (min-width: 761px) {
+  .goal-window .top { margin-top: 12px; }
+  .goal-window .view { padding: 16px 0; gap: 22px; }
+  .onboarding-window.goal-window .speaker .poki { width: 76px; height: 76px; flex-basis: 76px; }
+  .onboarding-window.goal-window .bubble { font-size: 24px; }
+  .goal-window .goal-input { height: 54px; }
+  .goal-window .chips-label { margin-top: 20px; }
+  .goal-window .chip { height: 42px; }
+  .goal-window .option { min-height: 56px; padding: 10px 18px; }
+  .onboarding-window.goal-window .done-view .poki { height: 180px; }
+  .goal-window .footer-inner { padding: 14px 0 28px; }
+}
+@media (max-width: 760px) {
+  .goal-window .view.done-view { grid-template-columns: 1fr; gap: 20px; }
+  .onboarding-window.goal-window .done-view .poki { order: -1; height: 150px; }
+  .onboarding-window.goal-window .speaker .poki { width: 72px; height: 72px; flex-basis: 72px; }
+  .onboarding-window.goal-window .bubble { font-size: 22px; }
+}
