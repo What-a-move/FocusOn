@@ -4,6 +4,11 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 집중 화면 (Issue #48, `feat/48-desktop-focus-session`)
+- 상태: 화면·SessionRuntime·세션 명령 IPC 구현 완료(2026-10-25). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
+- 다음 Issue 후보: Extension 팝업 세션 화면(E02·E03·E06)과 Extension Access Token 갱신. 홈에서 진행 중 세션으로 돌아가는 진입점도 함께 검토.
+
+
 - 작업명: 세션 설정 (Issue #46, `feat/46-desktop-session-setup`)
 - 상태: 화면·세션 IPC 구현 완료(2026-10-24). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 Issue 후보: 집중 화면(`session.html`, D10) — 시작한 세션은 `sessionStorage['focuson.activeSession']`에 있다. 그 전까지는 시작 성공 뒤 `집중 화면은 준비 중이에요` 안내만 있다.

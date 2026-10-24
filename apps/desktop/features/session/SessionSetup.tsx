@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CONFIRMED_GOAL_KEY } from '../goal/goal-api'
 import {
-  ACTIVE_SESSION_KEY, formatMinutes, isValidMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi,
+  formatMinutes, isValidMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi,
   type InterventionLevel, type NotificationChannel,
 } from './session-api'
 import '../onboarding/onboarding.css'
@@ -119,6 +119,7 @@ export function SessionSetup() {
     if (channels.length === 0) { setChannelError(true); return }
     const payload = {
       goalId: goal.goalId,
+      goalText: goal.goalText,
       targetDurationMs: minutes * 60_000,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sessionOptions: { interventionLevel: level, notificationChannels: CHANNELS.map(({ key }) => key).filter((key) => channels.includes(key)), cameraAnalysisEnabled: camera === true },
@@ -135,12 +136,9 @@ export function SessionSetup() {
       return
     }
     attempt.current = null
-    try {
-      sessionStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({ sessionId: result.data.sessionId, goalText: goal.goalText, targetDurationMs: result.data.targetDurationMs, startedAt: result.data.startedAt }))
-    } catch { /* 저장소를 못 써도 세션은 서버에 만들어졌다. */ }
+    // 시작한 세션은 Main 타이머(SessionRuntime)가 이어 센다.
     setStarted(true)
-    // 집중 화면(타이머)은 다음 Issue에서 연결한다.
-    setFeedback({ title: '집중을 시작했어요.', body: '집중 화면은 준비 중이에요.', info: true })
+    router.push('/session/')
   }
 
   const sendTest = async () => {

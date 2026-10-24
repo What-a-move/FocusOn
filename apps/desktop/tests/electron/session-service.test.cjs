@@ -8,7 +8,7 @@ const { NotificationReadiness } = require('../../dist-electron/main/notification
 const { isValidStartInput, parseFocusSettings, parseStartedSession } = require('../../dist-electron/shared/session-contract.cjs')
 
 const options = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI', 'MACOS_NOTIFICATION'], cameraAnalysisEnabled: false }
-const input = { goalId: '12', targetDurationMs: 30 * 60000, timeZone: 'Asia/Seoul', sessionOptions: options, idempotencyKey: '3f2b8a52-7c1e-4d6a-9b0f-1e2d3c4b5a69' }
+const input = { goalId: '12', goalText: '미적분 풀기', targetDurationMs: 30 * 60000, timeZone: 'Asia/Seoul', sessionOptions: options, idempotencyKey: '3f2b8a52-7c1e-4d6a-9b0f-1e2d3c4b5a69' }
 
 test('시작 입력은 5~300분·분 단위·IANA 시간대·알림 1개 이상·UUID 키만 받는다', () => {
   assert.equal(isValidStartInput(input), true)
@@ -61,4 +61,15 @@ test('알림 확인 기록은 파일이 없거나 깨지면 확인 안 됨으로
   assert.equal(readiness.isConfirmed(), false)
   fs.writeFileSync(file, '{broken')
   assert.equal(readiness.isConfirmed(), false)
+})
+
+test('세션 시작이 확정되면 Main 타이머를 시작하고, 목표 문구는 서버로 보내지 않는다', async () => {
+  const begun = []
+  const requests = []
+  const service = new SessionService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: { sessionId: '901', status: 'RUNNING', version: 1, targetDurationMs: 1800000, accumulatedActiveMs: 0, startedAt: '2026-10-25T01:00:00Z', interventionPolicyVersion: 'v1' } } } }, () => true, () => true, { begin: (started, goalText) => begun.push({ started, goalText }) })
+  await service.start(input)
+  assert.equal('goalText' in requests[0].body, false)
+  assert.equal(begun.length, 1)
+  assert.equal(begun[0].goalText, '미적분 풀기')
+  assert.equal(begun[0].started.version, 1)
 })

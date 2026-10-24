@@ -1,8 +1,8 @@
-import type { FocusSettings, InterventionLevel, NotificationChannel, StartSessionInput, StartedSession } from '../../electron/shared/session-contract.cjs'
+import type { FocusSettings, InterventionLevel, NotificationChannel, SessionSnapshot, StartSessionInput, StartedSession } from '../../electron/shared/session-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { FocusSettings, InterventionLevel, NotificationChannel, StartedSession }
+export type { FocusSettings, InterventionLevel, NotificationChannel, SessionSnapshot, StartedSession }
 
 // [주의] Renderer는 electron/shared에서 타입만 가져온다(goal-setting-shared-runtime-import-ERROR.md). Main의 값과 같다.
 export const MIN_MINUTES = 5
@@ -38,10 +38,14 @@ export const sessionApi = {
   sendTestNotification: () => viaPermissions<{ shown: boolean }>((api) => api.showNotification({ titleCode: 'ONBOARDING_TEST', bodyCode: 'ONBOARDING_TEST' })),
   confirmNotification: (seen: boolean) => viaPermissions<{ confirmed: boolean }>((api) => api.confirmNotification({ seen })),
   openNotificationSettings: () => viaPermissions<{ opened: boolean }>((api) => api.openNotificationSettings()),
+  // 집중 화면: 타이머와 상태 명령은 Main SessionRuntime이 맡는다.
+  getCurrent: () => viaSessions<SessionSnapshot | null>((api) => api.getCurrent()),
+  pause: () => viaSessions<SessionSnapshot>((api) => api.pause()),
+  resume: () => viaSessions<SessionSnapshot>((api) => api.resume()),
+  extend: (minutes: number) => viaSessions<SessionSnapshot>((api) => api.extend({ minutes })),
+  end: () => viaSessions<SessionSnapshot>((api) => api.end()),
+  onChanged: (callback: (snapshot: SessionSnapshot | null) => void) => (typeof window === 'undefined' ? undefined : window.focusOn?.sessions?.onChanged(callback)) ?? (() => {}),
 }
-
-/** 시작한 세션을 집중 화면으로 넘긴다. 세션 id·목표·시간만 두며 민감 정보가 아니다. */
-export const ACTIVE_SESSION_KEY = 'focuson.activeSession'
 
 /** 5~300분, 정수만 허용한다 (로그인 설계서 7.1). */
 export const isValidMinutes = (value: number) => Number.isInteger(value) && value >= MIN_MINUTES && value <= MAX_MINUTES

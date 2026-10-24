@@ -97,6 +97,11 @@ export class AuthApiClient {
       return { success: false, error: NETWORK_UNAVAILABLE }
     }
 
+    // 200을 기대한 조회가 204(본문 없음)를 받으면 parse(null)로 '없음'을 판단하게 한다 (예: GET /sessions/active).
+    if (response.status === 204 && expectedStatus === 200) {
+      const data = parse(null)
+      return data ? { success: true, data } : { success: false, error: INVALID_RESPONSE }
+    }
     // [주의] 로그인 요청의 redirect를 자동 추적하면 code나 token이 다른 주소로 넘어갈 수 있다.
     if (response.status !== expectedStatus) {
       try { return { success: false, error: parseError(await response.json()) } }
