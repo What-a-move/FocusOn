@@ -5,12 +5,12 @@
 ## 가장 먼저 진행할 작업
 
 - 작업명: 목표 설정 (Issue #44, `feat/44-desktop-goal-setting`)
-- 상태: 화면·목표 IPC·수동 확정 구현 완료(2026-10-24). 남은 일: clarify 요청의 `clarificationSessionId`·`previousAnswers` 형식 Backend 확인, 목표 API 병합 뒤 실제 계정 QA와 REPORT.
+- 상태: 화면·목표 IPC·수동 확정 구현 완료(2026-10-24). 남은 일: 목표 API 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 Issue 후보: 세션 설정(`session-setup.html`, D09) — 완료 화면 `집중 시간 정하기`와 연결. 저장한 목표는 `sessionStorage['focuson.confirmedGoal']`에 있다.
 
 
 - 작업명: 홈 대시보드 화면 구조 (Issue #41, `feat/41-desktop-dashboard`)
-- 상태: 화면·리포트 IPC·상태 UI 구현 완료(2026-10-24). 남은 일: 일간 리포트 세션 항목 형식 Backend 확인, 리포트 API 병합 뒤 실제 계정 QA와 REPORT. 날짜·지난 목표 클릭 이동은 집중 기록 화면 Issue에서 연결한다.
+- 상태: 화면·리포트 IPC·상태 UI 구현 완료(2026-10-24). 남은 일: 리포트 API 병합 뒤 실제 계정 QA와 REPORT. 날짜·지난 목표 클릭 이동은 집중 기록 화면 Issue에서 연결한다.
 - 다음 Issue 후보: 목표 설정(`goal-setting.html`, D06·D07).
 
 ## 이전 작업

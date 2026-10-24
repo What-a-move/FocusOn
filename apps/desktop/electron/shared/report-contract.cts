@@ -10,7 +10,7 @@ export const REPORT_CHANNELS = {
 export type CalendarDay = { date: string; totalActiveMs: number; sessionCount: number; hasStudyActivity: boolean }
 export type CalendarMonth = { month: string; studyDayCount: number; days: CalendarDay[] }
 
-/** GET /api/v1/reports/daily 의 세션 카드. Notion에 항목 필드가 없어 Frontend 제안 형식으로 읽는다(Backend 확인 전). */
+/** GET /api/v1/reports/daily 의 세션 카드. 항목 형식은 2026-10-24 확정(결정 020). */
 export type DailySession = { sessionId: string; goal: string; startedAt: string; endedAt: string | null; activeMs: number }
 export type DailyReport = { date: string; totalActiveMs: number; sessions: DailySession[] }
 

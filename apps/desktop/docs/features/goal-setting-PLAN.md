@@ -64,7 +64,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 - Main 전달값: `window.focusOn.goals.clarify({ goalText, conversationTurn, clarificationSessionId?, previousAnswers })`, `goals.create({ goalText, confirmationSource, clarificationSessionId? })`
 - Server 요청: `POST /api/v1/goals/clarify`, `POST /api/v1/goals`
 - 저장 데이터: 저장한 목표 `{ goalId, goalText }`를 세션 설정 화면에 넘기기 위해 `sessionStorage`에 둔다(민감 정보 아님).
-- Backend 확인 필요: 클라이언트 API 명세의 clarify 요청에는 `goalText`·`conversationTurn`만 있어 질문 답을 보낼 수 없다. AI 계약 3.2처럼 `clarificationSessionId`·`previousAnswers`를 받고, 응답에 `clarificationSessionId`를 돌려주는 형식으로 제안한다.
+- clarify 요청은 AI 계약 3.2처럼 `clarificationSessionId`·`previousAnswers`를 보내고, 응답에 `clarificationSessionId`를 받는다(2026-10-24 확정, 결정 020).
 
 ```json
 {

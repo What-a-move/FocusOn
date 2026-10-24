@@ -65,7 +65,7 @@ export function parseClarifyResult(value: unknown): ClarifyResult | null {
   const { normalizedGoalText, question, suggestions, goalCandidates, conversationTurn, clarificationSessionId } = value
   if (!(normalizedGoalText === null || isValidGoalText(normalizedGoalText)) || !(question === null || typeof question === 'string')) return null
   if (!isStringList(suggestions) || !isStringList(goalCandidates) || !Number.isInteger(conversationTurn)) return null
-  // clarificationSessionId는 Frontend 제안 필드다(Backend 확인 전). 없으면 null로 읽는다.
+  // clarificationSessionId는 2026-10-24 확정 필드다(결정 020). 첫 응답 전에는 없으므로 없으면 null로 읽는다.
   if (!(clarificationSessionId === undefined || clarificationSessionId === null || isId(clarificationSessionId))) return null
   const decision = value.decision as GoalDecision
   // [주의] 결정에 필요한 값이 없으면 화면에서 할 수 있는 일이 없으므로 계약 위반으로 본다.
