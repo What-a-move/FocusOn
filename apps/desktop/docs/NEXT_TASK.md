@@ -5,7 +5,7 @@
 ## 가장 먼저 진행할 작업
 
 - 작업명: 세션 설정 (Issue #46, `feat/46-desktop-session-setup`)
-- 상태: 화면·세션 IPC 구현 완료(2026-10-24). 남은 일: `sessionOptions`·`startReadiness` 형식 Backend 확인, 세션 API 병합 뒤 실제 계정 QA와 REPORT.
+- 상태: 화면·세션 IPC 구현 완료(2026-10-24). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 Issue 후보: 집중 화면(`session.html`, D10) — 시작한 세션은 `sessionStorage['focuson.activeSession']`에 있다. 그 전까지는 시작 성공 뒤 `집중 화면은 준비 중이에요` 안내만 있다.
 
 

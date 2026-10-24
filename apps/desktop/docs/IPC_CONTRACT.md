@@ -180,7 +180,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | `session:start` | `{ goalId, targetDurationMs(5~300분, 분 단위), timeZone(IANA), sessionOptions: { interventionLevel, notificationChannels(1개 이상·중복 없음), cameraAnalysisEnabled }, idempotencyKey(UUID v4) }` | `{ sessionId, status, targetDurationMs, startedAt, interventionPolicyVersion }` | `POST /api/v1/sessions` |
 
 - Main은 `Idempotency-Key`·`X-Device-Id` 헤더를 붙이고, `startReadiness: { screenAnalysisReady }`는 Main이 macOS 권한을 직접 확인해 넣는다(Renderer 입력 아님). POST라 자동 재전송하지 않는다. Renderer는 같은 선택으로 다시 누르면 같은 키를 보낸다.
-- `sessionOptions`·`startReadiness` 세부 필드는 Notion에 이름만 있어 Frontend 제안 형식으로 보낸다(Backend 확인 전).
+- `sessionOptions`는 focus-settings와 같은 필드 이름(`breakSuggestionEnabled` 제외), `startReadiness`는 `{ screenAnalysisReady }`다(2026-10-24 확정, 결정 021).
 - `AuthorizedRequest.headers`로 요청별 헤더를 붙인다. 토큰 만료로 한 번 다시 보낼 때도 같은 값이다.
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.

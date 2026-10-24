@@ -485,3 +485,27 @@ API 명세에 항목 필드와 질문 답 전달 방법이 없어 화면을 만�
 - `apps/desktop/electron/shared/report-contract.cts`, `goal-contract.cts`
 - `apps/desktop/electron/main/report-ipc.cts`, `goal-ipc.cts`
 - `apps/desktop/docs/IPC_CONTRACT.md`, `features/dashboard-home-PLAN.md`, `features/goal-setting-PLAN.md`
+
+## 결정 021 - 세션 시작 요청 형식
+
+- 결정일: 2026-10-24
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정, Notion `POST /api/v1/sessions` 반영)
+
+### 결정 내용
+
+- `POST /api/v1/sessions` 본문은 `{ goalId, targetDurationMs, timeZone, sessionOptions: { interventionLevel, notificationChannels, cameraAnalysisEnabled }, startReadiness: { screenAnalysisReady } }`다. 헤더는 `Idempotency-Key`·`X-Device-Id`.
+- `sessionOptions`는 focus-settings와 같은 필드 이름을 쓰고 `breakSuggestionEnabled`는 넣지 않는다.
+- `startReadiness`는 Main이 확인한 화면 기록 상태만 보낸다. 알림은 서버에 기록하지 않는다(결정 019와 같은 이유).
+- `targetDurationMs`는 5~300분(분 단위)만 보낸다. MVP에는 종료 없는 세션이 없어 명세의 null 설명을 지웠다.
+- 시작 요청은 자동 재전송하지 않고, 같은 선택으로 다시 누르면 같은 `Idempotency-Key`를 보낸다.
+
+### 결정 이유
+
+Notion에 `sessionOptions and startReadiness` 이름만 있어 화면을 만들 수 없었다. 이미 정한 focus-settings 필드와 알림 미기록 결정을 재사용한다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/shared/session-contract.cts`, `electron/main/session-ipc.cts`, `electron/main/auth-service.cts`
+- `apps/desktop/features/session/`, `docs/IPC_CONTRACT.md`, `docs/features/session-setup-PLAN.md`
