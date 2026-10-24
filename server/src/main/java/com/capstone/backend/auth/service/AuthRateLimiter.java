@@ -13,6 +13,16 @@ public class AuthRateLimiter {
   private final Map<String, Bucket> loginBuckets = new HashMap<>();
   private final Map<String, Bucket> authenticatedBuckets = new HashMap<>();
 
+  /**
+   * 설치 ID 변경으로 키 공간을 채우지 못하도록 IP를 먼저 검사한다.
+   * 공유 NAT를 고려한 IP 보호 상한 300회/10분과 기존 설치별 5회/10분을 함께 적용한다.
+   */
+  public synchronized void checkGoogleLogin(String remoteAddress, String installationId) {
+    check("google:ip:" + TokenSecrets.hash(remoteAddress), 300, Duration.ofMinutes(10));
+    check("google:" + TokenSecrets.hash(remoteAddress + "\n" + installationId),
+        5, Duration.ofMinutes(10));
+  }
+
   /** 동일 키의 카운트와 만료 처리를 원자적으로 수행한다. */
   public synchronized void check(String key, int limit, Duration window) {
     // 익명 클라이언트가 로그인 키 공간을 채워도 기존 인증 사용자의 한도를 소진하지 못한다.

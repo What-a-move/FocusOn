@@ -5,7 +5,7 @@
 Issue #49 로그인 API 마무리 및 후속 인증 준비
 
 - 우선순위: 높음
-- 상태: Issue #49의 Google 교환·auth/me·요청 인증 구현 및 검증 완료. 작업 브랜치에서 commit·push 후 PR 생성 승인 대기. dev 병합 전이다.
+- 상태: Issue #49의 Google 교환·auth/me·요청 인증 구현 및 검증 완료. PR #51 생성 후 CodeRabbit 지적 반영 중. dev 병합 전이다.
 
 ## 목적
 
@@ -13,7 +13,7 @@ Issue #49 로그인 API 마무리 및 후속 인증 준비
 
 ## 순서
 
-1. #49의 구현·독립 리뷰·QA 문서를 확인하고 PR 생성 승인을 받는다. 사용자 승인 없이 merge·Issue 종료하지 않는다.
+1. PR #51의 CodeRabbit 지적 반영·독립 리뷰·QA를 확인하고 병합 승인을 받는다. 사용자 승인 없이 merge·Issue 종료하지 않는다.
 2. 후속 Issue에서 Refresh Token 회전·재사용 감지와 로그아웃을 구현하고, 이어서 기기 목록·폐기 API를 구현한다. Issue #38 사용자·목표 API와는 인증·기기 검증 인터페이스를 공유한다.
 3. 목표·세션·분석 제외 도메인·heartbeat·개입 정책 버전·`studyDate`·학습 정리는 각 도메인 작업의 migration과 Entity로 분리한다.
 4. 목표와 세션 MVP API를 구현한다.

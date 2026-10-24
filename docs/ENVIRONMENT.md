@@ -69,3 +69,7 @@ docker compose up --build
 - Backend는 같은 Desktop client ID를 `GOOGLE_DESKTOP_CLIENT_ID`로 설정한다. 발급 JSON에 secret이 있으면 `GOOGLE_DESKTOP_CLIENT_SECRET`을 서버 `.env`에만 설정하고 Desktop에 넣지 않는다.
 - Google 설정이 비어 있어도 서버 health는 동작하지만 교환은 503으로 실패한다. `.env.example`은 실제 자격 증명으로 사용하지 않는다.
 - `server.forward-headers-strategy=none`으로 직접 연결 IP만 신뢰한다. 운영 reverse proxy를 추가할 때 신뢰 proxy와 IP 한도를 별도 구성한다.
+
+### 로그인 남용 방어와 proxy
+
+Google 교환은 기존 IP+installationId별 5회/10분 외에 IP별 300회/10분 보호 상한을 먼저 검사한다. 설치 ID 변경으로 한 IP가 로그인 키 공간을 채우는 것을 제한한다. 단일 서버 메모리 방식이며 분산 IP 공격 방어는 별도다. `server.forward-headers-strategy=none`이므로 reverse proxy 뒤에서는 proxy 주소를 공유한다. 배포 시 신뢰 proxy와 클라이언트 IP 전달 경계를 확정하고 공유 트래픽 기준으로 상한을 검토한다. 임의의 X-Forwarded-For는 신뢰하지 않는다.

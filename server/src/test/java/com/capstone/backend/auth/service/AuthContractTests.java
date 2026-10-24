@@ -4,11 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.capstone.backend.auth.controller.AuthController;
+import com.capstone.backend.auth.dto.AuthDtos.DesktopDevice;
+import com.capstone.backend.auth.dto.AuthDtos.GoogleExchangeRequest;
 import com.capstone.backend.common.api.ApiException;
 import java.time.Duration;
 import java.util.HashSet;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 class AuthContractTests {
   @Test
@@ -44,6 +52,55 @@ class AuthContractTests {
     assertThrows(ApiException.class,
         () -> limits.check("google:overflow", 5, Duration.ofMinutes(10)));
     assertDoesNotThrow(() -> limits.check("api:1:1", 60, Duration.ofMinutes(1)));
+  }
+
+  @Test
+  void changingInstallationCannotExhaustLoginCapacityFromOneIp() {
+    AuthRateLimiter limits = new AuthRateLimiter();
+    for (int i = 0; i < 300; i++) {
+      limits.checkGoogleLogin("192.0.2.1", "installation-" + i);
+    }
+    for (int i = 300; i < 11000; i++) {
+      final int installation = i;
+      assertThrows(ApiException.class,
+          () -> limits.checkGoogleLogin("192.0.2.1", "installation-" + installation));
+    }
+    assertDoesNotThrow(() -> limits.checkGoogleLogin("192.0.2.2", "new-user"));
+    assertDoesNotThrow(() -> limits.check("api:1:1", 60, Duration.ofMinutes(1)));
+  }
+
+  @Test
+  void loginPreservesFiveAttemptsPerIpAndInstallation() {
+    AuthRateLimiter limits = new AuthRateLimiter();
+    for (int i = 0; i < 5; i++) {
+      limits.checkGoogleLogin("192.0.2.1", "same-installation");
+    }
+    ApiException blocked = assertThrows(ApiException.class,
+        () -> limits.checkGoogleLogin("192.0.2.1", "same-installation"));
+    assertTrue(blocked.retryAfterSeconds() > 0);
+    assertDoesNotThrow(() -> limits.checkGoogleLogin("192.0.2.1", "other-installation"));
+  }
+
+  @Test
+  void controllerBlocksRotatingInstallationsBeforeCallingGoogleLogin() {
+    LoginService login = mock(LoginService.class);
+    AuthController controller = new AuthController(login, new AuthRateLimiter());
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setRemoteAddr("192.0.2.1");
+    for (int i = 0; i < 300; i++) {
+      controller.exchange(exchangeRequest("installation-" + i), request);
+    }
+    assertThrows(ApiException.class,
+        () -> controller.exchange(exchangeRequest("blocked-installation"), request));
+    verify(login, times(300)).exchange(any());
+    request.setRemoteAddr("192.0.2.2");
+    assertDoesNotThrow(() -> controller.exchange(exchangeRequest("other-ip"), request));
+    verify(login, times(301)).exchange(any());
+  }
+
+  private GoogleExchangeRequest exchangeRequest(String installationId) {
+    return new GoogleExchangeRequest("synthetic-code", "a".repeat(43), "synthetic-state",
+        "http://127.0.0.1:49152", new DesktopDevice(installationId, "QA Desktop", "MACOS"));
   }
 
   @Test

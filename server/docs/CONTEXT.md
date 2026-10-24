@@ -39,7 +39,7 @@
 
 2026-10-25 최신 `dev`(`0b88bb8`)와 Desktop 인증·목표 파서를 대조했다. MVP 세션 null 거절, 목표 대화 필드·Backend 재시도, Desktop 알림 확인 책임을 로컬 계약에 반영했다. 로그인 PLAN에는 만료 JWT 구분과 후속 family 만료 검토를 보강했다. 이후 같은 날 #49에서 승인된 로그인 API 범위를 구현했다. 결과는 위 작업 브랜치 절과 REPORT를 따른다.
 
-- Issue #49의 PR 생성 승인을 받고 리뷰·병합한다. 목표·세션 Entity는 후속 migration으로 분리한다.
+- Issue #49의 PR #51 CodeRabbit 지적을 반영하고 리뷰·병합 승인을 받는다. 목표·세션 Entity는 후속 migration으로 분리한다.
 - 병합 후 후속 Issue에서 refresh·logout과 family 수명·폐기 범위를 구현한다.
 - MVP API를 도메인 단위로 구현
 

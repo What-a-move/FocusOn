@@ -64,7 +64,7 @@
 
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
-- Server에는 공통 응답·Access JWT·인증 5개 테이블의 Entity·Repository까지 있고 목표·세션·이벤트·AI 연동 코드는 없다. Google 로그인 HTTP API도 아직 구현 전이다.
+- Server에는 공통 응답·Access JWT·인증 5개 테이블의 Entity·Repository와 Google 교환·`auth/me`·요청 인증·초기 토큰 발급(Issue #49, PR #51, dev 병합 전)이 있다. 목표·세션·이벤트·AI 연동 코드는 없으며 refresh·logout·pairing API는 후속이다.
 - AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
 - 목표 보조 코드는 Issue #12의 별도 미병합 Branch에 있다. 이 `dev` 기반 문서 Branch는 그 코드 변경을 포함하지 않는다. 목표 2~40자·질문 최대 2회 등 문서 계약은 #12 통합 전 코드·테스트와 맞춰야 한다.
 - 팀원 보고 Hybrid 99/120, Macro F1 0.732의 원자료·결합식·독립 holdout은 확인되지 않았다. 현재 `dev`에는 Hybrid 관련성 구현이 없다.

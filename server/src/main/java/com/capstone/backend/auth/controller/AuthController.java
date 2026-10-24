@@ -7,11 +7,9 @@ import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.auth.service.AuthRateLimiter;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.auth.service.RedirectUriValidator;
-import com.capstone.backend.auth.service.TokenSecrets;
 import com.capstone.backend.common.api.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,8 +38,7 @@ public class AuthController {
   public ApiResponse<LoginResponse> exchange(@Valid @RequestBody GoogleExchangeRequest body,
       HttpServletRequest request) {
     RedirectUriValidator.validate(body.redirectUri());
-    limits.check("google:" + TokenSecrets.hash(request.getRemoteAddr() + "\n"
-        + body.device().installationId()), 5, Duration.ofMinutes(10));
+    limits.checkGoogleLogin(request.getRemoteAddr(), body.device().installationId());
     return ApiResponse.of(login.exchange(body));
   }
 

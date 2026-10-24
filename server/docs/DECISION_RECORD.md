@@ -277,7 +277,7 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 상태: 구현 반영 (Issue #49, dev 병합 전)
 - 내용: Google 외부 통신은 DB 잠금 밖에서 수행한다. 계정 최초 생성 경쟁은 DB unique와 별도 transaction 재시도로 처리하고 기기 한도·family 교체는 사용자 잠금 안에서 처리한다.
 - 요청 인증은 JWT와 DB 사용자·기기·family 소유·활성·만료를 함께 검사한다. 만료 예외는 서명·필수 클레임을 통과한 경우에만 분리한다.
-- 한도: 단일 서버의 유한 메모리 fixed window를 사용하고 익명·인증 공간을 분리한다. 포화는 429로 거절한다. 배포 proxy를 구성하기 전에는 forwarded header를 신뢰하지 않는다.
+- 한도: 단일 서버의 유한 메모리 fixed window를 사용하고 익명·인증 공간을 분리한다. PR #51 리뷰 보강으로 IP별 300회/10분 보호 상한을 먼저 검사한 뒤 기존 IP+installationId별 5회/10분을 검사한다. 공유 NAT를 고려한 내부 남용 방어이며 다중 IP 공격 전체를 차단하는 장치는 아니다. 포화는 429로 거절한다. 배포 proxy를 구성하기 전에는 forwarded header를 신뢰하지 않는다.
 - 개인정보: Google Desktop secret은 서버 로컬 환경에만 설정한다. DTO 문자열과 로그·오류에 인증 원문을 노출하지 않는다.
 - 저장 모델: V1·V2는 수정하지 않고 기존 provider+subject UNIQUE를 JPA metadata에도 명시한다.
 - 후속: refresh·logout·family 만료 연장·기기 관리·pairing과 실제 Google 계정 왕복은 이번 구현 결과와 구분한다.

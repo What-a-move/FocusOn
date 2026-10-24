@@ -30,7 +30,7 @@
 - 실제 사용자 Google 로그인 → Desktop callback → 서버 → Keychain 왕복은 미실행.
 - refresh·logout·Extension pairing·기기 관리 API는 이번 구현 범위 밖.
 - HTTP 테스트는 MockMvc로 Controller·필터·저장 모델을 연결했으며 실제 외부 Google만 대체했다. 합성 키 검증 통과를 실제 Google 계정 검증 완료로 표현하지 않는다.
-- 원격 CI는 PR을 만들지 않았으므로 실행 결과가 없다.
+- 초기 QA 시점에는 PR이 없었다. 현재 PR #51이 생성됐으며 원격 CI 결과는 GitHub에서 별도 확인한다.
 - 새 Google client·key 초기 다운로드의 실제 네트워크 지연·부하 성능은 측정하지 않았다.
 
 ## 2차 적합성 검사
@@ -41,3 +41,10 @@
 - 테스트 2개를 추가해 정상 서명의 다른 사용자 ID, 폐기된 Desktop, Access Token 유효기간 안의 ACTIVE family 만료 시각을 재현했다. 모두 auth/me에서 401 AUTH_RELOGIN_REQUIRED로 거절했다.
 - 위 추가 사례를 별도 PostgreSQL QA DB에서도 실행하고 V1·V2 성공을 재확인했다. 기존 개발 DB와 migration 파일은 변경하지 않았다.
 - 실행 코드의 추가 수정은 필요하지 않았으며 실제 Google 사용자 왕복과 refresh·logout 등 후속 범위는 미검증 상태를 유지한다.
+
+## CodeRabbit 수정 후 회귀
+
+- 최신 origin/dev `bdd267d`(PR #50)를 작업 브랜치에 병합했다. Backend 변경 충돌 없음. 사용자 staged IDE 파일은 별도 보존·복원했다.
+- clean build·Checkstyle·전체 32개 테스트 통과(failure/error 0).
+- IP별 상한 선행 적용으로 installationId를 바꾼 11,000회 시도를 제한하고 다른 IP·인증 API가 영향받지 않음을 확인했다. 기존 복합 키 5회 제한과 서비스 호출 전 차단도 확인했다.
+- 이번 변경은 Controller·메모리 한도·문서이며 SQL 변경 없음. PostgreSQL 검증 결과는 앞 절의 기존 검증이며 이번에 재실행하지 않았다.

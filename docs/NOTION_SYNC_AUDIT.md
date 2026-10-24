@@ -8,11 +8,11 @@
 
 ## Issue #49 구현 후 상태 (2026-10-25)
 
-문서 준비 이후 사용자 승인을 받아 `feat/#49-google-login`에서 Google exchange·auth/me·요청 인증·초기 토큰 발급을 구현했다. 아래 `로그인 API 구현 전` 표현은 이전 문서 대조 당시 기록이다. 현재 작업 브랜치의 실행 검증은 `server/docs/features/google-login-REPORT.md`·`google-login-QA.md`를 따른다. dev 병합과 실제 Google 계정 왕복은 아직이며 refresh·logout·pairing은 후속이다.
+문서 준비 이후 사용자 승인을 받아 `feat/#49-google-login`에서 Google exchange·auth/me·요청 인증·초기 토큰 발급을 구현했다. 과거 대조 결과와 아래 현재 구현 상태를 구분한다. 현재 작업 브랜치의 실행 검증은 `server/docs/features/google-login-REPORT.md`·`google-login-QA.md`를 따른다. dev 병합과 실제 Google 계정 왕복은 아직이며 refresh·logout·pairing은 후속이다.
 
 ## 이번 재검증 요약
 
-**로컬 계약 정리와 실제 기능 구현은 별개다.** Google 로그인 API는 아직 구현 전이고, 아래 남은 항목이 해결됐다고 간주하지 않는다.
+**로컬 계약 정리와 실제 기능 구현은 별개다.** 현재 작업 브랜치에는 Google exchange·auth/me·요청 인증·초기 토큰 발급이 구현돼 있다. refresh·logout·pairing과 실제 Google 계정 왕복 QA는 아직 남아 있다.
 
 | 구분 | 확인 결과 | 처리 |
 | --- | --- | --- |
@@ -27,7 +27,7 @@
 
 | 영역 | 코드에서 확인한 것 | 아직 없는 것·미검증 |
 | --- | --- | --- |
-| Backend | 공통 응답·오류·requestId, AccessJwtService, 인증 Entity·Repository 5개, Flyway V1·V2 | Google exchange·refresh·auth/me·logout HTTP API와 요청 인증 필터 |
+| Backend | 공통 응답·오류·requestId, Access JWT, 인증 Entity·Repository 5개, Flyway V1·V2, Google exchange·auth/me·요청 인증·초기 토큰 발급(#49, dev 병합 전) | refresh·logout·pairing HTTP API, 실제 Google 계정 왕복 QA |
 | Desktop | Main 인증·온보딩·목표 클라이언트, 리포트 IPC와 달력·일간 응답 파서 | 실제 Backend 로그인·온보딩·리포트 왕복 QA |
 | Extension | installationId, pairing 요청·오류 파서, token 저장 | 실제 Desktop 발급 코드 왕복, 후속 refresh·unlink |
 | 세션·분석·리포트 | 로컬·노션 설계 계약 | Backend Controller·Service·migration 구현 |

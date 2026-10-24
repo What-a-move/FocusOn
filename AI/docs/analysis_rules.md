@@ -275,7 +275,7 @@ CANDIDATE
 - 관련 자료 복귀, 목표 변경, 화면 `RELATED`, `PRIVACY_BLOCKED`, 세션 일시정지·종료 시 대기 알림을 취소한다.
 - 알림이 표시되기 직전에도 `goalVersion`, `runId`, `navigationId`, 정책 버전과 카메라 동의를 다시 확인한다.
 - `DISMISSED`, `EXPIRED`, 무응답은 관련성 정답이 아니다.
-- 실제 쿨다운과 횟수 상한은 사용자 테스트 후 설정으로 확정한다.
+- 실제 전송부터 `sessionId + interventionType`별 5분 cooldown을 적용한다. 횟수 상한은 사용자 테스트 후 확정한다.
 
 ### 10.3 사용자 보호 원칙
 
