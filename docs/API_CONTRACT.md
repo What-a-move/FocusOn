@@ -78,6 +78,7 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 
 ```text
 GET /api/v1/users/me
+GET /api/v1/users/me/onboarding-readiness
 PUT /api/v1/users/me/profile
 PUT /api/v1/users/me/onboarding-readiness
 GET /api/v1/users/me/consents
@@ -86,6 +87,35 @@ GET /api/v1/users/me/focus-settings
 PUT /api/v1/users/me/focus-settings
 GET /api/v1/users/me/analysis-excluded-domains
 PUT /api/v1/users/me/analysis-excluded-domains
+```
+
+`GET /api/v1/users/me`의 `onboardingStatus`는 닉네임, Extension 연결, 필수 권한·동의, 분석 제외 사이트 설정 단계를 기준으로 `INCOMPLETE` 또는 `COMPLETED`를 반환한다. 목표·시간·개입 설정은 온보딩 상태에 포함하지 않으며, 온보딩 완료 뒤 Desktop 대시보드의 `오늘 학습` 흐름에서 설정한다.
+
+앱을 다시 열었을 때 이어갈 온보딩 단계는 `GET /api/v1/users/me/onboarding-readiness`로 조회한다. 응답의 `currentStep`은 `NICKNAME`, `EXTENSION`, `PERMISSIONS_AND_CONSENTS`, `EXCLUDED_SITES`, `COMPLETED` 중 첫 미완료 단계다. `steps`에는 프로필, Extension 연결, 필수 권한·동의, 제외 사이트 단계의 현재 상태를 반환한다. `COMPLETED`면 Desktop 대시보드로 이동한다.
+
+```json
+{
+  "data": {
+    "onboardingStatus": "INCOMPLETE",
+    "currentStep": "PERMISSIONS_AND_CONSENTS",
+    "steps": {
+      "profileCompleted": true,
+      "extensionLinked": true,
+      "screenAnalysisReady": false,
+      "requiredConsentsCompleted": false,
+      "analysisExcludedDomainsStepCompleted": false
+    }
+  }
+}
+```
+
+`PUT /api/v1/users/me/onboarding-readiness`는 현재 Desktop Main이 OS에서 확인한 `screenAnalysisReady`와 사용자가 제외 도메인을 저장하거나 빈 목록 건너뛰기를 선택한 뒤의 `analysisExcludedDomainsStepCompleted`만 받는다. 앱 시작·복귀 때 Desktop은 OS 권한을 다시 확인해 이 값을 갱신한다. Extension 연결은 서버 pairing 상태, 필수 동의는 동의 기록, 닉네임은 저장된 프로필에서 서버가 판정한다. 빈 도메인 목록만으로 사용자가 단계를 방문했는지 판별하지 않는다. 카메라 동의와 알림 권한은 선택 사항이며 온보딩 완료를 막지 않는다.
+
+```json
+{
+  "screenAnalysisReady": true,
+  "analysisExcludedDomainsStepCompleted": true
+}
 ```
 
 ### 목표
@@ -141,7 +171,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - 한 사용자에게 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING` 중인 활성 세션은 하나만 허용한다.
 - 시간은 `targetDurationMs`와 `accumulatedActiveMs`를 기준으로 계산한다.
 - `targetDurationMs = null`은 시간 기준 자동 종료 없이 사용자가 직접 종료하는 무기한 세션을 뜻한다.
-- MVP 온보딩은 `30분`, `1시간`, `2시간`, `직접 입력(5~300분)`만 선택지로 제공한다. 무기한 세션은 API 계약으로 남지만 온보딩 UI에는 노출하지 않는다.
+- MVP 대시보드의 첫 세션 설정은 `30분`, `1시간`, `2시간`, `직접 입력(5~300분)`만 선택지로 제공한다. 무기한 세션은 API 계약으로 남지만 대시보드 UI에는 노출하지 않는다.
 - Heartbeat는 10초 간격으로 보낸다. 과거 `clientObservedAt`은 무시하고, 감소한 `accumulatedActiveMs`는 거절한다.
 - 현재 RUNNING 구간의 첫 유효 heartbeat를 받기 전에는 `lastResumedAt`을 무신호 시간 계산 기준으로 사용한다. 최초 시작에서는 `lastResumedAt = startedAt`이다.
 - 마지막 heartbeat 뒤 60초 동안 신호가 없으면 `ABANDONED` 후보로 처리한다.
@@ -210,6 +240,7 @@ AUTH_OAUTH_REAUTH_REQUIRED
 AUTH_DEVICE_LIMIT_EXCEEDED
 DEVICE_NOT_FOUND
 LINK_001_INVALID_FORMAT
+LINK_006_CODE_MISMATCH
 LINK_002_EXPIRED
 LINK_003_ALREADY_USED
 LINK_004_ATTEMPTS_EXCEEDED

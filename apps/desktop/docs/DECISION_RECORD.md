@@ -170,8 +170,8 @@ Renderer에 내부 오류와 강한 Electron 권한이 노출되는 것을 막�
 ### 결정 내용
 
 - 온보딩에서 분석 제외 사이트 설정 단계를 반드시 보여준다. 사용자가 사이트를 등록하거나 빈 목록으로 건너뛰기를 선택하면 이 단계를 완료하고 온보딩을 끝낼 수 있다. 이후 설정에서 목록을 수정할 수 있다.
-- 첫 세션 시간 선택지는 `30분`, `1시간`, `2시간`, `직접 입력`이다. 직접 입력은 `5~300분`으로 제한한다.
-- `종료 시간 없이 시작`은 MVP 온보딩 선택지로 제공하지 않는다. 저수준 API의 `targetDurationMs = null` 계약은 유지한다.
+- 대시보드 `오늘 학습`의 첫 세션 시간 선택지는 `30분`, `1시간`, `2시간`, `직접 입력`이다. 직접 입력은 `5~300분`으로 제한한다.
+- `종료 시간 없이 시작`은 MVP 대시보드 선택지로 제공하지 않는다. 저수준 API의 `targetDurationMs = null` 계약은 유지한다.
 
 ### 결정 이유
 
@@ -332,3 +332,133 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 - `apps/desktop/electron/main/auth-api.cts`, `auth-service.cts`, `auth-keychain.cts`, `desktop-identity.cts`
 - `apps/desktop/electron/main/index.cts`, `auth-ipc.cts`
 - `apps/desktop/.env.example`, `apps/desktop/package.json`
+
+## 결정 015 - 온보딩 완료와 대시보드 목표 설정 경계
+
+- 결정일: 2026-10-21
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop·Extension
+- 상태: 확정
+
+### 결정 내용
+
+- 온보딩 순서는 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정이다.
+- 분석 제외 사이트는 저장하거나 빈 목록 건너뛰기를 선택할 수 있다. 두 경우 모두 설정 단계를 완료한 것으로 기록한다.
+- 필수 단계 완료 후 대시보드로 이동한다. 목표 입력·AI 명확성 확인·시간·개입 설정은 대시보드 `오늘 학습`에서 시작하며 온보딩 완료 상태에 포함하지 않는다.
+- 앱 재실행 뒤 이어갈 단계는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 복구한다. 앱 시작·복귀 때 Desktop Main은 로컬 필수 권한을 다시 확인하고 서버에 갱신한다.
+- Extension 연결 상태는 서버 pairing, 필수 동의는 서버 consent 기록으로 판정한다. 클라이언트가 완료 상태를 임의로 표시하지 않는다.
+- 카메라 동의는 선택 사항이며 온보딩 완료를 막지 않는다. 알림 권한은 결정 018(2026-10-23)에 따라 필수다.
+
+### 결정 이유
+
+필수 계정·기기·권한 준비와 학습 세션 구성을 분리하고, 앱이 종료된 뒤에도 사용자가 마지막 미완료 단계부터 이어갈 수 있게 한다. 빈 제외 목록은 미방문과 건너뛰기를 나타내므로 완료 marker를 별도로 보관한다.
+
+### 영향받는 문서
+
+- Notion `로그인 → 학습 목표 설정`
+- Notion `GET /api/v1/users/me/onboarding-readiness`
+- Notion `PUT /api/v1/users/me/onboarding-readiness`
+- `docs/PROJECT_CONTEXT.md`, `docs/API_CONTRACT.md`
+- `apps/desktop/docs/CONTEXT.md`, `NEXT_TASK.md`
+- `apps/extension/docs/CONTEXT.md`, `NEXT_TASK.md`
+
+## 결정 016 - 온보딩 macOS 권한 IPC 구현 방식
+
+- 결정일: 2026-10-22
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정
+
+### 결정 내용
+
+- `IPC_CONTRACT.md`의 확정 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)을 그대로 구현하고 Type은 `electron/shared/permission-contract.cts`에 둔다. Sender 검증은 인증 IPC와 같은 `isTrustedAuthSender`를 쓴다.
+- 화면 기록은 가짜 요청 API를 만들지 않는다. 상태가 `not-determined`일 때만 캡처 목록을 한 번 조회해 시스템 설정 목록에 앱이 나타나게 한 뒤 설정 화면을 연다.
+- 카메라는 `not-determined`일 때만 OS 허용 창을 띄운다. 이미 거부했으면 상태만 돌려준다.
+- macOS는 알림 허용 상태를 조회할 수 없으므로 온보딩에서는 Main이 정한 code의 시험 알림을 보내 허용 창을 띄우고, 화면에는 허용 여부를 단정하지 않고 `요청했어요`로 표시한다.
+- 개발 실행에서만 `FOCUSON_DEV_START_PATH`로 첫 화면 경로를 지정할 수 있다. 같은 앱 출처 경로만 허용하고 패키징 앱에서는 무시한다.
+
+### 결정 이유
+
+실제 macOS 동작을 그대로 보여 주고, OS가 알려 주지 않는 상태(화면 기록 요청 여부·알림 허용)를 화면에서 성공으로 꾸미지 않기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/permission-ipc.cts`, `electron/shared/permission-contract.cts`, `electron/preload/index.cts`, `electron/main/index.cts`
+- `apps/desktop/features/onboarding/onboarding-api.ts`, `PermissionsStep.tsx`
+- `apps/desktop/docs/IPC_CONTRACT.md`, `MACOS_PERMISSION_FLOW.md`
+
+## 결정 017 - 온보딩 Backend 연결 구조
+
+- 결정일: 2026-10-22
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (실제 Backend 왕복 QA 전)
+
+### 결정 내용
+
+- 온보딩 Backend 호출은 Renderer가 직접 하지 않고 Main `OnboardingService`가 Desktop 토큰으로 처리한다. 공통 토큰 처리는 `AuthService.authorizedRequest` 하나로 모은다.
+- Notion API에 닉네임 중복 확인 전용 endpoint가 없으므로, 화면의 `중복 확인`은 `PUT /users/me/profile` 저장 요청이며 409 `PROFILE_NICKNAME_DUPLICATE`로 중복을 알린다. 성공하면 다음 단계에서 다시 저장하지 않는다.
+- Extension 연결 완료는 별도 알림 채널이 없어 Extension 단계에서 3초마다 `onboarding-readiness`의 `extensionLinked`를 확인한다.
+- 동의 저장 버전은 `GET /users/me/consents`의 `currentVersion`을 쓰고, 응답에 없을 때만 `2026-09-17`을 쓴다. 출처는 `ONBOARDING`이다(2026-10-22 변경, 결정 019 확정).
+- 앱 진입 시 `onboarding-readiness.currentStep`으로 이어갈 화면을 정한다. 조회 실패 시 첫 단계로 보내며, 각 저장은 서버가 다시 검증한다.
+
+### 결정 이유
+
+토큰을 Main에만 두는 기존 인증 경계를 지키면서, 서버 계약이 없는 기능(중복 확인·연결 완료 알림)을 임의 API로 만들지 않기 위해서다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/auth-service.cts`, `auth-api.cts`, `onboarding-service.cts`, `onboarding-ipc.cts`, `index.cts`
+- `apps/desktop/electron/shared/onboarding-contract.cts`, `auth-contract.cts`, `electron/preload/index.cts`
+- `apps/desktop/features/onboarding/*`, `app/page.tsx`
+
+## 결정 018 - 알림 권한 필수와 확인 방식
+
+- 결정일: 2026-10-23
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정)
+
+### 결정 내용
+
+- 알림 권한은 필수다. 온보딩 권한 확인 화면은 화면 기록과 알림이 모두 준비되어야 다음 단계로 넘어간다.
+- macOS가 알림 허용 상태를 알려 주지 않으므로 시험 알림을 보내고 사용자가 `보였어요`를 눌렀을 때만 준비됨으로 본다. 화면에 허용 여부를 단정해 표시하지 않는다.
+- 서버 준비 상태에는 알림 필드가 없어 이 조건은 Desktop 화면에서 확인한다. 서버에도 기록하지 않는다(2026-10-24 확정, 결정 019).
+- 결정 016의 "알림은 `요청했어요`로만 표시" 부분을 이 결정으로 대체한다.
+
+### 결정 이유
+
+알림은 집중 이탈 안내의 핵심 경로라 필수로 둔다. OS가 상태를 주지 않는 상황에서 성공을 꾸미지 않으려면 사용자의 직접 확인이 가장 정확하다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/permission-ipc.cts`, `electron/shared/permission-contract.cts`, `electron/preload/index.cts`
+- `apps/desktop/features/onboarding/PermissionsStep.tsx`, `onboarding-api.ts`, `onboarding.css`
+- `FocusOn-design/onboarding.html`, `apps/desktop/docs/MACOS_PERMISSION_FLOW.md`
+
+## 결정 019 - Backend·AI·기획 확인 항목 확정
+
+- 결정일: 2026-10-24
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정, Notion 반영)
+
+### 결정 내용
+
+- `GET /users/me/consents` 응답은 `{ currentVersion, consents: [{ consentType, isGranted, consentVersion, grantedAt, withdrawnAt }] }`다. 현재 `OnboardingService.parseConsents`와 같다.
+- 알림 준비 상태는 서버 `onboarding-readiness`에 기록하지 않는다. 세션 시작 때 `SESSION_START_REQUIREMENT_MISSING`(`NOTIFICATION_PERMISSION`)으로 다시 막는다.
+- MVP 온보딩은 제외 사이트(도메인)만 저장한다. 제외 앱은 다음 단계로 미루며, 정할 때 bundleId 문자열 배열(전체 교체)로 제안한다.
+- 권한 목록에서 "macOS 활성 앱 확인"을 뺀다. 앞에 띄운 앱 이름 확인은 macOS 권한이 필요 없다.
+- 개입 임계값은 정책 `v1`로 서버에서만 관리한다. Desktop은 판단 결과만 받고 숫자를 들고 있지 않는다. 세션에는 `interventionPolicyVersion`으로 고정된다.
+- 세션 시작 요청(`POST /sessions`)에는 기기 시간대 IANA 이름(`Intl.DateTimeFormat().resolvedOptions().timeZone`)을 `timeZone`으로 보낸다. 서버는 IP로 추정하지 않고, 값이 없거나 이상하면 `Asia/Seoul`을 쓴다. 시작·종료·일시정지 시각은 서버 시계(UTC)로 확정한다.
+- 학습 정리 `keyConcepts`는 리포트 설계서 5.3의 `{ name, briefExplanation, sessionEvidence }`(최대 5개)다. 근거가 부족하면 `INSUFFICIENT_DATA` 상태다.
+
+### 결정 이유
+
+확인 대기로 남아 있던 항목을 Frontend 추천안으로 확정해 Desktop 구현 기준을 하나로 맞춘다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/onboarding-service.cts` (변경 없음, 기준 확인)
+- `apps/desktop/docs/MACOS_PERMISSION_FLOW.md`, `docs/features/onboarding-flow-PLAN.md`, `docs/NEXT_TASK.md`
+- 이후 세션 시작·리포트 구현 시 이 결정을 따른다.

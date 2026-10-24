@@ -4,38 +4,37 @@
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: Backend 인증 API 병합 후 Desktop 실제 로그인 왕복 QA
+- 작업명: Desktop 온보딩 단계 구현과 대시보드 진입
 - 담당 영역: Frontend(`apps`)
-- 대상 앱: Desktop
+- 대상 앱: Desktop (Extension pairing UI 연동 포함)
 - 우선순위: 높음
-- 상태: Main 인증 흐름과 Renderer 로그인·온보딩 시작·홈 화면 연결 완료. 서버 인증 API 4개 미구현으로 실제 계정 왕복 미검증
+- 상태: 온보딩 4단계 UI(닉네임 → Extension 연결 → 권한·동의(동의 → 권한 확인) → 제외 사이트 `/onboarding/sites` → 완료 `/onboarding/done`)와 다크 모드를 `FocusOn-design/onboarding.html` 시안대로 구현했다. macOS 권한(2026-10-22)과 온보딩 Backend 연결 구조(Main `OnboardingService`·온보딩 IPC·토큰 만료 재시도, 2026-10-22)를 구현했다. 남은 일은 Backend 온보딩 API가 완성된 뒤 실제 계정 QA, 결과 REPORT, #36 PR이다. Backend 합의안은 2026-10-24 확정했다(결정 019).
 
 ## 작업 목적
 
-Backend의 exchange·refresh·auth/me·logout 구현이 병합되면 실제 Google 계정으로 로그인·재실행·로그아웃을 확인하고, 서버의 `onboardingStatus`에 따라 온보딩 시작 화면 또는 홈에 진입하는지 검증한다.
+로그인 뒤 닉네임, Extension 연결, 필수 권한·동의, 분석 제외 사이트 설정을 구현하고 모든 필수 단계를 완료하면 대시보드로 이동한다. 목표·시간·개입은 온보딩에서 설정하지 않고 대시보드의 `오늘 학습` 흐름으로 분리한다.
 
 ## 선행 조건
 
-- Desktop 기본 화면이 실행되어야 한다.
+- 인증 기반과 로그인 화면이 `dev`에 반영되어 있어야 한다 (Issue #22).
 - `ELECTRON_ARCHITECTURE.md`, `IPC_CONTRACT.md`, `WINDOW_LIFECYCLE.md`의 확정 기준을 따라야 한다.
-- 관련 기획서를 `features/`에 작성해야 한다.
-- [x] Google exchange·refresh·auth/me·logout 서버 API의 구현 상태를 확인했다. 원격 `dev`(`0776ce3`)에는 Access JWT 발급·검증 서비스만 있고 4개 API Controller와 Refresh Token 처리는 없다. Notion 항목의 `READY`는 계약 준비 상태다.
-- [ ] 서버 인증 API 구현 일정을 Backend 담당자와 확인한다. Google code + PKCE + `redirectUri` 요청 형식은 Notion 정본과 Backend 작업 문서에 반영했다.
-- [x] Google token endpoint가 요구하는 `redirect_uri` 계약을 확정했다. Desktop은 최초 인증에 쓴 `redirectUri`를 Backend에 보내고 Backend는 검증 후 동일한 값을 Google에 전달한다.
-- 계약만 있고 서버 구현이 준비되지 않았다면 서버 응답을 임의로 만들지 않는다. 이번 Issue #22는 인증 완료 후 온보딩 시작 화면 진입까지이며 온보딩 단계 진행·Extension 연결은 별도 Issue다.
+- 기획서 [`onboarding-flow-PLAN.md`](./features/onboarding-flow-PLAN.md)와 Frontend [Issue #36](https://github.com/What-a-move/FocusOn/issues/36)를 확인한다. Backend API 구현은 담당 Backend 작업에서 진행한다.
+- 닉네임·pairing·consent·analysis-excluded-domains API 정본을 따른다.
+- 앱 시작·복귀 때 Desktop Main이 로컬 필수 권한을 다시 확인한다. 서버 응답만으로 OS 권한 허용을 가정하지 않는다.
+- 사용자가 제외 도메인을 저장하거나 빈 목록 건너뛰기를 명시적으로 선택한 뒤에만 완료 marker를 기록한다.
+- 서버 API 구현 전에는 저장·온보딩 완료 성공을 임의로 처리하지 않는다.
 
 ## 예상 작업 순서
 
-1. [x] Main·Preload TypeScript 진입점과 전용 Build 설정을 만든다.
-2. [x] 개발 `127.0.0.1` Loading과 Production `app://` Loading을 구현한다.
-3. [x] Single Instance와 Main Window 숨김·재실행 흐름을 구현한다.
-4. [x] 공통 IPC 결과, Main sender 검증, 인증 `getSession`·`google-login:start`·`logout`·상태 Event 경계를 구현한다. 로그인 시작의 브라우저 부분은 5번에서, Backend 인증·로그아웃은 6번에서 연결한다.
-5. [x] Google OAuth 기본 브라우저·임시 loopback callback, PKCE·state 검증을 Main에 연결한다. Client ID는 `FOCUSON_GOOGLE_CLIENT_ID`로 받는다.
-6. [x] macOS Keychain과 Backend code 교환·refresh·auth/me·logout 요청을 Main에 연결했다. 서버 API가 준비되기 전에는 code callback을 로그인 성공으로 처리하지 않는다. 실제 Google 계정 왕복과 Keychain 수동 QA는 서버 병합 뒤 확인한다.
-7. [x] 로그인 화면과 인증 상태에 따른 온보딩 시작 화면·홈 진입, 오프라인 재시도, 로그아웃 버튼을 연결했다. `FocusOn-Design` HTML의 레이아웃·색·포키 에셋으로 시안을 맞췄다.
-8. [x] Desktop lint·Build와 인증 테스트 24개를 확인했다. Google 재인증 필요(`AUTH_OAUTH_REAUTH_REQUIRED`)도 재로그인으로 처리한다. 전체 OAuth callback 테스트는 loopback을 허용하는 환경에서 실행했다. 실제 Google 계정 왕복은 Client ID·Backend 준비 뒤 확인한다.
+1. 부분 완료: 로그인 뒤 서버 `onboardingStatus`가 `INCOMPLETE`면 `/onboarding/`(재연결 필요면 `/onboarding/extension/`)으로 보낸다(2026-10-22). 남은 일은 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 이어갈 단계를 정하는 것이다.
+2. 완료: 공통 온보딩 틀과 닉네임 입력 UI, 클라이언트 형식 검증을 구현했다. 닉네임 저장·중복 확인은 `OnboardingService.saveProfile`(`PUT /users/me/profile`, 409 중복)로 연결했다(2026-10-22).
+3. 완료: Desktop 연결 안내·코드 발급(`POST /pairing-codes`)·3초 간격 readiness 확인(`extensionLinked`)·완료·오류 표시를 연결했다.
+4. 완료: 권한·동의 UI(동의 → 권한 확인)와 Main/Preload의 macOS 화면 기록 확인·시스템 설정 열기·카메라 요청·시험 알림 연결(2026-10-22). 시스템 설정에서 돌아오면(창 포커스) 화면 기록을 자동으로 다시 확인한다. 동의 저장은 `savePermissionsStep`으로 연결했다. 알림은 필수이며(결정 018) `PermissionsStep`은 화면 기록과 알림이 모두 준비되어야(`screenReady && notifyReady`) 다음으로 넘어간다. 카메라 동의만 선택이다.
+5. 완료: 제외 사이트 등록·빈 목록 건너뛰기(`/onboarding/sites`)와 저장 API·완료 marker(`analysisExcludedDomainsStepCompleted`) 기록을 연결했다.
+6. 서버가 `COMPLETED`를 반환하면 대시보드로 이동한다. 목표·시간·개입은 후속 대시보드 Issue에 남긴다.
+7. 백엔드 API 병합 뒤 신규 계정, 앱 재실행, 권한 변경, 네트워크 오류, Extension 연결을 실제 계정으로 검증한다.
 
-## Backend 병합 뒤 실제 계정 QA 순서
+## Issue #22 로그인: Backend 병합 뒤 실제 계정 QA 순서 (PR #39 병합 완료)
 
 1. 최신 `dev`에서 exchange·refresh·auth/me·logout 네 API와 Google code + PKCE + `redirectUri` 계약이 구현됐는지 확인한다. 요청·응답 필드가 다르면 Notion 정본과 대조해 Backend 담당자와 맞춘다.
 2. Google Cloud의 **데스크톱 앱** Client ID와 실행할 Backend origin을 준비하고, Electron 실행 셸에 `FOCUSON_GOOGLE_CLIENT_ID`, `FOCUSON_API_BASE_URL`을 설정한다. 예시는 `apps/desktop/.env.example`을 따른다.

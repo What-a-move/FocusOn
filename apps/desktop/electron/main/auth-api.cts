@@ -12,6 +12,8 @@ export type ExchangeResult = TokenPair & AuthIdentity
 export type DesktopDevice = { installationId: string; deviceName: string; platform: 'MACOS' }
 
 const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryable: true }
+// [유지보수] 성공 상태인데 계약과 다른 본문은 일시 장애가 아니므로 재시도 대상에서 뺀다.
+const INVALID_RESPONSE: AuthApiError = { code: 'INVALID_RESPONSE', retryable: false }
 const NETWORK_UNAVAILABLE: AuthApiError = { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -68,13 +70,15 @@ export function resolveAuthApiBaseUrl(value: string | undefined): string | null 
 export class AuthApiClient {
   constructor(private readonly baseUrl: string, private readonly request: typeof fetch = fetch) {}
 
-  private async call<T>(
+  // [유지보수] 인증 API와 이후 인증이 필요한 API가 같은 요청·오류 해석 규칙을 쓰도록 공개한다. 토큰 처리는 AuthService가 맡는다.
+  async call<T>(
     path: string,
-    method: 'GET' | 'POST',
+    method: 'GET' | 'POST' | 'PUT',
     expectedStatus: number,
     parse: (value: unknown) => T | null,
     body?: object,
     accessToken?: string,
+    extraHeaders: Record<string, string> = {},
   ): Promise<ApiResult<T>> {
     let response: Response
     try {
@@ -83,6 +87,7 @@ export class AuthApiClient {
         headers: {
           ...(body ? { 'Content-Type': 'application/json' } : {}),
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          ...extraHeaders,
         },
         body: body ? JSON.stringify(body) : undefined,
         redirect: 'manual',
@@ -100,9 +105,9 @@ export class AuthApiClient {
     try {
       const payload: unknown = await response.json()
       const data = isRecord(payload) ? parse(payload.data) : null
-      return data ? { success: true, data } : { success: false, error: SERVICE_UNAVAILABLE }
+      return data ? { success: true, data } : { success: false, error: INVALID_RESPONSE }
     } catch {
-      return { success: false, error: SERVICE_UNAVAILABLE }
+      return { success: false, error: INVALID_RESPONSE }
     }
   }
 

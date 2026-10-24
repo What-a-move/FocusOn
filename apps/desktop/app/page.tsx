@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
 import { selectAuthView } from './lib/auth-view'
+import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
 
 const signedOut: AuthSessionSnapshot = {
   revision: 0, status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: null,
@@ -66,37 +68,16 @@ function LoginScreen({ onLogin, onRetry, busy, authenticating, message, availabl
   </main>
 }
 
-function OnboardingScreen({ reconnect, onLogout, busy, message }: {
-  reconnect: boolean; onLogout: () => void; busy: boolean; message: string | null
-}) {
-  const [nickname, setNickname] = useState('')
-  return <main className="fo-onboarding-window">
-    <div className="fo-onboarding-top">
-      <span className="fo-back-placeholder" aria-hidden="true">←</span>
-      <div className="fo-progress" role="progressbar" aria-label="온보딩 진행" aria-valuemin={1} aria-valuemax={5} aria-valuenow={reconnect ? 2 : 1}>
-        {Array.from({ length: 5 }, (_, index) => <span className={index < (reconnect ? 2 : 1) ? 'active' : ''} key={index} />)}
-      </div>
-      <span className="fo-step-count">{reconnect ? '2' : '1'} / 5</span>
-    </div>
-    <div className="fo-onboarding-body"><section className="fo-onboarding-step" aria-labelledby="onboarding-speech">
-      <div className="fo-speaker">
-        <Image src="/design/poki-floating-logo-base-v1.png" alt="포키" width={200} height={200} priority />
-        <h1 className="fo-bubble" id="onboarding-speech">{reconnect ? 'Chrome이랑 다시 연결해 볼까요?' : '어떻게 불러드릴까요?'}</h1>
-      </div>
-      <div className="fo-onboarding-panel">
-        {reconnect ? <div className="fo-reconnect-panel"><strong>Chrome Extension 연결이 필요해요.</strong><p>연결 상태를 확인한 뒤 다음 단계로 이어갈 수 있어요.</p></div> : <>
-          <label className="fo-field-label" htmlFor="nickname">닉네임</label>
-          <div className="fo-name-row"><div className="fo-input-wrap">
-            <input id="nickname" value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={12} autoComplete="off" placeholder="2~12자" aria-describedby="nickname-hint" />
-            <span aria-hidden="true">{nickname.length}/12</span>
-          </div><button className="fo-button fo-button-ghost" type="button" disabled title="닉네임 중복 확인은 다음 온보딩 작업에서 연결해요">중복 확인</button></div>
-          <p className="fo-field-hint" id="nickname-hint">2~12자 · 특수문자 제외</p>
-        </>}
-        <Alert message={message} />
-      </div>
-    </section></div>
-    <footer className="fo-onboarding-footer"><div><button className="fo-text-button" type="button" onClick={onLogout} disabled={busy}>{busy ? '로그아웃 중…' : '로그아웃'}</button><button className="fo-button fo-button-primary" type="button" disabled title="다음 단계는 후속 온보딩 작업에서 연결해요">다음</button></div></footer>
-  </main>
+// [유지보수] 온보딩 화면은 /onboarding/ 경로에 있다. 서버 onboarding-readiness의 currentStep으로 이어갈 단계를 정한다.
+// 조회에 실패하면 첫 단계(재연결이면 Extension 단계)로 보낸다. 각 단계 저장은 서버가 다시 검증한다.
+function OnboardingRedirect({ reconnect }: { reconnect: boolean }) {
+  const router = useRouter()
+  useEffect(() => {
+    void onboardingApi.getReadiness().then((result) => {
+      router.replace(result.success ? STEP_ROUTES[result.data.currentStep] : reconnect ? '/onboarding/extension/' : '/onboarding/')
+    })
+  }, [reconnect, router])
+  return <LoadingScreen />
 }
 
 const navigation = [
@@ -212,7 +193,7 @@ export default function Page() {
   const view = selectAuthView(snapshot)
   const message = errorMessage(requestError ?? snapshot?.error ?? null)
   if (view === 'loading') return <LoadingScreen />
-  if (view === 'onboarding' && snapshot?.user) return <OnboardingScreen reconnect={snapshot.status === 'LINK_REQUIRED'} onLogout={() => { void logout() }} busy={busy} message={message} />
+  if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
   if (view === 'home' && snapshot?.user) return <HomeScreen name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
   return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} available={available} offline={view === 'offline'} />
 }

@@ -16,6 +16,7 @@ FocusOn의 macOS 데스크톱 앱 Renderer다. Next.js가 정적 화면을 생�
 ```bash
 pnpm dev:desktop                                  # 터미널 1: Next.js 화면
 pnpm --filter @focuson/desktop dev:electron       # 터미널 2: Electron 창
+FOCUSON_DEV_START_PATH=/onboarding/permissions/ pnpm --filter @focuson/desktop dev:electron  # 개발 실행에서만: 첫 화면을 원하는 경로로 열기
 pnpm build:desktop                                # Main·Preload·Renderer Build
 pnpm --filter @focuson/desktop preview:electron   # 정적 Build 앱 미리보기
 pnpm --filter @focuson/desktop test:electron

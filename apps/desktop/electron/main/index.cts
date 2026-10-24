@@ -15,6 +15,9 @@ import { AuthApiClient, resolveAuthApiBaseUrl } from './auth-api.cjs'
 import { MacKeychainRefreshTokenVault } from './auth-keychain.cjs'
 import { getDesktopDeviceName, getInstallationId } from './desktop-identity.cjs'
 import { AuthService } from './auth-service.cjs'
+import { mediaStatus, registerPermissionIpc } from './permission-ipc.cjs'
+import { OnboardingService } from './onboarding-service.cjs'
+import { registerOnboardingIpc } from './onboarding-ipc.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -120,7 +123,12 @@ if (!hasSingleInstanceLock) {
     window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
     window.webContents.session.setPermissionCheckHandler(() => false)
 
-    void window.loadURL(rendererUrl).catch((error: unknown) => {
+    // [유지보수] 개발 실행에서만 FOCUSON_DEV_START_PATH(예: /onboarding/permissions/)로 첫 화면을 바로 열 수 있다.
+    // 같은 앱 출처의 경로만 허용하고, 패키징된 앱에서는 무시한다.
+    const devStartPath = app.isPackaged ? '' : process.env.FOCUSON_DEV_START_PATH?.trim() ?? ''
+    const devStartUrl = devStartPath.startsWith('/') ? new URL(devStartPath, rendererUrl).toString() : ''
+    const startUrl = devStartUrl && isAllowedNavigation(devStartUrl, rendererUrl) ? devStartUrl : rendererUrl
+    void window.loadURL(startUrl).catch((error: unknown) => {
       console.error('Renderer를 열지 못했어요.', error)
     })
   }
@@ -182,6 +190,9 @@ if (!hasSingleInstanceLock) {
 
     installMenu()
     registerAuthIpc(() => mainWindow, rendererUrl, authStore, oauthFlow, authService)
+    registerPermissionIpc(() => mainWindow, rendererUrl)
+    // [주의] 화면 기록 준비 상태는 Renderer 주장이 아니라 Main이 macOS에서 직접 확인한 값으로 서버에 보낸다.
+    registerOnboardingIpc(() => mainWindow, rendererUrl, authService ? new OnboardingService(authService, () => mediaStatus('screen') === 'granted') : null)
     createMainWindow()
     void authService?.restore()
   })

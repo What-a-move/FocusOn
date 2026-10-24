@@ -40,8 +40,10 @@
 
 ### 진행 중인 작업
 
+- Issue #36에서 `FocusOn-design/onboarding.html` 시안(2026-10-21 합의 순서)에 맞춰 온보딩 4단계 UI를 구현했다: 닉네임(`/onboarding`) → Extension 연결(`/onboarding/extension`) → 권한·동의(`/onboarding/permissions`, 동의 → 권한 확인) → 분석 제외 사이트(`/onboarding/sites`). 서버 호출은 Main `OnboardingService`가 Desktop 토큰으로 처리한다(만료 시 refresh 1회·재시도 1회). Backend 온보딩 API가 아직 없어 실제 왕복은 미검증이다. macOS 권한(화면 기록·카메라·시험 알림)은 Main IPC로 실제 연결했다. 로그인 뒤 온보딩이 필요한 사용자는 `/onboarding/`으로 이동한다(2026-10-22).
 - 서버 API 병합 뒤 실제 Google 계정 왕복, Keychain 저장·복구, 신규·기존 사용자 화면 진입의 수동 QA가 필요하다.
-- 닉네임 중복 확인·저장, 온보딩 다음 단계, 홈 목표·기록 API는 별도 기능 작업이다. 현재 화면은 해당 값을 임의로 성공 처리하지 않는다.
+- 로그인 후 온보딩은 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정 순서로 진행하며, 완료 뒤 대시보드에 진입한다. 목표·시간·개입 설정은 대시보드 `오늘 학습`의 별도 흐름이다.
+- 온보딩 재개는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 결정한다. 앱 시작·복귀 때 Desktop Main이 OS 권한을 다시 확인하고 준비 상태를 갱신한다. API 구현은 Backend 담당 범위다.
 - 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
 - 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
 - 일회용 연결 코드 pairing과 상태 명령·Heartbeat 계약을 구현해야 하며 실시간 동기화 방식은 추가 확정이 필요하다.
