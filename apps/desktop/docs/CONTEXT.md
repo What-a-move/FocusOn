@@ -54,6 +54,8 @@
 
 - Issue #46(2026-10-24): 세션 설정(D09)을 `FocusOn-design/session-setup.html` 레이아웃으로 `/session-setup/`에 구현했다. 시간 선택지는 Notion 계약(30분·1시간·2시간·직접 5~300분)을 따른다. 기본값은 집중 설정 API, 시작은 Main `SessionService`(Idempotency-Key·X-Device-Id·기기 시간대)로 보낸다. 목표 설정 완료 화면에서 들어오고 `홈으로`로 나간다. 세션 API가 dev에 없어 실제 시작은 미검증이며, 가짜 bridge로 키보드 이동·범위 제한·알림 0개 차단·오프라인 뒤 같은 키 재시도·시작 성공(다크)을 확인했다. 집중 화면(타이머)은 다음 Issue다.
 
+- Issue #48(2026-10-25): 집중 화면(D10·D11·D15·D16)을 `FocusOn-design/session.html`대로 `/session/`에 구현했다. 타이머는 Main `SessionRuntime`이 monotonic clock으로 세고 1초 목표 도달·20초 heartbeat를 처리한다. 일시정지·재개·연장·종료는 Idempotency-Key·If-Match-Version, 버전 충돌 시 최신 조회, 앱 재실행 시 APP_RESTART 일시정지, 서버 자동 종료(ABANDONED) 안내를 처리한다. 세션 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 실행·멈춤·끝내기 확인·시간 종료(Esc로 안 닫힘)·연장·완료(다크)를 확인했다. 개발 중 오류 2건(Tailwind `ring` 클래스 충돌, dialog margin 초기화)을 ERROR 문서로 남겼다.
+
 ### 아직 진행하지 않은 작업
 
 - macOS 활성 앱 감지

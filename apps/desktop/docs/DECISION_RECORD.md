@@ -536,3 +536,26 @@ macOS는 앱에 알림 허용 상태를 알려 주지 않는다. 서버가 검�
 
 - `apps/desktop/electron/main/notification-readiness.cts`, `permission-ipc.cts`, `session-ipc.cts`, `index.cts`, `electron/shared/permission-contract.cts`, `preload/index.cts`
 - `apps/desktop/features/onboarding/PermissionsStep.tsx`, `onboarding-api.ts`, `features/session/`
+
+## 결정 023 - 집중 세션 조회·목표 도달·재개 형식
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정, Notion API 명세 반영)
+
+### 결정 내용
+
+- `GET /api/v1/sessions/active`(없으면 204)·`GET /api/v1/sessions/{id}` 응답 data는 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`다(상세는 `interventionPolicyVersion` 포함).
+- 목표 시간에 닿으면 Desktop이 누적을 멈추고 사용자 확인(끝내기·연장)을 기다리며, heartbeat는 `accumulatedActiveMs = targetDurationMs`로 계속 보낸다. 서버는 이 값으로 `AWAITING_END_CONFIRMATION`을 판단하고 별도 전이 API는 없다.
+- `POST /sessions/{id}/resume` 본문은 `{ readiness: { screenAnalysisReady } }`다. Chrome 연결은 서버가 직접 확인하고, 알림은 보내지 않는다(결정 022).
+- heartbeat는 20초마다 보낸다(서버 60초 후보·3분 자동 종료 기준 안).
+
+### 결정 이유
+
+Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재실행 복구와 시간 종료 처리를 만들 수 없었다. 새 API 없이 이미 있는 heartbeat로 판단해 계약을 늘리지 않는다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/session-runtime.cts`, `electron/shared/session-contract.cts`, `electron/main/auth-api.cts`(204 처리)
+- `apps/desktop/docs/IPC_CONTRACT.md`, `docs/features/focus-session-PLAN.md`
