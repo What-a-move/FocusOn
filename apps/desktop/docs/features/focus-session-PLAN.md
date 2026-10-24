@@ -53,7 +53,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 ## 데이터 및 IPC/API
 
 - `session:current:get`·`pause`·`resume`·`extend`·`end`, Event `session:changed` (`IPC_CONTRACT.md` 집중 세션 Channel)
-- Backend 확인 필요: `GET /sessions/active`·`GET /sessions/{id}` 응답 필드, 목표 시간 도달 시 서버 상태 전이(AWAITING_END_CONFIRMATION)를 누가 하는지, 재개 readiness 필드.
+- 확정(결정 023): 활성·상세 세션 응답 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`, 목표 도달은 heartbeat로 서버가 판단(별도 전이 API 없음), 재개 `{ readiness: { screenAnalysisReady } }`, heartbeat 20초.
 
 ## 예외 처리
 

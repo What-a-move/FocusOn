@@ -200,7 +200,8 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 - 상태 명령은 `Authorization`·`Idempotency-Key`·`If-Match-Version`을 붙이고 자동 재전송하지 않는다. 같은 명령을 다시 누르면 같은 키를 쓴다. `SESSION_VERSION_CONFLICT`면 `GET /sessions/{id}`로 서버 최신값에 맞춘다. `SESSION_ABANDONED`면 되살리지 않는다.
 - 앱 재실행 시 서버가 `RUNNING`이면 서버 확정 시간으로 `pauseReason: APP_RESTART` 일시정지한다(꺼져 있던 시간을 추정해 더하지 않음).
 - 재개도 알림 확인 기록이 없으면 서버에 요청하지 않는다(결정 022).
-- `GET /sessions/active`·`GET /sessions/{id}` 응답 필드는 Notion에 없어 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`로 읽는다(Frontend 제안, Backend 확인 전).
+- `GET /sessions/active`·`GET /sessions/{id}` 응답 필드는 Notion에 없어 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`로 읽는다(2026-10-25 확정, 결정 023).
+- 목표 시간 도달은 별도 API 없이 heartbeat(`accumulatedActiveMs = targetDurationMs`)로 서버가 판단한다(결정 023).
 - 공통 요청 함수는 200을 기대한 요청이 204를 받으면 `parse(null)`로 '없음'을 판단한다.
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.

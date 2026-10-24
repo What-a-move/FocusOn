@@ -22,7 +22,7 @@ export type StartedSession = { sessionId: string; status: string; version: numbe
 
 /** 서버 세션 상태 (세션 상태 전이 정책). */
 export type SessionStatus = 'RUNNING' | 'PAUSED' | 'AUTO_PAUSED' | 'AWAITING_END_CONFIRMATION' | 'ENDING' | 'ENDED' | 'ABANDONED'
-/** GET /sessions/active · GET /sessions/{id} 응답 중 화면에 필요한 값 (결정 023 제안 형식). */
+/** GET /sessions/active · GET /sessions/{id} 응답 중 화면에 필요한 값 (2026-10-25 확정, 결정 023). */
 export type RemoteSession = { sessionId: string; status: SessionStatus; version: number; goalText: string; targetDurationMs: number; accumulatedActiveMs: number }
 
 /**
@@ -101,7 +101,7 @@ export function parseStartedSession(value: unknown): StartedSession | null {
   return { sessionId: value.sessionId, status: value.status, version: value.version, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs, startedAt: value.startedAt, interventionPolicyVersion: value.interventionPolicyVersion }
 }
 
-// GET /sessions/active · /sessions/{id} 제안 형식: { sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }
+// GET /sessions/active · /sessions/{id} 확정 형식(결정 023): { sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }
 export function parseRemoteSession(value: unknown): RemoteSession | null {
   if (!isRecord(value) || !isId(value.sessionId) || !isSessionStatus(value.status) || !isCount(value.version)) return null
   if (typeof value.goalTextSnapshot !== 'string' || !isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
