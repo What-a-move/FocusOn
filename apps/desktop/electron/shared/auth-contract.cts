@@ -1,6 +1,7 @@
 import type { PermissionsApi } from './permission-contract.cjs'
 import type { OnboardingApi } from './onboarding-contract.cjs'
 import type { ReportsApi } from './report-contract.cjs'
+import type { GoalsApi } from './goal-contract.cjs'
 
 export const AUTH_CHANNELS = {
   getSession: 'auth:session:get',
@@ -43,6 +44,7 @@ export type FocusOnApi = {
   permissions: PermissionsApi
   onboarding: OnboardingApi
   reports: ReportsApi
+  goals: GoalsApi
 }
 
 const AUTH_STATUSES: readonly AuthUiStatus[] = [
