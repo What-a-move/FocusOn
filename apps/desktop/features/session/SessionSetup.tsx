@@ -65,6 +65,8 @@ export function SessionSetup() {
   // [주의] 같은 선택으로 다시 누르면 같은 Idempotency-Key를 보내 서버가 세션을 두 번 만들지 않게 한다.
   const attempt = useRef<{ fingerprint: string; key: string } | null>(null)
   const customRef = useRef<HTMLInputElement>(null)
+  // [주의] 기본값 응답이 늦게 와도 사용자가 이미 바꾼 항목은 덮어쓰지 않는다.
+  const touched = useRef({ level: false, channels: false })
 
   useEffect(() => {
     const unsubscribe = window.focusOn?.auth.onSessionChanged((snapshot) => { if (snapshot.status === 'SIGNED_OUT') router.replace('/') })
@@ -76,8 +78,8 @@ export function SessionSetup() {
     const timer = setInterval(() => setNow(new Date()), 30_000)
     void sessionApi.getFocusSettings().then((result) => {
       if (!result.success) return
-      setLevel(result.data.interventionLevel)
-      setChannels(result.data.notificationChannels)
+      if (!touched.current.level) setLevel(result.data.interventionLevel)
+      if (!touched.current.channels) setChannels(result.data.notificationChannels)
       setCamera(result.data.cameraAnalysisEnabled)
     })
     return () => clearInterval(timer)
@@ -104,6 +106,7 @@ export function SessionSetup() {
   }
   const step = (delta: number) => setCustom(String(Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, (Number(custom) || 0) + delta))))
   const toggleChannel = (key: NotificationChannel) => {
+    touched.current.channels = true
     const next = channels.includes(key) ? channels.filter((item) => item !== key) : [...channels, key]
     setChannels(next)
     setChannelError(next.length === 0)
@@ -188,8 +191,8 @@ export function SessionSetup() {
 
         <div className="group" role="radiogroup" aria-labelledby="intensity-title">
           <div className="group-head"><h2 id="intensity-title">포키가 알려주는 정도</h2></div>
-          <div className="segmented" onKeyDown={(event) => moveSegment(event, LEVELS.map(({ key }) => key), level, (key) => { setLevel(key); setFeedback(null) })}>
-            {LEVELS.map(({ key, label }) => <button type="button" role="radio" aria-checked={level === key} tabIndex={level === key ? 0 : -1} key={key} onClick={() => { setLevel(key); setFeedback(null) }}>{label}</button>)}
+          <div className="segmented" onKeyDown={(event) => moveSegment(event, LEVELS.map(({ key }) => key), level, (key) => { touched.current.level = true; setLevel(key); setFeedback(null) })}>
+            {LEVELS.map(({ key, label }) => <button type="button" role="radio" aria-checked={level === key} tabIndex={level === key ? 0 : -1} key={key} onClick={() => { touched.current.level = true; setLevel(key); setFeedback(null) }}>{label}</button>)}
           </div>
         </div>
 
