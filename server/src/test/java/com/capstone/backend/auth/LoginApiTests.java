@@ -38,6 +38,9 @@ import org.springframework.web.context.WebApplicationContext;
 class LoginApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
+  @Autowired private AccessJwtService jwt;
+  @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
+  @Autowired private com.capstone.backend.auth.persistence.UserDeviceRepository devices;
   @Autowired private RequestAuthenticationService authentication;
   @Autowired private RefreshTokenRecordRepository tokens;
   @MockitoBean private GoogleOauthClient google;
@@ -147,6 +150,40 @@ class LoginApiTests {
       assertEquals(1, userIds.size());
       assertEquals(1, blocked);
     }
+  }
+
+  @Test
+  void rejectsValidSignatureWithDifferentOwnerAndRevokedDevice() throws Exception {
+    var issued = login.exchange(request("ownership-check"));
+    var claims = jwt.verify(issued.accessToken());
+    String wrongOwner = jwt.issue(claims.userId() + 100000, claims.deviceId(),
+        claims.tokenFamilyId()).token();
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + wrongOwner))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+    var device = devices.findById(claims.deviceId()).orElseThrow();
+    device.setStatus(com.capstone.backend.auth.persistence.UserDeviceEntity.Status.REVOKED);
+    device.setRevokedAt(java.time.Instant.now());
+    devices.saveAndFlush(device);
+    mvc.perform(get("/api/v1/auth/me")
+            .header("Authorization", "Bearer " + issued.accessToken()))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+  }
+
+  @Test
+  void rejectsExpiredFamilyEvenWhenAccessTokenHasNotExpired() throws Exception {
+    var issued = login.exchange(request("expired-family-check"));
+    var claims = jwt.verify(issued.accessToken());
+    // ACTIVE 상태를 유지한 채 실제 만료 시각만 과거로 두어 시간 검사를 검증한다.
+    java.time.Instant now = java.time.Instant.now();
+    jdbc.update("update token_families set created_at = ?, expires_at = ? where id = ?",
+        java.sql.Timestamp.from(now.minusSeconds(600)),
+        java.sql.Timestamp.from(now.minusSeconds(1)), claims.tokenFamilyId());
+    mvc.perform(get("/api/v1/auth/me")
+            .header("Authorization", "Bearer " + issued.accessToken()))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
   }
 
   @Test

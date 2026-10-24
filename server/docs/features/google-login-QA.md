@@ -9,7 +9,7 @@
 
 | 검증 | 결과 |
 | --- | --- |
-| Backend clean build·Checkstyle·회귀 | 전체 27개 테스트 통과(failure/error 0), Checkstyle 통과. 합성 Google 키·모의 Google HTTP 사용 |
+| Backend clean build·Checkstyle·회귀 | 전체 29개 테스트 통과(failure/error 0), Checkstyle 통과. 합성 Google 키·모의 Google HTTP 사용 |
 | PostgreSQL 17.11 | 별도 임시 QA DB에 Flyway V1·V2 적용, Hibernate validate, 로그인·저장 모델 테스트 통과 |
 | 동일 Google 계정 동시 최초 로그인 | 사용자 1명으로 수렴, Desktop 3대 성공·4번째 제한 |
 | 동일 설치 재로그인 | deviceId 유지·새 family와 토큰 발급·이전 토큰 요청 거절 |
@@ -32,3 +32,12 @@
 - HTTP 테스트는 MockMvc로 Controller·필터·저장 모델을 연결했으며 실제 외부 Google만 대체했다. 합성 키 검증 통과를 실제 Google 계정 검증 완료로 표현하지 않는다.
 - 원격 CI는 PR을 만들지 않았으므로 실행 결과가 없다.
 - 새 Google client·key 초기 다운로드의 실제 네트워크 지연·부하 성능은 측정하지 않았다.
+
+## 2차 적합성 검사
+
+- 현재 Notion Google exchange·auth/me의 필드·응답·헤더·권한을 다시 읽고 Desktop auth-api 파서와 대조했다.
+- 최신 origin/dev를 fetch했으며 작업 시작 이후 새 dev 변경은 없었다.
+- 독립 재검토에서 새 actionable P1/P2가 보고되지 않았다.
+- 테스트 2개를 추가해 정상 서명의 다른 사용자 ID, 폐기된 Desktop, Access Token 유효기간 안의 ACTIVE family 만료 시각을 재현했다. 모두 auth/me에서 401 AUTH_RELOGIN_REQUIRED로 거절했다.
+- 위 추가 사례를 별도 PostgreSQL QA DB에서도 실행하고 V1·V2 성공을 재확인했다. 기존 개발 DB와 migration 파일은 변경하지 않았다.
+- 실행 코드의 추가 수정은 필요하지 않았으며 실제 Google 사용자 왕복과 refresh·logout 등 후속 범위는 미검증 상태를 유지한다.
