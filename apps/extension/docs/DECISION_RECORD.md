@@ -177,9 +177,9 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 
 ## 새 결정 기록
 
-다음 결정은 `결정 011`부터 추가한다.
+다음 결정은 `결정 012`부터 추가한다.
 
-### 결정 011
+### 결정 012
 
 - 결정일:
 - 담당 영역: Frontend(`apps`)

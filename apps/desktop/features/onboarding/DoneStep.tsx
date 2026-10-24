@@ -8,14 +8,16 @@ import { onboardingApi, type OnboardingSummary } from './onboarding-api'
 export function DoneStep() {
   const router = useRouter()
   const [summary, setSummary] = useState<OnboardingSummary | null>(null)
+  const [extensionLinked, setExtensionLinked] = useState(false)
 
   useEffect(() => {
     // [유지보수] 요약은 서버가 확정한 값만 보여 준다. 불러오지 못하면 요약 없이 완료 안내만 둔다.
     void onboardingApi.getSummary().then((result) => { if (result.success) setSummary(result.data) })
+    void onboardingApi.getReadiness().then((result) => { if (result.success) setExtensionLinked(result.data.steps.extensionLinked) })
   }, [])
 
   const chips = summary ? [
-    'Chrome 연결됨',
+    ...(extensionLinked ? ['Chrome 연결됨'] : []),
     summary.screenAnalysisReady ? '화면 기록 허용' : '화면 기록 확인 필요',
     summary.cameraConsent ? '카메라 사용' : '카메라 사용 안 함',
     summary.excludedDomainCount ? `제외 사이트 ${summary.excludedDomainCount}개` : '제외 사이트 없음',

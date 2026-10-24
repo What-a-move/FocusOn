@@ -27,10 +27,10 @@
 ## 예상 작업 순서
 
 1. 부분 완료: 로그인 뒤 서버 `onboardingStatus`가 `INCOMPLETE`면 `/onboarding/`(재연결 필요면 `/onboarding/extension/`)으로 보낸다(2026-10-22). 남은 일은 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 이어갈 단계를 정하는 것이다.
-2. 완료: 공통 온보딩 틀과 닉네임 입력 UI, 클라이언트 형식 검증을 구현했다. 닉네임 저장·중복 검증은 API 연결 뒤 이어서 구현한다.
-3. Desktop 연결 안내 및 코드 자리·대기·완료·오류 표시 UI를 구현했다. 실제 코드 발급과 상태 확인 API 연결은 후속 작업이다.
-4. 완료: 권한·동의 UI(동의 → 권한 확인)와 Main/Preload의 macOS 화면 기록 확인·시스템 설정 열기·카메라 요청·시험 알림 연결(2026-10-22). 시스템 설정에서 돌아오면(창 포커스) 화면 기록을 자동으로 다시 확인한다. 남은 일은 필수 동의 저장 API 연동이다. 카메라 동의와 알림은 선택으로 두고 거부해도 온보딩을 막지 않는다.
-5. 화면 완료: 제외 사이트 등록·빈 목록 건너뛰기 UI(`/onboarding/sites`). 남은 일은 저장 API와 완료 marker 기록 연결이다.
+2. 완료: 공통 온보딩 틀과 닉네임 입력 UI, 클라이언트 형식 검증을 구현했다. 닉네임 저장·중복 확인은 `OnboardingService.saveProfile`(`PUT /users/me/profile`, 409 중복)로 연결했다(2026-10-22).
+3. 완료: Desktop 연결 안내·코드 발급(`POST /pairing-codes`)·3초 간격 readiness 확인(`extensionLinked`)·완료·오류 표시를 연결했다.
+4. 완료: 권한·동의 UI(동의 → 권한 확인)와 Main/Preload의 macOS 화면 기록 확인·시스템 설정 열기·카메라 요청·시험 알림 연결(2026-10-22). 시스템 설정에서 돌아오면(창 포커스) 화면 기록을 자동으로 다시 확인한다. 동의 저장은 `savePermissionsStep`으로 연결했다. 알림은 필수이며(결정 018) `PermissionsStep`은 화면 기록과 알림이 모두 준비되어야(`screenReady && notifyReady`) 다음으로 넘어간다. 카메라 동의만 선택이다.
+5. 완료: 제외 사이트 등록·빈 목록 건너뛰기(`/onboarding/sites`)와 저장 API·완료 marker(`analysisExcludedDomainsStepCompleted`) 기록을 연결했다.
 6. 서버가 `COMPLETED`를 반환하면 대시보드로 이동한다. 목표·시간·개입은 후속 대시보드 Issue에 남긴다.
 7. 백엔드 API 병합 뒤 신규 계정, 앱 재실행, 권한 변경, 네트워크 오류, Extension 연결을 실제 계정으로 검증한다.
 

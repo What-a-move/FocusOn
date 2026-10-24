@@ -52,7 +52,7 @@
 - 정상 동작: `currentStep`에 맞는 단계만 표시하고 각 저장 성공이 확인된 뒤 다음으로 이동한다.
 - 종료 조건: 서버가 `currentStep: COMPLETED`를 반환하면 대시보드로 이동한다.
 - 단계 순서: `NICKNAME → EXTENSION → PERMISSIONS_AND_CONSENTS → EXCLUDED_SITES → COMPLETED`.
-- 권한: Screen Recording 등 필수 로컬 권한을 Main에서 확인한다. 알림 권한과 카메라 동의는 선택이며 온보딩 완료를 막지 않는다.
+- 권한: 화면 기록과 알림은 필수다(결정 018). 화면 기록은 Main에서 확인하고, 알림은 시험 알림 뒤 사용자 확인으로 준비됨을 정한다. 카메라 동의만 선택이며 온보딩 완료를 막지 않는다.
 - 동의: 필수 동의는 항목별로 저장·조회한다. 카메라 선택 동의는 별도로 기록한다.
 - 제외 사이트: 저장과 빈 목록 건너뛰기는 모두 완료로 기록한다. 사용자의 명시 행동 전에는 완료 표시를 보내지 않는다.
 - 상태 변화: `AUTHENTICATED → ONBOARDING_STEP → COMPLETED → DASHBOARD`.

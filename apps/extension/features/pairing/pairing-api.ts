@@ -1,4 +1,4 @@
-import { getInstallationId, saveTokens, storage, type TokenPair } from './extension-auth'
+import { clearTokens, getInstallationId, saveTokens, storage, type TokenPair } from './extension-auth'
 
 export type PairingError = { code: string; retryAfterSeconds?: number; remainingAttempts?: number }
 export type PairingResult = { success: true } | { success: false; error: PairingError }
@@ -68,7 +68,8 @@ export async function submitPairing(codeDisplay: string, baseUrl = resolveApiBas
   try {
     await saveTokens(tokens)
   } catch {
-    // [주의] 저장하지 못하면 연결 완료로 표시하지 않는다.
+    // [주의] 저장하지 못하면 연결 완료로 표시하지 않는다. 일부만 저장된 토큰은 지운다.
+    await clearTokens().catch(() => {})
     return fail('STORAGE_UNAVAILABLE')
   }
   return { success: true }
