@@ -1,0 +1,159 @@
+/* 홈 대시보드 — FocusOn-design/main.html과 fo-base.css 사이드바 규칙을 옮겼다. 색은 globals.css의 --fo-* 토큰을 쓴다. */
+.fo-home-window {
+  --fo-hover: #fafafa;
+  --fo-shadow: rgba(0, 0, 0, .18);
+  --fo-ease: cubic-bezier(.22, 1, .36, 1);
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  height: 100dvh;
+}
+@media (prefers-color-scheme: dark) {
+  .fo-home-window { --fo-hover: #232328; --fo-shadow: rgba(0, 0, 0, .5); }
+}
+
+/* 사이드바: 하위 화면에서도 고정하고 내용만 바뀐다. */
+.fo-sidebar { display: flex; flex-direction: column; min-height: 0; padding: 16px 16px 20px; border-right: 1px solid var(--fo-line); }
+.fo-sidebar-logo { align-self: center; width: 136px; margin: 4px 0 clamp(28px, 5vh, 48px); }
+.fo-nav { display: grid; gap: clamp(4px, 1.4vh, 12px); }
+.fo-nav-item { position: relative; display: flex; align-items: center; gap: 16px; min-height: 54px; padding: 0 14px 0 22px; border-radius: 14px; font-size: 16px; font-weight: 600; }
+.fo-nav-item.active { font-weight: 700; }
+.fo-nav-item.active::before { position: absolute; top: 50%; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--fo-gold); content: ''; transform: translateY(-50%); }
+.fo-nav-item img { flex: 0 0 28px; object-fit: contain; }
+.fo-sidebar-spacer { flex: 1; }
+.fo-profile { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; }
+.fo-profile-avatar { flex: 0 0 36px; width: 36px; height: 36px; border: 1.5px solid var(--fo-line); border-radius: 50%; background: var(--fo-gold-soft) url('/design/poki-floating-logo-base-v1.png') 50% 62% / 165% no-repeat; }
+.fo-profile strong { display: block; overflow: hidden; max-width: 138px; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.fo-profile small { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 12px; }
+.fo-sidebar-logout { align-self: flex-start; margin-left: 12px; border: 0; background: transparent; color: var(--fo-muted); font-size: 12px; cursor: pointer; }
+
+/* 콘텐츠: 테두리 상자 없이 면·여백·구분선으로 나눈다. */
+.fo-home-content { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
+.fo-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; max-width: 1180px; margin: 0 auto; padding: 26px 48px 0; }
+.fo-topbar > div > span { display: block; margin-bottom: 2px; color: var(--fo-muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.fo-topbar p { margin: 0; font-size: 16px; font-weight: 600; }
+.fo-topbar ul { display: flex; align-items: center; gap: 22px; margin: 0; padding: 0; list-style: none; }
+.fo-topbar li { display: flex; align-items: center; gap: 8px; color: var(--fo-muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
+.fo-topbar li b { color: var(--fo-ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fo-dashboard { display: flex; flex-direction: column; gap: 36px; width: 100%; max-width: 1180px; margin: 0 auto; padding: 8px 48px 40px; }
+
+/* 오늘: 포키 + 큰 질문 + 버튼 */
+.fo-hero { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: center; gap: 40px; padding: 12px 0 4px; }
+.fo-poki-stage { position: relative; display: grid; place-items: center; height: 220px; }
+.fo-poki-stage::before { position: absolute; width: 196px; height: 196px; border-radius: 50%; background: radial-gradient(circle, var(--fo-gold-soft) 0 62%, transparent 63%); content: ''; animation: fo-pop-in .6s .05s var(--fo-ease) both; }
+.fo-poki-stage::after { position: absolute; bottom: 14px; width: 120px; height: 14px; border-radius: 50%; background: var(--fo-shadow); content: ''; filter: blur(4px); animation: fo-fade-in .6s .3s var(--fo-ease) both; }
+.fo-poki-stage img { position: relative; z-index: 1; width: 220px; height: 220px; object-fit: contain; animation: fo-up .6s .1s var(--fo-ease) both; }
+.fo-hero h1 { margin: 0; font-size: 40px; font-weight: 700; line-height: 1.3; letter-spacing: -.035em; word-break: keep-all; }
+/* 포인트: '집중'에 금색 밑줄이 그어진다. */
+.fo-hl { position: relative; isolation: isolate; white-space: nowrap; }
+.fo-hl::after { position: absolute; right: -2px; bottom: 3px; left: -2px; z-index: -1; height: 10px; border-radius: 99px; background: var(--fo-gold); content: ''; opacity: .6; transform: scaleX(0); transform-origin: left; animation: fo-draw .6s .45s cubic-bezier(.2, .8, .2, 1) forwards; }
+.fo-goal-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 196px; height: 56px; margin-top: 26px; font-size: 17px; }
+.fo-goal-button span { transition: transform .2s ease; }
+.fo-goal-button:hover span { transform: translateX(4px); }
+.fo-home-notice { margin: 14px 0 0; color: var(--fo-muted); font-size: 14px; }
+.fo-rise { animation: fo-up .55s var(--fo-ease) backwards; }
+
+/* 아래: 상자 없이 두 칸, 가운데 얇은 선 */
+.fo-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+.fo-dashboard-block { min-width: 0; animation: fo-up .55s .25s var(--fo-ease) both; }
+.fo-dashboard-block + .fo-dashboard-block { margin-left: 48px; padding-left: 48px; border-left: 1px solid var(--fo-line); animation-delay: .32s; }
+.fo-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.fo-panel-head h2 { margin: 0; white-space: nowrap; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+
+/* 달력 */
+.fo-month-controls { display: flex; align-items: center; gap: 2px; }
+.fo-month-controls button { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 10px; background: none; color: var(--fo-ink); font-size: 18px; font-weight: 700; cursor: pointer; }
+.fo-month-controls button:hover:not(:disabled) { background: var(--fo-field); }
+.fo-month-controls button:disabled { color: var(--fo-faint); cursor: default; }
+.fo-month-controls span { min-width: 100px; font-size: 15px; font-weight: 700; text-align: center; }
+.fo-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px 4px; margin-top: 22px; animation: fo-pop-in .55s var(--fo-ease); }
+.fo-weekday { padding-bottom: 4px; color: var(--fo-muted); font-size: 13px; font-weight: 600; text-align: center; }
+.fo-calendar-day { display: grid; place-items: center; justify-self: center; width: 40px; height: 40px; border-radius: 50%; color: var(--fo-ink); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fo-calendar-day.today:not(.completed) { border: 1.5px solid var(--fo-ink); font-weight: 700; }
+.fo-calendar-day.future { color: var(--fo-faint); }
+.fo-calendar-day.completed { overflow: hidden; border: 1.5px solid var(--fo-gold); background: var(--fo-gold-soft); animation: fo-pop-in .55s var(--fo-ease) both; }
+.fo-calendar-day.completed.today { box-shadow: 0 0 0 2px var(--fo-surface), 0 0 0 4px var(--fo-ink); }
+.fo-poki-face { display: block; width: 100%; height: 100%; background: url('/design/poki-floating-master-v3.png') center 42% / 190% auto no-repeat; }
+.fo-calendar-state { display: grid; gap: 4px; margin-top: 20px; padding: 14px 16px; border: 1px solid var(--fo-line); border-radius: 12px; font-size: 14px; line-height: 1.6; }
+.fo-calendar-state strong { font-weight: 700; }
+.fo-calendar-state.is-error { border-color: var(--fo-danger-line); background: var(--fo-danger-soft); }
+.fo-calendar-state.is-error strong { color: var(--fo-danger); }
+.fo-retry { justify-self: start; min-width: 0; height: 40px; margin-top: 8px; padding: 0 16px; font-size: 14px; }
+.fo-skeleton { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+.fo-skeleton i { height: 32px; border-radius: 50%; background: linear-gradient(90deg, var(--fo-track), var(--fo-hover), var(--fo-track)); background-size: 200% 100%; animation: fo-shimmer 1.2s linear infinite; }
+
+/* 지난 목표: 날짜 블록 + 목표 + 시간 */
+.fo-recent-list { display: grid; gap: 4px; margin: 18px 0 0; padding: 0; list-style: none; }
+.fo-recent-list li { animation: fo-up .55s var(--fo-ease) both; }
+.fo-recent-list li:nth-child(1) { animation-delay: .35s; }
+.fo-recent-list li:nth-child(2) { animation-delay: .45s; }
+.fo-recent-list li:nth-child(3) { animation-delay: .55s; }
+.fo-recent-item { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 16px; margin: 0 -12px; padding: 10px 12px; border-radius: 16px; }
+.fo-recent-day { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 52px; height: 56px; border-radius: 14px; background: var(--fo-field); line-height: 1.1; }
+.fo-recent-day b { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fo-recent-day small { margin-top: 3px; color: var(--fo-muted); font-size: 12px; font-weight: 600; }
+.fo-recent-goal { display: block; overflow: hidden; font-size: 17px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.fo-recent-date { display: block; margin-top: 3px; color: var(--fo-muted); font-size: 14px; }
+.fo-recent-time { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fo-recent-loading { margin: 18px 0 0; color: var(--fo-muted); font-size: 14px; }
+.fo-records-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 12px; color: var(--fo-muted); font-size: 15px; line-height: 1.6; text-align: center; word-break: keep-all; }
+.fo-records-empty strong { color: var(--fo-ink); font-size: 17px; }
+.fo-dashboard > .fo-notice { margin: 0; }
+
+@keyframes fo-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fo-pop-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes fo-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fo-draw { to { transform: scaleX(1); } }
+@keyframes fo-shimmer { to { background-position: -200% 0; } }
+
+@media (max-width: 1000px) {
+  .fo-topbar, .fo-dashboard { padding-inline: 28px; }
+  .fo-hero { grid-template-columns: 190px minmax(0, 1fr); gap: 28px; }
+  .fo-poki-stage { height: 180px; }
+  .fo-poki-stage img { width: 180px; height: 180px; }
+  .fo-poki-stage::before { width: 160px; height: 160px; }
+  .fo-dashboard-block + .fo-dashboard-block { margin-left: 28px; padding-left: 28px; }
+  .fo-hero h1 { font-size: 32px; }
+}
+@media (max-width: 900px) {
+  .fo-home-window { grid-template-columns: 76px minmax(0, 1fr); }
+  .fo-sidebar { align-items: center; padding: 16px 10px; }
+  .fo-sidebar-logo { width: 52px; }
+  .fo-nav-item { width: 52px; justify-content: center; padding: 0; }
+  .fo-nav-item span, .fo-profile > div { display: none; }
+  .fo-nav-item.active::before { left: -6px; }
+  .fo-sidebar-logout { align-self: center; margin-left: 0; padding: 8px 0; }
+}
+@media (max-width: 760px) {
+  .fo-dashboard-grid { grid-template-columns: 1fr; gap: 32px; }
+  .fo-dashboard-block + .fo-dashboard-block { margin: 0; padding: 32px 0 0; border-top: 1px solid var(--fo-line); border-left: 0; }
+  .fo-hero { grid-template-columns: 1fr; }
+  .fo-poki-stage { display: none; }
+  .fo-topbar ul { gap: 14px; }
+}
+/* 큰 화면·전체 화면: 내용이 위에 몰리지 않게 세로 가운데 + 간격을 넓힌다. */
+@media (min-height: 860px) {
+  .fo-dashboard { flex: 1; justify-content: center; gap: 56px; padding-bottom: 72px; }
+}
+/* 낮은 창: 세로 여백을 줄여 스크롤 없이 */
+@media (max-height: 760px) {
+  .fo-topbar { padding-top: 16px; }
+  .fo-dashboard { gap: 28px; padding-top: 14px; padding-bottom: 24px; }
+  .fo-hero { grid-template-columns: 200px minmax(0, 1fr); padding: 0; }
+  .fo-poki-stage { height: 180px; }
+  .fo-poki-stage img { width: 180px; height: 180px; }
+  .fo-poki-stage::before { width: 164px; height: 164px; }
+  .fo-hero h1 { font-size: 34px; }
+  .fo-goal-button { height: 52px; margin-top: 18px; }
+  .fo-calendar-grid { gap: 4px; margin-top: 16px; }
+  .fo-calendar-day { width: 36px; height: 36px; }
+  .fo-recent-item { padding-block: 7px; }
+}
+@media (max-height: 600px) {
+  .fo-poki-stage { height: 140px; }
+  .fo-poki-stage img { width: 140px; height: 140px; }
+  .fo-poki-stage::before { width: 128px; height: 128px; }
+  .fo-hero h1 { font-size: 28px; }
+  .fo-calendar-day { width: 32px; height: 32px; font-size: 13px; }
+  .fo-calendar-grid { gap: 2px; }
+}

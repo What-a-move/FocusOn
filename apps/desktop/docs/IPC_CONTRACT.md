@@ -150,6 +150,16 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 - Preload는 `window.focusOn.auth.getSession()`, `retrySession()`, `startGoogleLogin()`, `logout()`, `onSessionChanged(callback)`처럼 기능별 API만 노출한다. Event 구독 함수는 해제 함수를 반환한다.
 - 공통 Type은 `electron/shared/`에 정의했다. Main은 `sender`와 입력값을 검증한다. OAuth·IPC 전용 오류 코드를 새로 만들 필요가 생기면 공통 Error Code 계약과 함께 먼저 확정한다.
 
+### 리포트 Channel (2026-10-24, Issue #41)
+
+| Channel | 입력 | 성공 data | Backend |
+| --- | --- | --- | --- |
+| `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }` | `GET /api/v1/reports/calendar` |
+| `report:daily:get` | `{ date: 'YYYY-MM-DD' }` | `{ date, totalActiveMs, sessions[{ sessionId, goal, startedAt, endedAt, activeMs }] }` | `GET /api/v1/reports/daily` |
+
+- Preload는 `window.focusOn.reports.getCalendar()`, `getDaily()`로 노출한다. Main은 실제로 있는 월·날짜만 받고, `AuthService.authorizedRequest`(X-Device-Id, GET 재시도)로 조회한다.
+- 일간 리포트 `sessions[]` 항목 필드는 Notion에 없어 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`로 읽는다(Frontend 제안, Backend 확인 전). 형식이 다르면 `INVALID_RESPONSE`로 실패를 보여 준다.
+
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 
 ## 보안 규칙

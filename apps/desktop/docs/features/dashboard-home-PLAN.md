@@ -26,8 +26,8 @@
 1. 로그인 → 온보딩 완료(또는 `COMPLETED` 사용자 재실행) → 홈(`/`)
 2. 상단에서 오늘 날짜·인사·오늘 집중 N분·이번 달 N일을 본다.
 3. `오늘 학습` 영역의 `목표 설정하기`를 누른다(목표 설정 화면은 다음 Issue).
-4. 집중 달력에서 월을 바꾸거나 날짜를 누른다(일간 리포트 화면은 이후 Issue, 이번에는 이동 자리만).
-5. 지난 목표 최근 3개를 보거나 `전체 보기`로 집중 기록으로 간다(이후 Issue).
+4. 집중 달력에서 월을 바꾼다. 날짜를 눌러 일간 리포트로 가는 동작은 집중 기록 화면 Issue에서 연결한다(그 전에는 누를 수 없는 표시만).
+5. 지난 목표 최근 3개를 본다. `전체 보기`는 집중 기록 화면이 생길 때 넣는다(빈 링크를 두지 않음).
 
 ## Desktop 상세 동작
 
@@ -60,7 +60,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 
 - Renderer 입력: 조회할 월(`YYYY-MM`)
 - Main 또는 Preload 전달값: `window.focusOn.reports.getCalendar({ month })`, 최근 목표 조회. 모두 Main에서 `AuthService.authorizedRequest`를 거친다(GET 재시도 규칙 동일).
-- Server·AI 요청 여부: `GET /api/v1/reports/calendar?month=YYYY-MM` → `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }`. 지난 목표·오늘 합계는 일간 리포트 API 기준(계약 확인 후 연결).
+- Server·AI 요청 여부: `GET /api/v1/reports/calendar?month=YYYY-MM` → `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }`. 오늘 집중 분·이번 달 일수는 이번 달 달력 응답에서 계산한다. 지난 목표는 이번 달 달력에서 기록이 있는 최근 날짜부터 `GET /api/v1/reports/daily?date=`를 차례로 조회해 최대 3개를 모은다(이번 달 범위만). 일간 세션 항목 형식은 Frontend 제안 `{ sessionId, goalTextSnapshot, startedAt, endedAt, accumulatedActiveMs }`이며 Backend 확인 전이다.
 - 저장 데이터: 없음(메모리 캐시만, 세션 종료 시 해당 월 무효화는 세션 Issue에서)
 - 분석 제외 대상: 해당 없음
 
