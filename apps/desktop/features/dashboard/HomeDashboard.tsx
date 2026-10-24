@@ -121,32 +121,49 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const [recent, setRecent] = useState<RecentView>({ status: 'loading' })
   const [notice, setNotice] = useState<string | null>(null)
   const cache = useRef(new Map<string, { data: CalendarMonth; loadedAt: Date }>())
-  const latest = useRef(0)
+  const latestCalendar = useRef(0)
+  const latestSummary = useRef(0)
+  const shownDay = useRef('')
 
   useEffect(() => {
     // [유지보수] 정적 빌드 시각과 실행 시각이 달라도 날짜가 어긋나지 않게 실행 후 계산한다.
-    queueMicrotask(() => { const now = new Date(); setToday(now); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)) })
+    // 앱을 켜 둔 채 자정이 지나거나 창으로 돌아왔을 때 날짜가 바뀌었으면 이번 달로 다시 불러온다.
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const sync = () => {
+      const now = new Date()
+      if (dayKey(now) !== shownDay.current) {
+        shownDay.current = dayKey(now)
+        setToday(now)
+        setMonth(new Date(now.getFullYear(), now.getMonth(), 1))
+      }
+      clearTimeout(timer)
+      timer = setTimeout(sync, new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime() + 1000)
+    }
+    queueMicrotask(sync)
+    window.addEventListener('focus', sync)
+    return () => { clearTimeout(timer); window.removeEventListener('focus', sync) }
   }, [])
 
   const loadMonth = useCallback(async (target: Date, now: Date) => {
     const key = monthKey(target)
-    // [주의] 월을 빠르게 넘기면 늦게 온 이전 응답이 화면을 덮지 않게 마지막 요청만 반영한다.
-    const request = ++latest.current
+    const isCurrentMonth = key === monthKey(now)
+    // [주의] 늦게 온 이전 응답이 새 화면을 덮지 않게 달력과 이번 달 요약은 각자 마지막 요청만 반영한다.
+    const calendarRequest = ++latestCalendar.current
+    const summaryRequest = isCurrentMonth ? ++latestSummary.current : 0
     setCalendar({ status: 'loading' })
     const result = await dashboardApi.getCalendar(key)
-    if (request !== latest.current) return
-    if (result.success) {
-      cache.current.set(key, { data: result.data, loadedAt: new Date() })
-      setCalendar({ status: 'ready', data: result.data })
-    } else {
-      setCalendar(result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? { status: 'offline', cached: cache.current.get(key) ?? null } : { status: 'error' })
+    if (result.success) cache.current.set(key, { data: result.data, loadedAt: new Date() })
+    if (calendarRequest === latestCalendar.current) {
+      setCalendar(result.success ? { status: 'ready', data: result.data }
+        : result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? { status: 'offline', cached: cache.current.get(key) ?? null } : { status: 'error' })
     }
-    if (key !== monthKey(now)) return
-    // 상단 요약과 지난 목표는 이번 달 기준이다.
+    // 상단 요약과 지난 목표는 이번 달 기준이다. 다른 달로 넘겨도 이번 달 응답은 끝까지 반영한다.
+    if (!isCurrentMonth || summaryRequest !== latestSummary.current) return
     if (!result.success) { setCurrent('error'); setRecent({ status: 'error' }); return }
     setCurrent(result.data)
     setRecent({ status: 'loading' })
     const sessions = await loadRecentSessions(result.data, dayKey(now))
+    if (summaryRequest !== latestSummary.current) return
     setRecent(sessions.success ? { status: 'ready', items: sessions.data } : { status: 'error' })
   }, [])
 

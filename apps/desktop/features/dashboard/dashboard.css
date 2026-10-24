@@ -139,7 +139,7 @@
 @media (max-height: 760px) {
   .fo-topbar { padding-top: 16px; }
   .fo-dashboard { gap: 28px; padding-top: 14px; padding-bottom: 24px; }
-  .fo-hero { grid-template-columns: 200px minmax(0, 1fr); padding: 0; }
+  .fo-hero { padding: 0; }
   .fo-poki-stage { height: 180px; }
   .fo-poki-stage img { width: 180px; height: 180px; }
   .fo-poki-stage::before { width: 164px; height: 164px; }
@@ -148,6 +148,10 @@
   .fo-calendar-grid { gap: 4px; margin-top: 16px; }
   .fo-calendar-day { width: 36px; height: 36px; }
   .fo-recent-item { padding-block: 7px; }
+}
+/* 좁은 창(760px 이하)은 한 칸을 유지하고, 넓은 창에서만 낮은 높이용 두 칸 배치를 쓴다. */
+@media (max-height: 760px) and (min-width: 761px) {
+  .fo-hero { grid-template-columns: 200px minmax(0, 1fr); }
 }
 @media (max-height: 600px) {
   .fo-poki-stage { height: 140px; }
