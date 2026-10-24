@@ -23,6 +23,8 @@ export type AuthorizedRequest<T> = {
   body?: object
   /** true면 로그인 때 받은 Desktop deviceId를 X-Device-Id 헤더로 보낸다. */
   withDeviceId?: boolean
+  /** 요청별 추가 헤더 (예: 세션 명령의 Idempotency-Key). 토큰 갱신 뒤 한 번 다시 보낼 때도 같은 값을 쓴다. */
+  headers?: Record<string, string>
 }
 const RELOGIN_REQUIRED: AuthApiError = { code: 'AUTH_RELOGIN_REQUIRED', retryable: false }
 
@@ -82,7 +84,7 @@ export class AuthService {
 
     const send = () => this.api.call(
       request.path, request.method, request.expectedStatus, request.parse, request.body,
-      this.accessToken ?? undefined, request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {},
+      this.accessToken ?? undefined, { ...request.headers, ...(request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {}) },
     )
     const sendWithRetry = async () => {
       let result = await send()
