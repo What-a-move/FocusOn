@@ -113,7 +113,7 @@ type AuthSessionSnapshot = {
 
 실제 Channel을 추가하면 입력·출력 Type을 `electron/shared/`에 정의하고 이 표를 갱신한다.
 
-현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Preload는 `window.focusOn.permissions`로 노출한다. `permission:notification:open-settings`(입력 `void`, 성공 `{ opened: boolean }`)는 시스템 설정 › 알림을 연다(2026-10-23 추가).
+현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Preload는 `window.focusOn.permissions`로 노출한다. `permission:notification:get-status`(입력 `void`, 성공 `{ confirmed }`)와 `permission:notification:confirm`(입력 `{ seen: boolean }`, 성공 `{ confirmed }`)은 시험 알림을 본 사용자 확인을 이 기기에 기록·조회한다(2026-10-25, 결정 022). macOS 허용 상태가 아니라 사용자 확인 결과다. `permission:notification:open-settings`(입력 `void`, 성공 `{ opened: boolean }`)는 시스템 설정 › 알림을 연다(2026-10-23 추가).
 
 온보딩 Channel(2026-10-22 구현, Type은 `electron/shared/onboarding-contract.cts`, Preload는 `window.focusOn.onboarding`):
 
@@ -179,7 +179,8 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | `session:focus-settings:get` | `void` | `{ interventionLevel, notificationChannels, cameraAnalysisEnabled }` | `GET /api/v1/users/me/focus-settings` |
 | `session:start` | `{ goalId, targetDurationMs(5~300분, 분 단위), timeZone(IANA), sessionOptions: { interventionLevel, notificationChannels(1개 이상·중복 없음), cameraAnalysisEnabled }, idempotencyKey(UUID v4) }` | `{ sessionId, status, targetDurationMs, startedAt, interventionPolicyVersion }` | `POST /api/v1/sessions` |
 
-- Main은 `Idempotency-Key`·`X-Device-Id` 헤더를 붙이고, `startReadiness: { screenAnalysisReady }`는 Main이 macOS 권한을 직접 확인해 넣는다(Renderer 입력 아님). POST라 자동 재전송하지 않는다. Renderer는 같은 선택으로 다시 누르면 같은 키를 보낸다.
+- Main은 `Authorization`(Bearer Access Token, 모든 인증 요청 공통)·`Idempotency-Key`·`X-Device-Id` 헤더를 붙이고, `startReadiness: { screenAnalysisReady }`는 Main이 macOS 권한을 직접 확인해 넣는다(Renderer 입력 아님). POST라 자동 재전송하지 않는다. Renderer는 같은 선택으로 다시 누르면 같은 키를 보낸다.
+- `session:start`는 알림 확인 기록이 없으면 서버에 요청하지 않고 `LOCAL_NOTIFICATION_NOT_CONFIRMED`를 돌려준다(결정 022).
 - `sessionOptions`는 focus-settings와 같은 필드 이름(`breakSuggestionEnabled` 제외), `startReadiness`는 `{ screenAnalysisReady }`다(2026-10-24 확정, 결정 021).
 - `AuthorizedRequest.headers`로 요청별 헤더를 붙인다. 토큰 만료로 한 번 다시 보낼 때도 같은 값이다.
 

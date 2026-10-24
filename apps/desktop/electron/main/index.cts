@@ -21,6 +21,7 @@ import { registerOnboardingIpc } from './onboarding-ipc.cjs'
 import { ReportService, registerReportIpc } from './report-ipc.cjs'
 import { GoalService, registerGoalIpc } from './goal-ipc.cjs'
 import { SessionService, registerSessionIpc } from './session-ipc.cjs'
+import { NotificationReadiness } from './notification-readiness.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -193,12 +194,13 @@ if (!hasSingleInstanceLock) {
 
     installMenu()
     registerAuthIpc(() => mainWindow, rendererUrl, authStore, oauthFlow, authService)
-    registerPermissionIpc(() => mainWindow, rendererUrl)
+    const notificationReadiness = new NotificationReadiness(path.join(app.getPath('userData'), 'notification-readiness.json'))
+    registerPermissionIpc(() => mainWindow, rendererUrl, notificationReadiness)
     // [주의] 화면 기록 준비 상태는 Renderer 주장이 아니라 Main이 macOS에서 직접 확인한 값으로 서버에 보낸다.
     registerOnboardingIpc(() => mainWindow, rendererUrl, authService ? new OnboardingService(authService, () => mediaStatus('screen') === 'granted') : null)
     registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)
     registerGoalIpc(() => mainWindow, rendererUrl, authService ? new GoalService(authService) : null)
-    registerSessionIpc(() => mainWindow, rendererUrl, authService ? new SessionService(authService, () => mediaStatus('screen') === 'granted') : null)
+    registerSessionIpc(() => mainWindow, rendererUrl, authService ? new SessionService(authService, () => mediaStatus('screen') === 'granted', () => notificationReadiness.isConfirmed()) : null)
     createMainWindow()
     void authService?.restore()
   })

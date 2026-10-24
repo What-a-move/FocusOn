@@ -15,13 +15,16 @@ export class SessionService {
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
     private readonly screenAnalysisReady: () => boolean,
+    private readonly notificationReady: () => boolean,
   ) {}
 
   getFocusSettings(): Promise<ApiResult<FocusSettings>> {
     return this.auth.authorizedRequest({ path: '/api/v1/users/me/focus-settings', method: 'GET', expectedStatus: 200, parse: parseFocusSettings })
   }
 
-  start(input: StartSessionInput): Promise<ApiResult<StartedSession>> {
+  async start(input: StartSessionInput): Promise<ApiResult<StartedSession>> {
+    // [주의] 서버는 알림 권한을 검증하지 않는다. 알림 준비(사용자 확인)는 Desktop이 여기서 막는다(결정 022).
+    if (!this.notificationReady()) return { success: false, error: { code: 'LOCAL_NOTIFICATION_NOT_CONFIRMED', retryable: false } }
     return this.auth.authorizedRequest({
       path: '/api/v1/sessions', method: 'POST', expectedStatus: 201, parse: parseStartedSession, withDeviceId: true,
       headers: { 'Idempotency-Key': input.idempotencyKey },

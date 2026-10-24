@@ -21,9 +21,23 @@ async function viaSessions<T>(call: (api: NonNullable<Window['focusOn']>['sessio
   }
 }
 
+async function viaPermissions<T>(call: (api: NonNullable<Window['focusOn']>['permissions']) => Promise<ApiResult<T>>): Promise<ApiResult<T>> {
+  const api = typeof window === 'undefined' ? undefined : window.focusOn?.permissions
+  if (!api) return UNAVAILABLE
+  try {
+    return await call(api)
+  } catch {
+    return UNAVAILABLE
+  }
+}
+
 export const sessionApi = {
   getFocusSettings: () => viaSessions<FocusSettings>((api) => api.getFocusSettings()),
   start: (input: StartSessionInput) => viaSessions<StartedSession>((api) => api.start(input)),
+  // 알림은 서버가 검증하지 않아 Desktop에서 시험 알림 + 사용자 확인으로 준비를 막는다(결정 022).
+  sendTestNotification: () => viaPermissions<{ shown: boolean }>((api) => api.showNotification({ titleCode: 'ONBOARDING_TEST', bodyCode: 'ONBOARDING_TEST' })),
+  confirmNotification: (seen: boolean) => viaPermissions<{ confirmed: boolean }>((api) => api.confirmNotification({ seen })),
+  openNotificationSettings: () => viaPermissions<{ opened: boolean }>((api) => api.openNotificationSettings()),
 }
 
 /** 시작한 세션을 집중 화면으로 넘긴다. 세션 id·목표·시간만 두며 민감 정보가 아니다. */

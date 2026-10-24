@@ -67,6 +67,8 @@
 .setup-window .start-feedback strong { display: block; color: var(--danger); }
 .setup-window .start-feedback span:not(.icon-error) { display: block; }
 .setup-window .start-feedback.is-info strong { color: var(--ink); }
+.setup-window .notify-actions { display: flex !important; gap: 8px; margin-top: 10px; }
+.onboarding-window.setup-window .notify-actions .btn { min-width: 0; height: 40px; padding: 0 16px; font-size: 14px; }
 
 /* 오른쪽: 알림 미리보기 */
 .setup-window .preview { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; border-left: 1px solid var(--line); }

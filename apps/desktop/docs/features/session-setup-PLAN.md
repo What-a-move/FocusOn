@@ -44,7 +44,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 ## macOS 권한 및 시스템 기능
 
 - 필요한 권한: 화면 기록·알림(필수, 온보딩에서 준비). 이 화면은 새로 요청하지 않는다.
-- 권한 거부 시: 서버가 `SESSION_START_REQUIREMENT_MISSING`(`SCREEN_PERMISSION`·`NOTIFICATION_PERMISSION`·`EXTENSION_LINK`)을 주면 무엇이 빠졌는지 안내한다.
+- 권한 거부 시: 서버는 `SESSION_START_REQUIREMENT_MISSING`(`SCREEN_PERMISSION`·`EXTENSION_LINK`)을 준다. 알림은 서버가 검증하지 않아, Main이 사용자 확인 기록이 없으면 요청 전에 `LOCAL_NOTIFICATION_NOT_CONFIRMED`로 막고 화면에서 시험 알림 → `보였어요`/`안 보였어요`(설정 열기)를 바로 진행한다(결정 022).
 
 ## 화면 및 사용자 경험
 

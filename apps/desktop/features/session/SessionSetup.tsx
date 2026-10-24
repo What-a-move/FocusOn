@@ -30,6 +30,7 @@ function startError(code: string): Feedback {
   switch (code) {
     case 'SESSION_START_REQUIREMENT_MISSING': return { title: '시작에 필요한 준비가 빠졌어요.', body: '화면 기록·알림 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.' }
     case 'SESSION_ACTIVE_EXISTS': return { title: '진행 중인 집중이 있어요.', body: '진행 중인 집중을 끝낸 뒤 새로 시작할 수 있어요.' }
+    case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return { title: '알림이 보이는지 확인이 필요해요.', body: '시험 알림을 보내 볼게요. 알림이 보이면 ‘보였어요’를 눌러 주세요.' }
     case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '인터넷 연결을 확인해 주세요.', body: '연결된 뒤 다시 누르면 같은 요청으로 이어서 시작해요.' }
     default: return { title: '집중을 시작하지 못했어요.', body: '잠시 후 다시 눌러 주세요.' }
   }
@@ -58,6 +59,8 @@ export function SessionSetup() {
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [busy, setBusy] = useState(false)
   const [started, setStarted] = useState(false)
+  // 알림 확인: 서버는 알림을 검증하지 않아 Desktop이 시험 알림 + 사용자 확인으로 막는다(결정 022).
+  const [notifyCheck, setNotifyCheck] = useState<'ask' | 'sent' | 'denied' | null>(null)
   const [now, setNow] = useState<Date | null>(null)
   // [주의] 같은 선택으로 다시 누르면 같은 Idempotency-Key를 보내 서버가 세션을 두 번 만들지 않게 한다.
   const attempt = useRef<{ fingerprint: string; key: string } | null>(null)
@@ -123,7 +126,11 @@ export function SessionSetup() {
     setFeedback(null)
     const result = await sessionApi.start({ ...payload, idempotencyKey: attempt.current.key })
     setBusy(false)
-    if (!result.success) { setFeedback(startError(result.error.code)); return }
+    if (!result.success) {
+      setNotifyCheck(result.error.code === 'LOCAL_NOTIFICATION_NOT_CONFIRMED' ? 'ask' : null)
+      setFeedback(startError(result.error.code))
+      return
+    }
     attempt.current = null
     try {
       sessionStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({ sessionId: result.data.sessionId, goalText: goal.goalText, targetDurationMs: result.data.targetDurationMs, startedAt: result.data.startedAt }))
@@ -131,6 +138,21 @@ export function SessionSetup() {
     setStarted(true)
     // 집중 화면(타이머)은 다음 Issue에서 연결한다.
     setFeedback({ title: '집중을 시작했어요.', body: '집중 화면은 준비 중이에요.', info: true })
+  }
+
+  const sendTest = async () => {
+    const sent = await sessionApi.sendTestNotification()
+    if (!sent.success || !sent.data.shown) { setFeedback({ title: '알림을 보내지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 다시 보내 주세요.' }); setNotifyCheck('denied'); return }
+    setNotifyCheck('sent')
+    setFeedback({ title: '방금 보낸 알림이 보였나요?', body: '화면 오른쪽 위에 FocusOn 알림이 떴는지 확인해 주세요.' })
+  }
+  const answerTest = async (seen: boolean) => {
+    const saved = await sessionApi.confirmNotification(seen)
+    if (!saved.success) { setFeedback({ title: '알림 확인을 저장하지 못했어요.', body: '다시 눌러 주세요.' }); return }
+    if (seen) { setNotifyCheck(null); setFeedback({ title: '알림을 확인했어요.', body: '‘집중 시작하기’를 다시 눌러 주세요.', info: true }); return }
+    setNotifyCheck('denied')
+    setFeedback({ title: '알림이 꺼져 있는 것 같아요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.' })
+    void sessionApi.openNotificationSettings()
   }
 
   return <main className="app-window onboarding-window setup-window">
@@ -182,7 +204,14 @@ export function SessionSetup() {
         <div className="start-row">
           {feedback && <div className={`start-feedback${feedback.info ? ' is-info' : ''}`} role={feedback.info ? 'status' : 'alert'}>
             {!feedback.info && <span className="icon-error" aria-hidden="true">!</span>}
-            <div><strong>{feedback.title}</strong><span>{feedback.body}</span></div>
+            <div>
+              <strong>{feedback.title}</strong><span>{feedback.body}</span>
+              {notifyCheck && <span className="notify-actions">
+                {notifyCheck === 'sent'
+                  ? <><button className="btn btn-ghost" type="button" onClick={() => { void answerTest(false) }}>안 보였어요</button><button className="btn btn-primary" type="button" onClick={() => { void answerTest(true) }}>보였어요</button></>
+                  : <button className="btn btn-ghost" type="button" onClick={() => { void sendTest() }}>{notifyCheck === 'denied' ? '다시 보내기' : '시험 알림 보내기'}</button>}
+              </span>}
+            </div>
           </div>}
           <p>카메라 <strong>{camera === null ? '확인하지 못했어요' : camera ? '사용 중' : '사용 안 함'}</strong></p>
           <button className="btn btn-primary" type="button" onClick={() => { void start() }} disabled={busy || started || !goal}>

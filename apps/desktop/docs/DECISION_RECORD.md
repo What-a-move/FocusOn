@@ -446,7 +446,7 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 ### 결정 내용
 
 - `GET /users/me/consents` 응답은 `{ currentVersion, consents: [{ consentType, isGranted, consentVersion, grantedAt, withdrawnAt }] }`다. 현재 `OnboardingService.parseConsents`와 같다.
-- 알림 준비 상태는 서버 `onboarding-readiness`에 기록하지 않는다. 세션 시작 때 `SESSION_START_REQUIREMENT_MISSING`(`NOTIFICATION_PERMISSION`)으로 다시 막는다.
+- 알림 준비 상태는 서버 `onboarding-readiness`에 기록하지 않는다. 세션 시작 때 막는 방식은 결정 022로 바뀌었다(서버가 아니라 Desktop이 막음).
 - MVP 온보딩은 제외 사이트(도메인)만 저장한다. 제외 앱은 다음 단계로 미루며, 정할 때 bundleId 문자열 배열(전체 교체)로 제안한다.
 - 권한 목록에서 "macOS 활성 앱 확인"을 뺀다. 앞에 띄운 앱 이름 확인은 macOS 권한이 필요 없다.
 - 개입 임계값은 정책 `v1`로 서버에서만 관리한다. Desktop은 판단 결과만 받고 숫자를 들고 있지 않는다. 세션에는 `interventionPolicyVersion`으로 고정된다.
@@ -509,3 +509,30 @@ Notion에 `sessionOptions and startReadiness` 이름만 있어 화면을 만들 
 
 - `apps/desktop/electron/shared/session-contract.cts`, `electron/main/session-ipc.cts`, `electron/main/auth-service.cts`
 - `apps/desktop/features/session/`, `docs/IPC_CONTRACT.md`, `docs/features/session-setup-PLAN.md`
+
+## 결정 022 - 알림 준비는 Desktop이 막고 서버는 검증하지 않음
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정, Notion 반영)
+
+### 결정 내용
+
+- `startReadiness`에는 화면 기록 상태만 보내므로 서버는 알림 준비 여부를 알 수 없다. 서버는 알림 권한을 검증했다고 처리하지 않고, `SESSION_START_REQUIREMENT_MISSING`의 누락 항목은 `SCREEN_PERMISSION`·`EXTENSION_LINK`뿐이다.
+- Desktop은 사용자가 시험 알림을 보고 누른 `보였어요`/`안 보였어요`를 Main이 `userData/notification-readiness.json`에 기록한다(온보딩 권한 화면, 세션 설정 화면).
+- `SessionService.start`는 기록이 없거나 `안 보였어요`면 서버에 요청하지 않고 `LOCAL_NOTIFICATION_NOT_CONFIRMED`를 돌려준다. 세션 설정 화면은 그 자리에서 시험 알림 → 확인(안 보이면 시스템 설정 › 알림) 흐름을 보여 준다.
+- 세션 시작 헤더는 `Authorization`·`Idempotency-Key`·`X-Device-Id` 세 개다. `Authorization`은 `AuthService.authorizedRequest`가 모든 인증 요청에 붙인다.
+
+### 결정 이유
+
+macOS는 앱에 알림 허용 상태를 알려 주지 않는다. 서버가 검증한다고 적어 두면 실제로는 아무도 막지 않는 빈틈이 생기므로, 사용자 확인을 기록한 Desktop이 시작을 막는다.
+
+### 한계
+
+- 사용자가 확인 뒤 시스템 설정에서 알림을 끄면 Desktop도 알 수 없다. macOS가 상태 API를 주면 그걸로 바꾼다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/notification-readiness.cts`, `permission-ipc.cts`, `session-ipc.cts`, `index.cts`, `electron/shared/permission-contract.cts`, `preload/index.cts`
+- `apps/desktop/features/onboarding/PermissionsStep.tsx`, `onboarding-api.ts`, `features/session/`

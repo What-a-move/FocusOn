@@ -176,8 +176,13 @@ export function PermissionsStep() {
     setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림을 보내지 못했어요.', error: true })
   }
 
-  function answerNotification(seen: boolean) {
+  async function answerNotification(seen: boolean) {
     setFeedback(null)
+    const saved = await onboardingApi.confirmNotification(seen)
+    if (!saved.success && seen) {
+      setFeedback({ title: '알림 확인을 저장하지 못했어요.', body: '‘보였어요’를 다시 눌러 주세요.' })
+      return
+    }
     setPerm('notify', { state: seen ? 'granted' : 'denied', error: null })
     setPrompt(seen ? { text: '알림도 준비됐어요!', error: false } : { text: '설정에서 알림을 켜 주세요.', error: false })
   }
@@ -302,8 +307,8 @@ export function PermissionsStep() {
                     : name === 'notify' && perm.state === 'requested'
                       ? (
                         <span className="perm-answer">
-                          <button className="btn btn-ghost perm-action" type="button" onClick={() => answerNotification(false)}>안 보였어요</button>
-                          <button className="btn btn-primary perm-action" type="button" onClick={() => answerNotification(true)}>보였어요</button>
+                          <button className="btn btn-ghost perm-action" type="button" onClick={() => { void answerNotification(false) }}>안 보였어요</button>
+                          <button className="btn btn-primary perm-action" type="button" onClick={() => { void answerNotification(true) }}>보였어요</button>
                         </span>
                       )
                       : <button className="btn btn-ghost perm-action" type="button" onClick={() => { void runPerm(name) }}>{action}</button>}
