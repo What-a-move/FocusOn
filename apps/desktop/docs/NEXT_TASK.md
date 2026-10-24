@@ -8,7 +8,7 @@
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Desktop (Extension pairing UI 연동 포함)
 - 우선순위: 높음
-- 상태: 온보딩 4단계 UI(닉네임 → Extension 연결 → 권한·동의(동의 → 권한 확인) → 제외 사이트 `/onboarding/sites` → 완료 `/onboarding/done`)와 다크 모드를 `FocusOn-design/onboarding.html` 시안대로 구현했다. macOS 권한(2026-10-22)과 온보딩 Backend 연결 구조(Main `OnboardingService`·온보딩 IPC·토큰 만료 재시도, 2026-10-22)를 구현했다. 남은 일은 Backend 온보딩 API가 완성된 뒤 실제 계정 QA, 결과 REPORT, #36 PR이다. Backend 확인 필요 항목은 기획서에 정리했다.
+- 상태: 온보딩 4단계 UI(닉네임 → Extension 연결 → 권한·동의(동의 → 권한 확인) → 제외 사이트 `/onboarding/sites` → 완료 `/onboarding/done`)와 다크 모드를 `FocusOn-design/onboarding.html` 시안대로 구현했다. macOS 권한(2026-10-22)과 온보딩 Backend 연결 구조(Main `OnboardingService`·온보딩 IPC·토큰 만료 재시도, 2026-10-22)를 구현했다. 남은 일은 Backend 온보딩 API가 완성된 뒤 실제 계정 QA, 결과 REPORT, #36 PR이다. Backend 합의안은 2026-10-24 확정했다(결정 019).
 
 ## 작업 목적
 

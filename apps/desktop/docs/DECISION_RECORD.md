@@ -423,7 +423,7 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 
 - 알림 권한은 필수다. 온보딩 권한 확인 화면은 화면 기록과 알림이 모두 준비되어야 다음 단계로 넘어간다.
 - macOS가 알림 허용 상태를 알려 주지 않으므로 시험 알림을 보내고 사용자가 `보였어요`를 눌렀을 때만 준비됨으로 본다. 화면에 허용 여부를 단정해 표시하지 않는다.
-- 서버 준비 상태에는 알림 필드가 없어 이 조건은 Desktop 화면에서 확인한다. 서버 기록 여부는 Backend와 정한다.
+- 서버 준비 상태에는 알림 필드가 없어 이 조건은 Desktop 화면에서 확인한다. 서버에도 기록하지 않는다(2026-10-24 확정, 결정 019).
 - 결정 016의 "알림은 `요청했어요`로만 표시" 부분을 이 결정으로 대체한다.
 
 ### 결정 이유
@@ -435,3 +435,30 @@ Refresh Token을 Keychain에만 보관한다는 Notion 정책과 Renderer에 토
 - `apps/desktop/electron/main/permission-ipc.cts`, `electron/shared/permission-contract.cts`, `electron/preload/index.cts`
 - `apps/desktop/features/onboarding/PermissionsStep.tsx`, `onboarding-api.ts`, `onboarding.css`
 - `FocusOn-design/onboarding.html`, `apps/desktop/docs/MACOS_PERMISSION_FLOW.md`
+
+## 결정 019 - Backend·AI·기획 확인 항목 확정
+
+- 결정일: 2026-10-24
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop
+- 상태: 확정 (사용자 결정, Notion 반영)
+
+### 결정 내용
+
+- `GET /users/me/consents` 응답은 `{ currentVersion, consents: [{ consentType, isGranted, consentVersion, grantedAt, withdrawnAt }] }`다. 현재 `OnboardingService.parseConsents`와 같다.
+- 알림 준비 상태는 서버 `onboarding-readiness`에 기록하지 않는다. 세션 시작 때 `SESSION_START_REQUIREMENT_MISSING`(`NOTIFICATION_PERMISSION`)으로 다시 막는다.
+- MVP 온보딩은 제외 사이트(도메인)만 저장한다. 제외 앱은 다음 단계로 미루며, 정할 때 bundleId 문자열 배열(전체 교체)로 제안한다.
+- 권한 목록에서 "macOS 활성 앱 확인"을 뺀다. 앞에 띄운 앱 이름 확인은 macOS 권한이 필요 없다.
+- 개입 임계값은 정책 `v1`로 서버에서만 관리한다. Desktop은 판단 결과만 받고 숫자를 들고 있지 않는다. 세션에는 `interventionPolicyVersion`으로 고정된다.
+- 세션 시작 요청(`POST /sessions`)에는 기기 시간대 IANA 이름(`Intl.DateTimeFormat().resolvedOptions().timeZone`)을 `timeZone`으로 보낸다. 서버는 IP로 추정하지 않고, 값이 없거나 이상하면 `Asia/Seoul`을 쓴다. 시작·종료·일시정지 시각은 서버 시계(UTC)로 확정한다.
+- 학습 정리 `keyConcepts`는 리포트 설계서 5.3의 `{ name, briefExplanation, sessionEvidence }`(최대 5개)다. 근거가 부족하면 `INSUFFICIENT_DATA` 상태다.
+
+### 결정 이유
+
+확인 대기로 남아 있던 항목을 Frontend 추천안으로 확정해 Desktop 구현 기준을 하나로 맞춘다.
+
+### 영향받는 파일
+
+- `apps/desktop/electron/main/onboarding-service.cts` (변경 없음, 기준 확인)
+- `apps/desktop/docs/MACOS_PERMISSION_FLOW.md`, `docs/features/onboarding-flow-PLAN.md`, `docs/NEXT_TASK.md`
+- 이후 세션 시작·리포트 구현 시 이 결정을 따른다.
