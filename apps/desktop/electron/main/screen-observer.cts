@@ -22,6 +22,13 @@ export function parseFrontmost(reply: Record<string, unknown> | null): Frontmost
 // Chrome 탭은 Extension이 맡는다. Desktop은 현재 URL을 몰라 제외·민감 페이지를 거를 수 없다.
 const CHROME = new Set(['com.google.Chrome', 'com.google.Chrome.beta', 'com.google.Chrome.dev', 'com.google.Chrome.canary'])
 
+// MVP는 macOS + Chrome만 지원한다. 다른 브라우저는 URL을 몰라 제외·민감 페이지를 거를 수 없어 내용을 보지 않고 EXCLUDED로만 알린다.
+// [주의] 아무것도 보내지 않으면 서버는 직전 판정(예: UNRELATED)이 계속된다고 보고 이탈 시간을 쌓는다.
+export const UNSUPPORTED_BROWSERS = new Set([
+  'com.apple.Safari', 'com.apple.SafariTechnologyPreview', 'company.thebrowser.Browser', 'com.microsoft.edgemac', 'org.mozilla.firefox',
+  'com.naver.Whale', 'com.brave.Browser', 'com.operasoftware.Opera', 'com.vivaldi.Vivaldi', 'org.chromium.Chromium', 'com.duckduckgo.macos.browser',
+])
+
 // ponytail: 고정 목록 기반이라 놓친 앱이 있을 수 있다. 사용자는 분석 제외 앱으로 직접 추가할 수 있다.
 export const SENSITIVE_APPS = new Set([
   // 비밀번호·키체인
@@ -61,14 +68,16 @@ export class ScreenObserver {
     this.current = null
   }
 
+  // Chrome은 Extension이 관측을 보낸다. 번들 ID가 없으면 대상 앱을 알 수 없어 관측하지 않는다.
   private skipped(front: Frontmost): boolean {
-    return front.pid === this.deps.selfPid || !front.bundleId || CHROME.has(front.bundleId)
+    return !front.bundleId || CHROME.has(front.bundleId)
   }
 
   private classify(front: Frontmost): Observation {
     const observedAt = this.deps.wallClock().toISOString()
     const bundleId = front.bundleId as string
-    if (this.deps.isExcluded(bundleId)) return { observedAt, guardStatus: 'EXCLUDED' }
+    // FocusOn 자기 창은 관련·무관 어느 쪽 근거도 아니다(Notion 화면 분석 3.1). 지원하지 않는 브라우저와 함께 분석 제외로만 알린다.
+    if (front.pid === this.deps.selfPid || UNSUPPORTED_BROWSERS.has(bundleId) || this.deps.isExcluded(bundleId)) return { observedAt, guardStatus: 'EXCLUDED' }
     if (SENSITIVE_APPS.has(bundleId) || (front.windowTitle && SENSITIVE_TITLE.test(front.windowTitle))) return { observedAt, guardStatus: 'PRIVACY_BLOCKED' }
     return { observedAt, guardStatus: null, contentSource: 'APP_META', metadata: { appName: front.appName ?? bundleId, windowTitle: front.windowTitle } }
   }

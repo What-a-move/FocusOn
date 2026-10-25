@@ -44,9 +44,8 @@ test('맨 앞 앱을 확인할 수 없는 순간은 이탈로 보지 않고 15�
   assert.equal(hold(xcode, 7).length, 1)
 })
 
-test('FocusOn 자신·Chrome·번들 ID 없는 앱은 관측하지 않는다', () => {
+test('Chrome·번들 ID 없는 앱은 관측하지 않는다', () => {
   const { hold } = setup()
-  assert.deepEqual(hold({ ...xcode, pid: 1 }, 20), [], 'FocusOn 창')
   assert.deepEqual(hold({ ...xcode, bundleId: 'com.google.Chrome', appName: 'Google Chrome' }, 20), [], 'Chrome은 Extension 담당')
   assert.deepEqual(hold({ ...xcode, bundleId: null }, 20), [])
 })
@@ -56,6 +55,14 @@ test('제외 앱은 EXCLUDED, 민감 앱·창 제목은 PRIVACY_BLOCKED로 메�
   assert.deepEqual(hold(xcode, 15), [{ observedAt: AT.toISOString(), guardStatus: 'EXCLUDED' }])
   assert.deepEqual(hold({ bundleId: 'com.kakao.KakaoTalkMac', appName: '카카오톡', pid: 60, windowTitle: '친구' }, 15), [{ observedAt: AT.toISOString(), guardStatus: 'PRIVACY_BLOCKED' }])
   assert.deepEqual(hold({ bundleId: 'com.apple.Notes', appName: '메모', pid: 61, windowTitle: '은행 비밀번호 정리' }, 15), [{ observedAt: AT.toISOString(), guardStatus: 'PRIVACY_BLOCKED' }])
+})
+
+test('지원하지 않는 브라우저와 FocusOn 자기 창은 내용 없이 EXCLUDED로만 알려 직전 판정을 끊는다', () => {
+  const { hold } = setup()
+  const excluded = [{ observedAt: AT.toISOString(), guardStatus: 'EXCLUDED' }]
+  assert.deepEqual(hold({ bundleId: 'com.apple.Safari', appName: 'Safari', pid: 70, windowTitle: 'React Query 문서' }, 15), excluded, 'Safari')
+  assert.deepEqual(hold({ bundleId: 'company.thebrowser.Browser', appName: 'Arc', pid: 71, windowTitle: null }, 15), excluded, 'Arc')
+  assert.deepEqual(hold({ ...xcode, bundleId: 'com.github.Electron', pid: 1 }, 15), excluded, 'FocusOn 창')
 })
 
 test('reset 뒤에는 같은 화면이어도 15초를 다시 센다', () => {

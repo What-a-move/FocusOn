@@ -52,8 +52,8 @@
 - 입력: 1초마다의 맨 앞 앱 `{ bundleId, appName, pid, windowTitle }` 또는 확인 불가.
 - 화면 key = `bundleId + windowTitle`. key가 바뀌면 그 시각부터 다시 센다. 15초 그대로면 그 화면의 관측을 한 번만 만든다.
 - 판정 순서(관측 전 Privacy Guard):
-  1. FocusOn 자신(pid가 Main과 같음) → 관측하지 않음
-  2. Chrome 계열(`com.google.Chrome`, `.beta`, `.dev`, `.canary`) → 관측하지 않음(Extension 담당)
+  1. Chrome 계열(`com.google.Chrome`, `.beta`, `.dev`, `.canary`) → 관측하지 않음(Extension 담당)
+  2. FocusOn 자신(pid가 Main과 같음)·지원하지 않는 브라우저(Safari·Arc·Edge·Firefox·Whale·Brave·Opera·Vivaldi·Chromium·DuckDuckGo) → `guardStatus: EXCLUDED` (MVP는 macOS + Chrome만 지원, 직전 판정을 끊기 위해 보냄)
   3. 사용자 제외 앱 → `guardStatus: EXCLUDED` (메타데이터 없음)
   4. 고정 민감 앱 또는 창 제목 민감 단어 → `guardStatus: PRIVACY_BLOCKED` (메타데이터 없음)
   5. 그 외 → `contentSource: APP_META`, `metadata { appName, windowTitle }`
@@ -112,6 +112,7 @@
 | 분석 제외 앱 | 없음 | `guardStatus: EXCLUDED`만, 메타데이터 없음 |
 | 민감 앱·창 제목 | 없음 | `guardStatus: PRIVACY_BLOCKED`만, 메타데이터 없음 |
 | Chrome이 맨 앞 | 없음 | 관측하지 않음(Extension 담당) |
+| 지원하지 않는 브라우저·FocusOn 창이 맨 앞 | 없음 (안내는 Floating Poki 단계 `분석 제외` 상태) | `guardStatus: EXCLUDED`만. 이 브라우저에서의 이탈은 감지하지 못함(MVP 제한) |
 | 설치된 앱 목록 실패 | 다시 시도 안내 | 제외 앱 저장은 이전 값 유지 |
 
 ## 보안·개인정보

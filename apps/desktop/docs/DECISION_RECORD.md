@@ -570,7 +570,8 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 
 ### 결정 내용
 
-- Desktop은 Chrome 밖의 앱을 맡는다. 맨 앞 앱이 Chrome이면 관측·전송하지 않고 Extension에 맡긴다. FocusOn 자기 창이 맨 앞이면 관측하지 않는다.
+- Desktop은 Chrome 밖의 앱을 맡는다. 맨 앞 앱이 Chrome이면 관측·전송하지 않고 Extension에 맡긴다.
+- MVP는 macOS + Chrome만 지원한다. Chrome이 아닌 브라우저(Safari·Arc·Edge 등)와 FocusOn 자기 창은 15초 유지 뒤 `guardStatus: EXCLUDED`만 보낸다(앱 이름·창 제목·OCR 없음). 아무것도 보내지 않으면 서버가 직전 판정(UNRELATED 등)을 이어 가 이탈로 셀 수 있기 때문이다. 리포트에는 분석 제외 시간으로 잡히고, 다른 브라우저에서의 이탈은 감지하지 못한다(MVP 제한, 2026-10-25 추가).
 - Swift 도우미 프로세스를 앱에 넣는다. Main이 띄우고 JSON 줄 단위로 통신한다. 도우미가 맨 앞 앱(`NSWorkspace`)·창 제목(`CGWindowList`)을 확인하고, 대상 창 하나만 캡처(`SCScreenshotManager`)해 Apple Vision으로 OCR한다. 캡처 이미지는 도우미 메모리에서만 다루고 OCR 직후 버린다. Node·Renderer에는 텍스트만 넘긴다.
 - 창 하나만 캡처하므로 Floating Poki가 이미지에 들어가지 않는다. 지원 macOS는 14 이상이다.
 - 먼저 `APP_META`만 보내고, 응답이 `UNCERTAIN` + `INSUFFICIENT_CONTEXT`일 때만 `DESKTOP_APP_OCR`로 다시 보낸다. OCR 텍스트는 최대 2,000자, 이메일·전화번호·긴 토큰 형태 문자열은 지운다.

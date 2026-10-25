@@ -214,7 +214,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | `analysis:excluded-apps:save` | `{ apps: { bundleId, name }[] }` (최대 50개, 중복 불가) | `{ apps }` | — (이 기기 `userData/excluded-apps.json`에만 저장) |
 
 - 분석 제외 앱은 서버로 보내지 않는다. 서버는 관측 결과의 `guardStatus: EXCLUDED`만 받는다(2단계).
-- 세션이 `RUNNING`이면 Main이 1초마다 Swift 도우미(`build/native/focuson-observer`)로 맨 앞 앱을 보고, 같은 화면이 15초 유지되면 관측 1건(`APP_META` / `EXCLUDED` / `PRIVACY_BLOCKED`)을 만든다. FocusOn 자신과 Chrome은 관측하지 않는다. 이번 단계는 서버로 보내지 않는다.
+- 세션이 `RUNNING`이면 Main이 1초마다 Swift 도우미(`build/native/focuson-observer`)로 맨 앞 앱을 보고, 같은 화면이 15초 유지되면 관측 1건(`APP_META` / `EXCLUDED` / `PRIVACY_BLOCKED`)을 만든다. Chrome은 관측하지 않는다(Extension 담당). FocusOn 자기 창과 지원하지 않는 브라우저(Safari 등)는 내용 없이 `EXCLUDED`로 만든다. 이번 단계는 서버로 보내지 않는다.
 - 세션이 `RUNNING`일 때 10초마다 화면 기록 권한을 확인한다. 꺼졌으면 `SessionRuntime`이 바로 `AUTO_PAUSED`(오류 `LOCAL_SCREEN_PERMISSION_REVOKED`)로 멈추고 `POST /sessions/{id}/local-events` `{ localEventCode, occurredAt }`(`Authorization`·`X-Device-Id`)을 보낸다. 일시 실패는 다음 heartbeat 주기에 다시 보낸다. 권한이 없으면 재개 요청을 보내지 않는다.
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
