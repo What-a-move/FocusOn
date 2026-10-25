@@ -6,6 +6,7 @@ import { ONBOARDING_CHANNELS } from '../shared/onboarding-contract.cjs'
 import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 import { GOAL_CHANNELS } from '../shared/goal-contract.cjs'
 import { SESSION_CHANNELS, isSessionSnapshot } from '../shared/session-contract.cjs'
+import { ANALYSIS_CHANNELS } from '../shared/analysis-contract.cjs'
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -85,6 +86,11 @@ const focusOnApi: FocusOnApi = {
     resume: () => ipcRenderer.invoke(SESSION_CHANNELS.resume),
     extend: (input) => ipcRenderer.invoke(SESSION_CHANNELS.extend, { minutes: input.minutes }),
     end: () => ipcRenderer.invoke(SESSION_CHANNELS.end),
+  },
+  analysis: {
+    listInstalledApps: () => ipcRenderer.invoke(ANALYSIS_CHANNELS.installedApps),
+    getExcludedApps: () => ipcRenderer.invoke(ANALYSIS_CHANNELS.excludedAppsGet),
+    saveExcludedApps: (input) => ipcRenderer.invoke(ANALYSIS_CHANNELS.excludedAppsSave, { apps: input.apps.map(({ bundleId, name }) => ({ bundleId, name })) }),
   },
 }
 

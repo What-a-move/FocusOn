@@ -54,6 +54,9 @@ Electron API가 반환하는 `not-determined`, `granted`, `denied`, `restricted`
 - 권한이 없으면 캡처 API를 반복 호출하지 않고 System Settings의 Screen Recording 안내로 이동한다.
 - 설정 변경 후 앱 재실행이 필요한지 실제 macOS Version에서 확인한다.
 - 제외 앱 또는 제외 도메인이 활성화되면 Capture와 후속 OCR·AI 처리를 함께 중지한다.
+- 맨 앞 앱 이름·번들 ID는 권한 없이 읽는다. 창 제목은 Screen Recording 권한이 있어야 읽히고, 없으면 `null`로 앱 단위로만 구분한다(Issue #54).
+- 세션 중 권한이 꺼지면 10초 안에 감지해 타이머를 멈추고(`AUTO_PAUSED`), 집중 화면에 `화면 분석 권한이 꺼졌어요.`와 `권한 확인`(시스템 설정 열기)을 보여 준다. 권한을 켠 뒤 사용자가 직접 이어 간다.
+- 지원 macOS는 14 이상이다. 대상 창 하나만 캡처하는 `SCScreenshotManager`가 14부터 있기 때문이다(결정 024).
 
 ### Notification
 

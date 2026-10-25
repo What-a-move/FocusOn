@@ -4,6 +4,16 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 화면 관측 결과 서버 전송 (Issue #56, `feat/56-desktop-analysis-sending`)
+- 상태: `AnalysisSender` 구현(2026-10-25). 남은 일: `analysis-runs` API 병합 뒤 실제 QA와 REPORT.
+- 다음 Issue 후보: 화면 분석 3단계 — Extension 탭·DOM 분석(결정 013: `optional_host_permissions` 전환, `TAB_META` → `INSUFFICIENT_CONTEXT`면 `CHROME_DOM`, 민감·제외 판정, `local-events`). 그다음 4단계 개입 표시(Floating Poki), 5단계 Desktop OCR.
+
+
+- 작업명: 화면 관측 기반과 분석 제외 앱 (Issue #54, `feat/54-desktop-screen-observation`)
+- 상태: Swift 도우미·관측 상태 기계·제외 앱(로컬)·화면 권한 철회 처리 구현(2026-10-25). 남은 일: `local-events` API 병합 뒤 실제 QA와 REPORT, 실제 Electron 세션에서 관측 확인.
+- 다음 Issue: 화면 분석 2단계 `analysis-runs` 전송은 Issue #56에서 진행했다(위 항목). OCR(대상 창 캡처·Vision OCR, 텍스트 2,000자·이메일/전화/토큰 제거·민감 패턴 차단, `INSUFFICIENT_CONTEXT`일 때만, 같은 창 내용 변경 30초)은 순서를 바꿔 5단계로 미뤘다(결정 024). 다른 브라우저는 `EXCLUDED`로 처리하기로 확정했다.
+
+
 - 작업명: 집중 화면 (Issue #48, `feat/48-desktop-focus-session`)
 - 상태: 화면·SessionRuntime·세션 명령 IPC 구현 완료(2026-10-25). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 Issue 후보: Extension 팝업 세션 화면(E02·E03·E06)과 Extension Access Token 갱신. 홈에서 진행 중 세션으로 돌아가는 진입점도 함께 검토.

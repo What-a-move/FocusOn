@@ -313,3 +313,20 @@
   .onboarding-window .bubble::after { display: none; }
   .onboarding-window .code-tiles span { width: 44px; height: 56px; font-size: 24px; }
 }
+
+/* 분석 제외 앱 (FocusOn-design/exclusions.html 앱 탭·앱 고르기 대화상자) */
+.onboarding-window .app-field { margin-top: 32px; }
+.onboarding-window .app-add { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.onboarding-window .app-add p { margin: 0; color: var(--muted); font-size: 15px; }
+.onboarding-window .app-field .hint:empty { min-height: 0; margin: 0; }
+.onboarding-window .app-dialog { width: min(420px, calc(100% - 48px)); }
+.onboarding-window .app-dialog > p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; word-break: keep-all; }
+.onboarding-window .app-dialog .btn { margin-top: 22px; }
+.onboarding-window .app-list { display: grid; gap: 6px; max-height: min(360px, 50vh); margin-top: 16px; overflow-y: auto; }
+.onboarding-window .app-option { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 600; text-align: left; cursor: pointer; }
+.onboarding-window .app-option:hover:not(:disabled) { background: var(--field); }
+.onboarding-window .app-option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.onboarding-window .app-option:disabled { color: var(--faint); cursor: default; }
+.onboarding-window .app-option small { margin-left: auto; color: var(--muted); font-size: 12px; }
+.onboarding-window .app-option .item-icon { width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center; border-radius: 8px; background: var(--field); font-size: 14px; font-weight: 700; }
+.onboarding-window .app-error .btn { width: 100%; margin-top: 12px; }

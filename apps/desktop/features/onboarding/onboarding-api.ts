@@ -1,9 +1,10 @@
 import type { PermissionsApi } from '../../electron/shared/permission-contract.cjs'
+import type { AnalysisApi, ExcludedApp, InstalledApp } from '../../electron/shared/analysis-contract.cjs'
 import type { OnboardingApi as MainOnboardingApi, OnboardingReadiness, OnboardingStep, OnboardingSummary, RequiredConsent } from '../../electron/shared/onboarding-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { OnboardingReadiness, OnboardingSummary }
+export type { OnboardingReadiness, OnboardingSummary, ExcludedApp, InstalledApp }
 
 // 화면 동의 id → 서버 consentType
 const CONSENT_TYPES: Record<string, RequiredConsent> = {
@@ -65,6 +66,15 @@ export const onboardingApi = {
   ),
   saveExcludedSites: (domains: string[]) => viaOnboarding((api) => api.saveExcludedDomains({ domains }), same),
   getSummary: () => viaOnboarding((api) => api.getSummary(), same),
+}
+
+// 분석 제외 앱은 서버가 아니라 이 기기(Desktop Main)에만 저장한다(결정 024).
+const viaAnalysis = <T, R>(call: (api: AnalysisApi) => Promise<ApiResult<T>>, map: (data: T) => R) => via((api) => api.analysis, call, map)
+
+export const analysisApi = {
+  listInstalledApps: () => viaAnalysis((api) => api.listInstalledApps(), (data) => data.apps),
+  getExcludedApps: () => viaAnalysis((api) => api.getExcludedApps(), (data) => data.apps),
+  saveExcludedApps: (apps: ExcludedApp[]) => viaAnalysis((api) => api.saveExcludedApps({ apps }), (data) => data.apps),
 }
 
 export type Notice = { title: string; body: string }

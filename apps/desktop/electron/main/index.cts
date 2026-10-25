@@ -24,6 +24,11 @@ import { SessionService, registerSessionIpc } from './session-ipc.cjs'
 import { NotificationReadiness } from './notification-readiness.cjs'
 import { SessionRuntime } from './session-runtime.cjs'
 import { SESSION_CHANNELS } from '../shared/session-contract.cjs'
+import { ExcludedApps } from './excluded-apps.cjs'
+import { ObserverHelper } from './observer-helper.cjs'
+import { ScreenObserver, parseFrontmost } from './screen-observer.cjs'
+import { AnalysisSender } from './analysis-sender.cjs'
+import { registerAnalysisIpc } from './analysis-ipc.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -211,10 +216,40 @@ if (!hasSingleInstanceLock) {
     }, sessionReady) : null
     const runtime = sessionRuntime
     registerSessionIpc(() => mainWindow, rendererUrl, authService && runtime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, runtime) : null, runtime)
+    const excludedApps = new ExcludedApps(path.join(app.getPath('userData'), 'excluded-apps.json'))
+    const helper = process.platform === 'darwin'
+      ? new ObserverHelper(app.isPackaged ? path.join(process.resourcesPath, 'focuson-observer') : path.join(app.getAppPath(), 'build/native/focuson-observer'))
+      : null
+    registerAnalysisIpc(() => mainWindow, rendererUrl, excludedApps, helper)
+    app.on('will-quit', () => helper?.dispose())
+    const observer = new ScreenObserver({ selfPid: process.pid, isExcluded: (bundleId) => excludedApps.has(bundleId), now: () => performance.now(), wallClock: () => new Date() })
+    // 관측은 바로 서버로 보내고 Desktop에 쌓아 두지 않는다(결정 024). 창 제목은 로그에 남기지 않는다.
+    const sender = authService ? new AnalysisSender(authService, path.join(app.getPath('userData'), 'analysis-sequence.json')) : null
+    let observing = false
     // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(10초, 학습 세션 설계서·세션 상태 전이 정책)를 계속 처리한다.
     if (runtime) {
-      setInterval(() => runtime.tick(), 1000)
-      setInterval(() => { void runtime.heartbeat() }, 10_000)
+      setInterval(() => {
+        runtime.tick()
+        // 세션이 RUNNING일 때만 맨 앞 앱을 본다(결정 024). 멈추면 15초 계산을 처음부터 다시 한다.
+        const session = runtime.snapshot()
+        if (session?.status !== 'RUNNING') { observer.reset(); return }
+        if (!helper || observing) return
+        observing = true
+        void helper.request('frontmost')
+          .then((reply) => {
+            // [주의] 확인하는 사이 세션이 멈췄거나 바뀌었으면 그 결과는 버린다. 멈춘 동안의 앱 정보를 보내지 않는다.
+            const current = runtime.snapshot()
+            if (current?.status !== 'RUNNING' || current.sessionId !== session.sessionId) return
+            const observation = observer.observe(parseFrontmost(reply))
+            if (observation) void sender?.send(session.sessionId, observation)
+          })
+          .finally(() => { observing = false })
+      }, 1000)
+      setInterval(() => {
+        // 세션 중 화면 기록 권한이 꺼지면 바로 멈춘다(Notion 화면 분석 7.2).
+        if (runtime.snapshot()?.status === 'RUNNING' && mediaStatus('screen') !== 'granted') runtime.screenPermissionLost()
+        void runtime.heartbeat()
+      }, 10_000)
     }
     createMainWindow()
     void authService?.restore()
