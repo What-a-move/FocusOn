@@ -6,7 +6,7 @@
 - 작성일: 2026-10-26
 - 우선순위: MVP 핵심 / Server
 - 관련 Issue: #59
-- Branch: feat/#59-auth-lifecycle 
+- Branch: feat/#59-auth-lifecycle
 - 선행: #49 / PR #51 dev 병합 완료
 - 다음: #58 Extension pairing (기획 대기). 기기 목록/선택 폐기는 별도 API 단위 작업.
 - 관련 Client: Desktop auth-api.cts·auth-service.cts, Extension features/session/api-client.ts
@@ -76,4 +76,3 @@ Google 로그인 이후 Access Token 만료·앱 재실행 시 로그인 유지,
 - [x] 실계정 QA 수행 범위와 미검증 구분
 - [x] CONTEXT/NEXT_TASK/REPORT/QA/ERROR 기록
 - [x] PR 생성 및 CodeRabbit 요청·피드백 반영
-
