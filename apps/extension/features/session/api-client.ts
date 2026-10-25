@@ -43,7 +43,7 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
   }
 
   const errorCode = (status: number, payload: unknown) =>
-    isRecord(payload) && typeof payload.code === 'string' ? payload.code : status === 503 ? 'SERVICE_UNAVAILABLE' : status === 504 ? 'REQUEST_TIMEOUT' : 'SERVICE_UNAVAILABLE'
+    isRecord(payload) && typeof payload.code === 'string' ? payload.code : status === 503 ? 'SERVICE_UNAVAILABLE' : status === 504 ? 'REQUEST_TIMEOUT' : 'REQUEST_FAILED'
 
   async function relink(): Promise<{ success: false; error: ApiError }> {
     // [주의] 갱신이 막힌 토큰을 계속 쓰지 않도록 지운다. 사용자는 Desktop에서 새 연결 코드를 받아야 한다.
@@ -77,8 +77,13 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
   }
 
   /** 인증이 필요한 요청. parse가 null을 돌려주면 계약 위반(INVALID_RESPONSE)이다. 204면 parse(null)로 '없음'을 판단한다. */
-  async function authorized<T>(path: string, method: 'GET' | 'DELETE', expected: number, parse: (data: unknown) => T | null): Promise<ApiResult<T>> {
-    if (!baseUrl) return fail('SERVICE_UNAVAILABLE', false)
+  function authorized<T>(path: string, method: 'GET' | 'DELETE', expected: number, parse: (data: unknown) => T | null): Promise<ApiResult<T>> {
+    if (!baseUrl) return Promise.resolve(fail('SERVICE_UNAVAILABLE', false))
+    // [주의] chrome.storage가 실패해도 reject하지 않고 결과로 돌려준다. 팝업이 로딩에 멈추지 않게 한다.
+    return run(path, method, expected, parse).catch(() => fail('LOCAL_STORAGE_UNAVAILABLE', true))
+  }
+
+  async function run<T>(path: string, method: 'GET' | 'DELETE', expected: number, parse: (data: unknown) => T | null): Promise<ApiResult<T>> {
     const once = async (token: string): Promise<ApiResult<T> | { expired: true }> => {
       let result = await send(path, method, token)
       for (const delay of method === 'GET' ? GET_RETRY_DELAYS_MS : []) {

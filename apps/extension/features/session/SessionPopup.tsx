@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getActiveSession, unlinkThisBrowser } from './session-api'
 import { displayActiveMs, formatClock, type ActiveSession } from './session-model'
 import '../pairing/pairing.css'
@@ -30,13 +30,17 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
   const [now, setNow] = useState(0)
   const [busy, setBusy] = useState(false)
   const [unlinkError, setUnlinkError] = useState(false)
+  const latest = useRef(0)
 
   const load = useCallback(async () => {
+    // [주의] 재시도 중인 이전 조회가 늦게 끝나도 새 결과를 덮지 않게 마지막 조회 결과만 쓴다.
+    const id = ++latest.current
     const result = await getActiveSession()
+    if (id !== latest.current) return
     const at = Date.now()
     setNow(at)
     if (result.success) {
-      if (result.data) setLast({ session: result.data, at: new Date(at) })
+      setLast(result.data ? { session: result.data, at: new Date(at) } : null)
       setView((current) => current.kind === 'unlink-confirm' ? current : result.data ? { kind: 'session', session: result.data, fetchedAt: at } : { kind: 'none' })
       return
     }

@@ -20,6 +20,20 @@ function setup(replies: Array<(url: string, init: RequestInit) => Response>, acc
   const client = createApiClient({ baseUrl: 'https://api.test', store, request, sleep: async (ms) => { waits.push(ms) }, now: () => NOW })
   return { client, calls, store, waits }
 }
+test('코드 없는 401은 다시 보내지 않고 재시도 불가 오류로 돌려준다', async () => {
+  const { client, calls } = setup([() => new Response(null, { status: 401 })])
+  const result = await client.authorized('/api/v1/sessions/active', 'GET', 200, parseActiveSession)
+  assert.deepEqual(result, { success: false, error: { code: 'REQUEST_FAILED', retryable: false } })
+  assert.equal(calls.length, 1)
+})
+
+test('토큰 저장소가 실패해도 reject하지 않고 오류 결과를 돌려준다', async () => {
+  const { client, store } = setup([])
+  store.getAccess = async () => { throw new Error('storage') }
+  const result = await client.authorized('/api/v1/sessions/active', 'GET', 200, parseActiveSession)
+  assert.deepEqual(result, { success: false, error: { code: 'LOCAL_STORAGE_UNAVAILABLE', retryable: true } })
+})
+
 const session = { sessionId: '901', status: 'RUNNING', version: 3, goalTextSnapshot: '미적분 풀기', targetDurationMs: 1500000, accumulatedActiveMs: 300000 }
 
 test('활성 세션 조회: Bearer 토큰으로 보내고, 204면 없음으로 읽는다', async () => {
