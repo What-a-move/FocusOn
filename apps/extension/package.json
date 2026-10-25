@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "tsc --noEmit && next build --webpack && node scripts/prepare-extension-build.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --test tests/*.test.ts"
   },
   "dependencies": {
     "@focuson/shared-types": "workspace:*",

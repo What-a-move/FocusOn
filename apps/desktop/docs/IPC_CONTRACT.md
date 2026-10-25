@@ -196,7 +196,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | `session:changed` (Event) | — | `SessionSnapshot \| null` | — |
 
 - `SessionSnapshot = { sessionId, goalText, status, targetDurationMs, accumulatedActiveMs(정수 ms), error, busy }`. Renderer는 `RUNNING`일 때만 받은 뒤 흐른 시간을 더해 그린다.
-- Main `SessionRuntime`이 monotonic clock으로 누적 시간을 세고, 1초마다 목표 시간 도달(→ `AWAITING_END_CONFIRMATION`, 누적 멈춤)을, 20초마다 `POST /sessions/{id}/heartbeats`(`Authorization`·`X-Device-Id`, `{ clientObservedAt, accumulatedActiveMs }`)를 처리한다.
+- Main `SessionRuntime`이 monotonic clock으로 누적 시간을 세고, 1초마다 목표 시간 도달(→ `AWAITING_END_CONFIRMATION`, 누적 멈춤)을, 10초마다 `POST /sessions/{id}/heartbeats`(`Authorization`·`X-Device-Id`, `{ clientObservedAt, accumulatedActiveMs }`)를 처리한다.
 - 상태 명령은 `Authorization`·`Idempotency-Key`·`If-Match-Version`을 붙이고 자동 재전송하지 않는다. 같은 의도(명령·사유·연장 시간)로 다시 누를 때만 처음 보낸 키와 본문을 그대로 쓰고, 의도가 바뀌면 새 키를 만든다. `SESSION_VERSION_CONFLICT`면 `GET /sessions/{id}`로 서버 최신값에 맞춘다. `SESSION_ABANDONED`면 되살리지 않는다.
 - 로그아웃(`SIGNED_OUT`)하면 Main은 세션 상태를 비운다. 복구 조회 중 새 세션이 시작되면 늦게 온 복구 결과로 덮어쓰지 않는다.
 - 앱 재실행 시 서버가 `RUNNING`이면 서버 확정 시간으로 `pauseReason: APP_RESTART` 일시정지한다(꺼져 있던 시간을 추정해 더하지 않음).

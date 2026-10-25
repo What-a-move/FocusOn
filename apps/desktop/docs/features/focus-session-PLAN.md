@@ -36,7 +36,7 @@
 Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECTURE.md`, `WINDOW_LIFECYCLE.md`, `IPC_CONTRACT.md`, `MACOS_PERMISSION_FLOW.md`를 따른다. 변경하려면 먼저 `DECISION_RECORD.md`를 갱신한다.
 
 - 타이머: Main `SessionRuntime`이 `performance.now()`(monotonic)로 `targetDurationMs`·`accumulatedActiveMs`를 센다. Renderer는 받은 값에 받은 뒤 흐른 시간만 더해 그린다.
-- 주기 작업: 1초마다 목표 도달 확인, 20초마다 heartbeat(서버는 60초 무응답이면 후보, 3분이면 ABANDONED).
+- 주기 작업: 1초마다 목표 도달 확인, 10초마다 heartbeat(서버는 60초 무응답이면 후보, 3분이면 ABANDONED).
 - 상태 명령: pause·resume·extend·end는 `Idempotency-Key`·`If-Match-Version`, 자동 재전송 없음, 같은 명령 재시도는 같은 키, `SESSION_VERSION_CONFLICT`면 `GET /sessions/{id}`로 최신값에 맞춤.
 - 상태 변화: `RUNNING ⇄ PAUSED/AUTO_PAUSED → (목표 도달) AWAITING_END_CONFIRMATION → ENDED`, 서버 자동 종료 `ABANDONED`.
 
@@ -53,7 +53,7 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 ## 데이터 및 IPC/API
 
 - `session:current:get`·`pause`·`resume`·`extend`·`end`, Event `session:changed` (`IPC_CONTRACT.md` 집중 세션 Channel)
-- 확정(결정 023): 활성·상세 세션 응답 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`, 목표 도달은 heartbeat로 서버가 판단(별도 전이 API 없음), 재개 `{ readiness: { screenAnalysisReady } }`, heartbeat 20초.
+- 확정(결정 023): 활성·상세 세션 응답 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`, 목표 도달은 heartbeat로 서버가 판단(별도 전이 API 없음), 재개 `{ readiness: { screenAnalysisReady } }`, heartbeat 10초(2026-10-25 정본 정책과 통일).
 
 ## 예외 처리
 

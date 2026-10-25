@@ -16,17 +16,19 @@ function isPairingCodeValid(value: string) {
   return /^[A-Z0-9]{3}-[A-Z0-9]{3}$/u.test(value)
 }
 
-export function PairingStep() {
+/** onLinked가 있으면 연결 완료 뒤 세션 화면으로 넘어갈 수 있다. initialNotice는 연결이 해제돼 다시 연결해야 할 때의 안내다. */
+export function PairingStep({ onLinked, initialNotice = null }: { onLinked?: () => void; initialNotice?: PairingNotice | null } = {}) {
   const [code, setCode] = useState('')
-  const [notice, setNotice] = useState<PairingNotice | null>(null)
+  const [notice, setNotice] = useState<PairingNotice | null>(initialNotice)
   const [submitting, setSubmitting] = useState(false)
   const [linked, setLinked] = useState(false)
   const isValid = isPairingCodeValid(code)
 
   useEffect(() => {
-    // [유지보수] 이미 연결된 브라우저면 입력 화면 대신 연결 완료 화면을 보여 준다.
+    // [유지보수] 이미 연결된 브라우저면 입력 화면 대신 연결 완료 화면을 보여 준다(다시 연결 안내 중이면 입력 화면 유지).
+    if (initialNotice) return
     void isLinked().then(setLinked).catch(() => setLinked(false))
-  }, [])
+  }, [initialNotice])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -57,6 +59,7 @@ export function PairingStep() {
               <h1>연결됐어요!</h1>
             </div>
             <p className="center muted">데스크톱 앱으로 돌아가 다음 단계를 진행해 주세요.</p>
+            {onLinked ? <p className="center"><button className="text-btn" type="button" onClick={onLinked}>집중 상태 보기</button></p> : null}
           </div>
         ) : (
           <div className="p-body">

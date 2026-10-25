@@ -4,6 +4,13 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 팝업 세션 화면과 Access Token 갱신 (Issue #52, `feat/52-extension-session-popup`)
+- 상태: E02·E03(표시 전용)·E06, 토큰 갱신(single-flight·rotation)·재연결 처리, 이 브라우저 연결 해제를 구현했다(2026-10-25). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
+- 다음 작업 후보: 현재 탭 추적과 페이지 분석 요청(결정 005·007, `POST /sessions/{id}/analysis-runs`), 사이트 접근 권한(E01b).
+
+## 이전 작업
+
+
 - 작업명: 온보딩용 일회용 연결 코드 pairing 구현
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Chrome Extension
@@ -35,10 +42,7 @@ Desktop에서 발급한 연결 코드를 Extension에 입력해 같은 계정에
 - 15초 체류 후 페이지 재분석
 - 현재 페이지 관련성 분석 요청
 - 분석 제외 도메인 설정 UI
-- 일회용 연결 코드 기반 Extension pairing (Desktop 온보딩의 필수 연결 단계)
-- Desktop 학습 세션 조회 및 타이머 표시
-- Desktop 세션 일시정지·재개·종료 명령
-- Desktop 연결 상태 표시
+- 팝업에서 세션 일시정지·재개·종료 명령 (P1, 결정 012. MVP 팝업은 표시만 하며 #52에서 구현 완료)
 - Service Worker 재시작 후 상태 복구
 
 ## 완료 조건

@@ -549,7 +549,8 @@ macOS는 앱에 알림 허용 상태를 알려 주지 않는다. 서버가 검�
 - `GET /api/v1/sessions/active`(없으면 204)·`GET /api/v1/sessions/{id}` 응답 data는 `{ sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }`다(상세는 `interventionPolicyVersion` 포함).
 - 목표 시간에 닿으면 Desktop이 누적을 멈추고 사용자 확인(끝내기·연장)을 기다리며, heartbeat는 `accumulatedActiveMs = targetDurationMs`로 계속 보낸다. 서버는 이 값으로 `AWAITING_END_CONFIRMATION`을 판단하고 별도 전이 API는 없다.
 - `POST /sessions/{id}/resume` 본문은 `{ readiness: { screenAnalysisReady } }`다. Chrome 연결은 서버가 직접 확인하고, 알림은 보내지 않는다(결정 022).
-- heartbeat는 20초마다 보낸다(서버 60초 후보·3분 자동 종료 기준 안).
+- heartbeat는 10초마다 보낸다. 처음에는 20초로 정했으나 정본(학습 세션 설계서·세션 상태 전이 정책)이 10초라 2026-10-25에 10초로 통일했다.
+- MVP에서 세션 명령(일시정지·재개·연장·종료)과 heartbeat는 Desktop만 보낸다. Chrome Extension 팝업은 표시만 한다(Extension 결정 012).
 
 ### 결정 이유
 
