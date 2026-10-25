@@ -39,7 +39,7 @@ Extension / macOS 네이티브 모듈
 | --- | --- |
 | 형식 | `application/json`, lower camel case |
 | 시각 | ISO 8601 UTC |
-| 식별자 | UUID 문자열을 기본으로 하며 실제 형식은 Server 계약에서 확정 |
+| 식별자 | MVP의 userId·deviceId·goalId·sessionId 등 DB 리소스는 BIGINT의 10진 문자열이다. clientRunId 등 관측·중복 방지 UUID와 구분한다. 후속 초안의 식별자 형식을 공개 API에 강제하지 않는다. |
 | 호출자 | Spring Server |
 | 인증 | 서비스 간 인증 방식 검토 필요; 비밀 값은 환경변수·비밀 관리 시스템 사용 |
 | Timeout | 기능별 예산 검토 필요; Timeout 시 현재 판정 적용 금지 |
@@ -66,7 +66,7 @@ Extension / macOS 네이티브 모듈
 | 목표 명확화 | `POST /api/v1/goals/clarify` | `POST /internal/v1/goals/clarify` | 공개 경로는 Notion 확정, 내부 경로 제안 |
 | 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
 | 사용자 관련성 판정 수정·무효화 | MVP 공개 경로 없음 | Server 소유권 검증 후 후속 검토 | P1 이후 제안; Notion API 계약 변경 전 구현 금지 |
-| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안; MVP 응답은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용 |
+| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안; MVP 응답은 `overview`, `keyConcepts`(name·briefExplanation·sessionEvidence 객체 최대 5개), `nextStartPrompt`만 사용 |
 
 기존 `/api/v1/analyze/relevance`는 레거시 경로 후보로만 기록하며 최신 `/api/v1/sessions/{sessionId}/analysis-runs`와 동시에 최종 경로로 구현하지 않는다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
@@ -78,11 +78,16 @@ Extension / macOS 네이티브 모듈
 {
   "requestId": "550e8400-e29b-41d4-a716-446655440002",
   "goalText": "Spring Security JWT 인증 구현",
-  "conversationTurn": 0
+  "conversationTurn": 0,
+  "previousAnswers": []
 }
 ```
 
 목표 명확화 요청은 `goalText`와 `conversationTurn`을 사용한다. `goalText`는 2~40자이며, `conversationTurn`은 0~2다. 사용자 확인 전 후보와 확인 후 확정 목표를 같은 객체로 덮어쓰지 않는다.
+
+2026-10-25 재확인한 공개 API는 첫 요청에서 `clarificationSessionId`를 생략하고 `previousAnswers: []`를 보낸다. 성공 응답은 서버가 발급한 `clarificationSessionId`를 포함하고, 다음 요청에서 같은 ID와 `previousAnswers: [{question, answer}]`를 사용한다. 최종 `POST /goals`에도 이 ID를 전달한다. 위 `requestId`는 내부 호출 추적값이며 공개 Desktop 입력에 새 필수 필드로 추가하지 않는다.
+
+Desktop의 clarify POST 자동 재전송은 하지 않는다. Backend가 AI 일시 실패·timeout에 1초 → 3초 간격 최대 2회 재시도하고, 대화 턴·질문 수의 확정은 논리 요청당 한 번만 한다. 최종 실패 시 수동 확정 경로를 유지한다.
 
 ### 4.2 확정 전 보조 응답
 
@@ -94,7 +99,8 @@ Extension / macOS 네이티브 모듈
     "question": null,
     "suggestions": [],
     "goalCandidates": [],
-    "conversationTurn": 0
+    "conversationTurn": 0,
+    "clarificationSessionId": "701"
   }
 }
 ```

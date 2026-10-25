@@ -13,6 +13,7 @@ docs/
 ├── ARCHITECTURE.md
 ├── API_CONTRACT.md
 ├── DATA_PRIVACY.md
+├── NOTION_SYNC_AUDIT.md
 ├── BRANCH_STRATEGY.md
 ├── COMMIT_CONVENTION.md
 ├── SENTENCE_WRITING.md
@@ -30,6 +31,8 @@ docs/
 6. Frontend 작업이면 `apps/docs/README.md`와 작업 대상 앱의 문서, Server·AI 작업이면 해당 영역의 `docs/README.md`, `docs/CONTEXT.md`, `docs/NEXT_TASK.md`, `docs/DECISION_RECORD.md`
 
 ## 문서 운영 원칙
+
+현재 구현 여부는 영역별 `CONTEXT.md`, 계약 충돌과 구현 전 확인 항목은 [문서 대조 기록](NOTION_SYNC_AUDIT.md)에서 확인한다. 과거 전체 대조 날짜와 현재 재검증 범위를 구분한다.
 
 - Frontend의 새 기능을 시작하기 전에 대상 앱의 기획 문서를 먼저 작성한다.
 - 작업 중 결정이 바뀌면 결정 기록을 바로 갱신한다.

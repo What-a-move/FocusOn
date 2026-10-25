@@ -47,7 +47,7 @@ Server와 AI 사이 호출 경로·Schema·상태 투영을 확정하고 Issue #
 ## 이후 작업 후보
 
 - 팀원 보고 120건 Hybrid 평가의 사례·정답·예측·클래스별 지표·결합식·재현 코드를 받아 독립 holdout과 지연·비용을 검증한다. 현재 결과를 배포 성능으로 표현하지 않는다.
-- 화면 `UNRELATED`와 시간 기반 `driftState`를 분리하고, `RELATED` 초기화·`UNCERTAIN` 비누적·15초 미만 제외 및 120초/10분 내 30초 2회/30초 임계값을 계약 테스트한다.
+- 화면 `UNRELATED`와 시간 기반 `driftState`를 분리하고, `RELATED` 초기화·`UNCERTAIN` 비누적 및 연속 구간 종료·15초 미만 제외와 `analysis_rules.md` 9.1의 정책 `v1` 연속/반복 OR 조건을 계약 테스트한다. 임계값 숫자와 실제 개입 판정은 Server가 관리한다.
 - 카메라 60초 후보·90초 최종 게이트, 최신 화면 `RELATED` 억제, `EXCLUDED`/`PRIVACY_BLOCKED` 분기를 통합 테스트한다.
 
 - Server 관련성 분석 요청·결과 저장 연동

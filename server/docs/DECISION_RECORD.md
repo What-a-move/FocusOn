@@ -206,6 +206,8 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 결정일: 2026-10-12
 - 상태: 확정
 
+개입 임계값·UNCERTAIN 처리의 최신 기준은 결정 018로 변경됐다. 아래 내용은 2026-10-12 당시 결정 이력이다.
+
 ### 결정 내용
 
 - 분석 제외 목록은 사용자별 별도 저장 모델로 관리하고 정규화한 `host`만 저장한다. 온보딩에서 빈 목록을 허용하며 설정 API의 `PUT`은 전체 교체 방식으로 동작한다.
@@ -238,3 +240,44 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 결정 이유: 서로 다른 사용자와 기기를 묶은 Token Family를 DB에서 막고, 연결 해제 이력이 로그인 대상으로 조회되지 않게 한다. Google 계정 해제·재연결 API는 MVP의 현재 범위에 없으므로 이 Issue에서 활성 행만 유일하게 만드는 정책 변경은 하지 않는다.
 - 후속 확인: Google 계정 해제·재연결 API를 도입할 때 기존 identity 재활성화·계정 이전·이력 보존 정책을 별도 Issue에서 확정한다.
 - 관련 Issue: [#32](https://github.com/What-a-move/FocusOn/issues/32).
+
+## 결정 017 - Frontend 온보딩·Extension 연결 계약 수용
+
+- 결정일: 2026-10-24
+- 상태: 확정 (사용자 공유·최종 정정, 관련 Notion·Frontend 코드 대조)
+- 결정 내용: 동의 응답은 `currentVersion`과 `consents[{consentType,isGranted,consentVersion,grantedAt,withdrawnAt}]`를 사용하고 현재 문서 버전을 그대로 저장 요청에 보낸다. 닉네임은 저장 시 409로 중복을 판단한다. Extension 연결은 토큰 3개 필드와 `deviceId`, 공개 `deviceType: EXTENSION`을 반환하며 내부 `CHROME_EXTENSION`은 유지한다. 코드 오입력 1~2회는 400 `LINK_006_CODE_MISMATCH`와 숫자 `remainingAttempts`, 3번째는 410이다. 400 입력 오류의 자동 재전송은 금지하고 `retryable: false`로 정리한다.
+- 권한·범위: 알림은 Desktop 필수 확인이지만 readiness API·DB에 새 알림 필드를 추가하지 않는다. MVP는 제외 도메인만 저장한다. 3초 polling은 기본 20회/분이며 다른 인증 요청·재시도와 60회/분을 공유한다.
+- 적용 범위: 계약과 구현 계획에 반영한다. 실제 pairing·동의 HTTP API는 아직 구현 전이며, 로그인 Issue와 팀원 Issue #38의 담당 범위를 혼합하지 않는다.
+- 남은 계약 경계: 틀린 코드의 대상 record를 식별할 시도 문맥과 세션 시작에서의 알림 준비 신호는 구현 전 명확히 한다. 상세는 `docs/NOTION_SYNC_AUDIT.md`.
+
+## 결정 018 - 개입 v1·시간대·리포트 형식
+
+- 결정일: 2026-10-24
+- 상태: 확정 (사용자 공유·최종 정정, 최신 화면 분석 5.2·5.3 및 리포트 3.3·5.3 대조)
+- 개입: `docs/API_CONTRACT.md`의 `v1` 연속/반복 OR 표를 따른다. 이전 120초 기준과 UNCERTAIN 30초 보류 규칙은 새 정책에서 사용하지 않는다. `초과`는 엄격한 `>`이며 UNCERTAIN은 연속 구간을 끊는다. 숫자는 서버가 관리하고 `interventionPolicyVersion`은 세션 생성 때 `v1`로 고정한다.
+- 알림: 실제 전송부터 세션·유형별 5분 cooldown을 적용한다. `확인했어` 뒤 5분은 Client UI의 재집중 상태이며 서버 상태나 AI 판정을 바꾸지 않는다.
+- 시간: 서버 UTC 시각과 Desktop monotonic 누적값의 서버 검증을 함께 사용한다. 세션 시작의 기기 IANA `timeZone`을 snapshot으로 고정하고 잘못된 값·누락은 `Asia/Seoul`로 처리한다. IP로 추정하지 않는다. `study_date`는 최초부터 NOT NULL이며 시작일 귀속을 바꾸지 않는다. 출시 전 세션 모델의 백필은 하지 않는다.
+- 리포트: 학습 정리 `keyConcepts`는 `name`, `briefExplanation`, `sessionEvidence` 객체 최대 5개이고 서로 다른 근거 2개 미만이면 `INSUFFICIENT_DATA`다. 일간 `sessions[]`는 `sessionId`, `goalTextSnapshot`, `startedAt`, `endedAt`, `accumulatedActiveMs`를 사용한다.
+- 근거와 제한: Notion AI 분석 계약 7장에는 이전 규칙이 남아 있고 일간 API에는 배열 내부 필드가 생략돼 있다. 이번 사용자 확정 기준을 로컬에 반영하되 Notion이나 미구현 정책을 구현 완료로 표시하지 않는다. 순환 window의 구간 포함 시각 기준도 구현 전 확정한다.
+
+## 결정 019 - 목표 확인·MVP 세션 생성 최신 계약
+
+- 결정일: 2026-10-25
+- 상태: 확정 계약 반영 (사용자 공유 및 현재 Notion API 대조)
+- 목표 확인: 첫 요청은 previousAnswers 빈 배열·대화 ID 생략, 응답은 서버 대화 ID 필수. 이후 같은 ID·질문 답을 보내며 서버는 소유권·유효성을 확인한다. AI 일시 실패 재시도는 Backend가 1초 → 3초 최대 2회 처리하고 질문 수·턴을 중복 확정하지 않는다.
+- 세션 생성: 5~300분의 1분 단위 targetDurationMs를 필수로 받고 null을 거절한다. 이전 무기한 세션 유지 결정을 현재 MVP에 적용하지 않는다. sessionOptions는 개입 강도·중복 없는 알림 채널·카메라 사용값이고 breakSuggestionEnabled는 제외한다.
+- 권한: startReadiness에는 screenAnalysisReady만 받는다. 알림은 Desktop의 요청 전 확인 책임이며 서버는 NOTIFICATION_PERMISSION을 반환하지 않는다. 결정 017의 알림 신호 미정 부분은 이 결정으로 대체한다.
+- 이전 기록 정정: 결정 018의 일간 배열 항목 누락은 현재 Notion에서 해결됐다. 목표 시간 null 허용이 남은 ERD·세션 정책은 문서 동기화 대상이다.
+- 로그인 연동: 만료 JWT와 위조 JWT의 구분은 구현 예정 인증 필터의 필수 조건이다. Access JWT 내부 서비스·인증 저장 모델은 HTTP 로그인 완료를 뜻하지 않는다. family 만료 연장 방식은 후속 refresh 구현 전 검토 항목이며 무기한 유지로 확정하지 않는다.
+- 영향: `docs/API_CONTRACT.md`, `PROJECT_CONTEXT.md`, `NOTION_SYNC_AUDIT.md`, Backend 개발 규칙·로그인 PLAN. 코드·SQL·Notion 변경 없음.
+
+## 결정 020 - 로그인 요청 인증 구현 경계
+
+- 결정일: 2026-10-25
+- 상태: 구현 반영 (Issue #49, dev 병합 전)
+- 내용: Google 외부 통신은 DB 잠금 밖에서 수행한다. 계정 최초 생성 경쟁은 DB unique와 별도 transaction 재시도로 처리하고 기기 한도·family 교체는 사용자 잠금 안에서 처리한다.
+- 요청 인증은 JWT와 DB 사용자·기기·family 소유·활성·만료를 함께 검사한다. 만료 예외는 서명·필수 클레임을 통과한 경우에만 분리한다.
+- 한도: 단일 서버의 유한 메모리 fixed window를 사용하고 익명·인증 공간을 분리한다. PR #51 리뷰 보강으로 IP별 300회/10분 보호 상한을 먼저 검사한 뒤 기존 IP+installationId별 5회/10분을 검사한다. 공유 NAT를 고려한 내부 남용 방어이며 다중 IP 공격 전체를 차단하는 장치는 아니다. 포화는 429로 거절한다. 배포 proxy를 구성하기 전에는 forwarded header를 신뢰하지 않는다.
+- 개인정보: Google Desktop secret은 서버 로컬 환경에만 설정한다. DTO 문자열과 로그·오류에 인증 원문을 노출하지 않는다.
+- 저장 모델: V1·V2는 수정하지 않고 기존 provider+subject UNIQUE를 JPA metadata에도 명시한다.
+- 후속: refresh·logout·family 만료 연장·기기 관리·pairing과 실제 Google 계정 왕복은 이번 구현 결과와 구분한다.

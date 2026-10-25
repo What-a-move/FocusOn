@@ -46,6 +46,9 @@ Desktop Google 로그인에서는 Main이 임시 loopback callback을 열고 `st
 ## Desktop·Extension 연결
 
 - 연결 Code는 5분 유효·3회 실패 제한·1회 사용이다. 새 코드를 발급하면 이전 코드는 즉시 폐기한다.
+- 연결 성공 201은 `data.accessToken`, `refreshToken`, `accessTokenExpiresAt`(UTC ISO 8601), `device: {deviceId,deviceType: EXTENSION}`을 반환한다. 서버 내부 `CHROME_EXTENSION`은 공개 응답에서 매핑한다.
+- 틀린 코드 1~2회는 400 `LINK_006_CODE_MISMATCH`와 `details.remainingAttempts`, 3번째는 410 `LINK_004_ATTEMPTS_EXCEEDED`다. `retryable: false`는 자동 재전송 금지이며 사용자의 수정 후 재입력은 가능하다.
+- Desktop 연결 화면의 readiness 조회는 3초 간격이며 코드 수명 안에서만 실행한다. 완료·만료·화면 이탈 때 중단하고 다른 API·재시도와 일반 인증 한도 60회/분을 공유한다.
 - 연결 성공 전에는 다른 사용자의 세션 정보를 표시하지 않는다.
 - 연결 해제 시 저장된 연결 정보와 Cache를 정리한다.
 - 한쪽 앱의 연결 실패가 다른 앱이나 Chrome Page 동작을 멈추게 하지 않는다.

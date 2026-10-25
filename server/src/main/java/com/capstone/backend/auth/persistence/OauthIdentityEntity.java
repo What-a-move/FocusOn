@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 /** Google 계정의 변경되지 않는 sub를 사용자와 연결한다. Google 토큰은 저장하지 않는다. */
 @Entity
-@Table(name = "oauth_identities")
+@Table(name = "oauth_identities", uniqueConstraints = @UniqueConstraint(
+    name = "uq_oauth_identities_provider_subject", columnNames = {"provider", "provider_subject"}))
 @Getter
 @Setter
 @NoArgsConstructor

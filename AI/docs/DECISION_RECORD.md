@@ -399,6 +399,8 @@ Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있�
 - 담당 영역: AI·Server·Client
 - 상태: 제안 (Notion AI 분석 계약 `REVIEW`, 팀 승인 전)
 
+화면 개입 임계값·UNCERTAIN 처리의 최신 기준은 결정 021로 대체한다. 아래 120초 등 수치는 당시 검토 이력이다.
+
 ### 결정 내용
 
 Notion 공개 목표 명확화 경로는 `POST /api/v1/goals/clarify`이고 판정값은 `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM`이다. 질문은 대화당 최대 2회이며 AI 실패 시 사용자가 목표를 수동 확정할 수 있다. MVP에는 화면 관련성 판정 수정·저장 공개 API가 없다.
@@ -425,17 +427,14 @@ PR #15의 최신 문서 계약을 유지하면서 Notion 제품·API 정합성�
 - Issue: [#16](https://github.com/What-a-move/FocusOn/issues/16)
 - Issue: [#23](https://github.com/What-a-move/FocusOn/issues/23)
 
-## 새 결정 기록
+## 결정 021 - 화면 개입 v1과 MVP 학습 정리 객체
 
-다음 결정은 `결정 021`부터 추가한다.
+- 결정일: 2026-10-24
+- 상태: 확정 (사용자 공유·최종 정정 및 최신 화면 분석 5.2·5.3, 리포트 5.3 대조)
+- 결정 내용: Server가 관리하는 `v1`의 연속/반복 OR 조건은 `analysis_rules.md` 9.1을 따른다. `UNCERTAIN`은 비누적·연속 구간 종료이고 이전 30초 보류는 적용하지 않는다. 실제 전송부터의 서버 5분 cooldown과 Client의 확인 후 재집중 UI를 구분한다. 세션에 고정한 버전과 분석·개입 기록의 버전은 같아야 한다.
+- 학습 정리: `keyConcepts`는 `name`, `briefExplanation`, `sessionEvidence` 객체 최대 5개다. 서로 다른 근거 2개 미만이면 `INSUFFICIENT_DATA`이며 전체 결과는 1,200자 이하, 원문·URL·코드·개인정보는 제외한다.
+- 이유: 최신 사용자 확정과 제품 문서에 맞추고, 이전 Notion AI 분석 계약의 임계값·버전 예시가 새 세션 정책을 덮지 않게 한다.
+- 제한: AI 코드·Policy Engine 구현 완료를 뜻하지 않는다. 현재 Notion 내 차이와 rolling window 경계의 미정 부분은 `docs/NOTION_SYNC_AUDIT.md`에 기록한다.
+- 영향받는 파일: `analysis_rules.md`, `state_model.md`, `evaluation_spec.md`, `NEXT_TASK.md`, `CONTEXT.md`, `api_spec.md`, `session_note_spec.md`.
 
-### 결정 021
-
-- 결정일:
-- 주제:
-- 상태: 제안 / 확정 / 변경됨 / 폐기
-- 결정 내용:
-- 결정 이유:
-- 고려한 대안:
-- 영향받는 파일:
-- 관련 Issue·PR:
+다음 결정은 `결정 022`부터 추가한다.
