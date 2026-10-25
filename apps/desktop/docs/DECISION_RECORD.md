@@ -578,6 +578,8 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 앱·창 제목이 바뀌고 15초 유지되면 보낸다. 같은 화면은 다시 보내지 않고, 같은 창의 내용 변경은 최대 30초에 한 번 보낸다.
 - 분석 제외 앱은 MVP에 포함한다. 번들 ID 목록을 Desktop 로컬 파일에만 저장하고 서버에 보내지 않는다. 설정(분석·권한)과 온보딩 제외 단계(선택)에서 고른다. 맨 앞 앱이 제외 앱이면 `guardStatus: EXCLUDED`만 보낸다.
 - 민감 화면은 고정 민감 앱 목록·창 제목 단어로 관측 전에, OCR 텍스트 패턴으로 보내기 전에 걸러 `guardStatus: PRIVACY_BLOCKED`로 보낸다.
+- 관측 전송(2026-10-25, Issue #56): 관측마다 새 `clientRunId`, 세션별 `sequence`, `contentSource: APP_META`로 보낸다. 실패하면 다시 보내지 않고 쌓지 않는다(서버가 기록하지 못한 시간은 판단 보류와 같다). 429는 60초 쉰다.
+- 진행 순서(2026-10-25): 메인 흐름을 먼저 잇는다. 2단계 Desktop 전송 → 3단계 Extension 탭·DOM → 4단계 개입 표시 → 5단계 Desktop OCR(정확도 보강).
 - 개입은 10초마다 `GET /sessions/{id}/interventions`로 조회해 Floating Poki·macOS 알림으로 표시하고 `POST /interventions/{id}/acknowledgements`로 기록한다.
 - 세션 중 화면 기록 권한 철회는 10초마다 권한 확인 + 캡처 실패로 감지하고, 즉시 로컬 타이머를 멈춘 뒤 `local-events`에 `LOCAL_SCREEN_PERMISSION_REVOKED`를 보낸다.
 
