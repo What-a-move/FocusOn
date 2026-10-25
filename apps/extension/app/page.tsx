@@ -1,5 +1,5 @@
-import { PairingStep } from '../features/pairing/PairingStep'
+import { Popup } from '../features/session/Popup'
 
 export default function Page() {
-  return <PairingStep />
+  return <Popup />
 }

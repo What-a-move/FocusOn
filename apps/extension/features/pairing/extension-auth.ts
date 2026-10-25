@@ -50,3 +50,28 @@ export async function clearTokens(): Promise<void> {
   await area.local.remove([KEYS.refreshToken, KEYS.deviceId])
   await area.session.remove(KEYS.access)
 }
+
+/** 갱신 요청에 쓰는 저장소 (features/session/api-client.ts의 TokenStore). */
+export const chromeTokenStore = {
+  async getAccess(): Promise<{ accessToken: string; expiresAt: string } | null> {
+    const saved = (await storage()?.session.get(KEYS.access))?.[KEYS.access] as { accessToken?: unknown; expiresAt?: unknown } | undefined
+    return saved && typeof saved.accessToken === 'string' && typeof saved.expiresAt === 'string' ? { accessToken: saved.accessToken, expiresAt: saved.expiresAt } : null
+  },
+  async getRefreshToken(): Promise<string | null> {
+    const saved = (await storage()?.local.get(KEYS.refreshToken))?.[KEYS.refreshToken]
+    return typeof saved === 'string' && saved ? saved : null
+  },
+  /** Refresh Token은 쓸 때마다 바뀐다. 새 값으로 바로 바꿔 둔다. */
+  async saveRotation(tokens: { accessToken: string; refreshToken: string; accessTokenExpiresAt: string }): Promise<void> {
+    const area = storage()
+    if (!area) throw new Error('Extension storage unavailable')
+    await area.local.set({ [KEYS.refreshToken]: tokens.refreshToken })
+    await area.session.set({ [KEYS.access]: { accessToken: tokens.accessToken, expiresAt: tokens.accessTokenExpiresAt } })
+  },
+  clear: clearTokens,
+}
+
+export async function getDeviceId(): Promise<string | null> {
+  const saved = (await storage()?.local.get(KEYS.deviceId))?.[KEYS.deviceId]
+  return typeof saved === 'string' && saved ? saved : null
+}

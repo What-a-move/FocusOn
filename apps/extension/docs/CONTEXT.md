@@ -28,14 +28,15 @@
 - 제외 Domain은 Server의 사용자별 정규화 host 목록이 정본이고 `chrome.storage.local`은 캐시다. Navigation 임시 상태는 `chrome.storage.session`, 세션·연결 기준은 Server로 확정했다.
 - Content Script Timer와 Service Worker 재검증을 조합한 15초 체류 흐름과 Message 계약을 확정했다.
 - 최소 Chrome 120과 HTTP Page 분석 지원을 확정했다.
+- 일회용 연결 코드 pairing(2026-10-22): 코드 입력·형식 검증, `POST /api/v1/extension-pairings` 제출, 오류 안내, token 저장(결정 011), 연결 완료 화면. 실제 Backend 왕복 QA는 남아 있다.
+- 팝업 세션 표시(Issue #52, 2026-10-25): 팝업을 연결 전(E01)·세션 없음(E02)·세션 진행 중(E03, 표시 전용)·서버 연결 불가(E06)로 나눴다. `features/session/api-client.ts`가 Access Token 갱신(만료 30초 전·서버 만료 응답 시 1회, single-flight, Refresh Token rotation 저장)과 재연결 처리(토큰 삭제 후 연결 화면)를 맡는다. 테스트는 `pnpm --filter @focuson/extension test`(Node 24 TypeScript 실행). 세션 API가 dev에 없어 실제 왕복은 미검증이며, 빌드 결과물에 가짜 저장소·서버 응답을 넣어 화면을 확인했다.
 
 ### 진행 중인 작업
 
-- Desktop 온보딩용 코드 입력 UI와 형식 검증을 기본 Popup(`/`)과 `/connect`에 추가했다. `FocusOn-design/extension-popup.html`의 시각 디자인을 적용했다. API를 호출하지 않으며 형식이 맞아도 연결 성공을 표시하지 않는다. 설치 ID 발급, pairing API, Extension token 안전 저장은 미구현이다.
+- 세션·pairing API가 dev에 병합되면 실제 계정으로 pairing → 세션 표시 → 토큰 갱신을 확인하고 REPORT를 작성한다.
 - 확정한 현재 Tab 자동 추적과 Message 구조를 실제 코드로 구현해야 한다.
 - 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
 - 전체 HTTP·HTTPS Host 권한을 필수 또는 Optional 권한으로 요청할지 확정해야 한다.
-- 일회용 연결 코드 pairing과 token 저장 정책을 구현해야 하며 Server 실시간 동기화 방식은 추가 확정이 필요하다.
 - Desktop 온보딩에서 Extension 연결은 필수 단계다. Extension pairing UI는 코드 입력과 연결 결과 표시까지만 담당하며, 온보딩 완료 뒤의 목표·시간 설정은 Desktop 대시보드에서 진행한다.
 
 ### 아직 진행하지 않은 작업
@@ -44,10 +45,8 @@
 - 페이지 이동 이벤트 저장
 - 15초 체류 후 재분석
 - 분석 제외 도메인 적용
-- Desktop 연결 및 상태 동기화
-- Server API 연결
-- 일회용 연결 코드 기반 Extension pairing
-- Popup 타이머 조회·제어 UI
+- 팝업에서 세션 일시정지·재개·종료 (P1, 결정 012)
+- Service Worker 재시작 후 상태 복구
 
 ## 현재 기술
 
