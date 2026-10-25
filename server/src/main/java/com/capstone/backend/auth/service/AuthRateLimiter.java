@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class AuthRateLimiter {
   private static final int MAX_KEYS = 10000;
   private final Map<String, Bucket> loginBuckets = new HashMap<>();
+  private final Map<String, Bucket> refreshBuckets = new HashMap<>();
   private final Map<String, Bucket> authenticatedBuckets = new HashMap<>();
 
   /**
@@ -23,10 +24,20 @@ public class AuthRateLimiter {
         5, Duration.ofMinutes(10));
   }
 
+  /** 미인증 refresh 요청은 별도 공개 공간에서 IP별로 제한한다. */
+  public void checkRefreshIp(String remoteAddress) {
+    check("refresh:ip:" + TokenSecrets.hash(remoteAddress), 300, Duration.ofMinutes(10));
+  }
+
   /** 동일 키의 카운트와 만료 처리를 원자적으로 수행한다. */
   public synchronized void check(String key, int limit, Duration window) {
     // 익명 클라이언트가 로그인 키 공간을 채워도 기존 인증 사용자의 한도를 소진하지 못한다.
-    Map<String, Bucket> buckets = key.startsWith("google:") ? loginBuckets : authenticatedBuckets;
+    Map<String, Bucket> buckets = authenticatedBuckets;
+    if (key.startsWith("google:")) {
+      buckets = loginBuckets;
+    } else if (key.startsWith("refresh:")) {
+      buckets = refreshBuckets;
+    }
     long now = System.currentTimeMillis();
     Bucket bucket = buckets.get(key);
     if (bucket == null || bucket.expiresAt <= now) {

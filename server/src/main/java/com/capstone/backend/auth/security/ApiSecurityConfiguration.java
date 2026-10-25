@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -39,7 +38,8 @@ public class ApiSecurityConfiguration {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .requestCache(cache -> cache.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.POST, "/api/v1/auth/google/exchange").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/v1/auth/google/exchange",
+                "/api/v1/auth/refresh").permitAll()
             .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
             .requestMatchers("/api/v1/**").authenticated().anyRequest().denyAll())
         .exceptionHandling(errors -> errors
@@ -82,7 +82,8 @@ public class ApiSecurityConfiguration {
       String path = request.getRequestURI().substring(request.getContextPath().length());
       return !path.startsWith("/api/v1/")
           || ("POST".equals(request.getMethod())
-              && "/api/v1/auth/google/exchange".equals(path));
+              && ("/api/v1/auth/google/exchange".equals(path)
+                  || "/api/v1/auth/refresh".equals(path)));
     }
 
     @Override
