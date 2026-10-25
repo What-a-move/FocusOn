@@ -84,3 +84,14 @@ test('앱을 다시 켜도 같은 세션이면 sequence를 이어서 센다', as
   await restarted.sender.send('902', meta)
   assert.deepEqual(restarted.calls.map((call) => call.body.sequence), [3, 1], '같은 세션은 3부터, 새 세션은 1부터')
 })
+
+test('응답은 필드가 빠지거나 형식이 틀리면 받지 않는다', () => {
+  const { parseAnalysisRun } = require('../../dist-electron/main/analysis-sender.cjs')
+  assert.deepEqual(parseAnalysisRun(run), { analysisRunId: '7001', relation: 'UNRELATED', confidence: 0.91, reasonCode: 'SEMANTIC_GOAL_MISMATCH', observedAt: run.observedAt, policyVersion: 'v1' })
+  assert.notEqual(parseAnalysisRun({ ...run, confidence: null, reasonCode: null, relation: 'EXCLUDED' }), null, '판정이 없으면 null 허용')
+  assert.equal(parseAnalysisRun({ ...run, policyVersion: undefined }), null, 'policyVersion 없음')
+  assert.equal(parseAnalysisRun({ ...run, confidence: '0.9' }), null, 'confidence 형식')
+  assert.equal(parseAnalysisRun({ ...run, confidence: 1.5 }), null, 'confidence 범위')
+  assert.equal(parseAnalysisRun({ ...run, reasonCode: 3 }), null, 'reasonCode 형식')
+  assert.equal(parseAnalysisRun({ ...run, confidence: undefined }), null, 'confidence 빠짐')
+})

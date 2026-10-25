@@ -237,6 +237,9 @@ if (!hasSingleInstanceLock) {
         observing = true
         void helper.request('frontmost')
           .then((reply) => {
+            // [주의] 확인하는 사이 세션이 멈췄거나 바뀌었으면 그 결과는 버린다. 멈춘 동안의 앱 정보를 보내지 않는다.
+            const current = runtime.snapshot()
+            if (current?.status !== 'RUNNING' || current.sessionId !== session.sessionId) return
             const observation = observer.observe(parseFrontmost(reply))
             if (observation) void sender?.send(session.sessionId, observation)
           })

@@ -4,21 +4,20 @@ import type { AuthService } from './auth-service.cjs'
 import type { Observation } from './screen-observer.cjs'
 
 export type Relation = 'RELATED' | 'UNRELATED' | 'UNCERTAIN' | 'EXCLUDED' | 'PRIVACY_BLOCKED'
-export type AnalysisRun = { analysisRunId: string; relation: Relation; confidence: number | null; reasonCode: string | null; observedAt: string }
+export type AnalysisRun = { analysisRunId: string; relation: Relation; confidence: number | null; reasonCode: string | null; observedAt: string; policyVersion: string }
 
 const RELATIONS: readonly Relation[] = ['RELATED', 'UNRELATED', 'UNCERTAIN', 'EXCLUDED', 'PRIVACY_BLOCKED']
 // ponytail: 서버 요청 제한이 분 단위라 429면 1분 쉰다. 공통 요청 함수가 Retry-After를 넘기게 되면 그 값을 쓴다.
 const RATE_LIMIT_PAUSE_MS = 60_000
 
+/** 응답 형식을 그대로 확인한다. 값이 없거나 형식이 틀리면 null(계약 위반)이다. confidence(0~1)·reasonCode는 판정이 없으면 null일 수 있다. */
 export function parseAnalysisRun(value: unknown): AnalysisRun | null {
   if (typeof value !== 'object' || value === null) return null
-  const { analysisRunId, relation, confidence, reasonCode, observedAt } = value as Record<string, unknown>
-  if (typeof analysisRunId !== 'string' || !RELATIONS.includes(relation as Relation) || typeof observedAt !== 'string') return null
-  return {
-    analysisRunId, relation: relation as Relation, observedAt,
-    confidence: typeof confidence === 'number' ? confidence : null,
-    reasonCode: typeof reasonCode === 'string' ? reasonCode : null,
-  }
+  const { analysisRunId, relation, confidence, reasonCode, observedAt, policyVersion } = value as Record<string, unknown>
+  if (typeof analysisRunId !== 'string' || !RELATIONS.includes(relation as Relation) || typeof observedAt !== 'string' || typeof policyVersion !== 'string') return null
+  if (confidence !== null && (typeof confidence !== 'number' || confidence < 0 || confidence > 1)) return null
+  if (reasonCode !== null && typeof reasonCode !== 'string') return null
+  return { analysisRunId, relation: relation as Relation, confidence, reasonCode, observedAt, policyVersion }
 }
 
 /**

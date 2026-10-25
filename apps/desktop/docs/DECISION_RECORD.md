@@ -574,7 +574,8 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - MVP는 macOS + Chrome만 지원한다. Chrome이 아닌 브라우저(Safari·Arc·Edge 등)와 FocusOn 자기 창은 15초 유지 뒤 `guardStatus: EXCLUDED`만 보낸다(앱 이름·창 제목·OCR 없음). 아무것도 보내지 않으면 서버가 직전 판정(UNRELATED 등)을 이어 가 이탈로 셀 수 있기 때문이다. 리포트에는 분석 제외 시간으로 잡히고, 다른 브라우저에서의 이탈은 감지하지 못한다(MVP 제한, 2026-10-25 추가).
 - Swift 도우미 프로세스를 앱에 넣는다. Main이 띄우고 JSON 줄 단위로 통신한다. 도우미가 맨 앞 앱(`NSWorkspace`)·창 제목(`CGWindowList`)을 확인하고, 대상 창 하나만 캡처(`SCScreenshotManager`)해 Apple Vision으로 OCR한다. 캡처 이미지는 도우미 메모리에서만 다루고 OCR 직후 버린다. Node·Renderer에는 텍스트만 넘긴다.
 - 창 하나만 캡처하므로 Floating Poki가 이미지에 들어가지 않는다. 지원 macOS는 14 이상이다.
-- 먼저 `APP_META`만 보내고, 응답이 `UNCERTAIN` + `INSUFFICIENT_CONTEXT`일 때만 `DESKTOP_APP_OCR`로 다시 보낸다. OCR 텍스트는 최대 2,000자, 이메일·전화번호·긴 토큰 형태 문자열은 지운다.
+- 먼저 `APP_META`만 보낸다. 결과가 `RELATED`면 확정하고, `UNRELATED`·`UNCERTAIN`이면 항상 `DESKTOP_APP_OCR`로 다시 보내 그 결과로 확정한다(2026-10-26 변경). 정확도 테스트에서 정보가 부족한 제목에도 AI가 `UNRELATED`를 낸 경우가 있어, 메타데이터만으로는 관련 없음을 확정하지 않는다. 서버도 메타데이터만 근거인 `UNRELATED`는 이탈 시간에 넣지 않는다. OCR 텍스트는 최대 2,000자, 이메일·전화번호·긴 토큰 형태 문자열은 지운다.
+- 늦게 도착한 이전 AI 결과는 최신 상태를 덮지 않는다(2026-10-26). 관측마다 번호를 붙이고, 응답이 지금 화면의 관측이 아니면 화면에 반영하지 않으며 그 응답으로 다음 단계도 보내지 않는다. 예: 화면 A의 2차 요청 중 제외 대상으로 옮겨 `EXCLUDED`를 보냈다면, 늦게 온 A 결과는 버린다. 서버도 같은 기기에서는 `contentSource`와 관계없이 `observedAt`이 가장 늦은 관측을 현재 상태로 본다(AI 분석 계약 8).
 - 앱·창 제목이 바뀌고 15초 유지되면 보낸다. 같은 화면은 다시 보내지 않고, 같은 창의 내용 변경은 최대 30초에 한 번 보낸다.
 - 분석 제외 앱은 MVP에 포함한다. 번들 ID 목록을 Desktop 로컬 파일에만 저장하고 서버에 보내지 않는다. 설정(분석·권한)과 온보딩 제외 단계(선택)에서 고른다. 맨 앞 앱이 제외 앱이면 `guardStatus: EXCLUDED`만 보낸다.
 - 민감 화면은 고정 민감 앱 목록·창 제목 단어로 관측 전에, OCR 텍스트 패턴으로 보내기 전에 걸러 `guardStatus: PRIVACY_BLOCKED`로 보낸다.
