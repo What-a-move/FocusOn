@@ -91,7 +91,7 @@ Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback 
 
 ## 5. 현재 개발 상태와 검토 필요 항목
 
-- Backend의 공통 응답·오류·Access JWT·인증 5개 테이블은 `dev`에 있다. Issue #49 작업 브랜치에는 Google 교환·auth/me·요청 인증·초기 토큰 발급을 구현하고 검증했다(dev 병합 전). refresh·logout·pairing API와 실제 Google 계정 왕복은 아직이다. 사용자·설정·목표는 Issue #38의 별도 담당 범위다.
+- Backend의 공통 응답·오류·Access JWT·인증 5개 테이블은 `dev`에 있다. Issue #49 / PR #51의 Google 교환·auth/me·요청 인증·초기 토큰 발급은 dev에 병합됐다. #59 작업 브랜치에는 refresh·회전·재사용 감지·logout을 구현하고 QA했다(dev 병합 전). 성공마다 token·family를 30일 연장하는 사용자 결정을 적용한다. pairing·기기 관리 API와 실제 Google 실계정 성공 왕복은 후속이다. 사용자·설정·목표는 Issue #38의 별도 담당 범위다.
 - Desktop은 인증·온보딩 클라이언트와 홈 대시보드·리포트 IPC·목표 설정 클라이언트까지 구현했다(PR #42·#45, `0b88bb8`). Extension도 최초 pairing 요청·오류 처리·token 저장을 구현했다. 실제 Backend 왕복 QA, Extension의 현재 탭 추적, 후속 refresh·unlink, 세션 동기화와 분석 연결이 남아 있다.
 - AI는 설계 문서와 scaffold 중심이다. 최근 AI v1.1 문서에는 목표 보조 상태, 분석 제외 모드, 개인화 휴식, 학습 노트 등 추가 제안이 있다. API 정본과 합의되지 않은 항목을 기존 MVP 계약으로 취급하지 않는다.
 - **검토 필요:** 카메라의 출시 범위와 구현 기술 표기가 문서마다 다르다. 공통 정책·제품 기획은 선택 동의 카메라를 MVP에 포함하고 macOS 로컬 분석을 설명한다. 일부 앱·AI 문서는 MediaPipe 또는 출시 보류를 적고 있다. 카메라 구현 작업 전에 해당 정본과 팀 결정을 다시 확인한다.
