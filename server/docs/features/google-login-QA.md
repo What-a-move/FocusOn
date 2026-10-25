@@ -48,3 +48,11 @@
 - clean build·Checkstyle·전체 32개 테스트 통과(failure/error 0).
 - IP별 상한 선행 적용으로 installationId를 바꾼 11,000회 시도를 제한하고 다른 IP·인증 API가 영향받지 않음을 확인했다. 기존 복합 키 5회 제한과 서비스 호출 전 차단도 확인했다.
 - 이번 변경은 Controller·메모리 한도·문서이며 SQL 변경 없음. PostgreSQL 검증 결과는 앞 절의 기존 검증이며 이번에 재실행하지 않았다.
+
+## azp 검증 보강 후 QA
+
+- clean build·Checkstyle·전체 38개 테스트 통과(failure/error 0).
+- 정상 단일 aud+azp 생략은 기존 테스트로 유지하고, 단일/다중 aud+일치 azp 허용을 검증했다.
+- 다른 Client의 azp, 다중 aud+azp 누락, 빈 문자열·공백·숫자·배열 azp를 서명된 합성 토큰으로 거절했다.
+- azp가 일치해도 aud가 다른 Client면 거절함을 확인했다. aud 누락도 azp 유무와 관계없이 인증 실패로 반환하며 예외로 500이 되지 않음을 확인했다.
+- 외부 실제 Google 계정 왕복과 PostgreSQL 재실행은 이번 claim 검증 보강에서 수행하지 않았다.

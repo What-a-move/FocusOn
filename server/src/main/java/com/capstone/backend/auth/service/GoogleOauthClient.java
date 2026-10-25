@@ -62,7 +62,8 @@ public class GoogleOauthClient {
     };
     this.decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
         new JwtTimestampValidator(Duration.ZERO), issuer,
-        new JwtAudienceValidator(clientId.isBlank() ? "unconfigured" : clientId)));
+        new JwtAudienceValidator(clientId.isBlank() ? "unconfigured" : clientId),
+        new GoogleAuthorizedPartyValidator(clientId)));
   }
 
   /** 일회성 code는 자동 재전송하지 않는다. Google 원문·토큰은 로그에 기록하지 않는다. */

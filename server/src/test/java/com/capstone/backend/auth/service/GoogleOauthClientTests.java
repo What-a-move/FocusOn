@@ -52,6 +52,66 @@ class GoogleOauthClientTests {
   }
 
   @Test
+  void acceptsMatchingAuthorizedPartyForSingleAndMultipleAudiences() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",
+        List.of("desktop-client"), "synthetic-sub", 300, "desktop-client")));
+    assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",
+        List.of("desktop-client", "other-client"), "synthetic-sub", 300, "desktop-client")));
+  }
+
+  @Test
+  void rejectsAnotherAuthorizedPartyEvenWhenAudienceContainsDesktop() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    for (var audiences : List.of(List.of("desktop-client"),
+        List.of("desktop-client", "other-client"))) {
+      String value = token("accounts.google.com", audiences, "synthetic-sub", 300, "other-client");
+      assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+          assertThrows(ApiException.class, () -> client.verifyIdentity(value)).code().name());
+    }
+  }
+
+  @Test
+  void rejectsMultipleAudiencesWithoutAuthorizedParty() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    String value = token("accounts.google.com", List.of("desktop-client", "other-client"),
+        "synthetic-sub", 300, null);
+    assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+        assertThrows(ApiException.class, () -> client.verifyIdentity(value)).code().name());
+  }
+
+  @Test
+  void rejectsBlankOrNonStringAuthorizedParty() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    for (Object authorizedParty : List.of("", " ", 123, List.of("desktop-client"))) {
+      String value = token("accounts.google.com", List.of("desktop-client"),
+          "synthetic-sub", 300, authorizedParty);
+      assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+          assertThrows(ApiException.class, () -> client.verifyIdentity(value)).code().name());
+    }
+  }
+
+  @Test
+  void matchingAuthorizedPartyDoesNotReplaceAudienceValidation() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    String value = token("accounts.google.com", List.of("other-client"),
+        "synthetic-sub", 300, "desktop-client");
+    assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+        assertThrows(ApiException.class, () -> client.verifyIdentity(value)).code().name());
+  }
+
+  @Test
+  void missingAudienceIsAuthenticationFailureWithOrWithoutAuthorizedParty() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    String withoutParty = token("accounts.google.com", null, "synthetic-sub", 300, null);
+    String withParty = token("accounts.google.com", null, "synthetic-sub", 300, "desktop-client");
+    for (String value : List.of(withoutParty, withParty)) {
+      assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+          assertThrows(ApiException.class, () -> client.verifyIdentity(value)).code().name());
+    }
+  }
+
+  @Test
   void exchangePostsCodePkceAndUnchangedRedirectToGoogle() throws Exception {
     HttpClient http = mock(HttpClient.class);
     @SuppressWarnings("unchecked")
@@ -121,10 +181,21 @@ class GoogleOauthClientTests {
   }
 
   private String token(String issuer, String audience, String subject, long expiresIn) {
-    RSAKey key = new RSAKey.Builder((RSAPublicKey) keys.getPublic())
+    return token(issuer, List.of(audience), subject, expiresIn, null);
+  }
+
+  private String token(String issuer, List<String> audiences, String subject, long expiresIn,
+      Object authorizedParty) {
+    final RSAKey key = new RSAKey.Builder((RSAPublicKey) keys.getPublic())
         .privateKey(keys.getPrivate()).keyID("synthetic-key").build();
-    var claims = JwtClaimsSet.builder().claim("iss", issuer).audience(List.of(audience))
+    var claims = JwtClaimsSet.builder().claim("iss", issuer)
         .issuedAt(Instant.now().minusSeconds(30)).expiresAt(Instant.now().plusSeconds(expiresIn));
+    if (audiences != null) {
+      claims.audience(audiences);
+    }
+    if (authorizedParty != null) {
+      claims.claim("azp", authorizedParty);
+    }
     if (subject != null) {
       claims.subject(subject);
     }

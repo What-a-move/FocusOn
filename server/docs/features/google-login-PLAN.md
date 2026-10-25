@@ -199,3 +199,7 @@ docs/ENVIRONMENT.md
 - Refresh rotation·로그아웃 API는 다음 Issue다. Refresh Token을 발급했다고 갱신·로그아웃까지 완료됐다고 표시하지 않는다.
 - 4번째 Desktop에서 로그인 오류만 받은 사용자는 아직 FocusOn 토큰이 없다. 현재 기기 폐기 API는 Authorization이 필요하므로, 새 기기에서 즉시 기존 기기를 선택 폐기하는 전체 UX에는 인증 수단이 추가로 명확해야 한다. 이번 작업은 확정된 409와 기기 목록 반환을 지키며 새 임시 토큰·endpoint를 임의로 만들지 않는다. 기기 관리 작업 전에 이 경계를 검토한다.
 - 온보딩 상태의 상세 판정은 Issue #38과 연결한다. 이 작업에서 닉네임·동의·권한·분석 제외 사이트 저장 API를 중복 구현하지 않는다.
+
+## 보안 검토 보강: authorized presenter
+
+Google ID token의 aud 검증에 더해 Google 전용 `GoogleAuthorizedPartyValidator`를 함께 등록한다. 단일 aud는 azp 생략을 허용하고, 다중 aud에는 azp를 요구한다. azp가 있으면 문자열이며 서버의 Desktop Client ID와 정확히 일치해야 한다. 실패 응답은 기존 AUTH_OAUTH_REAUTH_REQUIRED를 사용한다. HTTP 요청·응답·DB 스키마는 변경하지 않는다.

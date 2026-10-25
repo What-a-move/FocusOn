@@ -44,3 +44,12 @@
 - 구현 대화가 없는 독립 에이전트가 수정 diff·PLAN·계약·규칙을 검토했으며 추가 P1/P2를 보고하지 않았다.
 - 범위 경고: 사용자 승인으로 선행 계약 문서 commit을 같은 브랜치에 포함한 작업이다. 이미 승인된 문서 변경을 삭제하거나 별도 PR로 임의 분리하지 않는다.
 - 주석 비율 경고: CodeRabbit의 80% docstring 지표이며 현재 저장소 Checkstyle의 실패 조건이 아니다. 주요 공개 계약·보안 로직 설명은 유지하며, 단순 테스트·접근자에 비율만을 위한 주석은 추가하지 않았다.
+
+## 추가 P2: Google ID token azp 누락
+
+- 문제: aud에 Desktop Client ID가 들어 있어도 azp가 다른 Client라면 기존 audience 포함 검사만으로 통과할 수 있었다.
+- 대안 1: Google 전용 OAuth2TokenValidator를 합성한다. 기존 서명·issuer·audience·시간 검증과 역할을 분리할 수 있다.
+- 대안 2: GoogleOauthClient.verifyIdentity에 조건을 직접 추가한다. 파일은 적지만 외부 통신·오류 분류·claim 검증이 한 메서드에 섞인다.
+- 반영: 1번. package-private GoogleAuthorizedPartyValidator를 도입하고 Google decoder에만 등록했다. FocusOn Access JWT·DB 인증·API 계약·migration에는 적용하지 않는다.
+- 규칙: azp가 있으면 원본 타입이 문자열이고 Desktop Client ID와 일치해야 한다. 다중 aud는 azp 필수, 단일 aud는 생략 허용. aud 검증은 별도로 유지한다.
+- 출처: [Google OpenID Connect ID token claims](https://developers.google.com/identity/openid-connect/openid-connect). Google은 azp를 authorized presenter의 Client ID로 설명한다.

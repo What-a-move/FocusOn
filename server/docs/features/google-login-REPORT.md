@@ -53,3 +53,7 @@
 ## PR #51 후속 리뷰
 
 CodeRabbit 지적 4건을 수정했다. IP별 300회/10분 선행 보호와 기존 복합 키 5회/10분을 함께 적용하고 문서 3건을 정정했다. 최신 dev PR #50 반영 후 전체 32개 테스트·build·Checkstyle 및 독립 리뷰를 통과했다. 병합·Issue 종료와 실제 Google 계정 왕복은 아직이다.
+
+## azp 보안 검토 반영
+
+GoogleAuthorizedPartyValidator를 분리해 authorized presenter를 Desktop Client ID로 제한했다. GoogleOauthClient는 validator 합성만 추가하며 기존 Access JWT·DB 인증과 경계를 유지한다. 서명된 토큰의 azp 회귀 6개를 추가해 전체 38개 테스트·build·Checkstyle을 통과했다. API·DB 변경은 없다.
