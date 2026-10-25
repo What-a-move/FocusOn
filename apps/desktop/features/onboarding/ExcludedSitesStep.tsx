@@ -27,9 +27,15 @@ export function ExcludedSitesStep() {
   const [feedback, setFeedback] = useState<Notice | null>(null)
   const [saving, setSaving] = useState(false)
   const [apps, setApps] = useState<ExcludedApp[]>([])
+  const [appsLoaded, setAppsLoaded] = useState(false)
 
   // 이전에 이 기기에서 고른 제외 앱을 보여 준다. 없거나 못 읽으면 빈 목록이다.
-  useEffect(() => { void analysisApi.getExcludedApps().then((result) => { if (result.success) setApps(result.data) }) }, [])
+  useEffect(() => {
+    void analysisApi.getExcludedApps().then((result) => {
+      if (result.success) setApps(result.data)
+      setAppsLoaded(true)
+    })
+  }, [])
 
   function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -47,6 +53,8 @@ export function ExcludedSitesStep() {
 
   // [주의] 저장하거나 '건너뛰기'를 눌렀을 때만 단계 완료로 기록한다. 방문만으로는 완료가 아니다.
   async function finish() {
+    // [주의] 저장된 제외 앱을 읽기 전에 저장하면 빈 목록으로 덮어쓴다.
+    if (!appsLoaded) return
     setSaving(true)
     // 제외 앱은 이 기기에만 저장한다. 서버에는 보내지 않는다(결정 024).
     const savedApps = await analysisApi.saveExcludedApps(apps)
@@ -71,7 +79,7 @@ export function ExcludedSitesStep() {
       poki="/design/poki-floating-excluded-v2.png"
       backHref="/onboarding/permissions/"
       feedback={feedback}
-      next={{ label: sites.length || apps.length ? '다음' : '건너뛰기', blocked: false, busy: saving, onClick: () => { void finish() } }}
+      next={{ label: sites.length || apps.length ? '다음' : '건너뛰기', blocked: false, busy: saving || !appsLoaded, onClick: () => { void finish() } }}
     >
       <label className="field-label" htmlFor="site-input">분석 제외 사이트 <span className="tag">선택</span></label>
       <form className="name-row" onSubmit={add} noValidate>

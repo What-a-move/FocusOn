@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 const os = require('node:os')
 const path = require('node:path')
-const { mkdtempSync, readFileSync } = require('node:fs')
+const { existsSync, mkdtempSync, readFileSync } = require('node:fs')
 const { ScreenObserver, parseFrontmost } = require('../../dist-electron/main/screen-observer.cjs')
 const { ExcludedApps } = require('../../dist-electron/main/excluded-apps.cjs')
 const { isExcludedAppList } = require('../../dist-electron/shared/analysis-contract.cjs')
@@ -88,6 +88,7 @@ test('제외 앱은 로컬 파일에만 저장하고, 잘못된 목록은 받지
   assert.equal(store.has('com.valvesoftware.steam'), true)
   assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).apps, [{ bundleId: 'com.valvesoftware.steam', name: 'Steam' }])
   assert.deepEqual(new ExcludedApps(file).list(), [{ bundleId: 'com.valvesoftware.steam', name: 'Steam' }], '다시 열어도 유지')
+  assert.equal(existsSync(`${file}.tmp`), false, '임시 파일은 남기지 않음')
   assert.equal(isExcludedAppList([{ bundleId: 'a.b', name: 'A' }, { bundleId: 'a.b', name: 'B' }]), false, '중복')
   assert.equal(isExcludedAppList([{ bundleId: 'a b', name: 'A' }]), false, '번들 ID 형식')
   assert.equal(isExcludedAppList([{ bundleId: 'a.b', name: 'A', path: '/x' }]), false, '허용 필드만')
@@ -95,6 +96,9 @@ test('제외 앱은 로컬 파일에만 저장하고, 잘못된 목록은 받지
 })
 
 test('설치된 앱 목록은 실행 중인 앱을 먼저, 그다음 이름 순으로 정렬한다', () => {
-  const apps = toInstalledApps({ apps: [{ bundleId: 'c', name: '캘린더', path: '/c' }, { bundleId: 'b', name: 'Books', path: '/b' }, { bundleId: 'x', name: 1 }], running: ['c'] })
-  assert.deepEqual(apps.map((app) => [app.bundleId, app.running]), [['c', true], ['b', false]])
+  const apps = toInstalledApps({ apps: [
+    { bundleId: 'c', name: '캘린더', path: '/c' }, { bundleId: 'b', name: 'Books', path: '/b' }, { bundleId: 'x', name: 1 },
+    { bundleId: 'unity.My Game_1', name: 'Game', path: '/g' }, { bundleId: 'e', name: '  ', path: '/e' },
+  ], running: ['c'] })
+  assert.deepEqual(apps.map((app) => [app.bundleId, app.running]), [['c', true], ['b', false]], '저장할 수 없는 번들 ID·빈 이름은 뺌')
 })

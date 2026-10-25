@@ -1,7 +1,7 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { app, ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { ANALYSIS_CHANNELS, isExcludedAppList, type ExcludedApp, type InstalledApp } from '../shared/analysis-contract.cjs'
+import { ANALYSIS_CHANNELS, isExcludedApp, isExcludedAppList, type ExcludedApp, type InstalledApp } from '../shared/analysis-contract.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { ExcludedApps } from './excluded-apps.cjs'
 import type { ObserverHelper } from './observer-helper.cjs'
@@ -18,6 +18,8 @@ export function toInstalledApps(reply: Record<string, unknown>): (ExcludedApp & 
   return apps
     .filter((item): item is { bundleId: string; name: string; path: string } => typeof item === 'object' && item !== null
       && typeof item.bundleId === 'string' && typeof item.name === 'string' && typeof item.path === 'string')
+    // [주의] 저장 검증(번들 ID 형식·이름 길이)을 통과하지 못할 앱은 고를 수 없게 처음부터 뺀다. 고른 뒤 저장 전체가 실패하지 않게 한다.
+    .filter(({ bundleId, name }) => isExcludedApp({ bundleId, name }))
     .map(({ bundleId, name, path }) => ({ bundleId, name, path, running: running.has(bundleId) }))
     .sort((a, b) => Number(b.running) - Number(a.running) || a.name.localeCompare(b.name, 'ko'))
 }

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { isExcludedAppList, type ExcludedApp } from '../shared/analysis-contract.cjs'
 
 /**
@@ -27,7 +27,10 @@ export class ExcludedApps {
 
   save(apps: ExcludedApp[]): ExcludedApp[] {
     const clean = apps.map(({ bundleId, name }) => ({ bundleId, name: name.trim() }))
-    writeFileSync(this.file, JSON.stringify({ apps: clean, updatedAt: new Date().toISOString() }))
+    // [주의] 쓰는 도중 끊기면 파일이 깨져 제외 앱이 빈 목록으로 읽힌다. 임시 파일에 쓴 뒤 한 번에 바꾼다.
+    const temp = `${this.file}.tmp`
+    writeFileSync(temp, JSON.stringify({ apps: clean, updatedAt: new Date().toISOString() }))
+    renameSync(temp, this.file)
     this.cache = clean
     return clean
   }
