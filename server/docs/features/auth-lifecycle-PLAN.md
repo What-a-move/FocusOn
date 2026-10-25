@@ -75,5 +75,5 @@ Google 로그인 이후 Access Token 만료·앱 재실행 시 로그인 유지,
 - [x] 독립 리뷰·자동/실제 PostgreSQL·HTTP QA 통과
 - [x] 실계정 QA 수행 범위와 미검증 구분
 - [x] CONTEXT/NEXT_TASK/REPORT/QA/ERROR 기록
-- [ ] PR 생성 및 CodeRabbit 요청·피드백 반영
+- [x] PR 생성 및 CodeRabbit 요청·피드백 반영
 

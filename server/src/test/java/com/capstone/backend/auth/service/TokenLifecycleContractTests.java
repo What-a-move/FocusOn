@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 class TokenLifecycleContractTests {
+  /** token 값을 바꿔도 IP 한도를 우회하거나 차단 후 서비스에 도달하지 못하게 한다. */
   @Test
   void rotatingUnknownTokensCannotBypassIpLimitOrReachServiceAfterLimit() {
     var service = mock(TokenLifecycleService.class);
@@ -34,6 +35,7 @@ class TokenLifecycleContractTests {
     verify(service, times(301)).refresh(any());
   }
 
+  /** 공개 refresh 공간 포화가 로그인·인증 API 요청을 차단하지 않는지 확인한다. */
   @Test
   void refreshCapacityIsSeparateFromGoogleAndAuthenticatedApiCapacity() {
     var limiter = new AuthRateLimiter();

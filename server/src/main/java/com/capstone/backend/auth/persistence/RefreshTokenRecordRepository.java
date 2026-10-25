@@ -25,10 +25,13 @@ public interface RefreshTokenRecordRepository
 
   /** 비밀값이 없는 잠금 순서 결정용 projection이다. */
   interface TokenContext {
+    /** 첫 번째 잠금 대상인 사용자 ID를 반환한다. */
     Long getUserId();
 
+    /** 잠금 뒤 family의 기기 소유 관계를 대조할 ID를 반환한다. */
     Long getDeviceId();
 
+    /** 사용자 잠금 다음 획득할 family ID를 반환한다. */
     Long getFamilyId();
   }
 

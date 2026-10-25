@@ -369,6 +369,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 | 대상 | 기준 | 제한 |
 | --- | --- | --- |
 | Google 로그인 교환 | IP + installationId | 10분당 5회 |
+| Refresh Token 갱신 | IP 보호 + 유효 token의 userId/deviceId | IP 10분당 300회 + 일반 인증 분당 60회 공유 |
 | 연결 코드 발급 | userId + Desktop deviceId | 10분당 3회 |
 | 연결 코드 입력 | IP + Extension installationId | 10분당 10회 |
 | 분석 요청 | sessionId + deviceId | 분당 8회 |

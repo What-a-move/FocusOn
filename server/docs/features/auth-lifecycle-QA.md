@@ -35,4 +35,5 @@
 - 실제 Google 계정 로그인·동의 완료는 사용자 본인 인증이 필요해 진행 여부를 요청했다. 위 합성 세션 성공을 Google 실계정 성공으로 표시하지 않는다.
 - 전체 Desktop build:electron은 새 Swift observer의 로컬 compiler/SDK 불일치로 실패했다. TypeScript·preload 컴파일 및 인증 테스트·Keychain 연동은 별도로 성공했다. 전체 UI/native 빌드 성공을 뜻하지 않는다.
 - 분산 서버 한도·실제 배포 proxy·부하/침투 테스트는 미실행이다.
-- 원격 CI·CodeRabbit은 PR 생성 이후 실제 상태를 별도로 기록한다.
+- PR #60 Backend CI #45 성공. CodeRabbit 전체 리뷰는 dd93475 기준 actionable comment 0건·status success.
+- CodeRabbit의 주석 커버리지 경고에 따라 테스트 검증 의도·fixture·projection·DTO 마스킹 설명을 추가하고 refresh 한도 요약표를 보완했다. 실행 로직·계약 변경은 없다. 커버리지 비율 재산정 결과는 확인하지 않았다.

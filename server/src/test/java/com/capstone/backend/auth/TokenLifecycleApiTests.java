@@ -77,6 +77,7 @@ class TokenLifecycleApiTests {
   private TransactionTemplate tx;
   private String subject;
 
+  /** 테스트별 사용자 식별자를 분리하고 Google 응답만 대체해 실제 저장·인증 흐름을 사용한다. */
   @BeforeEach
   void setUp() {
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
@@ -87,6 +88,7 @@ class TokenLifecycleApiTests {
         ((GoogleExchangeRequest) call.getArgument(0)).state());
   }
 
+  /** 만료 Bearer를 무시하고 회전·부모 이력·30일 연장·활성 token 1개를 함께 검증한다. */
   @Test
   void refreshRotatesWithoutBearerAndSlidesTokenAndFamilyThirtyDays() throws Exception {
     final Session session = desktop();
@@ -121,6 +123,7 @@ class TokenLifecycleApiTests {
     assertEquals(1, activeTokenCount(session.familyId()));
   }
 
+  /** 실제 서명된 만료 JWT가 refresh와 me를 거쳐 정상 로그인으로 복구되는지 확인한다. */
   @Test
   void expiredAccessCanRecoverThroughRefreshThenMe() throws Exception {
     final Session session = desktop();
@@ -145,6 +148,7 @@ class TokenLifecycleApiTests {
     me(restored.accessToken(), 200);
   }
 
+  /** 재사용 401 이후 별도 조회로 폐기 commit과 다른 Desktop의 격리를 확인한다. */
   @Test
   void reusedTokenRevokesFamilyAndCommitsBeforeReturning401() throws Exception {
     final Session first = desktop();
@@ -161,6 +165,7 @@ class TokenLifecycleApiTests {
     assertEquals(1, activeTokenCount(other.familyId()));
   }
 
+  /** 누락·공백·미확인 token의 401과 과도한 길이의 400 계약을 검증한다. */
   @Test
   void missingBlankUnknownAndOversizedRefreshHaveContractErrors() throws Exception {
     mvc.perform(post("/api/v1/auth/refresh")).andExpect(status().isUnauthorized())
@@ -176,6 +181,7 @@ class TokenLifecycleApiTests {
         .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
   }
 
+  /** token 또는 family 만료 뒤에는 새 token을 만들지 못하는지 확인한다. */
   @Test
   void expiredRecordAndExpiredFamilyCannotBeRevived() throws Exception {
     final Session expiredToken = desktop();
@@ -190,6 +196,7 @@ class TokenLifecycleApiTests {
     assertEquals(1, tokenCount(expiredFamily.familyId()));
   }
 
+  /** 삭제 사용자나 폐기 기기는 token을 가지고 있어도 갱신하지 못하는지 확인한다. */
   @Test
   void deletedUserAndRevokedDeviceCannotRefresh() throws Exception {
     final Session deleted = desktop();
@@ -202,6 +209,7 @@ class TokenLifecycleApiTests {
     refreshError(revoked.refresh(), "AUTH_RELOGIN_REQUIRED");
   }
 
+  /** 동일 token 경쟁에서 한 번만 회전하고 후속 재사용이 family를 폐기하는지 확인한다. */
   @Test
   void concurrentSameTokenRotatesOnceThenRevokesOnReuse() throws Exception {
     final Session session = desktop();
@@ -218,6 +226,7 @@ class TokenLifecycleApiTests {
     me(issued.accessToken(), 401);
   }
 
+  /** 현재 Desktop·연결 Extension 폐기와 다른 로그인 유지 및 기존 폐기 사유 보존을 검증한다. */
   @Test
   void logoutRevokesOnlyCurrentDesktopAndLinkedExtensions() throws Exception {
     final Session first = desktop();
@@ -242,6 +251,7 @@ class TokenLifecycleApiTests {
         families.findById(first.familyId()).orElseThrow().getRevokedReason());
   }
 
+  /** Extension의 독립 token 갱신을 허용하면서 Desktop 로그아웃 호출은 거절한다. */
   @Test
   void extensionCanRefreshButCannotLogoutDesktop() throws Exception {
     final Session desktop = desktop();
@@ -254,6 +264,7 @@ class TokenLifecycleApiTests {
     me(next.accessToken(), 200);
   }
 
+  /** 부모 Desktop의 실제 로그인 family가 만료되면 Extension 인증·갱신도 거절한다. */
   @Test
   void extensionCannotRefreshWithoutLiveOwnedDesktopFamily() throws Exception {
     final Session desktop = desktop();
@@ -264,6 +275,7 @@ class TokenLifecycleApiTests {
     assertEquals(1, tokenCount(child.familyId()));
   }
 
+  /** 연결 Desktop이 없는 Extension은 유효 token을 갖고 있어도 인증하지 않는다. */
   @Test
   void extensionWithMissingParentIsRejected() throws Exception {
     final Session child = extension(desktop());
@@ -273,6 +285,7 @@ class TokenLifecycleApiTests {
     me(child.access(), 401);
   }
 
+  /** 회전과 로그아웃 순서가 달라도 최종적으로 사용 가능한 token이 남지 않게 한다. */
   @Test
   void refreshRacingLogoutNeverLeavesLiveTokens() throws Exception {
     final Session session = desktop();
@@ -288,6 +301,7 @@ class TokenLifecycleApiTests {
     me(session.access(), 401);
   }
 
+  /** 같은 설치의 재로그인과 회전이 경쟁해도 과거 token으로 새 family를 폐기하지 않는다. */
   @Test
   void refreshRacingReloginCannotRevokeNewLoginFamily() throws Exception {
     final Session old = desktop();
@@ -304,6 +318,7 @@ class TokenLifecycleApiTests {
     assertEquals(old.deviceId(), claims.deviceId());
   }
 
+  /** 로그아웃의 인증 요구와 활성 Desktop 3대 슬롯 반환을 검증한다. */
   @Test
   void logoutReleasesDesktopSlotAndMissingBearerIsRejected() throws Exception {
     final Session first = desktop();
@@ -316,6 +331,7 @@ class TokenLifecycleApiTests {
     mvc.perform(post("/api/v1/auth/logout")).andExpect(status().isUnauthorized());
   }
 
+  /** DTO 문자열 변환에 Access·Refresh Token 원문이 포함되지 않게 한다. */
   @Test
   void tokenDtoStringsNeverExposeSecrets() {
     String secret = "synthetic-private-value";
@@ -323,6 +339,7 @@ class TokenLifecycleApiTests {
     assertFalse(new TokenPair(secret, secret, Instant.now()).toString().contains(secret));
   }
 
+  /** 매번 새 설치로 실제 로그인 서비스를 호출해 테스트용 Desktop 인증 문맥을 만든다. */
   private Session desktop() {
     String installation = "install-" + UUID.randomUUID();
     var response = login.exchange(request(installation));
@@ -331,11 +348,13 @@ class TokenLifecycleApiTests {
         claims.deviceId(), claims.tokenFamilyId(), installation);
   }
 
+  /** 합성 Google 코드와 PKCE 입력을 만들고 같은 설치 재로그인에도 재사용한다. */
   private GoogleExchangeRequest request(String installation) {
     return new GoogleExchangeRequest("synthetic-code", "a".repeat(43), subject,
         "http://127.0.0.1:49152/", new DesktopDevice(installation, "QA Desktop", "MACOS"));
   }
 
+  /** pairing API를 구현하지 않고 전용 테스트 transaction에서 부모와 연결된 Extension을 만든다. */
   private Session extension(Session desktop) {
     return tx.execute(status -> {
       var device = new UserDeviceEntity();
@@ -361,42 +380,50 @@ class TokenLifecycleApiTests {
     });
   }
 
+  /** 서비스 동시성 검증에 사용할 Desktop principal을 기존 세션 ID로 구성한다. */
   private FocusOnPrincipal principal(Session session) {
     return new FocusOnPrincipal(session.userId(), session.deviceId(), session.familyId(),
         UserDeviceEntity.DeviceType.DESKTOP);
   }
 
+  /** 대기 없이 만료 조건을 만들되 DB의 생성·만료 시각 제약을 함께 만족시킨다. */
   private void expireFamily(long id) {
     Instant now = Instant.now();
     jdbc.update("update token_families set created_at=?,expires_at=? where id=?",
         Timestamp.from(now.minusSeconds(600)), Timestamp.from(now.minusSeconds(1)), id);
   }
 
+  /** commit된 DB 상태에서 family의 활성 Refresh Token 개수를 읽는다. */
   private int activeTokenCount(long id) {
     return jdbc.queryForObject("select count(*) from refresh_token_records "
         + "where token_family_id=? and status='ACTIVE'", Integer.class, id);
   }
 
+  /** 실패한 갱신이 기록을 추가하지 않았는지 검사할 전체 token 수를 읽는다. */
   private int tokenCount(long id) {
     return jdbc.queryForObject("select count(*) from refresh_token_records "
         + "where token_family_id=?", Integer.class, id);
   }
 
+  /** 테스트에서 생성한 안전한 token 문자열로 refresh JSON을 만든다. */
   private String body(String token) {
     return "{\"refreshToken\":\"" + token + "\"}";
   }
 
+  /** 공통 401 코드와 requestId를 실제 MVC 응답에서 확인한다. */
   private void refreshError(String raw, String code) throws Exception {
     mvc.perform(post("/api/v1/auth/refresh").contentType(MediaType.APPLICATION_JSON)
             .content(body(raw))).andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.code").value(code)).andExpect(jsonPath("$.requestId").isNotEmpty());
   }
 
+  /** 발급 JWT를 실제 인증 필터에 통과시켜 현재 사용 가능 여부를 확인한다. */
   private void me(String access, int expected) throws Exception {
     mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + access))
         .andExpect(status().is(expected));
   }
 
+  /** 두 작업을 같은 출발 신호로 실행하고 결과 또는 예외를 수집해 경쟁 결과를 검사한다. */
   private List<Object> race(Callable<Object> first, Callable<Object> second) throws Exception {
     try (var executor = Executors.newFixedThreadPool(2)) {
       CountDownLatch ready = new CountDownLatch(2);
@@ -421,6 +448,7 @@ class TokenLifecycleApiTests {
 
   private record Session(String access, String refresh, long userId, long deviceId,
       long familyId, String installation) {
+    /** 실패 메시지에 테스트 token 원문이 노출되지 않도록 마스킹한다. */
     @Override
     public String toString() {
       return "Session[tokens=<redacted>]";

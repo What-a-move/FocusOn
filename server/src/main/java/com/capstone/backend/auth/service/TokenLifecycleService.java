@@ -153,6 +153,7 @@ public class TokenLifecycleService {
   }
 
   private record RefreshOutcome(TokenPair pair, ApiErrorCode error) {
+    /** 폐기 등 transaction 결과를 보존한 채 외부에서 재로그인 오류를 반환한다. */
     private static RefreshOutcome relogin() {
       return new RefreshOutcome(null, ApiErrorCode.AUTH_RELOGIN_REQUIRED);
     }
