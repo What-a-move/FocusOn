@@ -78,3 +78,12 @@
   .focus-window .controls { margin-top: 16px; }
   .focus-window .round { width: 56px; height: 56px; }
 }
+
+/* 화면 기록 권한이 꺼져 자동으로 멈춤 (FocusOn-design/session-states.html `권한 꺼짐`) */
+.focus-window .clock-caption.is-error { color: var(--danger); }
+.focus-window .halt-notice { display: grid; justify-items: center; gap: 14px; max-width: 420px; margin-top: 20px; }
+.focus-window .halt-notice p { margin: 0; color: var(--danger); font-size: 14px; font-weight: 600; line-height: 1.55; text-align: center; word-break: keep-all; }
+.focus-window .halt-notice strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 16px; font-weight: 700; }
+.focus-window .btn-danger { background: var(--danger-strong); color: #fff; box-shadow: 0 4px 0 var(--danger-edge, #a32218); }
+.focus-window .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
+.focus-window .btn-danger:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--danger-edge, #a32218); transition-duration: .05s; }

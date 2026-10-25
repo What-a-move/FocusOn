@@ -21,6 +21,7 @@ function formatClock(ms: number): string {
 
 function errorText(code: string): string {
   switch (code) {
+    case 'LOCAL_SCREEN_PERMISSION_REVOKED': return '화면 기록 권한이 꺼져 있어요. 시스템 설정에서 켠 뒤 다시 눌러 주세요.'
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return '알림이 보이는지 확인이 필요해요. 세션 설정에서 시험 알림을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_START_REQUIREMENT_MISSING': return '화면 기록 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_VERSION_CONFLICT': return '다른 곳에서 상태가 바뀌어 최신 상태로 맞췄어요. 확인한 뒤 다시 눌러 주세요.'
@@ -83,7 +84,9 @@ export function FocusSession() {
   const remaining = Math.max(0, snapshot.targetDurationMs - elapsed)
   const paused = status === 'PAUSED' || status === 'AUTO_PAUSED' || awaiting
   const finished = status === 'ENDED' || status === 'ABANDONED'
-  const caption = awaiting ? '설정한 시간이 끝났어요' : status === 'AUTO_PAUSED' ? '앱을 다시 열어 멈춰 있어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
+  // 세션 중 화면 기록 권한이 꺼져 자동으로 멈춘 상태(session-states.html `권한 꺼짐`)
+  const permissionLost = status === 'AUTO_PAUSED' && snapshot.error === 'LOCAL_SCREEN_PERMISSION_REVOKED'
+  const caption = permissionLost ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : status === 'AUTO_PAUSED' ? '앱을 다시 열어 멈춰 있어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
 
   const togglePause = () => { void (running ? sessionApi.pause() : sessionApi.resume()) }
   const end = async () => { const result = await sessionApi.end(); if (result.success) setDialog(null) }
@@ -127,10 +130,10 @@ export function FocusSession() {
           </svg>
           <div className="ring-center">
             <div className="clock" role="timer" aria-live="off">{formatClock(Math.ceil(remaining / 1000) * 1000)}</div>
-            <div className="clock-caption">{caption}</div>
+            <div className={`clock-caption${permissionLost ? ' is-error' : ''}`}>{caption}</div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="poki" key={paused ? 'paused' : 'focus'} src={paused ? POKI.paused : POKI.focus} alt={paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
+          <img className="poki" key={permissionLost ? 'curious' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.curious : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '궁금해하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
         </div>
         <p className="goal" id="goal-text">{snapshot.goalText}</p>
         <div className="controls">
@@ -149,7 +152,11 @@ export function FocusSession() {
             <span className="label">끝내기</span>
           </div>
         </div>
-        {snapshot.error && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{errorText(snapshot.error)}</p>}
+        {permissionLost && !activeDialog && <div className="halt-notice" role="alert">
+          <p><strong>화면 분석 권한이 꺼졌어요.</strong>그래서 타이머와 분석을 멈췄어요.<br />권한을 켠 뒤 직접 이어 가 주세요.</p>
+          <button className="btn btn-danger" type="button" onClick={() => { void window.focusOn?.permissions.openScreenSettings() }}>권한 확인</button>
+        </div>}
+        {snapshot.error && !permissionLost && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{errorText(snapshot.error)}</p>}
       </div>
     </section>
 

@@ -560,3 +560,32 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 
 - `apps/desktop/electron/main/session-runtime.cts`, `electron/shared/session-contract.cts`, `electron/main/auth-api.cts`(204 처리)
 - `apps/desktop/docs/IPC_CONTRACT.md`, `docs/features/focus-session-PLAN.md`
+
+## 결정 024 - 화면 분석 수집·전송 방식
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Desktop (Extension 결정 013과 함께)
+- 상태: 확정 (사용자 결정, Notion 화면 분석·AI 분석 계약·Chrome·macOS 권한 정책·`POST /sessions/{id}/analysis-runs` 반영). 백엔드·AI·PM에 통보함.
+
+### 결정 내용
+
+- Desktop은 Chrome 밖의 앱을 맡는다. 맨 앞 앱이 Chrome이면 관측·전송하지 않고 Extension에 맡긴다.
+- MVP는 macOS + Chrome만 지원한다. Chrome이 아닌 브라우저(Safari·Arc·Edge 등)와 FocusOn 자기 창은 15초 유지 뒤 `guardStatus: EXCLUDED`만 보낸다(앱 이름·창 제목·OCR 없음). 아무것도 보내지 않으면 서버가 직전 판정(UNRELATED 등)을 이어 가 이탈로 셀 수 있기 때문이다. 리포트에는 분석 제외 시간으로 잡히고, 다른 브라우저에서의 이탈은 감지하지 못한다(MVP 제한, 2026-10-25 추가).
+- Swift 도우미 프로세스를 앱에 넣는다. Main이 띄우고 JSON 줄 단위로 통신한다. 도우미가 맨 앞 앱(`NSWorkspace`)·창 제목(`CGWindowList`)을 확인하고, 대상 창 하나만 캡처(`SCScreenshotManager`)해 Apple Vision으로 OCR한다. 캡처 이미지는 도우미 메모리에서만 다루고 OCR 직후 버린다. Node·Renderer에는 텍스트만 넘긴다.
+- 창 하나만 캡처하므로 Floating Poki가 이미지에 들어가지 않는다. 지원 macOS는 14 이상이다.
+- 먼저 `APP_META`만 보내고, 응답이 `UNCERTAIN` + `INSUFFICIENT_CONTEXT`일 때만 `DESKTOP_APP_OCR`로 다시 보낸다. OCR 텍스트는 최대 2,000자, 이메일·전화번호·긴 토큰 형태 문자열은 지운다.
+- 앱·창 제목이 바뀌고 15초 유지되면 보낸다. 같은 화면은 다시 보내지 않고, 같은 창의 내용 변경은 최대 30초에 한 번 보낸다.
+- 분석 제외 앱은 MVP에 포함한다. 번들 ID 목록을 Desktop 로컬 파일에만 저장하고 서버에 보내지 않는다. 설정(분석·권한)과 온보딩 제외 단계(선택)에서 고른다. 맨 앞 앱이 제외 앱이면 `guardStatus: EXCLUDED`만 보낸다.
+- 민감 화면은 고정 민감 앱 목록·창 제목 단어로 관측 전에, OCR 텍스트 패턴으로 보내기 전에 걸러 `guardStatus: PRIVACY_BLOCKED`로 보낸다.
+- 개입은 10초마다 `GET /sessions/{id}/interventions`로 조회해 Floating Poki·macOS 알림으로 표시하고 `POST /interventions/{id}/acknowledgements`로 기록한다.
+- 세션 중 화면 기록 권한 철회는 10초마다 권한 확인 + 캡처 실패로 감지하고, 즉시 로컬 타이머를 멈춘 뒤 `local-events`에 `LOCAL_SCREEN_PERMISSION_REVOKED`를 보낸다.
+
+### 결정 이유
+
+알림 판단은 서버 Policy Engine만 하므로 클라이언트는 최소 정보를 정확히 걸러 보내는 데 집중한다. 화면 변화 때만 보내 분당 8회 제한과 AI 비용을 지키고, 원본 이미지를 Node 밖 도우미에 가둬 개인정보 노출 범위를 줄인다. 제외 앱 목록은 그 자체가 민감할 수 있고 기기마다 달라 서버에 두지 않는다.
+
+### 서버 쪽 전제 (통보함)
+
+- `analysis-runs` 요청에 `metadata`·`guardStatus`, 응답에 `reasonCode`를 추가한다.
+- Policy Engine은 새 관측 전까지 마지막 판정이 계속된다고 보고 heartbeat마다 이탈 시간을 다시 계산한다.

@@ -174,3 +174,29 @@ test('복구 조회 중 새 세션이 시작되면 늦게 온 복구 결과로 �
   assert.equal(runtime.snapshot().sessionId, '901')
   assert.equal(runtime.snapshot().goalText, '새 목표')
 })
+
+test('세션 중 화면 기록 권한이 꺼지면 바로 멈추고 local-events로 알리며, 일시 실패는 다음 heartbeat에 다시 보낸다', async () => {
+  let screen = true
+  let attempt = 0
+  const { runtime, calls, advance } = setup({
+    'POST /api/v1/sessions/901/local-events': () => (++attempt === 1 ? { success: false, error: { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true } } : { success: true, data: {} }),
+    'POST /api/v1/sessions/901/heartbeats': { success: true, data: { sessionId: '901', status: 'AUTO_PAUSED', serverReceivedAt: '2026-10-25T01:00:00Z' } },
+  }, { screen: () => screen, notification: () => true })
+  runtime.begin(started, '미적분 풀기')
+  advance(90000)
+  screen = false
+  runtime.screenPermissionLost()
+  assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
+  assert.equal(runtime.snapshot().error, 'LOCAL_SCREEN_PERMISSION_REVOKED')
+  advance(60000)
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 90000, '멈춘 뒤에는 세지 않음')
+  await new Promise((resolve) => setImmediate(resolve))
+  await runtime.heartbeat()
+  await new Promise((resolve) => setImmediate(resolve))
+  const sent = calls.filter((call) => call.path.endsWith('/local-events'))
+  assert.equal(sent.length, 2, '실패한 이벤트를 다음 주기에 다시 보냄')
+  assert.deepEqual(sent[1].body, { localEventCode: 'LOCAL_SCREEN_PERMISSION_REVOKED', occurredAt: '2026-10-25T01:00:00.000Z' })
+  assert.equal(sent[1].withDeviceId, true)
+  assert.equal((await runtime.resume()).success, false, '권한이 없으면 재개 요청을 보내지 않음')
+  assert.equal(calls.some((call) => call.path.endsWith('/resume')), false)
+})

@@ -20,6 +20,7 @@ type State = {
 }
 
 const NONE = Symbol('no-active-session')
+const SCREEN_PERMISSION_REVOKED = 'LOCAL_SCREEN_PERMISSION_REVOKED'
 const ACTIVE: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING']
 const isActive = (status: SessionStatus) => ACTIVE.includes(status)
 
@@ -33,6 +34,9 @@ const isActive = (status: SessionStatus) => ACTIVE.includes(status)
 export class SessionRuntime {
   private state: State | null = null
   private pending = new Map<Command, { intent: string; key: string; body?: object }>()
+  // 서버에 아직 알리지 못한 로컬 이벤트. 다음 heartbeat 주기에 순서대로 다시 보낸다.
+  private localEvents: { sessionId: string; localEventCode: string; occurredAt: string }[] = []
+  private flushing = false
 
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
@@ -86,6 +90,7 @@ export class SessionRuntime {
   reset(): void {
     this.state = null
     this.pending.clear()
+    this.localEvents = []
     this.publish()
   }
 
@@ -101,6 +106,7 @@ export class SessionRuntime {
 
   /** 10초마다 불린다. 서버가 세션을 살아 있다고 보도록 Desktop이 확정한 누적 시간을 보낸다. */
   async heartbeat(): Promise<void> {
+    void this.flushLocalEvents()
     const s = this.state
     if (!s || !isActive(s.status) || s.busy) return
     const result = await this.auth.authorizedRequest({
@@ -121,7 +127,22 @@ export class SessionRuntime {
     })
   }
 
+  /**
+   * 세션 중 화면 기록 권한이 사라지면 서버 응답을 기다리지 않고 바로 멈춘다(Notion 화면 분석 7.2).
+   * 서버에는 local-events로 알리고, 서버가 AUTO_PAUSED로 맞춘다. 권한을 다시 켜야 재개할 수 있다.
+   */
+  screenPermissionLost(): void {
+    const s = this.state
+    if (!s || s.status !== 'RUNNING') return
+    this.settle('AUTO_PAUSED')
+    s.error = SCREEN_PERMISSION_REVOKED
+    this.localEvents.push({ sessionId: s.sessionId, localEventCode: SCREEN_PERMISSION_REVOKED, occurredAt: this.wallClock().toISOString() })
+    this.publish()
+    void this.flushLocalEvents()
+  }
+
   resume(): Promise<ApiResult<SessionSnapshot>> {
+    if (this.state && !this.ready.screen()) return Promise.resolve(this.fail(SCREEN_PERMISSION_REVOKED))
     // [주의] 서버는 알림 권한을 검증하지 않는다. 시작과 같이 Desktop이 사용자 확인 기록으로 막는다(결정 022).
     if (this.state && !this.ready.notification()) return Promise.resolve(this.fail('LOCAL_NOTIFICATION_NOT_CONFIRMED'))
     return this.command('resume', 'resume', ['PAUSED', 'AUTO_PAUSED'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/resume`, body: { readiness: { screenAnalysisReady: this.ready.screen() } } }), (s) => {
@@ -214,6 +235,22 @@ export class SessionRuntime {
     s.baseActiveMs = latest.data.accumulatedActiveMs
     s.status = latest.data.status
     s.resumedAt = latest.data.status === 'RUNNING' ? this.now() : null
+  }
+
+  private async flushLocalEvents(): Promise<void> {
+    if (this.flushing) return
+    this.flushing = true
+    try {
+      while (this.localEvents.length) {
+        const { sessionId, ...body } = this.localEvents[0]
+        const result = await this.auth.authorizedRequest({ path: `/api/v1/sessions/${sessionId}/local-events`, method: 'POST', expectedStatus: 200, parse: () => true, body, withDeviceId: true })
+        // 일시적인 실패면 다음 주기에 다시 보낸다. 세션이 없는 등 다시 보내도 안 되는 실패는 버린다.
+        if (!result.success && result.error.retryable) break
+        this.localEvents.shift()
+      }
+    } finally {
+      this.flushing = false
+    }
   }
 
   private publish(): void {

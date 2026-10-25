@@ -4,6 +4,11 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 화면 관측 기반과 분석 제외 앱 (Issue #54, `feat/54-desktop-screen-observation`)
+- 상태: Swift 도우미·관측 상태 기계·제외 앱(로컬)·화면 권한 철회 처리 구현(2026-10-25). 남은 일: `local-events` API 병합 뒤 실제 QA와 REPORT, 실제 Electron 세션에서 관측 확인.
+- 다음 Issue 후보: 화면 분석 2단계 — 도우미에 대상 창 캡처(`SCScreenshotManager`)·Vision OCR, OCR 텍스트 2,000자·이메일/전화/토큰 제거·민감 패턴 차단, `POST /sessions/{id}/analysis-runs`(metadata·guardStatus, `INSUFFICIENT_CONTEXT`일 때만 OCR로 다시 보냄, 같은 창 내용 변경 30초), 다른 브라우저(Safari 등)는 URL을 몰라 OCR하지 않는 방향 검토 필요.
+
+
 - 작업명: 집중 화면 (Issue #48, `feat/48-desktop-focus-session`)
 - 상태: 화면·SessionRuntime·세션 명령 IPC 구현 완료(2026-10-25). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 Issue 후보: Extension 팝업 세션 화면(E02·E03·E06)과 Extension Access Token 갱신. 홈에서 진행 중 세션으로 돌아가는 진입점도 함께 검토.

@@ -245,3 +245,23 @@ Desktop Main이 monotonic 타이머와 10초 heartbeat를 맡는다. 팝업에�
 
 - `apps/extension/features/session/`, `docs/features/session-popup-PLAN.md`
 - Notion: Figma 화면 설계 가이드 E03, 세션 상태 전이 정책 6.3, pause·resume·extend·end API 비고
+
+## 결정 013 - Chrome 화면 분석 수집 범위
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension (Desktop 결정 024와 함께)
+- 상태: 확정 (사용자 결정, Notion 화면 분석·AI 분석 계약·Chrome·macOS 권한 정책 반영). 백엔드·AI·PM에 통보함.
+
+### 결정 내용
+
+- 수집은 `TAB_META` → `CHROME_DOM` 순서다. 응답이 `UNCERTAIN` + `INSUFFICIENT_CONTEXT`일 때만 DOM으로 다시 보낸다.
+- `CHROME_VIEWPORT_OCR`(`captureVisibleTab()`)은 MVP에서 제외하고 P1로 미룬다. DOM으로 부족한 페이지는 `UNCERTAIN`이며 알림을 만들지 않는다.
+- DOM은 제목·h1~h3·본문 주요 텍스트·코드 블록 제목만 최대 2,000자로 읽는다. `input`·`textarea`·`contenteditable`의 입력값은 읽지 않는다.
+- 탭이 바뀌고 15초 유지되면 보낸다(기존 15초 체류 흐름). 같은 페이지는 다시 보내지 않고, 내용 변경은 최대 30초에 한 번 보낸다.
+- 제외 도메인이면 `guardStatus: EXCLUDED`, 비밀번호·일회용 코드·카드 입력 칸이 있거나 메일 작성 URL·메신저 도메인이면 `guardStatus: PRIVACY_BLOCKED`만 보낸다. DOM 텍스트에 민감 패턴이 있으면 버리고 `PRIVACY_BLOCKED`로 보낸다.
+- manifest를 Notion 권한 정책에 맞춘다: 필수 `host_permissions`·정적 `content_scripts`를 없애고 `optional_host_permissions` + `scripting`으로 Chrome 분석을 켤 때 요청한다. 권한 제거(`chrome.permissions.onRemoved`) 시 `local-events`를 보낸다.
+
+### 결정 이유
+
+Extension에는 기본 OCR이 없어 한국어 OCR 엔진을 따로 넣어야 하고, Desktop이 Chrome 창을 대신 찍으면 URL을 모른 채 제외·민감 페이지를 캡처할 수 있다. 판단 보류는 알림을 만들지 않아 MVP에서 빼도 잘못된 경고가 생기지 않는다.

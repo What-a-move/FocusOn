@@ -56,11 +56,12 @@
 
 - Issue #48(2026-10-25): 집중 화면(D10·D11·D15·D16)을 `FocusOn-design/session.html`대로 `/session/`에 구현했다. 타이머는 Main `SessionRuntime`이 monotonic clock으로 세고 1초 목표 도달·10초 heartbeat를 처리한다. 일시정지·재개·연장·종료는 Idempotency-Key·If-Match-Version, 버전 충돌 시 최신 조회, 앱 재실행 시 APP_RESTART 일시정지, 서버 자동 종료(ABANDONED) 안내를 처리한다. 세션 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 실행·멈춤·끝내기 확인·시간 종료(Esc로 안 닫힘)·연장·완료(다크)를 확인했다. 개발 중 오류 2건(Tailwind `ring` 클래스 충돌, dialog margin 초기화)을 ERROR 문서로 남겼다.
 
+- Issue #54(2026-10-25): 화면 분석 1단계. Swift 도우미(`native/observer`, macOS 14+)로 맨 앞 앱·창 제목·설치된 앱 목록을 읽고, Main `ScreenObserver`가 세션 `RUNNING` 중 같은 화면 15초 유지 시 관측 1건(Chrome 건너뜀, 제외 앱·FocusOn 창·지원하지 않는 브라우저 `EXCLUDED`, 고정 민감 앱·창 제목 단어 `PRIVACY_BLOCKED`, 그 외 `APP_META`)을 만든다. 서버 전송은 2단계다. 분석 제외 앱은 번들 ID로 이 기기에만 저장하고 온보딩 제외 단계에서 고른다(`exclusions.html` 앱 대화상자). 세션 중 화면 기록 권한이 꺼지면 바로 `AUTO_PAUSED` + `local-events`를 보내고 집중 화면에 `권한 꺼짐` 안내를 보여 준다. dialog 가운데 정렬을 `globals.css`에서 한 번에 고쳤다(ERROR 문서). `local-events` API가 dev에 없어 실제 왕복은 미검증이다.
+
 ### 아직 진행하지 않은 작업
 
-- macOS 활성 앱 감지
-- 화면 캡처 권한 및 캡처 처리
-- 분석 제외 앱 처리
+- 화면 분석 2단계: 대상 창 캡처·Apple Vision OCR·`analysis-runs` 전송
+- 설정 › 분석·권한의 제외 앱 관리 (설정 화면 작업 때)
 - MediaPipe 카메라 분석 연동
 - 인증 외 Server API 연결
 - 화면 부유형 마스코트 표시 및 사용자 문구 설정
