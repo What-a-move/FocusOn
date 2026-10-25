@@ -56,3 +56,27 @@
 - 다른 Client의 azp, 다중 aud+azp 누락, 빈 문자열·공백·숫자·배열 azp를 서명된 합성 토큰으로 거절했다.
 - azp가 일치해도 aud가 다른 Client면 거절함을 확인했다. aud 누락도 azp 유무와 관계없이 인증 실패로 반환하며 예외로 500이 되지 않음을 확인했다.
 - 외부 실제 Google 계정 왕복과 PostgreSQL 재실행은 이번 claim 검증 보강에서 수행하지 않았다.
+
+## 사용자 요청 재실행 QA (2026-10-25)
+
+- 최신 dev `49eacce`(PR #53)를 작업 브랜치에 통합했다. Extension CONTEXT 충돌은 refresh·팝업 구현 완료를 반영한 최신 dev 문서로 해결했다.
+- PostgreSQL 17.11의 별도 QA DB에서 LoginApiTests·AuthPersistenceRepositoryTests를 재실행했고 성공했다. Flyway 이력 V1/V2 모두 true, Hibernate validate 통과. 종료 후 해당 임시 DB만 제거했다.
+- 실제 실행 jar와 별도 PostgreSQL DB·127.0.0.1:18080 서버로 HTTP QA 10건을 수행했고 모두 통과했다.
+
+| 실제 HTTP/환경 QA | 결과 |
+| --- | --- |
+| readiness 및 DB 연결 | 200 UP |
+| Desktop/Backend Google Client ID | 일치 (원문 출력 안 함) |
+| auth/me Bearer 누락·위조 | 401 AUTH_RELOGIN_REQUIRED + requestId |
+| 비공개 actuator 접근 | 401 |
+| 잘못된 JSON | 400 VALIDATION_ERROR |
+| loopback 이외 redirectUri | 400 VALIDATION_ERROR |
+| 실제 Google token endpoint에 무효 code 교환 | 401 AUTH_OAUTH_REAUTH_REQUIRED |
+| 실패 후 users/token_families | 생성된 행 없음 |
+| Flyway V1/V2 | 모두 성공 |
+
+- 실제 Google token endpoint 통신은 모의 대체 없이 수행했다. 성공하는 실계정 ID token·Desktop callback·Keychain 왕복은 이 검증에 포함하지 않는다.
+- QA 서버 종료 및 임시 DB 제거 완료. 기존 개발 DB·로컬 인증 파일·사용자 staged IDE 파일을 보존했다.
+- 현재 체크아웃에는 Desktop node_modules·컴파일 산출물이 없어 Desktop 실행 QA는 수행하지 않았다. 실계정 Google 로그인은 본인 인증이 필요해 사용자에게 진행 여부를 요청했다.
+
+- 최신 dev 통합·PostgreSQL 실행 후 전체 clean build를 다시 실행했다. 최종 38개 테스트 failure/error 0, Checkstyle·build 통과. 원격 CI는 연결 도구에서 실행 목록을 확인하지 못해 통과로 표시하지 않는다.
