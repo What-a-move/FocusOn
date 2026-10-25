@@ -38,6 +38,8 @@
 - 일회용 연결 코드 pairing과 token 저장 정책을 구현해야 하며 Server 실시간 동기화 방식은 추가 확정이 필요하다.
 - Desktop 온보딩에서 Extension 연결은 필수 단계다. Extension pairing UI는 코드 입력과 연결 결과 표시까지만 담당하며, 온보딩 완료 뒤의 목표·시간 설정은 Desktop 대시보드에서 진행한다.
 
+- Issue #52(2026-10-25): 팝업을 연결 전(E01)·세션 없음(E02)·세션 진행 중(E03, 표시 전용)·서버 연결 불가(E06)로 나눴다. `features/session/api-client.ts`가 Access Token 갱신(만료 30초 전·서버 만료 응답 시 1회, single-flight, Refresh Token rotation 저장)과 재연결 처리(토큰 삭제 후 연결 화면)를 맡는다. 테스트는 `pnpm --filter @focuson/extension test`(Node 24 TypeScript 실행). 세션 API가 dev에 없어 실제 왕복은 미검증이며, 빌드 결과물에 가짜 저장소·서버 응답을 넣어 화면을 확인했다.
+
 ### 아직 진행하지 않은 작업
 
 - 현재 탭 정보 수집 API 연결

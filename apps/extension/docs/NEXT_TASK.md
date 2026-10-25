@@ -4,6 +4,13 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 팝업 세션 화면과 Access Token 갱신 (Issue #52, `feat/52-extension-session-popup`)
+- 상태: E02·E03(표시 전용)·E06, 토큰 갱신(single-flight·rotation)·재연결 처리, 이 브라우저 연결 해제를 구현했다(2026-10-25). 남은 일: 팝업 조작(일시정지·종료) 범위 팀 확인, 세션 API 병합 뒤 실제 계정 QA와 REPORT.
+- 다음 작업 후보: 현재 탭 추적과 페이지 분석 요청(결정 005·007, `POST /sessions/{id}/analysis-runs`), 사이트 접근 권한(E01b).
+
+## 이전 작업
+
+
 - 작업명: 온보딩용 일회용 연결 코드 pairing 구현
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Chrome Extension
