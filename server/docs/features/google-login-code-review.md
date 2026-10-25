@@ -53,3 +53,5 @@
 - 반영: 1번. package-private GoogleAuthorizedPartyValidator를 도입하고 Google decoder에만 등록했다. FocusOn Access JWT·DB 인증·API 계약·migration에는 적용하지 않는다.
 - 규칙: azp가 있으면 원본 타입이 문자열이고 Desktop Client ID와 일치해야 한다. 다중 aud는 azp 필수, 단일 aud는 생략 허용. aud 검증은 별도로 유지한다.
 - 출처: [Google OpenID Connect ID token claims](https://developers.google.com/identity/openid-connect/openid-connect). Google은 azp를 authorized presenter의 Client ID로 설명한다.
+
+- 최종 독립 정적 리뷰: bda78b5의 검증기·decoder 등록·서명/aud 검증 유지·테스트를 확인했고 P1/P2를 보고하지 않았다. 테스트 실행 결과는 root의 QA 기록이며 리뷰어는 테스트·외부 조회·파일 수정을 하지 않았다.
