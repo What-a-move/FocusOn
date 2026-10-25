@@ -3,6 +3,7 @@ import type { OnboardingApi } from './onboarding-contract.cjs'
 import type { ReportsApi } from './report-contract.cjs'
 import type { GoalsApi } from './goal-contract.cjs'
 import type { SessionsApi } from './session-contract.cjs'
+import type { AnalysisApi } from './analysis-contract.cjs'
 
 export const AUTH_CHANNELS = {
   getSession: 'auth:session:get',
@@ -47,6 +48,7 @@ export type FocusOnApi = {
   reports: ReportsApi
   goals: GoalsApi
   sessions: SessionsApi
+  analysis: AnalysisApi
 }
 
 const AUTH_STATUSES: readonly AuthUiStatus[] = [

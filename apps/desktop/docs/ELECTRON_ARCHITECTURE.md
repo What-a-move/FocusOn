@@ -18,6 +18,8 @@ Preload / contextBridge
 Next.js Renderer
 ```
 
+Main은 화면 관측용 Swift 도우미(`native/observer` → `build/native/focuson-observer`)를 자식 프로세스로 띄우고 표준 입출력 JSON 줄로 통신한다. 도우미는 맨 앞 앱·창 제목과 설치된 앱 목록을 읽는다(2단계부터 대상 창 캡처·Apple Vision OCR). 캡처 이미지는 도우미 밖으로 나오지 않는다(결정 024).
+
 | 영역 | 담당 | 금지 |
 | --- | --- | --- |
 | Main | 앱 생명주기, Window, Menu, 권한, 활성 앱, 화면 캡처, OAuth·Token·인증 API 요청 | React UI 상태 직접 관리 |
@@ -84,6 +86,7 @@ app.whenReady()
 
 - Main: TypeScript Compiler와 전용 설정을 사용해 `dist-electron/`에 Build
 - Preload: 같은 설정으로 타입 검사한 뒤 esbuild로 단일 `.cjs` 파일에 묶어 `dist-electron/`에 Build
+- 화면 관측 도우미: `pnpm build:electron`이 `xcrun swiftc`로 `build/native/focuson-observer`를 만든다(macOS 14 이상 대상). 배포본은 `extraResources`로 넣고 같은 인증서로 서명한다(패키징 작업 때 설정)
 - Renderer: Next.js Static Export 결과인 `out/` 사용
 - Packaging: 현재 설치된 electron-builder 사용
 - 개발 Loading: `http://127.0.0.1:3000`

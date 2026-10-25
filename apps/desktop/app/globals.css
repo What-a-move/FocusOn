@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* [주의] Tailwind 기본 초기화가 dialog margin을 0으로 만들어 showModal 창이 왼쪽 위에 붙는다. 모든 창을 가운데로 되돌린다
+   (focus-session-dialog-margin-preflight-ERROR.md, screen-observation-dialog-margin-preflight-ERROR.md). */
+dialog { margin: auto; }
+
 /* FocusOn-Design/fo-base.css의 화면 색과 버튼 깊이를 Desktop 화면에 맞춰 사용한다. */
 :root {
   --fo-surface: #fff;

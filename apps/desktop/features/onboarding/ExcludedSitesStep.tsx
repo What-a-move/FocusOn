@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
-import { describeError, onboardingApi, type Notice } from './onboarding-api'
+import { ExcludedAppsField } from './ExcludedAppsField'
+import { analysisApi, describeError, onboardingApi, type ExcludedApp, type Notice } from './onboarding-api'
 
 const MAX_SITES = 50
 const defaultHint = { kind: '' as '' | 'error' | 'success', text: '도메인만 적어 주세요. 하위 도메인도 함께 제외돼요.' }
@@ -25,6 +26,10 @@ export function ExcludedSitesStep() {
   const [hint, setHint] = useState(defaultHint)
   const [feedback, setFeedback] = useState<Notice | null>(null)
   const [saving, setSaving] = useState(false)
+  const [apps, setApps] = useState<ExcludedApp[]>([])
+
+  // 이전에 이 기기에서 고른 제외 앱을 보여 준다. 없거나 못 읽으면 빈 목록이다.
+  useEffect(() => { void analysisApi.getExcludedApps().then((result) => { if (result.success) setApps(result.data) }) }, [])
 
   function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -43,6 +48,13 @@ export function ExcludedSitesStep() {
   // [주의] 저장하거나 '건너뛰기'를 눌렀을 때만 단계 완료로 기록한다. 방문만으로는 완료가 아니다.
   async function finish() {
     setSaving(true)
+    // 제외 앱은 이 기기에만 저장한다. 서버에는 보내지 않는다(결정 024).
+    const savedApps = await analysisApi.saveExcludedApps(apps)
+    if (!savedApps.success) {
+      setSaving(false)
+      setFeedback({ title: '제외 앱을 저장하지 못했어요.', body: '잠시 후 다시 눌러 주세요.' })
+      return
+    }
     const result = await onboardingApi.saveExcludedSites(sites)
     setSaving(false)
     if (!result.success) {
@@ -59,7 +71,7 @@ export function ExcludedSitesStep() {
       poki="/design/poki-floating-excluded-v2.png"
       backHref="/onboarding/permissions/"
       feedback={feedback}
-      next={{ label: sites.length ? '다음' : '건너뛰기', blocked: false, busy: saving, onClick: () => { void finish() } }}
+      next={{ label: sites.length || apps.length ? '다음' : '건너뛰기', blocked: false, busy: saving, onClick: () => { void finish() } }}
     >
       <label className="field-label" htmlFor="site-input">분석 제외 사이트 <span className="tag">선택</span></label>
       <form className="name-row" onSubmit={add} noValidate>
@@ -86,7 +98,8 @@ export function ExcludedSitesStep() {
           </li>
         ))}
       </ul>
-      <p className="exclude-note">여기 있는 사이트에서는 화면 분석만 멈추고, 집중 타이머는 계속돼요.<br />지금 건너뛰어도 설정에서 언제든 추가할 수 있어요.</p>
+      <ExcludedAppsField apps={apps} onChange={(next) => { setApps(next); setFeedback(null) }} />
+      <p className="exclude-note">여기 있는 사이트와 앱에서는 화면 분석만 멈추고, 집중 타이머는 계속돼요.<br />지금 건너뛰어도 설정에서 언제든 추가할 수 있어요.</p>
     </OnboardingShell>
   )
 }
