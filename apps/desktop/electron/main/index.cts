@@ -224,7 +224,7 @@ if (!hasSingleInstanceLock) {
     app.on('will-quit', () => helper?.dispose())
     const observer = new ScreenObserver({ selfPid: process.pid, isExcluded: (bundleId) => excludedApps.has(bundleId), now: () => performance.now(), wallClock: () => new Date() })
     // 관측은 바로 서버로 보내고 Desktop에 쌓아 두지 않는다(결정 024). 창 제목은 로그에 남기지 않는다.
-    const sender = authService ? new AnalysisSender(authService) : null
+    const sender = authService ? new AnalysisSender(authService, path.join(app.getPath('userData'), 'analysis-sequence.json')) : null
     let observing = false
     // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(10초, 학습 세션 설계서·세션 상태 전이 정책)를 계속 처리한다.
     if (runtime) {

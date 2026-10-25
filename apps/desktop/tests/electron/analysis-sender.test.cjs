@@ -1,11 +1,14 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
+const os = require('node:os')
+const path = require('node:path')
+const { mkdtempSync } = require('node:fs')
 const { AnalysisSender } = require('../../dist-electron/main/analysis-sender.cjs')
 
 const run = { analysisRunId: '7001', relation: 'UNRELATED', confidence: 0.91, reasonCode: 'SEMANTIC_GOAL_MISMATCH', observedAt: '2026-10-25T10:00:15Z', policyVersion: 'v1' }
 const meta = { observedAt: '2026-10-25T10:00:15Z', guardStatus: null, contentSource: 'APP_META', metadata: { appName: 'Xcode', windowTitle: 'main.swift' } }
 
-function setup(replies) {
+function setup(replies, file = path.join(mkdtempSync(path.join(os.tmpdir(), 'focuson-')), 'analysis-sequence.json')) {
   const calls = []
   let clock = 0
   const auth = {
@@ -15,7 +18,7 @@ function setup(replies) {
       return reply.success ? { success: true, data: request.parse(reply.data) } : reply
     },
   }
-  return { sender: new AnalysisSender(auth, () => clock), calls, advance: (ms) => { clock += ms } }
+  return { sender: new AnalysisSender(auth, file, () => clock), calls, file, advance: (ms) => { clock += ms } }
 }
 
 test('일반 관측은 앱 정보와 함께, 고유 clientRunId·1부터 늘어나는 sequence로 보낸다', async () => {
@@ -70,4 +73,14 @@ test('AI 장애·네트워크 오류·형식 오류는 다시 보내거나 쌓�
   assert.equal(await sender.send('901', meta), null, '허용 밖 relation은 받지 않음')
   assert.equal(calls.length, 3, '실패마다 한 번씩만 보냄')
   assert.deepEqual(calls.map((call) => call.body.sequence), [1, 2, 3])
+})
+
+test('앱을 다시 켜도 같은 세션이면 sequence를 이어서 센다', async () => {
+  const first = setup([])
+  await first.sender.send('901', meta)
+  await first.sender.send('901', meta)
+  const restarted = setup([], first.file)
+  await restarted.sender.send('901', meta)
+  await restarted.sender.send('902', meta)
+  assert.deepEqual(restarted.calls.map((call) => call.body.sequence), [3, 1], '같은 세션은 3부터, 새 세션은 1부터')
 })

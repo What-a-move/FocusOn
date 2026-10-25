@@ -215,7 +215,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 
 - 분석 제외 앱은 서버로 보내지 않는다. 서버는 관측 결과의 `guardStatus: EXCLUDED`만 받는다(2단계).
 - 세션이 `RUNNING`이면 Main이 1초마다 Swift 도우미(`build/native/focuson-observer`)로 맨 앞 앱을 보고, 같은 화면이 15초 유지되면 관측 1건(`APP_META` / `EXCLUDED` / `PRIVACY_BLOCKED`)을 만든다. Chrome은 관측하지 않는다(Extension 담당). FocusOn 자기 창과 지원하지 않는 브라우저(Safari 등)는 내용 없이 `EXCLUDED`로 만든다.
-- 관측은 Main `AnalysisSender`가 바로 `POST /sessions/{id}/analysis-runs`(`Authorization`·`X-Device-Id`)로 보낸다(Issue #56). 본문은 `{ clientRunId(UUID v4), contentSource: APP_META, observedAt, sequence(세션별 1부터), guardStatus, metadata? }`이고 제외·민감이면 `metadata`를 넣지 않는다. 다시 보내거나 쌓지 않고, `TOO_MANY_REQUESTS`면 60초 쉰다. Renderer IPC는 없다.
+- 관측은 Main `AnalysisSender`가 바로 `POST /sessions/{id}/analysis-runs`(`Authorization`·`X-Device-Id`)로 보낸다(Issue #56). 본문은 `{ clientRunId(UUID v4), contentSource: APP_META, observedAt, sequence(세션별 1부터, 재시작해도 같은 세션이면 이어서 `userData/analysis-sequence.json`), guardStatus, metadata? }`이고 제외·민감이면 `metadata`를 넣지 않는다. 다시 보내거나 쌓지 않고, `TOO_MANY_REQUESTS`면 60초 쉰다. Renderer IPC는 없다.
 - 세션이 `RUNNING`일 때 10초마다 화면 기록 권한을 확인한다. 꺼졌으면 `SessionRuntime`이 바로 `AUTO_PAUSED`(오류 `LOCAL_SCREEN_PERMISSION_REVOKED`)로 멈추고 `POST /sessions/{id}/local-events` `{ localEventCode, occurredAt }`(`Authorization`·`X-Device-Id`)을 보낸다. 일시 실패는 다음 heartbeat 주기에 다시 보낸다. 권한이 없으면 재개 요청을 보내지 않는다.
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
