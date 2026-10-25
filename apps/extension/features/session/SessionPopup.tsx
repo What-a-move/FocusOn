@@ -6,7 +6,7 @@ import { displayActiveMs, formatClock, type ActiveSession } from './session-mode
 import '../pairing/pairing.css'
 import './session-popup.css'
 
-// 팝업이 열려 있는 동안만 서버 상태를 다시 읽는다. 시간 확정·조작은 Desktop이 맡는다(팝업은 표시만 — 팀 확인 전 제안, session-popup-PLAN.md).
+// 팝업이 열려 있는 동안만 서버 상태를 다시 읽는다. 시간 확정·조작은 Desktop이 맡는다(팝업은 표시만, 결정 012).
 const POLL_MS = 10_000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 
@@ -133,7 +133,7 @@ function SessionView({ session, activeMs }: { session: ActiveSession; activeMs: 
       <Poki name={session.status === 'AUTO_PAUSED' ? 'paused-v2' : paused ? 'paused-v3' : 'master-v3'} alt={paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
     </div>
     <div className={`progress${paused ? ' is-dim' : ''}`}><i style={{ width: `${percent}%` }} /></div>
-    {/* 멈추기·끝내기는 Desktop에서만 한다. Desktop이 타이머와 서버 신호를 맡기 때문이다(팀 확인 전 제안). */}
+    {/* 멈추기·끝내기는 Desktop에서만 한다. Desktop이 타이머와 서버 신호를 맡기 때문이다(결정 012). */}
     <p className="small muted">멈추기·끝내기는 데스크톱 앱에서 할 수 있어요.</p>
   </>
 }

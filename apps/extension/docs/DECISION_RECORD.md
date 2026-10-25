@@ -59,6 +59,8 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 
 Extension은 Desktop에서 시작한 학습 세션을 조회해 타이머를 표시하고, 일시정지·재개·종료 명령을 Server에 요청한다. 세션 상태와 기준 시간은 Server가 관리하며 Extension은 독립적으로 시간을 확정하지 않는다.
 
+> 2026-10-25 변경: MVP에서는 Extension이 조회·표시만 하고 일시정지·재개·종료 명령은 P1로 미룬다(결정 012).
+
 #### 결정 이유
 
 Popup이 닫히거나 Service Worker가 다시 시작되어도 Desktop과 Extension의 시간이 달라지지 않도록 하기 위해서다.
@@ -66,7 +68,8 @@ Popup이 닫히거나 Service Worker가 다시 시작되어도 Desktop과 Extens
 #### 후속 확인
 
 - [x] 일회용 연결 코드 기반 Extension pairing 확정
-- [ ] 세션 상태 조회 주기와 실시간 동기화 방식 확정
+- [x] 세션 상태 조회 주기와 실시간 동기화 방식 확정 (팝업이 열려 있는 동안 10초 조회, 결정 012)
+- [x] MVP 팝업은 표시만 하고 일시정지·재개·종료는 Desktop에서 한다. 팝업 조작은 P1 (결정 012로 일부 변경)
 - [x] 상태 명령 idempotency/version과 Heartbeat 예외 확정
 
 ### 결정 004 - Popup의 피드백 표시 범위
@@ -215,3 +218,30 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 
 - `apps/extension/features/pairing/extension-auth.ts`, `pairing-api.ts`, `PairingStep.tsx`
 - Notion `인증 · 토큰 · 디바이스 정책`의 Extension 저장 영역 항목
+
+## 결정 012 - MVP 팝업은 세션 표시만, 조작은 Desktop
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension (Desktop 연동)
+- 상태: 확정 (사용자 결정, Notion Figma 가이드 E03·세션 상태 전이 정책·API 명세 반영)
+
+### 결정 내용
+
+- MVP에서 Extension 팝업은 진행 중 세션의 목표·남은 시간·상태를 보여 주기만 한다. 일시정지·재개·연장·종료는 Desktop에서 한다. 팝업에는 `멈추기·끝내기는 데스크톱 앱에서 할 수 있어요`를 안내한다.
+- 팝업은 열려 있는 동안 10초마다 `GET /api/v1/sessions/active`를 다시 읽고, `RUNNING`이면 받은 뒤 흐른 시간만 화면용으로 더한다. 시간 확정은 서버·Desktop이 한다.
+- 결정 003의 "Extension이 일시정지·재개·종료 명령을 요청한다"는 P1로 미룬다.
+- 시안의 `FocusOn 앱 열기`는 Extension에서 Desktop을 여는 방법이 없어 넣지 않는다.
+
+### 결정 이유
+
+Desktop Main이 monotonic 타이머와 10초 heartbeat를 맡는다. 팝업에서 상태를 바꾸면 Desktop은 다음 heartbeat 응답 전까지(최대 10초) 이를 모르고, 일시정지 본문의 누적 시간도 Desktop이 센 값과 어긋날 수 있다. 시간을 세는 쪽을 하나로 두어 기록을 정확하게 한다.
+
+### 고려한 대안
+
+- 팝업 조작 + Desktop이 heartbeat 응답의 상태가 다르면 최신 세션을 다시 조회해 맞추기: 최대 10초 지연과 시간 차이가 생겨 P1로 미룸.
+
+### 영향받는 파일
+
+- `apps/extension/features/session/`, `docs/features/session-popup-PLAN.md`
+- Notion: Figma 화면 설계 가이드 E03, 세션 상태 전이 정책 6.3, pause·resume·extend·end API 비고

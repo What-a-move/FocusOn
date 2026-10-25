@@ -211,10 +211,10 @@ if (!hasSingleInstanceLock) {
     }, sessionReady) : null
     const runtime = sessionRuntime
     registerSessionIpc(() => mainWindow, rendererUrl, authService && runtime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, runtime) : null, runtime)
-    // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(20초)를 계속 처리한다.
+    // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(10초, 학습 세션 설계서·세션 상태 전이 정책)를 계속 처리한다.
     if (runtime) {
       setInterval(() => runtime.tick(), 1000)
-      setInterval(() => { void runtime.heartbeat() }, 20_000)
+      setInterval(() => { void runtime.heartbeat() }, 10_000)
     }
     createMainWindow()
     void authService?.restore()

@@ -99,7 +99,7 @@ export class SessionRuntime {
     this.publish()
   }
 
-  /** 20초마다 불린다. 서버가 세션을 살아 있다고 보도록 Desktop이 확정한 누적 시간을 보낸다. */
+  /** 10초마다 불린다. 서버가 세션을 살아 있다고 보도록 Desktop이 확정한 누적 시간을 보낸다. */
   async heartbeat(): Promise<void> {
     const s = this.state
     if (!s || !isActive(s.status) || s.busy) return

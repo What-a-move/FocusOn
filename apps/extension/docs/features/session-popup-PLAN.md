@@ -45,7 +45,7 @@
 
 ## Desktop·Server·AI 연결
 
-- 팝업은 표시만 한다. 일시정지·재개·종료는 Desktop이 맡는다(팀 확인 전 제안). 이유: Notion 상태 명령의 호출 주체가 Desktop이고, Desktop Main이 monotonic 타이머와 heartbeat를 맡아 팝업 명령은 Desktop과 어긋날 수 있다. 결정 003·Figma E03의 팝업 조작은 확인 뒤 반영한다.
+- 팝업은 표시만 한다. 일시정지·재개·종료는 Desktop이 맡는다(2026-10-25 확정, 결정 012, 팝업 조작은 P1). 이유: Notion 상태 명령의 호출 주체가 Desktop이고, Desktop Main이 monotonic 타이머와 heartbeat를 맡아 팝업 명령은 Desktop과 어긋날 수 있다. Figma E03도 같은 기준으로 고쳤다. 팝업 조작은 Desktop이 heartbeat 응답으로 서버 상태 변화를 맞추는 방식과 함께 P1에서 다시 검토한다.
 - 시안의 `FocusOn 앱 열기`는 Desktop을 여는 방법(사용자 지정 URL 등)이 없어 넣지 않았다.
 
 ## 예외 처리
