@@ -190,3 +190,97 @@ test('다시 로그인을 시작하면 늦게 끝난 이전 교환 결과는 저
   assert.deepEqual(loggedOut, ['access-secret'])
   assert.notEqual(store.getSnapshot().status, 'SIGNED_IN')
 })
+
+test('로그아웃 API의 만료 401은 성공으로 바꾸지 않고 코드를 서비스에 전달한다', async () => {
+  const api = new AuthApiClient('http://127.0.0.1:8080', async () => new Response(
+    JSON.stringify({ code: 'AUTH_ACCESS_TOKEN_EXPIRED', retryable: false }), { status: 401 },
+  ))
+  assert.deepEqual(await api.logout('expired'), {
+    success: false, error: { code: 'AUTH_ACCESS_TOKEN_EXPIRED', retryable: false },
+  })
+})
+
+// 실제 API 파서와 서비스를 함께 사용해 응답 사이의 만료·갱신·폐기 순서를 검사한다.
+function logoutExpiryFixture({ retryStatus = 204, refreshStatus = 200, logoutCode = 'AUTH_ACCESS_TOKEN_EXPIRED' } = {}) {
+  const calls = []
+  const store = new AuthSessionStore(() => {})
+  const vault = createVault()
+  let logoutCalls = 0
+  const api = new AuthApiClient('http://127.0.0.1:8080', async (url, options) => {
+    const path = new URL(url).pathname
+    calls.push([path, options.headers.Authorization])
+    if (path.endsWith('/exchange')) return new Response(JSON.stringify({ data: { ...tokens, ...identity } }), { status: 201 })
+    if (path.endsWith('/refresh')) {
+      assert.equal(options.headers.Authorization, undefined)
+      assert.equal(JSON.parse(options.body).refreshToken, tokens.refreshToken)
+      return refreshStatus === 200
+        ? new Response(JSON.stringify({ data: { ...tokens, accessToken: 'rotated-access', refreshToken: 'rotated-refresh' } }), { status: 200 })
+        : new Response(JSON.stringify({ code: 'SERVICE_UNAVAILABLE', retryable: true }), { status: refreshStatus })
+    }
+    if (path.endsWith('/logout')) {
+      logoutCalls += 1
+      if (logoutCalls === 1) return new Response(JSON.stringify({ code: logoutCode, retryable: false }), { status: 401 })
+      return retryStatus === 204 ? new Response(null, { status: 204 })
+        : new Response(JSON.stringify({ code: 'AUTH_ACCESS_TOKEN_EXPIRED', retryable: false }), { status: retryStatus })
+    }
+    throw new Error('unexpected authentication path')
+  })
+  const service = new AuthService(store, api, vault, async () => ({ installationId: 'logout-expiry', deviceName: 'QA Mac', platform: 'MACOS' }))
+  const login = () => service.handleOAuthOutcome({ type: 'code', data: {
+    authorizationCode: 'code', codeVerifier: 'verifier', state: 'state', redirectUri: 'http://127.0.0.1:49152/',
+  } })
+  return { calls, store, vault, service, login }
+}
+
+test('전송 중 만료된 로그아웃은 refresh 후 새 Access Token으로 한 번만 다시 보낸다', async () => {
+  const qa = logoutExpiryFixture()
+  await qa.login()
+  assert.equal(qa.store.getSnapshot().status, 'SIGNED_IN')
+  assert.deepEqual(await qa.service.logout(), { success: true, data: { loggedOut: true } })
+  assert.deepEqual(qa.calls.slice(1), [
+    ['/api/v1/auth/logout', 'Bearer access-secret'],
+    ['/api/v1/auth/refresh', undefined],
+    ['/api/v1/auth/logout', 'Bearer rotated-access'],
+  ])
+  assert.equal(qa.vault.peek(), null)
+  assert.equal(qa.store.getSnapshot().status, 'SIGNED_OUT')
+})
+
+test('로그아웃의 갱신이 실패하면 Keychain과 로그인 상태를 유지해 재시도할 수 있다', async () => {
+  const qa = logoutExpiryFixture({ refreshStatus: 503 })
+  await qa.login()
+  const result = await qa.service.logout()
+  assert.equal(result.success, false)
+  assert.equal(result.error.code, 'SERVICE_UNAVAILABLE')
+  assert.equal(qa.calls.length, 3)
+  assert.equal(qa.vault.peek(), tokens.refreshToken)
+  assert.equal(qa.store.getSnapshot().status, 'SIGNED_IN')
+})
+
+test('로그아웃 재시도도 만료이면 반복 갱신하지 않고 새 Keychain 토큰을 유지한다', async () => {
+  const qa = logoutExpiryFixture({ retryStatus: 401 })
+  await qa.login()
+  const result = await qa.service.logout()
+  assert.equal(result.success, false)
+  assert.equal(result.error.code, 'AUTH_ACCESS_TOKEN_EXPIRED')
+  assert.equal(qa.calls.length, 4)
+  assert.equal(qa.vault.peek(), 'rotated-refresh')
+  assert.equal(qa.store.getSnapshot().status, 'SIGNED_IN')
+})
+
+test('의미를 알 수 없는 로그아웃 401은 성공 처리하거나 Keychain을 삭제하지 않는다', async () => {
+  const qa = logoutExpiryFixture({ logoutCode: 'UNRECOGNIZED_AUTH_ERROR' })
+  await qa.login()
+  assert.equal((await qa.service.logout()).success, false)
+  assert.equal(qa.calls.length, 2)
+  assert.equal(qa.vault.peek(), tokens.refreshToken)
+})
+
+test('이미 폐기된 로그인은 불필요한 refresh 없이 로컬 로그아웃을 완료한다', async () => {
+  const qa = logoutExpiryFixture({ logoutCode: 'AUTH_RELOGIN_REQUIRED' })
+  await qa.login()
+  assert.equal((await qa.service.logout()).success, true)
+  assert.equal(qa.calls.length, 2)
+  assert.equal(qa.vault.peek(), null)
+  assert.equal(qa.store.getSnapshot().status, 'SIGNED_OUT')
+})

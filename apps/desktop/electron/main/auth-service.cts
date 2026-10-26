@@ -262,20 +262,34 @@ export class AuthService {
     this.generation += 1
     await this.ready()
     let token = this.accessToken
-    if (!token || this.accessTokenExpiresAt <= Date.now()) {
+    if (!token || this.accessTokenExpiresAt - EXPIRY_MARGIN_MS <= Date.now()) {
       const refreshed = await this.refresh()
       if (!refreshed.success) {
         if (isReloginError(refreshed.error.code)) {
-          this.publish('SIGNED_OUT', refreshed.error)
-          return { success: true, data: { loggedOut: true } }
+          return this.completeLogout()
         }
         return { success: false, error: refreshed.error }
       }
       token = refreshed.data.accessToken
     }
 
-    const result = await this.api.logout(token)
-    if (!result.success) return { success: false, error: result.error }
+    let result = await this.api.logout(token)
+    // 전송 중 만료되거나 PC 시계가 느려도 서버의 폐기 완료를 확인한 뒤 로컬 token을 지운다.
+    if (!result.success && result.error.code === ACCESS_TOKEN_EXPIRED) {
+      const refreshed = await this.refresh()
+      if (!refreshed.success) {
+        return isReloginError(refreshed.error.code)
+          ? this.completeLogout() : { success: false, error: refreshed.error }
+      }
+      result = await this.api.logout(refreshed.data.accessToken)
+    }
+    // 이미 폐기된 로그인만 로컬 정리를 허용한다. 알 수 없는 401·장애는 성공으로 바꾸지 않는다.
+    if (!result.success && !isReloginError(result.error.code)) return { success: false, error: result.error }
+    return this.completeLogout()
+  }
+
+  /** 서버 폐기 완료 또는 재로그인 필요가 확인된 경우에만 안전한 저장소와 메모리를 정리한다. */
+  private async completeLogout(): Promise<IpcResult<{ loggedOut: true }>> {
     try {
       await this.vault.clear()
     } catch {
@@ -285,6 +299,6 @@ export class AuthService {
     }
     this.forget()
     this.publish('SIGNED_OUT')
-    return result
+    return { success: true, data: { loggedOut: true } }
   }
 }
