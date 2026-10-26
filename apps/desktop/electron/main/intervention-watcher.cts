@@ -34,7 +34,9 @@ type Deps = {
   /** macOS 알림(소리 포함 여부)을 띄운다. */
   notify(payload: FloatingShow, sound: boolean): void
   /** 잠시 쉬기: 세션을 일시정지한다. */
-  pause(): Promise<unknown>
+  pause(): Promise<{ success: boolean }>
+  /** 조회 결과가 아직 지금 진행 중인 세션의 것인지. 늦게 온 이전 세션 결과는 보이지 않는다. */
+  isCurrent(sessionId: string): boolean
 }
 
 /**
@@ -53,7 +55,7 @@ export class InterventionWatcher {
     this.polling = true
     try {
       const result = await this.deps.auth.authorizedRequest({ path: `/api/v1/sessions/${sessionId}/interventions`, method: 'GET', expectedStatus: 200, parse: parsePending })
-      if (!result.success) return
+      if (!result.success || !this.deps.isCurrent(sessionId)) return
       const next = result.data.find((item) => !this.seen.has(item.interventionId))
       if (!next) return
       this.seen.add(next.interventionId)
@@ -62,20 +64,23 @@ export class InterventionWatcher {
       // 알림에 채널이 없으면 세션 시작 때 고른 채널을 쓴다.
       const channels = next.channels.length ? next.channels : options.notificationChannels
       if (channels.includes('MOLE_UI')) this.deps.show(payload)
-      if (channels.includes('MACOS_NOTIFICATION')) this.deps.notify(payload, channels.includes('SOUND'))
+      // 소리만 골랐어도 소리 있는 알림으로 알린다. 알림과 소리를 함께 골랐으면 알림은 한 번만 띄운다.
+      if (channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) this.deps.notify(payload, channels.includes('SOUND'))
     } finally {
       this.polling = false
     }
   }
 
-  async act(interventionId: string, action: InterventionAction): Promise<void> {
+  /** 잠시 쉬기에서 일시정지에 실패하면 false. 그 밖에는 기록 실패와 상관없이 true다. */
+  async act(interventionId: string, action: InterventionAction): Promise<boolean> {
     // 확인했어(ACK)는 이미 RECENTER에서 기록했으므로 창만 닫는다. 5분 재집중은 화면 상태일 뿐이다.
-    if (action === 'ACK') return
+    if (action === 'ACK') return true
     await this.deps.auth.authorizedRequest({
       path: `/api/v1/interventions/${encodeURIComponent(interventionId)}/acknowledgements`, method: 'POST', expectedStatus: 200, parse: () => true, withDeviceId: true,
       body: { action: action === 'CLOSE' ? 'DISMISSED' : 'ACKNOWLEDGED' },
     })
-    if (action === 'REST') await this.deps.pause()
+    if (action === 'REST') return (await this.deps.pause()).success
+    return true
   }
 
   /** 세션이 바뀌면 이전 세션의 알림 기록을 비운다. */

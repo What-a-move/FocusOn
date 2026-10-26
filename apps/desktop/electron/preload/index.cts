@@ -7,7 +7,16 @@ import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 import { GOAL_CHANNELS } from '../shared/goal-contract.cjs'
 import { SESSION_CHANNELS, isSessionSnapshot } from '../shared/session-contract.cjs'
 import { ANALYSIS_CHANNELS } from '../shared/analysis-contract.cjs'
-import { INTERVENTION_CHANNELS, isFloatingShow } from '../shared/intervention-contract.cjs'
+import { INTERVENTION_CHANNELS, isFloatingShow, type FloatingShow } from '../shared/intervention-contract.cjs'
+
+// 포키 창이 구독하기 전에 첫 알림이 도착해도 잃지 않도록 마지막 알림을 보관했다가 구독할 때 다시 전달한다.
+let lastShow: FloatingShow | null = null
+const showListeners = new Set<(show: FloatingShow) => void>()
+ipcRenderer.on(INTERVENTION_CHANNELS.show, (_event, payload: unknown) => {
+  if (!isFloatingShow(payload)) return
+  lastShow = payload
+  showListeners.forEach((listener) => listener(payload))
+})
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -95,11 +104,16 @@ const focusOnApi: FocusOnApi = {
   },
   interventions: {
     onShow(callback) {
-      const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => { if (isFloatingShow(payload)) callback(payload) }
-      ipcRenderer.on(INTERVENTION_CHANNELS.show, listener)
-      return () => ipcRenderer.removeListener(INTERVENTION_CHANNELS.show, listener)
+      showListeners.add(callback)
+      if (lastShow) callback(lastShow)
+      return () => { showListeners.delete(callback) }
     },
-    act: (input) => ipcRenderer.invoke(INTERVENTION_CHANNELS.act, { interventionId: input.interventionId, action: input.action }),
+    async act(input) {
+      const result = await ipcRenderer.invoke(INTERVENTION_CHANNELS.act, { interventionId: input.interventionId, action: input.action })
+      // 창을 닫는 동작이 끝나면 보관한 알림을 지워 다시 보이지 않게 한다.
+      if (result?.success && input.action !== 'RECENTER') lastShow = null
+      return result
+    },
   },
 }
 

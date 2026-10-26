@@ -268,13 +268,15 @@ if (!hasSingleInstanceLock) {
       show: showFloating,
       notify: (payload, sound) => { if (Notification.isSupported()) new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show() },
       pause: () => runtime.pause('USER'),
+      isCurrent: (sessionId) => { const current = runtime.snapshot(); return current?.status === 'RUNNING' && current.sessionId === sessionId },
     }) : null
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
       const { interventionId, action } = args[0]
-      // 조금 더 보기는 같은 창에서 목표 안내로 이어지고, 나머지는 창을 닫는다.
+      const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
+      // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 조금 더 보기는 같은 창에서 목표 안내로 이어진다.
+      if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }
       if (action !== 'RECENTER') hideFloating()
-      await watcher?.act(interventionId, action).catch(() => {})
       return { success: true, data: { done: true } }
     })
     let watchedSession: string | null = null
@@ -304,7 +306,8 @@ if (!hasSingleInstanceLock) {
         void runtime.heartbeat()
         // 이탈 알림은 heartbeat와 같은 10초 주기로 조회한다(Notion interventions 비고). 진행 중이 아니면 포키를 숨긴다.
         const current = runtime.snapshot()
-        if (current?.sessionId !== watchedSession) { watchedSession = current?.sessionId ?? null; watcher?.reset() }
+        // 세션이 바뀌면 이전 세션의 포키를 닫는다. 그 알림으로 새 세션을 멈추지 않게 한다.
+        if (current?.sessionId !== watchedSession) { watchedSession = current?.sessionId ?? null; watcher?.reset(); hideFloating() }
         if (current?.status === 'RUNNING') void watcher?.poll(current.sessionId, current.goalText, runtime.sessionOptions())
         else hideFloating()
       }, 10_000)

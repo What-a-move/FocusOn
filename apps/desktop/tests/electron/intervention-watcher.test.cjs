@@ -4,7 +4,7 @@ const { InterventionWatcher, parsePending } = require('../../dist-electron/main/
 const { isActInput } = require('../../dist-electron/shared/intervention-contract.cjs')
 
 const OPTIONS = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
-function setup(lists) {
+function setup(lists, { current = true, pauseOk = true } = {}) {
   const calls = []; const shown = []; const notified = []; let paused = 0
   const auth = {
     authorizedRequest: async (request) => {
@@ -13,7 +13,7 @@ function setup(lists) {
       return { success: true, data: true }
     },
   }
-  const watcher = new InterventionWatcher({ auth, show: (p) => shown.push(p), notify: (p, sound) => notified.push([p.interventionId, sound]), pause: async () => { paused += 1 } })
+  const watcher = new InterventionWatcher({ auth, show: (p) => shown.push(p), notify: (p, sound) => notified.push([p.interventionId, sound]), pause: async () => { paused += 1; return { success: pauseOk } }, isCurrent: () => current })
   return { watcher, calls, shown, notified, paused: () => paused }
 }
 
@@ -57,4 +57,19 @@ test('응답 형식이 다르면 보여 주지 않고, 포키 창 입력은 허�
   assert.equal(isActInput({ interventionId: 'i-1', action: 'DELETE' }), false)
   assert.equal(isActInput({ interventionId: '../x', action: 'ACK' }), false)
   assert.equal(isActInput({ interventionId: 'i-1', action: 'ACK', extra: 1 }), false)
+})
+
+test('소리만 골라도 소리 있는 알림을 띄우고, 이미 끝난 세션의 조회 결과는 보이지 않는다', async () => {
+  const sound = setup([[{ interventionId: 's-1', type: 'OFF_TASK', status: 'PENDING', channels: ['SOUND'] }]])
+  await sound.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(sound.notified, [['s-1', true]])
+  const stale = setup([[{ interventionId: 'o-1', type: 'OFF_TASK', status: 'PENDING', channels: [] }]], { current: false })
+  await stale.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(stale.shown, [])
+})
+
+test('잠시 쉬기에서 일시정지에 실패하면 실패로 알린다', async () => {
+  const t = setup([], { pauseOk: false })
+  assert.equal(await t.watcher.act('i-1', 'REST'), false)
+  assert.equal(await t.watcher.act('i-1', 'CLOSE'), true)
 })

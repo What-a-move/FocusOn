@@ -21,3 +21,4 @@ html:has(.floating-root), html:has(.floating-root) body { min-width: 0; backgrou
 .floating-root .close:hover { background: var(--fo-field); color: var(--fo-ink); }
 .floating-root .close svg { width: 15px; height: 15px; }
 @media (prefers-reduced-motion: reduce) { .floating-root .poki, .floating-root .bubble { animation: none; } }
+.floating-root .fail { margin: 10px 0 0; color: var(--fo-danger); font-size: 14px; font-weight: 600; line-height: 1.5; }
