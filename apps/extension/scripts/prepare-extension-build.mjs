@@ -34,6 +34,10 @@ for (const file of pages) {
   if (/<script>/u.test(html)) throw new Error(`인라인 스크립트가 남았습니다: ${file}`)
 }
 // Service Worker(TypeScript)를 한 파일로 묶는다. API 주소는 팝업과 같은 빌드 환경 변수를 쓴다.
+// [주의] next build는 .env 파일을 읽지만 이 스크립트는 따로 실행된다. Next와 같은 우선순위로 읽는다(이미 있는 값은 덮지 않음).
+for (const file of ['.env.production.local', '.env.local', '.env.production', '.env']) {
+  try { process.loadEnvFile(path.join(out, '..', file)) } catch { /* 파일이 없으면 넘어간다 */ }
+}
 const apiBase = process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL ?? ''
 await build({
   entryPoints: [path.join(out, '..', 'extension', 'background', 'index.ts')],

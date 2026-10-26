@@ -26,7 +26,7 @@
 - Next.js App Router와 Tailwind CSS v4 기반 화면 구조를 확인했다.
 - 활성 학습 세션 중 현재 Tab을 자동 추적하고 `tabs`와 `webNavigation`을 함께 사용하는 기준을 확정했다.
 - 제외 Domain은 Server의 사용자별 정규화 host 목록이 정본이고 `chrome.storage.local`은 캐시다. Navigation 임시 상태는 `chrome.storage.session`, 세션·연결 기준은 Server로 확정했다.
-- Content Script Timer와 Service Worker 재검증을 조합한 15초 체류 흐름과 Message 계약을 확정했다.
+- 15초 체류는 Service Worker 타이머와 저장된 시작 시각·알람 복구로 처리한다(결정 014, 결정 007 변경). Worker 재시작 복구는 구현했고 실제 Chrome QA가 남아 있다.
 - 최소 Chrome 120과 HTTP Page 분석 지원을 확정했다.
 - 일회용 연결 코드 pairing(2026-10-22): 코드 입력·형식 검증, `POST /api/v1/extension-pairings` 제출, 오류 안내, token 저장(결정 011), 연결 완료 화면. 실제 Backend 왕복 QA는 남아 있다.
 - 팝업 세션 표시(Issue #52, 2026-10-25): 팝업을 연결 전(E01)·세션 없음(E02)·세션 진행 중(E03, 표시 전용)·서버 연결 불가(E06)로 나눴다. `features/session/api-client.ts`가 Access Token 갱신(만료 30초 전·서버 만료 응답 시 1회, single-flight, Refresh Token rotation 저장)과 재연결 처리(토큰 삭제 후 연결 화면)를 맡는다. 테스트는 `pnpm --filter @focuson/extension test`(Node 24 TypeScript 실행). 세션 API가 dev에 없어 실제 왕복은 미검증이며, 빌드 결과물에 가짜 저장소·서버 응답을 넣어 화면을 확인했다.
@@ -36,7 +36,7 @@
 ### 진행 중인 작업
 
 - 세션·pairing API가 dev에 병합되면 실제 계정으로 pairing → 세션 표시 → 토큰 갱신을 확인하고 REPORT를 작성한다.
-- 페이지 본문 분석의 최소 수집 범위를 확정해야 한다.
+- 페이지 본문 최소 수집 범위: 제목·h1~h3·문단·목록·figcaption 최대 2,000자, 코드 내용·입력값 제외(결정 013, 구현 완료).
 - Desktop 온보딩에서 Extension 연결은 필수 단계다. Extension pairing UI는 코드 입력과 연결 결과 표시까지만 담당하며, 온보딩 완료 뒤의 목표·시간 설정은 Desktop 대시보드에서 진행한다.
 
 ### 아직 진행하지 않은 작업

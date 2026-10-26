@@ -1,6 +1,6 @@
 # Chrome Extension Service Worker 생명주기
 
-> 현재 상태: `public/service-worker.js`는 안내 주석만 있는 진입 파일이다. Event Listener, 상태 복구, Server 연결은 아직 구현하지 않았다.
+> 현재 상태(2026-10-26, Issue #61): TypeScript Worker(`extension/background/index.ts`)를 esbuild로 `out/service-worker.js`에 묶는다. 탭·이동·포커스 Event Listener, `resume()`(브라우저 시작·30초 알람 복구), 제외 목록·세션 조회·`analysis-runs`·`local-events` 서버 호출을 구현했다. 실제 Chrome에서 Worker 종료 복구 QA가 남아 있다.
 > 결정 상태: 자동 추적 Event, 저장 위치와 15초 체류 처리 방식은 확정했다.
 
 ## 핵심 원칙

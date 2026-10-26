@@ -157,15 +157,9 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 - 대상 앱: Chrome Extension
 - 상태: 확정 (2026-10-25 결정 013, Notion Chrome·macOS 권한 정책 2.2). 전체 사이트를 한 번에 요청하고, 문구는 E01b·E06 시안을 따른다. Content Script 상시 주입 대신 결정 014의 일회성 주입을 쓴다.
 
-### 제안 내용
+### 결정 내용
 
-`https://*/*`와 `http://*/*`는 `optional_host_permissions`에 선언하고 사용자가 자동 추적을 켜는 동작 안에서 이유를 설명한 뒤 요청한다. `scripting` 권한을 사용해 Worker가 활성 세션의 현재 Page에만 Content Script를 주입하고, 승인하지 않은 사이트에서는 분석을 중지하고 권한 안내를 표시한다. 이 제안이 확정되기 전에는 Manifest를 변경하지 않는다.
-
-### 확정 필요
-
-- 전체 사이트 권한을 한 번에 요청할지
-- 사이트별 권한 모드도 함께 제공할지
-- 권한을 거부하거나 철회했을 때의 Popup 문구
+`https://*/*`와 `http://*/*`는 `optional_host_permissions`에 선언하고, 연결 뒤 팝업 E01b에서 이유를 설명한 다음 사용자 클릭으로 한 번에 요청한다. 사이트별 권한 모드는 두지 않는다. 거부하면 E01b 허용 거부, 집중 중 철회하면 E06 사이트 접근 꺼짐을 보여 주고 `local-events`로 서버에 알린다. 페이지는 결정 014대로 필요할 때만 `scripting.executeScript`로 한 번 읽는다.
 
 ## 결정 010 - 제외 도메인 정본과 로컬 캐시
 
@@ -260,6 +254,7 @@ Desktop Main이 monotonic 타이머와 10초 heartbeat를 맡는다. 팝업에�
 - DOM은 제목·h1~h3·본문 주요 텍스트·코드 블록 제목만 최대 2,000자로 읽는다. `input`·`textarea`·`contenteditable`의 입력값은 읽지 않는다.
 - 늦게 도착한 이전 AI 결과는 최신 상태를 덮지 않는다(2026-10-26). 관측마다 번호를 붙이고, 응답이 지금 화면의 관측이 아니면 화면에 반영하지 않으며 그 응답으로 다음 단계도 보내지 않는다. 예: 화면 A의 2차 요청 중 제외 대상으로 옮겨 `EXCLUDED`를 보냈다면, 늦게 온 A 결과는 버린다. 서버도 같은 기기에서는 `contentSource`와 관계없이 `observedAt`이 가장 늦은 관측을 현재 상태로 본다(AI 분석 계약 8).
 - 탭이 바뀌고 15초 유지되면 보낸다(기존 15초 체류 흐름). 같은 페이지는 다시 보내지 않고, 내용 변경은 최대 30초에 한 번 보낸다.
+  - (2026-10-26) 같은 페이지 안 내용 변경(스크롤 등) 재전송은 미루고 아직 구현하지 않았다. 지금은 주소·탭이 바뀔 때만 보낸다.
 - 제외 도메인이면 `guardStatus: EXCLUDED`, 비밀번호·일회용 코드·카드 입력 칸이 있거나 메일 작성 URL·메신저 도메인이면 `guardStatus: PRIVACY_BLOCKED`만 보낸다. DOM 텍스트에 민감 패턴이 있으면 버리고 `PRIVACY_BLOCKED`로 보낸다.
 - manifest를 Notion 권한 정책에 맞춘다: 필수 `host_permissions`·정적 `content_scripts`를 없애고 `optional_host_permissions` + `scripting`으로 Chrome 분석을 켤 때 요청한다. 권한 제거(`chrome.permissions.onRemoved`) 시 `local-events`를 보낸다.
 
