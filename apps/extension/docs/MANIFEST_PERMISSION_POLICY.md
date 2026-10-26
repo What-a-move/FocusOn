@@ -1,6 +1,6 @@
 # Chrome Extension Manifest 권한 정책
 
-> 현재 상태: Manifest에는 `tabs`, `storage`, `webNavigation`, 모든 HTTP·HTTPS Host 권한이 선언되어 있다. 자동 추적과 HTTP 지원은 확정했지만, 전체 Host 권한의 사용자 승인 방식은 아직 확정하지 않았으므로 Manifest는 변경하지 않는다.
+> 현재 상태(2026-10-26, Issue #61): `tabs`, `storage`, `webNavigation`, `scripting`, `alarms`와 `optional_host_permissions`(`https://*/*`·`http://*/*`), `minimum_chrome_version: 120`. 정적 `content_scripts`는 없다. 필수 `host_permissions`는 빌드 때 FocusOn 서버 origin 하나만 넣는다(결정 009·014). 사이트 권한은 팝업 E01b에서 사용자 클릭으로 요청한다.
 
 ## 기본 원칙
 

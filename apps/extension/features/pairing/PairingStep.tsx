@@ -58,8 +58,11 @@ export function PairingStep({ onLinked, initialNotice = null }: { onLinked?: () 
               <img className="poki" src="/design/poki-floating-cheer-v7.png" alt="응원하는 포키" />
               <h1>연결됐어요!</h1>
             </div>
-            <p className="center muted">데스크톱 앱으로 돌아가 다음 단계를 진행해 주세요.</p>
-            {onLinked ? <p className="center"><button className="text-btn" type="button" onClick={onLinked}>집중 상태 보기</button></p> : null}
+            {/* 팝업에서는 사이트 접근 허용(E01b)으로 이어진다. */}
+            {onLinked ? <>
+              <p className="center muted">이제 사이트 접근만 허용하면 돼요.</p>
+              <button className="btn btn-primary" type="button" onClick={onLinked}>다음</button>
+            </> : <p className="center muted">데스크톱 앱으로 돌아가 다음 단계를 진행해 주세요.</p>}
           </div>
         ) : (
           <div className="p-body">

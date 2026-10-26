@@ -2,7 +2,7 @@
 // - Access Token이 만료되기 30초 전이면 먼저 갱신한다. 서버가 AUTH_ACCESS_TOKEN_EXPIRED를 주면 한 번만 갱신하고 원 요청을 한 번만 다시 보낸다.
 // - 갱신은 동시에 여러 번 부르지 않는다(single-flight). Refresh Token은 갱신할 때마다 새 값으로 바뀐다(rotation).
 // - 재로그인이 필요하거나 연결이 해제됐으면 로컬 토큰을 지우고 RELINK_REQUIRED로 알린다(새 연결 코드로만 복구).
-// - GET은 네트워크·503·504에서 1초 → 3초로 두 번까지 다시 보낸다. DELETE 같은 변경 요청은 자동으로 다시 보내지 않는다.
+// - GET은 네트워크·503·504에서 1초 → 3초로 두 번까지 다시 보낸다. POST·DELETE 같은 변경 요청은 자동으로 다시 보내지 않는다.
 // [주의] 이 파일은 node --test로 직접 실행하므로 상대 import 없이 필요한 것을 주입받는다.
 
 export type ApiError = { code: string; retryable: boolean }
@@ -14,6 +14,9 @@ export type TokenStore = {
   saveRotation(tokens: { accessToken: string; refreshToken: string; accessTokenExpiresAt: string }): Promise<void>
   clear(): Promise<void>
 }
+type Method = 'GET' | 'POST' | 'DELETE'
+/** body는 JSON으로 보낸다. headers에는 X-Device-Id처럼 API가 요구하는 값만 넣는다. */
+export type RequestOptions = { body?: object; headers?: Record<string, string> }
 type Deps = { baseUrl: string | null; store: TokenStore; request?: typeof fetch; sleep?: (ms: number) => Promise<void>; now?: () => number }
 
 const EXPIRY_MARGIN_MS = 30_000
@@ -26,11 +29,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), now = Date.now }: Deps) {
   let refreshing: Promise<ApiResult<string>> | null = null
 
-  async function send(path: string, method: 'GET' | 'DELETE' | 'POST', token?: string, body?: object): Promise<{ status: number; payload: unknown } | null> {
+  async function send(path: string, method: Method, token?: string, body?: object, headers: Record<string, string> = {}): Promise<{ status: number; payload: unknown } | null> {
     try {
       const response = await request(`${baseUrl}${path}`, {
         method,
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        headers: { ...headers, ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
         body: body ? JSON.stringify(body) : undefined,
         redirect: 'manual',
         signal: AbortSignal.timeout(10_000),
@@ -77,20 +80,20 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
   }
 
   /** 인증이 필요한 요청. parse가 null을 돌려주면 계약 위반(INVALID_RESPONSE)이다. 204면 parse(null)로 '없음'을 판단한다. */
-  function authorized<T>(path: string, method: 'GET' | 'DELETE', expected: number, parse: (data: unknown) => T | null): Promise<ApiResult<T>> {
+  function authorized<T>(path: string, method: Method, expected: number, parse: (data: unknown) => T | null, options: RequestOptions = {}): Promise<ApiResult<T>> {
     if (!baseUrl) return Promise.resolve(fail('SERVICE_UNAVAILABLE', false))
     // [주의] chrome.storage가 실패해도 reject하지 않고 결과로 돌려준다. 팝업이 로딩에 멈추지 않게 한다.
-    return run(path, method, expected, parse).catch(() => fail('LOCAL_STORAGE_UNAVAILABLE', true))
+    return run(path, method, expected, parse, options).catch(() => fail('LOCAL_STORAGE_UNAVAILABLE', true))
   }
 
-  async function run<T>(path: string, method: 'GET' | 'DELETE', expected: number, parse: (data: unknown) => T | null): Promise<ApiResult<T>> {
+  async function run<T>(path: string, method: Method, expected: number, parse: (data: unknown) => T | null, { body, headers }: RequestOptions): Promise<ApiResult<T>> {
     const once = async (token: string): Promise<ApiResult<T> | { expired: true }> => {
-      let result = await send(path, method, token)
+      let result = await send(path, method, token, body, headers)
       for (const delay of method === 'GET' ? GET_RETRY_DELAYS_MS : []) {
         const transient = !result || (result.status !== expected && result.status !== 204 && TRANSIENT_CODES.has(errorCode(result.status, result.payload)))
         if (!transient) break
         await sleep(delay)
-        result = await send(path, method, token)
+        result = await send(path, method, token, body, headers)
       }
       if (!result) return fail('LOCAL_NETWORK_UNAVAILABLE', true)
       if (result.status === 204) { const data = parse(null); return data === null ? fail('INVALID_RESPONSE') : { success: true, data } }

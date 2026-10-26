@@ -1,6 +1,6 @@
 # Chrome Extension 아키텍처
 
-> 현재 상태: Manifest V3, Popup 정적 Build, Service Worker·Content Script 진입 파일만 존재한다. 실제 탭 수집과 Message 처리는 아직 구현하지 않았다.
+> 현재 상태(2026-10-26, Issue #61): Service Worker(`extension/background/`, esbuild로 `out/service-worker.js`)가 활성 탭 15초 체류·제외·민감 판정·`analysis-runs` 전송을 한다. 상시 Content Script는 없고 `extension/content/inspect-page.ts`를 필요할 때만 주입한다(결정 014).
 > 결정 상태: 자동 추적 범위, 저장 위치, 15초 체류 처리, Message 계약과 최소 Chrome Version은 확정했다. 전체 Host 권한을 필수 또는 선택 권한으로 요청할지는 검토 중이다.
 
 ## 목적

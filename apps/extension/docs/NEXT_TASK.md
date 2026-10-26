@@ -4,6 +4,11 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: Chrome 탭·페이지 분석 (Issue #61, `feat/61-extension-tab-analysis`)
+- 상태: Service Worker 분석·사이트 권한 E01b·E06·권한 철회 `local-events` 구현(2026-10-26). 남은 일: 실제 Chrome에서 권한 창·Worker 종료 복구 QA, 백엔드 `analysis-runs` 병합 뒤 실제 왕복 QA와 REPORT. 같은 페이지 안 내용 변경(스크롤) 30초 재전송은 하지 않았다.
+- 다음 Issue 후보: 화면 분석 4단계 — Desktop 개입 표시(Floating Poki, `GET /sessions/{id}/interventions` 10초 조회).
+
+
 - 작업명: 팝업 세션 화면과 Access Token 갱신 (Issue #52, `feat/52-extension-session-popup`)
 - 상태: E02·E03(표시 전용)·E06, 토큰 갱신(single-flight·rotation)·재연결 처리, 이 브라우저 연결 해제를 구현했다(2026-10-25). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 작업 후보: 현재 탭 추적과 페이지 분석 요청(결정 005·007, `POST /sessions/{id}/analysis-runs`), 사이트 접근 권한(E01b).

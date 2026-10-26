@@ -43,6 +43,8 @@ Idempotent는 같은 작업을 여러 번 실행해도 결과가 한 번 실행�
 
 ## 15초 체류 분석
 
+> 2026-10-26 결정 014로 아래 Content Script Timer 방식을 바꿨다. 지금은 Worker `setTimeout` + `chrome.storage.session`의 시작 시각 + 30초 `chrome.alarms` 복구로 15초를 세고, 판정 때만 `scripting.executeScript`로 페이지를 읽는다. 아래는 기존 설계 기록이다.
+
 1. Worker가 활성 Tab의 최상위 Page 이동을 확인하고 제외 Domain과 활성 세션을 검사한다.
 2. Worker가 Navigation ID와 시작 시각을 `chrome.storage.session`에 기록한다.
 3. Worker가 Content Script에 `DWELL_TRACKING_STARTED`를 보내고 Content Script가 15초 Timer를 시작한다.
