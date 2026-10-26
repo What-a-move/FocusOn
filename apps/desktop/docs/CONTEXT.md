@@ -13,7 +13,7 @@
 - 화면 부유형 두더지 마스코트와 집중 상태 피드백
 - Google 로그인 및 Chrome Extension 연결 상태
 - 활성 앱 확인과 화면 분석 연결
-- 카메라 권한 및 MediaPipe 결과 연결
+- 카메라 권한 및 로컬 카메라 분석(AVFoundation + Apple Vision, Notion AI 분석 계약 5) 결과 연결
 
 ## 현재 상태
 
@@ -44,9 +44,8 @@
 - 서버 API 병합 뒤 실제 Google 계정 왕복, Keychain 저장·복구, 신규·기존 사용자 화면 진입의 수동 QA가 필요하다.
 - 로그인 후 온보딩은 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정 순서로 진행하며, 완료 뒤 대시보드에 진입한다. 목표·시간·개입 설정은 대시보드 `오늘 학습`의 별도 흐름이다.
 - 온보딩 재개는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 결정한다. 앱 시작·복귀 때 Desktop Main이 OS 권한을 다시 확인하고 준비 상태를 갱신한다. API 구현은 Backend 담당 범위다.
-- 확정된 Server 세션 상태와 타이머 필드를 Desktop 상태 모델에 반영해야 한다.
-- 학습 상태에 따른 화면 부유형 마스코트·팻말·말풍선 표현을 확정해야 한다.
-- Desktop 연결 코드 발급·readiness polling과 Extension의 최초 pairing 클라이언트는 구현돼 있다. 실제 Backend 왕복 QA, 세션 상태 명령·Heartbeat와 동기화 구현은 남아 있다.
+- 화면 위 포키는 F04 이탈·F05 휴식 제안까지 구현했다(Issue #63). F06 분석 제외·민감 화면, F07 연결 끊김 말풍선, 위치 옮기기, 휴식 포키 에셋이 남아 있다.
+- Desktop 연결 코드 발급·readiness polling과 Extension의 최초 pairing 클라이언트는 구현돼 있다. 세션 상태 명령·Heartbeat 동기화는 Issue #48에서 구현했다. 실제 Backend 왕복 QA가 남아 있다.
 
 - Issue #41(2026-10-24): 홈 대시보드를 `FocusOn-design/main.html`대로 `features/dashboard/`에 구현했다. 집중 달력·오늘 집중 분·이번 달 일수·지난 목표는 Main `ReportService`(리포트 IPC)로만 받고, 로딩·오류·오프라인(마지막 확인 시각)·빈 상태를 보여 준다. 리포트 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 라이트·다크·오프라인 화면을 확인했다.
 
@@ -58,17 +57,18 @@
 
 - Issue #54(2026-10-25): 화면 분석 1단계. Swift 도우미(`native/observer`, macOS 14+)로 맨 앞 앱·창 제목·설치된 앱 목록을 읽고, Main `ScreenObserver`가 세션 `RUNNING` 중 같은 화면 15초 유지 시 관측 1건(Chrome 건너뜀, 제외 앱·FocusOn 창·지원하지 않는 브라우저 `EXCLUDED`, 고정 민감 앱·창 제목 단어 `PRIVACY_BLOCKED`, 그 외 `APP_META`)을 만든다. 서버 전송은 2단계다. 분석 제외 앱은 번들 ID로 이 기기에만 저장하고 온보딩 제외 단계에서 고른다(`exclusions.html` 앱 대화상자). 세션 중 화면 기록 권한이 꺼지면 바로 `AUTO_PAUSED` + `local-events`를 보내고 집중 화면에 `권한 꺼짐` 안내를 보여 준다. dialog 가운데 정렬을 `globals.css`에서 한 번에 고쳤다(ERROR 문서). `local-events` API가 dev에 없어 실제 왕복은 미검증이다.
 
+- Issue #56(2026-10-25): 화면 분석 2단계. 관측을 Main `AnalysisSender`가 `POST /sessions/{id}/analysis-runs`로 바로 보낸다(clientRunId·세션별 sequence·`APP_META`, 제외·민감은 상태만). 다시 보내거나 쌓지 않고 429면 60초 쉰다. `analysis-runs` API가 dev에 없어 실제 왕복은 미검증이다.
+
 - Issue #63(2026-10-26): 화면 분석 4단계. Main `InterventionWatcher`가 10초마다 서버 알림을 조회해 화면 위 포키 창(`/floating/`, `floating-poki.html` F04·F05)과 macOS 알림으로 보여 주고, `조금 더 보기`·`잠시 쉬기`·닫기를 acknowledgements로 기록한다. 평소에는 아무것도 띄우지 않는다. 알림 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 말풍선·목표 안내 흐름을 확인했다.
 
-- Issue #56(2026-10-25): 화면 분석 2단계. 관측을 Main `AnalysisSender`가 `POST /sessions/{id}/analysis-runs`로 바로 보낸다(clientRunId·세션별 sequence·`APP_META`, 제외·민감은 상태만). 다시 보내거나 쌓지 않고 429면 60초 쉰다. `analysis-runs` API가 dev에 없어 실제 왕복은 미검증이다.
 
 ### 아직 진행하지 않은 작업
 
-- 화면 분석 5단계: 대상 창 캡처·Apple Vision OCR (`INSUFFICIENT_CONTEXT`일 때만)
+- 화면 분석 5단계: 대상 창 캡처·Apple Vision OCR. `APP_META` 결과가 `UNRELATED`·`UNCERTAIN`이면 항상 OCR로 다시 보낸다(결정 024, 2026-10-26 변경). 서버는 메타 근거 `UNRELATED`를 이탈로 세지 않아, Desktop 앱 이탈 감지는 이 단계가 있어야 동작한다.
 - 설정 › 분석·권한의 제외 앱 관리 (설정 화면 작업 때)
-- MediaPipe 카메라 분석 연동
+- 카메라 분석 연동(AVFoundation + Apple Vision 로컬, 선택 동의)
 - 인증·온보딩·리포트 외 Server API 클라이언트와 실제 Backend 왕복 QA
-- 화면 부유형 마스코트 표시 및 사용자 문구 설정
+- 화면 위 포키 F06·F07 말풍선과 위치 옮기기
 - 실제 Backend를 통한 Desktop 코드 발급·Extension 연결·readiness 반영 검증
 
 ## 현재 기술
