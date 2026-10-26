@@ -321,7 +321,7 @@ Google token endpoint는 code 교환에 최초 인증 요청의 `redirect_uri`�
 - Access Token은 Electron Main 메모리에만 둔다. 인증 API 요청과 응답 검증도 Main에서 처리하며 Renderer에는 `AuthSessionSnapshot`만 전달한다.
 - `FOCUSON_API_BASE_URL`은 HTTPS 또는 로컬 개발용 loopback HTTP origin만 허용한다. 설정이 없으면 Google 브라우저 인증을 시작하지 않는다.
 - Google code 교환 성공이라도 Keychain 저장이 실패하면 `SIGNED_IN`으로 전이하지 않는다. 앱 재실행 때 저장된 Refresh Token을 1회 회전하고 `auth/me`를 조회한다.
-- 로그아웃은 Backend 응답 `204` 또는 계약상 `401`을 받은 뒤 Keychain을 비운다. 네트워크·서버 오류라면 토큰을 유지한다.
+- 로그아웃은 Backend 응답 `204` 또는 명시적 재로그인 오류가 확인된 뒤 Keychain을 비운다(결정 026). 네트워크·서버 오류라면 토큰을 유지한다.
 
 ### 결정 이유
 
@@ -613,3 +613,11 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 
 - `packages/shared-types/src/index.ts`
 - `electron/shared/session-contract.cts`, `electron/main/screen-observer.cts`, `electron/main/analysis-sender.cts`
+
+## 결정 026 - 로그아웃 도중 Access Token 만료 처리
+
+- 결정일: 2026-10-26 / 상태: 기존 로그인 계약의 버그 수정 / Issue #59·PR #60.
+- AuthApiClient는 logout의 모든 401을 성공으로 바꾸지 않고 서버 오류 code를 전달한다.
+- AuthService는 유효한 token으로 logout을 먼저 요청하고, 서버 AUTH_ACCESS_TOKEN_EXPIRED에는 single-flight refresh 뒤 logout을 한 번만 재시도한다. 두 번째 만료·알 수 없는 401·네트워크/서버 실패는 성공 표시와 Keychain 삭제를 하지 않는다.
+- 204 또는 명시적 AUTH_RELOGIN_REQUIRED·AUTH_TOKEN_REUSE_DETECTED·AUTH_OAUTH_REAUTH_REQUIRED만 로컬 정리를 완료한다. API 형식과 서버 계약은 그대로다.
+- 실제 만료 JWT/서버/Keychain QA에서 401→refresh200→logout204와 연결 Extension 폐기·활성 기기 슬롯 반환을 확인했다. 실제 Google 인증 완료를 뜻하지 않는다.

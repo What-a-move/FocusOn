@@ -27,26 +27,26 @@
 - Issue #32: 인증 5개 테이블의 Flyway V1·소유 관계 보강 V2와 Entity·Repository를 구현했다. PostgreSQL 17.11에서 migration 적용·Hibernate 스키마 검증·소유권 FK를 확인했고, 빌드·QA·CodeRabbit 리뷰를 마쳤다. [PR #35](https://github.com/What-a-move/FocusOn/pull/35)는 2026-10-22 `dev`에 병합됐고 Issue #32도 종료됐다.
 - 2026-10-24 Frontend 공유·최종 정정에 맞춰 동의·Extension 연결·개입 v1·시간대·리포트 계약을 로컬 문서에 반영했다. 현재 미구현 API의 완료를 뜻하지 않는다. Notion 내 이전 AI 정책과 일간 배열 항목 누락, pairing 실패 시도 문맥 등 남은 검토는 `docs/NOTION_SYNC_AUDIT.md`에 기록했다.
 
-### Issue #49 — 현재 작업 브랜치 구현
+### 인증 구현 현황
 
-- `feat/#49-google-login`에서 Google exchange·auth/me·요청 인증 필터·principal·한도·초기 Refresh Token 발급을 구현했다. 아직 dev 병합 전이다.
-- HTTP 계약·DB 소유/활성 상태·동시 최초 로그인·3대 제한·동일 설치 재로그인·만료/위조를 검증했다. 실제 Google 계정 왕복은 미실행이다.
-- 독립 리뷰의 공개 키 장애 분류·rate-limit 공간 공유 문제를 수정하고 재검토했다.
-- 기존 V1·V2 재사용, OAuth UNIQUE를 JPA metadata에도 반영. refresh·logout·pairing API는 후속이다.
-- 관련 문서: `features/google-login-{PLAN,REPORT,QA,code-review,ERROR}.md`.
+- Issue #49 / PR #51은 2026-10-26 dev에 병합·종료됐다. Google 교환·auth/me·요청 인증·초기 토큰 발급·azp 검증을 포함한다.
+- Issue #59는 `feat/#59-auth-lifecycle`에서 refresh·rotation·reuse 감지·Desktop logout을 구현했다. 아직 dev 병합 전이다.
+- refresh 성공 때 새 token과 family 만료를 현재부터 30일로 함께 연장한다(사용자 확정). 사용자→family 잠금과 transaction 결과 분리로 재사용 폐기를 commit한 뒤 401을 반환한다.
+- logout은 현재 Desktop과 직접 연결된 같은 사용자 Extension만 폐기하고 다른 Desktop은 유지한다. Extension 자체 unlink는 #58 후속 API 단위 작업이다.
+- RequestAuthenticationService와 refresh는 TokenFamilyGuard의 동일 소유권·활성/만료·연결 Desktop 로그인 검사를 사용한다.
+- #59 QA: 전체 55개 Backend 테스트·build·Checkstyle, PostgreSQL 25개 테스트와 V1/V2·validate, 실제 HTTP/Keychain 연동 23건, 기존 Desktop 인증 테스트 22개 통과. Google 실계정 성공 및 전체 Desktop 앱 빌드는 아래 제한과 QA 문서를 따른다.
+- 관련 문서: `features/auth-lifecycle-{PLAN,REPORT,QA,code-review,ERROR}.md`.
 
 ### 다음 구현 범위
 
-2026-10-25 최신 `dev`(`0b88bb8`)와 Desktop 인증·목표 파서를 대조했다. MVP 세션 null 거절, 목표 대화 필드·Backend 재시도, Desktop 알림 확인 책임을 로컬 계약에 반영했다. 로그인 PLAN에는 만료 JWT 구분과 후속 family 만료 검토를 보강했다. 이후 같은 날 #49에서 승인된 로그인 API 범위를 구현했다. 결과는 위 작업 브랜치 절과 REPORT를 따른다.
-
-- Issue #49의 PR #51 CodeRabbit 지적을 반영하고 리뷰·병합 승인을 받는다. 목표·세션 Entity는 후속 migration으로 분리한다.
-- 병합 후 후속 Issue에서 refresh·logout과 family 수명·폐기 범위를 구현한다.
-- MVP API를 도메인 단위로 구현
+- #59 PR·CI·CodeRabbit 검토 후 병합과 종료 승인을 받는다.
+- #58 Extension pairing은 기획 대기이며 코드 오입력 시도 문맥·취소 경계를 정본에서 해결한 뒤 구현한다.
+- 기기 목록·선택 폐기, unlink는 별도 1~2개 API 단위 작업이다. #38 사용자·설정·목표 API는 타 담당 범위를 유지한다.
 
 ### 미구현
 
 - 사용자·목표·세션 등 나머지 도메인 HTTP API. 인증 Entity·Repository와 #49 로그인 요청 인증은 구현돼 있다.
-- refresh·logout·기기 관리·Extension 연결 API와 Refresh Token rotation 수명주기
+- 기기 관리·Extension 연결 API. refresh·logout 수명주기는 #59 브랜치에 구현됐으며 dev 병합 전이다.
 - 목표·세션·분석·리포트 API
 - 보관 기간 cleanup worker와 학습 정리 worker
 - AI 서비스 연동
@@ -75,3 +75,17 @@
 - `server/docs/DEVELOPMENT_RULES.md`
 - `server/docs/DECISION_RECORD.md`
 - `server/docs/rules/migration-convention.md`
+
+## 로그인 최종 연동 재검증 (2026-10-26)
+
+- 최신 dev 905c06c를 통합한 PR #60에서 Desktop logout 만료 401 오처리 P2를 수정했다. 실제 서버 오류 뒤 refresh와 logout을 한 번 재시도하며 성공/명시적 재로그인에서만 로컬 token을 정리한다.
+- Backend 55개·PostgreSQL 25개·Desktop 전체 Electron 89개·Extension 22개 테스트 통과. 실제 Google 잘못된 code 거절과 HTTP/Keychain 만료 경쟁까지 33건 통과. 독립 재검토에서 기존 P2 해결·추가 P1/P2 없음.
+- Desktop full build는 오래된 중복 SwiftBridging modulemap을 숨긴 임시 VFS QA 환경에서 통과했고 Extension full build도 통과했다. 시스템 파일이나 빌드 스크립트를 수정하지 않았다. 기본 Swift 환경의 관리자 복구와 Mac 잠금 해제 후 실제 UI·Google 계정 성공은 남아 있다.
+- #59 병합·종료는 사용자 별도 승인 대기. 세부 실행 증거는 features/auth-lifecycle-QA.md를 따른다.
+
+## CodeRabbit 재리뷰 수정 완료 (2026-10-26)
+
+- 유효 Access Token으로 logout을 먼저 시도하고, 실제 만료에서만 refresh·한 번 재시도한다.
+- POST refresh IP 한도는 본문 바인딩 전 Filter에서 한 번 집계한다. 잘못된 JSON·길이초과도 301번째에429, 정상 형식은300회까지처리·301번째429다.
+- 잔여20초·refresh503·logout204 조건20회에서 성공0→20회, 불필요한refresh20→0회. Backend58·Desktop96·PostgreSQL28·실제HTTP/Keychain33건 회귀와 독립 리뷰를 통과했다. 수치는 통제된 기능 검증이며 운영성공률이 아니다.
+- 최신 dev d03c2d2 통합·문서 충돌 해소, 로그인 결정026/공유타입결정025 분리. PR #60의 push·CI·리뷰 스레드 결과를 확인하며 merge·Issue종료는 별도 승인받는다.

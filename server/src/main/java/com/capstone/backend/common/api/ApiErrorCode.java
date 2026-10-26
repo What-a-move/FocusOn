@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 public enum ApiErrorCode {
   AUTH_ACCESS_TOKEN_EXPIRED(org.springframework.http.HttpStatus.UNAUTHORIZED,
       "인증 시간이 만료됐습니다. 갱신해 주세요.", false),
+  AUTH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "인증 정보가 재사용되어 로그아웃됐습니다.", false),
   AUTH_RELOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "다시 로그인해 주세요.", false),
   AUTH_OAUTH_REAUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "Google 인증을 다시 진행해 주세요.", false),
   AUTH_DEVICE_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "기존 Desktop 기기를 해제해 주세요.", false),

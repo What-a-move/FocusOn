@@ -88,6 +88,16 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 
 `POST /api/v1/auth/google/exchange` 요청에는 `authorizationCode`, `codeVerifier`, `state`, `redirectUri`, `device`를 포함한다. `redirectUri`는 Desktop Main이 Google 인증 요청에 사용한 `http://127.0.0.1:<임시 포트>` 주소 그대로다. Main이 callback의 `state` 일치를 먼저 확인한다. Backend는 `redirectUri`의 scheme·host·port·경로를 엄격히 검증한 뒤 서버 설정의 Desktop Google Client ID, code, verifier, 동일한 `redirectUri`로 Google token endpoint에 요청하고 Google ID token을 검증한다. Backend가 사전에 `state`를 저장하지 않았다면 요청에 포함된 값만으로 일치 여부를 검증했다고 간주하지 않는다. [Notion API 정본](https://app.notion.com/p/00f3391cae454614bf51bffbe995f0dc)
 
+### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
+
+- `POST /auth/refresh`는 Bearer 없이 `{refreshToken}`으로 인증하고 `200 data.{accessToken,refreshToken,accessTokenExpiresAt}`을 반환한다.
+- 갱신 성공마다 기존 token은 즉시 ROTATED이고 새 token·family의 만료는 현재부터 30일로 연장한다. 앱을 계속 사용해 유효 갱신이 이어지면 유지되며, 30일간 갱신하지 않으면 재로그인이 필요하다.
+- 누락·빈 값·미확인·만료는 401 AUTH_RELOGIN_REQUIRED, ROTATED/REVOKED 재사용은 401 AUTH_TOKEN_REUSE_DETECTED와 해당 family 폐기다. 폐기는 오류 응답 전에 commit한다.
+- 공개 refresh IP 보호는 300회/10분, 유효 token의 userId+deviceId는 일반 인증 60회/분 한도를 공유한다. 공개/인증 한도 공간은 분리한다.
+- `POST /auth/logout`은 현재 활성 Desktop Bearer를 사용하고 204 빈 본문이다. 해당 Desktop과 연결 Extension을 폐기하며 다른 Desktop은 유지한다. Extension의 직접 logout은 허용하지 않고 unlink 계약을 사용한다.
+- 사용자→family 순서의 잠금으로 rotation·logout·재로그인을 직렬화한다. Client single-flight와 원 요청 1회 재시도를 유지하며 token 재전송 grace는 없다.
+- #59 구현·QA 기록은 `server/docs/features/auth-lifecycle-*`를 따른다. 30일 연장·한도 세부값은 사용자가 승인한 최신 결정이며 이번 작업에서 Notion 원문은 수정하지 않았다.
+
 ### Extension 연결 응답과 실패 횟수
 
 `POST /api/v1/extension-pairings`는 성공 시 `201`과 다음 구조를 반환한다. Desktop과 독립된 token family를 발급하고, `device.deviceId`는 연결 해제 경로의 `extensionDeviceId`로 사용한다. `accessTokenExpiresAt`은 UTC ISO 8601 문자열이다.
@@ -359,6 +369,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 | 대상 | 기준 | 제한 |
 | --- | --- | --- |
 | Google 로그인 교환 | IP + installationId | 10분당 5회 |
+| Refresh Token 갱신 | IP 보호 + 유효 token의 userId/deviceId | IP 10분당 300회 + 일반 인증 분당 60회 공유 |
 | 연결 코드 발급 | userId + Desktop deviceId | 10분당 3회 |
 | 연결 코드 입력 | IP + Extension installationId | 10분당 10회 |
 | 분석 요청 | sessionId + deviceId | 분당 8회 |

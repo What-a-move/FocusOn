@@ -134,7 +134,8 @@ export class AuthApiClient {
       const response = await this.request(`${this.baseUrl}/api/v1/auth/logout`, {
         method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, redirect: 'manual', signal: AbortSignal.timeout(10_000),
       })
-      if (response.status === 204 || response.status === 401) return { success: true, data: { loggedOut: true } }
+      // 만료 401은 서버 폐기가 실행된 것이 아니다. 오류 코드를 서비스에 전달해 갱신 후 재시도한다.
+      if (response.status === 204) return { success: true, data: { loggedOut: true } }
       try { return { success: false, error: parseError(await response.json()) } }
       catch { return { success: false, error: SERVICE_UNAVAILABLE } }
     } catch {

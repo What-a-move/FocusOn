@@ -20,6 +20,10 @@ public interface UserDeviceRepository extends JpaRepository<UserDeviceEntity, Lo
   List<UserDeviceEntity> findByUserIdAndDeviceTypeAndStatus(
       Long userId, UserDeviceEntity.DeviceType deviceType, UserDeviceEntity.Status status);
 
+  /** 로그아웃 대상 Desktop에 직접 연결된 같은 사용자 Extension만 찾는다. */
+  List<UserDeviceEntity> findByUserIdAndLinkedDesktopDeviceIdAndDeviceType(
+      Long userId, Long desktopId, UserDeviceEntity.DeviceType deviceType);
+
   /** 사용자별 특정 종류와 상태의 기기 수를 센다. */
   @Query("select count(d) from UserDeviceEntity d where d.user.id = :userId "
       + "and d.deviceType = :deviceType and d.status = :status")

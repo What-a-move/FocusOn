@@ -281,3 +281,15 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 개인정보: Google Desktop secret은 서버 로컬 환경에만 설정한다. DTO 문자열과 로그·오류에 인증 원문을 노출하지 않는다.
 - 저장 모델: V1·V2는 수정하지 않고 기존 provider+subject UNIQUE를 JPA metadata에도 명시한다.
 - 후속: refresh·logout·family 만료 연장·기기 관리·pairing과 실제 Google 계정 왕복은 이번 구현 결과와 구분한다.
+
+## 결정 021 - FocusOn 로그인 수명주기 완성
+
+- 결정일: 2026-10-26 / Issue #59, 사용자 PLAN 승인.
+- refresh 성공 시 token·family의 expiresAt을 현재부터 30일로 같이 연장한다. 최초 로그인 기준 고정 30일이 아니며, 30일 동안 유효 갱신이 없으면 재로그인한다.
+- ROTATED·REVOKED token 재사용 시 해당 family만 폐기한다. transaction에서 폐기를 commit한 뒤 오류 응답을 반환해 rollback으로 무효화되지 않게 한다.
+- 잠금은 사용자→family 순서이며 같은 token 동시 갱신은 1회 성공 뒤 reuse 폐기로 처리한다. Client single-flight 유지, 재전송 grace는 도입하지 않는다.
+- 현재 Desktop logout은 연결 Extension까지 폐기하지만 다른 Desktop은 유지한다. 기기 상태를 LOGGED_OUT/REVOKED로 바꿔 재인증·기기 슬롯에 반영한다.
+- refresh 공개 IP 보호 300회/10분은 별도 유한 공간, 확인된 token 소유 user/device는 일반 60회/분 한도를 공유한다. proxy 신뢰 경계·단일 서버 메모리 한계는 기존 환경 문서를 따른다.
+- TokenFamilyGuard로 요청 인증과 refresh의 부모 Desktop 활성 family·수명·소유 검사를 통일한다.
+- Notion 원문은 이번 작업에서 수정하지 않았으며, 새 30일 연장·한도 세부값은 최신 사용자 승인 결정이다. 정본 문서 동기화 시 이 결정과 일치시킨다.
+- #58 pairing·기기 관리·unlink 및 실제 Google 실계정 성공 QA는 별도로 추적한다.
