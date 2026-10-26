@@ -7,6 +7,7 @@ import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 import { GOAL_CHANNELS } from '../shared/goal-contract.cjs'
 import { SESSION_CHANNELS, isSessionSnapshot } from '../shared/session-contract.cjs'
 import { ANALYSIS_CHANNELS } from '../shared/analysis-contract.cjs'
+import { INTERVENTION_CHANNELS, isFloatingShow } from '../shared/intervention-contract.cjs'
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -91,6 +92,14 @@ const focusOnApi: FocusOnApi = {
     listInstalledApps: () => ipcRenderer.invoke(ANALYSIS_CHANNELS.installedApps),
     getExcludedApps: () => ipcRenderer.invoke(ANALYSIS_CHANNELS.excludedAppsGet),
     saveExcludedApps: (input) => ipcRenderer.invoke(ANALYSIS_CHANNELS.excludedAppsSave, { apps: input.apps.map(({ bundleId, name }) => ({ bundleId, name })) }),
+  },
+  interventions: {
+    onShow(callback) {
+      const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => { if (isFloatingShow(payload)) callback(payload) }
+      ipcRenderer.on(INTERVENTION_CHANNELS.show, listener)
+      return () => ipcRenderer.removeListener(INTERVENTION_CHANNELS.show, listener)
+    },
+    act: (input) => ipcRenderer.invoke(INTERVENTION_CHANNELS.act, { interventionId: input.interventionId, action: input.action }),
   },
 }
 

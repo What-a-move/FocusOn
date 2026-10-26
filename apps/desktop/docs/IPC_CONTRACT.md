@@ -220,6 +220,18 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 
+### 화면 위 포키 Channel (2026-10-26, Issue #63)
+
+| Channel | 방향 | 입력·Payload | Backend |
+| --- | --- | --- | --- |
+| `floating:show` (Event) | Main → 포키 창 | `{ interventionId, kind: OFF_TASK \| BREAK, level, goalText, say, sub }` | — |
+| `intervention:act` | 포키 창 → Main | `{ interventionId, action: RECENTER \| ACK \| REST \| CLOSE }` → `{ done: true }` | `POST /interventions/{id}/acknowledgements { action: ACKNOWLEDGED \| DISMISSED }` |
+
+- Main `InterventionWatcher`가 세션 `RUNNING` 동안 10초마다 `GET /sessions/{id}/interventions`를 조회해 처음 보는 `PENDING` 하나를 보여 준다. 채널은 알림 값, 없으면 세션 시작 때 고른 값(`MOLE_UI` 포키 창, `MACOS_NOTIFICATION` 알림, `SOUND` 알림 소리).
+- 포키 창은 `/floating/`을 띄운 macOS panel 창(투명·테두리 없음·다른 앱 위·포커스를 빼앗지 않음)이며, 이 창에서 온 `intervention:act`만 받는다. 문구는 Main이 정해 보낸다.
+- `RECENTER`·`REST`는 `ACKNOWLEDGED`, `CLOSE`는 `DISMISSED`로 기록하고 `REST`는 세션을 일시정지한다. `ACK`(확인했어)는 창만 닫는다(5분 재집중은 화면 상태). 기록 실패는 다시 보내지 않는다.
+- 알림 목록 응답 형식은 Notion에 필드만 있어 `{ interventionId, type, status, channels }` 배열 또는 `{ interventions: [] }`로 읽는다(백엔드 확인 필요).
+
 ## 보안 규칙
 
 - Preload는 Channel 이름을 인자로 받는 범용 `send(channel, data)`를 노출하지 않는다.

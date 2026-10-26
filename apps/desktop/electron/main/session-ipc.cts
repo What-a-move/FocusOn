@@ -41,7 +41,7 @@ export class SessionService {
       },
     })
     // 시작이 확정되면 Main 타이머를 바로 센다.
-    if (result.success) this.runtime.begin(result.data, input.goalText.trim())
+    if (result.success) this.runtime.begin(result.data, input.goalText.trim(), input.sessionOptions)
     return result
   }
 }
