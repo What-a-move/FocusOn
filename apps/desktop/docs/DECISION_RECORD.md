@@ -618,6 +618,6 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 
 - 결정일: 2026-10-26 / 상태: 기존 로그인 계약의 버그 수정 / Issue #59·PR #60.
 - AuthApiClient는 logout의 모든 401을 성공으로 바꾸지 않고 서버 오류 code를 전달한다.
-- AuthService는 30초 만료 여유를 사용하고, 서버 AUTH_ACCESS_TOKEN_EXPIRED에는 single-flight refresh 뒤 logout을 한 번만 재시도한다. 두 번째 만료·알 수 없는 401·네트워크/서버 실패는 성공 표시와 Keychain 삭제를 하지 않는다.
+- AuthService는 유효한 token으로 logout을 먼저 요청하고, 서버 AUTH_ACCESS_TOKEN_EXPIRED에는 single-flight refresh 뒤 logout을 한 번만 재시도한다. 두 번째 만료·알 수 없는 401·네트워크/서버 실패는 성공 표시와 Keychain 삭제를 하지 않는다.
 - 204 또는 명시적 AUTH_RELOGIN_REQUIRED·AUTH_TOKEN_REUSE_DETECTED·AUTH_OAUTH_REAUTH_REQUIRED만 로컬 정리를 완료한다. API 형식과 서버 계약은 그대로다.
 - 실제 만료 JWT/서버/Keychain QA에서 401→refresh200→logout204와 연결 Extension 폐기·활성 기기 슬롯 반환을 확인했다. 실제 Google 인증 완료를 뜻하지 않는다.

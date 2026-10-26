@@ -82,6 +82,13 @@ Google 로그인 이후 Access Token 만료·앱 재실행 시 로그인 유지,
 사용자가 가능한 빌드·테스트·QA 및 로그인 완성을 요청해 Desktop 소비자의 실제 연동 경계까지 검토했다. QA에서 발견한 logout 만료 401 오처리를 같은 Issue #59에서 수정한다. 새 API·필드·정책을 추가하지 않으며 #58 pairing·#38 온보딩 범위는 유지한다.
 
 - Desktop AuthApiClient는 logout의 모든 401을 성공으로 바꾸지 않고 오류 코드를 전달한다.
-- AuthService는 30초 만료 여유와 서버 AUTH_ACCESS_TOKEN_EXPIRED 응답을 처리한다. single-flight refresh 후 logout을 한 번만 재시도하고, 실패 때 회전된 Keychain token을 유지한다.
+- AuthService는 유효한 token으로 logout을 먼저 요청하고, 이미 만료됐거나 서버가 AUTH_ACCESS_TOKEN_EXPIRED를 반환하면 갱신한다. single-flight refresh 후 logout을 한 번만 재시도하고, 실패 때 회전된 Keychain token을 유지한다.
 - 204 또는 명시적 재로그인 오류에만 로컬 로그아웃을 완료한다. 알 수 없는 401·네트워크·서버 오류는 성공으로 표시하지 않는다.
 - 실제 만료 JWT와 Keychain을 이용해 401→refresh200→logout204, 부모/Extension 폐기와 기기 슬롯 반환까지 검증한다.
+
+## CodeRabbit 재리뷰 보완
+
+- logout의 30초 선갱신을 제거한다. 아직 유효한 Access Token은 서버 폐기에 바로 쓰고, 전송 중 만료는 기존 한 번의 refresh·logout 재요청으로 처리한다.
+- 공개 refresh IP 한도는 body 파싱·검증 전에 Security filter에서 적용한다. Controller는 중복 집계하지 않는다. refresh의 Bearer 불필요·기존 공통 오류 형식은 유지한다.
+- 잘못된 JSON·길이 초과·정상 형식 각각 300회 허용 응답과 301번째 429, 다른 IP 격리 및 정상 요청의 1회 집계를 검증한다.
+- 수명이 20초인 token과 refresh503·logout204 조건을 20회 반복해 성공 수·refresh/logout 호출 수를 수정 전후 비교한다.

@@ -24,3 +24,10 @@
 - 실제: AuthApiClient가 모든 401을 성공으로 바꿔 Keychain은 지워지지만 서버 family·연결 Extension·기기 슬롯은 남았다.
 - 해결: 401 코드를 전달하고 AuthService가 single-flight refresh 뒤 logout을 한 번 재시도한다. 서버 오류·미확인 401·재시도 만료는 token을 보존한다.
 - 확인: 독립 재검토·Desktop 회귀 7개 및 실제 HTTP/PG/Keychain 만료 경쟁 성공. Frontend 상세 오류는 apps/desktop/docs/features/auth-lifecycle-logout-expiry-ERROR.md에 기록했다.
+
+## 4. CodeRabbit 재리뷰의 선갱신·본문 바인딩 전 한도 누락
+
+- 상태: 수정·검증 완료 / Minor2건, API 형식 변경 없음.
+- 선갱신: 유효 token으로 먼저 logout하도록 수정했다. 잔여20초·refresh 장애 조건20회에서 성공0→20회, 불필요한 refresh20→0회.
+- 요청 제한: 잘못된 JSON/길이 초과가 Controller 전에 거절돼 한도에 집계되지 않았다. Filter에서 먼저 검사하고 Controller 집계를 제거했다. 각 입력301번째가400→429로 바뀌었고 정상 입력의300회 허용도 유지했다.
+- 재현·검증: RefreshRateLimitApiTests3개와 Desktop20회 비교, 전체 Backend58·Desktop96·PG28·실제 HTTP33건 통과. 개인정보 없는 수치 원자료는 개인 트러블슈팅 폴더에 별도로 보관한다.

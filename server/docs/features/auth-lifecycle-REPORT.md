@@ -37,3 +37,11 @@ Desktop 전체 build는 임시 Swift VFS QA 환경에서 성공했고 Extension 
 ## Docker 검증
 
 실제 배포 Dockerfile의 이미지 빌드와 docker 프로필 컨테이너 기동을 확인했다. UID10001·read-only rootfs·tmpfs·no-new-privileges 환경에서 HTTP/Keychain·Google 오류·회전·logout 35건을 통과했다. 임시 DB·컨테이너·환경 파일은 정리했고 개발 데이터는 유지했다. 최신 검증 커밋537a09a의 Backend CI #53도 통과했다.
+
+## CodeRabbit 재리뷰 수정 검증
+
+- 최신 dev d03c2d2 통합·문서 충돌 해소. shared-types 결정025 유지, 로그인 결정026으로 분리했다.
+- 유효 token logout의 선갱신 제거: 잔여20초·refresh503·logout204 조건20회에서 성공0/20→20/20, refresh20→0회, logout0→20회. 이는 통제된 기능 회귀이며 운영 성공률 측정이 아니다.
+- refresh IP 한도를 본문 바인딩 전 Filter로 옮겼다. 잘못된 JSON·4097자 token은 처음300회400 후301번째가 수정 전400→수정 후429. 정상 형식은 처음300회401,301번째429 유지해 중복 집계가 없음을 확인했다. 모든 차단 응답의 양수 Retry-After·requestId와 다른 IP 격리를 검증했다.
+- Backend58개·build·Checkstyle, PostgreSQL28개·V1/V2·validate, Desktop96개·TypeScript·수정 auth 파일 ESLint, 실제 Google 잘못된 code 거절/HTTP/Keychain33건 통과. PG28은 전체58의 일부를 다른 DB 환경에서 실행한 결과다.
+- 독립 리뷰에서 추가 P1/P2 없음. 실제 Google 계정 성공·기본 Swift 환경 복구는 기존 제한 그대로다. Docker35건은 이전 head의 검증이며 이번 변경의 새 Docker 재검증으로 표현하지 않는다.

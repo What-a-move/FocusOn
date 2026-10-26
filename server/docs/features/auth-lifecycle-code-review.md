@@ -12,7 +12,7 @@ P1/P2로 보고할 실제 결함 없음. Critical/High/Medium/Low의 별도 acti
 - ROTATED flush 후 새 ACTIVE record·family 만료 연장·JWT 발급을 같은 transaction에서 처리한다.
 - reuse 폐기를 commit한 다음 transaction 밖에서 401로 변환하므로 현재 HTTP 경로에서 폐기가 rollback되지 않는다.
 - logout은 기존 principal family를 잠금 뒤 재검증하며 직접 연결된 같은 사용자 Extension만 폐기한다.
-- refresh는 Bearer 필터를 우회하고 body token으로 인증하며, logout은 검증된 Desktop Bearer와 204 빈 본문을 사용한다.
+- refresh는 IP 한도 필터를 통과하되 Bearer 검사를 건너뛰고 body token으로 인증하며, logout은 검증된 Desktop Bearer와 204 빈 본문을 사용한다.
 - 공개 refresh IP 한도 공간은 인증 사용자 한도와 분리된다.
 - DTO 문자열과 오류 응답에서 원문 token을 노출하는 경로를 확인하지 못했다.
 
@@ -24,3 +24,7 @@ P1/P2로 보고할 실제 결함 없음. Critical/High/Medium/Low의 별도 acti
 - P2 1건: Desktop AuthApiClient가 logout의 모든 401을 성공으로 바꿔, 서버 만료 오류에서 로그인 폐기 없이 Keychain을 삭제했다.
 - 수정 diff 재검토: 만료 code 전달 → single-flight refresh → logout 1회 재요청, 실패 token 유지, 명시적 종료에서만 로컬 정리. 기존 P2 해결, 새 P1/P2 없음.
 - 리뷰어는 코드 수정·테스트 실행·외부 댓글을 하지 않았다. 실행 증거는 최종 QA 기록을 따른다.
+
+## CodeRabbit 재리뷰 보완 독립 검토
+
+구현 대화 없는 별도 에이전트가 유효 token 우선 logout과 본문 바인딩 전 refresh IP 한도를 검토했다. Controller 중복 집계 제거, refresh의 Bearer 불필요, 기존 한 번 재시도, 회귀 기대값을 확인했고 추가 P1/P2·보안 회귀는 발견하지 못했다. 리뷰어는 코드 수정·테스트 실행·외부 댓글을 하지 않았다.

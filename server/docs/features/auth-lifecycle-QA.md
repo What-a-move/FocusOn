@@ -59,3 +59,11 @@
 - 실제 Google 잘못된 code 거절, 토큰 회전·재사용 폐기 commit, Desktop 만료 logout→refresh→logout, 연결 Extension·슬롯 반환, 실제 macOS Keychain을 포함한다.
 - QA 종료 후 전용 DB·컨테이너·임시 자격 증명 파일을 정리했다. 기존 개발 DB·사용자 Keychain 항목은 변경하지 않았다. 전체 Backend 보고서는 최종 55개·실패/오류 0으로 다시 생성했다.
 - head537a09a Backend CI #53 success. CodeRabbit 추가 리뷰 결과는 PR/Issue의 최신 상태를 확인한다.
+
+## CodeRabbit 재리뷰 수정 검증
+
+- 최신 dev d03c2d2 통합·문서 충돌 해소. shared-types 결정025 유지, 로그인 결정026으로 분리했다.
+- 유효 token logout의 선갱신 제거: 잔여20초·refresh503·logout204 조건20회에서 성공0/20→20/20, refresh20→0회, logout0→20회. 이는 통제된 기능 회귀이며 운영 성공률 측정이 아니다.
+- refresh IP 한도를 본문 바인딩 전 Filter로 옮겼다. 잘못된 JSON·4097자 token은 처음300회400 후301번째가 수정 전400→수정 후429. 정상 형식은 처음300회401,301번째429 유지해 중복 집계가 없음을 확인했다. 모든 차단 응답의 양수 Retry-After·requestId와 다른 IP 격리를 검증했다.
+- Backend58개·build·Checkstyle, PostgreSQL28개·V1/V2·validate, Desktop96개·TypeScript·수정 auth 파일 ESLint, 실제 Google 잘못된 code 거절/HTTP/Keychain33건 통과. PG28은 전체58의 일부를 다른 DB 환경에서 실행한 결과다.
+- 독립 리뷰에서 추가 P1/P2 없음. 실제 Google 계정 성공·기본 Swift 환경 복구는 기존 제한 그대로다. Docker35건은 이전 head의 검증이며 이번 변경의 새 Docker 재검증으로 표현하지 않는다.

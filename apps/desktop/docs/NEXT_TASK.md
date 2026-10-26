@@ -111,6 +111,6 @@
 
 ## 로그인 최종 QA 후속 (2026-10-26)
 
-- PR #60에서 logout 만료 401을 구분하고 refresh 뒤 한 번 재요청하도록 수정했다. 새 endpoint는 없다.
+- PR #60에서 logout 만료 401을 구분하고 refresh 뒤 한 번 재요청하도록 수정했다. 이 Desktop 재시도 수정 자체는 endpoint를 추가하지 않는다. PR #60의 Server 작업은 POST /api/v1/auth/refresh와 POST /api/v1/auth/logout을 추가한다.
 - Mac 잠금 해제 후 실제 Google 테스트 계정으로 시스템 브라우저 인증→callback→교환→온보딩/홈→재실행→logout을 확인한다.
 - SwiftBridging의 오래된 중복 modulemap 때문에 일반 빌드가 실패한다. 임시 VFS 환경에서는 전체 build 성공을 확인했지만 정식 Command Line Tools 설치 복구는 관리자 인증 후 별도 진행한다. 배포 앱 사용자에게 이 임시 환경을 요구하지 않는다.

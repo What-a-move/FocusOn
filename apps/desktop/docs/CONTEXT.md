@@ -128,5 +128,5 @@ Desktop은 카메라·화면·활성 앱 결과를 반영하는 주 클라이언
 ### 로그인 최종 연동 QA (2026-10-26)
 
 - Server Google exchange·auth/me는 PR #51로 dev에 병합됐다. refresh/logout은 PR #60의 검토 브랜치이며 dev 미병합이다. 위의 과거 미구현 기록과 구분한다.
-- 같은 PR의 최종 QA에서 logout 만료 401을 성공으로 처리하던 P2를 고쳤다. 결정 025와 auth-lifecycle-logout-expiry-ERROR.md를 따른다.
+- 같은 PR의 최종 QA에서 logout 만료 401을 성공으로 처리하던 P2를 고쳤다. 결정 026과 auth-lifecycle-logout-expiry-ERROR.md를 따른다.
 - Desktop 전체 Electron 89개 테스트, 실제 서버/PG/Keychain 33건 통과. 전체 Desktop build는 옛 SwiftBridging 중복 modulemap을 가린 임시 VFS QA 환경에서 통과했다. 일반 환경 복구·실제 UI·Google 계정 완료는 별도다.
