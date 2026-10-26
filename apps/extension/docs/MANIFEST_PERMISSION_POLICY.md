@@ -1,6 +1,6 @@
 # Chrome Extension Manifest 권한 정책
 
-> 현재 상태: Manifest에는 `tabs`, `storage`, `webNavigation`, 모든 HTTP·HTTPS Host 권한이 선언되어 있다. 자동 추적과 HTTP 지원은 확정했지만, 전체 Host 권한의 사용자 승인 방식은 아직 확정하지 않았으므로 Manifest는 변경하지 않는다.
+> 현재 상태(2026-10-26, Issue #61): `tabs`, `storage`, `webNavigation`, `scripting`, `alarms`와 `optional_host_permissions`(`https://*/*`·`http://*/*`), `minimum_chrome_version: 120`. 정적 `content_scripts`는 없다. 필수 `host_permissions`는 빌드 때 FocusOn 서버 origin 하나만 넣는다(결정 009·014). 사이트 권한은 팝업 E01b에서 사용자 클릭으로 요청한다.
 
 ## 기본 원칙
 
@@ -16,10 +16,13 @@
 | `tabs` | 활성 Tab 전환과 URL·Title 확인 | 사용 확정 | `tabs.onActivated` 중심으로 사용 |
 | `storage` | Server 제외 Domain의 로컬 캐시와 Worker 복구 상태 | 사용 확정 | 제외 Domain 캐시는 local, 임시 Navigation은 session |
 | `webNavigation` | 최상위 Frame의 Page 이동 확인 | 사용 확정 | `onCommitted` 중심으로 사용 |
-| `https://*/*` | HTTPS Page Content Script | 범위 검토 중 | 필수 또는 Optional 승인 방식 결정 필요 |
-| `http://*/*` | 오래된 HTTP 학습 Page 분석 | Scheme 지원 확정 | 필수 또는 Optional 승인 방식 결정 필요 |
+| `scripting` | 판정 때 현재 Tab에 `inspectPage`를 한 번 실행 | 사용 확정 | 상시 Content Script 없음(결정 014) |
+| `alarms` | Worker가 꺼져도 30초 뒤 깨어나 15초 체류를 이어 감 | 사용 확정 | 일회성 알람 |
+| `https://*/*` | HTTPS 학습 Page 분석 | `optional_host_permissions` 확정 | E01b에서 사용자 클릭으로 요청(결정 009) |
+| `http://*/*` | 오래된 HTTP 학습 Page 분석 | `optional_host_permissions` 확정 | 위와 같음 |
+| FocusOn 서버 origin | Popup·Worker의 서버 호출 | 필수 `host_permissions` | 빌드 때 `NEXT_PUBLIC_FOCUSON_API_BASE_URL`에서 넣음 |
 
-`tabs`, `storage`, `webNavigation` 사용은 확정했다. 현재 Manifest의 전체 Host 권한이 선언되어 있다는 사실은 승인 방식까지 확정했다는 뜻이 아니다.
+사이트 권한은 설치 때 받지 않는다. 서버 호출이 CORS로 막히지 않게 FocusOn 서버 origin 하나만 필수로 둔다.
 
 ## `activeTab` 검토
 
@@ -29,11 +32,9 @@
 ## Host Permission
 
 - 자동 추적은 여러 학습 사이트에서 동작해야 하므로 HTTP·HTTPS Host 범위 자체는 필요하다.
-- 다만 설치 즉시 필수 권한으로 요구할지, `optional_host_permissions`로 선언하고 학습 추적 활성화 버튼에서 요청할지는 사용자와 확정한다.
-- 추천안은 `https://*/*`와 `http://*/*`를 `optional_host_permissions`로 선언하고, 기능 설명 후 사용자 동작 안에서 `chrome.permissions.request()`로 승인받는 방식이다.
-- 추천안을 선택하면 `scripting` 권한을 추가하고 정적 `content_scripts` 등록은 제거한다. Worker가 활성 세션·현재 Tab·권한을 확인한 뒤 필요한 Page에만 Content Script를 주입한다.
-- 같은 Page에 중복 주입하지 않도록 Navigation ID를 확인하고, 세션 종료 후 새 Page에는 더 이상 주입하지 않는다.
-- 사용자가 전체 사이트를 허용하지 않으면 승인된 사이트에서만 자동 추적하고, 미승인 사이트에서는 분석 중지 상태를 표시한다.
+- `https://*/*`와 `http://*/*`는 `optional_host_permissions`로 선언하고, 팝업 E01b에서 기능을 설명한 뒤 사용자 클릭 안에서 `chrome.permissions.request()`로 한 번에 받는다(결정 009).
+- 정적 `content_scripts`는 없다. 15초 체류 뒤 제외·민감 사이트가 아닐 때만 Worker가 `scripting.executeScript`로 `inspectPage`를 한 번 실행한다(결정 014). 같은 탭·주소에서는 판정을 한 번만 한다.
+- 권한이 없는 사이트는 `EXCLUDED`로만 알리고, 집중 중 권한을 끄면 E06과 `local-events`로 처리한다.
 - 제외 Domain은 권한을 가지고 있어도 수집·전송하지 않는다.
 - Chrome 내부 Page, Extension Page, Web Store처럼 접근할 수 없는 URL을 정상 예외로 처리한다.
 
