@@ -1,8 +1,11 @@
 // FocusOn 화면 관측 도우미 (Desktop 결정 024, screen-observation-PLAN.md).
-// Main이 한 번 띄워 두고 표준 입출력으로 JSON 한 줄씩 주고받는다. 요청: {"id":1,"cmd":"frontmost"|"apps"}
-// [주의] 화면 이미지·창 내용은 이 단계에서 읽지 않는다. 창 제목은 화면 기록 권한이 없으면 null이다.
+// Main이 한 번 띄워 두고 표준 입출력으로 JSON 한 줄씩 주고받는다. 요청: {"id":1,"cmd":"frontmost"|"apps"|"ocr","windowId":123}
+// 창 제목은 화면 기록 권한이 없으면 null이다.
+// [주의] ocr은 지정한 창 하나만 캡처해 글자만 돌려준다. 이미지는 이 프로세스 밖으로 내보내지 않고 OCR 직후 버린다(결정 024).
 import AppKit
 import CoreGraphics
+import ScreenCaptureKit
+import Vision
 
 func reply(_ object: [String: Any]) {
   guard let data = try? JSONSerialization.data(withJSONObject: object), let line = String(data: data, encoding: .utf8) else { return }
@@ -16,7 +19,9 @@ func frontmost(_ id: Int) {
   let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
   let window = windows.first { ($0[kCGWindowOwnerPID as String] as? Int32) == pid && ($0[kCGWindowLayer as String] as? Int) == 0 }
   let title = (window?[kCGWindowName as String] as? String).flatMap { $0.isEmpty ? nil : $0 }
+  let windowId = window?[kCGWindowNumber as String] as? Int
   reply(["id": id, "ok": true, "app": [
+    "windowId": windowId ?? NSNull(),
     "bundleId": app.bundleIdentifier ?? NSNull(),
     "appName": app.localizedName ?? NSNull(),
     "pid": Int(pid),
@@ -42,6 +47,39 @@ func installedApps(_ id: Int) {
   reply(["id": id, "ok": true, "apps": apps, "running": running])
 }
 
+// 창 하나만 캡처해 Vision으로 글자를 읽는다(macOS 14+). 위→아래 순서로 이어 최대 4,000자를 돌려준다.
+let MAX_CAPTURE_WIDTH = 2560.0
+let MAX_TEXT = 4000
+
+func ocr(_ id: Int, windowId: Int) {
+  Task {
+    do {
+      let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+      guard let window = content.windows.first(where: { Int($0.windowID) == windowId }) else { reply(["id": id, "ok": false, "error": "WINDOW_NOT_FOUND"]); return }
+      let filter = SCContentFilter(desktopIndependentWindow: window)
+      let config = SCStreamConfiguration()
+      let scale = min(Double(filter.pointPixelScale), MAX_CAPTURE_WIDTH / max(1, Double(window.frame.width)))
+      config.width = max(1, Int(Double(window.frame.width) * scale))
+      config.height = max(1, Int(Double(window.frame.height) * scale))
+      config.showsCursor = false
+      let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+      let request = VNRecognizeTextRequest()
+      request.recognitionLevel = .accurate
+      request.recognitionLanguages = ["ko-KR", "en-US"]
+      request.usesLanguageCorrection = true
+      try VNImageRequestHandler(cgImage: image, options: [:]).perform([request])
+      // Vision 좌표는 아래가 0이라 y가 큰 것이 위쪽이다.
+      let lines = (request.results ?? [])
+        .sorted { $0.boundingBox.minY > $1.boundingBox.minY }
+        .compactMap { $0.topCandidates(1).first?.string }
+      reply(["id": id, "ok": true, "text": String(lines.joined(separator: "\n").prefix(MAX_TEXT))])
+    } catch {
+      // 화면 기록 권한이 없거나 캡처가 막히면 실패로만 알린다. 오류 문장은 넘기지 않는다.
+      reply(["id": id, "ok": false, "error": "CAPTURE_FAILED"])
+    }
+  }
+}
+
 // [주의] frontmostApplication은 메인 run loop가 돌아야 최신 값으로 바뀐다. 입력은 백그라운드에서 읽고 처리는 메인에서 한다.
 var pending = Data()
 FileHandle.standardInput.readabilityHandler = { handle in
@@ -58,6 +96,8 @@ FileHandle.standardInput.readabilityHandler = { handle in
     DispatchQueue.main.async {
       switch request["cmd"] as? String {
       case "frontmost": frontmost(id)
+      case "ocr":
+        if let windowId = request["windowId"] as? Int { ocr(id, windowId: windowId) } else { reply(["id": id, "ok": false, "error": "INVALID_REQUEST"]) }
       case "apps": installedApps(id)
       default: reply(["id": id, "ok": false, "error": "UNKNOWN_COMMAND"])
       }

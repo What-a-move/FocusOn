@@ -28,6 +28,7 @@ import { ExcludedApps } from './excluded-apps.cjs'
 import { ObserverHelper } from './observer-helper.cjs'
 import { ScreenObserver, parseFrontmost } from './screen-observer.cjs'
 import { AnalysisSender } from './analysis-sender.cjs'
+import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
 import { InterventionWatcher } from './intervention-watcher.cjs'
 import { INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
@@ -296,7 +297,20 @@ if (!hasSingleInstanceLock) {
             const current = runtime.snapshot()
             if (current?.status !== 'RUNNING' || current.sessionId !== session.sessionId) return
             const observation = observer.observe(parseFrontmost(reply))
-            if (observation) void sender?.send(session.sessionId, observation)
+            if (!observation || !sender) return
+            void analyzeObservation({
+              send: (sessionId, next) => sender.send(sessionId, next),
+              // 창 캡처·Vision OCR은 몇 초 걸릴 수 있다. 글자만 받고 이미지는 도우미 안에서 버린다.
+              ocr: async (windowId) => {
+                const result = await helper.request('ocr', { windowId, timeoutMs: 5000 })
+                return typeof result?.text === 'string' ? result.text : null
+              },
+              stillShowing: (key, sessionId) => {
+                const current = runtime.snapshot()
+                return observer.currentKey() === key && current?.status === 'RUNNING' && current.sessionId === sessionId
+              },
+              now: () => new Date(),
+            }, session.sessionId, observation)
           })
           .finally(() => { observing = false })
       }, 1000)

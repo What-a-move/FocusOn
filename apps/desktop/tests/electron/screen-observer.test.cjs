@@ -27,7 +27,7 @@ test('같은 화면이 15초 유지되면 APP_META 관측을 한 번만 만든�
   assert.deepEqual(hold(xcode, 14), [], '15초 전에는 만들지 않음')
   const made = hold(xcode, 30)
   assert.equal(made.length, 1, '같은 화면에서는 다시 만들지 않음')
-  assert.deepEqual(made[0], { observedAt: AT.toISOString(), guardStatus: null, contentSource: 'APP_META', metadata: { appName: 'Xcode', windowTitle: 'FocusOn — main.swift' } })
+  assert.deepEqual(made[0], { observedAt: AT.toISOString(), guardStatus: null, contentSource: 'APP_META', metadata: { appName: 'Xcode', windowTitle: 'FocusOn — main.swift' }, key: 'com.apple.dt.Xcode\nFocusOn — main.swift', windowId: null })
 })
 
 test('15초 안에 창 제목이 바뀌면 처음부터 다시 센다', () => {
@@ -73,8 +73,8 @@ test('reset 뒤에는 같은 화면이어도 15초를 다시 센다', () => {
 })
 
 test('도우미 응답은 허용 필드만 읽고 형식이 다르면 확인 불가로 본다', () => {
-  assert.deepEqual(parseFrontmost({ ok: true, app: { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null, extra: 'x' } }),
-    { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null })
+  assert.deepEqual(parseFrontmost({ ok: true, app: { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null, windowId: 204271, extra: 'x' } }),
+    { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null, windowId: 204271 })
   assert.equal(parseFrontmost({ ok: true, app: null }), null)
   assert.equal(parseFrontmost({ ok: true, app: { bundleId: 'a' } }), null)
   assert.equal(parseFrontmost(null), null)

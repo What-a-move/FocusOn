@@ -220,6 +220,12 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 
 Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Main이 허용한 `titleCode`와 `bodyCode`를 실제 문구로 변환하는 방식으로 제한한다.
 
+### 화면 OCR (2026-10-26, Issue #71)
+
+- Renderer IPC는 없다. Main이 `APP_META` 결과가 `UNRELATED`·`UNCERTAIN`이고 아직 같은 화면·같은 RUNNING 세션이면, Swift 도우미 `ocr { windowId }`로 그 창 하나만 캡처(`SCScreenshotManager`)해 Vision OCR 글자만 받는다. 이미지는 도우미 밖으로 나오지 않는다.
+- 글자는 주소·이메일·전화번호·긴 토큰을 지우고 2,000자로 줄여 `DESKTOP_APP_OCR { metadata, contentPayload: { text } }`로 보낸다. 민감 글자면 `guardStatus: PRIVACY_BLOCKED`만 보낸다. 응답·OCR 사이 화면이 바뀌면 보내지 않는다.
+- 순서 번호는 `contentSource`별(`APP_META`·`DESKTOP_APP_OCR`)로 `userData/analysis-sequence.json`에 둔다.
+
 ### 화면 위 포키 Channel (2026-10-26, Issue #63)
 
 | Channel | 방향 | 입력·Payload | Backend |

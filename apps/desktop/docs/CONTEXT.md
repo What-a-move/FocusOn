@@ -61,10 +61,12 @@
 
 - Issue #63(2026-10-26): 화면 분석 4단계. Main `InterventionWatcher`가 10초마다 서버 알림을 조회해 화면 위 포키 창(`/floating/`, `floating-poki.html` F04·F05)과 macOS 알림으로 보여 주고, `조금 더 보기`·`잠시 쉬기`·닫기를 acknowledgements로 기록한다. 평소에는 아무것도 띄우지 않는다. 알림 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 말풍선·목표 안내 흐름을 확인했다.
 
+- Issue #71(2026-10-26): 화면 분석 5단계. Swift 도우미 `ocr`이 맨 앞 창 하나만 `SCScreenshotManager`로 캡처해 Vision(`ko-KR`·`en-US`)으로 글자만 돌려준다(이미지는 도우미 안에서 버림). Main `analyzeObservation`이 `APP_META` 결과가 관련 없음·판단 보류이고 아직 같은 화면이면 정리한 글자를 `DESKTOP_APP_OCR`로 다시 보낸다(늦은 응답 버림, 민감 글자는 `PRIVACY_BLOCKED`). Vision 한국어 인식은 저장된 화면 캡처로 확인했고, 창 캡처는 화면 기록 권한이 있는 실제 앱에서 확인이 남아 있다.
+
 
 ### 아직 진행하지 않은 작업
 
-- 화면 분석 5단계: 대상 창 캡처·Apple Vision OCR. `APP_META` 결과가 `UNRELATED`·`UNCERTAIN`이면 항상 OCR로 다시 보낸다(결정 024, 2026-10-26 변경). 서버는 메타 근거 `UNRELATED`를 이탈로 세지 않아, Desktop 앱 이탈 감지는 이 단계가 있어야 동작한다.
+- 같은 창에서 글자만 바뀌는 경우(스크롤 등) 30초 재전송 (OCR 텍스트 비교, 결정 024에서 미룸)
 - 설정 › 분석·권한의 제외 앱 관리 (설정 화면 작업 때)
 - 카메라 분석 연동(AVFoundation + Apple Vision 로컬, 선택 동의)
 - 인증·온보딩·리포트 외 Server API 클라이언트와 실제 Backend 왕복 QA
