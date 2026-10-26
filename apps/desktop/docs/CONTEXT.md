@@ -58,6 +58,8 @@
 
 - Issue #54(2026-10-25): 화면 분석 1단계. Swift 도우미(`native/observer`, macOS 14+)로 맨 앞 앱·창 제목·설치된 앱 목록을 읽고, Main `ScreenObserver`가 세션 `RUNNING` 중 같은 화면 15초 유지 시 관측 1건(Chrome 건너뜀, 제외 앱·FocusOn 창·지원하지 않는 브라우저 `EXCLUDED`, 고정 민감 앱·창 제목 단어 `PRIVACY_BLOCKED`, 그 외 `APP_META`)을 만든다. 서버 전송은 2단계다. 분석 제외 앱은 번들 ID로 이 기기에만 저장하고 온보딩 제외 단계에서 고른다(`exclusions.html` 앱 대화상자). 세션 중 화면 기록 권한이 꺼지면 바로 `AUTO_PAUSED` + `local-events`를 보내고 집중 화면에 `권한 꺼짐` 안내를 보여 준다. dialog 가운데 정렬을 `globals.css`에서 한 번에 고쳤다(ERROR 문서). `local-events` API가 dev에 없어 실제 왕복은 미검증이다.
 
+- Issue #63(2026-10-26): 화면 분석 4단계. Main `InterventionWatcher`가 10초마다 서버 알림을 조회해 화면 위 포키 창(`/floating/`, `floating-poki.html` F04·F05)과 macOS 알림으로 보여 주고, `조금 더 보기`·`잠시 쉬기`·닫기를 acknowledgements로 기록한다. 평소에는 아무것도 띄우지 않는다. 알림 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 말풍선·목표 안내 흐름을 확인했다.
+
 - Issue #56(2026-10-25): 화면 분석 2단계. 관측을 Main `AnalysisSender`가 `POST /sessions/{id}/analysis-runs`로 바로 보낸다(clientRunId·세션별 sequence·`APP_META`, 제외·민감은 상태만). 다시 보내거나 쌓지 않고 429면 60초 쉰다. `analysis-runs` API가 dev에 없어 실제 왕복은 미검증이다.
 
 ### 아직 진행하지 않은 작업

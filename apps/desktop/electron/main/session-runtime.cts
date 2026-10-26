@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { ApiResult } from './auth-api.cjs'
 import type { AuthService } from './auth-service.cjs'
 import { parseCommandResult, parseHeartbeat, parseRemoteSession } from '../shared/session-contract.cjs'
-import type { CommandResult, RemoteSession, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
+import type { CommandResult, FocusSettings, RemoteSession, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
 
 type Command = 'pause' | 'resume' | 'extend' | 'end'
 type State = {
@@ -19,6 +19,8 @@ type State = {
   busy: boolean
 }
 
+// ponytail: 앱을 다시 켜 이어받은 세션은 조회 응답에 옵션이 없어 기본값(포키·보통)으로 알림을 보여 준다.
+const DEFAULT_OPTIONS: FocusSettings = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
 const NONE = Symbol('no-active-session')
 const SCREEN_PERMISSION_REVOKED = 'LOCAL_SCREEN_PERMISSION_REVOKED'
 const ACTIVE: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING']
@@ -37,6 +39,7 @@ export class SessionRuntime {
   // 서버에 아직 알리지 못한 로컬 이벤트. 다음 heartbeat 주기에 순서대로 다시 보낸다.
   private localEvents: { sessionId: string; localEventCode: string; occurredAt: string }[] = []
   private flushing = false
+  private options: FocusSettings = DEFAULT_OPTIONS
 
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
@@ -53,13 +56,19 @@ export class SessionRuntime {
   }
 
   /** 세션 설정에서 시작에 성공하면 그 응답으로 타이머를 시작한다. */
-  begin(started: StartedSession, goalText: string): void {
+  begin(started: StartedSession, goalText: string, options: FocusSettings = DEFAULT_OPTIONS): void {
     this.pending.clear()
+    this.options = options
     this.state = {
       sessionId: started.sessionId, goalText, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
       baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false,
     }
     this.publish()
+  }
+
+  /** 세션 시작 때 고른 개입 강도·알림 채널. */
+  sessionOptions(): FocusSettings {
+    return this.options
   }
 
   /** 앱을 다시 켰을 때 서버의 활성 세션을 이어받는다. 실행 중이었다면 사용자 확인 없이 다시 세지 않도록 APP_RESTART로 멈춘다. */
@@ -76,6 +85,7 @@ export class SessionRuntime {
     if (result.data === NONE || !isActive(result.data.status)) { this.state = null; this.publish(); return { success: true, data: null } }
     const remote = result.data
     this.pending.clear()
+    this.options = DEFAULT_OPTIONS
     this.state = {
       sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status, version: remote.version,
       // [주의] 꺼져 있던 동안의 시간은 서버가 마지막으로 확정한 값만 쓴다. 로컬에서 추정해 더하지 않는다(resumedAt 없음).

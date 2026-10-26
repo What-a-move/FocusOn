@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, Menu, nativeTheme, net, protocol, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, protocol, screen, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -8,7 +8,7 @@ import {
   isAllowedNavigation,
   resolveRendererFile,
 } from './renderer-path.cjs'
-import { AuthSessionStore, registerAuthIpc } from './auth-ipc.cjs'
+import { AuthSessionStore, isTrustedAuthSender, registerAuthIpc } from './auth-ipc.cjs'
 import { AUTH_CHANNELS } from '../shared/auth-contract.cjs'
 import { GoogleOAuthFlow } from './google-oauth.cjs'
 import { AuthApiClient, resolveAuthApiBaseUrl } from './auth-api.cjs'
@@ -29,6 +29,8 @@ import { ObserverHelper } from './observer-helper.cjs'
 import { ScreenObserver, parseFrontmost } from './screen-observer.cjs'
 import { AnalysisSender } from './analysis-sender.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
+import { InterventionWatcher } from './intervention-watcher.cjs'
+import { INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -226,6 +228,59 @@ if (!hasSingleInstanceLock) {
     // 관측은 바로 서버로 보내고 Desktop에 쌓아 두지 않는다(결정 024). 창 제목은 로그에 남기지 않는다.
     const sender = authService ? new AnalysisSender(authService, path.join(app.getPath('userData'), 'analysis-sequence.json')) : null
     let observing = false
+    // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
+    let floatingWindow: BrowserWindow | null = null
+    let pendingShow: FloatingShow | null = null
+    const FLOATING_SIZE = { width: 580, height: 400 }
+    function showFloating(payload: FloatingShow): void {
+      if (!floatingWindow || floatingWindow.isDestroyed()) {
+        const area = screen.getPrimaryDisplay().workArea
+        const window = new BrowserWindow({
+          ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width - 48, y: area.y + area.height - FLOATING_SIZE.height,
+          // macOS panel: 다른 앱을 쓰는 중에도 클릭할 수 있고 FocusOn을 앞으로 가져오지 않는다.
+          type: 'panel', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false,
+          minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, show: false,
+          webPreferences: { preload: path.join(__dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
+        })
+        window.setAlwaysOnTop(true, 'floating')
+        window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+        window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+        window.webContents.on('will-navigate', (event) => event.preventDefault())
+        window.webContents.on('did-finish-load', () => {
+          if (pendingShow) { window.webContents.send(INTERVENTION_CHANNELS.show, pendingShow); window.showInactive() }
+        })
+        window.on('closed', () => { if (floatingWindow === window) floatingWindow = null })
+        floatingWindow = window
+        pendingShow = payload
+        void window.loadURL(new URL('floating/', rendererUrl).toString()).catch(() => {})
+        return
+      }
+      pendingShow = payload
+      floatingWindow.webContents.send(INTERVENTION_CHANNELS.show, payload)
+      floatingWindow.showInactive()
+    }
+    function hideFloating(): void {
+      pendingShow = null
+      if (floatingWindow && !floatingWindow.isDestroyed()) floatingWindow.hide()
+    }
+    const watcher = authService && runtime ? new InterventionWatcher({
+      auth: authService,
+      show: showFloating,
+      notify: (payload, sound) => { if (Notification.isSupported()) new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show() },
+      pause: () => runtime.pause('USER'),
+      isCurrent: (sessionId) => { const current = runtime.snapshot(); return current?.status === 'RUNNING' && current.sessionId === sessionId },
+    }) : null
+    ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
+      if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
+      const { interventionId, action } = args[0]
+      const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
+      // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 조금 더 보기는 같은 창에서 목표 안내로 이어진다.
+      if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }
+      if (action !== 'RECENTER') hideFloating()
+      return { success: true, data: { done: true } }
+    })
+    let watchedSession: string | null = null
+
     // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(10초, 학습 세션 설계서·세션 상태 전이 정책)를 계속 처리한다.
     if (runtime) {
       setInterval(() => {
@@ -249,6 +304,12 @@ if (!hasSingleInstanceLock) {
         // 세션 중 화면 기록 권한이 꺼지면 바로 멈춘다(Notion 화면 분석 7.2).
         if (runtime.snapshot()?.status === 'RUNNING' && mediaStatus('screen') !== 'granted') runtime.screenPermissionLost()
         void runtime.heartbeat()
+        // 이탈 알림은 heartbeat와 같은 10초 주기로 조회한다(Notion interventions 비고). 진행 중이 아니면 포키를 숨긴다.
+        const current = runtime.snapshot()
+        // 세션이 바뀌면 이전 세션의 포키를 닫는다. 그 알림으로 새 세션을 멈추지 않게 한다.
+        if (current?.sessionId !== watchedSession) { watchedSession = current?.sessionId ?? null; watcher?.reset(); hideFloating() }
+        if (current?.status === 'RUNNING') void watcher?.poll(current.sessionId, current.goalText, runtime.sessionOptions())
+        else hideFloating()
       }, 10_000)
     }
     createMainWindow()

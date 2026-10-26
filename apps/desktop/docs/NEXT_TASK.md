@@ -4,6 +4,11 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 화면 위 포키 이탈 알림 (Issue #63, `feat/63-desktop-floating-poki`)
+- 상태: 알림 조회·포키 창·acknowledgements 구현(2026-10-26). 남은 일: 실제 Electron에서 전체화면 앱 위 표시·포커스 QA, 백엔드 interventions 병합 뒤 실제 QA와 REPORT, 알림 목록 응답 형식 백엔드 확인. F06(분석 제외·민감)·F07(연결 끊김) 말풍선, 휴식 포키(sleepy) 에셋, 위치 옮기기는 다음 작업.
+- 다음 Issue 후보: 화면 분석 5단계 Desktop OCR(메타 근거 UNRELATED는 이탈로 세지 않으므로 Desktop 앱 이탈 감지에 필요), 세션 결과 화면.
+
+
 - 작업명: 화면 관측 결과 서버 전송 (Issue #56, `feat/56-desktop-analysis-sending`)
 - 상태: `AnalysisSender` 구현(2026-10-25). 남은 일: `analysis-runs` API 병합 뒤 실제 QA와 REPORT.
 - 다음 Issue 후보: 화면 분석 3단계 — Extension 탭·DOM 분석(결정 013: `optional_host_permissions` 전환, `TAB_META` → `INSUFFICIENT_CONTEXT`면 `CHROME_DOM`, 민감·제외 판정, `local-events`). 그다음 4단계 개입 표시(Floating Poki), 5단계 Desktop OCR.
