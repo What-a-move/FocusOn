@@ -17,3 +17,10 @@ P1/P2로 보고할 실제 결함 없음. Critical/High/Medium/Low의 별도 acti
 - DTO 문자열과 오류 응답에서 원문 token을 노출하는 경로를 확인하지 못했다.
 
 리뷰어는 코드 수정·테스트 실행·외부 댓글을 하지 않았다. 동시성 판단은 정적 검토 결과이며 실행 증거는 별도 QA에 기록한다. 실제 Google 사용자 왕복 성공을 이 리뷰로 대신하지 않는다.
+
+## 최종 Client 연동 독립 리뷰
+
+- 같은 구현 대화를 전달하지 않은 별도 에이전트가 최신 dev 통합 뒤 Server와 Desktop 인증 경계를 검토했다. Server 추가 P1/P2는 없었다.
+- P2 1건: Desktop AuthApiClient가 logout의 모든 401을 성공으로 바꿔, 서버 만료 오류에서 로그인 폐기 없이 Keychain을 삭제했다.
+- 수정 diff 재검토: 만료 code 전달 → single-flight refresh → logout 1회 재요청, 실패 token 유지, 명시적 종료에서만 로컬 정리. 기존 P2 해결, 새 P1/P2 없음.
+- 리뷰어는 코드 수정·테스트 실행·외부 댓글을 하지 않았다. 실행 증거는 최종 QA 기록을 따른다.

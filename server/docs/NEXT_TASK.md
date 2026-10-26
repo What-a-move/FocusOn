@@ -26,3 +26,9 @@
 ## PR 검증 결과
 
 PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionable comment 0건. 주석 경고 보완 후 CI를 다시 확인한다. 병합·Issue #59 종료는 사용자 별도 승인이 필요하다.
+
+## 로그인 최종 QA 갱신 (2026-10-26)
+
+- PR #60에 최신 dev 통합과 Desktop logout 만료 재시도 수정, 독립 재검토·Backend/PG/Desktop/Extension/HTTP QA 결과를 반영했다.
+- 세부 결과는 auth-lifecycle-QA.md가 현재 기준이다. 임시 VFS 전체 빌드 성공과 기본 Swift 설치 복구, 합성 인증과 실제 Google 계정 성공을 구분한다.
+- Mac 잠금 해제·실계정 인증, 관리자 인증 후 개발 도구 복구를 확인한다. PR의 최신 CI·CodeRabbit 결과 확인 뒤 병합·Issue 종료는 별도 승인받는다.
