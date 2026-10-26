@@ -4,14 +4,19 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 화면 위 포키 이탈 알림 (Issue #63, `feat/63-desktop-floating-poki`)
+- 상태: 알림 조회·포키 창·acknowledgements 구현(2026-10-26). 남은 일: 실제 Electron에서 전체화면 앱 위 표시·포커스 QA, 백엔드 interventions 병합 뒤 실제 QA와 REPORT, 알림 목록 응답 형식 백엔드 확인. F06(분석 제외·민감)·F07(연결 끊김) 말풍선, 휴식 포키(sleepy) 에셋, 위치 옮기기는 다음 작업.
+- 다음 Issue 후보: 화면 분석 5단계 Desktop OCR(메타 근거 UNRELATED는 이탈로 세지 않으므로 Desktop 앱 이탈 감지에 필요), 세션 결과 화면.
+
+
 - 작업명: 화면 관측 결과 서버 전송 (Issue #56, `feat/56-desktop-analysis-sending`)
 - 상태: `AnalysisSender` 구현(2026-10-25). 남은 일: `analysis-runs` API 병합 뒤 실제 QA와 REPORT.
-- 다음 Issue 후보: 화면 분석 3단계 — Extension 탭·DOM 분석(결정 013: `optional_host_permissions` 전환, `TAB_META` → `INSUFFICIENT_CONTEXT`면 `CHROME_DOM`, 민감·제외 판정, `local-events`). 그다음 4단계 개입 표시(Floating Poki), 5단계 Desktop OCR.
+- 다음 Issue 후보: 화면 분석 3단계 — Extension 탭·DOM 분석(결정 013: `optional_host_permissions` 전환, `TAB_META` → 관련 없음·판단 보류면 `CHROME_DOM`(2026-10-26 기준), 민감·제외 판정, `local-events`). 그다음 4단계 개입 표시(Floating Poki), 5단계 Desktop OCR.
 
 
 - 작업명: 화면 관측 기반과 분석 제외 앱 (Issue #54, `feat/54-desktop-screen-observation`)
 - 상태: Swift 도우미·관측 상태 기계·제외 앱(로컬)·화면 권한 철회 처리 구현(2026-10-25). 남은 일: `local-events` API 병합 뒤 실제 QA와 REPORT, 실제 Electron 세션에서 관측 확인.
-- 다음 Issue: 화면 분석 2단계 `analysis-runs` 전송은 Issue #56에서 진행했다(위 항목). OCR(대상 창 캡처·Vision OCR, 텍스트 2,000자·이메일/전화/토큰 제거·민감 패턴 차단, `INSUFFICIENT_CONTEXT`일 때만, 같은 창 내용 변경 30초)은 순서를 바꿔 5단계로 미뤘다(결정 024). 다른 브라우저는 `EXCLUDED`로 처리하기로 확정했다.
+- 다음 Issue: 화면 분석 2단계 `analysis-runs` 전송은 Issue #56에서 진행했다(위 항목). OCR(대상 창 캡처·Vision OCR, 텍스트 2,000자·이메일/전화/토큰 제거·민감 패턴 차단, `APP_META` 결과가 관련 없음·판단 보류면 항상(2026-10-26 변경), 같은 창 내용 변경 30초)은 순서를 바꿔 5단계로 미뤘다(결정 024). 다른 브라우저는 `EXCLUDED`로 처리하기로 확정했다.
 
 
 - 작업명: 집중 화면 (Issue #48, `feat/48-desktop-focus-session`)
@@ -84,7 +89,7 @@
 - macOS 활성 앱과 Bundle Identifier 확인
 - 분석 제외 앱 설정
 - 화면 캡처 권한과 캡처 중지
-- MediaPipe 카메라 권한 및 상태 연결
+- 카메라 권한 및 로컬 카메라 분석(AVFoundation + Apple Vision) 상태 연결
 
 ## 완료 조건
 

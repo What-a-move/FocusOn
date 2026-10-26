@@ -1,7 +1,10 @@
 // GET /api/v1/sessions/active 응답 (Desktop과 같은 계약, Desktop 결정 023). 활성 세션이 없으면 204 → null.
 // [주의] node --test로 직접 실행하므로 상대 import를 두지 않는다.
 
-export type SessionStatus = 'RUNNING' | 'PAUSED' | 'AUTO_PAUSED' | 'AWAITING_END_CONFIRMATION' | 'ENDING' | 'ENDED' | 'ABANDONED'
+import type { SessionStatus } from '@focuson/shared-types'
+
+// 서버 계약 타입은 Desktop과 함께 shared-types에서 가져온다(타입만, 결정 015).
+export type { SessionStatus }
 export type ActiveSession = { sessionId: string; status: SessionStatus; goalText: string; targetDurationMs: number; accumulatedActiveMs: number }
 
 const STATUSES: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING', 'ENDED', 'ABANDONED']

@@ -23,7 +23,7 @@ docs/
 
 ## 먼저 읽을 문서
 
-1. `PROJECT_CONTEXT.md` - 새 채팅에서 프로젝트 목적·MVP·정본·현재 상태를 파악하는 시작점
+1. `PROJECT_CONTEXT.md` - 새 채팅에서 프로젝트 목적·MVP 흐름·영역 구성·문서 위치를 파악하는 시작용 지도(현재 상태는 각 영역 `CONTEXT.md`)
 2. `WORKFLOW.md` - 작업 시작부터 PR까지의 전체 흐름
 3. `BRANCH_STRATEGY.md` - Branch 이름과 작업 분리 규칙
 4. `COMMIT_CONVENTION.md` - Commit 메시지 규칙

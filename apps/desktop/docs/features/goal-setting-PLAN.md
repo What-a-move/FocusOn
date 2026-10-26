@@ -93,12 +93,12 @@ Electron Process·Window·IPC·권한의 확정 기본값은 `ELECTRON_ARCHITECT
 
 ## 완료 조건
 
-- [ ] 기획 내용 확인
-- [ ] 정상 흐름 구현 (AI 응답 4종, 질문 2회 제한, 수동 확정)
-- [ ] 권한 거부 흐름 구현 (해당 없음)
-- [ ] 예외 상황 확인 (AI 장애·오프라인·저장 실패·늦은 응답)
-- [ ] 키보드 사용·접근 가능한 이름·색상 대비·Focus 표시 확인
-- [ ] 테스트 완료
-- [ ] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성
+- [x] 기획 내용 확인
+- [x] 정상 흐름 구현 (AI 응답 4종, 질문 2회 제한, 수동 확정)
+- [x] 권한 거부 흐름 구현 (해당 없음)
+- [x] 예외 상황 확인 (AI 장애·오프라인·저장 실패·늦은 응답)
+- [x] 키보드 사용·접근 가능한 이름·색상 대비·Focus 표시 확인
+- [x] 테스트 완료 (단위·가짜 bridge 화면 확인, 실제 API QA는 백엔드 병합 뒤)
+- [x] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성 (goal-setting-shared-runtime-import, goal-setting-feedback-icon-span-selector)
 - [ ] `*-REPORT.md` 작성
-- [ ] `CONTEXT.md`, `NEXT_TASK.md` 갱신
+- [x] `CONTEXT.md`, `NEXT_TASK.md` 갱신

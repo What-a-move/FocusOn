@@ -64,13 +64,13 @@
 
 ## 완료 조건
 
-- [ ] 기획 내용 확인
-- [ ] 필요한 권한만 선언 (변경 없음)
-- [ ] 정상 흐름 구현
-- [ ] 제외 도메인 구현 (해당 없음)
-- [ ] 연결 실패 처리
-- [ ] 키보드 사용·접근 가능한 이름·색상 대비·Focus 표시 확인
-- [ ] 테스트 완료 (`pnpm --filter @focuson/extension test`)
-- [ ] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성
+- [x] 기획 내용 확인
+- [x] 필요한 권한만 선언 (변경 없음)
+- [x] 정상 흐름 구현
+- [x] 제외 도메인 구현 (해당 없음)
+- [x] 연결 실패 처리
+- [x] 키보드 사용·접근 가능한 이름·색상 대비·Focus 표시 확인
+- [x] 테스트 완료 (`pnpm --filter @focuson/extension test`) (단위·가짜 bridge 화면 확인, 실제 API QA는 백엔드 병합 뒤)
+- [x] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성 (session-popup-dev-server-blank, 보류)
 - [ ] `*-REPORT.md` 작성
-- [ ] `CONTEXT.md`, `NEXT_TASK.md` 갱신
+- [x] `CONTEXT.md`, `NEXT_TASK.md` 갱신

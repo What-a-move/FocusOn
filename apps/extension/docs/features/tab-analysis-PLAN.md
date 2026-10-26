@@ -76,6 +76,20 @@
 | 민감 페이지 | 없음 | `PRIVACY_BLOCKED`만 |
 | 서버·네트워크 오류 | 없음 | 버림 |
 
+## 완료 조건
+
+- [x] 기획 내용 확인 (결정 013·014)
+- [x] 필요한 권한만 선언 (`scripting`·`alarms`, 사이트는 optional, 서버 origin만 필수)
+- [x] 정상 흐름 구현 (15초 체류 → TAB_META → CHROME_DOM)
+- [x] 제외 도메인·민감 페이지·Chrome 내부 페이지 구현
+- [x] 연결 실패 처리 (보내지 않고 버림, 429 60초)
+- [x] 키보드 사용·접근 가능한 이름·색상 대비·Focus 표시 확인 (E01b·E06)
+- [x] 테스트 완료 (단위 테스트, Chromium + 가짜 서버로 문서·로그인·제외 사이트 흐름)
+- [x] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성 (typescript6-types-default, node-test-parameter-property)
+- [ ] 실제 Chrome에서 권한 창 허용·거부, Worker 종료 복구 QA
+- [ ] `*-REPORT.md` 작성 (백엔드 병합 뒤 실제 QA 포함)
+- [x] `CONTEXT.md`, `NEXT_TASK.md` 갱신
+
 ## 남은 작업
 
 - 같은 페이지 안 내용 변경(스크롤 등) 30초 재전송은 이번에 하지 않는다(ponytail: 주소·제목이 바뀔 때만). 필요하면 본문 hash 비교로 추가한다.

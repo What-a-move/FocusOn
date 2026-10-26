@@ -284,3 +284,24 @@ Worker 유휴 종료는 30초 뒤라 15초 타이머는 대부분 그대로 실�
 ### 영향받는 파일
 
 - `extension/background/`, `extension/content/inspect-page.ts`, `extension/shared/`, `public/manifest.json`, `scripts/prepare-extension-build.mjs`
+
+## 결정 015 - 서버 계약 타입은 shared-types로 공유한다 (타입만)
+
+- 결정일: 2026-10-26
+- 담당 영역: Frontend(`apps`)·Shared(`packages/shared-types`)
+- 대상 앱: Desktop·Chrome Extension
+- 상태: 확정 (Issue #69)
+
+### 결정 내용
+
+- 두 앱이 함께 쓰는 서버 계약 타입(`Relation`, `ContentSource`, `GuardStatus`, `ReasonCode`, `SessionStatus`, `AnalysisRunRequest`·`AnalysisRunResponse`)은 `@focuson/shared-types`에 두고 `import type`으로만 가져온다. 기존 이름(`SessionStatus`, `GuardStatus`, `RunBody`, `AnalysisRun`)은 각 앱에서 다시 내보내 사용처를 바꾸지 않았다.
+- 확인(parse) 함수·허용 값 배열 같은 **실행 코드는 공유하지 않고** 각 앱에 둔다.
+
+### 결정 이유
+
+같은 계약을 두 앱이 따로 적으면 계약이 바뀔 때 한쪽을 놓친다. 다만 `shared-types`는 빌드 없이 TS 원본을 내보내므로, Desktop Main(`.cjs`)이나 Extension `node --test`에서 실행 값을 가져오면 깨진다. `import type`은 컴파일 때 사라져 이 문제가 없다(빌드 결과에 `shared-types` 참조가 남지 않음을 확인).
+
+### 영향받는 파일
+
+- `packages/shared-types/src/index.ts`
+- `extension/background/tab-analyzer.ts`, `features/session/session-model.ts`

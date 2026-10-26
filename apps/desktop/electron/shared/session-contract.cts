@@ -1,3 +1,4 @@
+import type { SessionStatus } from '@focuson/shared-types'
 import type { IpcResult } from './auth-contract.cjs'
 
 // IPC_CONTRACT.md 세션 Channel. 세션 설정(D09)·집중 화면(D10)이 쓴다.
@@ -21,7 +22,8 @@ export type StartSessionInput = { goalId: string; goalText: string; targetDurati
 export type StartedSession = { sessionId: string; status: string; version: number; targetDurationMs: number; accumulatedActiveMs: number; startedAt: string; interventionPolicyVersion: string }
 
 /** 서버 세션 상태 (세션 상태 전이 정책). */
-export type SessionStatus = 'RUNNING' | 'PAUSED' | 'AUTO_PAUSED' | 'AWAITING_END_CONFIRMATION' | 'ENDING' | 'ENDED' | 'ABANDONED'
+// 서버 계약 타입은 Desktop·Extension이 shared-types에서 함께 쓴다(타입만, 결정 025).
+export type { SessionStatus }
 /** GET /sessions/active · GET /sessions/{id} 응답 중 화면에 필요한 값 (2026-10-25 확정, 결정 023). */
 export type RemoteSession = { sessionId: string; status: SessionStatus; version: number; goalText: string; targetDurationMs: number; accumulatedActiveMs: number }
 

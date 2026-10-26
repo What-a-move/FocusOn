@@ -321,7 +321,7 @@ Google token endpoint는 code 교환에 최초 인증 요청의 `redirect_uri`�
 - Access Token은 Electron Main 메모리에만 둔다. 인증 API 요청과 응답 검증도 Main에서 처리하며 Renderer에는 `AuthSessionSnapshot`만 전달한다.
 - `FOCUSON_API_BASE_URL`은 HTTPS 또는 로컬 개발용 loopback HTTP origin만 허용한다. 설정이 없으면 Google 브라우저 인증을 시작하지 않는다.
 - Google code 교환 성공이라도 Keychain 저장이 실패하면 `SIGNED_IN`으로 전이하지 않는다. 앱 재실행 때 저장된 Refresh Token을 1회 회전하고 `auth/me`를 조회한다.
-- 로그아웃은 Backend 응답 `204` 또는 명시적 재로그인 오류가 확인된 뒤 Keychain을 비운다(결정 025). 네트워크·서버 오류라면 토큰을 유지한다.
+- 로그아웃은 Backend 응답 `204` 또는 명시적 재로그인 오류가 확인된 뒤 Keychain을 비운다(결정 026). 네트워크·서버 오류라면 토큰을 유지한다.
 
 ### 결정 이유
 
@@ -593,7 +593,28 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - `analysis-runs` 요청에 `metadata`·`guardStatus`, 응답에 `reasonCode`를 추가한다.
 - Policy Engine은 새 관측 전까지 마지막 판정이 계속된다고 보고 heartbeat마다 이탈 시간을 다시 계산한다.
 
-## 결정 025 - 로그아웃 도중 Access Token 만료 처리
+## 결정 025 - 서버 계약 타입은 shared-types로 공유한다 (타입만)
+
+- 결정일: 2026-10-26
+- 담당 영역: Frontend(`apps`)·Shared(`packages/shared-types`)
+- 대상 앱: Desktop·Chrome Extension
+- 상태: 확정 (Issue #69)
+
+### 결정 내용
+
+- 두 앱이 함께 쓰는 서버 계약 타입(`Relation`, `ContentSource`, `GuardStatus`, `ReasonCode`, `SessionStatus`, `AnalysisRunRequest`·`AnalysisRunResponse`)은 `@focuson/shared-types`에 두고 `import type`으로만 가져온다. 기존 이름(`SessionStatus`, `GuardStatus`, `RunBody`, `AnalysisRun`)은 각 앱에서 다시 내보내 사용처를 바꾸지 않았다.
+- 확인(parse) 함수·허용 값 배열 같은 **실행 코드는 공유하지 않고** 각 앱에 둔다.
+
+### 결정 이유
+
+같은 계약을 두 앱이 따로 적으면 계약이 바뀔 때 한쪽을 놓친다. 다만 `shared-types`는 빌드 없이 TS 원본을 내보내므로, Desktop Main(`.cjs`)이나 Extension `node --test`에서 실행 값을 가져오면 깨진다. `import type`은 컴파일 때 사라져 이 문제가 없다(빌드 결과에 `shared-types` 참조가 남지 않음을 확인).
+
+### 영향받는 파일
+
+- `packages/shared-types/src/index.ts`
+- `electron/shared/session-contract.cts`, `electron/main/screen-observer.cts`, `electron/main/analysis-sender.cts`
+
+## 결정 026 - 로그아웃 도중 Access Token 만료 처리
 
 - 결정일: 2026-10-26 / 상태: 기존 로그인 계약의 버그 수정 / Issue #59·PR #60.
 - AuthApiClient는 logout의 모든 401을 성공으로 바꾸지 않고 서버 오류 code를 전달한다.
