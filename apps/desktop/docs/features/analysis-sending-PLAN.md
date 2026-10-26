@@ -37,7 +37,7 @@
   - 일반: `{ clientRunId, contentSource: 'APP_META', observedAt, sequence, guardStatus: null, metadata: { appName, windowTitle } }`
   - 제외·민감: `{ clientRunId, contentSource: 'APP_META', observedAt, sequence, guardStatus: 'EXCLUDED' | 'PRIVACY_BLOCKED' }` (metadata 없음)
 - `clientRunId`: 관측마다 UUID v4. `sequence`: 같은 세션·`APP_META` 안에서 1부터 증가. 세션이 바뀌면 1부터. 서버는 더 작은 sequence를 옛날 결과로 보므로, 앱을 다시 켜도 같은 세션이면 이어 세도록 마지막 값을 `userData/analysis-sequence.json`에 둔다.
-- 응답 200: `{ analysisRunId, relation, confidence, reasonCode, observedAt, policyVersion }`을 검사만 한다. `reasonCode: INSUFFICIENT_CONTEXT`일 때 OCR로 다시 보내는 것은 5단계다.
+- 응답 200: `{ analysisRunId, relation, confidence, reasonCode, observedAt, policyVersion }`을 검사만 한다. 결과가 `UNRELATED`·`UNCERTAIN`이면 OCR로 다시 보내는 것은 5단계다(2026-10-26 기준, 결정 024).
 - 실패 처리:
   - 자동 재전송하지 않는다(POST, 공통 규칙). 다음 화면 변경부터 새로 보낸다.
   - `TOO_MANY_REQUESTS`: 60초 동안 보내지 않는다. ponytail: Retry-After 헤더 대신 요청 제한 단위(1분)로 쉰다. 공통 요청 함수가 헤더를 넘기게 되면 그 값을 쓴다.
@@ -74,10 +74,10 @@
 
 ## 완료 조건
 
-- [ ] 기획 내용 확인
-- [ ] 정상 흐름 구현 (요청 본문·순서 번호·세션 변경)
-- [ ] 예외 상황 확인 (429·503·네트워크·형식 오류)
-- [ ] 테스트 완료
-- [ ] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성
+- [x] 기획 내용 확인
+- [x] 정상 흐름 구현 (요청 본문·순서 번호·세션 변경)
+- [x] 예외 상황 확인 (429·503·네트워크·형식 오류)
+- [x] 테스트 완료 (단위·가짜 bridge 화면 확인, 실제 API QA는 백엔드 병합 뒤)
+- [x] 실제 오류가 발생했다면 오류별 `기능명-오류명-ERROR.md` 작성 (실제 오류 없음)
 - [ ] `*-REPORT.md` 작성 (백엔드 `analysis-runs` 병합 뒤 실제 QA 포함)
-- [ ] `CONTEXT.md`, `NEXT_TASK.md` 갱신
+- [x] `CONTEXT.md`, `NEXT_TASK.md` 갱신
