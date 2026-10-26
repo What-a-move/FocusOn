@@ -15,14 +15,15 @@ export class ObserverHelper {
 
   constructor(private readonly binary: string) {}
 
-  request(cmd: 'frontmost' | 'apps', timeoutMs = TIMEOUT_MS): Promise<Record<string, unknown> | null> {
+  /** ocr은 windowId가 필요하다. 창 캡처·OCR은 1초보다 오래 걸릴 수 있어 timeoutMs를 늘려 부른다. */
+  request(cmd: 'frontmost' | 'apps' | 'ocr', { timeoutMs = TIMEOUT_MS, windowId }: { timeoutMs?: number; windowId?: number } = {}): Promise<Record<string, unknown> | null> {
     const child = this.ensure()
     if (!child) return Promise.resolve(null)
     const id = this.nextId++
     return new Promise((resolve) => {
       const timer = setTimeout(() => { this.waiting.delete(id); resolve(null) }, timeoutMs)
       this.waiting.set(id, (value) => { clearTimeout(timer); resolve(value) })
-      child.stdin.write(`${JSON.stringify({ id, cmd })}\n`)
+      child.stdin.write(`${JSON.stringify({ id, cmd, ...(windowId === undefined ? {} : { windowId }) })}\n`)
     })
   }
 
