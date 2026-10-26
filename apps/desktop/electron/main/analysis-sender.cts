@@ -3,8 +3,9 @@ import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import type { AuthService } from './auth-service.cjs'
 import type { Observation } from './screen-observer.cjs'
 
-export type Relation = 'RELATED' | 'UNRELATED' | 'UNCERTAIN' | 'EXCLUDED' | 'PRIVACY_BLOCKED'
-export type AnalysisRun = { analysisRunId: string; relation: Relation; confidence: number | null; reasonCode: string | null; observedAt: string; policyVersion: string }
+import type { AnalysisRunRequest, AnalysisRunResponse, Relation } from '@focuson/shared-types'
+
+export type AnalysisRun = AnalysisRunResponse
 
 const RELATIONS: readonly Relation[] = ['RELATED', 'UNRELATED', 'UNCERTAIN', 'EXCLUDED', 'PRIVACY_BLOCKED']
 // ponytail: 서버 요청 제한이 분 단위라 429면 1분 쉰다. 공통 요청 함수가 Retry-After를 넘기게 되면 그 값을 쓴다.
@@ -42,9 +43,9 @@ export class AnalysisSender {
     if (this.session?.id !== sessionId) this.session = { id: sessionId, sequence: this.savedSequence(sessionId) }
     const sequence = ++this.session.sequence
     this.saveSequence(sessionId, sequence)
-    const base = { clientRunId: randomUUID(), contentSource: 'APP_META', observedAt: observation.observedAt, sequence }
+    const base = { clientRunId: randomUUID(), contentSource: 'APP_META' as const, observedAt: observation.observedAt, sequence }
     // [주의] 제외·민감 화면은 상태만 보낸다. 앱 이름·창 제목도 넣지 않는다.
-    const body = observation.guardStatus
+    const body: AnalysisRunRequest = observation.guardStatus
       ? { ...base, guardStatus: observation.guardStatus }
       : { ...base, guardStatus: null, metadata: observation.metadata }
     const result = await this.auth.authorizedRequest({

@@ -1,5 +1,6 @@
 // Chrome 탭 분석 흐름 (화면 분석 3단계, 결정 013·014). Chrome API는 Deps로 받아 테스트할 수 있게 한다.
 // [주의] 이 파일은 node --test로도 실행하므로 상대 import는 확장자(.ts)를 붙인다.
+import type { AnalysisRunRequest, ContentSource, GuardStatus } from '@focuson/shared-types'
 import { cleanPageText, hostOf, isExcludedHost, isPrivateHost, isWebPage, MAX_TEXT_LENGTH } from '../shared/page-rules.ts'
 
 export const DWELL_MS = 15_000
@@ -8,12 +9,10 @@ const RATE_LIMIT_PAUSE_MS = 60_000
 
 export type Target = { tabId: number; url: string; title: string }
 export type Tracking = { key: string; tabId: number; url: string; title: string; navigationId: string; startedAt: number; done: boolean }
-type Source = 'TAB_META' | 'CHROME_DOM'
-type Guard = 'EXCLUDED' | 'PRIVACY_BLOCKED'
-export type RunBody = {
-  clientRunId: string; contentSource: Source; observedAt: string; sequence: number; guardStatus: Guard | null
-  metadata?: { appName: 'Google Chrome'; pageTitle: string; urlHost: string }; contentPayload?: { text: string }
-}
+type Source = Extract<ContentSource, 'TAB_META' | 'CHROME_DOM'>
+type Guard = GuardStatus
+// 서버 계약 타입은 Desktop과 함께 shared-types에서 가져온다(타입만, 결정 015).
+export type RunBody = AnalysisRunRequest
 export type RunResult = { ok: true; relation: string } | { ok: false; code: string }
 type Sequences = { sessionId: string; TAB_META: number; CHROME_DOM: number }
 
