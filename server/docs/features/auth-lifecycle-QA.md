@@ -51,3 +51,11 @@
 - 실제 Google token endpoint에 합성 잘못된 code를 보내 AUTH_OAUTH_REAUTH_REQUIRED 401과 사용자·OAuth identity 미생성을 확인했다. 이는 실제 계정의 성공 인증과 별개다.
 - 로컬 Backend/Desktop의 Client ID 설정이 모두 존재하고 일치하며 Desktop API origin도 설정돼 있음을 비밀값 출력 없이 확인했다. Desktop 실행 셸에서 .env.local을 source해야 하는 기존 실행 규칙은 유지한다.
 - 수정된 Desktop auth-api/auth-service/회귀 테스트 ESLint 검사 통과. 최초 pnpm wrapper의 서명 조회 네트워크 실패와 별도로 설치된 ESLint를 직접 실행했다.
+
+## Docker 배포 형태 추가 QA
+
+- 실제 server/Dockerfile의 builder·runtime 단계로 QA 이미지 빌드 성공. .dockerignore가 .env·로그·로컬 build 파일을 제외한다.
+- 별도 QA DB와 컨테이너에서 동일 HTTP/Keychain 33건 및 UID10001·read-only rootfs 확인 2건, 총 35건 통과. docker 프로필·내부 DB 네트워크·tmpfs·no-new-privileges를 적용했다.
+- 실제 Google 잘못된 code 거절, 토큰 회전·재사용 폐기 commit, Desktop 만료 logout→refresh→logout, 연결 Extension·슬롯 반환, 실제 macOS Keychain을 포함한다.
+- QA 종료 후 전용 DB·컨테이너·임시 자격 증명 파일을 정리했다. 기존 개발 DB·사용자 Keychain 항목은 변경하지 않았다. 전체 Backend 보고서는 최종 55개·실패/오류 0으로 다시 생성했다.
+- head537a09a Backend CI #53 success. CodeRabbit 추가 리뷰 결과는 PR/Issue의 최신 상태를 확인한다.

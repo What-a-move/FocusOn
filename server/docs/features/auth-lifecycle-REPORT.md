@@ -33,3 +33,7 @@ POST /api/v1/auth/refresh와 POST /api/v1/auth/logout을 추가했다. Google �
 Desktop 전체 build는 임시 Swift VFS QA 환경에서 성공했고 Extension 전체 build도 성공했다. 기본 Swift 환경은 관리자 인증을 통한 설치 복구가 남아 있다. Mac 잠금으로 실제 UI와 Google 계정 인증은 진행하지 못했다. 분석 계약 미커밋 문서는 이번 로그인 커밋에 넣지 않는다.
 
 실제 Google의 잘못된 code 거절(401)·사용자 미생성까지 검증했으며 Backend/Desktop Client ID 일치를 확인했다. Google 계정의 정상 인증 성공을 대신하지 않는다.
+
+## Docker 검증
+
+실제 배포 Dockerfile의 이미지 빌드와 docker 프로필 컨테이너 기동을 확인했다. UID10001·read-only rootfs·tmpfs·no-new-privileges 환경에서 HTTP/Keychain·Google 오류·회전·logout 35건을 통과했다. 임시 DB·컨테이너·환경 파일은 정리했고 개발 데이터는 유지했다. 최신 검증 커밋537a09a의 Backend CI #53도 통과했다.
