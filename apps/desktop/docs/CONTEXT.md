@@ -1,5 +1,14 @@
 # Desktop 작업 컨텍스트
 
+## 인증 수정 현재 상태 (2026-10-27, Issue #74)
+
+- PR #51·#60은 dev 병합 완료, Issue #49·#59 종료. 아래 과거 미구현·미병합 표기는 당시 이력이다.
+- `fix/74-desktop-auth-races`에서 terminal오류 정리, OAuth/Keychain순서, restore/refresh단일회전, logout barrier, 계정 전환의 이전 요청 차단을 수정했다. API·DB schema·공개IPC형식 변경 없음.
+- Desktop 130개, Backend 58개, PostgreSQL 28개, 실제HTTP/Keychain 45건 로컬검증 완료. 상세는 `features/auth-session-races-QA.md`와 `auth-session-races-code-review.md`.
+- 다음 확인: 연결PR의 최신head CI·CodeRabbit, 실제 Google실계정→앱UI→재실행→logout. 합성세션QA를 실계정성공으로 표시하지 않는다.
+- merge·Issue종료는 별도 승인. 다른Frontend 기능·Server #38·#58은 해당담당 범위로 유지한다.
+
+
 > Frontend(`apps`) 담당자가 Desktop 작업을 시작할 때 읽는 플랫폼 전용 문서다.
 > 작업이 끝나면 현재 상태와 다음 담당자가 알아야 할 내용을 갱신한다.
 

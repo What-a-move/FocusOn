@@ -3,7 +3,15 @@
 - 날짜: 2026-10-26 / Issue #59
 - 환경: Java 25·Spring Boot 4.1.1, H2 및 PostgreSQL 17.11, macOS Node 24·기존 Desktop 인증 모듈.
 
-## 실행 결과
+
+## 최신 상태와 후속 검증 (2026-10-27)
+
+- PR #60은 head `7d019f5`를 dev에 병합했고 Issue59는종료됐다. 해당 head의Backend CI #59통과, CodeRabbit재리뷰는 새코드지적없이 문서3건을남겼다.
+- PR60의 최종수치는Backend 58·PG 28·Desktop 96·HTTP/Keychain 33건이었다. 아래55/25/89와CI45/dd93475는 이전 단계의 이력이다.
+- 후속Desktop인증수정은Issue74에서진행하며 이번 로컬회귀는Backend 58·PG 28·Desktop 130·HTTP/Keychain 45건이다. 상세와한계는 `apps/desktop/docs/features/auth-session-races-QA.md`.
+- 후속 PR의CI/CodeRabbit은 해당 PR의각head기준으로확인한다. 이전리뷰성공을최신코드검증으로사용하지않는다.
+
+## 초기 실행 결과 (PR #60 재리뷰 이전의 과거 기록)
 
 | 범위 | 결과 |
 | --- | --- |
@@ -65,5 +73,5 @@
 - 최신 dev d03c2d2 통합·문서 충돌 해소. shared-types 결정025 유지, 로그인 결정026으로 분리했다.
 - 유효 token logout의 선갱신 제거: 잔여20초·refresh503·logout204 조건20회에서 성공0/20→20/20, refresh20→0회, logout0→20회. 이는 통제된 기능 회귀이며 운영 성공률 측정이 아니다.
 - refresh IP 한도를 본문 바인딩 전 Filter로 옮겼다. 잘못된 JSON·4097자 token은 처음300회400 후301번째가 수정 전400→수정 후429. 정상 형식은 처음300회401,301번째429 유지해 중복 집계가 없음을 확인했다. 모든 차단 응답의 양수 Retry-After·requestId와 다른 IP 격리를 검증했다.
-- Backend58개·build·Checkstyle, PostgreSQL28개·V1/V2·validate, Desktop96개·TypeScript·수정 auth 파일 ESLint, 실제 Google 잘못된 code 거절/HTTP/Keychain33건 통과. PG28은 전체58의 일부를 다른 DB 환경에서 실행한 결과다.
+- Backend 58개·build·Checkstyle, PostgreSQL 28개·V1/V2·validate, Desktop 96개·TypeScript·수정 auth 파일 ESLint, 실제 Google 잘못된 code 거절/HTTP/Keychain 33건 통과. PG 28은 전체58의 일부를 다른 DB 환경에서 실행한 결과다.
 - 독립 리뷰에서 추가 P1/P2 없음. 실제 Google 계정 성공·기본 Swift 환경 복구는 기존 제한 그대로다. Docker35건은 이전 head의 검증이며 이번 변경의 새 Docker 재검증으로 표현하지 않는다.

@@ -621,3 +621,14 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - AuthService는 유효한 token으로 logout을 먼저 요청하고, 서버 AUTH_ACCESS_TOKEN_EXPIRED에는 single-flight refresh 뒤 logout을 한 번만 재시도한다. 두 번째 만료·알 수 없는 401·네트워크/서버 실패는 성공 표시와 Keychain 삭제를 하지 않는다.
 - 204 또는 명시적 AUTH_RELOGIN_REQUIRED·AUTH_TOKEN_REUSE_DETECTED·AUTH_OAUTH_REAUTH_REQUIRED만 로컬 정리를 완료한다. API 형식과 서버 계약은 그대로다.
 - 실제 만료 JWT/서버/Keychain QA에서 401→refresh200→logout204와 연결 Extension 폐기·활성 기기 슬롯 반환을 확인했다. 실제 Google 인증 완료를 뜻하지 않는다.
+
+
+## 결정 027 - 인증 자격 증명 작업 순서와 계정 세대 격리
+
+- 결정일: 2026-10-27 / 상태: 기존 계약 버그 수정 / Issue #74
+- Google 교환·Keychain조회/회전/저장·logout·terminal오류 정리는 같은 인증작업큐에서 처리한다. 일반 API전체를 직렬화하지 않는다.
+- restore와 refresh는 같은 generation의 single-flight를 공유한다. logout내부갱신은 큐에 재진입하지 않으며 기존유효token우선·만료응답뒤1회재시도를 유지한다.
+- 일반요청은 시작generation을 전송전·응답후·재시도전에 검사한다. 로그인재시도/새결과/로그아웃은 이전작업의 상태반영을 무효화하며, 이전 요청을 새 계정 token으로 보내지 않는다.
+- logout은 진행중회전의저장뒤에 서버폐기·로컬삭제를 마치는barrier다. 실패한logout의 유효자격 증명은 이후새요청에서 계속 쓸 수 있게 현재generation에 연결한다.
+- 명시적재로그인오류는 현재 계정만 정리하고 transient/unknown오류는 구분한다. Keychain조회/저장실패는OFFLINE으로 안내하며 원문token을 다른저장소로 우회하지 않는다.
+- BackendAPI·DB·공개IPC형식은 변경하지 않는다. 수치는 통제된QA이며 실제 Google성공은 별도다.
