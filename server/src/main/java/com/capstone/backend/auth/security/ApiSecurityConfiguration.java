@@ -82,29 +82,20 @@ public class ApiSecurityConfiguration {
       String path = request.getRequestURI().substring(request.getContextPath().length());
       return !path.startsWith("/api/v1/")
           || ("POST".equals(request.getMethod())
-              && ("/api/v1/auth/google/exchange".equals(path)
-                  || "/api/v1/auth/refresh".equals(path)));
+              && "/api/v1/auth/google/exchange".equals(path));
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
         FilterChain chain) throws ServletException, IOException {
       try {
-        String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ") || header.length() > 8192
-            || java.util.Collections.list(request.getHeaders("Authorization")).size() != 1) {
-          throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        if ("POST".equals(request.getMethod()) && "/api/v1/auth/refresh".equals(path)) {
+          // JSON 변환·@Valid보다 먼저 집계한다. refresh의 Bearer는 인증 수단으로 쓰지 않는다.
+          limits.checkRefreshIp(request.getRemoteAddr());
+        } else {
+          authenticateBearer(request);
         }
-        FocusOnPrincipal principal = authentication.authenticate(header.substring(7));
-        if (request.getHeader("X-Device-Id") != null) {
-          DeviceHeaderValidator.require(request.getHeader("X-Device-Id"), principal);
-        }
-        limits.check("api:" + principal.userId() + ":" + principal.deviceId(),
-            60, Duration.ofMinutes(1));
-        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
-        var context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(auth);
-        SecurityContextHolder.setContext(context);
       } catch (ApiException exception) {
         SecurityContextHolder.clearContext();
         writeError(request, response, json, exception);
@@ -119,6 +110,25 @@ public class ApiSecurityConfiguration {
       } finally {
         SecurityContextHolder.clearContext();
       }
+    }
+
+    /** 일반 인증 API만 Bearer·소유권·기기·사용자별 한도를 검사한다. */
+    private void authenticateBearer(HttpServletRequest request) {
+      String header = request.getHeader("Authorization");
+      if (header == null || !header.startsWith("Bearer ") || header.length() > 8192
+          || java.util.Collections.list(request.getHeaders("Authorization")).size() != 1) {
+        throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+      }
+      FocusOnPrincipal principal = authentication.authenticate(header.substring(7));
+      if (request.getHeader("X-Device-Id") != null) {
+        DeviceHeaderValidator.require(request.getHeader("X-Device-Id"), principal);
+      }
+      limits.check("api:" + principal.userId() + ":" + principal.deviceId(),
+          60, Duration.ofMinutes(1));
+      var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+      var context = SecurityContextHolder.createEmptyContext();
+      context.setAuthentication(auth);
+      SecurityContextHolder.setContext(context);
     }
   }
 }

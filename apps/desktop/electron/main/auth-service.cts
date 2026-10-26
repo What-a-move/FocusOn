@@ -262,7 +262,8 @@ export class AuthService {
     this.generation += 1
     await this.ready()
     let token = this.accessToken
-    if (!token || this.accessTokenExpiresAt - EXPIRY_MARGIN_MS <= Date.now()) {
+    // logout은 아직 유효한 token으로 먼저 시도해 refresh 장애와 독립적으로 종료한다.
+    if (!token || this.accessTokenExpiresAt <= Date.now()) {
       const refreshed = await this.refresh()
       if (!refreshed.success) {
         if (isReloginError(refreshed.error.code)) {

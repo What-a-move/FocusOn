@@ -284,3 +284,34 @@ test('이미 폐기된 로그인은 불필요한 refresh 없이 로컬 로그아
   assert.equal(qa.vault.peek(), null)
   assert.equal(qa.store.getSnapshot().status, 'SIGNED_OUT')
 })
+
+test('수명 20초의 Access Token이면 refresh 장애에도 logout 20회가 먼저 성공한다', async (t) => {
+  let refreshCalls = 0
+  let logoutCalls = 0
+  let successes = 0
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const nearExpiry = { ...tokens, accessTokenExpiresAt: new Date(Date.now() + 20_000).toISOString() }
+    const store = new AuthSessionStore(() => {})
+    const vault = createVault()
+    const api = new AuthApiClient('http://127.0.0.1:8080', async (url) => {
+      if (url.endsWith('/exchange')) return new Response(JSON.stringify({ data: { ...nearExpiry, ...identity } }), { status: 201 })
+      if (url.endsWith('/refresh')) {
+        refreshCalls += 1
+        return new Response(JSON.stringify({ code: 'SERVICE_UNAVAILABLE', retryable: true }), { status: 503 })
+      }
+      if (url.endsWith('/logout')) { logoutCalls += 1; return new Response(null, { status: 204 }) }
+      throw new Error('unexpected authentication path')
+    })
+    const service = new AuthService(store, api, vault, async () => ({ installationId: 'margin-qa', deviceName: 'QA', platform: 'MACOS' }))
+    await service.handleOAuthOutcome({ type: 'code', data: { authorizationCode: 'synthetic', codeVerifier: 'synthetic', state: 'synthetic', redirectUri: 'http://127.0.0.1:49152/' } })
+    if ((await service.logout()).success) {
+      successes += 1
+      assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
+      assert.equal(vault.peek(), null)
+    }
+  }
+  t.diagnostic(JSON.stringify({ attempts: 20, successes, refreshCalls, logoutCalls }))
+  assert.equal(successes, 20)
+  assert.equal(refreshCalls, 0)
+  assert.equal(logoutCalls, 20)
+})
