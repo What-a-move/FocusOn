@@ -2,7 +2,9 @@
 // 이 파일은 순수 로직이다. 1초마다 맨 앞 앱을 넣으면, 같은 화면이 15초 유지됐을 때 관측 1건을 돌려준다.
 
 export type Frontmost = { bundleId: string | null; appName: string | null; pid: number; windowTitle: string | null }
-export type GuardStatus = 'EXCLUDED' | 'PRIVACY_BLOCKED'
+import type { GuardStatus } from '@focuson/shared-types'
+
+export type { GuardStatus }
 export type Observation =
   | { observedAt: string; guardStatus: GuardStatus }
   | { observedAt: string; guardStatus: null; contentSource: 'APP_META'; metadata: { appName: string; windowTitle: string | null } }
