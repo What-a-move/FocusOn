@@ -4,10 +4,10 @@ html:has(.floating-root), html:has(.floating-root) body { min-width: 0; backgrou
 .floating-root .pop { display: flex; align-items: flex-end; gap: 6px; }
 .floating-root .poki { height: 112px; margin-bottom: -6px; animation: floating-emerge .5s cubic-bezier(.2, .9, .3, 1.15) both; }
 @keyframes floating-emerge { from { transform: translateY(100%); } to { transform: none; } }
-.floating-root .bubble { position: relative; max-width: 260px; margin-bottom: 64px; padding: 14px 40px 14px 18px; border: 1.5px solid var(--fo-line); border-radius: 18px; background: var(--fo-surface); color: var(--fo-ink); font-size: 16px; font-weight: 700; line-height: 1.45; box-shadow: 0 6px 18px rgba(20, 20, 30, .08); animation: floating-pop .55s .12s cubic-bezier(.22, 1, .36, 1) both; transform-origin: right bottom; }
-.floating-root .bubble::before, .floating-root .bubble::after { position: absolute; top: 50%; content: ''; border-style: solid; transform: translateY(-50%); }
-.floating-root .bubble::before { right: -14px; border-width: 10px 0 10px 14px; border-color: transparent transparent transparent var(--fo-line); }
-.floating-root .bubble::after { right: -10px; border-width: 8px 0 8px 11px; border-color: transparent transparent transparent var(--fo-surface); }
+.floating-root .bubble { position: relative; max-width: 260px; margin-right: 30px; margin-bottom: 40px; padding: 14px 40px 14px 18px; border: 1.5px solid var(--fo-line); border-radius: 18px; background: var(--fo-surface); color: var(--fo-ink); font-size: 16px; font-weight: 700; line-height: 1.45; box-shadow: 0 6px 18px rgba(20, 20, 30, .08); animation: floating-pop .55s .12s cubic-bezier(.22, 1, .36, 1) both; transform-origin: right bottom; }
+.floating-root .tail { position: absolute; left: calc(100% - 1.5px); bottom: 12px; width: 36px; height: 30px; overflow: visible; }
+.floating-root .tail-fill { fill: var(--fo-surface); }
+.floating-root .tail-line { fill: none; stroke: var(--fo-line); stroke-width: 1.5px; stroke-linejoin: round; }
 @keyframes floating-pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
 .floating-root .bubble small { display: block; margin-top: 4px; color: var(--fo-muted); font-size: 13px; font-weight: 600; line-height: 1.5; white-space: pre-line; }
 .floating-root .say-actions { display: flex; gap: 6px; margin-top: 12px; }

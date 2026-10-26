@@ -36,6 +36,11 @@ export function FloatingPoki() {
         <div className="say-actions">
           {actions.map(([label, action, primary]) => <button key={action} type="button" className={primary ? 'primary' : ''} onClick={() => act(action)}>{label}</button>)}
         </div>
+        {/* 말꼬리: 말풍선 오른쪽 아래에서 나와 포키 얼굴 쪽으로 휘어진다. 바탕을 말풍선 테두리 위에 겹쳐 이어 붙인다. */}
+        <svg className="tail" viewBox="0 0 36 30" aria-hidden="true">
+          <path className="tail-fill" d="M0 0C9 3 19 10 34 26C20 22 9 21 0 18Z" />
+          <path className="tail-line" d="M0 0C9 3 19 10 34 26C20 22 9 21 0 18" />
+        </svg>
         <button className="close" type="button" aria-label="포키 닫기" onClick={() => act(recenter ? 'ACK' : 'CLOSE')}>
           <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
         </button>
