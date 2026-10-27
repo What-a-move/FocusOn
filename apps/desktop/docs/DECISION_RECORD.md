@@ -630,3 +630,14 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 분석 안 됨 시간과 목표 활동 비율은 Desktop이 계산한다(설계서 3.2). 학습 정리는 `/learning-summary`로 따로 받는다.
 - 이유: 백엔드가 일부 필드만 먼저 내려도 화면이 열리게 하고, 거짓 값을 만들지 않기 위해서다. 백엔드가 이름을 바꾸면 `parseSessionSummary`만 고친다.
 - 영향받는 파일: `electron/shared/report-contract.cts`, `electron/main/report-ipc.cts`, `features/report/*`
+
+## 결정 028 - 인증 작업은 한 줄로 세우고 요청마다 시작 로그인 세대를 확인한다
+
+- 결정일: 2026-10-27 / 상태: 확정 (버그 수정) / Issue #77, 원 검토 #74·팀원 수정안 PR #75.
+- Keychain 읽기·쓰기·삭제, Google 교환, 토큰 갱신, 로그아웃은 `runAuthOperation` 큐에서 하나씩 실행한다. 일반 API 요청 전체를 줄 세우지는 않는다.
+- 복구(restore)도 같은 single-flight 갱신 경로(`refreshTokens`)를 쓴다.
+- 모든 인증 요청은 시작할 때의 로그인 세대(generation)를 기록하고 전송 전·응답 후·재시도 전에 확인한다. 세대가 바뀌었으면 `AUTH_RELOGIN_REQUIRED` 실패로 돌려주고 새 로그인의 토큰·화면은 건드리지 않는다.
+- 일반 요청의 재로그인 오류(`AUTH_RELOGIN_REQUIRED`·`AUTH_TOKEN_REUSE_DETECTED`·`AUTH_OAUTH_REAUTH_REQUIRED`)는 현재 로그인일 때만 정리한다. 네트워크·503·알 수 없는 401은 토큰을 유지한다.
+- 자동 갱신 중 Keychain 읽기·쓰기가 실패하면 메모리 토큰을 버리고 `OFFLINE`으로 바꾼다. 이 상태의 인증 요청은 다시 복구하기 전까지 `AUTH_RELOGIN_REQUIRED`로 실패한다.
+- 이유: "요청을 시작할 때의 로그인 = 지금 로그인인가?"를 Google 교환에서만 확인해 5가지 경쟁이 생겼다. 서버 API·IPC 형식은 바꾸지 않는다.
+- 영향받는 파일: `electron/main/auth-service.cts`, `electron/main/auth-ipc.cts`, `tests/electron/auth-races.test.cjs`
