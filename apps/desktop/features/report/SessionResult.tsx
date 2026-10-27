@@ -16,14 +16,14 @@ const REVIEW = {
   READY: { kind: 'ready', icon: '✓', heading: '학습 정리가 준비됐어요', copy: '' },
   INSUFFICIENT_DATA: { kind: 'neutral', icon: '–', heading: '이번에는 학습 기록만 남겼어요', copy: '정리할 내용이 부족했어요.' },
   FAILED: { kind: 'error', icon: '!', heading: '학습 정리를 만들지 못했어요.', copy: '집중 기록은 그대로 남아 있어요.' },
-  UNKNOWN: { kind: 'neutral', icon: '–', heading: '학습 정리 상태를 확인하지 못했어요', copy: '잠시 후 다시 확인할게요.' },
+  UNKNOWN: { kind: 'neutral', icon: '–', heading: '학습 정리 상태를 확인하지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
 } as const
 
 type View =
   | { kind: 'loading' }
   | { kind: 'missing' }
   | { kind: 'error' }
-  | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary | null }
+  | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary | null; retryLearning: boolean }
 
 const minutes = (ms: number) => Math.round(ms / 60000)
 
@@ -53,7 +53,15 @@ export function SessionResult() {
   const load = useCallback(async (id: string) => {
     const [summary, learning] = await Promise.all([sessionResultApi.getSummary(id), sessionResultApi.getLearningSummary(id)])
     if (!summary.success) { setView({ kind: summary.error.code === 'SESSION_NOT_FOUND' ? 'missing' : 'error' }); return }
-    setView({ kind: 'ready', summary: summary.data, learning: learning.success ? learning.data : null })
+    setView({ kind: 'ready', summary: summary.data, learning: learning.success ? learning.data : null, retryLearning: !learning.success && learning.error.retryable })
+  }, [])
+
+  // 다시 조회할 때는 학습 정리만 바꾼다. 일시 실패면 화면을 그대로 두고 다음에 다시 묻고, 다시 해도 안 되는 실패면 멈춘다.
+  const reloadLearning = useCallback(async (id: string) => {
+    const learning = await sessionResultApi.getLearningSummary(id)
+    setView((current) => current.kind !== 'ready' ? current
+      : learning.success ? { ...current, learning: learning.data, retryLearning: false }
+      : learning.error.retryable ? current : { ...current, retryLearning: false })
   }, [])
 
   useEffect(() => {
@@ -63,12 +71,12 @@ export function SessionResult() {
   }, [load])
 
   // 학습 정리가 만들어지는 동안 5초마다 다시 조회하고, 끝나면 멈춘다(리포트 설계서 2.1).
-  const pending = view.kind === 'ready' && (view.learning === null || view.learning.status === 'QUEUED' || view.learning.status === 'GENERATING')
+  const pending = view.kind === 'ready' && (view.learning === null ? view.retryLearning : view.learning.status === 'QUEUED' || view.learning.status === 'GENERATING')
   useEffect(() => {
     if (!pending || !sessionId) return
-    const timer = setInterval(() => { void load(sessionId) }, POLL_MS)
+    const timer = setInterval(() => { void reloadLearning(sessionId) }, POLL_MS)
     return () => clearInterval(timer)
-  }, [pending, sessionId, load])
+  }, [pending, sessionId, reloadLearning])
 
   const summary = view.kind === 'ready' ? view.summary : null
   const seconds = Math.floor((summary?.accumulatedActiveMs ?? 0) / 1000)
