@@ -54,7 +54,9 @@ class SwaggerApiTests {
     assertEquals(0, doc.at("/paths/~1api~1v1~1auth~1refresh/post/security").size());
     assertFalse(doc.at("/paths/~1api~1v1~1auth~1me/get").has("parameters"));
     assertFalse(doc.at("/paths/~1api~1v1~1auth~1logout/post").has("parameters"));
-    assertEquals(4, doc.path("paths").size());
+    assertTrue(doc.at("/paths/~1api~1v1~1extension-pairings/post/security").isArray());
+    assertEquals(0, doc.at("/paths/~1api~1v1~1extension-pairings/post/security").size());
+    assertTrue(doc.path("paths").has("/api/v1/pairing-codes"));
     assertFalse(doc.path("paths").has("/actuator/health"));
   }
 

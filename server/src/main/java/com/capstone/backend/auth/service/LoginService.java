@@ -8,6 +8,7 @@ import com.capstone.backend.auth.dto.AuthDtos.LoginResponse;
 import com.capstone.backend.auth.dto.AuthDtos.UserInfo;
 import com.capstone.backend.auth.persistence.OauthIdentityEntity;
 import com.capstone.backend.auth.persistence.OauthIdentityRepository;
+import com.capstone.backend.auth.persistence.PairingCodeRepository;
 import com.capstone.backend.auth.persistence.RefreshTokenRecordEntity;
 import com.capstone.backend.auth.persistence.RefreshTokenRecordRepository;
 import com.capstone.backend.auth.persistence.TokenFamilyEntity;
@@ -38,14 +39,16 @@ public class LoginService {
   private final UserDeviceRepository devices;
   private final TokenFamilyRepository families;
   private final RefreshTokenRecordRepository refreshTokens;
+  private final PairingCodeRepository pairingCodes;
   private final TransactionTemplate transaction;
 
   /** 기존 인증 저장 모델을 재사용한다. */
   public LoginService(GoogleOauthClient google, AccessJwtService jwt, UserRepository users,
       OauthIdentityRepository identities, UserDeviceRepository devices,
       TokenFamilyRepository families, RefreshTokenRecordRepository refreshTokens,
-      PlatformTransactionManager transactions) {
+      PairingCodeRepository pairingCodes, PlatformTransactionManager transactions) {
     this.google = google;
+    this.pairingCodes = pairingCodes;
     this.jwt = jwt;
     this.users = users;
     this.identities = identities;
@@ -118,6 +121,7 @@ public class LoginService {
           families.saveAndFlush(old);
           refreshTokens.revokeActiveByFamily(old.getId(), now);
         });
+    pairingCodes.cancelActive(device.getId(), now);
     TokenFamilyEntity family = new TokenFamilyEntity();
     family.setUser(user);
     family.setDevice(device);

@@ -12,6 +12,7 @@ public class AuthRateLimiter {
   private static final int MAX_KEYS = 10000;
   private final Map<String, Bucket> loginBuckets = new HashMap<>();
   private final Map<String, Bucket> refreshBuckets = new HashMap<>();
+  private final Map<String, Bucket> pairingBuckets = new HashMap<>();
   private final Map<String, Bucket> authenticatedBuckets = new HashMap<>();
 
   /**
@@ -29,6 +30,17 @@ public class AuthRateLimiter {
     check("refresh:ip:" + TokenSecrets.hash(remoteAddress), 300, Duration.ofMinutes(10));
   }
 
+  /** JSON 검증 전 익명 pairing IP 공간을 제한한다. */
+  public void checkPairingIp(String remoteAddress) {
+    check("pairing:ip:" + TokenSecrets.hash(remoteAddress), 300, Duration.ofMinutes(10));
+  }
+
+  /** 공개 요청은 인증 사용자 키 공간을 소모하지 않는다. */
+  public void checkPairingInstallation(String remoteAddress, String installationId) {
+    check("pairing:installation:" + TokenSecrets.hash(remoteAddress + "\n" + installationId),
+        10, Duration.ofMinutes(10));
+  }
+
   /** 동일 키의 카운트와 만료 처리를 원자적으로 수행한다. */
   public synchronized void check(String key, int limit, Duration window) {
     // 익명 클라이언트가 로그인 키 공간을 채워도 기존 인증 사용자의 한도를 소진하지 못한다.
@@ -37,6 +49,8 @@ public class AuthRateLimiter {
       buckets = loginBuckets;
     } else if (key.startsWith("refresh:")) {
       buckets = refreshBuckets;
+    } else if (key.startsWith("pairing:")) {
+      buckets = pairingBuckets;
     }
     long now = System.currentTimeMillis();
     Bucket bucket = buckets.get(key);
