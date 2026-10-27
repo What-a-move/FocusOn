@@ -1,6 +1,16 @@
 # Backend 다음 작업
 
-## 현재 작업
+## 현재 작업 (2026-10-27)
+
+- Issue #79: 개발용 Swagger·FocusOn JWT Authorize·Google PKCE 보조 도구. Branch `chore/#79-swagger-testing`, 기준 dev `65da4f0`.
+- 구현·독립 리뷰·build/Checkstyle·Backend62·Python10·실제 PostgreSQL HTTP32 확인을 완료했다. 실제 Google 계정 성공 테스트는 사용자 인증이 필요하다.
+- 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
+- Swagger local 통합·별도 파일 제거 완료. 독립 리뷰 지적 없음, Backend62/build/Checkstyle·HTTP32·기본 bootRun9개 확인 통과. server에서 `./gradlew bootRun`으로 개발한다.
+- 2026-10-27 사용자가 문서 반영과 dev 대상 PR 생성을 승인했다. 원격 PR·CI·리뷰 상태는 [Issue #79](https://github.com/What-a-move/FocusOn/issues/79)에 연결된 PR에서 확인한다. merge·Issue 종료는 별도 승인한다.
+- 이전 #59 / PR #60은 dev 병합·종료됐다. 아래 내용은 당시 기록이며 현 작업으로 재개하지 않는다.
+- 사용법: [SWAGGER_TESTING.md](SWAGGER_TESTING.md).
+
+## 이전 작업 기록
 
 - Issue #59: refresh·회전·재사용 감지·Desktop logout 구현·QA 완료, PR #60 생성 및 CodeRabbit 전체 리뷰 actionable comment 0건.
 - Branch: `feat/#59-auth-lifecycle`; dev 직접 push 금지.
