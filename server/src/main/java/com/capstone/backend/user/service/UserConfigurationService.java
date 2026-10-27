@@ -154,8 +154,10 @@ public class UserConfigurationService {
     if (hosts.size() > 50) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
-    UserEntity user = currentUser(principal);
+    UserEntity user = users.findByIdForUpdate(principal.userId()).orElseThrow(() ->
+        new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
     excludedDomains.deleteByUserId(user.getId());
+    excludedDomains.flush();
     Instant now = clock.instant();
     excludedDomains.saveAll(hosts.stream()
         .map(host -> AnalysisExcludedDomainEntity.create(user, host, now)).toList());

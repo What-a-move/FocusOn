@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -149,7 +150,11 @@ public class UserConfigurationController {
   @PutMapping("/focus-settings")
   @ResponseStatus(HttpStatus.OK)
   @Operation(summary = "집중 설정 수정",
-      description = "개입 강도와 알림 채널을 포함한 기본 설정을 저장합니다.")
+      description = "개입 강도와 알림 채널을 포함한 기본 설정을 저장합니다.",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          content = @Content(mediaType = "application/json", examples = @ExampleObject(value =
+              "{\"interventionLevel\":\"NORMAL\",\"notificationChannels\":[\"MOLE_UI\"],"
+                  + "\"breakSuggestionEnabled\":true,\"cameraAnalysisEnabled\":false}"))))
   @ApiResponses({
       @io.swagger.v3.oas.annotations.responses.ApiResponse(
           responseCode = "200", description = "저장 성공"),

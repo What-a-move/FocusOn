@@ -3,7 +3,7 @@
 - 관련 Issue: [#38](https://github.com/What-a-move/FocusOn/issues/38)
 - Branch: `feat/#38-user-configuration`
 - 작성일: 2026-10-26
-- 상태: 미해결 항목 있음
+- 상태: 반복 저장 수정 및 PostgreSQL 테스트 완료
 
 ## 작업 중 해결한 문제
 
@@ -55,5 +55,11 @@
 - 재현: 동일 사용자가 `PUT /api/v1/users/me/analysis-excluded-domains`를 두 번 호출하고, 기존 목록에 포함된 host를 다시 전달했다.
 - 현상: 두 번째 요청이 500 `INTERNAL_ERROR`로 실패했다.
 - 원인: `deleteByUserId()` 뒤 새 host를 저장할 때 삭제 SQL이 먼저 flush되지 않아, PostgreSQL의 `(user_id, host)` 유니크 제약과 충돌했다.
-- 조치: 미해결. 삭제 뒤 flush를 보장하거나 저장 방식을 재구성하는 수정과 반복 교체 통합 테스트가 필요하다.
-- 검증: 2026-10-27 로컬 Swagger QA에서 같은 `youtube.com`을 포함한 두 번째 전체 교체 요청이 `uq_user_analysis_excluded_domains_user_host` 충돌로 재현됐다.
+- 조치: 사용자 행을 잠가 동일 사용자 교체를 직렬화하고, 기존 행 삭제를 flush한 다음 새 목록을 저장한다.
+- 검증: H2와 PostgreSQL 17 임시 DB의 MockMvc 인증 HTTP 경로에서 동일한 50개 host를 두 번 교체하는 회귀 테스트가 통과했다.
+
+### Swagger 집중 설정 예시의 잘못된 알림 채널
+
+- 현상: Swagger 요청 본문에 허용되지 않는 `string`이 표시돼 그대로 실행하면 400이 발생했다.
+- 조치: 집중 설정 수정 API의 요청 본문에 `MOLE_UI`가 포함된 전체 예시를 명시했다.
+- 검증: local 서버의 Swagger UI에서 요청 예시가 `notificationChannels: ["MOLE_UI"]`로 표시되는 것을 확인했다.

@@ -15,6 +15,8 @@ import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.common.api.RequestIdFilter;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +41,7 @@ class UserConfigurationApiTests {
   void setUp() {
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
         .addFilters(new RequestIdFilter()).build();
-    when(google.exchange(any())).thenReturn("user-config-" + UUID.randomUUID());
+    when(google.exchange(any())).thenAnswer(invocation -> "user-config-" + UUID.randomUUID());
   }
 
   @Test
@@ -62,18 +64,93 @@ class UserConfigurationApiTests {
   }
 
   @Test
+  void profileDuplicateAndConsentStateAreValidated() throws Exception {
+    LoginResponse first = desktop("profile-first");
+    LoginResponse second = desktop("profile-second");
+    String profile = "/api/v1/users/me/profile";
+    String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
+    String body = "{\"nickname\":\"" + nickname + "\"}";
+    mvc.perform(put(profile).header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isOk());
+    mvc.perform(put(profile).header("Authorization", "Bearer " + second.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("PROFILE_NICKNAME_DUPLICATE"));
+    mvc.perform(put(profile).header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"x\"}"))
+        .andExpect(status().isBadRequest());
+    String consent = "/api/v1/users/me/consents/SCREEN_ANALYSIS";
+    String granted = "{\"isGranted\":true,\"consentVersion\":\"2026-09-17\","
+        + "\"consentSource\":\"DESKTOP\"}";
+    String withdrawn = granted.replace("true", "false");
+    mvc.perform(put(consent).header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content(granted))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.isGranted").value(true))
+        .andExpect(jsonPath("$.data.grantedAt").isNotEmpty());
+    mvc.perform(put(consent).header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content(withdrawn))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.isGranted").value(false))
+        .andExpect(jsonPath("$.data.withdrawnAt").isNotEmpty());
+    mvc.perform(get("/api/v1/users/me/consents")
+            .header("Authorization", "Bearer " + second.accessToken()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.consents.length()").value(0));
+  }
+
+  @Test
   void excludedDomainsRequireMatchingDeviceAndNormalizeHosts() throws Exception {
     LoginResponse session = desktop("domain-device");
     mvc.perform(put("/api/v1/users/me/analysis-excluded-domains").header("Authorization",
             "Bearer " + session.accessToken()).header("X-Device-Id", session.device().deviceId())
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"domains\":[\"YouTube.COM.\",\"xn--bcher-kva.de\",\"youtube.com\"]}"))
+            .content("{\"domains\":[\"YouTube.COM.\",\"bücher.de\",\"youtube.com\"]}"))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(2))
         .andExpect(jsonPath("$.data.domains[0]").value("xn--bcher-kva.de"));
     mvc.perform(get("/api/v1/users/me/analysis-excluded-domains").header("Authorization",
             "Bearer " + session.accessToken()).header("X-Device-Id", "999999"))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+  }
+
+  @Test
+  void excludedDomainsCanBeReplacedClearedAndAreIsolated() throws Exception {
+    LoginResponse first = desktop("domain-first");
+    String path = "/api/v1/users/me/analysis-excluded-domains";
+    String fifty = IntStream.range(0, 50).mapToObj(i -> "\"site" + i + ".example\"")
+        .collect(Collectors.joining(",", "{\"domains\":[", "]}"));
+    String fiftyOne = IntStream.range(0, 51).mapToObj(i -> "\"site" + i + ".example\"")
+        .collect(Collectors.joining(",", "{\"domains\":[", "]}"));
+    for (int i = 0; i < 2; i++) {
+      mvc.perform(put(path).header("Authorization", "Bearer " + first.accessToken())
+              .header("X-Device-Id", first.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(fifty))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(50));
+    }
+    mvc.perform(put(path).header("Authorization", "Bearer " + first.accessToken())
+            .header("X-Device-Id", first.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(fiftyOne))
+        .andExpect(status().isBadRequest());
+    mvc.perform(get(path).header("Authorization", "Bearer " + first.accessToken())
+            .header("X-Device-Id", first.device().deviceId()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(50));
+    LoginResponse second = desktop("domain-second");
+    mvc.perform(get(path).header("Authorization", "Bearer " + second.accessToken())
+            .header("X-Device-Id", second.device().deviceId()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(0));
+    mvc.perform(put(path).header("Authorization", "Bearer " + second.accessToken())
+            .header("X-Device-Id", second.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"domains\":[\"second.example\"]}"))
+        .andExpect(status().isOk());
+    mvc.perform(get(path).header("Authorization", "Bearer " + first.accessToken())
+            .header("X-Device-Id", first.device().deviceId()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(50));
+    mvc.perform(put(path).header("Authorization", "Bearer " + first.accessToken())
+            .header("X-Device-Id", first.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"domains\":[]}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(0));
+    mvc.perform(get(path).header("Authorization", "Bearer " + first.accessToken())
+            .header("X-Device-Id", first.device().deviceId()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.domains.length()").value(0));
   }
 
   @Test

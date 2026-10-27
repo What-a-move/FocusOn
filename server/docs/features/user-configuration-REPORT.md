@@ -3,7 +3,7 @@
 - 관련 Issue: [#38](https://github.com/What-a-move/FocusOn/issues/38)
 - Branch: `feat/#38-user-configuration`
 - 기획서: [user-configuration-PLAN.md](user-configuration-PLAN.md)
-- 상태: 구현·자동 검증 완료, 반복 도메인 저장 결함 확인
+- 상태: 반복 도메인 저장 수정 및 H2·PostgreSQL 자동 검증 완료, 명세 재대조 필요
 
 ## 구현 결과
 
@@ -26,10 +26,13 @@
 - `git diff --check`: 성공
 - 재빌드된 로컬 Swagger UI에서 10개 경로와 `focusOnBearer` Authorize 구성을 확인했다. docker 프로필은 Swagger를 비활성으로 유지하고, local 프로필의 8080에서만 UI를 열었다.
 - 실제 Google OAuth PKCE 흐름에서 `POST /auth/google/exchange` 201, `GET /auth/me` 200, `GET /users/me` 200, 프로필·동의·집중 설정 저장/조회 200, refresh 200, logout 204, 로그아웃 뒤·무토큰 `GET /auth/me` 401을 확인했다. code·토큰은 출력하지 않았고 소비된 요청 파일은 휴지통으로 옮겼다.
-- 분석 제외 도메인의 첫 저장·정규화는 200으로 통과했지만, 같은 host를 포함한 두 번째 전체 교체는 유니크 제약 충돌로 500이 발생했다. 따라서 반복 저장은 미검증이 아니라 실패 상태다.
+- 분석 제외 도메인의 반복 교체·50개 저장·51개 거부 후 기존 값 유지·빈 배열 삭제·다른 사용자 조회를 H2와 PostgreSQL 17 임시 DB에서 MockMvc 인증 HTTP 경로로 검증했다. PostgreSQL에는 Flyway V1~V3을 적용했고 테스트 전용 DB는 삭제했다.
+- 집중 설정 수정의 Swagger UI 요청 예시에 `MOLE_UI`가 표시된다.
+- `./gradlew test build checkstyleMain checkstyleTest --no-daemon`: 성공 (2026-10-27). 신규 닉네임 중복·형식, 동의/철회 및 사용자 분리 테스트 포함.
 
 ## 현재 제한과 후속 작업
 
 - 온보딩 준비 상태 API는 Extension pairing #58 완료 뒤 별도 이슈에서 구현한다.
 - 목표, 세션, 분석·개입, 리포트 API는 이 작업의 범위가 아니다.
-- 분석 제외 도메인 전체 교체는 삭제 뒤 flush 순서를 보장하고 반복 저장 통합 테스트를 추가한 뒤 다시 QA해야 한다.
+- 최신 Notion 명세 접근 후 8개 API 계약을 재대조해야 한다. PostgreSQL 검증은 MockMvc 경로이며 실제 Google 계정으로 변경 후 다시 호출한 검증은 아니다.
+- PLAN 승인 및 독립 리뷰는 아직 확인되지 않았다.

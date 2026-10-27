@@ -9,6 +9,7 @@
 
 ## 현재 작업 (2026-10-27)
 
+- Issue #38 사용자 설정 API: 도메인 반복 교체 충돌을 수정하고 H2·PostgreSQL MockMvc 경계·소유권 테스트와 Swagger 집중 설정 예시를 보강했다. 최신 Notion 명세 접근 및 계약 재대조는 남아 있다. 상세는 `features/user-configuration-REPORT.md`를 따른다.
 - Issue #79: `chore/#79-swagger-testing`에서 백엔드 개발용 Swagger·JWT Authorize·Google PKCE 도구 구현·독립 리뷰·QA를 완료했다. 기준 dev는 `65da4f0`이다.
 - 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
 - Swagger를 local에 통합했다. 기본 local은 `.env` 자동 읽기·loopback 바인딩·Swagger 활성화를 함께 적용하며 docker/test는 비활성이다. 사용법은 [SWAGGER_TESTING.md](SWAGGER_TESTING.md)를 따른다.
