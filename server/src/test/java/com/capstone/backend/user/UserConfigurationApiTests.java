@@ -79,7 +79,12 @@ class UserConfigurationApiTests {
         .andExpect(jsonPath("$.code").value("PROFILE_NICKNAME_DUPLICATE"));
     mvc.perform(put(profile).header("Authorization", "Bearer " + first.accessToken())
             .contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"x\"}"))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("PROFILE_NICKNAME_INVALID"));
+    mvc.perform(put(profile).header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"a!\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("PROFILE_NICKNAME_INVALID"));
     String consent = "/api/v1/users/me/consents/SCREEN_ANALYSIS";
     String granted = "{\"isGranted\":true,\"consentVersion\":\"2026-09-17\","
         + "\"consentSource\":\"DESKTOP\"}";
@@ -95,6 +100,37 @@ class UserConfigurationApiTests {
     mvc.perform(get("/api/v1/users/me/consents")
             .header("Authorization", "Bearer " + second.accessToken()))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.consents.length()").value(0));
+  }
+
+  @Test
+  void profileAndFocusSettingsAreIsolatedBetweenUsers() throws Exception {
+    LoginResponse first = desktop("isolation-first");
+    LoginResponse second = desktop("isolation-second");
+    String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
+    mvc.perform(put("/api/v1/users/me/profile")
+            .header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"nickname\":\"" + nickname + "\"}"))
+        .andExpect(status().isOk());
+    mvc.perform(get("/api/v1/users/me")
+            .header("Authorization", "Bearer " + second.accessToken()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.nickname").isEmpty());
+    mvc.perform(put("/api/v1/users/me/focus-settings")
+            .header("Authorization", "Bearer " + first.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"interventionLevel\":\"ACTIVE\",\"notificationChannels\":[\"SOUND\"],"
+                + "\"breakSuggestionEnabled\":false,\"cameraAnalysisEnabled\":true}"))
+        .andExpect(status().isOk());
+    mvc.perform(get("/api/v1/users/me/focus-settings")
+            .header("Authorization", "Bearer " + second.accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.interventionLevel").value("NORMAL"))
+        .andExpect(jsonPath("$.data.notificationChannels[0]").value("MOLE_UI"))
+        .andExpect(jsonPath("$.data.cameraAnalysisEnabled").value(false));
+    mvc.perform(get("/api/v1/users/me/focus-settings")
+            .header("Authorization", "Bearer " + first.accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.interventionLevel").value("ACTIVE"));
   }
 
   @Test

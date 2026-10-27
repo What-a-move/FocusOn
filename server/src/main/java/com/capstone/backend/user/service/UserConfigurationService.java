@@ -69,8 +69,8 @@ public class UserConfigurationService {
   @Transactional
   public MeResponse updateProfile(FocusOnPrincipal principal, UpdateProfileRequest request) {
     UserEntity user = currentUser(principal);
-    String nickname = request.nickname().trim();
-    if (nickname.isBlank()) {
+    String nickname = request.nickname();
+    if (nickname == null || !nickname.matches("[가-힣a-zA-Z0-9]{2,12}")) {
       throw new ApiException(ApiErrorCode.PROFILE_NICKNAME_INVALID);
     }
     boolean duplicate = users.findByNickname(nickname)

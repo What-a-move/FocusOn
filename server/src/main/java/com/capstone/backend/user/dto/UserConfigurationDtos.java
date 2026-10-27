@@ -21,8 +21,8 @@ public final class UserConfigurationDtos {
 
   /** 프로필 변경 요청이다. */
   public record UpdateProfileRequest(
-      @Schema(description = "2~12자 닉네임", example = "집중러")
-      @NotBlank @Size(min = 2, max = 12) String nickname) {}
+      @Schema(description = "한글·영문·숫자로 구성된 2~12자 닉네임", example = "집중러")
+      String nickname) {}
 
   /** 동의 변경 요청이다. */
   public record UpdateConsentRequest(
