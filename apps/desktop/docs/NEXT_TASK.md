@@ -4,6 +4,11 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 세션 결과 화면 (Issue #73, `feat/73-desktop-session-result`)
+- 상태: 결과 화면·summary/learning-summary IPC·세션 종료 후 이동 구현(2026-10-27). 남은 일: 백엔드에 summary 응답 필드 확인(결정 027 제안), API 병합 뒤 실제 세션 QA와 REPORT.
+- 다음 Issue 후보: 학습 정리 상세(`정리 보기`), 집중 기록(달력·일간) 화면, 설정 화면(제외 앱·사이트·알림 방식).
+
+
 - 작업명: Desktop 화면 OCR (Issue #71, `feat/71-desktop-ocr`)
 - 상태: 도우미 창 캡처·Vision OCR, 다시 보내기·글자 정리·contentSource별 순서 번호 구현(2026-10-26). 남은 일: 화면 기록 권한이 있는 실제 Electron에서 창 캡처 확인, 백엔드 `analysis-runs` 병합 뒤 실제 QA와 REPORT.
 - 다음 Issue 후보: 화면 위 포키 F06·F07, 세션 결과 화면, 설정 화면(제외 앱·사이트·알림 방식).

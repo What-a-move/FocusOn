@@ -4,6 +4,8 @@ import type { IpcResult } from './auth-contract.cjs'
 export const REPORT_CHANNELS = {
   calendar: 'report:calendar:get',
   daily: 'report:daily:get',
+  sessionSummary: 'report:session-summary:get',
+  learningSummary: 'report:learning-summary:get',
 } as const
 
 /** GET /api/v1/reports/calendar 의 날짜 하나. hasStudyActivity는 서버가 totalActiveMs >= 60000으로 계산한다. */
@@ -14,9 +16,38 @@ export type CalendarMonth = { month: string; studyDayCount: number; days: Calend
 export type DailySession = { sessionId: string; goal: string; startedAt: string; endedAt: string | null; activeMs: number }
 export type DailyReport = { date: string; totalActiveMs: number; sessions: DailySession[] }
 
+/**
+ * GET /api/v1/sessions/{id}/summary. 시간 필드 이름은 리포트 설계서 3.1을 따른다.
+ * 나머지(status·startedAt·endedAt·연장·멈춤·자동 멈춤·알림 횟수)는 Notion에 이름이 없어 제안 형식이며, 없으면 null(화면에 `기록 없음`)이다.
+ */
+export type SessionSummary = {
+  sessionId: string
+  goalText: string
+  status: 'ENDED' | 'ABANDONED' | null
+  startedAt: string | null
+  endedAt: string | null
+  targetDurationMs: number
+  accumulatedActiveMs: number
+  totalPausedMs: number | null
+  relatedDurationMs: number | null
+  unrelatedDurationMs: number | null
+  uncertainDurationMs: number | null
+  extensionCount: number | null
+  extendedDurationMs: number | null
+  pauseCount: number | null
+  autoPauseCount: number | null
+  autoPauseReasons: string[]
+  interventionCount: number | null
+}
+/** GET /api/v1/sessions/{id}/learning-summary. 생성 중·근거 부족·실패도 200으로 오고 상태로 구분한다. */
+export type LearningSummaryStatus = 'QUEUED' | 'GENERATING' | 'READY' | 'INSUFFICIENT_DATA' | 'FAILED'
+export type LearningSummary = { status: LearningSummaryStatus; overview: string | null }
+
 export type ReportsApi = {
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
+  getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
+  getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -55,4 +86,41 @@ export function parseDaily(value: unknown): DailyReport | null {
     sessions.push({ sessionId: item.sessionId, goal: item.goalTextSnapshot, startedAt: item.startedAt, endedAt: item.endedAt, activeMs: item.accumulatedActiveMs })
   }
   return { date: value.date, totalActiveMs: value.totalActiveMs, sessions }
+}
+
+// 세션 ID는 문자열이다(API에서 BIGINT를 string으로 보냄). 경로에 넣으므로 영문·숫자·하이픈만 받는다.
+export function isValidSessionId(value: unknown): value is string {
+  return typeof value === 'string' && /^[\w-]{1,64}$/u.test(value)
+}
+
+const optionalCount = (value: unknown): number | null => isCount(value) ? value : null
+const LEARNING_STATUSES: readonly LearningSummaryStatus[] = ['QUEUED', 'GENERATING', 'READY', 'INSUFFICIENT_DATA', 'FAILED']
+
+export function parseSessionSummary(value: unknown): SessionSummary | null {
+  if (!isRecord(value) || typeof value.sessionId !== 'string' || typeof value.goalSnapshot !== 'string') return null
+  if (!isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
+  return {
+    sessionId: value.sessionId,
+    goalText: value.goalSnapshot,
+    status: value.status === 'ENDED' || value.status === 'ABANDONED' ? value.status : null,
+    startedAt: isTime(value.startedAt) ? value.startedAt : null,
+    endedAt: isTime(value.endedAt) ? value.endedAt : null,
+    targetDurationMs: value.targetDurationMs,
+    accumulatedActiveMs: value.accumulatedActiveMs,
+    totalPausedMs: optionalCount(value.totalPausedMs),
+    relatedDurationMs: optionalCount(value.relatedDurationMs),
+    unrelatedDurationMs: optionalCount(value.unrelatedDurationMs),
+    uncertainDurationMs: optionalCount(value.uncertainDurationMs),
+    extensionCount: optionalCount(value.extensionCount),
+    extendedDurationMs: optionalCount(value.extendedDurationMs),
+    pauseCount: optionalCount(value.pauseCount),
+    autoPauseCount: optionalCount(value.autoPauseCount),
+    autoPauseReasons: Array.isArray(value.autoPauseReasons) ? value.autoPauseReasons.filter((reason): reason is string => typeof reason === 'string') : [],
+    interventionCount: optionalCount(value.interventionCount),
+  }
+}
+
+export function parseLearningSummary(value: unknown): LearningSummary | null {
+  if (!isRecord(value) || !LEARNING_STATUSES.includes(value.learningSummaryStatus as LearningSummaryStatus)) return null
+  return { status: value.learningSummaryStatus as LearningSummaryStatus, overview: typeof value.overview === 'string' && value.overview ? value.overview : null }
 }

@@ -155,6 +155,8 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | Channel | 입력 | 성공 data | Backend |
 | --- | --- | --- | --- |
 | `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }` | `GET /api/v1/reports/calendar` |
+| `report:session-summary:get` | `{ sessionId }` | `SessionSummary` (결정 027, 없는 값은 null) | `GET /api/v1/sessions/{id}/summary` |
+| `report:learning-summary:get` | `{ sessionId }` | `{ status: QUEUED·GENERATING·READY·INSUFFICIENT_DATA·FAILED, overview }` | `GET /api/v1/sessions/{id}/learning-summary` |
 | `report:daily:get` | `{ date: 'YYYY-MM-DD' }` | `{ date, totalActiveMs, sessions[{ sessionId, goal, startedAt, endedAt, activeMs }] }` | `GET /api/v1/reports/daily` |
 
 - Preload는 `window.focusOn.reports.getCalendar()`, `getDaily()`로 노출한다. Main은 실제로 있는 월·날짜만 받고, `AuthService.authorizedRequest`(X-Device-Id, GET 재시도)로 조회한다.

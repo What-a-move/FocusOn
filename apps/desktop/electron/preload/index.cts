@@ -58,6 +58,8 @@ const focusOnApi: FocusOnApi = {
   reports: {
     getCalendar: (input) => ipcRenderer.invoke(REPORT_CHANNELS.calendar, { month: input.month }),
     getDaily: (input) => ipcRenderer.invoke(REPORT_CHANNELS.daily, { date: input.date }),
+    getSessionSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionSummary, { sessionId: input.sessionId }),
+    getLearningSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningSummary, { sessionId: input.sessionId }),
   },
   goals: {
     clarify: (input) => ipcRenderer.invoke(GOAL_CHANNELS.clarify, {
