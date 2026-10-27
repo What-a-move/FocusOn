@@ -15,9 +15,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-/** 명시적으로 켠 개발 프로필에서만 문서 경로를 연다. 제품 API 인증 체인과 분리한다. */
+/** local 개발 프로필에서만 문서 경로를 연다. 제품 API 인증 체인과 분리한다. */
 @Configuration
-@Profile("swagger")
+@Profile("local")
 @ConditionalOnProperty(name = "springdoc.api-docs.enabled", havingValue = "true")
 public class SwaggerConfiguration {
   @Bean

@@ -42,7 +42,7 @@ server/docs/
 ## 개발용 API 수동 테스트
 
 - [Swagger 실행·Google PKCE 로그인 테스트](SWAGGER_TESTING.md)
-- Swagger는 기본 비활성이며 로컬에서 `local,swagger` 프로필로 켠다.
+- local은 `.env`를 자동으로 읽고 Swagger를 켠다. DB가 켜져 있으면 `bootRun`만 실행한다. docker/test는 Swagger 비활성이다.
 
 ## Backend 전용 확인 항목
 

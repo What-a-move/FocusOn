@@ -29,7 +29,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** 개발 문서 공개와 제품 API 인증의 경계를 검증한다. Google 성공은 합성 응답이다. */
 @SpringBootTest
-@ActiveProfiles({"test", "swagger"})
+@ActiveProfiles({"local", "test"})
 class SwaggerApiTests {
   @Autowired private WebApplicationContext context;
   @MockitoBean private GoogleOauthClient google;

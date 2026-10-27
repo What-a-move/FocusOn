@@ -13,9 +13,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-/** 프로필을 켜지 않은 서버에서 문서가 공개되지 않는지 확인한다. */
+/** docker 설정에서도 문서가 공개되지 않는지 확인한다. DB만 test 설정으로 대체한다. */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles({"docker", "test"})
 class SwaggerDisabledApiTests {
   @Autowired private WebApplicationContext context;
 

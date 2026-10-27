@@ -12,8 +12,8 @@
 
 ## 구성
 
-1. 기본 프로필에서 UI·OpenAPI 생성을 끈다. `local,swagger`로 명시적으로 켜고 서버를 `127.0.0.1`에 바인딩한다. 개발자가 원격 서버에서 swagger 프로필을 켜거나 바인딩을 덮어쓰지 않는다.
-2. `common/openapi/SwaggerConfiguration`은 swagger 프로필과 api-docs 활성 조건에서만 등록한다. 우선 순위 0의 좁은 문서 전용 SecurityFilterChain으로 GET 문서·정적 리소스만 허용한다. 기존 API 인증 체인은 변경하지 않는다.
+1. 공통 설정에서 UI·OpenAPI 생성을 끄고 기본 local 프로필에서 자동으로 켠다. local은 서버를 `127.0.0.1`에 바인딩한다. 별도 swagger 파일·프로필은 두지 않고 docker/test의 비활성을 유지한다.
+2. `common/openapi/SwaggerConfiguration`은 local 프로필과 api-docs 활성 조건에서만 등록한다. 우선 순위 0의 좁은 문서 전용 SecurityFilterChain으로 GET 문서·정적 리소스만 허용한다. 기존 API 인증 체인은 변경하지 않는다.
 3. OpenAPI의 전역 HTTP Bearer scheme과 exchange·refresh의 명시적 `security: []`로 현재 구현을 설명한다. `@AuthenticationPrincipal`은 입력 필드로 노출하지 않는다. 미구현 API를 문서에 만들지 않는다.
 4. 표준 라이브러리 Python CLI가 Desktop Client ID·PKCE S256·무작위 state·임시 IPv4 loopback 포트를 사용한다. callback의 host·경로·중복 query·state를 검증하고, code를 소비하지 않은 채 exchange 요청 JSON만 0600 임시 파일로 쓴다. Client Secret·토큰·인증 원문은 출력하지 않는다.
 5. Swagger 로그인·조회·회전·logout 순서를 사용법으로 남긴다. 실제 Desktop과 별도 installation을 쓰고 logout으로 슬롯을 반환한다.
@@ -28,7 +28,7 @@
 
 ## 검증 및 완료 기준
 
-- Swagger 켠 환경 UI·JSON·설정 GET 성공, 문서 비활성 환경 비공개.
+- 기본 local에서 UI·JSON·설정 GET 성공, docker/test 및 명시적 문서 비활성 환경 비공개.
 - 보호 API 무토큰401·교환 입력 오류400·refresh 본문 인증·logout204 유지.
 - Bearer scheme·공개 security 예외·실제 DTO 필드·비영구 인증 저장·외부 validator 비활성 확인.
 - PKCE·state·loopback·개인 파일 권한·취소/타임아웃·원문 비노출 오프라인 검증.
@@ -41,3 +41,7 @@
 사용자가 개발 시 매번 source를 실행하지 않도록 실제 설정·코드 설명을 요청했다. Spring 기본 Config Data import로 local 프로필에서 현재 디렉터리 `.env`와 저장소 루트 기준 `server/.env`를 Properties로 읽는다. 후자가 같은 키에 우선하며 OS 환경변수는 두 파일보다 우선한다. 파일은 optional로 두어 IDE/OS 환경변수만 쓰는 실행을 지원한다. DB host port는 POSTGRES_PORT → POSTGRES_HOST_PORT → 5432 순서다. docker·test·Swagger 활성화 정책은 바꾸지 않는다. 표준 KEY=VALUE 형식만 사용하고 shell 구문을 실행하지 않는다.
 
 검증: 격리된 파일/실행 위치별 실제 Spring 설정 로딩, OS 우선순위·파일 누락·docker 제외, 실제 `bootRun`에서 source 없이 DB·JWT·Swagger 기동, jar에 .env 미포함, 독립 diff 리뷰. 새 라이브러리나 Gradle 전용 파서를 만들지 않는다.
+
+## 추가 승인: Swagger를 local에 통합 (2026-10-27)
+
+사용자가 `.env` 자동 읽기에 이어 Swagger 설정도 local에 합치고 Docker에서는 사용하지 않도록 승인했다. 구성 1~2항은 최종 결정029를 반영한다. 별도 application-swagger.properties를 삭제하고 Java 문서 보안·OpenAPI 모델은 local에서만 생성한다. Spring 테스트는 local+test에서 H2/테스트 JWT를 마지막으로 적용해 문서·인증을 검증하고 docker+test에서 비공개를 검증한다. 기존 API 인증은 유지하며 실제 bootRun을 추가 인자·source 없이 실행해 UI/JSON·DB·401을 확인한다.

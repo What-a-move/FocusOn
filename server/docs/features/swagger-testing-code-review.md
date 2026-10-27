@@ -22,7 +22,7 @@
 
 ## 확인 범위
 
-- 기본 Swagger 비활성, swagger 프로필·api-docs 속성 조건, GET 문서 전용 좁은 보안 체인, 제품 API 인증 분리.
+- 최초 구성의 공통 Swagger 비활성, 별도 swagger 프로필·api-docs 속성 조건, GET 문서 전용 좁은 보안 체인, 제품 API 인증 분리.
 - 전역 Bearer와 공개 exchange·refresh의 `security: []`, principal 입력 비노출.
 - PKCE S256, 무작위 state, Host·경로·중복 query 검증, 취소/타임아웃, 미사용 code 반환.
 - 0600 임시 파일, 실패 시 파일 삭제, Google Client Secret·인증 원문 비출력.
@@ -32,3 +32,7 @@
 ## 추가 리뷰: local .env 자동 읽기 (2026-10-27)
 
 구현 대화가 없는 별도 에이전트가 이번 HEAD diff와 추가 승인 PLAN·컨벤션만 검토했다. 실제 자격 증명은 읽지 않고 합성 파일로 Spring Boot 4.1.1 Config Data 로딩을 확인했다. root/server 실행 위치·파일 간 우선순위·OS override·포트 fallback·파일 누락·docker/test 제외·local,swagger 동작이 일치했으며 Critical/High/Medium/Low 없음으로 결론 냈다.
+
+## 최종 리뷰: Swagger local 통합 (2026-10-27)
+
+구현 대화가 없는 별도 에이전트가 이번 HEAD diff·최종 PLAN·컨벤션을 정적으로 검토했다. local 기본 Swagger·loopback·GET 문서 체인과 제품 API Bearer, docker/test 비공개, 테스트 프로필 순서에 따른 H2/테스트 JWT 우선 적용, 실행 문서가 일치하며 Critical/High/Medium/Low 없음이었다. 리뷰자는 테스트를 직접 실행하지 않았고 실제 .env를 읽지 않았다. 앞선 별도 swagger 프로필 방식은 결정029로 대체됐다.

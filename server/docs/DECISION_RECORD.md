@@ -297,6 +297,8 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 
 ## 결정 027 - 개발용 Swagger 접근과 PKCE 테스트 도구
 
+별도 swagger 프로필 활성화 방식은 결정029로 변경됐다. 아래는 최초 결정 이력이다.
+
 - 결정일: 2026-10-27 / Issue #79 범위·구현 사용자 승인.
 - 기본 local·docker는 OpenAPI·Swagger UI를 끈다. 개발자가 `local,swagger` 프로필로 명시적으로 켜면 서버를 IPv4 loopback에 바인딩하고 문서 GET 경로만 별도 체인에서 허용한다. 제품 API의 Bearer·DB 인증은 기존 체인을 유지한다.
 - OpenAPI 전역 HTTP Bearer는 FocusOn Access JWT를 받는다. exchange·refresh는 명시적 빈 security 목록으로 표시하며 Google OAuth 원클릭 기능으로 오인하지 않게 한다. 인증 영구 저장·외부 validator·기본 Petstore 문서는 사용하지 않는다.
@@ -313,4 +315,13 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - `optional:`은 파일이 없어도 IDE/OS 환경변수로 실행할 수 있게 하기 위한 것이다. DB password·JWT 등 기존 필수 설정 검증을 없애지 않는다. `.env`는 Git 및 jar에 포함하지 않는다.
 - `.env.example`의 단순 KEY=VALUE 형식을 공유한다. 값 바깥 따옴표·export·shell 구문을 지원한다고 표현하지 않는다. Spring 내부 설정 소스로 읽으므로 별도 Python 프로세스의 shell 환경으로 export되지 않는다.
 - local DB 포트는 `POSTGRES_PORT` → `POSTGRES_HOST_PORT` → 5432 순서로 선택한다. docker 프로필은 기존 Compose 환경변수 전달 방식을 유지한다.
-- Swagger를 켜는 local,swagger 조합은 결정027을 유지한다. 이번 변경에 Swagger 프로필 재구성은 포함하지 않는다.
+- 이 결정 당시 Swagger 활성화 방식은 결정027을 유지했다. 이후 사용자가 local 통합을 승인해 현재는 결정029를 따른다.
+
+
+## 결정 029 - local에서 Swagger 자동 활성화
+
+- 결정일: 2026-10-27 / 사용자 명시 승인, Issue #79 보완.
+- Swagger 속성을 application-local.properties에 통합하고 application-swagger.properties를 삭제한다. Java 문서 설정의 Profile도 local로 변경한다. 기본 local은 `.env`를 읽고 loopback에 바인딩하며 UI·OpenAPI를 자동으로 연다. DB가 켜져 있으면 bootRun만으로 개발한다.
+- 공통 설정의 springdoc false를 유지해 docker/test 실행에서는 Swagger를 열지 않는다. Docker 자체가 운영 전용이라는 의미가 아니라 현재 팀이 정한 실행 구성이다.
+- GET 문서 전용 체인·제품 API 인증·공개 exchange/refresh 예외·Bearer UI·PKCE 도구·환경변수 우선순위는 유지한다.
+- 검증: local 문서+인증 통합, docker 비공개, 명시적 disable, 실제 추가 인자·source 없는 bootRun. PR·merge·Issue 종료는 별도 승인한다.

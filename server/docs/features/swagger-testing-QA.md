@@ -5,7 +5,7 @@
 - 대상: `chore/#79-swagger-testing`, 기준 `origin/dev 65da4f0`
 - 범위: `server/` 설정·문서·도구. 제품 API payload·DB schema·Frontend 변경 없음.
 
-## 결과
+## 최초 검증 결과 (별도 swagger 프로필을 사용하던 시점)
 
 | 검증 | 결과 | 의미 |
 | --- | --- | --- |
@@ -19,7 +19,7 @@
 
 JUnit 62개에는 합성 Google 응답을 사용하는 exchange201 → me200 → refresh200 → logout204 → 폐기 JWT401 흐름이 포함된다. 테스트 수를 운영 로그인 성공률로 해석하지 않는다.
 
-## 실제 HTTP 32개
+## 최초 실제 HTTP 32개 (설정 변경 전 이력)
 
 - 기본 `local`: Swagger HTML·UI·OpenAPI JSON·UI 설정·YAML 5개 경로 모두401.
 - `local,swagger`: UI 진입·HTML·JSON·YAML·UI 설정 성공. 구현된 인증 경로 4개만 문서화.
@@ -61,3 +61,12 @@ python3 -m unittest discover -s server/scripts -p 'test_*.py' -v
 - 독립 리뷰는 별도 합성 환경에서 경로·우선순위·포트·docker/test 제외도 확인했다. 실행 인자·OS 환경변수는 파일보다 우선한다.
 - 실제 .env는 기존 자격 증명을 현재 작업 checkout에 0600으로 준비했으며 원래 checkout 값은 변경하지 않았다. Git ignore·Docker build context 제외·jar 미포함을 확인했다. 비밀값을 테스트 로그·문서에 기록하지 않았다.
 - 로컬 파일 자동 읽기는 Spring 내부 설정 소스로 추가하는 기능이다. Python PKCE CLI 등 별도 프로세스에 shell 환경변수를 export하지는 않는다.
+
+## 최종 QA: local 통합 후 (현재 실행 기준)
+
+- 최종 설정: local은 `.env` 자동 읽기·127.0.0.1 바인딩·Swagger 자동 활성화. 별도 swagger 프로필/파일은 삭제했다. docker/test는 기본 비활성이다. 앞선 별도 프로필 실행 결과는 초기 이력이다.
+- 변경 후 build·Checkstyle 및 Backend62개 통과(실패/오류/skip0). Swagger 통합 테스트는 local+test, 비공개 검증은 docker+test를 사용한다. H2·테스트 JWT가 마지막 프로필에서 우선 적용된다.
+- source·프로필 인자 없는 실제 bootRun 검사9개 통과: 시작 환경에서 자격 증명 제거, DB readiness200, JWT 초기화 및 me401, 기본 local 선택, Swagger UI200, OpenAPI Bearer, exchange/refresh security 예외, 임시 DB migration2개, jar .env 미포함.
+- 실제 jar·PostgreSQL HTTP32개 재검증 통과: docker 프로필 문서5개401, local UI/JSON/YAML/설정 성공, 인증 스키마·공개/보호 API 경계, refresh·logout·폐기, local에서 명시적 false로 덮어쓴 문서 차단. Docker 프로필 동작을 직접 확인했으며 컨테이너 이미지 전체 배포 성공으로 표현하지 않는다.
+- 위 두 실행은 서로 다른 임시 QA DB를 만들었고 서버/Gradle 프로세스·DB를 정리했다. 기존 DB·자격 증명은 보존했다. PKCE 코드는 변경하지 않아10개 테스트를 다시 실행하지 않았다.
+- 독립 diff 리뷰 Critical/High/Medium/Low 없음. 리뷰자는 정적 검토를 수행했고 실제 .env를 읽지 않았다.

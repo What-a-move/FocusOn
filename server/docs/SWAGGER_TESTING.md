@@ -8,7 +8,7 @@ macOS에서 Java 25·Python 3·PostgreSQL 17이 필요하다. 저장소 루트�
 
 ```bash
 docker compose --env-file server/.env -f server/docker-compose.yml up -d postgres
-./server/gradlew -p server bootRun --args='--spring.profiles.active=local,swagger'
+./server/gradlew -p server bootRun
 ```
 
 DB가 이미 실행 중이면 Compose 명령은 생략한다. local 프로필은 `POSTGRES_PORT`가 있으면 그 값을, 없으면 `.env`의 `POSTGRES_HOST_PORT`를 사용한다.
@@ -17,10 +17,10 @@ DB가 이미 실행 중이면 Compose 명령은 생략한다. local 프로필은
 
 `.env`는 `.env.example`처럼 `KEY=VALUE` 형식으로 쓴다. Spring이 Properties 형식으로 읽기 때문에 값 바깥의 따옴표·`export`·shell 명령을 붙이지 않는다. 파일이 없어도 OS 환경변수로 필수 DB/JWT 값을 제공할 수 있다. 자동 읽기는 local 전용이며 docker 프로필은 Compose가 전달하는 환경변수를 그대로 사용한다.
 
-브라우저에서 [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html)를 연다. OpenAPI JSON은 [API 문서](http://127.0.0.1:8080/v3/api-docs)다. `bootRun`의 기본 포트는 8080이고, 다른 포트는 `--server.port=...`로 지정한다.
+브라우저에서 [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html)를 연다. OpenAPI JSON은 [API 문서](http://127.0.0.1:8080/v3/api-docs)다. `bootRun`의 기본 포트는 8080이고, 다른 포트는 `--args='--server.port=...'`로 지정한다.
 
-- 기본 local·docker 프로필에서는 Swagger가 비활성이다.
-- `swagger` 프로필은 서버 주소를 `127.0.0.1`로 제한한다. 로컬 개발에서만 `local,swagger`로 켠다. 운영·공유 서버에서는 추가하지 않는다.
+- 기본 local 프로필은 서버 주소를 `127.0.0.1`로 제한하고 Swagger를 자동으로 켠다. 별도 swagger 프로필·실행 인자가 필요 없다.
+- docker/test 프로필에서는 공통 설정의 Swagger 비활성을 유지한다. Docker를 개발에 쓰는 팀도 있지만, 현재 프로젝트에서는 Docker 실행에 Swagger를 켜지 않는다. 배포할 때는 Compose가 지정하는 docker 프로필을 사용한다.
 - Swagger UI의 인증 영구 저장과 외부 validator를 끈다. 브라우저 탭 안의 요청/응답·개발자 도구에는 토큰이 남을 수 있으므로 테스트 후 지우고 탭을 닫는다.
 - Swagger에는 FocusOn Access Token만 넣는다. Google Client Secret을 입력할 곳은 없다.
 
