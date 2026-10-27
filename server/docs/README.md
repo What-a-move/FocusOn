@@ -39,6 +39,11 @@ server/docs/
     └── 기능명-PLAN.md / 기능명-ERROR.md / 기능명-REPORT.md
 ```
 
+## 개발용 API 수동 테스트
+
+- [Swagger 실행·Google PKCE 로그인 테스트](SWAGGER_TESTING.md)
+- Swagger는 기본 비활성이며 로컬에서 `local,swagger` 프로필로 켠다.
+
 ## Backend 전용 확인 항목
 
 - API 요청·응답 형식과 HTTP 상태 코드

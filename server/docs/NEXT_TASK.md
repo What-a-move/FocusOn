@@ -1,6 +1,14 @@
 # Backend 다음 작업
 
-## 현재 작업
+## 현재 작업 (2026-10-27)
+
+- Issue #79: 개발용 Swagger·FocusOn JWT Authorize·Google PKCE 보조 도구. Branch `chore/#79-swagger-testing`, 기준 dev `65da4f0`.
+- 구현·독립 리뷰·build/Checkstyle·Backend62·Python10·실제 PostgreSQL HTTP32 확인을 완료했다. 실제 Google 계정 성공 테스트는 사용자 인증이 필요하다.
+- 다음 승인 단계는 PR 생성이며 제목·본문 초안을 먼저 제시한다. merge·Issue 종료도 별도 승인한다.
+- 이전 #59 / PR #60은 dev 병합·종료됐다. 아래 내용은 당시 기록이며 현 작업으로 재개하지 않는다.
+- 사용법: [SWAGGER_TESTING.md](SWAGGER_TESTING.md).
+
+## 이전 작업 기록
 
 - Issue #59: refresh·회전·재사용 감지·Desktop logout 구현·QA 완료, PR #60 생성 및 CodeRabbit 전체 리뷰 actionable comment 0건.
 - Branch: `feat/#59-auth-lifecycle`; dev 직접 push 금지.

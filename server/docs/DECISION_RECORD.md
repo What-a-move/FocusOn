@@ -293,3 +293,14 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - TokenFamilyGuard로 요청 인증과 refresh의 부모 Desktop 활성 family·수명·소유 검사를 통일한다.
 - Notion 원문은 이번 작업에서 수정하지 않았으며, 새 30일 연장·한도 세부값은 최신 사용자 승인 결정이다. 정본 문서 동기화 시 이 결정과 일치시킨다.
 - #58 pairing·기기 관리·unlink 및 실제 Google 실계정 성공 QA는 별도로 추적한다.
+
+
+## 결정 027 - 개발용 Swagger 접근과 PKCE 테스트 도구
+
+- 결정일: 2026-10-27 / Issue #79 범위·구현 사용자 승인.
+- 기본 local·docker는 OpenAPI·Swagger UI를 끈다. 개발자가 `local,swagger` 프로필로 명시적으로 켜면 서버를 IPv4 loopback에 바인딩하고 문서 GET 경로만 별도 체인에서 허용한다. 제품 API의 Bearer·DB 인증은 기존 체인을 유지한다.
+- OpenAPI 전역 HTTP Bearer는 FocusOn Access JWT를 받는다. exchange·refresh는 명시적 빈 security 목록으로 표시하며 Google OAuth 원클릭 기능으로 오인하지 않게 한다. 인증 영구 저장·외부 validator·기본 Petstore 문서는 사용하지 않는다.
+- Python 표준 라이브러리 로컬 도구로 Desktop Client ID·PKCE S256·state·임시 loopback을 사용한다. callback을 검증한 뒤 미사용 code를 담은 0600 JSON 파일만 만든다. Google token endpoint 호출·Client Secret 출력·임의 FocusOn 토큰 발급을 하지 않는다.
+- `common/openapi` 패키지는 인증 비즈니스 로직과 문서 전용 보안·OpenAPI 모델의 책임을 분리하기 위해 추가한다. 공개 API·DB·토큰 수명·Frontend 변경은 없다.
+- 실계정 Google 성공·Desktop UI 검증은 오프라인/합성 QA와 구분한다. PR 생성·merge·Issue 종료는 별도 승인한다.
+- 사용법: `SWAGGER_TESTING.md`; 계획·리뷰·QA는 `features/swagger-testing-*`를 따른다.
