@@ -54,8 +54,20 @@ class SwaggerApiTests {
     assertEquals(0, doc.at("/paths/~1api~1v1~1auth~1refresh/post/security").size());
     assertFalse(doc.at("/paths/~1api~1v1~1auth~1me/get").has("parameters"));
     assertFalse(doc.at("/paths/~1api~1v1~1auth~1logout/post").has("parameters"));
-    assertEquals(4, doc.path("paths").size());
+    assertTrue(doc.path("paths").has("/api/v1/users/me"));
+    assertTrue(doc.path("paths").has("/api/v1/users/me/analysis-excluded-domains"));
     assertFalse(doc.path("paths").has("/actuator/health"));
+    assertEquals("google-authorization-code-from-pkce-tool",
+        doc.at("/components/schemas/GoogleExchangeRequest/properties/authorizationCode/example")
+            .asText());
+    assertEquals("2026-09-17", doc.at(
+        "/components/schemas/UpdateConsentRequest/properties/consentVersion/example").asText());
+    assertEquals("youtube.com", doc.at(
+        "/components/schemas/ReplaceExcludedDomainsRequest/properties/domains/items/example")
+            .asText());
+    assertEquals("MOLE_UI", doc.at(
+        "/components/schemas/UpdateFocusSettingsRequest/properties/notificationChannels"
+            + "/items/example").asText());
   }
 
   @Test
