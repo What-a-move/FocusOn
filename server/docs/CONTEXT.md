@@ -15,7 +15,7 @@
 - 기존 #59 / PR #60은 dev 병합·종료됐다. 아래 #59 브랜치/병합 대기 기록은 당시 이력이다.
 - local 통합 후 독립 리뷰 지적 없음, Backend62/build/Checkstyle·HTTP32·인자 없는 bootRun9개 확인을 통과했다. 현재 실행 명령은 server 폴더의 `./gradlew bootRun`이다.
 - 제품 API 계약·DB·Frontend 변경은 없다. Backend62·Python10·실제 PostgreSQL HTTP32 확인 통과. 독립 리뷰 Low1 수정 후 추가 지적 없음. 검증 결과는 `features/swagger-testing-*`를 따른다. 실계정 Google 성공은 별도 사용자 인증이 필요하다.
-- PR 생성·merge·Issue 종료는 사용자 별도 승인 대상이다.
+- 2026-10-27 사용자가 문서 반영·dev 대상 PR 생성을 승인했다. PR/CI 최신 상태는 Issue #79 연결 PR을 따른다. merge·Issue 종료는 별도 승인 대상이다.
 
 ## 현재 상태
 

@@ -45,3 +45,7 @@
 ## 추가 승인: Swagger를 local에 통합 (2026-10-27)
 
 사용자가 `.env` 자동 읽기에 이어 Swagger 설정도 local에 합치고 Docker에서는 사용하지 않도록 승인했다. 구성 1~2항은 최종 결정029를 반영한다. 별도 application-swagger.properties를 삭제하고 Java 문서 보안·OpenAPI 모델은 local에서만 생성한다. Spring 테스트는 local+test에서 H2/테스트 JWT를 마지막으로 적용해 문서·인증을 검증하고 docker+test에서 비공개를 검증한다. 기존 API 인증은 유지하며 실제 bootRun을 추가 인자·source 없이 실행해 UI/JSON·DB·401을 확인한다.
+
+## PR 제출 승인 (2026-10-27)
+
+사용자가 최종 local 통합·문서 갱신 상태에서 dev 대상 PR 제출을 승인했다. 최종 실행은 DB가 켜지고 server/.env가 준비된 상태의 `./gradlew bootRun`이며 추가 source/프로필 인자는 없다. 최초 프로필 분리 기록은 결정 이력이고 현재 운영 안내는 SWAGGER_TESTING.md·결정029를 따른다. merge·Issue 종료는 별도 승인한다.
