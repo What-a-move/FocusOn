@@ -14,7 +14,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 - POST /api/v1/extension-pairings 요청은 기존 {pairingCode,installationId}, Bearer 불필요. 응답201 data.accessToken/refreshToken/accessTokenExpiresAt/device{deviceId,deviceType:EXTENSION}.
 - 1~2회 오입력:400 LINK_006_CODE_MISMATCH, retryable=false, details.remainingAttempts=2/1. 사용자 수정 후 재입력 가능.
 - 3회:410 LINK_004_ATTEMPTS_EXCEEDED, remainingAttempts=0, retryAfterSeconds 및 Retry-After. **코드 재발급 안내 대신 설치별3분 입력 잠금**을 표시한다. 유효 코드로도 우회할 수 없다.
-- 자동 재시도하지 않는다. 대기 뒤 사용자가 재입력한다. 성공 또는 잠금 만료 시 실패 횟수 초기화.
+- 자동 재시도하지 않는다. 대기 뒤 사용자가 재입력한다. 성공 또는 잠금 만료 시 실패 횟수 초기화. 1~2회 실패는 마지막 실패 후24시간이 지나면 초기화된다.
 - 같은 계정 재연결은 deviceId 재사용·이전 token 폐기. 새 token을 안전하게 교체한다.
 - 다른 계정 활성 설치:409 LINK_007_INSTALLATION_ALREADY_LINKED. 기존 연결을 먼저 해제하도록 안내한다. 소유자 정보는 응답하지 않는다.
 - 기존 LINK_002/003/005는 새 코드 발급 안내를 유지한다.

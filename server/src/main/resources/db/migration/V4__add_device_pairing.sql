@@ -54,3 +54,7 @@ CREATE TABLE pairing_installation_attempts (
 );
 CREATE INDEX ix_pairing_attempts_locked_until ON pairing_installation_attempts (locked_until)
     WHERE locked_until IS NOT NULL;
+
+-- 미완료 실패의 24시간 보관 만료 조회를 지원한다.
+CREATE INDEX ix_pairing_attempts_pending_updated ON pairing_installation_attempts (updated_at)
+    WHERE failed_attempts IN (1, 2) AND locked_until IS NULL;

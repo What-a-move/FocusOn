@@ -3,7 +3,8 @@
 ## 현재 작업 (2026-10-28)
 
 - #58 Extension 연결 구현·정본 반영·독립 리뷰·QA 완료, feat/#58-extension-pairing에서 PR 생성 승인 대기.
-- 검증: build/Checkstyle·JUnit76·실제PG14·HTTP33·DB제약6. 미해결 리뷰 지적 없음.
+- Issue #38의 사용자 설정 PR #82가 dev에 병합됐다. CodeRabbit의 동의 출처·닉네임 및 최초 저장 경쟁·고정 테스트 닉네임 지적은 별도 후속 확인 대상이다.
+- 검증: 최신 dev 통합 후 build/Checkstyle·JUnit83·실제PG15·V1~V4 통과. 이전 기준 HTTP33·DB제약6. 24시간 보관 정책의 독립 재리뷰도 통과했다.
 - PR 생성·병합·이슈 종료는 승인 없이 실행하지 않는다.
 
 ## 다음 순서

@@ -133,7 +133,7 @@ class PairingApiTests {
   }
 
   @Test
-  void successResetsFailuresButUnfinishedFailuresSurviveCleanup() {
+  void cleanupExpiresUnfinishedFailuresAfterTwentyFourHours() {
     final var desktop = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     String installation = UUID.randomUUID().toString();
     String wrong = unusedCode();
@@ -143,12 +143,30 @@ class PairingApiTests {
         + "where installation_id_hash=?",
         Timestamp.from(now.minusSeconds(40L * 86400)), TokenSecrets.hash(installation));
     pairing.cleanup();
-    assertEquals(1, assertThrows(ApiException.class, () -> pairing.claim(
+    assertEquals(2, assertThrows(ApiException.class, () -> pairing.claim(
         new ClaimRequest(wrong, installation), "reset-ip")).details().get("remainingAttempts"));
     var code = pairing.issue(desktop.principal());
     pairing.claim(new ClaimRequest(code.codeDisplay(), installation), "reset-ip");
     assertEquals(2, assertThrows(ApiException.class, () -> pairing.claim(
         new ClaimRequest(wrong, installation), "reset-ip")).details().get("remainingAttempts"));
+  }
+
+  @Test
+  void unfinishedFailuresExpireAtExactTwentyFourHourBoundaryWithoutCleanup() {
+    String installation = UUID.randomUUID().toString();
+    String wrong = unusedCode();
+    assertEquals(2, assertThrows(ApiException.class, () -> pairing.claim(
+        new ClaimRequest(wrong, installation), "expiry-window-ip"))
+        .details().get("remainingAttempts"));
+    when(pairingClock.instant()).thenReturn(now.plusSeconds(24L * 3600 - 1));
+    assertEquals(1, assertThrows(ApiException.class, () -> pairing.claim(
+        new ClaimRequest(wrong, installation), "expiry-window-ip"))
+        .details().get("remainingAttempts"));
+    // 두 번째 실패 시각부터 다시 24시간을 센다.
+    when(pairingClock.instant()).thenReturn(now.plusSeconds(2L * 24 * 3600 - 1));
+    assertEquals(2, assertThrows(ApiException.class, () -> pairing.claim(
+        new ClaimRequest(wrong, installation), "expiry-window-ip"))
+        .details().get("remainingAttempts"));
   }
 
   @Test

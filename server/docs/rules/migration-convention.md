@@ -11,7 +11,8 @@ FocusOn Server는 PostgreSQL(`server/docker-compose.yml`의 `postgres:17.11-alpi
 ```text
 V1__create_initial_schema.sql
 V2__enforce_auth_ownership.sql
-V3__add_device_pairing.sql
+V3__create_user_configuration.sql
+V4__add_device_pairing.sql
 ```
 
 - Issue #32에서 `V1__create_initial_schema.sql`은 인증 5개 테이블을 만들고, 이미 로컬 DB에 적용된 V1은 유지한 채 `V2__enforce_auth_ownership.sql`로 사용자·기기 소유 제약을 보강한다. 목표·세션 등 다른 도메인은 후속 버전으로 추가한다.

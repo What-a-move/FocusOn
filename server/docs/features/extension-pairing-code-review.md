@@ -18,3 +18,8 @@
 
 - 기존 P2 해결 확인. 신규 확정 P1/P2 없음. Critical/High/미해결 Medium/Low 없음.
 - 전체 실행 검증은 별도 QA 문서에 기록한다. CodeRabbit 또는 GitHub PR 리뷰를 받은 것으로 표현하지 않는다.
+
+## 최신 dev 통합·24시간 정리 재리뷰 (2026-10-28)
+
+- 별도 리뷰에서 V3→V4, 24시간 경계·cleanup/입력 경쟁·3분 잠금 유지와 최신 dev 보존을 확인했다. 신규 확정 P1/P2 없음.
+- 리뷰에서 마이그레이션 README의 오래된 V3 연결 파일 예시를 지적해 README와 migration-convention.md를 실제 V3/V4에 맞췄다.

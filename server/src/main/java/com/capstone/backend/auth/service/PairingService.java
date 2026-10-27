@@ -159,7 +159,9 @@ public class PairingService {
     if (attempt.getLockedUntil() != null && attempt.getLockedUntil().isAfter(now)) {
       return ClaimOutcome.error(locked(attempt.getLockedUntil(), now));
     }
-    if (attempt.getLockedUntil() != null) {
+    if (attempt.getLockedUntil() != null
+        || (attempt.getFailedAttempts() > 0
+            && !attempt.getUpdatedAt().plus(Duration.ofHours(24)).isAfter(now))) {
       reset(attempt, now);
     }
     var context = codes.findContext(codeHash).orElse(null);
@@ -340,7 +342,8 @@ public class PairingService {
     });
     // claim은 설치 행 다음 코드를 잠근다. 역순 교착을 피하려고 별도 transaction으로 정리한다.
     transaction.executeWithoutResult(status ->
-        attempts.deleteResettable(now.minus(Duration.ofDays(30)), now));
+        attempts.deleteResettable(now.minus(Duration.ofDays(30)),
+            now.minus(Duration.ofHours(24)), now));
   }
 
   private record ClaimOutcome(LinkedExtension linked, ApiException error, boolean missingAttempt) {

@@ -6,12 +6,12 @@
 | 검증 | 결과 |
 | --- | --- |
 | 전체 build·Checkstyle | 통과 |
-| 전체 JUnit (H2) | 76 / 실패0 / 생략0 |
-| 실제 PostgreSQL pairing 통합 | 14 / 실패0 |
-| Flyway·Hibernate | V1·V2·V3 적용/validate 통과 |
-| 실제 HTTP (8081) | 33 / 실패0 |
-| 실제 DB 제약 거절 | 6 / 실패0 |
-| 독립 리뷰 | P2 1개 수정·재리뷰 통과 |
+| 최신 dev 통합 후 전체 JUnit (H2) | 83 / 실패0 / 생략0 |
+| 최신 dev 통합 후 실제 PostgreSQL pairing 통합 | 15 / 실패0 |
+| Flyway·Hibernate | 신규 격리 DB에서 사용자 설정 V3·연결 V4 포함 V1~V4 적용 및 validate 통과 |
+| 실제 HTTP (8081, 이전 dev 기준) | 33 / 실패0. 최신 통합 후 별도 HTTP 재검증 전 |
+| 실제 DB 제약 거절 (이전 dev 기준) | 6 / 실패0 |
+| 독립 리뷰 | 초기 P2 및 최신 dev 통합·24시간 정리 재리뷰 통과, 문서 경로 지적 수정 |
 
 ## 확인한 흐름
 
@@ -19,7 +19,7 @@
 - 공개 claim은 잘못된 Bearer를 무시하고 코드로 인증, Extension201·문자열 ID·UTC token 만료 응답.
 - 코드 형식/기소비/만료/취소 오류, 설치별 실패1/2/3회 commit·remainingAttempts2/1/0.
 - 잠금180초 동안 유효 코드도 거절, 179초에는1초 대기, 180초 경계 성공.
-- 성공 reset, 미완료1~2회는 cleanup 뒤에도 유지. terminal_at 기준30일 삭제.
+- 성공 reset, 미완료1~2회는 마지막 실패 후24시간까지 보존하고 경계에서 초기화한다. 재실패 시 시각을 갱신하며 cleanup도 만료 행을 삭제한다. terminal code는 terminal_at 기준30일 삭제.
 - 같은 설치·같은 사용자 재연결은 deviceId 재사용·이전 family/refresh 폐기. 새 family는 이전 refresh 재사용 폐기에 영향받지 않음.
 - 다른 계정 활성 설치409 LINK_007, 충돌 코드 미소비.
 - 취소204 멱등·타 소유 no-op·기소비 코드 취소 시 token 유지.

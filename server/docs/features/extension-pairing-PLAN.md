@@ -41,7 +41,7 @@ Google 로그인한 현재 Desktop만5분 일회용 코드를 발급하고, 공�
 | 형식 정상·존재하지 않음1~2회 | 400 LINK_006_CODE_MISMATCH | remainingAttempts2/1, retryable=false |
 | 다른 계정 활성 설치 | 409 LINK_007_INSTALLATION_ALREADY_LINKED | 코드 미소비·소유자 정보 미노출 |
 
-- 실패는 installationId 해시별 누적. 3회 후180초 잠금이며 유효 코드로도 우회하지 못한다. 성공/잠금 만료 시 reset. 미완료1~2회는 임의 TTL로 초기화하지 않는다.
+- 실패는 installationId 해시별 누적. 3회 후180초 잠금이며 유효 코드로도 우회하지 못한다. 성공/잠금 만료 시 reset. 미완료1~2회는 마지막 실패 후24시간이 지나면 초기화하고 정리한다. 새 실패가 생기면 기준 시각을 갱신한다.
 - 같은 사용자 설치는 deviceId 재사용·이전 family와 ACTIVE refresh 폐기 뒤 새 Desktop 연결/새 family 발급. 다른 사용자 활성 설치는 먼저 unlink해야 한다.
 
 ### DELETE /api/v1/pairing-codes/{pairingCodeId}
@@ -53,7 +53,7 @@ Google 로그인한 현재 Desktop만5분 일회용 코드를 발급하고, 공�
 
 ## 저장 모델
 
-- V1/V2 유지, 신규 V3__add_device_pairing.sql.
+- V1/V2 유지, 신규 V4__add_device_pairing.sql.
 - pairing_codes: BIGINT id/user_id/issuer_desktop_device_id, CHAR64 code_hash UNIQUE, ACTIVE/CONSUMED/EXPIRED/CANCELLED, expires_at/created_at, consumed_by_extension_device_id/consumed_at/cancelled_at/terminal_at nullable. UTC는 PostgreSQL TIMESTAMPTZ다.
 - user_id 및 발급·소비 기기 (id,user_id) 복합 FK. 상태별 필수·NULL timestamp CHECK, Desktop당 ACTIVE코드1개 partial UNIQUE, expiry/terminal 정리 인덱스.
 - pairing_installation_attempts: CHAR64 installation_id_hash PK, failed_attempts SMALLINT0~3, locked_until nullable, updated_at NOT NULL. count3과 잠금시각의 동시 유무 CHECK. 원문 설치 ID는 미저장.
@@ -70,7 +70,7 @@ Google 로그인한 현재 Desktop만5분 일회용 코드를 발급하고, 공�
 5. 재연결은 이전 ACTIVE family·refresh 폐기/flush 후 새 family·refresh를 발급한다. 코드 소비까지 한 transaction이다.
 6. HMAC hash UNIQUE 충돌은 해당 제약만 실패 transaction 바깥에서 새 코드로 최대3회 생성 시도한다.
 7. cleanup은 코드 만료/30일 삭제와 설치 행 정리를 서로 다른 transaction으로 실행해 claim의 설치→코드 순서를 역전하지 않는다. EXPIRED의 terminal_at은 실제 expires_at이며 보관 기간을 worker 실행 시각으로 늘리지 않는다.
-8. terminal 코드30일 보관 후 삭제. reset 완료 행은30일 후·잠금 행은 만료 후 정리할 수 있다. 미완료1~2회는 보존한다.
+8. terminal 코드30일 보관 후 삭제. reset 완료 행은30일 후·잠금 행은 만료 후 정리할 수 있다. 미완료1~2회는 마지막 실패 후24시간이 지나면 삭제한다. 경계에서 cleanup 실행 여부와 관계없이 최초 재입력 때 초기화한다.
 
 ## 리뷰·검증·완료 조건
 

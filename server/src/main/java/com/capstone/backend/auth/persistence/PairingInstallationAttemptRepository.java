@@ -17,10 +17,13 @@ public interface PairingInstallationAttemptRepository
   @Query("select a from PairingInstallationAttemptEntity a where a.installationIdHash = :hash")
   Optional<PairingInstallationAttemptEntity> findForUpdate(@Param("hash") String hash);
 
-  /** 미완료 1~2회는 보존하며 성공한 오래된 행·만료된 잠금만 삭제한다. */
+  /** 오래된 미완료 실패·성공 상태와 만료된 잠금만 삭제한다. */
   @Modifying
   @Query("delete from PairingInstallationAttemptEntity a where "
       + "(a.failedAttempts = 0 and a.updatedAt <= :cutoff) "
+      + "or (a.failedAttempts between 1 and 2 and a.lockedUntil is null "
+      + "and a.updatedAt <= :staleBefore) "
       + "or (a.lockedUntil is not null and a.lockedUntil <= :now)")
-  int deleteResettable(@Param("cutoff") Instant cutoff, @Param("now") Instant now);
+  int deleteResettable(@Param("cutoff") Instant cutoff, @Param("staleBefore") Instant staleBefore,
+      @Param("now") Instant now);
 }

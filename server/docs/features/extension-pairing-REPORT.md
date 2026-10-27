@@ -6,8 +6,8 @@
 ## 구현
 
 - POST pairing-codes / POST extension-pairings / DELETE pairing-codes/{pairingCodeId}.
-- V3: pairing_codes·pairing_installation_attempts, parent/issuer/consumer 소유권 FK, 활성 Extension 설치 전역 UNIQUE·코드 상태/정리 인덱스. V1/V2 변경 없음.
-- 설치별3회 실패→3분 잠금, 정상 취소·통지 불가5분 만료, 같은 사용자 재연결·다른 사용자 활성 충돌 정책.
+- V4: pairing_codes·pairing_installation_attempts, parent/issuer/consumer 소유권 FK, 활성 Extension 설치 전역 UNIQUE·코드 상태/정리 인덱스. V1/V2 변경 없음.
+- 설치별3회 실패→3분 잠금, 1~2회 실패 후24시간 초기화·정리, 정상 취소·통지 불가5분 만료, 같은 사용자 재연결·다른 사용자 활성 충돌 정책.
 - 공개 필터와 익명 한도 분리, 로그인/로그아웃의 이전 코드 취소, 별도 HMAC 키와 보관 worker.
 - 이름·token 형식은 기존 인증 API와 공유한다. 닉네임·프로필·readiness·Frontend·AI는 수정하지 않았다.
 
@@ -15,7 +15,7 @@
 
 - [x] 정상·형식·누락·인증·권한·없는 ID·중복/기소비
 - [x] 저장·조회·상태 변경·보관 정리·트랜잭션·제약
-- [x] 전체 build/Checkstyle·JUnit76, PostgreSQL14, 실제 HTTP33, 제약6
+- [x] 최신 dev 통합 후 build/Checkstyle·JUnit83, PostgreSQL15·V1~V4. 이전 기준 실제 HTTP33·제약6은 당시 결과.
 - [x] 독립 코드 리뷰·P2 수정 후 재검토
 - [ ] 실제 Desktop·Extension UI 통합 QA (handoff 필요)
 - [ ] 원격 PR/CI·CodeRabbit (PR 생성 별도 승인)
