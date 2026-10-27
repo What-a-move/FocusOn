@@ -61,14 +61,21 @@
 
 - Issue #63(2026-10-26): 화면 분석 4단계. Main `InterventionWatcher`가 10초마다 서버 알림을 조회해 화면 위 포키 창(`/floating/`, `floating-poki.html` F04·F05)과 macOS 알림으로 보여 주고, `조금 더 보기`·`잠시 쉬기`·닫기를 acknowledgements로 기록한다. 평소에는 아무것도 띄우지 않는다. 알림 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 말풍선·목표 안내 흐름을 확인했다.
 
+- Issue #71(2026-10-26): 화면 분석 5단계. Swift 도우미 `ocr`이 맨 앞 창 하나만 `SCScreenshotManager`로 캡처해 Vision(`ko-KR`·`en-US`)으로 글자만 돌려준다(이미지는 도우미 안에서 버림). Main `analyzeObservation`이 `APP_META` 결과가 관련 없음·판단 보류이고 아직 같은 화면이면 정리한 글자를 `DESKTOP_APP_OCR`로 다시 보낸다(늦은 응답 버림, 민감 글자는 `PRIVACY_BLOCKED`). Vision 한국어 인식은 저장된 화면 캡처로 확인했고, 창 캡처는 화면 기록 권한이 있는 실제 앱에서 확인이 남아 있다.
+
+
+- Issue #73(2026-10-27): 세션 결과 화면(`/session-result/`, `session-result.html` D16·D18). 세션이 끝나거나 자동 종료되면 집중 화면이 결과 화면으로 넘긴다. Main이 `GET /sessions/{id}/summary`·`/learning-summary`를 조회하고, 화면은 시간·집중 흐름(분석 안 됨 = 실제 시간 − 분석 구간, 목표 활동 비율은 관련+무관 1분 이상일 때만)·기록·학습 정리 상태를 보여 준다. 정리가 대기·생성 중이면 5초마다 다시 조회한다. summary 응답 형식은 Notion에 시간 필드 이름만 있어 제안 형식(결정 027)으로 만들었고 백엔드 확인을 기다린다. 실제 API가 없어 가짜 bridge로 6가지 상태를 확인했다.
+
+- Issue #77(2026-10-27): 로그인·인증 경계 5건 수정(결정 028). 재로그인 오류 정리, Keychain·Google 교환 순서 보장, 복구·갱신 중복 소비 방지, 로그아웃 뒤 늦은 갱신 재저장 방지, 계정 전환 뒤 이전 요청 격리. 팀원 수정안(PR #75)의 Desktop 코드와 회귀 테스트 27개를 가져와 확인했다(수정 전 20개 실패 → 수정 후 통과). 실제 Google 계정 왕복은 미검증이다.
 
 ### 아직 진행하지 않은 작업
 
-- 화면 분석 5단계: 대상 창 캡처·Apple Vision OCR. `APP_META` 결과가 `UNRELATED`·`UNCERTAIN`이면 항상 OCR로 다시 보낸다(결정 024, 2026-10-26 변경). 서버는 메타 근거 `UNRELATED`를 이탈로 세지 않아, Desktop 앱 이탈 감지는 이 단계가 있어야 동작한다.
+- 같은 창에서 글자만 바뀌는 경우(스크롤 등) 30초 재전송 (OCR 텍스트 비교, 결정 024에서 미룸)
 - 설정 › 분석·권한의 제외 앱 관리 (설정 화면 작업 때)
 - 카메라 분석 연동(AVFoundation + Apple Vision 로컬, 선택 동의)
 - 인증·온보딩·리포트 외 Server API 클라이언트와 실제 Backend 왕복 QA
 - 화면 위 포키 F06·F07 말풍선과 위치 옮기기
+- 세션 결과의 `정리 보기`(학습 정리 상세)·`집중 기록` 이동 (해당 화면이 생길 때)
 - 실제 Backend를 통한 Desktop 코드 발급·Extension 연결·readiness 반영 검증
 
 ## 현재 기술

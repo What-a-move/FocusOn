@@ -29,7 +29,7 @@ export function registerAnalysisIpc(getMainWindow: () => BrowserWindow | null, r
 
   ipcMain.handle(ANALYSIS_CHANNELS.installedApps, async (event, ...args: unknown[]): Promise<IpcResult<{ apps: InstalledApp[] }>> => {
     if (args.length !== 0 || !trusted(event)) return INVALID_REQUEST
-    const reply = await helper?.request('apps', APPS_TIMEOUT_MS)
+    const reply = await helper?.request('apps', { timeoutMs: APPS_TIMEOUT_MS })
     if (!reply) return SERVICE_UNAVAILABLE
     const apps = await Promise.all(toInstalledApps(reply).map(async ({ path, ...rest }) => ({
       ...rest,

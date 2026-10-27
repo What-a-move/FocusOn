@@ -621,3 +621,23 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - AuthService는 유효한 token으로 logout을 먼저 요청하고, 서버 AUTH_ACCESS_TOKEN_EXPIRED에는 single-flight refresh 뒤 logout을 한 번만 재시도한다. 두 번째 만료·알 수 없는 401·네트워크/서버 실패는 성공 표시와 Keychain 삭제를 하지 않는다.
 - 204 또는 명시적 AUTH_RELOGIN_REQUIRED·AUTH_TOKEN_REUSE_DETECTED·AUTH_OAUTH_REAUTH_REQUIRED만 로컬 정리를 완료한다. API 형식과 서버 계약은 그대로다.
 - 실제 만료 JWT/서버/Keychain QA에서 401→refresh200→logout204와 연결 Extension 폐기·활성 기기 슬롯 반환을 확인했다. 실제 Google 인증 완료를 뜻하지 않는다.
+
+## 결정 027 - 세션 결과 summary 응답은 제안 형식으로 받고 빠진 값은 "기록 없음"으로 둔다
+
+- 결정일: 2026-10-27 / 상태: 제안 (백엔드 확인 대기) / Issue #73.
+- Notion 리포트 설계서 3.1에는 시간 필드 이름만 있어, `GET /sessions/{id}/summary`를 `sessionId`·`goalSnapshot`·`targetDurationMs`·`accumulatedActiveMs`(필수)와 `status`·`startedAt`·`endedAt`·`totalPausedMs`·`related/unrelated/uncertainDurationMs`·`extensionCount`·`extendedDurationMs`·`pauseCount`·`autoPauseCount`·`autoPauseReasons[]`·`interventionCount`(선택)로 받는다.
+- 필수 값이 없으면 조회 실패로 보고, 선택 값이 없거나 형식이 다르면 null로 두어 화면에 "기록 없음"으로 표시한다. 흐름 막대는 관련·무관·보류 세 값이 모두 있을 때만 그린다.
+- 분석 안 됨 시간과 목표 활동 비율은 Desktop이 계산한다(설계서 3.2). 학습 정리는 `/learning-summary`로 따로 받는다.
+- 이유: 백엔드가 일부 필드만 먼저 내려도 화면이 열리게 하고, 거짓 값을 만들지 않기 위해서다. 백엔드가 이름을 바꾸면 `parseSessionSummary`만 고친다.
+- 영향받는 파일: `electron/shared/report-contract.cts`, `electron/main/report-ipc.cts`, `features/report/*`
+
+## 결정 028 - 인증 작업은 한 줄로 세우고 요청마다 시작 로그인 세대를 확인한다
+
+- 결정일: 2026-10-27 / 상태: 확정 (버그 수정) / Issue #77, 원 검토 #74·팀원 수정안 PR #75.
+- Keychain 읽기·쓰기·삭제, Google 교환, 토큰 갱신, 로그아웃은 `runAuthOperation` 큐에서 하나씩 실행한다. 일반 API 요청 전체를 줄 세우지는 않는다.
+- 복구(restore)도 같은 single-flight 갱신 경로(`refreshTokens`)를 쓴다.
+- 모든 인증 요청은 시작할 때의 로그인 세대(generation)를 기록하고 전송 전·응답 후·재시도 전에 확인한다. 세대가 바뀌었으면 `AUTH_RELOGIN_REQUIRED` 실패로 돌려주고 새 로그인의 토큰·화면은 건드리지 않는다.
+- 일반 요청의 재로그인 오류(`AUTH_RELOGIN_REQUIRED`·`AUTH_TOKEN_REUSE_DETECTED`·`AUTH_OAUTH_REAUTH_REQUIRED`)는 현재 로그인일 때만 정리한다. 네트워크·503·알 수 없는 401은 토큰을 유지한다.
+- 자동 갱신 중 Keychain 읽기·쓰기가 실패하면 메모리 토큰을 버리고 `OFFLINE`으로 바꾼다. 이 상태의 인증 요청은 다시 복구하기 전까지 `AUTH_RELOGIN_REQUIRED`로 실패한다.
+- 이유: "요청을 시작할 때의 로그인 = 지금 로그인인가?"를 Google 교환에서만 확인해 5가지 경쟁이 생겼다. 서버 API·IPC 형식은 바꾸지 않는다.
+- 영향받는 파일: `electron/main/auth-service.cts`, `electron/main/auth-ipc.cts`, `tests/electron/auth-races.test.cjs`

@@ -6,6 +6,7 @@ import type { Observation } from './screen-observer.cjs'
 import type { AnalysisRunRequest, AnalysisRunResponse, Relation } from '@focuson/shared-types'
 
 export type AnalysisRun = AnalysisRunResponse
+type Sequences = { APP_META: number; DESKTOP_APP_OCR: number }
 
 const RELATIONS: readonly Relation[] = ['RELATED', 'UNRELATED', 'UNCERTAIN', 'EXCLUDED', 'PRIVACY_BLOCKED']
 // ponytail: 서버 요청 제한이 분 단위라 429면 1분 쉰다. 공통 요청 함수가 Retry-After를 넘기게 되면 그 값을 쓴다.
@@ -29,7 +30,7 @@ export function parseAnalysisRun(value: unknown): AnalysisRun | null {
  *   서버가 기록하지 못한 시간은 판단 보류와 같아 알림으로 이어지지 않는다.
  */
 export class AnalysisSender {
-  private session: { id: string; sequence: number } | null = null
+  private session: { id: string; sequences: Sequences } | null = null
   private pausedUntil = 0
 
   constructor(
@@ -40,14 +41,16 @@ export class AnalysisSender {
 
   async send(sessionId: string, observation: Observation): Promise<AnalysisRun | null> {
     if (this.now() < this.pausedUntil) return null
-    if (this.session?.id !== sessionId) this.session = { id: sessionId, sequence: this.savedSequence(sessionId) }
-    const sequence = ++this.session.sequence
-    this.saveSequence(sessionId, sequence)
-    const base = { clientRunId: randomUUID(), contentSource: 'APP_META' as const, observedAt: observation.observedAt, sequence }
-    // [주의] 제외·민감 화면은 상태만 보낸다. 앱 이름·창 제목도 넣지 않는다.
+    if (this.session?.id !== sessionId) this.session = { id: sessionId, sequences: this.savedSequences(sessionId) }
+    const contentSource = observation.contentSource ?? 'APP_META'
+    // 순서 번호는 같은 세션·contentSource 안에서 센다(AI 분석 계약 2.2).
+    const sequence = ++this.session.sequences[contentSource]
+    this.saveSequences(sessionId, this.session.sequences)
+    const base = { clientRunId: randomUUID(), contentSource, observedAt: observation.observedAt, sequence }
+    // [주의] 제외·민감 화면은 상태만 보낸다. 앱 이름·창 제목도 넣지 않는다. key·windowId는 보내지 않는다.
     const body: AnalysisRunRequest = observation.guardStatus
       ? { ...base, guardStatus: observation.guardStatus }
-      : { ...base, guardStatus: null, metadata: observation.metadata }
+      : { ...base, guardStatus: null, metadata: observation.metadata, ...(observation.contentSource === 'DESKTOP_APP_OCR' ? { contentPayload: { text: observation.text } } : {}) }
     const result = await this.auth.authorizedRequest({
       path: `/api/v1/sessions/${sessionId}/analysis-runs`, method: 'POST', expectedStatus: 200, parse: parseAnalysisRun, body, withDeviceId: true,
     })
@@ -56,19 +59,23 @@ export class AnalysisSender {
     return null
   }
 
-  private savedSequence(sessionId: string): number {
+  private savedSequences(sessionId: string): Sequences {
+    const empty = { APP_META: 0, DESKTOP_APP_OCR: 0 }
     try {
-      const saved = JSON.parse(readFileSync(this.sequenceFile, 'utf8')) as { sessionId?: unknown; sequence?: unknown }
-      return saved.sessionId === sessionId && Number.isSafeInteger(saved.sequence) ? saved.sequence as number : 0
+      const saved = JSON.parse(readFileSync(this.sequenceFile, 'utf8')) as { sessionId?: unknown; sequence?: unknown; sequences?: Partial<Record<keyof Sequences, unknown>> }
+      if (saved.sessionId !== sessionId) return empty
+      const count = (value: unknown) => Number.isSafeInteger(value) ? value as number : 0
+      // 예전 형식 { sessionId, sequence }는 APP_META 번호로 읽는다.
+      return { APP_META: count(saved.sequences?.APP_META ?? saved.sequence), DESKTOP_APP_OCR: count(saved.sequences?.DESKTOP_APP_OCR) }
     } catch {
-      return 0
+      return empty
     }
   }
 
-  private saveSequence(sessionId: string, sequence: number): void {
+  private saveSequences(sessionId: string, sequences: Sequences): void {
     try {
       const temp = `${this.sequenceFile}.tmp`
-      writeFileSync(temp, JSON.stringify({ sessionId, sequence }))
+      writeFileSync(temp, JSON.stringify({ sessionId, sequences }))
       renameSync(temp, this.sequenceFile)
     } catch {
       // ponytail: 저장에 실패해도 이번 실행 안에서는 메모리 값으로 이어 센다. 재시작 뒤 순서가 꼬일 수 있는 드문 경우만 남는다.

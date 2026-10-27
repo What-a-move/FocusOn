@@ -8,6 +8,8 @@ import com.capstone.backend.auth.service.AuthRateLimiter;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.auth.service.RedirectUriValidator;
 import com.capstone.backend.common.api.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,9 @@ public class AuthController {
 
   /** state 검증은 Desktop이 수행하며 서버는 code·PKCE·redirect URI를 검증한다. */
   @PostMapping("/google/exchange")
+  @Operation(summary = "Desktop Google code + PKCE 교환",
+      description = "Bearer 불필요. 로컬 PKCE 도구로 준비한 미사용 code와 동일 redirectUri를 보냅니다.")
+  @SecurityRequirements
   @ResponseStatus(HttpStatus.CREATED)
   public ApiResponse<LoginResponse> exchange(@Valid @RequestBody GoogleExchangeRequest body,
       HttpServletRequest request) {
@@ -44,6 +49,7 @@ public class AuthController {
 
   /** userId query 없이 검증된 요청 주체의 정보만 반환한다. */
   @GetMapping("/me")
+  @Operation(summary = "현재 인증된 사용자·기기 조회")
   public ApiResponse<Identity> me(@AuthenticationPrincipal FocusOnPrincipal principal) {
     return ApiResponse.of(login.me(principal));
   }

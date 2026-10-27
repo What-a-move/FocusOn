@@ -9,7 +9,7 @@ import './focus-session.css'
 
 const CIRCUMFERENCE = 2 * Math.PI * 90
 const EXTEND_OPTIONS = [10, 25, 50]
-const POKI = { focus: '/design/poki-floating-master-v3.png', paused: '/design/poki-floating-paused-v3.png', curious: '/design/poki-floating-curious-v8.png', cheer: '/design/poki-floating-cheer-v7.png' }
+const POKI = { focus: '/design/poki-floating-master-v3.png', paused: '/design/poki-floating-paused-v3.png', curious: '/design/poki-floating-curious-v8.png' }
 
 function formatClock(ms: number): string {
   const seconds = Math.max(0, Math.floor(ms / 1000))
@@ -64,6 +64,12 @@ export function FocusSession() {
     if (!activeDialog && element.open) element.close()
   }, [activeDialog])
 
+  // 세션이 끝나면(종료·시간 종료·자동 종료) 집중 리포트로 넘어간다(D16·D18).
+  const endedSessionId = snapshot && (snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED') ? snapshot.sessionId : null
+  useEffect(() => {
+    if (endedSessionId) router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
+  }, [endedSessionId, router])
+
   if (snapshot === undefined && !loadError) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
 
   if (!snapshot) {
@@ -102,20 +108,8 @@ export function FocusSession() {
     if (valid) void extend(value)
   }
 
-  if (finished) {
-    const abandoned = status === 'ABANDONED'
-    return <main className="app-window onboarding-window focus-window">
-      <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
-      <section className="finished" aria-labelledby="finished-title">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="poki" src={abandoned ? POKI.curious : POKI.cheer} alt={abandoned ? '궁금해하는 포키' : '응원하는 포키'} />
-        <h1 id="finished-title">{abandoned ? '집중이 자동으로 끝났어요' : '집중을 마쳤어요'}</h1>
-        <p>{abandoned ? `앱과 3분 넘게 연결되지 않아 마지막으로 확인한 ${Math.floor(snapshot.accumulatedActiveMs / 60000)}분까지 기록했어요.` : `집중한 시간 ${Math.floor(snapshot.accumulatedActiveMs / 60000)}분`}</p>
-        {/* 회차 리포트(D16·D18)는 리포트 Issue에서 연결한다. */}
-        <Link className="btn btn-primary" href="/">홈으로</Link>
-      </section>
-    </main>
-  }
+  // 리포트로 넘어가는 동안은 빈 화면만 둔다.
+  if (finished) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
 
   return <main className={`app-window onboarding-window focus-window${paused ? ' is-paused' : ''}`}>
     <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>

@@ -113,7 +113,7 @@ export function registerAuthIpc(
     if (!authService) return SERVICE_UNAVAILABLE
     await authService.ready()
     // [주의] 이미 진행 중인 code 교환이 늦게 끝나도 새 시도를 덮어쓰지 않도록 이전 시도를 무효화한다.
-    if (store.getSnapshot().status === 'AUTHENTICATING') authService.invalidatePendingLogin()
+    authService.invalidatePendingLogin()
     return beginGoogleLogin(store, oauthFlow)
   })
 

@@ -1,13 +1,19 @@
 // 세션 중 맨 앞 앱 관측 규칙 (결정 024, Notion 화면 분석 3.1·6.1.1·6.2).
 // 이 파일은 순수 로직이다. 1초마다 맨 앞 앱을 넣으면, 같은 화면이 15초 유지됐을 때 관측 1건을 돌려준다.
 
-export type Frontmost = { bundleId: string | null; appName: string | null; pid: number; windowTitle: string | null }
+export type Frontmost = { bundleId: string | null; appName: string | null; pid: number; windowTitle: string | null; windowId?: number | null }
 import type { GuardStatus } from '@focuson/shared-types'
 
 export type { GuardStatus }
+type Metadata = { appName: string; windowTitle: string | null }
+/**
+ * 서버로 보낼 관측. key·windowId는 Desktop 안에서만 쓰고 보내지 않는다(같은 화면인지 확인·OCR 대상 창).
+ * DESKTOP_APP_OCR은 APP_META 결과가 애매할 때 만든다(screen-analysis.cts).
+ */
 export type Observation =
-  | { observedAt: string; guardStatus: GuardStatus }
-  | { observedAt: string; guardStatus: null; contentSource: 'APP_META'; metadata: { appName: string; windowTitle: string | null } }
+  | { observedAt: string; guardStatus: GuardStatus; contentSource?: 'APP_META' | 'DESKTOP_APP_OCR' }
+  | { observedAt: string; guardStatus: null; contentSource: 'APP_META'; metadata: Metadata; key: string; windowId: number | null }
+  | { observedAt: string; guardStatus: null; contentSource: 'DESKTOP_APP_OCR'; metadata: Metadata; text: string }
 
 export const DWELL_MS = 15_000
 
@@ -18,7 +24,8 @@ export function parseFrontmost(reply: Record<string, unknown> | null): Frontmost
   const { bundleId, appName, pid, windowTitle } = app as Record<string, unknown>
   if (typeof pid !== 'number') return null
   const text = (value: unknown) => typeof value === 'string' && value ? value : null
-  return { bundleId: text(bundleId), appName: text(appName), pid, windowTitle: text(windowTitle) }
+  const { windowId } = app as Record<string, unknown>
+  return { bundleId: text(bundleId), appName: text(appName), pid, windowTitle: text(windowTitle), windowId: Number.isSafeInteger(windowId) ? windowId as number : null }
 }
 
 // Chrome 탭은 Extension이 맡는다. Desktop은 현재 URL을 몰라 제외·민감 페이지를 거를 수 없다.
@@ -65,6 +72,11 @@ export class ScreenObserver {
     return this.classify(front)
   }
 
+  /** 지금 보고 있는 화면의 key. 관측을 보낸 뒤에도 같은 화면인지 확인할 때 쓴다. */
+  currentKey(): string | null {
+    return this.current?.key ?? null
+  }
+
   /** 세션이 RUNNING이 아니면 비운다. 다시 시작하면 처음부터 15초를 센다. */
   reset(): void {
     this.current = null
@@ -81,6 +93,6 @@ export class ScreenObserver {
     // FocusOn 자기 창은 관련·무관 어느 쪽 근거도 아니다(Notion 화면 분석 3.1). 지원하지 않는 브라우저와 함께 분석 제외로만 알린다.
     if (front.pid === this.deps.selfPid || UNSUPPORTED_BROWSERS.has(bundleId) || this.deps.isExcluded(bundleId)) return { observedAt, guardStatus: 'EXCLUDED' }
     if (SENSITIVE_APPS.has(bundleId) || (front.windowTitle && SENSITIVE_TITLE.test(front.windowTitle))) return { observedAt, guardStatus: 'PRIVACY_BLOCKED' }
-    return { observedAt, guardStatus: null, contentSource: 'APP_META', metadata: { appName: front.appName ?? bundleId, windowTitle: front.windowTitle } }
+    return { observedAt, guardStatus: null, contentSource: 'APP_META', metadata: { appName: front.appName ?? bundleId, windowTitle: front.windowTitle }, key: this.current?.key ?? '', windowId: front.windowId ?? null }
   }
 }
