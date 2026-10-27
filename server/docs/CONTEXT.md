@@ -7,15 +7,15 @@
 - Desktop·Extension·AI 연동
 - PostgreSQL 스키마와 Flyway migration
 
-## 현재 작업 (2026-10-27)
+## 현재 작업 (2026-10-28)
 
-- Issue #79: `chore/#79-swagger-testing`에서 백엔드 개발용 Swagger·JWT Authorize·Google PKCE 도구 구현·독립 리뷰·QA를 완료했다. 기준 dev는 `65da4f0`이다.
-- 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
-- Swagger를 local에 통합했다. 기본 local은 `.env` 자동 읽기·loopback 바인딩·Swagger 활성화를 함께 적용하며 docker/test는 비활성이다. 사용법은 [SWAGGER_TESTING.md](SWAGGER_TESTING.md)를 따른다.
-- 기존 #59 / PR #60은 dev 병합·종료됐다. 아래 #59 브랜치/병합 대기 기록은 당시 이력이다.
-- local 통합 후 독립 리뷰 지적 없음, Backend62/build/Checkstyle·HTTP32·인자 없는 bootRun9개 확인을 통과했다. 현재 실행 명령은 server 폴더의 `./gradlew bootRun`이다.
-- 제품 API 계약·DB·Frontend 변경은 없다. Backend62·Python10·실제 PostgreSQL HTTP32 확인 통과. 독립 리뷰 Low1 수정 후 추가 지적 없음. 검증 결과는 `features/swagger-testing-*`를 따른다. 실계정 Google 성공은 별도 사용자 인증이 필요하다.
-- 2026-10-27 사용자가 문서 반영·dev 대상 PR 생성을 승인했다. PR/CI 최신 상태는 Issue #79 연결 PR을 따른다. merge·Issue 종료는 별도 승인 대상이다.
+- Issue #58, feat/#58-extension-pairing, 최신 origin/dev b293bf1에서 구현했다. server/만 수정했고 PR은 아직 생성하지 않았다.
+- 코드 발급·공개 Extension 연결·코드 취소, 설치별3회 실패/3분 잠금·재연결·소유권 제약을 구현했다.
+- Notion API·인증 정책·공통 오류·ERD에 사용자 승인 계약 반영. 결정030 및 extension-pairing-PLAN.md가 현재 기준이다.
+- 독립 리뷰 P2 1개 수정 후 재검토 통과. 전체 build/Checkstyle·JUnit76·실제PG14·HTTP33·DB제약6 통과. 실제 Frontend UI 통합은 별도다.
+- 전달 사항은 features/extension-pairing-frontend-handoff.md. 닉네임·프로필·readiness는 팀원 담당이다.
+- 선행 Swagger PR #81은 dev b293bf1에 병합됐고 실제 Google Swagger exchange→me→refresh→logout→401도 완료했다. Issue #79 종료는 별도 사용자 승인 전이다.
+- #59/PR #60도 이미 병합·종료됐다. 아래의 병합 전/실계정 미완료 문구는 당시 이력이며 현재 상태를 뜻하지 않는다.
 
 ## 현재 상태
 

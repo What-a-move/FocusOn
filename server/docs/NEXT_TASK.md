@@ -1,14 +1,19 @@
 # Backend 다음 작업
 
-## 현재 작업 (2026-10-27)
+## 현재 작업 (2026-10-28)
 
-- Issue #79: 개발용 Swagger·FocusOn JWT Authorize·Google PKCE 보조 도구. Branch `chore/#79-swagger-testing`, 기준 dev `65da4f0`.
-- 구현·독립 리뷰·build/Checkstyle·Backend62·Python10·실제 PostgreSQL HTTP32 확인을 완료했다. 실제 Google 계정 성공 테스트는 사용자 인증이 필요하다.
-- 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
-- Swagger local 통합·별도 파일 제거 완료. 독립 리뷰 지적 없음, Backend62/build/Checkstyle·HTTP32·기본 bootRun9개 확인 통과. server에서 `./gradlew bootRun`으로 개발한다.
-- 2026-10-27 사용자가 문서 반영과 dev 대상 PR 생성을 승인했다. 원격 PR·CI·리뷰 상태는 [Issue #79](https://github.com/What-a-move/FocusOn/issues/79)에 연결된 PR에서 확인한다. merge·Issue 종료는 별도 승인한다.
-- 이전 #59 / PR #60은 dev 병합·종료됐다. 아래 내용은 당시 기록이며 현 작업으로 재개하지 않는다.
-- 사용법: [SWAGGER_TESTING.md](SWAGGER_TESTING.md).
+- #58 Extension 연결 구현·정본 반영·독립 리뷰·QA 완료, feat/#58-extension-pairing에서 PR 생성 승인 대기.
+- 검증: build/Checkstyle·JUnit76·실제PG14·HTTP33·DB제약6. 미해결 리뷰 지적 없음.
+- PR 생성·병합·이슈 종료는 승인 없이 실행하지 않는다.
+
+## 다음 순서
+
+1. 변경 검토 후 PR 초안 공유·사용자 승인, dev 대상 PR·CI 확인. dev 직접 push 금지.
+2. Frontend 담당에게 extension-pairing-frontend-handoff.md를 전달하고 실제 앱 연결 QA. 이 AI가 Frontend 파일을 수정하지 않는다.
+3. #38 온보딩·닉네임 작업을 중복하지 않는다. 기기 관리·Extension unlink는 별도 후속 범위다.
+4. #79는 PR81 병합·실제 Google QA 완료 상태이며 종료는 승인 후 진행한다.
+
+아래는 과거 작업 이력이다. 미완료 문구를 현재 지시로 재개하지 않는다.
 
 ## 이전 작업 기록
 
@@ -17,7 +22,7 @@
 - 선행 #49 / PR #51은 dev 병합·이슈 종료 완료.
 - 계획: `features/auth-lifecycle-PLAN.md`, 검증: QA·code-review·REPORT·ERROR.
 
-## 이어갈 순서
+## 과거 이어갈 순서 (현재 순서 아님)
 
 1. #59 주석 보완 커밋의 원격 CI 결과를 확인하고 병합 여부를 검토한다. merge·이슈 종료는 별도 사용자 승인.
 2. Google 실계정 OAuth 성공은 본인 인증 응답이 필요하다. 실제 서버/Keychain으로 합성 로그인 세션의 복구·회전·logout은 검증했으나 실계정 성공으로 표현하지 않는다.

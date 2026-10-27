@@ -71,7 +71,9 @@ Controller에 상태 전이와 정책 판단을 작성하지 않는다.
 - 동의 응답은 `currentVersion`, `consents[{consentType,isGranted,consentVersion,grantedAt,withdrawnAt}]`를 사용한다. 현재 문서 버전을 응답하고 클라이언트가 그대로 저장 요청에 보낸다.
 - 닉네임 중복은 프로필 저장의 `409 PROFILE_NICKNAME_DUPLICATE`로 처리하며 별도 확인 API를 만들지 않는다.
 - Extension 연결 응답은 토큰 3개 필드와 `device.deviceId`, 공개 `deviceType: EXTENSION`을 반환한다. 내부 `CHROME_EXTENSION` enum은 응답에서 변환한다.
-- 틀린 코드 1~2회는 `400 LINK_006_CODE_MISMATCH`, 숫자 `details.remainingAttempts`, `retryable: false`; 3번째는 `410 LINK_004_ATTEMPTS_EXCEEDED`다. 자동 재시도와 사용자 수정 후 재입력을 구분한다. 실패 횟수를 귀속할 연결 시도 문맥은 구현 전 계약 검토 대상이다.
+- 틀린 코드 1~2회는 `400 LINK_006_CODE_MISMATCH`, 숫자 `details.remainingAttempts`, `retryable: false`; 3번째는 `410 LINK_004_ATTEMPTS_EXCEEDED`다. 자동 재시도와 사용자 수정 후 재입력을 구분한다. 실패는 Extension installationId별로 누적하며 3회면3분 입력을 잠근다. 잠금 중 올바른 코드도 거절하고 remainingAttempts=0·retryAfterSeconds·Retry-After를 반환한다. 성공/잠금 만료 시 초기화하고 타 Desktop 코드는 폐기하지 않는다.
+- 정상 화면 닫기·Desktop 종료는 DELETE /pairing-codes/{pairingCodeId}로 취소하며 통지 불가는 발급 후5분 만료다. 재발급·logout·동일 Desktop 재로그인도 기존 ACTIVE 코드를 취소하되 이미 만료된 코드는 EXPIRED/terminal_at=expires_at을 유지한다.
+- 같은 사용자·같은 설치는 deviceId 재사용·기존 family/refresh 폐기 후 새 family 발급이다. 다른 계정 활성 설치는409 LINK_007_INSTALLATION_ALREADY_LINKED로 거절하고 코드를 소비하지 않는다.
 - 3초 polling은 기본 20회/분이며 다른 호출·재시도와 60회/분 한도를 공유한다. 429의 `Retry-After`를 지킨다.
 - 알림은 Desktop에서 필수 확인하지만 readiness API·DB에는 알림 필드를 추가하지 않는다. 2026-10-25 정본에 따라 Desktop이 요청 전에 알림 준비를 확인·차단하며 서버는 `NOTIFICATION_PERMISSION`을 반환하지 않는다. 제외 앱 저장은 MVP 범위 밖이고 제외 도메인만 저장한다.
 

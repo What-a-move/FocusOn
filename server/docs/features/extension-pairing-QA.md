@@ -1,0 +1,39 @@
+# Extension 연결 QA
+
+- Issue #58 / Branch feat/#58-extension-pairing / 2026-10-28
+- 기준 dev b293bf1. 사용자 개발 DB와 기존8080 서버를 유지하고, 별도 QA DB·8081 서버를 사용했다.
+
+| 검증 | 결과 |
+| --- | --- |
+| 전체 build·Checkstyle | 통과 |
+| 전체 JUnit (H2) | 76 / 실패0 / 생략0 |
+| 실제 PostgreSQL pairing 통합 | 14 / 실패0 |
+| Flyway·Hibernate | V1·V2·V3 적용/validate 통과 |
+| 실제 HTTP (8081) | 33 / 실패0 |
+| 실제 DB 제약 거절 | 6 / 실패0 |
+| 독립 리뷰 | P2 1개 수정·재리뷰 통과 |
+
+## 확인한 흐름
+
+- INCOMPLETE Desktop 발급201, 원문 대신 별도 HMAC 저장, 발급당5분·최대3회 입력.
+- 공개 claim은 잘못된 Bearer를 무시하고 코드로 인증, Extension201·문자열 ID·UTC token 만료 응답.
+- 코드 형식/기소비/만료/취소 오류, 설치별 실패1/2/3회 commit·remainingAttempts2/1/0.
+- 잠금180초 동안 유효 코드도 거절, 179초에는1초 대기, 180초 경계 성공.
+- 성공 reset, 미완료1~2회는 cleanup 뒤에도 유지. terminal_at 기준30일 삭제.
+- 같은 설치·같은 사용자 재연결은 deviceId 재사용·이전 family/refresh 폐기. 새 family는 이전 refresh 재사용 폐기에 영향받지 않음.
+- 다른 계정 활성 설치409 LINK_007, 충돌 코드 미소비.
+- 취소204 멱등·타 소유 no-op·기소비 코드 취소 시 token 유지.
+- 같은 코드 동시 입력1승자, 다른 계정의 같은 설치 동시 연결1승자. cancel/claim·logout/claim 경쟁에서 상태 부활 없음.
+- 재발급·logout·재로그인 시 이전 코드 취소. 이미 만료된 경우 EXPIRED·expires_at 기준 유지.
+- Extension refresh·me 성공 및 Desktop logout 뒤 LINK_TOKEN_REVOKED. Extension 발급/취소 요청401.
+- 발급4번째429·Retry-After. OpenAPI 공개 claim security 배열 비어 있음.
+- DB6개: parent/issuer/consumer 소유권 FK, 실패 상태 CHECK, terminal null CHECK, 활성 설치 UNIQUE의 잘못된 저장 거절.
+
+## 실행 방법과 한계
+
+- 기본: JAVA_HOME=JDK25 ./server/gradlew -p server build --offline --no-daemon.
+- PostgreSQL 검증은 test 프로필의 datasource를 **격리 PG DB**로 대체하고 ddl-auto=validate, flyway=true로 PairingApiTests를 실행했다. H2 결과만으로 SQL 정합성을 주장하지 않는다.
+- HTTP 검증은 격리 DB의 합성 Desktop 인증 fixture를 사용했다. 이번33개를 Google 실계정 OAuth 또는 Desktop·Extension UI 연동 성공으로 표현하지 않는다. 기존 Google 실계정 Swagger 왕복은 선행 작업에서 별도로 완료했다.
+- 이번 변경의 원격 CI·CodeRabbit·PR은 아직 없다. Frontend 코드는 수정하지 않았다. 취소 UI·기존 installation 충돌 안내는 handoff 후 통합 QA가 필요하다.
+- 단일 서버 유한 메모리 rate limiter다. 다중 인스턴스 공유 한도·HMAC 키 교체는 별도 설계가 필요하다.
+- 수치는 통제된 기능 검증 건수이며 운영 성공률·성능 지표가 아니다.
