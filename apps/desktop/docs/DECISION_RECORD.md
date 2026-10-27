@@ -621,3 +621,12 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - AuthService는 유효한 token으로 logout을 먼저 요청하고, 서버 AUTH_ACCESS_TOKEN_EXPIRED에는 single-flight refresh 뒤 logout을 한 번만 재시도한다. 두 번째 만료·알 수 없는 401·네트워크/서버 실패는 성공 표시와 Keychain 삭제를 하지 않는다.
 - 204 또는 명시적 AUTH_RELOGIN_REQUIRED·AUTH_TOKEN_REUSE_DETECTED·AUTH_OAUTH_REAUTH_REQUIRED만 로컬 정리를 완료한다. API 형식과 서버 계약은 그대로다.
 - 실제 만료 JWT/서버/Keychain QA에서 401→refresh200→logout204와 연결 Extension 폐기·활성 기기 슬롯 반환을 확인했다. 실제 Google 인증 완료를 뜻하지 않는다.
+
+## 결정 027 - 세션 결과 summary 응답은 제안 형식으로 받고 빠진 값은 "기록 없음"으로 둔다
+
+- 결정일: 2026-10-27 / 상태: 제안 (백엔드 확인 대기) / Issue #73.
+- Notion 리포트 설계서 3.1에는 시간 필드 이름만 있어, `GET /sessions/{id}/summary`를 `sessionId`·`goalSnapshot`·`targetDurationMs`·`accumulatedActiveMs`(필수)와 `status`·`startedAt`·`endedAt`·`totalPausedMs`·`related/unrelated/uncertainDurationMs`·`extensionCount`·`extendedDurationMs`·`pauseCount`·`autoPauseCount`·`autoPauseReasons[]`·`interventionCount`(선택)로 받는다.
+- 필수 값이 없으면 조회 실패로 보고, 선택 값이 없거나 형식이 다르면 null로 두어 화면에 "기록 없음"으로 표시한다. 흐름 막대는 관련·무관·보류 세 값이 모두 있을 때만 그린다.
+- 분석 안 됨 시간과 목표 활동 비율은 Desktop이 계산한다(설계서 3.2). 학습 정리는 `/learning-summary`로 따로 받는다.
+- 이유: 백엔드가 일부 필드만 먼저 내려도 화면이 열리게 하고, 거짓 값을 만들지 않기 위해서다. 백엔드가 이름을 바꾸면 `parseSessionSummary`만 고친다.
+- 영향받는 파일: `electron/shared/report-contract.cts`, `electron/main/report-ipc.cts`, `features/report/*`

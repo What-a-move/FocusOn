@@ -64,6 +64,8 @@
 - Issue #71(2026-10-26): 화면 분석 5단계. Swift 도우미 `ocr`이 맨 앞 창 하나만 `SCScreenshotManager`로 캡처해 Vision(`ko-KR`·`en-US`)으로 글자만 돌려준다(이미지는 도우미 안에서 버림). Main `analyzeObservation`이 `APP_META` 결과가 관련 없음·판단 보류이고 아직 같은 화면이면 정리한 글자를 `DESKTOP_APP_OCR`로 다시 보낸다(늦은 응답 버림, 민감 글자는 `PRIVACY_BLOCKED`). Vision 한국어 인식은 저장된 화면 캡처로 확인했고, 창 캡처는 화면 기록 권한이 있는 실제 앱에서 확인이 남아 있다.
 
 
+- Issue #73(2026-10-27): 세션 결과 화면(`/session-result/`, `session-result.html` D16·D18). 세션이 끝나거나 자동 종료되면 집중 화면이 결과 화면으로 넘긴다. Main이 `GET /sessions/{id}/summary`·`/learning-summary`를 조회하고, 화면은 시간·집중 흐름(분석 안 됨 = 실제 시간 − 분석 구간, 목표 활동 비율은 관련+무관 1분 이상일 때만)·기록·학습 정리 상태를 보여 준다. 정리가 대기·생성 중이면 5초마다 다시 조회한다. summary 응답 형식은 Notion에 시간 필드 이름만 있어 제안 형식(결정 027)으로 만들었고 백엔드 확인을 기다린다. 실제 API가 없어 가짜 bridge로 6가지 상태를 확인했다.
+
 ### 아직 진행하지 않은 작업
 
 - 같은 창에서 글자만 바뀌는 경우(스크롤 등) 30초 재전송 (OCR 텍스트 비교, 결정 024에서 미룸)
@@ -71,6 +73,7 @@
 - 카메라 분석 연동(AVFoundation + Apple Vision 로컬, 선택 동의)
 - 인증·온보딩·리포트 외 Server API 클라이언트와 실제 Backend 왕복 QA
 - 화면 위 포키 F06·F07 말풍선과 위치 옮기기
+- 세션 결과의 `정리 보기`(학습 정리 상세)·`집중 기록` 이동 (해당 화면이 생길 때)
 - 실제 Backend를 통한 Desktop 코드 발급·Extension 연결·readiness 반영 검증
 
 ## 현재 기술
