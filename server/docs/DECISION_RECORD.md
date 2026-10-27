@@ -304,3 +304,13 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - `common/openapi` 패키지는 인증 비즈니스 로직과 문서 전용 보안·OpenAPI 모델의 책임을 분리하기 위해 추가한다. 공개 API·DB·토큰 수명·Frontend 변경은 없다.
 - 실계정 Google 성공·Desktop UI 검증은 오프라인/합성 QA와 구분한다. PR 생성·merge·Issue 종료는 별도 승인한다.
 - 사용법: `SWAGGER_TESTING.md`; 계획·리뷰·QA는 `features/swagger-testing-*`를 따른다.
+
+
+## 결정 028 - 개발용 .env 자동 로딩
+
+- 결정일: 2026-10-27 / 사용자 명시 요청, Issue #79 추가 범위.
+- local 프로필의 `spring.config.import`로 `.env`를 Properties 형식으로 읽는다. `server/`에서 실행하면 `./.env`, 저장소 루트면 `./server/.env`를 사용하며 두 파일이 있으면 후자가 우선한다. OS 환경변수·JVM 옵션·실행 인자는 파일보다 우선한다.
+- `optional:`은 파일이 없어도 IDE/OS 환경변수로 실행할 수 있게 하기 위한 것이다. DB password·JWT 등 기존 필수 설정 검증을 없애지 않는다. `.env`는 Git 및 jar에 포함하지 않는다.
+- `.env.example`의 단순 KEY=VALUE 형식을 공유한다. 값 바깥 따옴표·export·shell 구문을 지원한다고 표현하지 않는다. Spring 내부 설정 소스로 읽으므로 별도 Python 프로세스의 shell 환경으로 export되지 않는다.
+- local DB 포트는 `POSTGRES_PORT` → `POSTGRES_HOST_PORT` → 5432 순서로 선택한다. docker 프로필은 기존 Compose 환경변수 전달 방식을 유지한다.
+- Swagger를 켜는 local,swagger 조합은 결정027을 유지한다. 이번 변경에 Swagger 프로필 재구성은 포함하지 않는다.

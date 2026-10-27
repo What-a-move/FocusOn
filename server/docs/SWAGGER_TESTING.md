@@ -4,19 +4,18 @@ Swagger는 현재 구현된 서버 API를 실행하는 도구다. 엔드포인�
 
 ## 1. 실행 준비
 
-macOS에서 Java 25·Python 3·PostgreSQL 17이 필요하다. 저장소 루트에서 실행한다. 기존 `server/.env`의 DB·JWT·Desktop Google Client ID/Secret을 사용하며 파일을 커밋하지 않는다. 터미널의 `set -x`는 끈다.
+macOS에서 Java 25·Python 3·PostgreSQL 17이 필요하다. 저장소 루트에서 실행한다. `server/.env`에 DB·JWT·Desktop Google Client ID/Secret을 준비하며 파일을 커밋하지 않는다. 새 checkout에는 `.env`가 없으므로 별도 준비한다. 터미널의 `set -x`는 끈다.
 
 ```bash
-cd server
-set -a
-source .env
-set +a
-cd ..
 docker compose --env-file server/.env -f server/docker-compose.yml up -d postgres
 ./server/gradlew -p server bootRun --args='--spring.profiles.active=local,swagger'
 ```
 
-local 프로필의 PostgreSQL 포트는 `POSTGRES_PORT`를 쓰므로 `POSTGRES_HOST_PORT`를 5432 이외로 설정했다면 서버 실행 전에 `export POSTGRES_PORT="$POSTGRES_HOST_PORT"`로 맞춘다.
+DB가 이미 실행 중이면 Compose 명령은 생략한다. local 프로필은 `POSTGRES_PORT`가 있으면 그 값을, 없으면 `.env`의 `POSTGRES_HOST_PORT`를 사용한다.
+
+서버의 local 프로필은 `.env`를 자동으로 읽으므로 서버 실행 전에 `source .env`를 할 필요가 없다. `server/`에서 실행할 때는 `./.env`, 저장소 루트에서 실행할 때는 `./server/.env`를 읽는다. 두 파일이 모두 있으면 server 쪽 값이 우선한다. IDE 실행도 두 디렉터리 중 하나를 작업 디렉터리로 사용한다. 파일 값보다 OS 환경변수·JVM 옵션·실행 인자가 우선한다.
+
+`.env`는 `.env.example`처럼 `KEY=VALUE` 형식으로 쓴다. Spring이 Properties 형식으로 읽기 때문에 값 바깥의 따옴표·`export`·shell 명령을 붙이지 않는다. 파일이 없어도 OS 환경변수로 필수 DB/JWT 값을 제공할 수 있다. 자동 읽기는 local 전용이며 docker 프로필은 Compose가 전달하는 환경변수를 그대로 사용한다.
 
 브라우저에서 [Swagger UI](http://127.0.0.1:8080/swagger-ui/index.html)를 연다. OpenAPI JSON은 [API 문서](http://127.0.0.1:8080/v3/api-docs)다. `bootRun`의 기본 포트는 8080이고, 다른 포트는 `--server.port=...`로 지정한다.
 
@@ -27,7 +26,7 @@ local 프로필의 PostgreSQL 포트는 `POSTGRES_PORT`를 쓰므로 `POSTGRES_H
 
 ## 2. Google PKCE 요청 준비
 
-별도 터미널에서 `.env`를 다시 로드하고 실행한다. 서버는 계속 켜 둔다.
+PKCE Python 도구는 Spring 프로세스와 별개이므로 별도 터미널에서 아래처럼 환경변수를 로드한다. 서버의 자동 읽기는 shell 환경변수를 export하는 기능이 아니다. 서버는 계속 켜 둔다.
 
 ```bash
 cd server

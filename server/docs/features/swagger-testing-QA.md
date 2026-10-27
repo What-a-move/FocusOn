@@ -52,3 +52,12 @@ python3 -m unittest discover -s server/scripts -p 'test_*.py' -v
 - 실제 Google 테스트 사용자 동의·외부 token endpoint·키 검증을 포함한 성공 왕복은 미실행이다.
 - Desktop callback·IPC·Keychain·UI, 원격 배포·proxy 환경은 이 설정 QA의 범위가 아니다.
 - Python 검증은 현재 GitHub Backend CI에서 자동 실행되지 않는다. 위 로컬 명령으로 실행했다. Java 검증은 기존 Gradle build에 포함된다.
+
+## 추가 QA: local .env 자동 읽기 (2026-10-27)
+
+- 실제 SpringApplication을 사용한 격리된 합성 파일 검사 7개 통과: server 작업 디렉터리, 저장소 루트, server 파일 우선순위, OS 환경변수 우선순위와 포트 override, optional 파일 누락, 파일 없이 OS만 제공, docker에서 local 파일 미로딩.
+- 실제 `bootRun` 검사 6개 통과: DB/JWT/Google 자격 증명을 시작 환경변수에서 제거한 사실 확인, source·프로필 인자 없이 DB readiness200, JWT 서비스 기동 및 me401 인증 유지, 기본 local 선택, 이번 임시 DB에 Flyway2개 적용, jar에 .env 미포함. 기존 DB 대신 새 QA DB를 사용했고 Gradle/서버 프로세스와 임시 DB를 정리했다.
+- 변경 뒤 build·Checkstyle 통과, JUnit62개 실패/오류/skip0. PKCE 도구 코드는 변경하지 않아 기존10개를 불필요하게 재실행하지 않았다.
+- 독립 리뷰는 별도 합성 환경에서 경로·우선순위·포트·docker/test 제외도 확인했다. 실행 인자·OS 환경변수는 파일보다 우선한다.
+- 실제 .env는 기존 자격 증명을 현재 작업 checkout에 0600으로 준비했으며 원래 checkout 값은 변경하지 않았다. Git ignore·Docker build context 제외·jar 미포함을 확인했다. 비밀값을 테스트 로그·문서에 기록하지 않았다.
+- 로컬 파일 자동 읽기는 Spring 내부 설정 소스로 추가하는 기능이다. Python PKCE CLI 등 별도 프로세스에 shell 환경변수를 export하지는 않는다.

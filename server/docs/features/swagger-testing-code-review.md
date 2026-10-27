@@ -28,3 +28,7 @@
 - 0600 임시 파일, 실패 시 파일 삭제, Google Client Secret·인증 원문 비출력.
 - 설치된 springdoc 3.1.0 소스로 빈 validatorUrl 동작과 사용법의 인증·회전·logout 순서 확인.
 - 리뷰자가 Python 10개를 직접 재실행했다. Java 빌드는 구현자 실행 결과를 확인했으며 리뷰자가 별도 재실행했다고 기록하지 않는다.
+
+## 추가 리뷰: local .env 자동 읽기 (2026-10-27)
+
+구현 대화가 없는 별도 에이전트가 이번 HEAD diff와 추가 승인 PLAN·컨벤션만 검토했다. 실제 자격 증명은 읽지 않고 합성 파일로 Spring Boot 4.1.1 Config Data 로딩을 확인했다. root/server 실행 위치·파일 간 우선순위·OS override·포트 fallback·파일 누락·docker/test 제외·local,swagger 동작이 일치했으며 Critical/High/Medium/Low 없음으로 결론 냈다.

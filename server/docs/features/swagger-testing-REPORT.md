@@ -31,3 +31,7 @@ Backend 62개·Python 10개·실제 PostgreSQL HTTP 32개를 통과했다. 독�
 새 제품 API·Entity·migration·토큰 수명·Frontend·Notion 변경은 없다. Google 실계정 성공은 사용자 본인 인증 후 별도 확인한다. 응답 성능/부하 개선 수치는 측정하지 않았다.
 
 PR 생성·CI·CodeRabbit·merge·Issue 종료는 아직 진행하지 않았다. PR 초안 검토 및 별도 사용자 승인이 다음 단계다.
+
+## 추가 반영: .env 자동 읽기
+
+사용자 추가 요청에 따라 local `spring.config.import`·POSTGRES 포트 fallback·.env.example 형식 안내를 보완했다. 이제 개발 서버는 source 없이 기존 .env를 읽는다. 격리된 설정7개·실제 bootRun6개 및 변경 후 Backend62/build/Checkstyle 확인을 통과했고 독립 리뷰 지적 없음이다. 별도 Swagger 프로필 활성화 정책은 유지한다. PR 생성·merge·Issue 종료는 여전히 별도 승인 대상이다.

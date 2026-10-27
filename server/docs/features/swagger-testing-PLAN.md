@@ -35,3 +35,9 @@
 - Google 응답만 대체한 인증 흐름과 실제 PostgreSQL/HTTP 경계를 검증하고 실계정 성공과 구분한다.
 - 독립 코드 리뷰 → 필요한 수정 → build·Checkstyle·QA 결과 기록 → Issue 체크리스트 갱신.
 - 코드 리뷰·QA·사용법·CONTEXT·NEXT_TASK·결정 기록을 같은 작업에 남긴다.
+
+## 추가 승인: local .env 자동 읽기 (2026-10-27)
+
+사용자가 개발 시 매번 source를 실행하지 않도록 실제 설정·코드 설명을 요청했다. Spring 기본 Config Data import로 local 프로필에서 현재 디렉터리 `.env`와 저장소 루트 기준 `server/.env`를 Properties로 읽는다. 후자가 같은 키에 우선하며 OS 환경변수는 두 파일보다 우선한다. 파일은 optional로 두어 IDE/OS 환경변수만 쓰는 실행을 지원한다. DB host port는 POSTGRES_PORT → POSTGRES_HOST_PORT → 5432 순서다. docker·test·Swagger 활성화 정책은 바꾸지 않는다. 표준 KEY=VALUE 형식만 사용하고 shell 구문을 실행하지 않는다.
+
+검증: 격리된 파일/실행 위치별 실제 Spring 설정 로딩, OS 우선순위·파일 누락·docker 제외, 실제 `bootRun`에서 source 없이 DB·JWT·Swagger 기동, jar에 .env 미포함, 독립 diff 리뷰. 새 라이브러리나 Gradle 전용 파서를 만들지 않는다.

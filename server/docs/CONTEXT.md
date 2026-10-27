@@ -10,6 +10,7 @@
 ## 현재 작업 (2026-10-27)
 
 - Issue #79: `chore/#79-swagger-testing`에서 백엔드 개발용 Swagger·JWT Authorize·Google PKCE 도구 구현·독립 리뷰·QA를 완료했다. 기준 dev는 `65da4f0`이다.
+- 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
 - 기본 Swagger는 비활성이며 `local,swagger` 프로필에서만 로컬 문서 접근을 연다. 사용법은 [SWAGGER_TESTING.md](SWAGGER_TESTING.md)를 따른다.
 - 기존 #59 / PR #60은 dev 병합·종료됐다. 아래 #59 브랜치/병합 대기 기록은 당시 이력이다.
 - 제품 API 계약·DB·Frontend 변경은 없다. Backend62·Python10·실제 PostgreSQL HTTP32 확인 통과. 독립 리뷰 Low1 수정 후 추가 지적 없음. 검증 결과는 `features/swagger-testing-*`를 따른다. 실계정 Google 성공은 별도 사용자 인증이 필요하다.
