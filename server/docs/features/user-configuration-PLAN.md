@@ -1,6 +1,6 @@
 # 사용자 프로필·동의·집중 설정·분석 제외 도메인 구현 계획
 
-> 상태: Issue #38의 범위를 사용자 설정 API로 축소했다. 구현 시작 전 계획 문서다.
+> 상태: Issue #38의 사용자 설정 API를 구현하고 검증 중이다. PLAN 승인과 최종 QA는 별도로 확인한다.
 
 ## 기본 정보
 
@@ -32,7 +32,7 @@ PUT /api/v1/users/me/analysis-excluded-domains
 ## 계약과 구현 기준
 
 - `GET /users/me`는 현재 인증 사용자의 `userId`, `nickname`, `onboardingStatus`만 반환한다.
-- 프로필 수정은 현재 사용자만 대상으로 하며, 닉네임 형식과 중복을 검증한다.
+- 프로필 수정은 현재 사용자만 대상으로 하며, 닉네임은 한글·영문·숫자 2~12자와 전역 중복을 검증한다.
 - 동의 조회에는 `currentVersion`과 동의별 `consentType`, `isGranted`, `consentVersion`, `grantedAt`, `withdrawnAt`을 반환한다. 동의 수정은 명세의 `consentType`과 현재 문서 버전을 검증한다.
 - 집중 설정은 `interventionLevel`, `notificationChannels`, `breakSuggestionEnabled`, `cameraAnalysisEnabled`를 전체 저장·반환한다.
 - 분석 제외 도메인은 현재 사용자의 전체 목록을 교체한다. host는 소문자, IDNA ASCII, 후행 점 제거 기준으로 정규화하고, scheme·port·path·query·fragment·페이지 원문은 저장하지 않는다.
@@ -68,9 +68,9 @@ PUT /api/v1/users/me/analysis-excluded-domains
 - [x] `X-Device-Id`가 필요한 요청은 현재 인증 기기와 일치해야 한다.
 - [x] 사용자 설정 API 전용 MockMvc 정상·권한·도메인 정규화 테스트를 통과했다.
 - [x] Swagger Bearer 보안 설정과 공통 오류 응답 스키마를 OpenAPI JSON으로 검증했다.
-- [x] PostgreSQL·실행 서버 HTTP QA를 통과한다.
+- [ ] PostgreSQL과 최신 코드의 실제 인증 HTTP QA를 최종 확인한다. 기존 실계정 HTTP 검증과 PostgreSQL MockMvc 검증 결과는 REPORT에 기록했다.
 - [x] 기존 Backend 전체 테스트와 Checkstyle을 통과한다.
-- [ ] `user-configuration-ERROR.md`, `user-configuration-REPORT.md`, `CONTEXT.md`, `NEXT_TASK.md`를 실제 상태로 갱신한다.
+- [x] `user-configuration-ERROR.md`, `user-configuration-REPORT.md`, `CONTEXT.md`, `NEXT_TASK.md`를 현재 확인된 상태로 갱신한다.
 
 ## 예상 변경 파일
 

@@ -16,7 +16,7 @@
 - 400·401·409 오류 응답은 실제 공통 `ApiErrorResponse` 스키마로 문서화했다.
 - 분석 제외 도메인은 IDNA ASCII 변환, 소문자화, 단일 후행 점 제거, 중복 제거, 50개 제한, 전체 교체를 구현했다.
 - 분석 제외 도메인 API는 `X-Device-Id`와 인증 principal 일치를 확인한다.
-- 프로필 중복 닉네임은 `PROFILE_NICKNAME_DUPLICATE`, 형식 오류는 `PROFILE_NICKNAME_INVALID` 또는 공통 검증 오류로 처리한다.
+- 프로필 중복 닉네임은 `PROFILE_NICKNAME_DUPLICATE`, 닉네임 문자·길이 형식 오류는 `PROFILE_NICKNAME_INVALID`로 처리한다.
 
 ## 검증
 
@@ -29,6 +29,11 @@
 - 분석 제외 도메인의 반복 교체·50개 저장·51개 거부 후 기존 값 유지·빈 배열 삭제·다른 사용자 조회를 H2와 PostgreSQL 17 임시 DB에서 MockMvc 인증 HTTP 경로로 검증했다. PostgreSQL에는 Flyway V1~V3을 적용했고 테스트 전용 DB는 삭제했다.
 - 집중 설정 수정의 Swagger UI 요청 예시에 `MOLE_UI`가 표시된다.
 - `./gradlew test build checkstyleMain checkstyleTest --no-daemon`: 성공 (2026-10-27). 신규 닉네임 중복·형식, 동의/철회 및 사용자 분리 테스트 포함.
+- Notion 사용자 API 8개의 표시된 요청·응답·필수 헤더를 대조했고, 프로필 상세 명세의 닉네임 문자·길이 오류 규칙을 반영했다. 전체 오류·권한 상세 대조는 계속 필요하다.
+- 서로 다른 두 사용자의 프로필·동의·집중 설정·도메인 분리를 MockMvc로 검증했다.
+- 2026-10-27 실행 중인 PostgreSQL의 `flyway_schema_history`에서 V1·V2·V3의 성공 상태를 조회했다. 기존 데이터베이스의 기록 확인이며 새 DB에 다시 적용한 결과는 아니다.
+- 같은 날 실행 중인 Docker 서버의 사용자 설정 8개 API에 인증 없이 실제 HTTP 요청을 보내 모두 401을 확인했다. 서버 이미지가 현재 로컬 미커밋 코드와 일치하는지는 확인하지 않았으며, 이 검사는 인증 성공 경로를 대체하지 않는다.
+- `./gradlew test checkstyleMain checkstyleTest --rerun-tasks --no-daemon`: 성공. 캐시 결과가 아닌 테스트와 Checkstyle을 재실행했다. `./gradlew test build checkstyleMain checkstyleTest --no-daemon`도 성공했으며 해당 실행은 up-to-date 결과였다.
 
 ## 현재 제한과 후속 작업
 
@@ -36,3 +41,4 @@
 - 목표, 세션, 분석·개입, 리포트 API는 이 작업의 범위가 아니다.
 - 최신 Notion 명세 접근 후 8개 API 계약을 재대조해야 한다. PostgreSQL 검증은 MockMvc 경로이며 실제 Google 계정으로 변경 후 다시 호출한 검증은 아니다.
 - PLAN 승인 및 독립 리뷰는 아직 확인되지 않았다.
+- 최신 로컬 닉네임 변경을 포함한 실제 Google 인증 HTTP 재검증은 남았다. 코드와 이 문서 변경은 아직 커밋되지 않았다.

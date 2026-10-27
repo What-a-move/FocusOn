@@ -2,7 +2,7 @@
 
 ## 현재 작업 (2026-10-27)
 
-- Issue #38: 최신 Notion API 명세 접근 후 8개 계약을 대조한다. PostgreSQL MockMvc 재검증은 통과했다. PLAN 승인·독립 리뷰·PR은 각각 실제 결과를 확인한다.
+- Issue #38: Notion 8개 API의 나머지 오류·권한 상세를 대조하고 최신 로컬 코드의 실계정 HTTP 성공 경로를 재검증한다. PostgreSQL MockMvc 및 기존 DB의 Flyway V1~V3 기록, 실행 서버 무인증 401은 확인했다. PLAN 승인·독립 리뷰·PR은 각각 실제 결과를 확인한다.
 - Issue #79: 개발용 Swagger·FocusOn JWT Authorize·Google PKCE 보조 도구. Branch `chore/#79-swagger-testing`, 기준 dev `65da4f0`.
 - 구현·독립 리뷰·build/Checkstyle·Backend62·Python10·실제 PostgreSQL HTTP32 확인을 완료했다. 실제 Google 계정 성공 테스트는 사용자 인증이 필요하다.
 - 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
