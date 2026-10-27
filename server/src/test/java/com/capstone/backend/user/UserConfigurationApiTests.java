@@ -28,7 +28,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 /** 인증된 사용자 설정 API의 소유권과 도메인 정규화를 HTTP 경로로 검증한다. */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles({"local", "test"})
 class UserConfigurationApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
@@ -84,8 +84,8 @@ class UserConfigurationApiTests {
             .value("현재 사용자 조회"))
         .andExpect(jsonPath("$.paths['/api/v1/users/me/focus-settings'].put"
             + ".responses['200'].description").value("저장 성공"))
-        .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
-        .andExpect(jsonPath("$.paths['/api/v1/users/me'].get.security[0].bearerAuth").exists())
+        .andExpect(jsonPath("$.components.securitySchemes.focusOnBearer.scheme").value("bearer"))
+        .andExpect(jsonPath("$.paths['/api/v1/users/me'].get.security[0].focusOnBearer").exists())
         .andExpect(jsonPath("$.paths['/api/v1/users/me'].get.responses['401'].content"
             + ".['application/json'].schema.['$ref']")
             .value("#/components/schemas/ApiErrorResponse"));

@@ -41,7 +41,8 @@ public class ApiSecurityConfiguration {
             .requestMatchers(HttpMethod.POST, "/api/v1/auth/google/exchange",
                 "/api/v1/auth/refresh").permitAll()
             .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
-            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+            .requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**",
+                "/swagger-ui.html").permitAll()
             .requestMatchers("/api/v1/**").authenticated().anyRequest().denyAll())
         .exceptionHandling(errors -> errors
             .authenticationEntryPoint((request, response, exception) -> writeError(

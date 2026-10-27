@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/users/me")
 @RequiredArgsConstructor
 @Tag(name = "사용자 설정", description = "현재 인증 사용자의 프로필, 동의, 집중 설정 API")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "focusOnBearer")
 public class UserConfigurationController {
   private final UserConfigurationService configuration;
 

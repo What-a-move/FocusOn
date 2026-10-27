@@ -67,7 +67,7 @@ PUT /api/v1/users/me/analysis-excluded-domains
 - [x] `X-Device-Id`가 필요한 요청은 현재 인증 기기와 일치해야 한다.
 - [x] 사용자 설정 API 전용 MockMvc 정상·권한·도메인 정규화 테스트를 통과했다.
 - [x] Swagger Bearer 보안 설정과 공통 오류 응답 스키마를 OpenAPI JSON으로 검증했다.
-- [ ] PostgreSQL·실행 서버 HTTP QA를 통과한다.
+- [x] PostgreSQL·실행 서버 HTTP QA를 통과한다.
 - [x] 기존 Backend 전체 테스트와 Checkstyle을 통과한다.
 - [ ] `user-configuration-ERROR.md`, `user-configuration-REPORT.md`, `CONTEXT.md`, `NEXT_TASK.md`를 실제 상태로 갱신한다.
 

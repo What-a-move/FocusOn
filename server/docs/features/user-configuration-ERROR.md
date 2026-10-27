@@ -3,7 +3,7 @@
 - 관련 Issue: [#38](https://github.com/What-a-move/FocusOn/issues/38)
 - Branch: `feat/#38-user-configuration`
 - 작성일: 2026-10-26
-- 상태: 해결
+- 상태: 미해결 항목 있음
 
 ## 작업 중 해결한 문제
 
@@ -39,8 +39,8 @@
 - 재현: 재빌드한 로컬 Swagger UI에서 사용자 설정 API를 열고 인증 없는 `GET /api/v1/users/me`를 실행했다.
 - 현상: 실제 응답은 `401 AUTH_RELOGIN_REQUIRED` 공통 오류 형식이지만, 문서에는 성공 DTO 예시가 표시됐다. 또한 Bearer 토큰을 입력할 `Authorize` 설정이 없었다.
 - 원인: OpenAPI Security Scheme과 Controller의 Security Requirement가 없었고, 오류 응답에 media type·`ApiErrorResponse` schema를 명시하지 않았다.
-- 조치: `OpenApiConfiguration`에 `bearerAuth` HTTP Bearer scheme을 추가하고 사용자 설정 Controller에 적용했다. 400·401·409 응답에는 `application/json`과 `ApiErrorResponse` schema를 명시했다.
-- 검증: `/v3/api-docs` MockMvc 테스트에서 bearer scheme, API 보안 요구사항, 401 오류 schema reference를 확인했다.
+- 조치: dev 병합 뒤 `common/openapi/SwaggerConfiguration`의 local 전용 `focusOnBearer` scheme을 사용하도록 통합했다. 400·401·409 응답에는 `application/json`과 `ApiErrorResponse` schema를 명시했다.
+- 검증: `/v3/api-docs` MockMvc 테스트에서 bearer scheme, API 보안 요구사항, 401 오류 schema reference를 확인했다. docker/test 프로필에서는 Swagger가 비공개인 것도 유지했다.
 
 ### 분석 제외 도메인 후행 점 거부
 
@@ -49,3 +49,11 @@
 - 원인: `normalizeHost`가 후행 점을 제거하지 않고 유효하지 않은 값으로 분류했다.
 - 조치: 단일 후행 점을 IDNA 변환 전에 제거해 `youtube.com`으로 정규화했다. 연속 후행 점과 빈 host는 기존 정규식 검증에서 계속 거부한다.
 - 검증: 사용자 설정 MockMvc 테스트에서 `YouTube.COM.`과 `youtube.com`이 한 개의 `youtube.com`으로 중복 제거되는 것을 확인했다.
+
+### 분석 제외 도메인 반복 저장 500
+
+- 재현: 동일 사용자가 `PUT /api/v1/users/me/analysis-excluded-domains`를 두 번 호출하고, 기존 목록에 포함된 host를 다시 전달했다.
+- 현상: 두 번째 요청이 500 `INTERNAL_ERROR`로 실패했다.
+- 원인: `deleteByUserId()` 뒤 새 host를 저장할 때 삭제 SQL이 먼저 flush되지 않아, PostgreSQL의 `(user_id, host)` 유니크 제약과 충돌했다.
+- 조치: 미해결. 삭제 뒤 flush를 보장하거나 저장 방식을 재구성하는 수정과 반복 교체 통합 테스트가 필요하다.
+- 검증: 2026-10-27 로컬 Swagger QA에서 같은 `youtube.com`을 포함한 두 번째 전체 교체 요청이 `uq_user_analysis_excluded_domains_user_host` 충돌로 재현됐다.
