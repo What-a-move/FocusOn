@@ -23,3 +23,6 @@ server/.vscode/
 .turbo/
 .claude
 AGENTS.md
+
+# 로컬 Playwright 미리보기 스크립트·로그
+.playwright-mcp/
