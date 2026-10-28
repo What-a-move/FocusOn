@@ -1,6 +1,6 @@
 import type { AuthService } from './auth-service.cjs'
 import type { FloatingShow, InterventionAction } from '../shared/intervention-contract.cjs'
-import type { FocusSettings } from '../shared/session-contract.cjs'
+import type { SessionOptions } from '../shared/session-contract.cjs'
 
 // 포키 코칭 문구는 친근한 반말이다(Notion UX 문구·알림 문구 정책 2.1, floating-poki.html). 구체 활동은 추측해 말하지 않는다.
 const COPY = {
@@ -50,7 +50,7 @@ export class InterventionWatcher {
 
   constructor(private readonly deps: Deps) {}
 
-  async poll(sessionId: string, goalText: string, options: FocusSettings): Promise<void> {
+  async poll(sessionId: string, goalText: string, options: SessionOptions): Promise<void> {
     if (this.polling) return
     this.polling = true
     try {

@@ -19,6 +19,9 @@
 .fo-nav-item.active { font-weight: 700; }
 .fo-nav-item.active::before { position: absolute; top: 50%; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--fo-gold); content: ''; transform: translateY(-50%); }
 .fo-nav-item img { flex: 0 0 28px; object-fit: contain; }
+a.fo-nav-item { color: inherit; text-decoration: none; transition: background .15s ease; }
+a.fo-nav-item:hover { background: var(--fo-hover); }
+a.fo-nav-item:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 .fo-sidebar-spacer { flex: 1; }
 .fo-profile { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; }
 .fo-profile-avatar { flex: 0 0 36px; width: 36px; height: 36px; border: 1.5px solid var(--fo-line); border-radius: 50%; background: var(--fo-gold-soft) url('/design/poki-floating-logo-base-v1.png') 50% 62% / 165% no-repeat; }
