@@ -170,7 +170,7 @@ def test_ambiguous_or_conflicting_metadata_is_uncertain_without_embedding():
         assert client.calls == 0
 
 
-def test_content_fallback_order_is_metadata_then_dom_then_viewport_ocr():
+def test_content_fallback_order_stops_after_dom_in_mvp():
     metadata, goal, metadata_context = inputs(
         contentSource="TAB_META",
         text="",
@@ -195,7 +195,7 @@ def test_content_fallback_order_is_metadata_then_dom_then_viewport_ocr():
         dom, goal, dom_context, current_context=lambda: dom_context
     )
     assert dom_result.relevance_label == "UNCERTAIN"
-    assert dom_result.next_content_source == "CHROME_VIEWPORT_OCR"
+    assert dom_result.next_content_source is None
 
     ocr, _, ocr_context = inputs(
         clientRunId="event-3",
@@ -228,6 +228,16 @@ def test_desktop_metadata_falls_back_directly_to_desktop_ocr():
     assert result.next_content_source == "DESKTOP_APP_OCR"
 
 
+def test_unrelated_metadata_cannot_finish_without_body_confirmation():
+    content, goal, context = inputs(contentSource="TAB_META", text="", pageTitle="노래 가사 앨범")
+    client = ScriptedClient()
+    result = RelevanceAnalyzer(client).analyze(content, goal, context, current_context=lambda: context)
+    assert result.relevance_label == "UNCERTAIN"
+    assert result.reason_code == "METADATA_UNRELATED_REQUIRES_BODY"
+    assert result.next_content_source == "CHROME_DOM"
+    assert client.calls == 0
+
+
 def test_staged_analysis_requests_only_needed_chrome_content():
     metadata, goal, metadata_context = inputs(
         contentSource="TAB_META", text="", pageTitle="useState 참고",
@@ -257,9 +267,9 @@ def test_staged_analysis_requests_only_needed_chrome_content():
         metadata, goal, metadata_context,
         current_context=lambda: live[0], acquire_next=acquire,
     )
-    assert requested == ["CHROME_DOM", "CHROME_VIEWPORT_OCR"]
-    assert result.content_source == "CHROME_VIEWPORT_OCR"
-    assert result.relevance_label == "RELATED"
+    assert requested == ["CHROME_DOM"]
+    assert result.content_source == "CHROME_DOM"
+    assert result.relevance_label == "UNCERTAIN"
 
 
 def test_staged_analysis_stops_after_decisive_metadata():

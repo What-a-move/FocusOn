@@ -29,6 +29,17 @@ BROAD_TERMS = frozenset({"상태", "객체", "값", "결과", "자료", "정보"
                          "state", "object", "value", "result", "data", "information", "content", "screen"})
 KEYWORD_EXTRACTOR_VERSION = "kiwi-weighted-terms-v3"
 SCORING_VERSION = "body-context-hybrid-v3"
+# Separate from calibrated query/document scores: this policy uses document/document similarity.
+EVIDENCE_POLICY_VERSION = "dependent-followup-v2"
+INTRO_CONTINUITY_THRESHOLD = 0.50  # Provisional synthetic-test criterion, not calibrated accuracy.
+# Bounded linguistic heuristic, not a semantic classifier or a sentence whitelist.
+_FOLLOWUP_REFERENTS = frozenset({"앞", "위", "이전", "해당", "설명", "예제", "예시", "실습"})
+_FOLLOWUP_NOUNS = _FOLLOWUP_REFERENTS | frozenset({
+    "내용", "결과", "예상", "부분", "동작", "원리", "순서", "용어", "역할", "입력", "조건",
+    "실행", "이유", "연결", "확인", "비교", "추적", "수정", "정리", "반복", "차이", "항목",
+    "요약", "참고", "과정", "단계", "변화", "원인", "방식", "절차", "관찰", "검토", "기록",
+})
+_FOLLOWUP_VERBS = frozenset({"하", "되", "있", "없", "보", "나오", "바꾸", "달라지", "맞", "다르"})
 _TECH_TERM = re.compile(r"[A-Za-z][A-Za-z0-9_]*(?:[+#]{1,2}|(?:[.-][A-Za-z0-9_]+)*)")
 
 
@@ -138,6 +149,40 @@ class ScreenContext:
     source_ids: tuple[str, ...]
 
 
+def is_dependent_followup(text: str) -> bool:
+    """Recognize only complete Korean references using abstract learning vocabulary.
+
+    Unknown subjects, identifiers and actions are deliberately left unchanged.
+    Kiwi supplies morphology; it does not decide relevance or understand a topic.
+    """
+    tokens = _tokenizer().tokenize(unicodedata.normalize("NFKC", text))
+    nouns = {token.form.casefold() for token in tokens if token.tag in {"NNG", "NNP", "SL", "SN", "SH"}}
+    verbs = {token.form for token in tokens if token.tag.startswith(("VV", "VA"))}
+    referential = bool(nouns & _FOLLOWUP_REFERENTS) or any(
+        token.form in {"이", "그"} and token.tag in {"MM", "NP"} for token in tokens)
+    return bool(nouns and referential and nouns <= _FOLLOWUP_NOUNS
+                and verbs <= _FOLLOWUP_VERBS and any(token.tag == "EF" for token in tokens))
+
+
+def build_followup_contexts(passages: Sequence[CleanedPassage], *,
+                            source_pairs: Sequence[tuple[str, str]],
+                            max_bytes: int = 8_000) -> tuple[ScreenContext, ...]:
+    """Pair only original adjacent BODY/OCR paragraphs, with no inferred boundaries."""
+    allowed = set(source_pairs)
+    contexts = []
+    for anchor, followup in zip(passages, passages[1:]):
+        if (anchor.kind not in {PassageKind.BODY, PassageKind.OCR} or followup.kind != anchor.kind
+                or followup.order != anchor.order + 1 or (anchor.text, followup.text) not in allowed
+                or not is_dependent_followup(followup.text)):
+            continue
+        text = anchor.text + "\n\n" + followup.text
+        if len(text.encode("utf-8")) <= max_bytes:
+            contexts.append(ScreenContext(CleanedPassage(
+                "followup-context:" + followup.id, followup.kind, text, followup.order),
+                (anchor.id, followup.id)))
+    return tuple(contexts)
+
+
 def build_screen_contexts(passages: Sequence[CleanedPassage], *, window_title: str = "",
                           max_bytes: int = 8_000) -> tuple[ScreenContext, ...]:
     """Only actual same-screen metadata; never create headings or goal terms."""
@@ -170,13 +215,18 @@ def decide_matches(matches: Sequence[dict], config: GraphlessConfig = GraphlessC
     body = {row["passageId"]: row for row in matches
             if row.get("unitType", "PASSAGE") == "PASSAGE" and row["kind"] not in {"TITLE", "HEADING"}}
     total_chars = sum(len(row["text"]) for row in body.values())
+    followups = {row["sourceIds"][1]: row for row in matches
+                 if row.get("unitType") == "FOLLOWUP_CONTEXT" and len(row["sourceIds"]) == 2}
     related_ids, unrelated_ids = set(), set()
     rows = []
     for original in matches:
         row = dict(original)
         ids = row["sourceIds"]
         valid_body = bool(ids) and all(pid in body for pid in ids)
-        if row.get("unitType") == "SCREEN_CONTEXT":
+        if row.get("unitType") == "FOLLOWUP_CONTEXT":
+            # Context can defer a candidate, never generate positive passage evidence.
+            related = unrelated = False
+        elif row.get("unitType") == "SCREEN_CONTEXT":
             # A relevant title cannot override a weak/unrelated raw body.
             raw_floor = min((body[pid]["cosine"] for pid in ids if pid in body), default=-1.)
             related = (valid_body and raw_floor >= config.min_related_cosine
@@ -189,7 +239,30 @@ def decide_matches(matches: Sequence[dict], config: GraphlessConfig = GraphlessC
             # A keyword hit is evidence, never a categorical veto of low V.
             unrelated = (row["passageId"] in body
                          and row["cosine"] <= config.unrelated_cosine_threshold)
-        row.update(relatedEvidence=bool(related), unrelatedEvidence=bool(unrelated))
+        candidate = bool(unrelated)
+        following = body.get(row.get("followingBodyId"))
+        contextual_intro = (candidate and following is not None
+                            and row.get("followingSimilarity", -1.) >= INTRO_CONTINUITY_THRESHOLD
+                            and following["cosine"] > config.unrelated_cosine_threshold)
+        followup = followups.get(row["passageId"])
+        anchor = body.get(followup["sourceIds"][0]) if followup else None
+        contextual_followup = bool(
+            candidate and anchor and followup
+            and anchor["cosine"] >= config.min_related_cosine
+            and anchor["hybridScore"] >= config.related_passage_threshold
+            and followup["cosine"] >= config.min_related_cosine
+            and followup["hybridScore"] >= config.related_passage_threshold)
+        # Defer an ambiguous introduction; never promote it to positive evidence.
+        # Complete sentences, isolated fragments and abrupt topic changes retain their evidence.
+        if contextual_intro or contextual_followup:
+            unrelated = False
+        if followup:
+            row.update(followupContextId=followup["passageId"], anchorBodyId=followup["sourceIds"][0])
+        row.update(relatedEvidence=bool(related), unrelatedEvidence=bool(unrelated),
+                   unrelatedCandidate=candidate,
+                   negativeEvidenceReason=("FOLLOWUP_CONTEXT_DEFERRED" if contextual_followup else
+                                           "INTRO_CONTEXT_DEFERRED" if contextual_intro else
+                                           "LOW_COSINE" if candidate else "NOT_CANDIDATE"))
         if related:
             related_ids.update(ids)
         if unrelated:
@@ -224,9 +297,13 @@ def score_passages(
     context_vectors: Sequence[Sequence[float]] = (), allow_unrelated: bool = True,
     screen_contexts: Sequence[ScreenContext] = (),
     screen_vectors: Sequence[Sequence[float]] = (),
+    intro_pairs: Sequence[tuple[str, str]] = (),
+    followup_contexts: Sequence[ScreenContext] = (),
+    followup_vectors: Sequence[Sequence[float]] = (),
 ) -> dict:
     if (len(passages) != len(passage_vectors) or len(context_groups) != len(context_vectors)
-            or len(screen_contexts) != len(screen_vectors)):
+            or len(screen_contexts) != len(screen_vectors)
+            or len(followup_contexts) != len(followup_vectors)):
         raise ValueError("VECTOR_COUNT_INVALID")
     body = tuple(p for p in passages if p.kind not in {PassageKind.TITLE, PassageKind.HEADING})
     total_chars = sum(len(p.text) for p in body)
@@ -245,6 +322,8 @@ def score_passages(
     units.extend((g.passage, v, g.source_ids, "CODE_CONTEXT") for g, v in zip(context_groups, context_vectors))
     base_units = {p.id: p for p in passages}
     units.extend((g.passage, v, g.source_ids, "SCREEN_CONTEXT") for g, v in zip(screen_contexts, screen_vectors))
+    units.extend((g.passage, v, g.source_ids, "FOLLOWUP_CONTEXT")
+                 for g, v in zip(followup_contexts, followup_vectors))
     for passage, vector, source_ids, unit_type in units:
         # Metadata may affect the context vector, never the body's lexical K.
         lexical_text = ("\n".join(base_units[pid].text for pid in source_ids)
@@ -267,6 +346,21 @@ def score_passages(
                      "cosine": cosine, "hybridScore": vector_base + keyword_boost,
                      "vectorBase": vector_base, "keywordBoost": keyword_boost,
                      "charCount": len(passage.text), "text": passage.text})
+    # Require original extraction adjacency too: cleaning must not join across removed content.
+    allowed_pairs = set(intro_pairs)
+    raw_rows = {row["passageId"]: row for row in rows if row["unitType"] == "PASSAGE"}
+    for index, (intro, following) in enumerate(zip(passages, passages[1:])):
+        if (intro.kind not in {PassageKind.BODY, PassageKind.OCR} or following.kind != intro.kind
+                or following.order != intro.order + 1 or (intro.text, following.text) not in allowed_pairs
+                or "\n" in intro.text or re.search(r"[.!?。！？]", intro.text)
+                or not re.search(r"[.!?。！？]", following.text)
+                or len(intro.text) >= len(following.text)):
+            continue
+        tokens = _tokenizer().tokenize(intro.text)
+        if not tokens or tokens[-1].tag not in {"NNG", "NNP", "SL", "SN"}:
+            continue
+        raw_rows[intro.id].update(followingBodyId=following.id,
+                                 followingSimilarity=cosine_similarity(passage_vectors[index], passage_vectors[index + 1]))
     decision = decide_matches(rows, config, allow_unrelated=allow_unrelated)
     return {**decision, "matchedKeywords": sorted({term for row in rows if row["kind"] not in {"TITLE", "HEADING"}
                                                    for term in row["keywordHits"]}), **keyword_info}
@@ -274,23 +368,42 @@ def score_passages(
 
 # Metadata thresholds are an uncalibrated, conservative experiment baseline.
 # They are independent of the body-only calibration file.
-METADATA_SCORING_VERSION = "title-hybrid-v1"
+METADATA_SCORING_VERSION = "title-hybrid-v3-mvp"
 METADATA_CONFIG = GraphlessConfig(keyword_boost=.20, min_related_cosine=.55,
                                   related_passage_threshold=.60, unrelated_cosine_threshold=.25)
-_METADATA_GENERIC_TERMS = frozenset({"자료", "문서", "노트", "페이지", "참고", "탭", "새", "제목",
-                                      "document", "untitled", "notes", "page", "tab", "new"})
+_METADATA_GENERIC_TERMS = frozenset({"자료", "문서", "내용", "파일", "화면", "목차", "노트", "페이지", "참고", "탭", "새", "제목",
+                                      "document", "untitled", "notes", "page", "tab", "new",
+                                      "content", "contents", "file", "reference", "material", "materials"})
+_METADATA_APP_NAMES = frozenset({"google chrome", "chrome", "chromium", "microsoft edge",
+                                "safari", "firefox", "preview", "미리보기"})
+
+
+def _metadata_subject(text: str, app_name: str = "") -> str:
+    """Ignore app decorations for the information gate, not embedding input."""
+    title = unicodedata.normalize("NFKC", text).strip()
+    names = _METADATA_APP_NAMES | ({unicodedata.normalize("NFKC", app_name).strip().casefold()} - {""})
+    suffix = r"\s+[-–—|·]\s+(?:" + "|".join(re.escape(name) for name in sorted(names)) + r")$"
+    while title:
+        if title.casefold() in names:
+            return ""
+        stripped = re.sub(suffix, "", title, flags=re.IGNORECASE).strip()
+        if stripped == title:
+            break
+        title = stripped
+    return title
 
 
 def metadata_titles(page_title: str, window_title: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(text for text in (page_title.strip(), window_title.strip()) if text))
 
 
-def metadata_is_informative(text: str) -> bool:
-    return bool(set(_terms(_term_sequences(text))) - _METADATA_GENERIC_TERMS - GENERAL_TERMS)
+def metadata_is_informative(text: str, *, app_name: str = "") -> bool:
+    return bool(set(_terms(_term_sequences(_metadata_subject(text, app_name)))) - _METADATA_GENERIC_TERMS - GENERAL_TERMS)
 
 
 def score_metadata(goal_text: str, titles: Sequence[str], goal_vector: Sequence[float],
-                   title_vectors: Sequence[Sequence[float]], *, allow_unrelated: bool = True) -> dict:
+                   title_vectors: Sequence[Sequence[float]], *, allow_unrelated: bool = False,
+                   app_name: str = "") -> dict:
     """Judge actual titles; never use a synthetic body or coverage/length gates."""
     if len(titles) != len(title_vectors):
         raise ValueError("VECTOR_COUNT_INVALID")
@@ -306,9 +419,9 @@ def score_metadata(goal_text: str, titles: Sequence[str], goal_vector: Sequence[
         cosine = cosine_similarity(goal_vector, vector)
         base = min(1., max(0., cosine))
         boost = config.keyword_boost * k * (1. - base)
-        informative = metadata_is_informative(title)
+        informative = metadata_is_informative(title, app_name=app_name)
         related = bool(keywords) and informative and cosine >= config.min_related_cosine and base + boost >= config.related_passage_threshold
-        unrelated = bool(keywords) and informative and allow_unrelated and cosine <= config.unrelated_cosine_threshold
+        unrelated = bool(keywords) and informative and cosine <= config.unrelated_cosine_threshold
         rows.append({"passageId": f"metadata-{index}", "sourceIds": [f"metadata-{index}"],
                      "kind": "TITLE", "unitType": "METADATA", "text": title,
                      "keywordHits": hits, "keywordScore": k, "cosine": cosine,
@@ -322,7 +435,9 @@ def score_metadata(goal_text: str, titles: Sequence[str], goal_vector: Sequence[
     elif positive:
         label, reason = "RELATED", "METADATA_HYBRID_RELATED"
     elif negative:
-        label, reason = "UNRELATED", "METADATA_HYBRID_UNRELATED"
+        # Metadata never establishes an off-task interval, even if the caller
+        # still passes the legacy allow_unrelated option.
+        label, reason = "UNCERTAIN", "METADATA_UNRELATED_REQUIRES_BODY"
     else:
         label, reason = "UNCERTAIN", "METADATA_INSUFFICIENT"
     return {"relevanceLabel": label, "reasonCode": reason, "matches": rows,

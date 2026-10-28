@@ -82,7 +82,7 @@ class ContentInput(Observation):
     window_title: Annotated[str, Field(max_length=800)] = Field(default="", alias="windowTitle", repr=False)
     page_title: Annotated[str, Field(max_length=800)] = Field(default="", alias="pageTitle", repr=False)
     url_host: Annotated[str, Field(max_length=253)] = Field(default="", alias="urlHost", repr=False)
-    text: Annotated[str, Field(max_length=64_000)] = Field(default="", repr=False)
+    text: Annotated[str, Field(max_length=2_000)] = Field(default="", repr=False)
     extraction_status: ExtractionStatus = Field(alias="extractionStatus")
     is_sensitive: bool = Field(alias="isSensitive")
     is_excluded: bool = Field(alias="isExcluded")

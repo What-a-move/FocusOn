@@ -16,11 +16,16 @@ if str(ROOT) not in sys.path:
 from AI.evaluation.streamlit_runner import (DEFAULT_REVISION, DEFAULT_URL,
                                             GraphlessSession, compare_graphless, parse_inputs)
 from AI.evaluation.graphless_hybrid import (KEYWORD_EXTRACTOR_VERSION, SCORING_VERSION,
-                                           load_calibrated_config, METADATA_CONFIG, METADATA_SCORING_VERSION)
+                                           load_calibrated_config, METADATA_CONFIG, METADATA_SCORING_VERSION,
+                                           EVIDENCE_POLICY_VERSION, INTRO_CONTINUITY_THRESHOLD)
 from src.models.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
 
 REASONS = {
+    "CHROME_EXTENSION_REQUIRED": "Chrome은 Extension의 탭 메타데이터·DOM 경로를 사용합니다. Desktop OCR로 우회하지 않습니다.",
+    "CLIENT_GUARD_REQUIRED": "지원하지 않는 브라우저나 FocusOn 자체 창입니다. 클라이언트의 제외 상태 처리로 전환해야 합니다.",
     "METADATA_HYBRID_RELATED": "실제 제목의 코사인·결합 점수가 메타데이터 관련 기준을 통과했습니다. 본문 길이·커버리지는 적용하지 않습니다.",
+    "METADATA_UNRELATED_REQUIRES_BODY": "메타데이터 무관 후보는 확정하지 않습니다. Chrome DOM 또는 Desktop OCR 본문으로 재확인해야 합니다.",
+    "CHROME_OCR_DEFERRED_P1": "Chrome viewport OCR은 P1입니다. MVP에서는 DOM으로 부족하면 판단을 보류합니다.",
     "METADATA_HYBRID_UNRELATED": "주제를 식별할 수 있는 제목의 코사인이 메타데이터 무관 기준 이하입니다. 도메인·앱 이름만으로 판정하지 않습니다.",
     "METADATA_CONFLICTING": "페이지 제목과 창 제목에 관련·무관 근거가 함께 있어 추가 수집이 필요합니다.",
     "INSUFFICIENT_GOAL_KEYWORDS": "목표에 일반 표현만 있어 주제를 식별하기 어렵습니다. 구체적인 학습 대상을 입력하세요.",
@@ -69,15 +74,17 @@ def main():
         old_runtime.close()
     st.session_state.pop("resolver", None)
     st.title("FocusOn 키워드 + 벡터 Hybrid 테스트")
-    st.caption("Graph 없는 Streamlit 실험 · 메타데이터 제목 / DOM·OCR 본문을 구분해 비교")
+    st.caption("Graph 없는 Streamlit 실험 · 10/26 MVP 수집 정책 · DOM/OCR 최대 2,000자")
+    st.caption("메타데이터는 RELATED만 확정합니다. 나머지는 Chrome DOM 또는 Desktop OCR로 재확인하며, Chrome OCR은 P1입니다.")
     st.caption("OpenAI API: 미사용 (Graph 생성 없음). 임베딩은 학교 Qwen API를 호출합니다.")
+    st.caption("실험 점수는 공개 판정 신뢰도 confidence가 아닙니다. confidence 보정과 실제 Backend 연동은 후속 작업입니다.")
     st.caption("같은 화면의 제목·창 제목·명시 소제목을 본문 문맥으로 사용합니다. DOM/OCR 경로에서는 제목만으로 판정하지 않으며, "
                "원래 본문의 코사인이 최소 기준을 통과해야 문맥 점수를 관련 근거로 인정합니다.")
     st.caption("TAB_META·APP_META는 제목만 별도 분석합니다. 메타데이터 V≥0.55·H≥0.60, 본문 길이·커버리지 미적용. 도메인·앱 이름만으로는 판정하지 않습니다.")
     evaluation = calibration.get("evaluationMetrics")
     if evaluation:
-        st.caption(f"DOM/OCR 보정에 쓰지 않은 목표의 합성 평가: {evaluation['correct']}/{evaluation['cases']} 일치 · "
-                   f"Macro-F1 {evaluation['macroF1']:.3f} · 독립 사람 검수 전 참고 결과")
+        st.caption(f"기존 무관 근거 정책의 과거 합성 평가: {evaluation['correct']}/{evaluation['cases']} 일치 · "
+                   f"Macro-F1 {evaluation['macroF1']:.3f} · 현재 문맥 근거 정책의 정확도를 뜻하지 않습니다.")
         if evaluation["unrelatedToRelated"]:
             st.warning(f"합성 평가에서 무관 화면 {evaluation['unrelatedToRelated']}건을 RELATED로 오판했습니다. "
                        "아직 운영 정확도가 검증된 기준은 아닙니다.")
@@ -95,11 +102,17 @@ def main():
         with st.expander("고정 실험 기준", expanded=True):
             st.caption("벡터 기본 + 키워드 보강 · 보강 계수 0.20")
             st.caption(f"점수 버전: {SCORING_VERSION}")
+            st.caption(f"근거 정책: {EVIDENCE_POLICY_VERSION} · 도입 표현 연속성 실험 기준 {INTRO_CONTINUITY_THRESHOLD:.2f}")
             st.json(asdict(config))
             st.caption(f"메타데이터 별도 실험값 ({METADATA_SCORING_VERSION}, 미보정): V ≥ {METADATA_CONFIG.min_related_cosine:.2f} 및 H ≥ {METADATA_CONFIG.related_passage_threshold:.2f}이면 관련 후보, V ≤ {METADATA_CONFIG.unrelated_cosine_threshold:.2f}이면 무관 후보. 본문 길이·커버리지 미적용. 빈/일반 제목은 UNCERTAIN.")
             st.caption("보정 상태: " + calibration.get("status", "SYNTHETIC_DEVELOPMENT_CALIBRATED")
                        + " · 개발용 선택 / 다른 목표 평가용 확인 · 독립 사람 검수 전 실험값")
         st.caption("낮은 유사도 기반 UNRELATED는 실험 규칙입니다. 별도 정답 데이터로 기준을 조정해야 합니다.")
+        st.caption("종결되지 않은 도입 표현은 바로 다음 원본 설명과 의미가 가깝고 그 설명이 무관 기준에 걸리지 않으면 "
+                   "무관 근거에서 보류합니다. 관련 근거로 올리지는 않습니다.")
+        st.caption("앞 내용을 참조하는 일반적인 후속 설명은 원본 인접 본문과 함께 검토합니다. "
+                   "앞 본문 자체와 결합 문맥이 모두 관련 기준을 통과할 때만 무관 근거에서 보류합니다. "
+                   "새 주제·행동은 작은 한국어 형태소 규칙으로 걸러내며, 조건에 맞는 문맥 벡터가 배치에 추가됩니다.")
 
     col1, col2 = st.columns(2)
     if col1.button("공부 예제 넣기"):
@@ -109,7 +122,7 @@ def main():
     with st.form("comparison"):
         goal_raw = st.text_area("확정 학습 목표", key="goal", height=90,
                                 help="목표 문장 또는 기존 ConfirmedGoal JSON. 키워드는 목표 text에서만 추출합니다. GoalProfile·템플릿·기대 라벨은 점수 계산에 사용하지 않습니다.")
-        source = st.radio("입력 출처", ["CHROME_DOM", "CHROME_VIEWPORT_OCR", "DESKTOP_APP_OCR", "TAB_META", "APP_META"], horizontal=True)
+        source = st.radio("입력 출처", ["CHROME_DOM", "DESKTOP_APP_OCR", "TAB_META", "APP_META"], horizontal=True)
         page_title = st.text_input("페이지 제목 (텍스트 입력 시)")
         content_raw = st.text_area("메타데이터·DOM/OCR 텍스트 또는 JSON", key="content", height=270,
                                   placeholder='{"contentSource":"CHROME_DOM","pageTitle":"자료 제목","text":"추출 본문"}',
@@ -160,7 +173,9 @@ def main():
                 st.session_state.graphless_runtime = runtime
             report = compare_graphless(goal, cases, runtime.client, config=config, session=runtime)
     except ValueError as error:
-        if str(error) == "DATASET_GOAL_MISMATCH":
+        if str(error) == "CONTENT_TEXT_TOO_LONG":
+            st.error("DOM·OCR 본문은 최대 2,000자입니다. 초과한 입력은 모델로 보내지 않았습니다.")
+        elif str(error) == "DATASET_GOAL_MISMATCH":
             st.error("목표 칸과 JSON의 goal.text가 다릅니다. 같은 주제의 목표와 데이터셋을 넣은 뒤 다시 비교하세요. 이번 입력은 모델로 보내지 않았습니다.")
         else:
             st.error("목표·JSON 형식·출처·API 설정을 확인하세요. OCR JSON에는 ocr 정보가 필요합니다.")
@@ -169,7 +184,7 @@ def main():
         st.error("실행하지 못했습니다. 임베딩 API 연결과 입력 설정을 확인하세요.")
         return
     st.subheader("비교 요약")
-    st.caption(f"본문 점수 버전: {report.get('scoringVersion', SCORING_VERSION)} · 메타데이터: {report.get('metadataScoringVersion', METADATA_SCORING_VERSION)}")
+    st.caption(f"본문 점수 버전: {report.get('scoringVersion', SCORING_VERSION)} · 메타데이터: {report.get('metadataScoringVersion', METADATA_SCORING_VERSION)} · 근거 정책: {report.get('evidencePolicyVersion', EVIDENCE_POLICY_VERSION)}")
     st.caption(f"전체 {report['totalMs'] / 1000:.3f}초 · Graph 생성 없음 · 임베딩 요청 {report['embeddingCalls']}회")
     st.caption(f"임베딩 API 왕복·벡터 검증 {report.get('embeddingMs', 0) / 1000:.3f}초 · 로컬 전처리·판정 {report.get('localMs', 0) / 1000:.3f}초")
     st.caption(f"OpenAI API: 미호출 · {report.get('openaiCalls', 0)}회 · {report.get('openaiMs', 0) / 1000:.3f}초 "
@@ -188,7 +203,8 @@ def main():
                       "메타데이터 최고 점수" if row.get("analysisPath") == "METADATA" else "제목·소제목 최고 점수 (단독 판정 안 함)": row.get("metadataScore"),
                       "분석 경로": row.get("analysisPath", "BODY"),
                       "통과한 관련 근거 점수": row.get("decisionScore"),
-                      "점수 종류": row["scoreType"], "reasonCode": row["reasonCode"],
+                      "점수 종류": row["scoreType"], "내부 사유": row["reasonCode"],
+                      "계약 reasonCode": row.get("publicReasonCode"),
                       "다음 요청 출처": row["nextContentSource"], "임베딩 요청": row["embeddingCalls"],
                       "벡터 전체 캐시 사용": row.get("cacheHit", False),
                       "임베딩 API 시간 ms": row.get("embeddingMs"), "로컬 계산 ms": row.get("localMs")})
@@ -203,21 +219,22 @@ def main():
                 left, right = st.columns(2)
                 left.metric("관련 본문 커버리지", f"{row['relatedCoverage']:.1%}",
                             help=f"관련 근거 {row['relatedBodyChars']}자 / 전체 분석 본문 {row['totalBodyChars']}자")
-                right.metric("무관 후보 본문 커버리지", f"{row['unrelatedCoverage']:.1%}",
-                             help=f"무관 후보 {row['unrelatedBodyChars']}자 / 전체 분석 본문 {row['totalBodyChars']}자")
-                st.caption(f"전체 분석 본문 {row['totalBodyChars']}자 · 관련 {row['relatedBodyChars']}자 · 무관 후보 {row['unrelatedBodyChars']}자. "
-                           "제목·소제목 제외, 설명+코드 묶음의 원본 글자는 한 번만 셉니다. 관련·무관 후보가 함께 있으면 UNCERTAIN입니다.")
+                right.metric("무관 근거 본문 커버리지", f"{row['unrelatedCoverage']:.1%}",
+                             help=f"검토 후 무관 근거 {row['unrelatedBodyChars']}자 / 전체 분석 본문 {row['totalBodyChars']}자")
+                st.caption(f"전체 분석 본문 {row['totalBodyChars']}자 · 관련 {row['relatedBodyChars']}자 · 무관 근거 {row['unrelatedBodyChars']}자. "
+                           "제목·소제목 제외, 원본 글자는 한 번만 셉니다. 도입·후속 설명 검토 후 인정된 관련·무관 근거가 함께 있으면 UNCERTAIN입니다.")
             for evidence in row["evidence"]:
                 st.text(f"근거 {evidence['id']}")
                 st.code(evidence["text"], language=None)
             if row["matches"]:
-                st.caption("메타데이터 제목별 점수입니다. 본문 길이·커버리지 미적용." if row.get("analysisPath") == "METADATA" else "문단·설명+코드 묶음별 키워드 점수·코사인·결합 점수와 근거 통과 여부입니다. "
+                st.caption("메타데이터 제목별 점수입니다. 본문 길이·커버리지 미적용." if row.get("analysisPath") == "METADATA" else "문단·설명+코드·후속 설명 문맥별 점수와 근거 통과 여부입니다. FOLLOWUP_CONTEXT는 무관 후보 검토에만 쓰고 관련 근거로 가산하지 않습니다. "
                            "RELATED는 본문 관련 근거와 충돌 여부로 판단합니다. 관련 커버리지는 참고값이며, UNRELATED에는 기존 커버리지·길이 조건을 적용합니다.")
                 st.dataframe(row["matches"], hide_index=True, use_container_width=True,
                              column_config={name: st.column_config.NumberColumn(format="%.4f")
                                             for name in ("cosine", "hybridScore", "keywordScore", "vectorBase", "keywordBoost")})
     with st.expander("이번 실험 설정"):
-        st.json({"body": report["config"], "metadata": report.get("metadataConfig", asdict(METADATA_CONFIG))})
+        st.json({"body": report["config"], "metadata": report.get("metadataConfig", asdict(METADATA_CONFIG)),
+                 "evidencePolicyVersion": report.get("evidencePolicyVersion", EVIDENCE_POLICY_VERSION)})
 
 
 if __name__ == "__main__":

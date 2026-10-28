@@ -20,29 +20,11 @@ from .goal_analyzer import GoalGraphResolver
 from .goal_graph import Concept, ContentRole, GoalGraph, keyword_match
 from .hybrid_scoring import Decision, HybridConfig, VectorError, decide_relevance, normalize_vector
 from .passage_grouping import build_code_context_groups
+from .acquisition_policy import (METADATA_SOURCES as _METADATA_SOURCES,
+                                 desktop_target_block_reason, next_content_source)
 
-ANALYZER_VERSION = "school-hybrid-v6"
+ANALYZER_VERSION = "school-hybrid-v7-mvp"
 DEFAULT_INSTRUCTION = "Retrieve passages useful for the given learning goal and concept."
-_METADATA_SOURCES = {ContentSource.APP_META, ContentSource.TAB_META}
-_NEXT_CONTENT_SOURCE = {
-    ContentSource.APP_META: ContentSource.DESKTOP_APP_OCR,
-    ContentSource.TAB_META: ContentSource.CHROME_DOM,
-    ContentSource.CHROME_DOM: ContentSource.CHROME_VIEWPORT_OCR,
-}
-_CONTENT_FALLBACK_REASONS = {
-    "METADATA_INSUFFICIENT",
-    "CONFLICTING_METADATA",
-    "EXTRACTION_FAILED",
-    "UNSUPPORTED",
-    "EMPTY_CONTENT",
-    "TOO_SHORT",
-    "LOW_CONFIDENCE",
-    "BROKEN_CONTENT",
-    "INSUFFICIENT_BODY",
-    "INCOMPLETE_REPRESENTATION",
-    "CONFLICTING_EVIDENCE",
-    "INSUFFICIENT_EVIDENCE",
-}
 
 
 def concept_queries(graph: GoalGraph, instruction: str) -> tuple[str, ...]:
@@ -82,13 +64,6 @@ class RelevanceResult:
     next_content_source: str | None = None
 
 
-def next_content_source(source: ContentSource, label: str, reason_code: str) -> ContentSource | None:
-    """Return the next allowed acquisition stage for content ambiguity only."""
-    if label != "UNCERTAIN" or reason_code not in _CONTENT_FALLBACK_REASONS:
-        return None
-    return _NEXT_CONTENT_SOURCE.get(source)
-
-
 def decide_metadata(content: ContentInput, graph: GoalGraph) -> Decision:
     """Return only high-precision exact metadata matches; all ambiguity falls back."""
     fields = (
@@ -116,8 +91,7 @@ def decide_metadata(content: ContentInput, graph: GoalGraph) -> Decision:
         roles = tuple(role for role in ContentRole if any(concept.role is role for concept, _ in related))
         return Decision("RELATED", "METADATA_GOAL_CONNECTED", evidence, roles)
     if unrelated:
-        evidence = tuple(dict.fromkeys(name for _, names in unrelated for name in names))
-        return Decision("UNRELATED", "METADATA_UNRELATED_TOPIC", evidence)
+        return Decision("UNCERTAIN", "METADATA_UNRELATED_REQUIRES_BODY")
     return Decision("UNCERTAIN", "METADATA_INSUFFICIENT")
 
 
@@ -284,6 +258,11 @@ class RelevanceAnalyzer:
         )):
             self.clear_caches()
             return result("SKIPPED", "PRIVACY_BLOCKED", "PRIVACY_BLOCKED")
+        if content.content_source is ContentSource.CHROME_VIEWPORT_OCR:
+            return result("SKIPPED", "UNCERTAIN", "CHROME_OCR_DEFERRED_P1")
+        target_block = desktop_target_block_reason(content.content_source, content.app_name)
+        if target_block:
+            return result("SKIPPED", "UNCERTAIN", target_block)
         if (goal.goal_id, goal.goal_version) != (context.goal_id, context.goal_version):
             return result("DISCARDED", "UNCERTAIN", "GOAL_VERSION_MISMATCH")
         if content.extraction_status.value == "FAILED":

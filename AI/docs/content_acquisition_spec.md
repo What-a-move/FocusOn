@@ -1,5 +1,7 @@
 # 콘텐츠 수집·추출 계약
 
+> 2026-10-26 MVP 화면 수집 규칙: 메타데이터의 RELATED만 확정한다. UNRELATED·UNCERTAIN은 현재 대상과 Privacy Guard가 유효한 경우 Chrome DOM 또는 Desktop OCR로 재확인한다. Chrome viewport OCR은 P1이며 DOM으로 부족하면 UNCERTAIN이다. Desktop은 Chrome 창을 OCR로 대신 분석하지 않는다. 아래 과거 Chrome OCR 제안은 MVP 실행 경로에 적용하지 않는다. [적용 보고서](features/screen-analysis-contract-v1-REPORT.md).
+
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안, 미구현

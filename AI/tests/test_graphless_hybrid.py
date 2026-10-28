@@ -432,3 +432,126 @@ def test_calibration_loader_rejects_stale_or_unsafe_settings(tmp_path):
     target.write_text(json.dumps({**value, 'embedding': {**value['embedding'], 'instructionSha256': 'old'}}))
     with pytest.raises(ValueError):
         load_calibrated_config(target)
+
+
+def test_intro_candidate_is_deferred_without_becoming_related_evidence():
+    from AI.evaluation.graphless_hybrid import decide_matches
+    config = GraphlessConfig(min_related_cosine=.30, related_passage_threshold=.35)
+    rows = [dict(passageId='intro', sourceIds=['intro'], kind='BODY', text='문자 누락 현상',
+                 cosine=.22, hybridScore=.22, followingBodyId='explanation', followingSimilarity=.52),
+            dict(passageId='explanation', sourceIds=['explanation'], kind='BODY', text='설명',
+                 cosine=.26, hybridScore=.26),
+            dict(passageId='related', sourceIds=['related'], kind='BODY', text='수신 인터럽트 처리',
+                 cosine=.40, hybridScore=.43)]
+    result = decide_matches(rows, config)
+    assert result['relevanceLabel'] == 'RELATED'
+    intro = result['matches'][0]
+    assert intro['unrelatedCandidate'] and not intro['unrelatedEvidence'] and not intro['relatedEvidence']
+    assert intro['negativeEvidenceReason'] == 'INTRO_CONTEXT_DEFERRED'
+    assert result['relatedBodyChars'] == len('수신 인터럽트 처리')
+    assert result['unrelatedBodyChars'] == 0
+    # No independent positive evidence means abstain, not an automatic RELATED.
+    assert decide_matches(rows[:2], config)['relevanceLabel'] == 'UNCERTAIN'
+    # Abrupt topic change and two consistently low-goal passages still conflict.
+    for change in ({'followingSimilarity': .49}, {'followingBodyId': 'missing'}):
+        assert decide_matches([dict(rows[0], **change), *rows[1:]], config)['relevanceLabel'] == 'UNCERTAIN'
+    assert decide_matches([rows[0], dict(rows[1], cosine=.25), rows[2]], config)['relevanceLabel'] == 'UNCERTAIN'
+
+
+def test_intro_requires_original_adjacency_and_non_sentence_structure():
+    import math
+    v = (.22, math.sqrt(1 - .22 ** 2))
+    w = (.26, math.sqrt(1 - .26 ** 2))
+    config = GraphlessConfig(min_related_cosine=.30, related_passage_threshold=.35)
+    for kind in (PassageKind.BODY, PassageKind.OCR):
+        a, b = passage('a', '문자 누락 현상', kind, 1), passage('b', '문자를 수신한 다음 처리합니다.', kind, 2)
+        result = score_passages('UART 공부', (a, b), (1, 0), (v, w), config,
+                                intro_pairs=((a.text, b.text),))
+        assert result['matches'][0]['negativeEvidenceReason'] == 'INTRO_CONTEXT_DEFERRED'
+        assert 'followingBodyId' not in score_passages('UART 공부', (a, b), (1, 0), (v, w), config)['matches'][0]
+        for first in (passage('a', '문자를 놓친다.', kind, 1), passage('a', a.text, kind, 0),
+                      passage('a', a.text, PassageKind.HEADING, 1)):
+            output = score_passages('UART 공부', (first, b), (1, 0), (v, w), config,
+                                    intro_pairs=((first.text, b.text),))
+            assert 'followingBodyId' not in output['matches'][0]
+
+
+@pytest.mark.parametrize('text', [
+    '앞에서 본 동작을 다른 입력으로 반복해 보고 차이를 설명해 보세요.',
+    '방금 설명한 항목을 순서에 맞게 요약해 둔다.',
+    '위 내용을 참고해 결과를 단계별로 요약하고 비교합니다.',
+    '실습 결과를 예상과 비교하고 잘못된 부분이 있으면 해당 동작을 다시 추적하여 수정한다.',
+])
+def test_dependent_followup_recognizes_paraphrases(text):
+    from AI.evaluation.graphless_hybrid import is_dependent_followup
+    assert is_dependent_followup(text)
+
+
+@pytest.mark.parametrize('text', [
+    '위 내용을 참고해 친구들과 게임을 플레이한다.',
+    '예제의 결과를 확인한 다음 RTX4090 공동구매 가격을 비교한다.',
+    '앞의 설명처럼 토마토와 마늘을 넣고 조리한다.',
+    '위 결과를 참고해 주문한다.',
+    '예제의 결과를 보며 논다.',
+    '그 예제의 실행 순서',
+    'Compare the prices of the examples on a shopping website.',
+])
+def test_followup_heuristic_leaves_new_topics_actions_and_incomplete_text_unchanged(text):
+    from AI.evaluation.graphless_hybrid import is_dependent_followup
+    assert not is_dependent_followup(text)
+
+
+def test_followup_requires_original_same_source_adjacency_and_body_boundaries():
+    from AI.evaluation.graphless_hybrid import build_followup_contexts
+    a = passage('a', 'JWT 서명을 검증하고 토큰을 검사합니다.', order=1)
+    b = passage('b', '위 내용을 참고해 결과를 정리한다.', order=2)
+    pairs = ((a.text, b.text),)
+    assert len(build_followup_contexts((a,b), source_pairs=pairs)) == 1
+    assert not build_followup_contexts((a,b), source_pairs=())
+    assert not build_followup_contexts((a,b), source_pairs=pairs, max_bytes=1)
+    for first in (passage('a',a.text,PassageKind.TITLE,1), passage('a',a.text,order=0),
+                  passage('a',a.text,PassageKind.OCR,1), passage('a',a.text,PassageKind.CODE,1)):
+        assert not build_followup_contexts((first,b), source_pairs=pairs)
+    assert not build_followup_contexts((a,passage('h','# 다른 주제',PassageKind.HEADING,2),
+                                        passage('b',b.text,order=3)), source_pairs=pairs)
+
+
+def test_followup_deferral_needs_raw_related_anchor_and_context_without_promoting_or_double_counting():
+    import math
+    from AI.evaluation.graphless_hybrid import build_followup_contexts
+    def vector(v): return (v, math.sqrt(1-v*v))
+    a = passage('a','JWT 토큰의 서명을 검증합니다.',order=1)
+    b = passage('b','앞의 설명과 결과를 비교하여 정리한다.',order=2)
+    contexts = build_followup_contexts((a,b), source_pairs=((a.text,b.text),))
+    cfg = GraphlessConfig(min_related_cosine=.30,related_passage_threshold=.35)
+    def run(anchor=.6,context=.5):
+        return score_passages('JWT 토큰 검증',(a,b),(1,0),(vector(anchor),vector(.1)),cfg,
+                              followup_contexts=contexts,followup_vectors=(vector(context),))
+    result=run()
+    assert result['relevanceLabel']=='RELATED'
+    assert result['totalBodyChars']==len(a.text)+len(b.text)
+    assert result['relatedBodyChars']==len(a.text) and result['unrelatedBodyChars']==0
+    followup=result['matches'][1]
+    assert followup['unrelatedCandidate'] and not followup['unrelatedEvidence']
+    assert not followup['relatedEvidence'] and followup['cosine']==pytest.approx(.1)
+    assert followup['negativeEvidenceReason']=='FOLLOWUP_CONTEXT_DEFERRED'
+    assert not result['matches'][2]['relatedEvidence']  # Combined context adds no coverage.
+    assert run(anchor=.29)['relevanceLabel']=='UNCERTAIN'
+    assert run(context=.29)['relevanceLabel']=='UNCERTAIN'
+    with pytest.raises(ValueError,match='VECTOR_COUNT_INVALID'):
+        score_passages('JWT 토큰',(a,b),(1,0),(vector(.6),vector(.1)),cfg,followup_contexts=contexts)
+
+
+def test_followup_does_not_propagate_relevance_through_neutral_paragraphs():
+    import math
+    from AI.evaluation.graphless_hybrid import build_followup_contexts
+    ps=(passage('a','JWT 토큰 서명을 검증합니다.',order=1),
+        passage('b','앞의 설명과 결과를 비교한다.',order=2),
+        passage('c','위 결과와 예상을 비교해 정리한다.',order=3))
+    contexts=build_followup_contexts(ps,source_pairs=tuple((a.text,b.text) for a,b in zip(ps,ps[1:])))
+    low=(.1, math.sqrt(.99))
+    result=score_passages('JWT 토큰',ps,(1,0),((1,0),low,low),
+                          followup_contexts=contexts,followup_vectors=((1,0),(1,0)))
+    assert result['relevanceLabel']=='UNCERTAIN'
+    assert result['matches'][1]['negativeEvidenceReason']=='FOLLOWUP_CONTEXT_DEFERRED'
+    assert result['matches'][2]['unrelatedEvidence']

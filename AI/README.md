@@ -1,5 +1,7 @@
 # FocusOn AI
 
+> 2026-10-26: 메타데이터는 RELATED만 확정하고 나머지는 본문 재확인을 요청합니다. Chrome OCR은 P1, DOM/OCR 본문은 최대 2,000자입니다. Streamlit에서 계약의 중첩 metadata/contentPayload JSON도 입력할 수 있습니다. 공개 응답 confidence 보정과 실제 Server 연결은 미완료이며, 화면의 Hybrid 점수를 confidence로 사용하지 않습니다. [구현 범위](docs/features/screen-analysis-contract-v1-REPORT.md).
+
 FocusOn AI는 사용자의 학습 목표와 현재 화면·페이지 정보를 비교해 활동 관련성을 판단하고, 이후 학습 흐름과 사용자 상태를 보조 분석하는 Python 서비스다.
 
 ## 로컬 Streamlit 관련성 테스트 (2026-10-22)

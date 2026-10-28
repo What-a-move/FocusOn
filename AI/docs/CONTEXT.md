@@ -1,5 +1,16 @@
 # AI 작업 컨텍스트
 
+- 2026-10-26 사용자 전달 화면 분석/AI 계약 적용: 메타데이터 무관 후보는 UNCERTAIN으로 보류하고 Chrome DOM 또는 Desktop OCR로 재확인한다. Chrome viewport OCR은 P1으로 모델 무호출, Desktop의 Chrome 우회 OCR도 차단한다. text 최대 2,000자, 중첩 공개 JSON 변환 및 5종 reasonCode/신뢰도 검증 경계를 추가했다. 공개 응답은 명시적 판정 confidence가 없으면 UNCERTAIN이며, 코사인/Hybrid/OCR 품질을 confidence로 전용하지 않는다. 관련 로컬 회귀 310 passed·16 subtests passed, Streamlit 8501 health HTTP 200. 실제 Server 연결과 confidence 보정은 미완료다. [계약 정합성 보고서](features/screen-analysis-contract-v1-REPORT.md).
+
+- 2026-10-25 Streamlit 메타데이터 `title-hybrid-v2`: 일반 제목의 정보성 검사에서 구분자로 붙은 앱·브라우저 접미사와 제공된 `appName`을 제외하고, `내용`·`파일` 등 일반 표현을 주제 근거로 쓰지 않는다. 실제 임베딩에는 기존 제목 문자열을 보존하며 수치 임계값은 유지한다. 새 주제 메타데이터 120건을 실제 학교 Qwen으로 재평가해 36→66건 일치(30→55%), 모호한 30건의 무관 오판 30→0건·전부 UNCERTAIN·해당 모델 호출 0회, 새 불일치 0건이다. 90 POST·32.873초·실패 0건. 전체 불일치는 54건(공부→보류46·공부→무관6·딴짓→보류2) 남으며 합성 개발 사례에 한정한다. 관련 자동 회귀 127 passed. 결과: `evaluation/new-topic-metadata-prefilter-results.json`. 본문·운영 Graph 분석기·공개 API 계약은 이번 수정 대상이 아니다.
+
+- 2026-10-25 dependent-followup-v2 구현·실제 Qwen600건: 456→528/600(76→88%), 불일치율24→12%(12%p·상대50% 감소). 잘못된 충돌72건만 RELATED로 교정, 딴짓60/60·모호80/80·공부 무관 오판1건 유지. 새 목표 대조16건10→16건, 기존56건 유지. 자동376 passed·16 subtests passed. 한국어 수동 어휘 규칙과 문맥 임베딩을 사용한 합성 개발 결과이며 독립 실제 화면 성능은 미검증이다. [검증 보고서](features/graphless-hybrid-calibration-REPORT.md)의 후속 설명 항목 참조.
+
+- 2026-10-25 바탕화면 JSON25개·600건 전체 실제 Qwen 재평가: 이전 456/600→현재456/600, 불일치율24.00%→24.00%, 감소0.00%p(상대0.00%). 도입 조건 검토 쌍0개·근거 보류0개·라벨 변경0건. 원본 해시 불변, 최초 실패1건은 재시도 성공·최종 실패0건. [파일별 결과](features/graphless-hybrid-calibration-REPORT.md)의600건 항목을 따른다.
+
+- 2026-10-25 Streamlit 무관 근거 검토: `adjacent-intro-v1`을 추가했다. 원본에서 바로 이어진 동일 BODY/OCR의 명사형 도입 표현은 다음 설명과 문서 간 코사인≥0.50이고 다음 설명의 목표 코사인>0.25이면 무관 근거에서 보류한다. 관련 근거로 승격하지 않으며 기존 점수·커버리지 계산과 임계값은 유지한다. 추가 임베딩은 없다.
+- 실제 Qwen에서 002는 UNCERTAIN→RELATED, 대조 8건은7→8건 일치했다. 기존48건은43/48 그대로이며 기존 RELATED 오판5건은 남았다. 자동 회귀362 passed,16 subtests passed. 합성 개발/회귀 결과이며 0.50의 독립 검수는 남아 있다. [결과 기록](features/graphless-hybrid-calibration-REPORT.md)의 2026-10-25 항목을 따른다.
+
 - 2026-10-23 커밋 준비: 중복 `evaluation/AI 2/`를 ZIP 동일성 확인 후 로컬 삭제했다. `.env`·Chroma·LangSmith 수동 스크립트·중복 추출 폴더·전달용 ZIP은 업로드 대상에서 제외한다. AI 전체 회귀는360 passed, 16 subtests passed이며 실제 화면·공개 API 통합 완료를 의미하지 않는다.
 
 - 2026-10-23 Streamlit 메타데이터 전용 title-hybrid-v1 추가. 제목 V0.55/H0.60·무관V0.25(미보정), 본문 길이·커버리지 미적용. 개발 주제 합성240건 실제 Qwen191/240(79.6%), 관련→보류49건, 실패0. 무관 정답이 없어 무관 성능은 검증하지 않았다. [보고서](features/graphless-hybrid-calibration-REPORT.md).

@@ -22,6 +22,8 @@ from src.analysis.goal_graph import ContentRole
 from src.analysis.hybrid_scoring import decide_relevance
 from src.analysis.passage_grouping import build_code_context_groups
 from src.analysis.relevance_analyzer import DEFAULT_INSTRUCTION, RelevanceAnalyzer, concept_queries, next_content_source
+from src.analysis.acquisition_policy import desktop_target_block_reason
+from src.api.relevance_contract import contract_reason_code
 from src.preprocessing.adapter import adapt_content, observation_is_current, preprocessing_context
 from src.preprocessing.models import PassageKind, PreprocessingConfig
 from src.preprocessing.text_cleaner import clean_text
@@ -30,7 +32,8 @@ from src.utils.cache import TTLCache
 from AI.evaluation.similarity_methods import METHODS, Goal, PreparedCase, parse_goal, score_method
 from AI.evaluation.graphless_hybrid import (GraphlessConfig, SCORING_VERSION, build_screen_contexts,
                                            score_passages, score_metadata, metadata_titles, metadata_is_informative,
-                                           METADATA_CONFIG, METADATA_SCORING_VERSION)
+                                           METADATA_CONFIG, METADATA_SCORING_VERSION, EVIDENCE_POLICY_VERSION,
+                                           build_followup_contexts)
 
 LABELS = ("RELATED", "UNRELATED", "UNCERTAIN", "EXCLUDED", "PRIVACY_BLOCKED")
 DEFAULT_URL = "https://desktop-n7o3o02.tail1023df.ts.net"
@@ -105,6 +108,26 @@ def parse_inputs(goal_raw: str, content_raw: str, source: str, *, page_title: st
         # Only documented evaluation metadata is removed; typo fields are rejected.
         meta = {"caseId", "expectedLabel", "expectedRelevanceLabel", "expected", "purpose"}
         supplied = {k: v for k, v in payload.items() if k not in meta}
+        raw_text = supplied.get("text", "")
+        if isinstance(supplied.get("contentPayload"), dict):
+            raw_text = supplied["contentPayload"].get("text", "")
+        if isinstance(raw_text, str) and len(raw_text) > 2_000:
+            raise ValueError("CONTENT_TEXT_TOO_LONG")
+        if any(key in supplied for key in ("metadata", "contentPayload", "goalSnapshot", "guardStatus")):
+            from src.api.relevance_contract import ScreenAnalysisRequest
+            public = ScreenAnalysisRequest.parse_safe(supplied)
+            if public.goal_snapshot is not None and public.goal_snapshot != goal.text:
+                raise ValueError("DATASET_GOAL_MISMATCH")
+            supplied = {"sessionId": public.session_id, "clientRunId": public.client_run_id,
+                        "observedAt": public.observed_at.isoformat(), "sequence": public.sequence,
+                        "contentSource": public.content_source.value,
+                        "text": public.content_payload.text if public.content_payload else "",
+                        "isSensitive": public.guard_status == "PRIVACY_BLOCKED",
+                        "isExcluded": public.guard_status == "EXCLUDED"}
+            if public.metadata is not None:
+                supplied.update(public.metadata.model_dump(by_alias=True))
+            # The public contract does not yet carry OCR recognition quality.
+            # Missing quality is deliberately not replaced with the manual UI default.
         content_data = {
             "sessionId": "lab-session", "runId": "lab-run", "goalId": goal.goal_id,
             "goalVersion": goal.goal_version, "clientRunId": f"lab-{batch_id}-{index}",
@@ -206,7 +229,8 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
     query_text = f"Instruct: {DEFAULT_INSTRUCTION}\nQuery: {goal.text}"
     # This experiment judges short text by evidence, not a character minimum.
     preprocessing = PreprocessingConfig(min_text_chars=0, penalize_removed_fragments=False,
-                                        preserve_extracted_markup=True)
+                                        preserve_extracted_markup=True,
+                                        max_passage_chars=2_000)
     rows = []
     for case_id, content, context, expected in cases:
         tick = perf_counter()
@@ -238,7 +262,11 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
         elif content.extraction_status.value in {"FAILED", "UNSUPPORTED"}:
             reason = "EXTRACTION_FAILED" if content.extraction_status.value == "FAILED" else "UNSUPPORTED"
             status = "FAILED"
-        elif content.content_source.value in {"CHROME_VIEWPORT_OCR", "DESKTOP_APP_OCR"}:
+        elif desktop_target_block_reason(content.content_source, content.app_name):
+            reason = desktop_target_block_reason(content.content_source, content.app_name)
+        elif content.content_source.value == "CHROME_VIEWPORT_OCR":
+            reason = "CHROME_OCR_DEFERRED_P1"
+        elif content.content_source.value == "DESKTOP_APP_OCR":
             if content.ocr is None:
                 reason = "OCR_METADATA_REQUIRED"
             elif content.ocr.capture_status != "SUCCESS":
@@ -250,7 +278,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                     clean_text(content.window_title, PassageKind.TITLE, preprocessing.ui_fragments, strip_html=False).text)
                 if sum(len(title.encode("utf-8")) for title in titles) > 8000:
                     reason = "INCOMPLETE_REPRESENTATION"
-                elif not any(metadata_is_informative(title) for title in titles):
+                elif not any(metadata_is_informative(title, app_name=content.app_name) for title in titles):
                     # Missing/generic metadata is a completed abstention, not model failure.
                     score_result = score_metadata(goal.text, (), (), ())
                     status = "COMPLETED"
@@ -270,7 +298,8 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                         vector_by_text.update(zip(missing, vectors))
                     score_result = score_metadata(goal.text, titles, vector_by_text[query_text],
                                                   tuple(vector_by_text[text] for text in titles),
-                                                  allow_unrelated=content.extraction_status.value == "SUCCESS")
+                                                  allow_unrelated=content.extraction_status.value == "SUCCESS",
+                                                  app_name=content.app_name)
                     status = "COMPLETED"
             elif reason is None:
                 request = adapt_content(content, context)
@@ -291,11 +320,17 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                                   for a, b in zip(request.passages, request.passages[1:])
                                   if a.kind in {PassageKind.BODY, PassageKind.OCR} and b.kind is PassageKind.CODE)
                     groups = build_code_context_groups(prepared.passages, source_pairs=pairs)
+                    intro_pairs = tuple((clean_text(a.text, a.kind, preprocessing.ui_fragments, strip_html=False).text,
+                                         clean_text(b.text, b.kind, preprocessing.ui_fragments, strip_html=False).text)
+                                        for a, b in zip(request.passages, request.passages[1:])
+                                        if a.kind in {PassageKind.BODY, PassageKind.OCR} and b.kind == a.kind)
                     window_title = clean_text(content.window_title, PassageKind.TITLE,
                                               preprocessing.ui_fragments, strip_html=False).text
                     screen_contexts = build_screen_contexts(prepared.passages, window_title=window_title)
+                    followups = build_followup_contexts(prepared.passages, source_pairs=intro_pairs)
                     texts = (tuple(p.text for p in prepared.passages) + tuple(g.passage.text for g in groups)
-                             + tuple(g.passage.text for g in screen_contexts))
+                             + tuple(g.passage.text for g in screen_contexts)
+                             + tuple(g.passage.text for g in followups))
                     inputs = tuple(dict.fromkeys((query_text, *texts)))
                     vector_by_text, missing = {}, []
                     for text in inputs:
@@ -316,6 +351,9 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                         context_vectors=tuple(vector_by_text[g.passage.text] for g in groups),
                         screen_contexts=screen_contexts,
                         screen_vectors=tuple(vector_by_text[g.passage.text] for g in screen_contexts),
+                        intro_pairs=intro_pairs,
+                        followup_contexts=followups,
+                        followup_vectors=tuple(vector_by_text[g.passage.text] for g in followups),
                         allow_unrelated=content.extraction_status.value == "SUCCESS",
                     )
                     status = "COMPLETED"
@@ -331,13 +369,14 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
             recorded.vectors.clear()
         evidence_ids = set(score_result["evidenceIds"])
         body_scores = [item["hybridScore"] for item in score_result["matches"]
-                       if item["kind"] not in {"TITLE", "HEADING"} and item["unitType"] != "SCREEN_CONTEXT"]
-        context_scores = [item["hybridScore"] for item in score_result["matches"] if item["unitType"] == "SCREEN_CONTEXT"]
+                       if item["kind"] not in {"TITLE", "HEADING"}
+                       and item["unitType"] not in {"SCREEN_CONTEXT", "FOLLOWUP_CONTEXT"}]
+        context_scores = [item["hybridScore"] for item in score_result["matches"]
+                          if item["unitType"] in {"SCREEN_CONTEXT", "FOLLOWUP_CONTEXT"}]
         metadata_scores = [item["hybridScore"] for item in score_result["matches"] if item["kind"] in {"TITLE", "HEADING"}]
         evidence_scores = [item["hybridScore"] for item in score_result["matches"] if item["relatedEvidence"]]
         fallback = next_content_source(content.content_source, score_result["relevanceLabel"],
-                                       "METADATA_INSUFFICIENT" if is_metadata and score_result["relevanceLabel"] == "UNCERTAIN"
-                                       else score_result["reasonCode"])
+                                       score_result["reasonCode"])
         elapsed_ms = (perf_counter() - tick) * 1000
         embedding_ms = recorded.embedding_ms - embedding_before
         rows.append({
@@ -347,6 +386,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                 "generalTerms", "goalPhrases", "keywordWeights",
                 "relatedCoverage", "unrelatedCoverage", "totalBodyChars", "relatedBodyChars", "unrelatedBodyChars", "matches")},
             "scoringVersion": METADATA_SCORING_VERSION if is_metadata else SCORING_VERSION,
+            "evidencePolicyVersion": METADATA_SCORING_VERSION if is_metadata else EVIDENCE_POLICY_VERSION,
             "analysisPath": "METADATA" if is_metadata else "BODY",
             "coverageApplicable": not is_metadata,
             "score": max(metadata_scores if is_metadata else body_scores, default=None),
@@ -359,6 +399,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                          + ([{"id": item["passageId"], "kind": "TITLE", "text": item["text"]}
                              for item in score_result["matches"] if item["passageId"] in evidence_ids] if is_metadata else []),
             "nextContentSource": fallback.value if fallback else None,
+            "publicReasonCode": contract_reason_code(score_result["relevanceLabel"], score_result["reasonCode"]),
             "cacheHit": status == "COMPLETED" and getattr(client, "calls", 0) == calls_before,
             "embeddingMs": round(embedding_ms, 2), "localMs": round(max(0, elapsed_ms - embedding_ms), 2),
             "openaiCalls": 0, "openaiMs": 0.0,
@@ -378,6 +419,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
     embedding_ms = recorded.embedding_ms - embedding_start
     return {"rows": rows, "summary": summary, "graph": None, "graphMs": 0.0,
             "scoringVersion": SCORING_VERSION,
+            "evidencePolicyVersion": EVIDENCE_POLICY_VERSION,
             # This path has no OpenAI client; zero means not invoked, not a fast response.
             "openaiCalls": 0, "openaiMs": 0.0,
             "metadataScoringVersion": METADATA_SCORING_VERSION, "metadataConfig": {key: getattr(METADATA_CONFIG, key) for key in
