@@ -34,12 +34,8 @@ REASONS = {
     "INSUFFICIENT_BODY": "분석할 본문이 부족합니다. 제목만으로 본문 커버리지를 계산하지 않습니다.",
     "MODEL_OR_SCORING_FAILED": "임베딩 요청 또는 벡터 계산에 실패했습니다. 관련성 정답으로 집계하지 않습니다.",
     "INCOMPLETE_REPRESENTATION": "본문이 잘려 전체 화면을 대표한다고 볼 수 없어 판정을 보류했습니다.",
-    "GOAL_CONNECTED": "관련 개념의 근거와 본문 커버리지가 기준을 통과했습니다.",
-    "POSITIVE_UNRELATED_TOPIC": "목표와 무관한 주제의 양성 근거와 커버리지가 기준을 통과했습니다.",
     "INSUFFICIENT_EVIDENCE": "관련 본문 근거가 확인되지 않았고 무관 판정 조건도 충족하지 못했습니다. 관련 커버리지 60% 미달 때문에 보류한 것은 아닙니다.",
     "CONFLICTING_EVIDENCE": "관련 근거와 무관 근거가 함께 통과해 판정을 보류했습니다.",
-    "METADATA_GOAL_CONNECTED": "제목 등 메타데이터에서 관련 개념 별칭이 충분히 확인됐습니다.",
-    "METADATA_UNRELATED_TOPIC": "메타데이터에서 무관 주제 별칭이 충분히 확인됐습니다.",
     "METADATA_INSUFFICIENT": "메타데이터만으로 부족해 다음 수집 단계가 필요합니다.",
     "BLACK_SCREEN": "검은 화면이므로 관련성을 판정하지 않았습니다.",
     "OCR_METADATA_REQUIRED": "JSON에 OCR confidence와 captureStatus가 필요합니다.",
@@ -68,11 +64,6 @@ def main():
     except (ValueError, TypeError, KeyError):
         st.error("점수 보정 설정의 버전·검증 상태가 맞지 않습니다. 보정 보고서와 설정 파일을 확인하세요.")
         return
-    # Release the previous graph-based UI runtime when this page hot reloads.
-    old_runtime = st.session_state.pop("hybrid_runtime", None)
-    if old_runtime is not None:
-        old_runtime.close()
-    st.session_state.pop("resolver", None)
     st.title("FocusOn 키워드 + 벡터 Hybrid 테스트")
     st.caption("Graph 없는 Streamlit 실험 · 10/26 MVP 수집 정책 · DOM/OCR 최대 2,000자")
     st.caption("메타데이터는 RELATED만 확정합니다. 나머지는 Chrome DOM 또는 Desktop OCR로 재확인하며, Chrome OCR은 P1입니다.")

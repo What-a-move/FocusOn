@@ -228,7 +228,6 @@ def test_expectations_do_not_enter_embedding_and_goal_vectors_are_reused():
     first = compare_graphless(goal, cases, client, session=runtime)
     assert first["rows"][0]["relevanceLabel"] == "RELATED"
     assert first["embeddingCalls"] == 1
-    assert first["graph"] is None
     assert first["openaiCalls"] == first["openaiMs"] == 0
     assert first["rows"][0]["openaiCalls"] == first["rows"][0]["openaiMs"] == 0
     assert len(client.inputs) == 2  # Goal + body in one request.
@@ -415,7 +414,7 @@ def test_calibration_loader_rejects_stale_or_unsafe_settings(tmp_path):
     import hashlib
     from dataclasses import asdict
     from AI.evaluation.graphless_hybrid import load_calibrated_config, SCORING_VERSION, KEYWORD_EXTRACTOR_VERSION
-    from src.analysis.relevance_analyzer import DEFAULT_INSTRUCTION
+    from src.models.embedding_client import DEFAULT_INSTRUCTION
     target = tmp_path / 'config.json'
     cfg, meta = load_calibrated_config(target)
     assert meta['status'] == 'UNCALIBRATED'

@@ -23,15 +23,13 @@ def test_page_requires_compare_click_and_hides_results_after_input_edit(monkeypa
     calls = []
     runtimes = []
     configs = []
-    monkeypatch.setenv("GOAL_GRAPH_LLM_API_KEY", "")
-    monkeypatch.setenv("GOAL_GRAPH_LLM_MODEL", "")
 
     def compare_graphless(*args, **kwargs):
         calls.append(args)
         runtimes.append(kwargs["session"])
         configs.append(kwargs["config"])
-        return {"graphMs": 0, "totalMs": 10, "embeddingCalls": 0,
-                "rows": [], "graph": None, "config": {},
+        return {"totalMs": 10, "embeddingCalls": 0,
+                "rows": [], "config": {},
                 "summary": [{"방식": "6", "기대 일치": "1/1", "기대 일치율 %": 100}]}
     monkeypatch.setattr(streamlit_runner, "compare_graphless", compare_graphless)
     app = AppTest.from_file(str(APP), default_timeout=15).run()
@@ -93,10 +91,6 @@ def test_different_dataset_goal_is_explained_before_inference(monkeypatch):
 
 def test_graphless_page_renders_scores_coverage_and_uses_no_graph(monkeypatch):
     from src.models import embedding_client
-    from src.analysis import goal_graph_runtime
-
-    def forbidden(*args, **kwargs):
-        pytest.fail("Graph generation must not run from the graphless page")
 
     class Client:
         fingerprint, dimensions = "ui-synthetic", 2
@@ -111,7 +105,6 @@ def test_graphless_page_renders_scores_coverage_and_uses_no_graph(monkeypatch):
         def close(self):
             pass
 
-    monkeypatch.setattr(goal_graph_runtime, "build_goal_graph_resolver", forbidden)
     monkeypatch.setattr(embedding_client, "OllamaEmbeddingClient", Client)
     app = AppTest.from_file(str(APP), default_timeout=15).run()
     app.button[0].click().run()

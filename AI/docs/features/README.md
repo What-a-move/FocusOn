@@ -24,5 +24,5 @@ relevance-analysis-REPORT.md
 ## 학교 캡스톤 구현 지침
 
 - [입력 검증·전처리와 Hybrid 6번 관련성 구현·테스트 지침](learning-goal-content-relevance-evaluation-PLAN.md): 통합 #11의 이재빈 노션 두 문서 기준. 모델 없는 테스트와 실제 Qwen3 4B 평가를 구분한다.
-- [학교 Windows Ollama 임베딩 설치·테스트 지침](school-ollama-embedding-SETUP.md): Qwen3 4B·FP16 설치, PowerShell API·속도 확인, Mac SSH 연결. 학교 실기 검증 전이며 추후 vLLM 전환 계획과 구분한다.
-- [통합 #11 실제 구현·검증 결과](learning-goal-content-relevance-evaluation-REPORT.md): 전처리·Graph·Hybrid·Ollama Client·합성 CLI 구현과 학교 실측·공개 API 잔여 범위.
+- [학교 Windows Ollama 임베딩 설치·테스트 지침](school-ollama-embedding-SETUP.md): 현재 Qwen 벡터 API·Tailscale 연결 확인과 Mac Kiwi Hybrid 실행. Graph/OpenAI 생성 설정은 제거했다.
+- [통합 #11 실제 구현·검증 결과](learning-goal-content-relevance-evaluation-REPORT.md): 이전 Graph 실험의 구현·학교 실측 이력. 현재 코드 실행은 AI README와 화면 계약 보고서를 따른다.

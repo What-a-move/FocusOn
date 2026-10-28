@@ -17,11 +17,13 @@
 ## 코드 연결 방법
 
 - 입력: `src.api.relevance_contract.ScreenAnalysisRequest.parse_safe(payload)` → Server가 검증한 ConfirmedGoal/VerifiedContext/extraction_status 및 별도 OCRMetadata로 `adapt_screen_request(...)` 호출.
-- 판정: 기존 내부 분석기 호출. 현재 Streamlit의 최신 수치/점수 경로는 Graphless이며 기존 graph 기반 RelevanceAnalyzer와 별개다.
+- 판정: 현재 평가 경로는 `streamlit_runner.compare_graphless`의 Kiwi + Qwen Hybrid다. 2026-10-28 미사용 Graph 분석기를 제거했으며 공개 Server 실행 연결은 후속 작업이다.
 - 출력: 내부 라벨/사유와 명시적인 **판정 confidence**를 `public_response(...)`에 전달. `.model_dump(mode="json", by_alias=True)`로 공개 JSON 생성.
 - guardStatus는 Server에서 저장하고 AI Adapter를 호출하지 않는다. 현재 routes.py는 비어 있으므로 이 함수 구현이 HTTP API 배포 완료를 뜻하지 않는다.
 
 ## 검증
+
+아래 10/26 테스트 수치는 Graph 코드 삭제 전 이력이다. 10/28 정리 후의 회귀 결과는 PR #43과 현재 CONTEXT 기록을 따른다.
 
 - 모델/네트워크 없는 관련 회귀: 310 passed, 16 subtests passed. 공개 JSON·2,000자 경계·PII/차단·stale·enum/신뢰도·Chrome OCR 미호출·단계 전환·Streamlit UI를 확인했다.
 - 실행 환경: 별도 기존 Python 3.13 venv의 Pydantic 2.14.1/Kiwi/Streamlit/Pytest. 원본 .env 기반 Graph LLM/DB 연결은 빈 환경 변수로 꺼서 테스트했다.
@@ -51,3 +53,10 @@
 2. 공개 계약에서 Desktop OCR 인식 품질의 위치와 Server 검증 책임을 합의한다. Client 원문 삭제와 민감 화면 전체 차단은 서로 다른 동작이므로 최신 개인정보 기준을 적용한다.
 3. Server가 최신 세션·기기·출처 간 observedAt·정책 버전을 제공하고 Public Adapter를 실제 실행 경로에 연결한다. Policy Engine에서 메타데이터 UNRELATED는 이탈에 넣지 않고 UNCERTAIN 수신 시 연속 구간을 끊는다.
 4. 실제 대상 창/Chrome DOM 수집, 순서 역전, 제외·민감 화면 전환, 모델 장애, 종료 세션에서 Client → Server → AI → Validator/Policy Engine 왕복을 검증한다.
+
+## 2026-10-28 미사용 Graph 제거 후 확인
+
+- 목표 Graph 생성·OpenAI Client·ChromaDB 저장·Graph 분석기·이전 비교/평가 CLI를 삭제하고, 벡터 수학과 기존 retrieval 지침을 독립 모듈로 옮겼다. 현재 점수·정답·공개 계약은 유지했다.
+- 전체 AI 회귀는 262 passed, 16 subtests passed. 삭제된 Graph 전용 테스트 수를 포함한 과거 총계와 직접 비교하지 않는다. 공통 벡터·Schema·캐시·문단 묶음 검사는 유지했다.
+- 기존 고정 48건에서 동일한 합성 벡터를 사용해 삭제 전후 라벨·점수·근거·커버리지·임베딩 입력 해시가 일치했다. Qwen/OpenAI 실측·독립 정확도 테스트는 수행하지 않았다.
+- 공개 Backend 라우트·confidence 보정·운영 이벤트 멱등/역순 적용·실제 수집은 계속 후속 작업이다.

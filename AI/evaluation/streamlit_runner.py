@@ -1,4 +1,4 @@
-"""Streamlit-only harness; production method 6 plus existing comparison baselines."""
+"""Streamlit harness for the current Kiwi keyword + Qwen vector Hybrid path."""
 from __future__ import annotations
 
 import hashlib
@@ -17,19 +17,15 @@ if str(AI_ROOT) not in sys.path:
     sys.path.insert(0, str(AI_ROOT))
 
 from src.api.schemas import ConfirmedGoal, ContentInput, Observation, VerifiedContext
-from src.analysis.goal_analyzer import GoalGraphResolver
-from src.analysis.goal_graph import ContentRole
-from src.analysis.hybrid_scoring import decide_relevance
 from src.analysis.passage_grouping import build_code_context_groups
-from src.analysis.relevance_analyzer import DEFAULT_INSTRUCTION, RelevanceAnalyzer, concept_queries, next_content_source
-from src.analysis.acquisition_policy import desktop_target_block_reason
+from src.models.embedding_client import DEFAULT_INSTRUCTION
+from src.analysis.acquisition_policy import next_content_source, desktop_target_block_reason
 from src.api.relevance_contract import contract_reason_code
 from src.preprocessing.adapter import adapt_content, observation_is_current, preprocessing_context
 from src.preprocessing.models import PassageKind, PreprocessingConfig
 from src.preprocessing.text_cleaner import clean_text
 from src.preprocessing.validator import contains_sensitive_data, validate_and_preprocess
 from src.utils.cache import TTLCache
-from AI.evaluation.similarity_methods import METHODS, Goal, PreparedCase, parse_goal, score_method
 from AI.evaluation.graphless_hybrid import (GraphlessConfig, SCORING_VERSION, build_screen_contexts,
                                            score_passages, score_metadata, metadata_titles, metadata_is_informative,
                                            METADATA_CONFIG, METADATA_SCORING_VERSION, EVIDENCE_POLICY_VERSION,
@@ -174,38 +170,6 @@ class RecordingClient:
         if any(vector is None for vector in vectors):
             raise LookupError("DIAGNOSTIC_VECTORS_EXPIRED")
         return vectors
-
-    def encode(self, texts, **_):
-        # Existing baselines supplied E5 prefixes; translate to the current Qwen format.
-        return self.embed(tuple(
-            f"Instruct: {DEFAULT_INSTRUCTION}\nQuery: {text[7:]}" if text.startswith("query: ")
-            else text[9:] if text.startswith("passage: ") else text for text in texts))
-
-
-def _trace(analyzer, recorded, graph, request, prepared):
-    pairs = tuple((clean_text(a.text, a.kind, analyzer.preprocessing.ui_fragments).text,
-                   clean_text(b.text, b.kind, analyzer.preprocessing.ui_fragments).text)
-                  for a, b in zip(request.passages, request.passages[1:])
-                  if a.kind in {PassageKind.BODY, PassageKind.OCR} and b.kind is PassageKind.CODE)
-    groups = build_code_context_groups(prepared.passages, max_bytes=analyzer.code_context_max_bytes, source_pairs=pairs)
-    decision = decide_relevance(prepared.passages, graph,
-        recorded.lookup(tuple(p.text for p in prepared.passages)),
-        recorded.lookup(concept_queries(graph, analyzer.instruction)), analyzer.hybrid,
-        context_groups=groups, context_vectors=recorded.lookup(tuple(g.passage.text for g in groups)))
-    return decision
-
-
-class HybridSession:
-    """Per-browser runtime; reuse HTTP connections and bounded analyzer caches."""
-    def __init__(self, client, resolver):
-        self.client = client
-        self.recorded = RecordingClient(client)
-        self.analyzer = RelevanceAnalyzer(self.recorded, goal_graph_resolver=resolver)
-
-    def close(self):
-        self.analyzer.clear_caches()
-        self.recorded.vectors.clear()
-        self.client.close()
 
 
 class GraphlessSession:
@@ -417,7 +381,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
     }]
     total_ms = (perf_counter() - started) * 1000
     embedding_ms = recorded.embedding_ms - embedding_start
-    return {"rows": rows, "summary": summary, "graph": None, "graphMs": 0.0,
+    return {"rows": rows, "summary": summary,
             "scoringVersion": SCORING_VERSION,
             "evidencePolicyVersion": EVIDENCE_POLICY_VERSION,
             # This path has no OpenAI client; zero means not invoked, not a fast response.
@@ -426,123 +390,4 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                 ("keyword_boost", "min_related_cosine", "related_passage_threshold", "unrelated_cosine_threshold")},
             "config": asdict(config), "totalMs": round(total_ms, 2), "embeddingMs": round(embedding_ms, 2),
             "localMs": round(max(0, total_ms - embedding_ms), 2),
-            "embeddingCalls": getattr(client, "calls", 0) - calls_start}
-
-
-def compare(goal, cases, selected, client, resolver: GoalGraphResolver, *, reranker=None,
-            session: HybridSession | None = None):
-    """One comparison run; returns session-local results, never saves screen text."""
-    if not selected or any(method not in METHODS for method in selected):
-        raise ValueError("비교할 방식을 선택하세요.")
-    started = perf_counter()
-    calls_start = getattr(client, "calls", 0)
-    # Reuse exactly this graph in the production analyzer and comparison baselines.
-    graph_start = perf_counter()
-    graph = resolver.resolve(goal) if set(selected) - {"1", "3"} else None
-    graph_ms = (perf_counter() - graph_start) * 1000
-    recorded = session.recorded if session else RecordingClient(client)
-    embedding_start = recorded.embedding_ms
-    class FixedResolver:
-        def resolve(self, _):
-            return graph
-    analyzer = session.analyzer if session else RelevanceAnalyzer(recorded, goal_graph_resolver=FixedResolver())
-    baseline = parse_goal(goal.text)
-    semantic_goal = baseline
-    if graph:
-        direct = tuple(dict.fromkeys(a for c in graph.concepts if c.role is ContentRole.DIRECT for a in c.aliases))
-        support = tuple(dict.fromkeys(a for c in graph.concepts if c.role is not ContentRole.DIRECT for a in c.aliases))
-        baseline = Goal(goal.text, baseline.base_terms, direct, support, True)
-        # Method 4 embeds concepts, rather than making a separate query for every alias.
-        semantic_goal = Goal(goal.text, baseline.base_terms,
-            tuple(c.description for c in graph.concepts if c.role is ContentRole.DIRECT),
-            tuple(c.description for c in graph.concepts if c.role is not ContentRole.DIRECT), True)
-    rows = []
-    for case_id, content, context, expected in cases:
-        request = adapt_content(content, context)
-        prepared = validate_and_preprocess(request, preprocessing_context(context), analyzer.preprocessing)
-        clean = PreparedCase(case_id, tuple((p.id, p.kind.value, p.text) for p in prepared.passages),
-                             prepared.status, prepared.should_analyze, ", ".join(r.value for r in prepared.reasons))
-        for method in selected:
-            tick = perf_counter()
-            embedding_before = recorded.embedding_ms
-            calls_before = getattr(client, "calls", 0)
-            row = {"caseId": case_id, "method": method, "methodName": METHODS[method], "expectedLabel": expected,
-                   "score": None, "scoreType": "—", "matches": [], "evidence": [], "nextContentSource": None}
-            # Run the real analyzer's policy/quality gate before any baseline model work.
-            # Failed, private, inactive or stale inputs must not bypass current protections.
-            try:
-                if method == "6":
-                    result = analyzer.analyze(content, goal, context, current_context=lambda: context)
-                    row.update(status=result.analysis_status, relevanceLabel=result.relevance_label,
-                               reasonCode=result.reason_code, contentRoles=[r.value for r in result.content_roles],
-                               nextContentSource=result.next_content_source, evidenceIds=list(result.evidence_ids),
-                               cacheHit=result.cache_hit)
-                    if result.relevance_label in {"EXCLUDED", "PRIVACY_BLOCKED"}:
-                        recorded.vectors.clear()
-                    if result.analysis_status == "SUCCEEDED" and content.content_source.value not in {"TAB_META", "APP_META"}:
-                        try:
-                            decision = _trace(analyzer, recorded, graph, request, prepared)
-                        except LookupError:
-                            decision = None  # Do not repeat inference merely to draw diagnostic scores.
-                            row["detail"] = "판정 캐시를 재사용했습니다. 상세 벡터가 만료되어 개념별 점수는 표시하지 않습니다."
-                    else:
-                        decision = None
-                    if decision is not None:
-                        if (decision.label, decision.reason_code) != (result.relevance_label, result.reason_code):
-                            raise ValueError("DIAGNOSTIC_MISMATCH")
-                        row["matches"] = [asdict(match) for match in decision.matches]
-                        row["score"] = max((m.hybrid_score for m in decision.matches), default=None)
-                        row["scoreType"] = "최대 개념 결합점수 (최종 판정은 근거·커버리지 포함)"
-                else:
-                    # A no-vector client lets the same production code validate policy gates.
-                    # An otherwise analyzable content reaches embeddings and stops there.
-                    class GateClient:
-                        fingerprint, dimensions = "gate-only", client.dimensions
-                        def embed(self, _):
-                            from src.models.embedding_client import EmbeddingError
-                            raise EmbeddingError("EMBEDDING_UNAVAILABLE")
-                    gate = RelevanceAnalyzer(GateClient(), goal_graph_resolver=FixedResolver() if graph else GoalGraphResolver())
-                    guard = gate.analyze(content, goal, context, current_context=lambda: context)
-                    if guard.reason_code != "EMBEDDING_UNAVAILABLE":
-                        row.update(status="SKIPPED", relevanceLabel=guard.relevance_label,
-                                   reasonCode=guard.reason_code, evidenceIds=list(guard.evidence_ids))
-                        if content.content_source.value in {"TAB_META", "APP_META"}:
-                            row.update(status="NOT_RUN", relevanceLabel="UNCERTAIN", evidenceIds=[])
-                            row["detail"] = "이 비교 방식은 DOM/OCR 본문 입력을 사용합니다. 메타데이터는 6번에서 확인하세요."
-                    else:
-                        result = score_method(method, semantic_goal if method == "4" else baseline,
-                                              clean, recorded, reranker)
-                        row.update(status=result.status, relevanceLabel=result.relevance_label,
-                                   reasonCode=result.reason_code, evidenceIds=list(result.evidence_ids),
-                                   score=result.score, scoreType=result.score_name, detail=result.detail or result.reason)
-                ids = row.get("evidenceIds", [])
-                row["evidence"] = [{"id": p.id, "kind": p.kind.value, "text": p.text}
-                                   for p in prepared.passages if p.id in ids]
-                if row.get("reasonCode", "").startswith("METADATA_"):
-                    row["evidence"] = [{"id": name, "text": content.model_dump(by_alias=True).get(name, "")} for name in ids]
-            except Exception:
-                # Never serialize provider error messages, input values, URLs or credentials.
-                row.update(status="ERROR", relevanceLabel="UNCERTAIN", reasonCode="ANALYSIS_UNAVAILABLE",
-                           detail="모델 연결 또는 계산 실패. 설정과 모델 서버를 확인하세요.")
-            row["elapsedMs"] = round((perf_counter() - tick) * 1000, 2)
-            row["embeddingMs"] = round(recorded.embedding_ms - embedding_before, 2)
-            row["localMs"] = round(max(0, row["elapsedMs"] - row["embeddingMs"]), 2)
-            row["embeddingCalls"] = getattr(client, "calls", 0) - calls_before
-            valid = row["status"] not in {"ERROR", "FAILED", "NOT_RUN"}
-            row["matchesExpected"] = valid and row["relevanceLabel"] == expected if expected else None
-            rows.append(row)
-    summary = []
-    for method in selected:
-        subset = [r for r in rows if r["method"] == method]
-        labelled = [r for r in subset if r["expectedLabel"] is not None]
-        summary.append({"방식": f"{method}. {METHODS[method]}", "사례 수": len(subset),
-                        "실행 오류/미실행": sum(r["status"] in {"ERROR", "FAILED", "NOT_RUN"} for r in subset),
-                        "기대 일치": f"{sum(r['matchesExpected'] is True for r in labelled)}/{len(labelled)}" if labelled else "기대 라벨 없음",
-                        "기대 일치율 %": round(100 * sum(r["matchesExpected"] is True for r in labelled) / len(labelled), 1) if labelled else None,
-                        "평균 시간 ms": round(sum(r["elapsedMs"] for r in subset) / len(subset), 2)})
-    total_ms = (perf_counter() - started) * 1000
-    embedding_ms = recorded.embedding_ms - embedding_start
-    return {"rows": rows, "summary": summary, "graph": asdict(graph) if graph else None,
-            "graphMs": round(graph_ms, 2), "totalMs": round(total_ms, 2),
-            "embeddingMs": round(embedding_ms, 2), "localMs": round(max(0, total_ms - graph_ms - embedding_ms), 2),
             "embeddingCalls": getattr(client, "calls", 0) - calls_start}

@@ -11,7 +11,10 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from ..analysis.hybrid_scoring import VectorError, normalize_vector
+from ..analysis.vector_math import VectorError, normalize_vector
+
+# Keep the evaluated retrieval instruction stable across this code cleanup.
+DEFAULT_INSTRUCTION = "Retrieve passages useful for the given learning goal and concept."
 
 
 class EmbeddingError(RuntimeError):

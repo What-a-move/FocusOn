@@ -83,3 +83,5 @@ Server와 AI 사이 호출 경로·Schema·상태 투영을 확정하고 Issue #
 - 독립 검수 자료로 판정 confidence를 보정한다. 보정 전에는 cosine/Hybrid/OCR confidence로 RELATED·UNRELATED confidence를 만들지 않는다.
 - 실제 Client → Server → AI → 결과 검증/정책 적용 왕복에서 메타데이터 재확인, stale/순서 역전, 제외·민감 화면, 모델 장애를 검증한다.
 - Desktop OCR 품질 메타데이터의 계약 위치와 전달 책임을 합의한다.
+
+- 현재 Kiwi + Qwen Hybrid를 공개 Server 실행 경로에 연결할 때 사용자·목표·출처별 캐시 격리, 현재 문맥 재확인, 이벤트 멱등·역순 폐기를 명시적으로 구현한다. 삭제한 Graph 분석기의 이전 테스트를 현재 경로의 보장으로 전용하지 않는다.

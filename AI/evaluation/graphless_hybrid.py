@@ -11,7 +11,7 @@ from functools import lru_cache
 from typing import Sequence
 from pathlib import Path
 
-from src.analysis.hybrid_scoring import cosine_similarity
+from src.analysis.vector_math import cosine_similarity
 from src.preprocessing.models import CleanedPassage, PassageKind
 from src.analysis.passage_grouping import CodeContextGroup
 
@@ -129,7 +129,7 @@ def load_calibrated_config(path: Path | None = None) -> tuple[GraphlessConfig, d
     if not path.exists():
         return GraphlessConfig(), {"status": "UNCALIBRATED"}
     value = json.loads(path.read_text(encoding="utf-8"))
-    from src.analysis.relevance_analyzer import DEFAULT_INSTRUCTION
+    from src.models.embedding_client import DEFAULT_INSTRUCTION
     embedding = value.get("embedding", {})
     if (value.get("scoringVersion") != SCORING_VERSION
             or value.get("keywordExtractorVersion") != KEYWORD_EXTRACTOR_VERSION

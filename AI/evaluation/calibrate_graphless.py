@@ -235,7 +235,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     from AI.evaluation.graphless_hybrid import SCORING_VERSION, KEYWORD_EXTRACTOR_VERSION
     from src.models.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
-    from src.analysis.relevance_analyzer import DEFAULT_INSTRUCTION
+    from src.models.embedding_client import DEFAULT_INSTRUCTION
 
     fixture_bytes = args.fixture.read_bytes()
     fixture = json.loads(fixture_bytes)
