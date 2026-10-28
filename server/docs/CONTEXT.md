@@ -9,6 +9,8 @@
 
 ## 현재 작업 (2026-10-28)
 
+- 2026-10-28 Issue #87: `feat/87-goal-create-read`에서 수동 목표 저장·본인 상세 조회를 구현 중이다. AI 명확화 이력 검증은 선행 기능이 없어 미완료이며, 상세 검증 현황은 `features/goal-create-read-REPORT.md`를 따른다.
+
 - Issue #58, feat/#58-extension-pairing, 최초 기준 origin/dev b293bf1에서 구현하고 최신 dev 6c93515를 통합했다. server/만 수정했고 PR은 아직 생성하지 않았다.
 - Issue #83: 닉네임 유일 제약 오류 변환, 동의·집중 설정 저장 잠금, 고정 닉네임 테스트를 수정했다. 사용자 결정으로 최신 동의 출처를 저장한다. PostgreSQL 동시 시작 테스트는 통과했지만 닉네임 사전 검사 두 건이 겹쳤는지는 확인하지 못했다. 상세는 `features/user-configuration-review-REPORT.md`를 따른다.
 - Issue #38 사용자 설정 API: 도메인 반복 교체 충돌과 닉네임 문자 검증을 수정하고 계정 격리 테스트를 보강했다. 실행 중인 PostgreSQL에서 Flyway V1~V3 성공 기록과 Docker 서버 8개 API의 무인증 401을 확인했다. 최신 로컬 변경의 실계정 HTTP 재검증과 Notion 오류·권한 상세 대조가 남아 있다. 상세는 `features/user-configuration-REPORT.md`를 따른다.
