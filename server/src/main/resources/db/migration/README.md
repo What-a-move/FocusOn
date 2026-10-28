@@ -7,7 +7,9 @@
 ```text
 V1__create_initial_schema.sql
 V2__enforce_auth_ownership.sql
-V3__add_device_pairing.sql
+V3__create_user_configuration.sql
+V4__add_consent_source.sql
+V5__add_device_pairing.sql
 ```
 
 - 한 번 적용된 migration 파일은 수정하지 않고 다음 버전 파일을 추가한다.
