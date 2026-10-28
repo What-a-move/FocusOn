@@ -65,8 +65,11 @@
 | `X-Device-Id: {deviceId}` | 해당 Notion endpoint의 필수 헤더에 기재된 요청 |
 | `Idempotency-Key: {key}` | 세션 생성·일시정지·재개·연장·종료 |
 | `If-Match-Version: {version}` | 기존 세션의 일시정지·재개·연장·종료 |
+| `X-Trace-Id: {uuid}` | 모든 API 요청. 클라이언트가 요청마다 UUID v4로 만들고, `analysis-runs`는 `clientRunId`와 같은 값을 쓴다 |
 
-Heartbeat에는 `Authorization`과 `X-Device-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
+`X-Trace-Id`는 모듈 간 로그를 잇는 용도로만 쓴다. Server는 형식이 맞으면(UUID 형태, 64자 이하) 그대로, 없거나 틀리면 새로 만들어 로그의 `traceId`로 남기고 응답 헤더 `X-Trace-Id`로 돌려준다. Server가 만드는 `requestId`는 그대로 유지하며, `traceId`를 인증·권한·중복 판단·DB 키에 쓰지 않는다. 세부 규칙은 Notion [모듈 연동 로깅 규칙](https://app.notion.com/p/4070b6e5e64c8156abc9d1bff00aef88)을 따른다.
+
+Heartbeat에는 `Authorization`, `X-Device-Id`, `X-Trace-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
 
 `POST /api/v1/auth/refresh`는 `Authorization` 헤더 대신 JSON body의 `refreshToken`으로 인증한다. 각 endpoint의 실제 필수 헤더는 Notion API DB 항목을 따른다. 성공 응답의 `data`에는 새 `accessToken`, 새 `refreshToken`, UTC ISO 8601 `accessTokenExpiresAt`을 담는다. 클라이언트는 single-flight로 1회 호출한 뒤 원 요청을 1회만 재시도한다.
 

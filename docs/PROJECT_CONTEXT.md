@@ -44,6 +44,7 @@ Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback 
 | ERD | https://app.notion.com/p/ERD-3de0b6e5e64c80a4bf5ef7ff3ac01f17 |
 | 세션 상태 전이 정책 | https://app.notion.com/p/3de0b6e5e64c80cc8140f659abd82371 |
 | AI 분석 계약 | https://app.notion.com/p/AI-3de0b6e5e64c80fbb0bccb985e38002c |
+| 모듈 연동 로깅 규칙 | https://app.notion.com/p/4070b6e5e64c8156abc9d1bff00aef88 |
 
 | 필요한 정보 | 우선 확인할 곳 |
 | --- | --- |

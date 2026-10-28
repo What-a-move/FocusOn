@@ -4,6 +4,10 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 설정 화면 집중·분석·권한·화면 (Issue #80, `feat/80-desktop-settings`)
+- 상태: 화면·설정 IPC·화면 모드 구현(2026-10-27). 남은 일: focus-settings·analysis-excluded-domains API 병합 뒤 실제 계정 QA와 REPORT, 실제 Electron에서 화면 모드 전환·재실행 유지 확인.
+- 다음 Issue 후보: 설정 계정·기기 연결 탭(D24·D25, 계정 삭제 API는 아직 없음), 집중 기록 화면.
+
 - 작업명: 로그인·인증 경계 5건 수정 (Issue #77, `fix/77-desktop-auth-races`)
 - 상태: 수정·회귀 테스트 완료(2026-10-27). 남은 일: 실제 Google 계정으로 로그인·계정 전환·로그아웃·집중 중 갱신을 팀원과 함께 확인.
 

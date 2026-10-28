@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { ApiResult } from './auth-api.cjs'
 import type { AuthService } from './auth-service.cjs'
 import { parseCommandResult, parseHeartbeat, parseRemoteSession } from '../shared/session-contract.cjs'
-import type { CommandResult, FocusSettings, RemoteSession, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
+import type { CommandResult, RemoteSession, SessionOptions, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
 
 type Command = 'pause' | 'resume' | 'extend' | 'end'
 type State = {
@@ -20,7 +20,7 @@ type State = {
 }
 
 // ponytail: 앱을 다시 켜 이어받은 세션은 조회 응답에 옵션이 없어 기본값(포키·보통)으로 알림을 보여 준다.
-const DEFAULT_OPTIONS: FocusSettings = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
+const DEFAULT_OPTIONS: SessionOptions = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
 const NONE = Symbol('no-active-session')
 const SCREEN_PERMISSION_REVOKED = 'LOCAL_SCREEN_PERMISSION_REVOKED'
 const ACTIVE: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING']
@@ -39,7 +39,7 @@ export class SessionRuntime {
   // 서버에 아직 알리지 못한 로컬 이벤트. 다음 heartbeat 주기에 순서대로 다시 보낸다.
   private localEvents: { sessionId: string; localEventCode: string; occurredAt: string }[] = []
   private flushing = false
-  private options: FocusSettings = DEFAULT_OPTIONS
+  private options: SessionOptions = DEFAULT_OPTIONS
 
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
@@ -56,7 +56,7 @@ export class SessionRuntime {
   }
 
   /** 세션 설정에서 시작에 성공하면 그 응답으로 타이머를 시작한다. */
-  begin(started: StartedSession, goalText: string, options: FocusSettings = DEFAULT_OPTIONS): void {
+  begin(started: StartedSession, goalText: string, options: SessionOptions = DEFAULT_OPTIONS): void {
     this.pending.clear()
     this.options = options
     this.state = {
@@ -67,7 +67,7 @@ export class SessionRuntime {
   }
 
   /** 세션 시작 때 고른 개입 강도·알림 채널. */
-  sessionOptions(): FocusSettings {
+  sessionOptions(): SessionOptions {
     return this.options
   }
 
