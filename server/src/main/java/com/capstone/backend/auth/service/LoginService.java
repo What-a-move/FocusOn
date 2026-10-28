@@ -20,6 +20,7 @@ import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.user.service.OnboardingReadinessService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -40,13 +41,15 @@ public class LoginService {
   private final TokenFamilyRepository families;
   private final RefreshTokenRecordRepository refreshTokens;
   private final PairingCodeRepository pairingCodes;
+  private final OnboardingReadinessService readiness;
   private final TransactionTemplate transaction;
 
   /** 기존 인증 저장 모델을 재사용한다. */
   public LoginService(GoogleOauthClient google, AccessJwtService jwt, UserRepository users,
       OauthIdentityRepository identities, UserDeviceRepository devices,
       TokenFamilyRepository families, RefreshTokenRecordRepository refreshTokens,
-      PairingCodeRepository pairingCodes, PlatformTransactionManager transactions) {
+      PairingCodeRepository pairingCodes, PlatformTransactionManager transactions,
+      OnboardingReadinessService readiness) {
     this.google = google;
     this.pairingCodes = pairingCodes;
     this.jwt = jwt;
@@ -56,6 +59,7 @@ public class LoginService {
     this.families = families;
     this.refreshTokens = refreshTokens;
     this.transaction = new TransactionTemplate(transactions);
+    this.readiness = readiness;
   }
 
   /** 외부 인증을 먼저 끝낸 뒤 최초 계정 생성 경쟁만 별도 트랜잭션으로 재시도한다. */
@@ -134,18 +138,22 @@ public class LoginService {
     record.setExpiresAt(family.getExpiresAt());
     refreshTokens.saveAndFlush(record);
     var access = jwt.issue(user.getId(), device.getId(), family.getId());
+    var principal = new FocusOnPrincipal(user.getId(), device.getId(), family.getId(),
+        UserDeviceEntity.DeviceType.DESKTOP);
+    String onboardingStatus = readiness.get(principal, null).onboardingStatus().name();
     return new LoginResponse(access.token(), refresh, access.expiresAt(),
-        userInfo(user), deviceInfo(device), user.getOnboardingStatus().name());
+        userInfo(user), deviceInfo(device), onboardingStatus);
   }
 
   /** 요청 필터가 검증한 주체로 현재 사용자·기기 요약만 반환한다. */
-  @Transactional(readOnly = true)
+  @Transactional
   public Identity me(FocusOnPrincipal principal) {
     UserEntity user = users.findById(principal.userId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
     UserDeviceEntity device = devices.findById(principal.deviceId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
-    return new Identity(userInfo(user), deviceInfo(device), user.getOnboardingStatus().name());
+    String status = readiness.forPrincipal(principal).onboardingStatus().name();
+    return new Identity(userInfo(user), deviceInfo(device), status);
   }
 
   private static UserInfo userInfo(UserEntity user) {

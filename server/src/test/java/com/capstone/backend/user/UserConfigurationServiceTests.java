@@ -35,7 +35,7 @@ class UserConfigurationServiceTests {
   @Test
   void translatesOnlyNicknameConstraintViolation() {
     UserEntity user = mock(UserEntity.class);
-    when(users.findById(1L)).thenReturn(Optional.of(user));
+    when(users.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
     when(users.findByNickname("nickname")).thenReturn(Optional.empty());
     DataIntegrityViolationException failure = new DataIntegrityViolationException("constraint",
         new ConstraintViolationException("constraint", new SQLException(), "uq_users_nickname"));
@@ -49,7 +49,7 @@ class UserConfigurationServiceTests {
   @Test
   void preservesUnrelatedIntegrityViolation() {
     UserEntity user = mock(UserEntity.class);
-    when(users.findById(1L)).thenReturn(Optional.of(user));
+    when(users.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
     when(users.findByNickname("nickname")).thenReturn(Optional.empty());
     DataIntegrityViolationException failure = new DataIntegrityViolationException("other",
         new ConstraintViolationException("other", new SQLException(), "other_constraint"));

@@ -67,6 +67,12 @@ public class UserDeviceEntity {
   @Column(nullable = false, length = 16)
   private Status status = Status.ACTIVE;
 
+  @Column(name = "screen_analysis_ready", nullable = false)
+  private boolean screenAnalysisReady;
+
+  @Column(name = "excluded_domains_step_completed", nullable = false)
+  private boolean excludedDomainsStepCompleted;
+
   @Column(name = "last_used_at")
   private Instant lastUsedAt;
 

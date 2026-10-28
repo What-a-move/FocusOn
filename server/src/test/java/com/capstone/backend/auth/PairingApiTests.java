@@ -10,6 +10,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,6 +32,7 @@ import com.capstone.backend.auth.service.TokenSecrets;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.user.service.OnboardingReadinessService;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
@@ -64,6 +66,7 @@ class PairingApiTests {
   @Autowired private LoginService login;
   @Autowired private TokenLifecycleService lifecycle;
   @Autowired private AccessJwtService jwt;
+  @Autowired private OnboardingReadinessService readiness;
   @Autowired private JdbcTemplate jdbc;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private Clock pairingClock;
@@ -79,6 +82,88 @@ class PairingApiTests {
         ((GoogleExchangeRequest) call.getArgument(0)).state());
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
         .addFilters(new RequestIdFilter()).build();
+  }
+
+  @Test
+  void simultaneousReadinessUpdatesKeepBothDesktopMarkers() throws Exception {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var results = race(() -> readiness.get(owner.principal(),
+        new OnboardingReadinessService.Update(true, null)),
+        () -> readiness.get(owner.principal(),
+            new OnboardingReadinessService.Update(null, true)));
+    assertEquals(List.of("SUCCESS", "SUCCESS"), results);
+    var steps = readiness.get(owner.principal(), null).steps();
+    assertTrue(steps.screenAnalysisReady());
+    assertTrue(steps.analysisExcludedDomainsStepCompleted());
+  }
+
+  @Test
+  void readinessStopsTreatingExpiredExtensionFamilyAsLinked() {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var linked = claim(owner, UUID.randomUUID().toString());
+    assertTrue(readiness.get(owner.principal(), null).steps().extensionLinked());
+    jdbc.update("update token_families set created_at=?, expires_at=? where id=?",
+        Timestamp.from(Instant.now().minusSeconds(60)),
+        Timestamp.from(Instant.now().minusSeconds(1)),
+        jwt.verify(linked.accessToken()).tokenFamilyId());
+    assertTrue(!readiness.get(owner.principal(), null).steps().extensionLinked());
+  }
+
+  @Test
+  void onboardingReadinessTracksDesktopConnectionAndExplicitEmptySkip() throws Exception {
+    String subject = UUID.randomUUID().toString();
+    var owner = desktop(subject, UUID.randomUUID().toString());
+    String bearer = "Bearer " + owner.access();
+    String path = "/api/v1/users/me/onboarding-readiness";
+    mvc.perform(get(path).header("Authorization", bearer)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.currentStep").value("NICKNAME"));
+    mvc.perform(put("/api/v1/users/me/profile").header("Authorization", bearer)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"nickname\":\"q" + UUID.randomUUID().toString().substring(0, 8) + "\"}"))
+        .andExpect(status().isOk());
+    mvc.perform(get(path).header("Authorization", bearer))
+        .andExpect(jsonPath("$.data.currentStep").value("EXTENSION"));
+    final var linked = pairing.claim(
+        new ClaimRequest(pairing.issue(owner.principal()).codeDisplay(),
+            UUID.randomUUID().toString()), "readiness-ip");
+    for (String type : List.of("TERMS_OF_SERVICE", "PRIVACY_POLICY", "SCREEN_ANALYSIS")) {
+      mvc.perform(put("/api/v1/users/me/consents/" + type).header("Authorization", bearer)
+          .contentType(MediaType.APPLICATION_JSON).content("{\"isGranted\":true,"
+              + "\"consentVersion\":\"2026-09-17\",\"consentSource\":\"ONBOARDING\"}"))
+          .andExpect(status().isOk());
+    }
+    mvc.perform(put(path).header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON)
+        .content("{\"screenAnalysisReady\":true}"))
+        .andExpect(jsonPath("$.data.currentStep").value("EXCLUDED_SITES"));
+    mvc.perform(put(path).header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON)
+        .content("{\"analysisExcludedDomainsStepCompleted\":true}"))
+        .andExpect(jsonPath("$.data.onboardingStatus").value("COMPLETED"));
+    var otherDesktop = desktop(subject, UUID.randomUUID().toString());
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + otherDesktop.access()))
+        .andExpect(jsonPath("$.data.onboardingStatus").value("INCOMPLETE"));
+    mvc.perform(get("/api/v1/users/me").header("Authorization", bearer))
+        .andExpect(jsonPath("$.data.onboardingStatus").value("COMPLETED"));
+    mvc.perform(put("/api/v1/users/me/profile").header("Authorization", bearer)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"nickname\":\"q" + UUID.randomUUID().toString().substring(0, 8) + "\"}"))
+        .andExpect(jsonPath("$.data.onboardingStatus").value("COMPLETED"));
+    mvc.perform(get("/api/v1/users/me")
+        .header("Authorization", "Bearer " + linked.accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.onboardingStatus").value("COMPLETED"));
+    mvc.perform(put("/api/v1/users/me/consents/SCREEN_ANALYSIS").header("Authorization", bearer)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"isGranted\":false,"
+            + "\"consentVersion\":\"2026-09-17\",\"consentSource\":\"SETTINGS\"}"))
+        .andExpect(status().isOk());
+    mvc.perform(get("/api/v1/users/me").header("Authorization", bearer))
+        .andExpect(jsonPath("$.data.onboardingStatus").value("INCOMPLETE"));
+    mvc.perform(delete("/api/v1/extension-pairings/" + linked.device().deviceId())
+        .header("Authorization", bearer)).andExpect(status().isNoContent());
+    mvc.perform(get("/api/v1/users/me").header("Authorization", bearer))
+        .andExpect(jsonPath("$.data.onboardingStatus").value("INCOMPLETE"));
+    mvc.perform(get(path).header("Authorization", bearer))
+        .andExpect(jsonPath("$.data.currentStep").value("EXTENSION"))
+        .andExpect(jsonPath("$.data.steps.extensionLinked").value(false));
   }
 
   @Test

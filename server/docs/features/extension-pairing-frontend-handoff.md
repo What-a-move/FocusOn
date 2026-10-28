@@ -7,7 +7,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 1. POST /api/v1/pairing-codes 응답의 pairingCodeId를 codeDisplay·expiresAt과 함께 보존한다. ID는 문자열이다.
 2. 연결 화면 닫기·정상 앱 종료 때 DELETE /api/v1/pairing-codes/{pairingCodeId}를 Bearer로 호출한다. 성공204·본문 없음. 이미 소비/취소/만료/없는 ID도204이며 연결 성공을 취소하지 않는다.
 3. 강제 종료·충돌·전원 차단·통신 미전달은 즉시 취소를 보장할 수 없고 발급 후5분 만료로 처리한다.
-4. readiness 3초 polling은 Desktop에서 수행한다. readiness API는 별도 #85 브랜치에서 구현했으며 이 #86 브랜치에는 없다.
+4. readiness 3초 polling은 Desktop에서 수행한다. readiness API는 #85 브랜치에서 구현됐고, #86 브랜치에는 없다.
 
 ## Extension
 
@@ -30,7 +30,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 - Extension `submitPairing`: 하이픈 제거된 대문자 코드와 `installationId`를 공개 POST로 전송한다. `data.accessToken`, `refreshToken`, `accessTokenExpiresAt`, `device.deviceId` 및 201을 읽는다. Backend가 이 필드를 모두 제공하는지 백엔드 HTTP 통합 테스트로 확인했다.
 - Extension `LINK_006`은 숫자 remainingAttempts를 읽는다. `LINK_004`는 현재 새 코드 발급을 안내하지만, Backend의 설치별 3분 잠금과 다르다. `Retry-After`를 읽는 구조는 있으나 해당 오류 화면에 대기 시간을 표시하지 않는다.
 - 대조 당시 Extension에 `LINK_007_INSTALLATION_ALREADY_LINKED` 전용 안내가 없었다. #86에 연결 해제 API가 구현됐지만 Frontend 안내·해제 흐름과 실제 연동 QA는 남았다.
-- Desktop은 readiness GET/PUT과 `steps.extensionLinked`에 의존한다. Backend는 이 endpoint를 아직 제공하지 않아 프론트 전체 온보딩 흐름은 미완성이다. 이 API는 별도의 저장 모델·완료 정책이 필요하다.
+- Desktop은 readiness GET/PUT과 `steps.extensionLinked`에 의존한다. #85 브랜치에 해당 API가 구현됐지만 dev에는 아직 없고 실제 앱 통합 QA는 남았다.
 - 실제 Desktop·Chrome Extension 실행 왕복은 이번 검사에서 수행하지 않았다. Backend 변경만으로 프론트 오류 화면이나 종료 시 취소 호출이 바뀌지는 않는다.
 
 ## LINK_007 복구 경로 검토 (2026-10-28)
@@ -45,3 +45,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 ### #86 Desktop 복구 API
 
 기존 계정의 Desktop access token으로 `GET /api/v1/devices`를 호출하면 `data.devices` 배열에 본인 ACTIVE 기기의 `deviceId`, `type`(DESKTOP/EXTENSION), `name`, `lastUsedAt`, `linkedDesktopDeviceId`를 제공한다. Extension을 선택해 `DELETE /api/v1/extension-pairings/{deviceId}`로 해제하는 흐름이다. 배열 래퍼 `data.devices`는 Notion에 명시되지 않아 Frontend 확인이 필요하다. 이 문단은 구현 브랜치 기준이며 dev 배포 완료를 의미하지 않는다.
+
+### 통합 브랜치 상태
+
+`feat/#85-onboarding-readiness`에는 `feat/#86-extension-unlink`를 포함해 기기 목록·연결 해제·온보딩 준비 상태가 모두 구현되어 있다. 두 브랜치와 #58은 dev에 아직 병합되지 않았다. 앱 수준 연동은 Frontend의 기기 목록·해제 UI와 코드 취소·오류 처리를 반영한 뒤 검증해야 한다.
