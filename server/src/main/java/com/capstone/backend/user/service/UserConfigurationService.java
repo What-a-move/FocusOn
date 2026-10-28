@@ -27,7 +27,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class UserConfigurationService {
   private static final String CURRENT_CONSENT_VERSION = "2026-09-17";
+  private static final String NICKNAME_UNIQUE_CONSTRAINT = "uq_users_nickname";
   private final UserRepository users;
   private final UserConsentRepository consents;
   private final UserFocusSettingsRepository focusSettings;
@@ -79,7 +82,25 @@ public class UserConfigurationService {
       throw new ApiException(ApiErrorCode.PROFILE_NICKNAME_DUPLICATE);
     }
     user.setNickname(nickname);
+    try {
+      users.saveAndFlush(user);
+    } catch (DataIntegrityViolationException exception) {
+      if (isNicknameConflict(exception)) {
+        throw new ApiException(ApiErrorCode.PROFILE_NICKNAME_DUPLICATE);
+      }
+      throw exception;
+    }
     return meResponse(user);
+  }
+
+  private boolean isNicknameConflict(Throwable exception) {
+    for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+      if (cause instanceof ConstraintViolationException violation
+          && NICKNAME_UNIQUE_CONSTRAINT.equalsIgnoreCase(violation.getConstraintName())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** 현재 사용자의 동의 상태를 반환한다. */
@@ -98,13 +119,13 @@ public class UserConfigurationService {
     if (!CURRENT_CONSENT_VERSION.equals(request.consentVersion())) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
-    UserEntity user = currentUser(principal);
+    UserEntity user = lockedUser(principal);
     Instant now = clock.instant();
     UserConsentEntity consent = consents.findByUserIdAndConsentType(user.getId(), type)
         .orElseGet(() -> UserConsentEntity.create(user, type, request.isGranted(),
-            request.consentVersion(), now));
+            request.consentVersion(), request.consentSource(), now));
     if (consent.getId() != null) {
-      consent.apply(request.isGranted(), request.consentVersion(), now);
+      consent.apply(request.isGranted(), request.consentVersion(), request.consentSource(), now);
     }
     UserConsentEntity saved = consents.save(consent);
     return new ConsentResponse(saved.getConsentType(), saved.isGranted(), saved.getConsentVersion(),
@@ -123,13 +144,14 @@ public class UserConfigurationService {
   public FocusSettingsResponse updateFocusSettings(FocusOnPrincipal principal,
       UpdateFocusSettingsRequest request) {
     List<String> channels = normalizedChannels(request.notificationChannels());
-    UserEntity user = currentUser(principal);
+    UserEntity user = lockedUser(principal);
     String serialized = String.join(",", channels);
     Instant now = clock.instant();
-    UserFocusSettingsEntity settings = focusSettings.findById(user.getId()).orElseGet(() ->
-        UserFocusSettingsEntity.create(user.getId(), request.interventionLevel(), serialized,
-            request.breakSuggestionEnabled(), request.cameraAnalysisEnabled(), now));
-    if (settings.getUserId() != null) {
+    UserFocusSettingsEntity settings = focusSettings.findById(user.getId()).orElse(null);
+    if (settings == null) {
+      settings = UserFocusSettingsEntity.create(user.getId(), request.interventionLevel(),
+          serialized, request.breakSuggestionEnabled(), request.cameraAnalysisEnabled(), now);
+    } else {
       settings.apply(request.interventionLevel(), serialized, request.breakSuggestionEnabled(),
           request.cameraAnalysisEnabled(), now);
     }
@@ -154,8 +176,7 @@ public class UserConfigurationService {
     if (hosts.size() > 50) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
-    UserEntity user = users.findByIdForUpdate(principal.userId()).orElseThrow(() ->
-        new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+    UserEntity user = lockedUser(principal);
     excludedDomains.deleteByUserId(user.getId());
     excludedDomains.flush();
     Instant now = clock.instant();
@@ -166,6 +187,11 @@ public class UserConfigurationService {
 
   private UserEntity currentUser(FocusOnPrincipal principal) {
     return users.findById(principal.userId()).orElseThrow(() ->
+        new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+  }
+
+  private UserEntity lockedUser(FocusOnPrincipal principal) {
+    return users.findByIdForUpdate(principal.userId()).orElseThrow(() ->
         new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
   }
 

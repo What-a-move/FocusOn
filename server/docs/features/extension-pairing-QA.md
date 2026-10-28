@@ -44,3 +44,11 @@
 - Backend HTTP 테스트로 codeDisplay·expiresAt·pairingCodeId, 하이픈 없는 pairingCode·installationId, accessToken·refreshToken·accessTokenExpiresAt·device를 확인하고, 소비 뒤 코드 취소가 연결을 유지하는지 검사했다.
 - 기존 작업 브랜치에서 전체 build·Checkstyle 및 JUnit 84개 통과. 이 테스트는 H2·MockMvc이며 실제 앱·Chrome·실계정 통합 검증은 아니다.
 - 최신 origin/dev 6c93515의 협업자 V4와 우리 V4가 충돌해 아직 dev를 통합하지 않았다. 따라서 이번 빌드는 최신 dev와 결합된 전체 빌드를 뜻하지 않는다.
+
+
+## 협업자 PR #84 통합 검증 (2026-10-28)
+
+- 최신 dev 6c93515를 작업 브랜치에 통합했고 사용자 설정 V4는 유지, 연결 migration은 V5로 조정했다.
+- build·Checkstyle·전체 H2 JUnit 87개 성공. H2는 Flyway를 사용하지 않아 PostgreSQL의 nickname partial UNIQUE 및 제약명 매핑을 생성하지 않는다. 동시 닉네임 분기는 실제 PostgreSQL 검증으로 한정하고 동의·집중 설정 동시성은 H2에서도 유지한다.
+- 별도 PostgreSQL DB에 V1~V5 적용·Hibernate validate 및 pairing 16개와 사용자 설정 API 7개 테스트 통과. PostgreSQL 동시 요청 시작은 확인했으나 두 사전 검사 시점이 겹쳤는지는 계측하지 않았다.
+- 실제 Desktop·Extension 통합 UI QA 및 원격 PR CI는 아직 미실행이다. 이전의 V4 기반 QA 결과는 당시 기준의 이력이다.

@@ -9,11 +9,12 @@
 
 ## 현재 작업 (2026-10-28)
 
-- Issue #58, feat/#58-extension-pairing, 최초 기준 origin/dev b293bf1에서 구현하고 최신 dev 4ee5493을 통합했다. server/만 수정했고 PR은 아직 생성하지 않았다.
+- Issue #58, feat/#58-extension-pairing, 최초 기준 origin/dev b293bf1에서 구현하고 최신 dev 6c93515를 통합했다. server/만 수정했고 PR은 아직 생성하지 않았다.
+- Issue #83: 닉네임 유일 제약 오류 변환, 동의·집중 설정 저장 잠금, 고정 닉네임 테스트를 수정했다. 사용자 결정으로 최신 동의 출처를 저장한다. PostgreSQL 동시 시작 테스트는 통과했지만 닉네임 사전 검사 두 건이 겹쳤는지는 확인하지 못했다. 상세는 `features/user-configuration-review-REPORT.md`를 따른다.
 - Issue #38 사용자 설정 API: 도메인 반복 교체 충돌과 닉네임 문자 검증을 수정하고 계정 격리 테스트를 보강했다. 실행 중인 PostgreSQL에서 Flyway V1~V3 성공 기록과 Docker 서버 8개 API의 무인증 401을 확인했다. 최신 로컬 변경의 실계정 HTTP 재검증과 Notion 오류·권한 상세 대조가 남아 있다. 상세는 `features/user-configuration-REPORT.md`를 따른다.
 - 코드 발급·공개 Extension 연결·코드 취소, 설치별3회 실패/3분 잠금·재연결·소유권 제약을 구현했다.
 - Notion API·인증 정책·공통 오류·ERD에 사용자 승인 계약 반영. 결정030 및 extension-pairing-PLAN.md가 현재 기준이다.
-- 최신 dev 통합 후 build/Checkstyle·JUnit83·PostgreSQL pairing15·V1~V4 검증 통과. 이전 기준 HTTP33·DB제약6 통과. 실제 Frontend UI 통합은 별도다.
+- 최신 dev 통합 후 build/Checkstyle·H2 JUnit87·PostgreSQL 연결16/사용자 설정7·V1~V5 통과. PostgreSQL 닉네임 동시 사전 검사의 정확한 겹침은 미계측이다. 실제 Frontend UI 통합은 별도다.
 - 전달 사항은 features/extension-pairing-frontend-handoff.md. 닉네임·프로필·readiness는 팀원 담당이다.
 - 선행 Swagger PR #81은 dev b293bf1에 병합됐고 실제 Google Swagger exchange→me→refresh→logout→401도 완료했다. Issue #79 종료는 별도 사용자 승인 전이다.
 - #59/PR #60도 이미 병합·종료됐다. 아래의 병합 전/실계정 미완료 문구는 당시 이력이며 현재 상태를 뜻하지 않는다.

@@ -25,7 +25,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 
 ## 코드 대조 기록 (2026-10-28)
 
-- 기준: Backend 브랜치 `feat/#58-extension-pairing`, Frontend는 `origin/dev`(4ee5493 이후 동일 코드 확인). 최신 dev 6c93515은 협업자 V4가 추가돼 아직 이 브랜치에 통합하지 않았다.
+- 기준: Backend 브랜치 `feat/#58-extension-pairing`, Frontend는 `origin/dev`(4ee5493 이후 동일 코드 확인). 최신 dev 6c93515의 협업자 V4를 통합하고 연결 migration을 V5로 조정했다.
 - Desktop `parsePairingCode`: `codeDisplay` 형식 ABC-123, 파싱 가능한 `expiresAt`만 읽으며 `pairingCodeId`를 버린다. 코드는 표시할 수 있지만 정상 화면 닫기 시 취소 API에 필요한 ID 보존·호출은 Frontend 작업이다.
 - Extension `submitPairing`: 하이픈 제거된 대문자 코드와 `installationId`를 공개 POST로 전송한다. `data.accessToken`, `refreshToken`, `accessTokenExpiresAt`, `device.deviceId` 및 201을 읽는다. Backend가 이 필드를 모두 제공하는지 백엔드 HTTP 통합 테스트로 확인했다.
 - Extension `LINK_006`은 숫자 remainingAttempts를 읽는다. `LINK_004`는 현재 새 코드 발급을 안내하지만, Backend의 설치별 3분 잠금과 다르다. `Retry-After`를 읽는 구조는 있으나 해당 오류 화면에 대기 시간을 표시하지 않는다.

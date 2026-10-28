@@ -45,6 +45,9 @@ public class UserConsentEntity {
   @Column(name = "consent_version", nullable = false, length = 32)
   private String consentVersion;
 
+  @Column(name = "consent_source", length = 32)
+  private String consentSource;
+
   @Column(name = "granted_at")
   private Instant grantedAt;
 
@@ -55,22 +58,24 @@ public class UserConsentEntity {
   private Instant updatedAt;
 
   private UserConsentEntity(UserEntity user, ConsentType consentType, boolean granted,
-      String consentVersion, Instant now) {
+      String consentVersion, String consentSource, Instant now) {
     this.user = user;
     this.consentType = consentType;
-    apply(granted, consentVersion, now);
+    apply(granted, consentVersion, consentSource, now);
   }
 
   /** 새 동의 기록을 만든다. */
   public static UserConsentEntity create(UserEntity user, ConsentType consentType, boolean granted,
-      String consentVersion, Instant now) {
-    return new UserConsentEntity(user, consentType, granted, consentVersion, now);
+      String consentVersion, String consentSource, Instant now) {
+    return new UserConsentEntity(user, consentType, granted, consentVersion, consentSource, now);
   }
 
   /** 현재 문서 버전의 동의 상태로 갱신한다. */
-  public void apply(boolean newGranted, String newConsentVersion, Instant now) {
+  public void apply(boolean newGranted, String newConsentVersion, String newConsentSource,
+      Instant now) {
     granted = newGranted;
     consentVersion = newConsentVersion;
+    consentSource = newConsentSource;
     grantedAt = newGranted ? now : null;
     withdrawnAt = newGranted ? null : now;
     updatedAt = now;

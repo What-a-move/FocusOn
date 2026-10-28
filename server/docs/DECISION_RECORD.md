@@ -333,7 +333,7 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 오입력은 installationId 해시로 귀속한다. 형식 정상·존재하지 않는 코드1~2회는400 LINK006와 remainingAttempts2/1, 3회는410 LINK004와180초 입력 잠금이다. 잠금 중 올바른 코드도 거절하며 다른 Desktop 코드는 폐기하지 않는다. 성공/잠금 만료 시 reset한다. 2026-10-28 사용자 추가 결정으로 미완료1~2회는 마지막 실패 후24시간이 지나면 초기화·정리한다. 새 실패 시 기준을 갱신한다.
 - 정상 화면 닫기·종료는 DELETE /api/v1/pairing-codes/{pairingCodeId}로 즉시 취소한다. 없는 ID·타 Desktop 소유·terminal은204 no-op, 기소비 코드 취소는 token에 영향이 없다. 통지 불가는 발급 후300초 만료다.
 - 같은 계정 재연결은 기존 Extension deviceId 재사용·이전 family/refresh 폐기 후 새 Desktop·독립 family 발급. 다른 계정 활성 설치는409 LINK007·코드 미소비로 처리한다.
-- V4 신규 코드/설치 실패 테이블 및 소유권 FK·활성 설치 partial UNIQUE. 코드 원문은 별도 고정 HMAC 키로만 해시 저장한다. terminal 코드30일 보관, EXPIRED의 terminal_at은 expires_at이다.
+- V5 신규 코드/설치 실패 테이블 및 소유권 FK·활성 설치 partial UNIQUE. 코드 원문은 별도 고정 HMAC 키로만 해시 저장한다. terminal 코드30일 보관, EXPIRED의 terminal_at은 expires_at이다.
 - 설치 잠금→사용자 잠금으로 claim 직렬화. 기존 auth는 사용자→family를 유지하며 설치 행을 역으로 잠그지 않는다. cleanup은 코드/설치별 transaction을 분리한다.
 - API3개와 Notion API/정책/오류/ERD 반영·독립 리뷰·QA를 완료했다. PR·병합·이슈 종료는 별도 승인 대상이다.
 - #38 온보딩·닉네임 unique와 Frontend는 담당자 범위로 유지한다. 루트 docs/API_CONTRACT.md의 과거 코드별 폐기 설명은 이 승인 결정과 최신 Notion 정본으로 대체한다.

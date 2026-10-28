@@ -53,7 +53,7 @@ Google 로그인한 현재 Desktop만5분 일회용 코드를 발급하고, 공�
 
 ## 저장 모델
 
-- V1/V2 유지, 신규 V4__add_device_pairing.sql.
+- V1/V2 유지, 신규 V5__add_device_pairing.sql.
 - pairing_codes: BIGINT id/user_id/issuer_desktop_device_id, CHAR64 code_hash UNIQUE, ACTIVE/CONSUMED/EXPIRED/CANCELLED, expires_at/created_at, consumed_by_extension_device_id/consumed_at/cancelled_at/terminal_at nullable. UTC는 PostgreSQL TIMESTAMPTZ다.
 - user_id 및 발급·소비 기기 (id,user_id) 복합 FK. 상태별 필수·NULL timestamp CHECK, Desktop당 ACTIVE코드1개 partial UNIQUE, expiry/terminal 정리 인덱스.
 - pairing_installation_attempts: CHAR64 installation_id_hash PK, failed_attempts SMALLINT0~3, locked_until nullable, updated_at NOT NULL. count3과 잠금시각의 동시 유무 CHECK. 원문 설치 ID는 미저장.

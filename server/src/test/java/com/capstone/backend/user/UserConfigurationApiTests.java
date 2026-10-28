@@ -1,5 +1,7 @@
 package com.capstone.backend.user;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -14,7 +16,13 @@ import com.capstone.backend.auth.dto.AuthDtos.LoginResponse;
 import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
+import com.capstone.backend.user.persistence.UserConsentRepository;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +42,9 @@ import org.springframework.web.context.WebApplicationContext;
 class UserConfigurationApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
+  @Autowired private UserConsentRepository consents;
+  @org.springframework.beans.factory.annotation.Value("${spring.datasource.driver-class-name}")
+  private String driverClassName;
   @MockitoBean private GoogleOauthClient google;
   private MockMvc mvc;
 
@@ -45,12 +56,59 @@ class UserConfigurationApiTests {
   }
 
   @Test
+  void concurrentFirstWritesAndNicknameConflicts() throws Exception {
+    LoginResponse first = desktop("concurrent-first");
+    LoginResponse second = desktop("concurrent-second");
+    if (!"org.h2.Driver".equals(driverClassName)) {
+      // PostgreSQL의 partial UNIQUE와 제약명 매핑은 Flyway를 실행하지 않는 H2로 검증할 수 없다.
+      String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
+      String profileBody = "{\"nickname\":\"" + nickname + "\"}";
+      List<Integer> profileStatuses = concurrentPut("/api/v1/users/me/profile", profileBody,
+          first.accessToken(), second.accessToken());
+      assertEquals(List.of(200, 409), profileStatuses.stream().sorted().toList());
+    }
+
+    String consentBody = "{\"isGranted\":true,\"consentVersion\":\"2026-09-17\","
+        + "\"consentSource\":\"ONBOARDING\"}";
+    assertEquals(List.of(200, 200), concurrentPut("/api/v1/users/me/consents/PRIVACY_POLICY",
+        consentBody, first.accessToken(), first.accessToken()));
+    String focusBody = "{\"interventionLevel\":\"NORMAL\",\"notificationChannels\":[\"MOLE_UI\"],"
+        + "\"breakSuggestionEnabled\":true,\"cameraAnalysisEnabled\":false}";
+    assertEquals(List.of(200, 200), concurrentPut("/api/v1/users/me/focus-settings", focusBody,
+        first.accessToken(), first.accessToken()));
+    assertEquals(1, consents.findAllByUserIdOrderByConsentType(
+        Long.parseLong(first.user().userId())).size());
+  }
+
+  private List<Integer> concurrentPut(String path, String body, String firstToken,
+      String secondToken) throws Exception {
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var futures = List.of(firstToken, secondToken).stream().map(token -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("동시 요청 시작 시간 초과");
+        }
+        return mvc.perform(put(path).header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON).content(body)).andReturn()
+            .getResponse().getStatus();
+      })).toList();
+      assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      return List.of(futures.get(0).get(30, TimeUnit.SECONDS),
+          futures.get(1).get(30, TimeUnit.SECONDS));
+    }
+  }
+
+  @Test
   void profileAndFocusSettingsUseOnlyAuthenticatedUser() throws Exception {
     LoginResponse session = desktop("profile-device");
+    String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
     mvc.perform(put("/api/v1/users/me/profile").header("Authorization",
             "Bearer " + session.accessToken()).contentType(MediaType.APPLICATION_JSON)
-            .content("{\"nickname\":\"focuson\"}"))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.data.nickname").value("focuson"));
+            .content("{\"nickname\":\"" + nickname + "\"}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.nickname").value(nickname));
     mvc.perform(put("/api/v1/users/me/focus-settings").header("Authorization",
             "Bearer " + session.accessToken()).contentType(MediaType.APPLICATION_JSON)
             .content("{\"interventionLevel\":\"ACTIVE\","
@@ -88,15 +146,21 @@ class UserConfigurationApiTests {
     String consent = "/api/v1/users/me/consents/SCREEN_ANALYSIS";
     String granted = "{\"isGranted\":true,\"consentVersion\":\"2026-09-17\","
         + "\"consentSource\":\"DESKTOP\"}";
-    String withdrawn = granted.replace("true", "false");
+    String withdrawn = granted.replace("true", "false").replace("DESKTOP", "SETTINGS");
     mvc.perform(put(consent).header("Authorization", "Bearer " + first.accessToken())
             .contentType(MediaType.APPLICATION_JSON).content(granted))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.isGranted").value(true))
         .andExpect(jsonPath("$.data.grantedAt").isNotEmpty());
+    assertEquals("DESKTOP", consents.findByUserIdAndConsentType(
+        Long.parseLong(first.user().userId()), ConsentType.SCREEN_ANALYSIS).orElseThrow()
+        .getConsentSource());
     mvc.perform(put(consent).header("Authorization", "Bearer " + first.accessToken())
             .contentType(MediaType.APPLICATION_JSON).content(withdrawn))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.isGranted").value(false))
         .andExpect(jsonPath("$.data.withdrawnAt").isNotEmpty());
+    assertEquals("SETTINGS", consents.findByUserIdAndConsentType(
+        Long.parseLong(first.user().userId()), ConsentType.SCREEN_ANALYSIS).orElseThrow()
+        .getConsentSource());
     mvc.perform(get("/api/v1/users/me/consents")
             .header("Authorization", "Bearer " + second.accessToken()))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.consents.length()").value(0));

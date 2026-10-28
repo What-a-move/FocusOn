@@ -3,8 +3,9 @@
 ## 현재 작업 (2026-10-28)
 
 - #58 Extension 연결 구현·정본 반영·독립 리뷰·QA 완료, feat/#58-extension-pairing에서 PR 생성 승인 대기.
-- Issue #38의 사용자 설정 PR #82가 dev에 병합됐다. CodeRabbit의 동의 출처·닉네임 및 최초 저장 경쟁·고정 테스트 닉네임 지적은 별도 후속 확인 대상이다.
-- 검증: 최신 dev 통합 후 build/Checkstyle·JUnit83·실제PG15·V1~V4 통과. 이전 기준 HTTP33·DB제약6. 24시간 보관 정책의 독립 재리뷰도 통과했다.
+- Issue #83: PostgreSQL 동시 시작 테스트와 local 서버의 실계정 인증 HTTP QA를 수행했다. PR 전 최신 dev의 migration 번호를 대조한다. 개발 DB와 격리 테스트 DB에 V4 적용은 확인했다. 사용자 `UserEntity` 미커밋 변경은 별도로 보존한다.
+- Issue #38의 사용자 설정 PR #82가 dev에 병합됐다. 관련 CodeRabbit 지적을 다룬 PR #84가 dev에 병합됐다.
+- 검증: 최신 dev 통합 후 build/Checkstyle·H2 JUnit87·PostgreSQL 연결16/사용자 설정7·V1~V5 통과. 이전 기준 HTTP33·DB제약6. 실제 Frontend UI 통합은 미완료다.
 - PR 생성·병합·이슈 종료는 승인 없이 실행하지 않는다.
 
 ## 다음 순서
