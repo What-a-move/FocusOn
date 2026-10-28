@@ -80,6 +80,30 @@ class PairingApiTests {
   }
 
   @Test
+  void desktopListsOnlyItsOwnDevicesForTokenLossRecovery() throws Exception {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var other = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    String installation = UUID.randomUUID().toString();
+    var linked = pairing.claim(new ClaimRequest(pairing.issue(owner.principal()).codeDisplay(),
+        installation), "list-ip");
+    var result = mvc.perform(get("/api/v1/devices")
+        .header("Authorization", "Bearer " + owner.access())).andExpect(status().isOk())
+        .andReturn();
+    var items = JsonMapper.builder().build().readTree(result.getResponse().getContentAsString())
+        .path("data").path("devices");
+    assertEquals(2, items.size());
+    assertTrue(items.toString().contains(linked.device().deviceId()));
+    assertTrue(!items.toString().contains(other.principal().deviceId() + "\""));
+    mvc.perform(get("/api/v1/devices").header("Authorization", "Bearer " + linked.accessToken()))
+        .andExpect(status().isUnauthorized());
+    mvc.perform(delete("/api/v1/extension-pairings/" + linked.device().deviceId())
+        .header("Authorization", "Bearer " + owner.access())).andExpect(status().isNoContent());
+    var recovered = pairing.claim(new ClaimRequest(pairing.issue(other.principal()).codeDisplay(),
+        installation), "list-ip");
+    assertEquals("EXTENSION", recovered.device().deviceType());
+  }
+
+  @Test
   void extensionCanUnlinkItselfAndAnotherAccountCanThenConnect() throws Exception {
     var first = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     var second = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
