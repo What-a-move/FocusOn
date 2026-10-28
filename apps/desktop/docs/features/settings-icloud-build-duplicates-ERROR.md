@@ -52,7 +52,7 @@
 
 - 추정 원인: 이번 작업의 새 라우트(`/settings`, `/settings/exclusions`)가 Next.js 타입 생성과 충돌했다.
 - 실제 원인: 라우트와는 관계없었다. 사본의 생성 시각(09:04)이 이번 작업 시작 전이었고, 원본(09:23)과 내용 크기가 같았다. `~/Desktop`이 iCloud 파일 공급자(`com.apple.file-provider-domain-id`)로 동기화되고 있어서, 빌드가 파일을 빠르게 지우고 다시 쓰는 동안 iCloud가 충돌 사본(`이름 2`)을 남긴 것이다. 같은 이유로 `.git/index 2`, `apps/extension/.next/.../index.pack 2.pack`도 있었다. `tsconfig.json`이 `.next/types/**/*.ts`를 포함하기 때문에 사본까지 타입 검사에 들어갔다.
-- 해결 방법: git이 무시하는 빌드 결과물(`apps/desktop/.next`, `apps/desktop/out`)에서 ` 2`·` 3` 사본만 지우고 다시 빌드했다. `.git` 안의 사본은 git이 읽지 않아서 건드리지 않았다.
+- 해결 방법: git이 무시하는 빌드 결과물(`apps/desktop/.next`, `apps/desktop/out`)에서 이름 끝에 " 2"·" 3"이 붙은 사본만 지우고 다시 빌드했다. `.git` 안의 사본은 git이 읽지 않아서 건드리지 않았다.
 - 변경 파일: 없음 (빌드 결과물만 정리)
 
 ## 확인 결과

@@ -26,6 +26,9 @@ export function Exclusions() {
   const [saving, setSaving] = useState(false)
   const [justAdded, setJustAdded] = useState('')
   const [toast, showToast, hideToast] = useToast()
+  // 되돌리기는 누르는 시점의 최신 목록에 지운 항목만 다시 넣는다. 그사이 추가한 항목을 지우지 않기 위해서다.
+  const latest = useRef({ sites, apps })
+  useEffect(() => { latest.current = { sites, apps } }, [sites, apps])
 
   const loadSites = useCallback(async () => {
     setSites({ status: 'loading' })
@@ -59,14 +62,21 @@ export function Exclusions() {
 
   async function remove(target: Kind, id: string, label: string) {
     if (target === 'sites' && sites.status === 'ready') {
-      const before = sites.data
-      const error = await saveSites(before.filter((item) => item !== id))
-      showToast(error ? { text: error } : { text: `제외를 풀었어요 · ${label}`, undo: () => { void saveSites(before).then((undoError) => { if (undoError) showToast({ text: undoError }) }) } })
+      const error = await saveSites(sites.data.filter((item) => item !== id))
+      showToast(error ? { text: error } : { text: `제외를 풀었어요 · ${label}`, undo: () => {
+        const now = latest.current.sites
+        if (now.status !== 'ready' || now.data.includes(id)) return
+        void saveSites([id, ...now.data]).then((undoError) => { if (undoError) showToast({ text: undoError }) })
+      } })
     }
     if (target === 'apps' && apps.status === 'ready') {
-      const before = apps.data
-      const error = await saveApps(before.filter((item) => item.bundleId !== id))
-      showToast(error ? { text: error } : { text: `제외를 풀었어요 · ${label}`, undo: () => { void saveApps(before).then((undoError) => { if (undoError) showToast({ text: undoError }) }) } })
+      const removed = apps.data.find((item) => item.bundleId === id)
+      const error = await saveApps(apps.data.filter((item) => item.bundleId !== id))
+      showToast(error ? { text: error } : { text: `제외를 풀었어요 · ${label}`, undo: () => {
+        const now = latest.current.apps
+        if (!removed || now.status !== 'ready' || now.data.some((item) => item.bundleId === id)) return
+        void saveApps([removed, ...now.data]).then((undoError) => { if (undoError) showToast({ text: undoError }) })
+      } })
     }
   }
 
