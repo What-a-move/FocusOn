@@ -106,6 +106,40 @@ class PairingApiTests {
   }
 
   @Test
+  void desktopAndExtensionCanExchangeTheirDocumentedJsonFields() throws Exception {
+    var desktop = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var issuedResponse = mvc.perform(post("/api/v1/pairing-codes")
+        .header("Authorization", "Bearer " + desktop.access()))
+        .andExpect(status().isCreated()).andReturn();
+    var json = JsonMapper.builder().build();
+    var issued = json.readTree(issuedResponse.getResponse().getContentAsString()).path("data");
+    assertTrue(issued.path("pairingCodeId").isString());
+    String display = issued.path("codeDisplay").asText();
+    assertTrue(display.matches("[A-Z0-9]{3}-[A-Z0-9]{3}"));
+    assertTrue(Instant.parse(issued.path("expiresAt").asText()).isAfter(now));
+    assertEquals(3, issued.path("maxAttempts").asInt());
+
+    // Extension이 실제로 전송하는 하이픈 없는 코드와 installationId를 사용한다.
+    String body = json.writeValueAsString(new ClaimRequest(
+        display.replace("-", ""), UUID.randomUUID().toString()));
+    var linkedResponse = mvc.perform(post("/api/v1/extension-pairings")
+        .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isCreated()).andReturn();
+    var linked = json.readTree(linkedResponse.getResponse().getContentAsString()).path("data");
+    assertTrue(linked.path("accessToken").isString());
+    assertTrue(linked.path("refreshToken").isString());
+    assertTrue(Instant.parse(linked.path("accessTokenExpiresAt").asText()).isAfter(now));
+    assertTrue(linked.path("device").path("deviceId").isString());
+    assertEquals("EXTENSION", linked.path("device").path("deviceType").asText());
+
+    // Desktop이 보관할 발급 ID로 소비된 코드를 취소해도 연결은 유지된다.
+    mvc.perform(delete("/api/v1/pairing-codes/" + issued.path("pairingCodeId").asText())
+        .header("Authorization", "Bearer " + desktop.access())).andExpect(status().isNoContent());
+    mvc.perform(get("/api/v1/auth/me").header("Authorization",
+        "Bearer " + linked.path("accessToken").asText())).andExpect(status().isOk());
+  }
+
+  @Test
   void invalidAttemptsCommitAndLockCorrectCodeUntilExactThreeMinuteBoundary() throws Exception {
     final var desktop = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     var code = pairing.issue(desktop.principal());

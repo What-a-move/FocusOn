@@ -37,3 +37,10 @@
 - 이번 변경의 원격 CI·CodeRabbit·PR은 아직 없다. Frontend 코드는 수정하지 않았다. 취소 UI·기존 installation 충돌 안내는 handoff 후 통합 QA가 필요하다.
 - 단일 서버 유한 메모리 rate limiter다. 다중 인스턴스 공유 한도·HMAC 키 교체는 별도 설계가 필요하다.
 - 수치는 통제된 기능 검증 건수이며 운영 성공률·성능 지표가 아니다.
+
+## 프론트 필드 대조 후 재검증 (2026-10-28)
+
+- `origin/dev` Frontend의 Desktop 코드 파서와 Extension 연결 파서·입력 요청을 대조했다.
+- Backend HTTP 테스트로 codeDisplay·expiresAt·pairingCodeId, 하이픈 없는 pairingCode·installationId, accessToken·refreshToken·accessTokenExpiresAt·device를 확인하고, 소비 뒤 코드 취소가 연결을 유지하는지 검사했다.
+- 기존 작업 브랜치에서 전체 build·Checkstyle 및 JUnit 84개 통과. 이 테스트는 H2·MockMvc이며 실제 앱·Chrome·실계정 통합 검증은 아니다.
+- 최신 origin/dev 6c93515의 협업자 V4와 우리 V4가 충돌해 아직 dev를 통합하지 않았다. 따라서 이번 빌드는 최신 dev와 결합된 전체 빌드를 뜻하지 않는다.
