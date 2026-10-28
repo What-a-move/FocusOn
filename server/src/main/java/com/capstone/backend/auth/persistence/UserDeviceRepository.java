@@ -8,6 +8,9 @@ import org.springframework.data.repository.query.Param;
 
 /** 사용자 소유 기기와 활성 Desktop 수를 조회한다. */
 public interface UserDeviceRepository extends JpaRepository<UserDeviceEntity, Long> {
+  /** 로그인한 사용자의 활성 기기만 표시한다. */
+  List<UserDeviceEntity> findByUserIdAndStatus(Long userId, UserDeviceEntity.Status status);
+
   /** 사용자와 설치 해시로 기존 기기를 찾는다. */
   @Query("select d from UserDeviceEntity d where d.user.id = :userId "
       + "and d.deviceType = :deviceType and d.installationIdHash = :hash")

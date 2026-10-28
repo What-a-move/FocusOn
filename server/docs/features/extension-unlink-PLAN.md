@@ -7,3 +7,9 @@
 - 재연결, refresh, logout 동시 처리·반복 호출·타 계정 접근·readiness 갱신을 검증한다.
 - 토큰이 없는 경우 기존 Google 계정 인증 후 본인 기기를 찾아 해제할 수 있는지 기기 조회 및 삭제 구현과 Frontend 상태를 확인한다. 두 인증 수단 모두 없으면 소유권 증명 없는 강제 해제를 허용하지 않는다.
 - 프론트 화면은 수정하지 않는다. 독립 리뷰·빌드·QA 및 연동 조건을 기록한다.
+
+## 기존 토큰 분실 시 복구 보완
+
+- `GET /api/v1/devices`: 기존 계정으로 인증한 Desktop에 본인 ACTIVE 기기만 반환한다. 응답은 `data.devices[]`와 `deviceId`, `type`, `name`, `lastUsedAt`, `linkedDesktopDeviceId`를 사용한다. Notion은 항목 이름만 지정하고 배열 래퍼를 명시하지 않으므로 `data.devices`는 구현 제안으로 프론트와 확인이 필요하다.
+- 목록에서 Extension ID를 얻어 기존 `DELETE /api/v1/extension-pairings/{extensionDeviceId}`를 호출한다. 타 사용자에게 소유자 정보·설치 ID·token은 공개하지 않는다.
+- 기존 Google 계정에 인증할 수 없다면 이 경로로 소유권을 확인할 수 없다. 별도의 계정 복구 정책이 필요하다.

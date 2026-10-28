@@ -41,3 +41,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 - 제안: 기존 Extension의 유효한 토큰과 deviceId가 있으면 팝업에서 본인의 연결을 해제한다. Desktop도 본인 소유 기기만 해제할 수 있도록 기기 조회·해제 흐름이 필요하다. 두 경로의 상세 권한·동시성·오류는 후속 Issue와 정본 검토 후 구현한다.
 - Extension 토큰이 없으면 기존 Google 계정으로 Desktop에 다시 인증하여 본인 기기를 조회·해제하는 복구 경로가 필요하다. 기기 조회·해제 API와 화면이 현재 구현됐다고 가정하면 안 된다. 기존 계정 인증도 불가능하면 임의 해제를 허용하지 않으며 소유권 확인을 위한 별도 복구 정책이 필요하다.
 - Backend는 아직 dev에 병합되지 않았다. 실제 Desktop·Extension 연동 QA는 dev 반영과 Frontend의 취소·오류·해제 화면 구현 후 별도로 진행한다.
+
+### 추가 구현 중인 Desktop 복구 API
+
+기존 계정의 Desktop access token으로 `GET /api/v1/devices`를 호출하면 `data.devices` 배열에 본인 ACTIVE 기기의 `deviceId`, `type`(DESKTOP/EXTENSION), `name`, `lastUsedAt`, `linkedDesktopDeviceId`를 제공한다. Extension을 선택해 `DELETE /api/v1/extension-pairings/{deviceId}`로 해제하는 흐름이다. 배열 래퍼 `data.devices`는 Notion에 명시되지 않아 Frontend 확인이 필요하다. 이 문단은 구현 브랜치 기준이며 dev 배포 완료를 의미하지 않는다.
