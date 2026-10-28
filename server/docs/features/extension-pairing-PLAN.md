@@ -29,7 +29,7 @@ Google 로그인한 현재 Desktop만5분 일회용 코드를 발급하고, 공�
 - 201: data.{accessToken,refreshToken,accessTokenExpiresAt,device:{deviceId:string,deviceType:"EXTENSION"}}.
 - 내부 device_type=CHROME_EXTENSION, 기본 display_name=Chrome Extension.
 - Access15분, 독립 family/refresh30일. 갱신 성공마다 token+family30일 연장은 기존 refresh 서비스 계약이다.
-- IP+installation10회/10분. JSON 바인딩 전 별도 익명 공간의 IP300회/10분 보호. 기존 인증 사용자 bucket을 소모하지 않는다. 단일 서버 fixed-window 한도이며 proxy 헤더는 신뢰하지 않는다.
+- IP+installation10회/10분(형식 오류 포함). JSON 바인딩 전 별도 익명 공간의 IP300회/10분 보호. 설치 한도 기록은 IP별 유효 기록 32개까지 별도로 제한한다. 초과 시 기존 기록은 유지하고 새 설치는 429·Retry-After로 거절한다. 기존 인증 사용자 bucket을 소모하지 않는다. 단일 서버 fixed-window 한도이며 proxy 헤더는 신뢰하지 않는다.
 
 | 상황 | HTTP / code | 부가 처리 |
 | --- | --- | --- |
