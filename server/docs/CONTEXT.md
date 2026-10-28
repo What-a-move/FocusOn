@@ -9,7 +9,7 @@
 
 ## 현재 작업 (2026-10-27)
 
-- Issue #83: 닉네임 유일 제약 오류 변환, 동의·집중 설정 저장 잠금, 고정 닉네임 테스트를 수정했다. 사용자 결정으로 최신 동의 출처를 저장하며 PostgreSQL 동시성 검증은 미완료다. 상세는 `features/user-configuration-review-REPORT.md`를 따른다.
+- Issue #83: 닉네임 유일 제약 오류 변환, 동의·집중 설정 저장 잠금, 고정 닉네임 테스트를 수정했다. 사용자 결정으로 최신 동의 출처를 저장한다. PostgreSQL 동시 시작 테스트는 통과했지만 닉네임 사전 검사 두 건이 겹쳤는지는 확인하지 못했다. 상세는 `features/user-configuration-review-REPORT.md`를 따른다.
 
 - Issue #38 사용자 설정 API: 도메인 반복 교체 충돌과 닉네임 문자 검증을 수정하고 계정 격리 테스트를 보강했다. 실행 중인 PostgreSQL에서 Flyway V1~V3 성공 기록과 Docker 서버 8개 API의 무인증 401을 확인했다. 최신 로컬 변경의 실계정 HTTP 재검증과 Notion 오류·권한 상세 대조가 남아 있다. 상세는 `features/user-configuration-REPORT.md`를 따른다.
 - Issue #79: `chore/#79-swagger-testing`에서 백엔드 개발용 Swagger·JWT Authorize·Google PKCE 도구 구현·독립 리뷰·QA를 완료했다. 기준 dev는 `65da4f0`이다.
