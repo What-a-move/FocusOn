@@ -37,7 +37,8 @@ public class GoalController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "학습 목표 저장",
-      description = "AI 확인 대화 연동 전에는 수동 확정 목표만 저장합니다.")
+      description = "AI 확인 대화 연동 전에는 수동 확정 목표만 저장하며, "
+          + "수동 확정에 포함된 대화 ID는 검증하거나 저장하지 않습니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "목표 저장 성공"),
       @ApiResponse(responseCode = "400", description = "입력값 오류",

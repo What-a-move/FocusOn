@@ -31,8 +31,7 @@ public class GoalService {
     if (length < 2 || length > 40) {
       throw new ApiException(ApiErrorCode.GOAL_TEXT_INVALID);
     }
-    if (request.confirmationSource() != ConfirmationSource.MANUAL_CONFIRMED
-        || request.clarificationSessionId() != null) {
+    if (request.confirmationSource() != ConfirmationSource.MANUAL_CONFIRMED) {
       throw new ApiException(ApiErrorCode.SERVICE_UNAVAILABLE);
     }
     UserEntity user = users.findById(principal.userId())
