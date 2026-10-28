@@ -1,7 +1,7 @@
 # 닉네임 동시성 CI 수정 계획
 
 - Issue: [#93](https://github.com/What-a-move/FocusOn/issues/93)
-- Branch: `fix/93-nickname-ci`, 기준 `origin/dev` f16c874
+- Branch: `fix/93-nickname-ci`, 최신 `origin/dev` 7470184 반영
 
 ## 범위
 

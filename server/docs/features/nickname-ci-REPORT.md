@@ -16,4 +16,5 @@
 - PostgreSQL 17 임시 DB에서 Flyway 적용 후 동시성 테스트를 3회 순차 재실행해 모두 통과했다. 각 회차에서 응답 200·409와 저장된 닉네임 1건을 확인했다.
 - GitHub Actions의 실제 CI 실행 상태는 push 후 확인해야 한다.
 - 추가 검증에서 Spring Data가 생성한 실제 `UserRepository.findByNickname`으로 두 요청이 모두 빈 조회 결과를 확인한 뒤 저장하도록 강제했다. PostgreSQL `uq_users_nickname` 충돌, 200·409 응답과 DB 저장 1건을 확인했고 3회 재실행해 모두 통과했다. 테스트용 Repository는 애플리케이션에 주입된 객체와 별개로 생성했다.
-- 강제 동시성 테스트 추가 후 H2 전체 빌드·테스트와 Main/Test Checkstyle을 실행해 통과했다. 실제 Repository 조회로 변경한 후 최신 dev에서 재검증한다.
+- 최신 `dev` 7470184를 병합한 뒤 PostgreSQL 강제 동시성 테스트와 H2 전체 빌드·테스트, Main/Test Checkstyle을 재실행해 통과했다.
+- 최신 `dev`에도 닉네임 동시 충돌 부분을 H2에서 건너뛰는 변경이 이미 포함되어 있었다. 이번 변경은 이를 분리하고 PostgreSQL CI 검사와 사전 조회 동기화를 추가한다.
