@@ -2,6 +2,8 @@
 
 ## 현재 작업 (2026-10-27)
 
+- 2026-10-28 Issue #87: 목표 생성·상세 조회를 구현 중이다. 사용자가 Swagger 테스트, Notion 경로·메서드 일치 및 `goals` 테이블 생성을 확인했다. AI 명확화 세션 검증은 해당 기능이 준비된 뒤 연동해야 한다. 기존 닉네임 동시성 테스트 실패와 수동 테스트의 세부 결과를 확인한다. 상세는 `features/goal-create-read-REPORT.md`를 따른다.
+
 - Issue #83: PostgreSQL 동시 시작 테스트와 local 서버의 실계정 인증 HTTP QA를 수행했다. PR 전 최신 dev의 migration 번호를 대조한다. 개발 DB와 격리 테스트 DB에 V4 적용은 확인했다. 사용자 `UserEntity` 미커밋 변경은 별도로 보존한다.
 
 - Issue #38: Notion 8개 API의 나머지 오류·권한 상세를 대조하고 최신 로컬 코드의 실계정 HTTP 성공 경로를 재검증한다. PostgreSQL MockMvc 및 기존 DB의 Flyway V1~V3 기록, 실행 서버 무인증 401은 확인했다. PLAN 승인·독립 리뷰·PR은 각각 실제 결과를 확인한다.
