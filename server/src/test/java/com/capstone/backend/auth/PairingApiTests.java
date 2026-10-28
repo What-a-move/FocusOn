@@ -35,6 +35,7 @@ import com.capstone.backend.common.api.RequestIdFilter;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -72,7 +73,8 @@ class PairingApiTests {
 
   @BeforeEach
   void setUp() {
-    now = Instant.now();
+    // H2/PostgreSQL은 DB 시각을 마이크로초까지 저장하므로 경계 기준을 밀리초에 고정한다.
+    now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
     when(pairingClock.instant()).thenReturn(now);
     when(google.exchange(any())).thenAnswer(call ->
         ((GoogleExchangeRequest) call.getArgument(0)).state());
