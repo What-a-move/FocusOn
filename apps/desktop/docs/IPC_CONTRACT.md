@@ -178,7 +178,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 
 | Channel | 입력 | 성공 data | Backend |
 | --- | --- | --- | --- |
-| `session:focus-settings:get` | `void` | `{ interventionLevel, notificationChannels, cameraAnalysisEnabled }` | `GET /api/v1/users/me/focus-settings` |
+| `session:focus-settings:get` | `void` | `{ interventionLevel, notificationChannels, cameraAnalysisEnabled, breakSuggestionEnabled }` (2026-10-27 휴식 제안 추가, 4개 모두 필수) | `GET /api/v1/users/me/focus-settings` |
 | `session:start` | `{ goalId, goalText(화면 표시용, 서버로 안 보냄), targetDurationMs(5~300분, 분 단위), timeZone(IANA), sessionOptions: { interventionLevel, notificationChannels(1개 이상·중복 없음), cameraAnalysisEnabled }, idempotencyKey(UUID v4) }` | `{ sessionId, status, version, targetDurationMs, accumulatedActiveMs, startedAt, interventionPolicyVersion }` | `POST /api/v1/sessions` |
 
 - Main은 `Authorization`(Bearer Access Token, 모든 인증 요청 공통)·`Idempotency-Key`·`X-Device-Id` 헤더를 붙이고, `startReadiness: { screenAnalysisReady }`는 Main이 macOS 권한을 직접 확인해 넣는다(Renderer 입력 아님). POST라 자동 재전송하지 않는다. Renderer는 같은 선택으로 다시 누르면 같은 키를 보낸다.
@@ -239,6 +239,20 @@ Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Ma
 - 포키 창은 `/floating/`을 띄운 macOS panel 창(투명·테두리 없음·다른 앱 위·포커스를 빼앗지 않음)이며, 이 창에서 온 `intervention:act`만 받는다. 문구는 Main이 정해 보낸다.
 - `RECENTER`·`REST`는 `ACKNOWLEDGED`, `CLOSE`는 `DISMISSED`로 기록하고 `REST`는 세션을 일시정지한다. `ACK`(확인했어)는 창만 닫는다(5분 재집중은 화면 상태). 기록 실패는 다시 보내지 않는다.
 - 알림 목록 응답 형식은 Notion에 필드만 있어 `{ interventionId, type, status, channels }` 배열 또는 `{ interventions: [] }`로 읽는다(백엔드 확인 필요).
+
+### 설정 Channel (2026-10-27, Issue #80, 결정 029)
+
+| Channel | 입력 | 성공 data | Backend |
+| --- | --- | --- | --- |
+| `settings:focus-settings:save` | `{ interventionLevel, notificationChannels(1개 이상·중복 없음), cameraAnalysisEnabled, breakSuggestionEnabled }` (4개 필드만) | 저장된 전체 값 | `PUT /api/v1/users/me/focus-settings` |
+| `settings:excluded-domains:get` | `void` | `{ domains }` | `GET /api/v1/users/me/analysis-excluded-domains` (`X-Device-Id`) |
+| `settings:excluded-domains:save` | `{ domains }` (최대 50개, 정규화한 host) | `{ domains }` | `PUT /api/v1/users/me/analysis-excluded-domains` (전체 교체, `X-Device-Id`) |
+| `app:theme:get` | `void` | `{ theme: light \| dark \| system }` | — |
+| `app:theme:set` | `{ theme: light \| dark \| system }` | `{ theme }` | — (`nativeTheme.themeSource` + `userData/preferences.json`) |
+
+- 집중 설정 조회는 기존 `session:focus-settings:get`을 쓴다. 저장은 바꿀 때마다 전체 객체를 보내고, `cameraAnalysisEnabled`는 읽은 값을 그대로 돌려보낸다(카메라 분석 미구현).
+- 설정 화면의 제외 사이트 저장은 온보딩 `onboarding:excluded-domains:save`와 달리 `onboarding-readiness` 단계 완료를 기록하지 않는다.
+- 화면 모드는 앱 시작 때 창을 만들기 전에 저장값을 적용한다. 파일이 없거나 깨졌으면 `system`이다.
 
 ## 보안 규칙
 

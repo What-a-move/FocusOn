@@ -7,6 +7,7 @@ import { REPORT_CHANNELS } from '../shared/report-contract.cjs'
 import { GOAL_CHANNELS } from '../shared/goal-contract.cjs'
 import { SESSION_CHANNELS, isSessionSnapshot } from '../shared/session-contract.cjs'
 import { ANALYSIS_CHANNELS } from '../shared/analysis-contract.cjs'
+import { SETTINGS_CHANNELS } from '../shared/settings-contract.cjs'
 import { INTERVENTION_CHANNELS, isFloatingShow, type FloatingShow } from '../shared/intervention-contract.cjs'
 
 // 포키 창이 구독하기 전에 첫 알림이 도착해도 잃지 않도록 마지막 알림을 보관했다가 구독할 때 다시 전달한다.
@@ -103,6 +104,18 @@ const focusOnApi: FocusOnApi = {
     listInstalledApps: () => ipcRenderer.invoke(ANALYSIS_CHANNELS.installedApps),
     getExcludedApps: () => ipcRenderer.invoke(ANALYSIS_CHANNELS.excludedAppsGet),
     saveExcludedApps: (input) => ipcRenderer.invoke(ANALYSIS_CHANNELS.excludedAppsSave, { apps: input.apps.map(({ bundleId, name }) => ({ bundleId, name })) }),
+  },
+  settings: {
+    saveFocusSettings: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.saveFocusSettings, {
+      interventionLevel: input.interventionLevel,
+      notificationChannels: [...input.notificationChannels],
+      cameraAnalysisEnabled: input.cameraAnalysisEnabled,
+      breakSuggestionEnabled: input.breakSuggestionEnabled,
+    }),
+    getExcludedDomains: () => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsGet),
+    saveExcludedDomains: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsSave, { domains: [...input.domains] }),
+    getTheme: () => ipcRenderer.invoke(SETTINGS_CHANNELS.themeGet),
+    setTheme: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.themeSet, { theme: input.theme }),
   },
   interventions: {
     onShow(callback) {
