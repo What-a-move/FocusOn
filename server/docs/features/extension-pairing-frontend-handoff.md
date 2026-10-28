@@ -32,3 +32,12 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 - Extension에 `LINK_007_INSTALLATION_ALREADY_LINKED` 전용 안내가 없다. 연결 해제 API가 미구현이어서 다른 계정 활성 설치를 해제하는 전 과정은 동작하지 않는다.
 - Desktop은 readiness GET/PUT과 `steps.extensionLinked`에 의존한다. Backend는 이 endpoint를 아직 제공하지 않아 프론트 전체 온보딩 흐름은 미완성이다. 이 API는 별도의 저장 모델·완료 정책이 필요하다.
 - 실제 Desktop·Chrome Extension 실행 왕복은 이번 검사에서 수행하지 않았다. Backend 변경만으로 프론트 오류 화면이나 종료 시 취소 호출이 바뀌지는 않는다.
+
+## LINK_007 복구 경로 검토 (2026-10-28)
+
+현재 #58 브랜치에는 연결 해제 API가 아직 없으므로 LINK_007 뒤 Extension 팝업에서 해제할 수 없다. 다른 계정이 설치 ID나 연결 코드만으로 기존 소유자의 연결을 해제하는 방식은 허용하지 않는다.
+
+- 현재 코드에서 기존 계정으로 인증된 **연결 원본 Desktop**이 로그아웃하면 그 Desktop에 직접 연결된 Extension을 REVOKED로 변경하고 토큰을 폐기한다. 이후 새 계정으로 연결할 수 있다. 이는 API 수준 동작이며 현재 Desktop 화면에서 사용 가능한지와 실제 앱 왕복은 별도 확인이 필요하다.
+- 제안: 기존 Extension의 유효한 토큰과 deviceId가 있으면 팝업에서 본인의 연결을 해제한다. Desktop도 본인 소유 기기만 해제할 수 있도록 기기 조회·해제 흐름이 필요하다. 두 경로의 상세 권한·동시성·오류는 후속 Issue와 정본 검토 후 구현한다.
+- Extension 토큰이 없으면 기존 Google 계정으로 Desktop에 다시 인증하여 본인 기기를 조회·해제하는 복구 경로가 필요하다. 기기 조회·해제 API와 화면이 현재 구현됐다고 가정하면 안 된다. 기존 계정 인증도 불가능하면 임의 해제를 허용하지 않으며 소유권 확인을 위한 별도 복구 정책이 필요하다.
+- Backend는 아직 dev에 병합되지 않았다. 실제 Desktop·Extension 연동 QA는 dev 반영과 Frontend의 취소·오류·해제 화면 구현 후 별도로 진행한다.

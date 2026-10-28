@@ -273,6 +273,39 @@ public class PairingService {
     });
   }
 
+  /** 사용자 잠금으로 연결·로그아웃·갱신과 직렬화하고 대상 family만 폐기한다. */
+  public void unlink(FocusOnPrincipal principal, long extensionDeviceId) {
+    transaction.executeWithoutResult(status -> {
+      users.findByIdForUpdate(principal.userId())
+          .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+      Instant now = clock.instant();
+      var caller = families.findByIdForUpdate(principal.tokenFamilyId())
+          .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+      if (!caller.getUser().getId().equals(principal.userId())
+          || !caller.getDevice().getId().equals(principal.deviceId())
+          || !guard.isActive(caller, now)
+          || !guard.hasActiveLinkedDesktop(caller.getDevice(), principal.userId(), now)) {
+        throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+      }
+      var device = devices.findById(extensionDeviceId)
+          .filter(d -> d.getUser().getId().equals(principal.userId()))
+          .filter(d -> d.getDeviceType() == UserDeviceEntity.DeviceType.CHROME_EXTENSION)
+          .filter(d -> principal.deviceType() == UserDeviceEntity.DeviceType.DESKTOP
+              || d.getId().equals(principal.deviceId()))
+          .orElseThrow(() -> new ApiException(ApiErrorCode.DEVICE_NOT_FOUND));
+      families.findByDeviceAndStatus(device.getId(), TokenFamilyEntity.Status.ACTIVE)
+          .ifPresent(family -> {
+            var locked = families.findByIdForUpdate(family.getId()).orElseThrow();
+            locked.setStatus(TokenFamilyEntity.Status.REVOKED);
+            locked.setRevokedReason(TokenFamilyEntity.RevokedReason.UNLINK);
+            locked.setRevokedAt(now);
+            tokens.revokeActiveByFamily(locked.getId(), now);
+          });
+      device.setStatus(UserDeviceEntity.Status.REVOKED);
+      device.setRevokedAt(now);
+    });
+  }
+
   private UserDeviceEntity currentDesktop(FocusOnPrincipal principal, Instant now) {
     var family = families.findByIdForUpdate(principal.tokenFamilyId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));

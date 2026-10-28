@@ -57,4 +57,13 @@ public class PairingController {
       @PathVariable long pairingCodeId) {
     pairing.cancel(principal, pairingCodeId);
   }
+
+  /** 인증된 소유자의 Extension 연결을 해제한다. */
+  @DeleteMapping("/extension-pairings/{extensionDeviceId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "Extension 연결 해제")
+  public void unlink(@AuthenticationPrincipal FocusOnPrincipal principal,
+      @PathVariable long extensionDeviceId) {
+    pairing.unlink(principal, extensionDeviceId);
+  }
 }

@@ -10,6 +10,7 @@ public enum ApiErrorCode {
   AUTH_RELOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "다시 로그인해 주세요.", false),
   AUTH_OAUTH_REAUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "Google 인증을 다시 진행해 주세요.", false),
   AUTH_DEVICE_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "기존 Desktop 기기를 해제해 주세요.", false),
+  DEVICE_NOT_FOUND(HttpStatus.NOT_FOUND, "기기를 찾을 수 없습니다.", false),
   LINK_001_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "영문·숫자 6자리 코드를 확인해 주세요.", false),
   LINK_002_EXPIRED(HttpStatus.GONE, "코드가 만료됐습니다. 새 코드를 발급해 주세요.", false),
   LINK_003_ALREADY_USED(HttpStatus.CONFLICT, "이미 사용한 코드입니다.", false),

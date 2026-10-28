@@ -80,6 +80,48 @@ class PairingApiTests {
   }
 
   @Test
+  void extensionCanUnlinkItselfAndAnotherAccountCanThenConnect() throws Exception {
+    var first = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var second = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    String installation = UUID.randomUUID().toString();
+    var original = pairing.claim(new ClaimRequest(pairing.issue(first.principal()).codeDisplay(),
+        installation), "unlink-ip");
+    var newCode = pairing.issue(second.principal());
+    assertEquals(ApiErrorCode.LINK_007_INSTALLATION_ALREADY_LINKED,
+        assertThrows(ApiException.class, () -> pairing.claim(
+            new ClaimRequest(newCode.codeDisplay(), installation), "unlink-ip")).code());
+    mvc.perform(delete("/api/v1/extension-pairings/" + original.device().deviceId())
+        .header("Authorization", "Bearer " + second.access()))
+        .andExpect(status().isNotFound());
+    mvc.perform(delete("/api/v1/extension-pairings/" + original.device().deviceId())
+        .header("Authorization", "Bearer " + original.accessToken()))
+        .andExpect(status().isNoContent()).andExpect(content().string(""));
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + original.accessToken()))
+        .andExpect(status().isUnauthorized());
+    assertThrows(ApiException.class, () -> lifecycle.refresh(original.refreshToken()));
+    var next = pairing.claim(new ClaimRequest(newCode.codeDisplay(), installation), "unlink-ip");
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + next.accessToken()))
+        .andExpect(status().isOk());
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + first.access()))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void desktopCanUnlinkItsExtensionWithoutRevokingOtherExtensions() throws Exception {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var one = pairing.claim(new ClaimRequest(pairing.issue(owner.principal()).codeDisplay(),
+        UUID.randomUUID().toString()), "unlink-ip");
+    var two = pairing.claim(new ClaimRequest(pairing.issue(owner.principal()).codeDisplay(),
+        UUID.randomUUID().toString()), "unlink-ip");
+    mvc.perform(delete("/api/v1/extension-pairings/" + two.device().deviceId())
+        .header("Authorization", "Bearer " + one.accessToken())).andExpect(status().isNotFound());
+    mvc.perform(delete("/api/v1/extension-pairings/" + one.device().deviceId())
+        .header("Authorization", "Bearer " + owner.access())).andExpect(status().isNoContent());
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + two.accessToken()))
+        .andExpect(status().isOk());
+  }
+
+  @Test
   void publicClaimIssuesIndependentTokensAndDesktopLogoutRevokesThem() throws Exception {
     final var desktop = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     var issued = pairing.issue(desktop.principal());
