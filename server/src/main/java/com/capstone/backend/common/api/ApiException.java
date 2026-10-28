@@ -38,6 +38,15 @@ public final class ApiException extends RuntimeException {
     return new ApiException(ApiErrorCode.TOO_MANY_REQUESTS, retryAfterSeconds, Map.of());
   }
 
+  /** 입력 잠금의 410 응답에도 남은 대기 시간과 시도 횟수를 함께 제공한다. */
+  public static ApiException pairingLocked(long retryAfterSeconds) {
+    if (retryAfterSeconds < 1) {
+      throw new IllegalArgumentException("Retry-After must be positive");
+    }
+    return new ApiException(ApiErrorCode.LINK_004_ATTEMPTS_EXCEEDED, retryAfterSeconds,
+        Map.of("remainingAttempts", 0));
+  }
+
   /** 클라이언트가 분기할 오류 코드를 반환한다. */
   public ApiErrorCode code() {
     return code;

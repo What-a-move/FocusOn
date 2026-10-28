@@ -30,6 +30,7 @@ import { ScreenObserver, parseFrontmost } from './screen-observer.cjs'
 import { AnalysisSender } from './analysis-sender.cjs'
 import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
+import { SettingsService, ThemePreference, registerSettingsIpc } from './settings-ipc.cjs'
 import { InterventionWatcher } from './intervention-watcher.cjs'
 import { INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
 
@@ -206,6 +207,13 @@ if (!hasSingleInstanceLock) {
     })
 
     installMenu()
+    // 화면 모드는 창을 만들기 전에 적용해야 첫 화면부터 맞는 색으로 그린다.
+    const themePreference = new ThemePreference(path.join(app.getPath('userData'), 'preferences.json'))
+    nativeTheme.themeSource = themePreference.read()
+    registerSettingsIpc(() => mainWindow, rendererUrl, authService ? new SettingsService(authService) : null, {
+      get: () => nativeTheme.themeSource,
+      set: (theme) => { themePreference.write(theme); nativeTheme.themeSource = theme },
+    })
     registerAuthIpc(() => mainWindow, rendererUrl, authStore, oauthFlow, authService)
     const notificationReadiness = new NotificationReadiness(path.join(app.getPath('userData'), 'notification-readiness.json'))
     registerPermissionIpc(() => mainWindow, rendererUrl, notificationReadiness)

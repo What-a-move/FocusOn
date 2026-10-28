@@ -6,9 +6,9 @@ import { OnboardingShell } from './OnboardingShell'
 import { ExcludedAppsField } from './ExcludedAppsField'
 import { analysisApi, describeError, onboardingApi, type ExcludedApp, type Notice } from './onboarding-api'
 
-const MAX_SITES = 50
+export const MAX_SITES = 50
 const defaultHint = { kind: '' as '' | 'error' | 'success', text: '도메인만 적어 주세요. 하위 도메인도 함께 제외돼요.' }
-const DOMAIN = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]?$/u
+export const DOMAIN = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]?$/u
 
 // [주의] 주소 전체가 아니라 정규화한 host만 남긴다 (API_CONTRACT 분석 제외 도메인).
 export function normalizeDomain(raw: string): string {

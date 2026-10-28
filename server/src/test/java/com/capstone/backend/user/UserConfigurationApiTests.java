@@ -43,6 +43,8 @@ class UserConfigurationApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
   @Autowired private UserConsentRepository consents;
+  @org.springframework.beans.factory.annotation.Value("${spring.datasource.driver-class-name}")
+  private String driverClassName;
   @MockitoBean private GoogleOauthClient google;
   private MockMvc mvc;
 
@@ -57,11 +59,14 @@ class UserConfigurationApiTests {
   void concurrentFirstWritesAndNicknameConflicts() throws Exception {
     LoginResponse first = desktop("concurrent-first");
     LoginResponse second = desktop("concurrent-second");
-    String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
-    String profileBody = "{\"nickname\":\"" + nickname + "\"}";
-    List<Integer> profileStatuses = concurrentPut("/api/v1/users/me/profile", profileBody,
-        first.accessToken(), second.accessToken());
-    assertEquals(List.of(200, 409), profileStatuses.stream().sorted().toList());
+    if (!"org.h2.Driver".equals(driverClassName)) {
+      // PostgreSQL의 partial UNIQUE와 제약명 매핑은 Flyway를 실행하지 않는 H2로 검증할 수 없다.
+      String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
+      String profileBody = "{\"nickname\":\"" + nickname + "\"}";
+      List<Integer> profileStatuses = concurrentPut("/api/v1/users/me/profile", profileBody,
+          first.accessToken(), second.accessToken());
+      assertEquals(List.of(200, 409), profileStatuses.stream().sorted().toList());
+    }
 
     String consentBody = "{\"isGranted\":true,\"consentVersion\":\"2026-09-17\","
         + "\"consentSource\":\"ONBOARDING\"}";

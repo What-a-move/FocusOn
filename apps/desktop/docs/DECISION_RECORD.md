@@ -641,3 +641,14 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 자동 갱신 중 Keychain 읽기·쓰기가 실패하면 메모리 토큰을 버리고 `OFFLINE`으로 바꾼다. 이 상태의 인증 요청은 다시 복구하기 전까지 `AUTH_RELOGIN_REQUIRED`로 실패한다.
 - 이유: "요청을 시작할 때의 로그인 = 지금 로그인인가?"를 Google 교환에서만 확인해 5가지 경쟁이 생겼다. 서버 API·IPC 형식은 바꾸지 않는다.
 - 영향받는 파일: `electron/main/auth-service.cts`, `electron/main/auth-ipc.cts`, `tests/electron/auth-races.test.cjs`
+
+## 결정 029 - 설정 화면은 집중·분석·권한·화면 탭만 먼저 만들고 계약에 없는 값은 넣지 않는다
+
+- 결정일: 2026-10-27 / 상태: 확정 (사용자 결정) / Issue #80.
+- 범위: `settings.html`의 5개 탭 중 집중·분석·권한·화면만 만든다. 계정(D25)·기기 연결(D24)은 다음 Issue에서 만들고, 그전에는 탭 자체를 보여 주지 않는다.
+- 시안의 `기본 집중 시간`은 focus-settings에 필드가 없어 넣지 않는다. 시안 선택지(25·50·90분)도 세션 시간 계약(30분·1시간·2시간·직접)과 다르다. 필요하면 백엔드에 필드 추가를 먼저 묻는다.
+- 권한 목록은 Desktop이 직접 확인할 수 있는 화면 기록·알림만 보여 준다. `Chrome 페이지 분석`은 Extension 사이트 권한이고 `활성 앱 확인`은 macOS 권한이 필요 없다. 카메라 분석 스위치는 카메라 분석이 구현될 때 넣는다.
+- 집중 설정은 바꿀 때마다 `PUT focus-settings`로 전체 객체를 저장하고 실패하면 되돌린다. 읽지 못하면 기본값을 보여 주거나 저장하지 않는다.
+- `FocusSettings` 타입에 `breakSuggestionEnabled`를 넣고, 세션 시작용 `SessionOptions`(3개 필드)와 나눴다. GET 응답에 휴식 제안이 없으면 형식 오류다(Notion GET 응답 필드).
+- 화면 모드는 Main이 `nativeTheme.themeSource`로 앱 전체에 적용하고 이 기기에만 저장한다. 기존 CSS의 `prefers-color-scheme`이 그대로 따라간다.
+- 영향받는 파일: `electron/shared/settings-contract.cts`, `electron/main/settings-ipc.cts`, `electron/shared/session-contract.cts`, `features/settings/*`, `features/dashboard/AppSidebar.tsx`

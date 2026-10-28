@@ -3,16 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { AppSidebar } from './AppSidebar'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
 import './dashboard.css'
 
-const NAVIGATION = [
-  { label: '홈', asset: 'nav-home.png' },
-  { label: '집중 시작', asset: 'nav-start.svg' },
-  { label: '집중 기록', asset: 'nav-records.png' },
-  { label: '학습 노트', asset: 'nav-notes.svg' },
-  { label: '설정', asset: 'nav-settings.png' },
-] as const
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
 
 type CalendarView =
@@ -178,16 +172,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const monthDays = current && current !== 'error' ? current.studyDayCount : null
 
   return <main className="fo-home-window">
-    <aside className="fo-sidebar" aria-label="주 메뉴">
-      <span className="fo-logo fo-sidebar-logo">
-        <Image className="fo-logo-light" src="/design/focuson-logo.png" alt="FocusOn" width={2172} height={724} priority />
-        <Image className="fo-logo-dark" src="/design/focuson-logo-dark.png" alt="FocusOn" width={2172} height={724} priority />
-      </span>
-      <nav className="fo-nav">{NAVIGATION.map(({ label, asset }, index) => <span className={`fo-nav-item${index === 0 ? ' active' : ''}`} aria-current={index === 0 ? 'page' : undefined} key={label}><Image src={`/design/${asset}`} alt="" width={28} height={28} /><span>{label}</span></span>)}</nav>
-      <div className="fo-sidebar-spacer" />
-      <div className="fo-profile"><span className="fo-profile-avatar" aria-hidden="true" /><div><strong>{name}</strong><small>Google 계정</small></div></div>
-      <button className="fo-sidebar-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? '로그아웃 중…' : '로그아웃'}</button>
-    </aside>
+    <AppSidebar active="home" name={name} onLogout={onLogout} busy={busy} />
     <div className="fo-home-content">
       <header className="fo-topbar">
         <div className="fo-rise"><span>{today ? new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(today) : '오늘'}</span><p><strong>{name}</strong>님, 안녕하세요</p></div>

@@ -39,7 +39,7 @@ public class ApiSecurityConfiguration {
         .requestCache(cache -> cache.disable())
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/api/v1/auth/google/exchange",
-                "/api/v1/auth/refresh").permitAll()
+                "/api/v1/auth/refresh", "/api/v1/extension-pairings").permitAll()
             .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
             .requestMatchers("/api/v1/**").authenticated().anyRequest().denyAll())
         .exceptionHandling(errors -> errors
@@ -93,6 +93,9 @@ public class ApiSecurityConfiguration {
         if ("POST".equals(request.getMethod()) && "/api/v1/auth/refresh".equals(path)) {
           // JSON 변환·@Valid보다 먼저 집계한다. refresh의 Bearer는 인증 수단으로 쓰지 않는다.
           limits.checkRefreshIp(request.getRemoteAddr());
+        } else if ("POST".equals(request.getMethod())
+            && "/api/v1/extension-pairings".equals(path)) {
+          limits.checkPairingIp(request.getRemoteAddr());
         } else {
           authenticateBearer(request);
         }

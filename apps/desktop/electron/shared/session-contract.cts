@@ -15,8 +15,9 @@ export const SESSION_CHANNELS = {
 
 export type InterventionLevel = 'GENTLE' | 'NORMAL' | 'ACTIVE'
 export type NotificationChannel = 'MOLE_UI' | 'MACOS_NOTIFICATION' | 'SOUND'
-export type FocusSettings = { interventionLevel: InterventionLevel; notificationChannels: NotificationChannel[]; cameraAnalysisEnabled: boolean }
-export type SessionOptions = FocusSettings
+export type SessionOptions = { interventionLevel: InterventionLevel; notificationChannels: NotificationChannel[]; cameraAnalysisEnabled: boolean }
+/** GET·PUT /users/me/focus-settings. 세션 시작 sessionOptions에는 breakSuggestionEnabled를 넣지 않는다(API_CONTRACT). */
+export type FocusSettings = SessionOptions & { breakSuggestionEnabled: boolean }
 /** goalText는 집중 화면 표시용이며 서버로 보내지 않는다(서버는 goalId로 snapshot을 만든다). */
 export type StartSessionInput = { goalId: string; goalText: string; targetDurationMs: number; timeZone: string; sessionOptions: SessionOptions; idempotencyKey: string }
 export type StartedSession = { sessionId: string; status: string; version: number; targetDurationMs: number; accumulatedActiveMs: number; startedAt: string; interventionPolicyVersion: string }
@@ -88,8 +89,14 @@ export function isValidStartInput(value: unknown): value is StartSessionInput {
 }
 
 export function parseFocusSettings(value: unknown): FocusSettings | null {
-  if (!isRecord(value) || !LEVELS.includes(value.interventionLevel as InterventionLevel) || !isChannelList(value.notificationChannels) || typeof value.cameraAnalysisEnabled !== 'boolean') return null
-  return { interventionLevel: value.interventionLevel as InterventionLevel, notificationChannels: value.notificationChannels, cameraAnalysisEnabled: value.cameraAnalysisEnabled }
+  if (!isRecord(value) || !LEVELS.includes(value.interventionLevel as InterventionLevel) || !isChannelList(value.notificationChannels)
+    || typeof value.cameraAnalysisEnabled !== 'boolean' || typeof value.breakSuggestionEnabled !== 'boolean') return null
+  return { interventionLevel: value.interventionLevel as InterventionLevel, notificationChannels: value.notificationChannels, cameraAnalysisEnabled: value.cameraAnalysisEnabled, breakSuggestionEnabled: value.breakSuggestionEnabled }
+}
+
+/** Renderer가 보낸 집중 설정 저장 입력. 4개 필드만 받는다. */
+export function isFocusSettingsInput(value: unknown): value is FocusSettings {
+  return isRecord(value) && Object.keys(value).length === 4 && parseFocusSettings(value) !== null
 }
 
 const STATUSES: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING', 'ENDED', 'ABANDONED']
