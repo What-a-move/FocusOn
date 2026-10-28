@@ -2,7 +2,7 @@
 
 ## 현재 작업 (2026-10-28)
 
-- #58 Extension 연결 구현·정본 반영·독립 리뷰·QA 완료, feat/#58-extension-pairing에서 PR 생성 승인 대기.
+- #58 연결과 #86 Extension 연결 해제·기기 조회는 PR #91에 제출돼 리뷰 중이다. #85 온보딩 준비 상태 PR #92는 #91에 의존한다. 두 PR 모두 dev 미병합이다.
 - Issue #83: PostgreSQL 동시 시작 테스트와 local 서버의 실계정 인증 HTTP QA를 수행했다. PR 전 최신 dev의 migration 번호를 대조한다. 개발 DB와 격리 테스트 DB에 V4 적용은 확인했다. 사용자 `UserEntity` 미커밋 변경은 별도로 보존한다.
 - Issue #38의 사용자 설정 PR #82가 dev에 병합됐다. 관련 CodeRabbit 지적을 다룬 PR #84가 dev에 병합됐다.
 - 검증: 최신 dev 통합 후 build/Checkstyle·H2 JUnit87·PostgreSQL 연결16/사용자 설정7·V1~V5 통과. 이전 기준 HTTP33·DB제약6. 실제 Frontend UI 통합은 미완료다.
@@ -10,9 +10,9 @@
 
 ## 다음 순서
 
-1. 변경 검토 후 PR 초안 공유·사용자 승인, dev 대상 PR·CI 확인. dev 직접 push 금지.
+1. PR #91·#92의 리뷰와 CI를 확인하고 지적을 수정한다. #91을 먼저 처리하며 병합·이슈 종료는 별도 승인을 받는다.
 2. Frontend 담당에게 extension-pairing-frontend-handoff.md를 전달하고 실제 앱 연결 QA. 이 AI가 Frontend 파일을 수정하지 않는다.
-3. #38 온보딩·닉네임 작업을 중복하지 않는다. 기기 관리·Extension unlink는 별도 후속 범위다.
+3. #86 기기 조회·Extension unlink와 선행 #58 연결 코드를 PR #91에서 검토한다. 기기 선택 폐기 및 Frontend 화면은 별도 범위다. #85 readiness PR은 #91에 의존한다.
 4. #79는 PR81 병합·실제 Google QA 완료 상태이며 종료는 승인 후 진행한다.
 
 아래는 과거 작업 이력이다. 미완료 문구를 현재 지시로 재개하지 않는다.
@@ -40,7 +40,7 @@
 - 로그인·refresh·logout의 DB 변경 잠금 순서는 사용자→family다. 신규 인증 변경도 이 순서와 폐기 commit 경계를 확인한다.
 - 기존 V1/V2를 수정하지 않고 새 schema는 후속 migration으로 분리한다.
 
-## PR 검증 결과
+## PR 검증 결과 (아래 이전 항목은 당시 이력)
 
 PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionable comment 0건. 주석 경고 보완 후 CI를 다시 확인한다. 병합·Issue #59 종료는 사용자 별도 승인이 필요하다.
 
