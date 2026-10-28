@@ -2,7 +2,10 @@ package com.capstone.backend.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,25 +16,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.capstone.backend.auth.dto.AuthDtos.DesktopDevice;
 import com.capstone.backend.auth.dto.AuthDtos.GoogleExchangeRequest;
 import com.capstone.backend.auth.dto.AuthDtos.LoginResponse;
+import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.common.api.RequestIdFilter;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -43,7 +52,10 @@ class UserConfigurationApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
   @Autowired private UserConsentRepository consents;
+  @Autowired private JdbcTemplate jdbc;
+  @Autowired private EntityManager entityManager;
   @MockitoBean private GoogleOauthClient google;
+  @MockitoSpyBean private UserRepository users;
   private MockMvc mvc;
 
   @BeforeEach
@@ -54,15 +66,41 @@ class UserConfigurationApiTests {
   }
 
   @Test
-  void concurrentFirstWritesAndNicknameConflicts() throws Exception {
+  void concurrentNicknameConflictsOnPostgres() throws Exception {
+    try (var connection = jdbc.getDataSource().getConnection()) {
+      assumeTrue("PostgreSQL".equals(connection.getMetaData().getDatabaseProductName()),
+          "닉네임 동시 충돌은 Flyway 제약이 적용된 PostgreSQL에서 검증한다.");
+    }
     LoginResponse first = desktop("concurrent-first");
     LoginResponse second = desktop("concurrent-second");
     String nickname = "qa" + UUID.randomUUID().toString().substring(0, 8);
+    CountDownLatch checked = new CountDownLatch(2);
+    AtomicInteger emptyChecks = new AtomicInteger();
+    UserRepository realUsers = new JpaRepositoryFactory(entityManager)
+        .getRepository(UserRepository.class);
+    doAnswer(invocation -> {
+      var result = realUsers.findByNickname(nickname);
+      if (result.isEmpty()) {
+        emptyChecks.incrementAndGet();
+      }
+      checked.countDown();
+      if (!checked.await(10, TimeUnit.SECONDS)) {
+        throw new IllegalStateException("두 닉네임 중복 조회를 기다리는 중 시간 초과");
+      }
+      return result;
+    }).when(users).findByNickname(eq(nickname));
     String profileBody = "{\"nickname\":\"" + nickname + "\"}";
     List<Integer> profileStatuses = concurrentPut("/api/v1/users/me/profile", profileBody,
         first.accessToken(), second.accessToken());
     assertEquals(List.of(200, 409), profileStatuses.stream().sorted().toList());
+    assertEquals(2, emptyChecks.get());
+    assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM users WHERE nickname = ?",
+        Integer.class, nickname));
+  }
 
+  @Test
+  void concurrentFirstWrites() throws Exception {
+    LoginResponse first = desktop("concon-first-write");
     String consentBody = "{\"isGranted\":true,\"consentVersion\":\"2026-09-17\","
         + "\"consentSource\":\"ONBOARDING\"}";
     assertEquals(List.of(200, 200), concurrentPut("/api/v1/users/me/consents/PRIVACY_POLICY",
@@ -85,9 +123,12 @@ class UserConfigurationApiTests {
         if (!start.await(10, TimeUnit.SECONDS)) {
           throw new IllegalStateException("동시 요청 시작 시간 초과");
         }
-        return mvc.perform(put(path).header("Authorization", "Bearer " + token)
-            .contentType(MediaType.APPLICATION_JSON).content(body)).andReturn()
-            .getResponse().getStatus();
+        var result = mvc.perform(put(path).header("Authorization", "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON).content(body)).andReturn();
+        if (result.getResponse().getStatus() == 500 && result.getResolvedException() != null) {
+          throw new IllegalStateException("동시 요청 중 서버 오류", result.getResolvedException());
+        }
+        return result.getResponse().getStatus();
       })).toList();
       assertTrue(ready.await(10, TimeUnit.SECONDS));
       start.countDown();
