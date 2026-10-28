@@ -15,7 +15,7 @@
 - 코드 발급·공개 Extension 연결·코드 취소, 설치별3회 실패/3분 잠금·재연결·소유권 제약을 구현했다.
 - Notion API·인증 정책·공통 오류·ERD에 사용자 승인 계약 반영. 결정030 및 extension-pairing-PLAN.md가 현재 기준이다.
 - 최신 dev 통합 후 build/Checkstyle·H2 JUnit87·PostgreSQL 연결16/사용자 설정7·V1~V5 통과. PostgreSQL 닉네임 동시 사전 검사의 정확한 겹침은 미계측이다. 실제 Frontend UI 통합은 별도다.
-- 전달 사항은 features/extension-pairing-frontend-handoff.md. 닉네임·프로필·readiness는 팀원 담당이다.
+- 전달 사항은 features/extension-pairing-frontend-handoff.md. 닉네임·프로필은 팀원 작업이며 #86에 연결 해제·기기 조회가 구현됐다. readiness는 후속 #85 브랜치에서 구현됐다.
 - 선행 Swagger PR #81은 dev b293bf1에 병합됐고 실제 Google Swagger exchange→me→refresh→logout→401도 완료했다. Issue #79 종료는 별도 사용자 승인 전이다.
 - #59/PR #60도 이미 병합·종료됐다. 아래의 병합 전/실계정 미완료 문구는 당시 이력이며 현재 상태를 뜻하지 않는다.
 
@@ -39,7 +39,7 @@
 - Issue #32: 인증 5개 테이블의 Flyway V1·소유 관계 보강 V2와 Entity·Repository를 구현했다. PostgreSQL 17.11에서 migration 적용·Hibernate 스키마 검증·소유권 FK를 확인했고, 빌드·QA·CodeRabbit 리뷰를 마쳤다. [PR #35](https://github.com/What-a-move/FocusOn/pull/35)는 2026-10-22 `dev`에 병합됐고 Issue #32도 종료됐다.
 - 2026-10-24 Frontend 공유·최종 정정에 맞춰 동의·Extension 연결·개입 v1·시간대·리포트 계약을 로컬 문서에 반영했다. 현재 미구현 API의 완료를 뜻하지 않는다. Notion 내 이전 AI 정책과 일간 배열 항목 누락, pairing 실패 시도 문맥 등 남은 검토는 `docs/NOTION_SYNC_AUDIT.md`에 기록했다.
 
-### 인증 구현 현황
+### 인증 구현 현황 (아래 항목은 당시 이력)
 
 - Issue #49 / PR #51은 2026-10-26 dev에 병합·종료됐다. Google 교환·auth/me·요청 인증·초기 토큰 발급·azp 검증을 포함한다.
 - Issue #59는 `feat/#59-auth-lifecycle`에서 refresh·rotation·reuse 감지·Desktop logout을 구현했다. 아직 dev 병합 전이다.
@@ -55,7 +55,7 @@
 - #58 Extension pairing은 기획 대기이며 코드 오입력 시도 문맥·취소 경계를 정본에서 해결한 뒤 구현한다.
 - 기기 목록·선택 폐기, unlink는 별도 1~2개 API 단위 작업이다. #38 사용자·설정·목표 API는 타 담당 범위를 유지한다.
 
-### 미구현
+### 당시 미구현 기록 (현재 #86 상태는 상단 참고)
 
 - 사용자·목표·세션 등 나머지 도메인 HTTP API. 인증 Entity·Repository와 #49 로그인 요청 인증은 구현돼 있다.
 - 기기 관리·Extension 연결 API. refresh·logout 수명주기는 #59 브랜치에 구현됐으며 dev 병합 전이다.
