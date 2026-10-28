@@ -59,6 +59,8 @@ Chrome Extension은 Manifest V3를 기준으로 개발한다.
 
 Extension은 Desktop에서 시작한 학습 세션을 조회해 타이머를 표시하고, 일시정지·재개·종료 명령을 Server에 요청한다. 세션 상태와 기준 시간은 Server가 관리하며 Extension은 독립적으로 시간을 확정하지 않는다.
 
+> 2026-10-25 변경: MVP에서는 Extension이 조회·표시만 하고 일시정지·재개·종료 명령은 P1로 미룬다(결정 012).
+
 #### 결정 이유
 
 Popup이 닫히거나 Service Worker가 다시 시작되어도 Desktop과 Extension의 시간이 달라지지 않도록 하기 위해서다.
@@ -66,7 +68,8 @@ Popup이 닫히거나 Service Worker가 다시 시작되어도 Desktop과 Extens
 #### 후속 확인
 
 - [x] 일회용 연결 코드 기반 Extension pairing 확정
-- [ ] 세션 상태 조회 주기와 실시간 동기화 방식 확정
+- [x] 세션 상태 조회 주기와 실시간 동기화 방식 확정 (팝업이 열려 있는 동안 10초 조회, 결정 012)
+- [x] MVP 팝업은 표시만 하고 일시정지·재개·종료는 Desktop에서 한다. 팝업 조작은 P1 (결정 012로 일부 변경)
 - [x] 상태 명령 idempotency/version과 Heartbeat 예외 확정
 
 ### 결정 004 - Popup의 피드백 표시 범위
@@ -111,7 +114,7 @@ Server에서 활성 학습 세션이 확인된 동안 사용자가 보고 있는
 - 제외 Domain의 정본은 Server 사용자 설정이며, `chrome.storage.local`에는 빠른 차단·오프라인 복구용 최신 목록만 캐시한다. 동기화 실패 시 콘텐츠 수집을 시작하지 않는다.
 - 현재 Navigation과 짧은 연결 Cache는 `chrome.storage.session`에 저장한다.
 - 학습 세션과 Desktop 연결 상태의 최종 기준은 Server다.
-- Page 본문과 인증 Token은 `chrome.storage.local` 또는 `sync`에 저장하지 않는다.
+- Page 본문과 인증 Token은 `chrome.storage.local` 또는 `sync`에 저장하지 않는다. 단, Extension Refresh Token은 결정 011에 따라 `chrome.storage.local`에 둔다(2026-10-22 변경).
 
 ### 결정 이유
 
@@ -122,7 +125,7 @@ Server에서 활성 학습 세션이 확인된 동안 사용자가 보고 있는
 - 결정일: 2026-09-13
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Chrome Extension
-- 상태: 확정
+- 상태: 결정 014로 변경 (2026-10-26)
 
 ### 결정 내용
 
@@ -152,17 +155,11 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 - 결정일: 2026-09-13
 - 담당 영역: Frontend(`apps`)
 - 대상 앱: Chrome Extension
-- 상태: 제안
+- 상태: 확정 (2026-10-25 결정 013, Notion Chrome·macOS 권한 정책 2.2). 전체 사이트를 한 번에 요청하고, 문구는 E01b·E06 시안을 따른다. Content Script 상시 주입 대신 결정 014의 일회성 주입을 쓴다.
 
-### 제안 내용
+### 결정 내용
 
-`https://*/*`와 `http://*/*`는 `optional_host_permissions`에 선언하고 사용자가 자동 추적을 켜는 동작 안에서 이유를 설명한 뒤 요청한다. `scripting` 권한을 사용해 Worker가 활성 세션의 현재 Page에만 Content Script를 주입하고, 승인하지 않은 사이트에서는 분석을 중지하고 권한 안내를 표시한다. 이 제안이 확정되기 전에는 Manifest를 변경하지 않는다.
-
-### 확정 필요
-
-- 전체 사이트 권한을 한 번에 요청할지
-- 사이트별 권한 모드도 함께 제공할지
-- 권한을 거부하거나 철회했을 때의 Popup 문구
+`https://*/*`와 `http://*/*`는 `optional_host_permissions`에 선언하고, 연결 뒤 팝업 E01b에서 이유를 설명한 다음 사용자 클릭으로 한 번에 요청한다. 사이트별 권한 모드는 두지 않는다. 거부하면 E01b 허용 거부, 집중 중 철회하면 E06 사이트 접근 꺼짐을 보여 주고 `local-events`로 서버에 알린다. 페이지는 결정 014대로 필요할 때만 `scripting.executeScript`로 한 번 읽는다.
 
 ## 결정 010 - 제외 도메인 정본과 로컬 캐시
 
@@ -177,9 +174,9 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 
 ## 새 결정 기록
 
-다음 결정은 `결정 011`부터 추가한다.
+다음 결정은 `결정 012`부터 추가한다.
 
-### 결정 011
+### 결정 012
 
 - 결정일:
 - 담당 영역: Frontend(`apps`)
@@ -191,3 +188,120 @@ Manifest V3 Service Worker와 `chrome.storage.session`을 일관된 기준으로
 - 고려한 대안:
 - 영향받는 파일:
 - 관련 Issue·PR:
+
+## 결정 011 - Extension 인증 Token 저장 위치
+
+- 결정일: 2026-10-22
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension
+- 상태: 확정 (사용자 결정)
+
+### 결정 내용
+
+- pairing 성공으로 받은 Extension 전용 Refresh Token은 `chrome.storage.local`에 저장한다. 브라우저를 다시 열어도 연결이 유지된다.
+- Access Token과 만료 시각은 `chrome.storage.session`(메모리)에 두고, 저장 전에 `setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' })`로 Content Script 접근을 막는다.
+- installationId는 비밀값이 아니므로 `chrome.storage.local`에 둔다.
+- Desktop 토큰과 공유하지 않고 Content Script·페이지로 전달하지 않는다. 저장에 실패하면 연결 완료로 표시하지 않는다.
+- Backend origin은 빌드 시 `NEXT_PUBLIC_FOCUSON_API_BASE_URL`로 넣고 HTTPS 또는 로컬 loopback HTTP만 허용한다.
+
+### 결정 이유
+
+메모리에만 두면 Chrome을 다시 열 때마다 연결 코드를 새로 받아야 한다. Refresh Token은 사용할 때마다 회전하고 재사용이 감지되면 family 전체가 폐기되므로(인증 정책), 프로필 폴더에 평문으로 남는 위험을 감수하고 연결 유지를 택했다. WebCrypto 키로 암호화하는 안은 같은 Extension 코드가 복호화할 수 있어 실제 보호 효과가 제한적이라 택하지 않았다.
+
+### 영향받는 파일
+
+- `apps/extension/features/pairing/extension-auth.ts`, `pairing-api.ts`, `PairingStep.tsx`
+- Notion `인증 · 토큰 · 디바이스 정책`의 Extension 저장 영역 항목
+
+## 결정 012 - MVP 팝업은 세션 표시만, 조작은 Desktop
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension (Desktop 연동)
+- 상태: 확정 (사용자 결정, Notion Figma 가이드 E03·세션 상태 전이 정책·API 명세 반영)
+
+### 결정 내용
+
+- MVP에서 Extension 팝업은 진행 중 세션의 목표·남은 시간·상태를 보여 주기만 한다. 일시정지·재개·연장·종료는 Desktop에서 한다. 팝업에는 `멈추기·끝내기는 데스크톱 앱에서 할 수 있어요`를 안내한다.
+- 팝업은 열려 있는 동안 10초마다 `GET /api/v1/sessions/active`를 다시 읽고, `RUNNING`이면 받은 뒤 흐른 시간만 화면용으로 더한다. 시간 확정은 서버·Desktop이 한다.
+- 결정 003의 "Extension이 일시정지·재개·종료 명령을 요청한다"는 P1로 미룬다.
+- 시안의 `FocusOn 앱 열기`는 Extension에서 Desktop을 여는 방법이 없어 넣지 않는다.
+
+### 결정 이유
+
+Desktop Main이 monotonic 타이머와 10초 heartbeat를 맡는다. 팝업에서 상태를 바꾸면 Desktop은 다음 heartbeat 응답 전까지(최대 10초) 이를 모르고, 일시정지 본문의 누적 시간도 Desktop이 센 값과 어긋날 수 있다. 시간을 세는 쪽을 하나로 두어 기록을 정확하게 한다.
+
+### 고려한 대안
+
+- 팝업 조작 + Desktop이 heartbeat 응답의 상태가 다르면 최신 세션을 다시 조회해 맞추기: 최대 10초 지연과 시간 차이가 생겨 P1로 미룸.
+
+### 영향받는 파일
+
+- `apps/extension/features/session/`, `docs/features/session-popup-PLAN.md`
+- Notion: Figma 화면 설계 가이드 E03, 세션 상태 전이 정책 6.3, pause·resume·extend·end API 비고
+
+## 결정 013 - Chrome 화면 분석 수집 범위
+
+- 결정일: 2026-10-25
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension (Desktop 결정 024와 함께)
+- 상태: 확정 (사용자 결정, Notion 화면 분석·AI 분석 계약·Chrome·macOS 권한 정책 반영). 백엔드·AI·PM에 통보함.
+
+### 결정 내용
+
+- 수집은 `TAB_META` → `CHROME_DOM` 순서다. `TAB_META` 결과가 `RELATED`면 확정하고, `UNRELATED`·`UNCERTAIN`이면 항상 DOM으로 다시 보내 그 결과로 확정한다(2026-10-26 변경, Desktop 결정 024와 같은 이유). DOM을 읽을 수 없으면 `UNCERTAIN`이다.
+- `CHROME_VIEWPORT_OCR`(`captureVisibleTab()`)은 MVP에서 제외하고 P1로 미룬다. DOM으로 부족한 페이지는 `UNCERTAIN`이며 알림을 만들지 않는다.
+- DOM은 제목·h1~h3·본문 주요 텍스트·코드 블록 제목만 최대 2,000자로 읽는다. `input`·`textarea`·`contenteditable`의 입력값은 읽지 않는다.
+- 늦게 도착한 이전 AI 결과는 최신 상태를 덮지 않는다(2026-10-26). 관측마다 번호를 붙이고, 응답이 지금 화면의 관측이 아니면 화면에 반영하지 않으며 그 응답으로 다음 단계도 보내지 않는다. 예: 화면 A의 2차 요청 중 제외 대상으로 옮겨 `EXCLUDED`를 보냈다면, 늦게 온 A 결과는 버린다. 서버도 같은 기기에서는 `contentSource`와 관계없이 `observedAt`이 가장 늦은 관측을 현재 상태로 본다(AI 분석 계약 8).
+- 탭이 바뀌고 15초 유지되면 보낸다(기존 15초 체류 흐름). 같은 페이지는 다시 보내지 않고, 내용 변경은 최대 30초에 한 번 보낸다.
+  - (2026-10-26) 같은 페이지 안 내용 변경(스크롤 등) 재전송은 미루고 아직 구현하지 않았다. 지금은 주소·탭이 바뀔 때만 보낸다.
+- 제외 도메인이면 `guardStatus: EXCLUDED`, 비밀번호·일회용 코드·카드 입력 칸이 있거나 메일 작성 URL·메신저 도메인이면 `guardStatus: PRIVACY_BLOCKED`만 보낸다. DOM 텍스트에 민감 패턴이 있으면 버리고 `PRIVACY_BLOCKED`로 보낸다.
+- manifest를 Notion 권한 정책에 맞춘다: 필수 `host_permissions`·정적 `content_scripts`를 없애고 `optional_host_permissions` + `scripting`으로 Chrome 분석을 켤 때 요청한다. 권한 제거(`chrome.permissions.onRemoved`) 시 `local-events`를 보낸다.
+
+### 결정 이유
+
+Extension에는 기본 OCR이 없어 한국어 OCR 엔진을 따로 넣어야 하고, Desktop이 Chrome 창을 대신 찍으면 URL을 모른 채 제외·민감 페이지를 캡처할 수 있다. 판단 보류는 알림을 만들지 않아 MVP에서 빼도 잘못된 경고가 생기지 않는다.
+
+## 결정 014 - 15초 체류는 Service Worker가 세고, 페이지는 필요할 때만 읽는다
+
+- 결정일: 2026-10-26
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension
+- 상태: 확정 (사용자 결정, 결정 007 변경). Issue #61
+
+### 결정 내용
+
+- 15초 체류는 Service Worker의 `setTimeout`으로 센다. 시작 정보 `{ key(tabId+주소), navigationId, startedAt, done }`를 `chrome.storage.session`에 두고, Worker가 꺼졌다 깨어나면(30초 `chrome.alarms`·브라우저 시작) 저장된 시작 시각으로 이어서 판단한다. 판정 전에 현재 탭·주소와 서버 세션(`RUNNING`)을 다시 확인한다.
+- Content Script를 상시 등록·주입하지 않는다. 15초가 지나고 제외·민감 사이트가 아닐 때만 `chrome.scripting.executeScript`로 `inspectPage`를 한 번 실행해 민감 입력칸 확인(`maxLength: 0`)과 본문 읽기(`maxLength: 2000`)를 한다. 그래서 `MESSAGE_CONTRACT.md`의 `DWELL_*`·`TAB_CONTEXT_*` Message는 쓰지 않는다.
+- 이벤트: `tabs.onActivated`, `webNavigation.onCommitted`·`onHistoryStateUpdated`(최상위 frame), `windows.onFocusChanged`(Chrome이 뒤로 가면 추적 중지, 그 시간은 Desktop이 본다).
+- 사이트 권한은 optional이라 서버 호출이 CORS로 막히지 않게 FocusOn 서버 origin 하나만 빌드 때 필수 `host_permissions`로 넣는다(`NEXT_PUBLIC_FOCUSON_API_BASE_URL`).
+- Chrome 내부 페이지·새 탭·사이트 권한이 없는 페이지는 `EXCLUDED`, 제외 목록을 한 번도 받지 못했을 때도 `EXCLUDED`로 보낸다(아무것도 보내지 않으면 서버가 직전 판정을 이어 간다).
+
+### 결정 이유
+
+Worker 유휴 종료는 30초 뒤라 15초 타이머는 대부분 그대로 실행되고, 꺼지더라도 저장된 시작 시각과 알람으로 복구할 수 있다. 상시 Content Script는 제외·민감 사이트에도 들어가고 Message 6종이 필요했다. 필요한 순간에만 읽으면 개인정보 노출과 코드가 함께 줄어든다.
+
+### 영향받는 파일
+
+- `extension/background/`, `extension/content/inspect-page.ts`, `extension/shared/`, `public/manifest.json`, `scripts/prepare-extension-build.mjs`
+
+## 결정 015 - 서버 계약 타입은 shared-types로 공유한다 (타입만)
+
+- 결정일: 2026-10-26
+- 담당 영역: Frontend(`apps`)·Shared(`packages/shared-types`)
+- 대상 앱: Desktop·Chrome Extension
+- 상태: 확정 (Issue #69)
+
+### 결정 내용
+
+- 두 앱이 함께 쓰는 서버 계약 타입(`Relation`, `ContentSource`, `GuardStatus`, `ReasonCode`, `SessionStatus`, `AnalysisRunRequest`·`AnalysisRunResponse`)은 `@focuson/shared-types`에 두고 `import type`으로만 가져온다. 기존 이름(`SessionStatus`, `GuardStatus`, `RunBody`, `AnalysisRun`)은 각 앱에서 다시 내보내 사용처를 바꾸지 않았다.
+- 확인(parse) 함수·허용 값 배열 같은 **실행 코드는 공유하지 않고** 각 앱에 둔다.
+
+### 결정 이유
+
+같은 계약을 두 앱이 따로 적으면 계약이 바뀔 때 한쪽을 놓친다. 다만 `shared-types`는 빌드 없이 TS 원본을 내보내므로, Desktop Main(`.cjs`)이나 Extension `node --test`에서 실행 값을 가져오면 깨진다. `import type`은 컴파일 때 사라져 이 문제가 없다(빌드 결과에 `shared-types` 참조가 남지 않음을 확인).
+
+### 영향받는 파일
+
+- `packages/shared-types/src/index.ts`
+- `extension/background/tab-analyzer.ts`, `features/session/session-model.ts`

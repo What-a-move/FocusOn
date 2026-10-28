@@ -1,30 +1,52 @@
 # Backend 다음 작업
 
-## 작업명
+## 현재 작업 (2026-10-27)
 
-최초 PostgreSQL 스키마와 핵심 DB 모델 구현
+- Issue #38: Notion 8개 API의 나머지 오류·권한 상세를 대조하고 최신 로컬 코드의 실계정 HTTP 성공 경로를 재검증한다. PostgreSQL MockMvc 및 기존 DB의 Flyway V1~V3 기록, 실행 서버 무인증 401은 확인했다. PLAN 승인·독립 리뷰·PR은 각각 실제 결과를 확인한다.
+- Issue #79: 개발용 Swagger·FocusOn JWT Authorize·Google PKCE 보조 도구. Branch `chore/#79-swagger-testing`, 기준 dev `65da4f0`.
+- 구현·독립 리뷰·build/Checkstyle·Backend62·Python10·실제 PostgreSQL HTTP32 확인을 완료했다. 실제 Google 계정 성공 테스트는 사용자 인증이 필요하다.
+- 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
+- Swagger local 통합·별도 파일 제거 완료. 독립 리뷰 지적 없음, Backend62/build/Checkstyle·HTTP32·기본 bootRun9개 확인 통과. server에서 `./gradlew bootRun`으로 개발한다.
+- 2026-10-27 사용자가 문서 반영과 dev 대상 PR 생성을 승인했다. 원격 PR·CI·리뷰 상태는 [Issue #79](https://github.com/What-a-move/FocusOn/issues/79)에 연결된 PR에서 확인한다. merge·Issue 종료는 별도 승인한다.
+- 이전 #59 / PR #60은 dev 병합·종료됐다. 아래 내용은 당시 기록이며 현 작업으로 재개하지 않는다.
+- 사용법: [SWAGGER_TESTING.md](SWAGGER_TESTING.md).
 
-- 우선순위: 높음
-- 상태: Issue #30 공통 API 기반이 `dev`에 반영된 뒤 착수
+## 이전 작업 기록
 
-## 목적
+- Issue #59: refresh·회전·재사용 감지·Desktop logout 구현·QA 완료, PR #60 생성 및 CodeRabbit 전체 리뷰 actionable comment 0건.
+- Branch: `feat/#59-auth-lifecycle`; dev 직접 push 금지.
+- 선행 #49 / PR #51은 dev 병합·이슈 종료 완료.
+- 계획: `features/auth-lifecycle-PLAN.md`, 검증: QA·code-review·REPORT·ERROR.
 
-확정된 FocusOn API 명세를 기준으로 도메인 API를 안전하게 추가할 수 있는 서버 기반을 만든다.
+## 이어갈 순서
 
-## 순서
+1. #59 주석 보완 커밋의 원격 CI 결과를 확인하고 병합 여부를 검토한다. merge·이슈 종료는 별도 사용자 승인.
+2. Google 실계정 OAuth 성공은 본인 인증 응답이 필요하다. 실제 서버/Keychain으로 합성 로그인 세션의 복구·회전·logout은 검증했으나 실계정 성공으로 표현하지 않는다.
+3. Desktop 전체 빌드의 로컬 Swift compiler/SDK 불일치 해결은 Frontend 환경 작업으로 구분한다. 인증 TS·서비스 테스트와 Keychain은 검증됐다.
+4. #58 pairing 기획 검토를 재개한다. 코드 오입력 시도 대상·화면 닫기 즉시 취소·재연결 경계를 임의로 정하지 않는다.
+5. 기기 조회·선택 폐기, Extension unlink를 별도 API 작업으로 진행한다. #38 사용자·온보딩·목표 구현을 중복하지 않는다.
+6. 이후 목표·세션·분석·리포트 API는 관련 최신 정본과 2026-10-26 화면 분석 공유 계약을 먼저 대조한다.
 
-1. Notion ERD와 API 필드를 대조해 V1 migration 범위를 나눈다. 제외 도메인, heartbeat 기준 시각, 종료 사유, 개입 정책 버전, `studyDate`, 학습 정리 테이블을 포함한다.
-2. 사용자, 기기, 목표, 세션 핵심 Entity와 Repository를 구현한다.
-3. Google 로그인 교환과 Refresh Token 정책을 구현하고 기존 Access JWT 서비스에 연결한다. Spring Security 필터의 401·403도 공통 오류 응답에 연결한다.
-4. 목표와 세션 MVP API를 구현한다.
-5. 분석·개입 정책과 일간 리포트·집중 달력·학습 정리 API를 연결한다.
-6. P1인 세션 목록과 주간 리포트는 MVP 안정화 뒤 구현한다.
+## 구현 유지 기준
 
-## 완료 조건
+- refresh 요청은 body token만으로 인증하며 Bearer를 요구하지 않는다.
+- 성공마다 새 Refresh Token과 family 만료를 30일 연장한다. single-flight·strict reuse 정책이며 같은 token의 재전송 grace는 없다.
+- 로그인·refresh·logout의 DB 변경 잠금 순서는 사용자→family다. 신규 인증 변경도 이 순서와 폐기 commit 경계를 확인한다.
+- 기존 V1/V2를 수정하지 않고 새 schema는 후속 migration으로 분리한다.
 
-- [ ] 관련 `*-PLAN.md`가 있다.
-- [ ] 구현 경로·필드·권한이 Notion 명세와 일치한다.
-- [ ] migration이 빈 DB와 기존 개발 DB에 적용된다.
-- [ ] 정상·검증·인증·충돌 응답을 확인했다.
-- [ ] 토큰과 민감 데이터가 로그에 없다.
-- [ ] `*-REPORT.md`에 결과와 남은 위험을 기록했다.
+## PR 검증 결과
+
+PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionable comment 0건. 주석 경고 보완 후 CI를 다시 확인한다. 병합·Issue #59 종료는 사용자 별도 승인이 필요하다.
+
+## 로그인 최종 QA 갱신 (2026-10-26)
+
+- PR #60에 최신 dev 통합과 Desktop logout 만료 재시도 수정, 독립 재검토·Backend/PG/Desktop/Extension/HTTP QA 결과를 반영했다.
+- 세부 결과는 auth-lifecycle-QA.md가 현재 기준이다. 임시 VFS 전체 빌드 성공과 기본 Swift 설치 복구, 합성 인증과 실제 Google 계정 성공을 구분한다.
+- Mac 잠금 해제·실계정 인증, 관리자 인증 후 개발 도구 복구를 확인한다. PR의 최신 CI·CodeRabbit 결과 확인 뒤 병합·Issue 종료는 별도 승인받는다.
+
+## CodeRabbit 재리뷰 수정 완료 (2026-10-26)
+
+- 유효 Access Token으로 logout을 먼저 시도하고, 실제 만료에서만 refresh·한 번 재시도한다.
+- POST refresh IP 한도는 본문 바인딩 전 Filter에서 한 번 집계한다. 잘못된 JSON·길이초과도 301번째에429, 정상 형식은300회까지처리·301번째429다.
+- 잔여20초·refresh503·logout204 조건20회에서 성공0→20회, 불필요한refresh20→0회. Backend58·Desktop96·PostgreSQL28·실제HTTP/Keychain33건 회귀와 독립 리뷰를 통과했다. 수치는 통제된 기능 검증이며 운영성공률이 아니다.
+- 최신 dev d03c2d2 통합·문서 충돌 해소, 로그인 결정026/공유타입결정025 분리. PR #60의 push·CI·리뷰 스레드 결과를 확인하며 merge·Issue종료는 별도 승인받는다.

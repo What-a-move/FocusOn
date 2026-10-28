@@ -17,6 +17,8 @@ Google 로그인
 
 학습 세션의 상태와 기준 시간은 Server가 확정한다. Desktop과 Extension은 인증된 동일 사용자의 Server 상태를 조회해 화면을 갱신한다.
 
+Desktop Google 로그인에서는 Main이 임시 loopback callback을 열고 `state`와 PKCE verifier를 만든다. callback의 `state` 일치를 확인한 뒤 받은 code, verifier, state, 인증 요청에 사용한 정확한 `redirectUri`, 기기 정보를 `POST /api/v1/auth/google/exchange`에 보낸다. Backend는 `redirectUri`를 `http://127.0.0.1:<임시 포트>`로 제한하고 같은 값으로 Google token endpoint에서 code를 교환한다. `state` 일치 검증의 책임은 Main에 있다.
+
 ## 상태 구분
 
 | 상태 | 의미 | UI 처리 |
@@ -44,6 +46,9 @@ Google 로그인
 ## Desktop·Extension 연결
 
 - 연결 Code는 5분 유효·3회 실패 제한·1회 사용이다. 새 코드를 발급하면 이전 코드는 즉시 폐기한다.
+- 연결 성공 201은 `data.accessToken`, `refreshToken`, `accessTokenExpiresAt`(UTC ISO 8601), `device: {deviceId,deviceType: EXTENSION}`을 반환한다. 서버 내부 `CHROME_EXTENSION`은 공개 응답에서 매핑한다.
+- 틀린 코드 1~2회는 400 `LINK_006_CODE_MISMATCH`와 `details.remainingAttempts`, 3번째는 410 `LINK_004_ATTEMPTS_EXCEEDED`다. `retryable: false`는 자동 재전송 금지이며 사용자의 수정 후 재입력은 가능하다.
+- Desktop 연결 화면의 readiness 조회는 3초 간격이며 코드 수명 안에서만 실행한다. 완료·만료·화면 이탈 때 중단하고 다른 API·재시도와 일반 인증 한도 60회/분을 공유한다.
 - 연결 성공 전에는 다른 사용자의 세션 정보를 표시하지 않는다.
 - 연결 해제 시 저장된 연결 정보와 Cache를 정리한다.
 - 한쪽 앱의 연결 실패가 다른 앱이나 Chrome Page 동작을 멈추게 하지 않는다.

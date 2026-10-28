@@ -25,6 +25,11 @@ public final class ApiException extends RuntimeException {
     this.details = Map.copyOf(details);
   }
 
+  /** 기기 한도처럼 명세에 정의된 안전한 부가 정보만 담는다. */
+  public static ApiException withDetails(ApiErrorCode code, Map<String, Object> details) {
+    return new ApiException(code, null, details);
+  }
+
   /** 429 응답의 본문과 Retry-After 헤더에 같은 대기 시간을 사용한다. */
   public static ApiException tooManyRequests(long retryAfterSeconds) {
     if (retryAfterSeconds < 1) {

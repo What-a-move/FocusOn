@@ -28,13 +28,18 @@ pnpm lint
 
 ## Server와 PostgreSQL
 
-최초 1회 `server/.env.example`을 `server/.env`로 복사하고 로컬 비밀번호를 설정한다. `.env`는 Git에 올리지 않는다.
+최초 1회 `server/.env.example`을 `server/.env`로 복사하고 로컬 PostgreSQL 비밀번호를 설정한다. `openssl rand -base64 32`로 생성한 값을 `JWT_SECRET_BASE64`에도 넣는다. Docker Compose는 PostgreSQL만 시작할 때도 Backend의 필수 환경 변수인 이 값을 확인한다. `.env`는 Git에 올리지 않는다.
 
 ```bash
 cd server
 docker compose up -d postgres
+set -a
+. ./.env
+set +a
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
+
+Gradle에서 직접 Backend를 실행할 때는 위처럼 `.env`를 현재 셸에 읽어야 한다. Spring Boot는 `.env` 파일을 자동으로 읽지 않는다. `.env` 값은 셸에서 읽을 수 있는 형식으로 작성한다.
 
 Backend까지 Docker로 실행할 때:
 
@@ -59,4 +64,12 @@ docker compose up --build
 - 비밀 값은 `.env`에만 저장하고 `.env.example`에는 키 이름과 안전한 예시만 둔다.
 - API key, OAuth secret, token, DB password를 Issue·PR·로그에 남기지 않는다.
 - 팀 공유 값과 개인 비밀 값을 구분한다.
-- OAuth redirect URI는 실제 Desktop 로그인 방식이 확정된 뒤 Google Console과 환경 설정에 동일하게 등록한다.
+- Desktop OAuth는 기본 브라우저·PKCE와 `http://127.0.0.1:<임시 포트>` loopback을 사용한다. Desktop이 실제 사용한 redirectUri를 서버가 동일하게 Google에 전달하며 임의의 고정 웹 callback을 추가하지 않는다.
+- Desktop 실행 셸은 `FOCUSON_GOOGLE_CLIENT_ID`, `FOCUSON_API_BASE_URL`을 설정한다. `apps/desktop/.env.local`을 준비했으면 저장소 루트에서 `source apps/desktop/.env.local`로 읽는다. Electron은 해당 파일을 자동으로 읽지 않는다.
+- Backend는 같은 Desktop client ID를 `GOOGLE_DESKTOP_CLIENT_ID`로 설정한다. 발급 JSON에 secret이 있으면 `GOOGLE_DESKTOP_CLIENT_SECRET`을 서버 `.env`에만 설정하고 Desktop에 넣지 않는다.
+- Google 설정이 비어 있어도 서버 health는 동작하지만 교환은 503으로 실패한다. `.env.example`은 실제 자격 증명으로 사용하지 않는다.
+- `server.forward-headers-strategy=none`으로 직접 연결 IP만 신뢰한다. 운영 reverse proxy를 추가할 때 신뢰 proxy와 IP 한도를 별도 구성한다.
+
+### 로그인 남용 방어와 proxy
+
+Google 교환은 기존 IP+installationId별 5회/10분 외에 IP별 300회/10분 보호 상한을 먼저 검사한다. 설치 ID 변경으로 한 IP가 로그인 키 공간을 채우는 것을 제한한다. 단일 서버 메모리 방식이며 분산 IP 공격 방어는 별도다. `server.forward-headers-strategy=none`이므로 reverse proxy 뒤에서는 proxy 주소를 공유한다. 배포 시 신뢰 proxy와 클라이언트 IP 전달 경계를 확정하고 공유 트래픽 기준으로 상한을 검토한다. 임의의 X-Forwarded-For는 신뢰하지 않는다.

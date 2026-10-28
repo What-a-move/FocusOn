@@ -19,7 +19,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
@@ -75,11 +74,8 @@ public class AccessJwtService {
         .macAlgorithm(MacAlgorithm.HS256)
         .build();
 
-    // Access Token은 짧게 사용하므로 만료 시각의 허용 오차를 두지 않는다.
-    JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ZERO);
-    timestampValidator.setAllowEmptyExpiryClaim(false);
+    // 시간 검증은 서명·issuer·audience 검증 뒤 수행해 만료와 위조를 안전하게 구분한다.
     this.decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-        timestampValidator,
         new JwtIssuerValidator(issuer),
         new JwtAudienceValidator(audience)));
   }
@@ -132,6 +128,7 @@ public class AccessJwtService {
       if (!ACCESS_TOKEN_TYPE.equals(jwt.getClaimAsString("tokenType"))
           || issuedAt == null
           || issuedAt.isAfter(clock.instant())
+          || (jwt.getNotBefore() != null && jwt.getNotBefore().isAfter(clock.instant()))
           || expiresAt == null
           || !issuedAt.isBefore(expiresAt)
           || expiresAt.isAfter(issuedAt.plus(ACCESS_TOKEN_LIFETIME))
@@ -140,10 +137,13 @@ public class AccessJwtService {
         throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
       }
 
-      return new AccessTokenClaims(
-          parseId(jwt.getSubject()),
-          parseId(jwt.getClaimAsString("deviceId")),
+      AccessTokenClaims claims = new AccessTokenClaims(
+          parseId(jwt.getSubject()), parseId(jwt.getClaimAsString("deviceId")),
           parseId(jwt.getClaimAsString("tokenFamilyId")));
+      if (!expiresAt.isAfter(clock.instant())) {
+        throw new ExpiredAccessTokenException();
+      }
+      return claims;
     } catch (JwtException | ClassCastException exception) {
       throw new IllegalArgumentException(INVALID_TOKEN_MESSAGE);
     }
@@ -164,6 +164,13 @@ public class AccessJwtService {
   private static void requirePositiveId(long id) {
     if (id <= 0) {
       throw new IllegalArgumentException("JWT IDs must be positive");
+    }
+  }
+
+  /** 서명과 필수 클레임이 유효하지만 시간이 만료된 경우만 나타낸다. */
+  public static final class ExpiredAccessTokenException extends IllegalArgumentException {
+    private ExpiredAccessTokenException() {
+      super(INVALID_TOKEN_MESSAGE);
     }
   }
 

@@ -303,13 +303,13 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 
 ## 결정 015 - 제품 표시 상태와 AI 내부 상태 매핑
 
-- 결정일: 2026-09-22
+- 결정일: 2026-10-13
 - 담당 영역: AI·Server·Client
-- 상태: 제안
+- 상태: 확정
 
 ### 결정 내용
 
-AI 내부는 `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`, `UNAVAILABLE`을 유지한다. 제품 표시에서는 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. `SUPPORTING`은 `RELATED`의 보조 유형, `OFF_TASK`는 `UNRELATED`, `UNAVAILABLE`은 `UNCERTAIN`과 처리 실패 상세 상태로 투영한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 관련성 결과가 아닌 비분석 결과다.
+AI 내부는 `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`, `UNAVAILABLE`을 유지한다. 제품 공개 `relation`에서는 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. AI 관련성 판정은 앞의 세 값만 반환하며 `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 차단 결과다. `SUPPORTING`은 `RELATED`의 보조 유형이고 별도 공개 상태로 노출하지 않는다. `OFF_TASK`는 `UNRELATED`, `UNAVAILABLE`은 `UNCERTAIN`과 처리 실패 상세 상태로 투영한다.
 
 ### 결정 이유
 
@@ -346,7 +346,7 @@ Chrome은 DOM 우선 후 Extension 내부 로컬 OCR을 사용하고, macOS Desk
 
 - 결정일: 2026-09-22
 - 담당 영역: AI·Server·Client
-- 상태: 제안
+- 상태: 변경됨 — 결정 020 참조
 
 ### 결정 내용
 
@@ -363,7 +363,7 @@ Chrome은 DOM 우선 후 Extension 내부 로컬 OCR을 사용하고, macOS Desk
 
 - 결정일: 2026-09-22
 - 담당 영역: AI·Server·Client
-- 상태: 제안
+- 상태: 변경됨 — 결정 020 참조
 
 ### 결정 내용
 
@@ -380,7 +380,7 @@ Server는 `sessionStatus=ACTIVE/PAUSED/ENDED`, `exclusionMode=NONE/ANALYSIS_ONLY
 
 - 결정일: 2026-09-22
 - 담당 영역: AI·Desktop·Server·Client
-- 상태: 제안
+- 상태: 변경됨 — 결정 020 참조
 
 ### 결정 내용
 
@@ -393,107 +393,55 @@ Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있�
 - `AI/docs/DEVELOPMENT_RULES.md`
 - `AI/docs/features/personalized-break-recommendation-PLAN.md`
 
-## 결정 020 - 이재빈 노션 기준 Hybrid MVP와 학교 테스트 지침
+## 결정 020 - Notion MVP·API·분석 계약 동기화
 
-> 통합 전 이 Branch의 결정 015. 최신 dev의 결정 015~019를 보존하기 위해 번호만 이동했다.
+- 결정일: 2026-10-12
+- 담당 영역: AI·Server·Client
+- 상태: 제안 (Notion AI 분석 계약 `REVIEW`, 팀 승인 전)
 
-- 결정일: 2026-10-07
-- 담당 영역: AI / 이재빈
-- 상태: 확정 — 이재빈의 MVP 개발 방향. 배포·공통 API 전체 합의·성능 검증 완료를 뜻하지 않는다.
-- 근거: 이재빈 노션 전처리·관련성 기능 문서와 사용자 전달 Hybrid 비교 결과.
-- 결정 내용: 목표별 소형 Graph + 키워드 + 벡터 Hybrid 6번, Qwen/Qwen3-Embedding-4B·FP16, Windows GPU의 WSL2·Linux·vLLM 운영 방향. 역할별 점수·근거를 독립 평가한다.
-- 변경 내용: 기존 후보 1~7은 비교 기록으로 유지하고 현재 #14는 채택 방식의 구현·평가를 수행한다. 지침은 Issue에서 도출하지 않고 노션을 직접 기준으로 작성한다.
-- 경계: qualityScore는 전처리 품질, cosine·결합 점수는 관련성 내부 신호. 사용자 판정 수정·삭제·수정 기반 개인화는 현재 구현에서 제외한다.
-- 미확정: 숫자 결합 비율·정규화·임계값·품질 산식·평가 완료 기준, 백엔드 컬럼 9개, 실제 장비 호환성과 리비전/실측, 추가 LLM 제공자·예산.
-- 영향: #14 PLAN, CONTEXT, NEXT_TASK. 공통 API·공유 타입은 별도 합의 없이 변경하지 않는다.
-- 관련 Issue: [#14](https://github.com/What-a-move/FocusOn/issues/14), [#11](https://github.com/What-a-move/FocusOn/issues/11)
+화면 개입 임계값·UNCERTAIN 처리의 최신 기준은 결정 021로 대체한다. 아래 120초 등 수치는 당시 검토 이력이다.
 
-## 결정 021 - 입력 전처리와 관련성 구현 Issue·Branch 통합
+### 결정 내용
 
-> 통합 전 이 Branch의 결정 016. 결정 내용은 유지하고 번호만 이동했다.
+Notion 공개 목표 명확화 경로는 `POST /api/v1/goals/clarify`이고 판정값은 `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM`이다. 질문은 대화당 최대 2회이며 AI 실패 시 사용자가 목표를 수동 확정할 수 있다. MVP에는 화면 관련성 판정 수정·저장 공개 API가 없다.
 
-- 결정일: 2026-10-07
-- 담당 영역: AI / 이재빈
-- 상태: 확정 — 사용자 요청에 따른 작업 단위 통합
-- 결정 내용: #14의 Graph·Hybrid·관련성 구현·평가를 #11의 입력 검증·전처리 범위에 통합한다. 작업 Branch는 `feat/11-ai-preprocessing-relevance` 하나를 사용한다.
-- 유지 사항: 전처리와 관련성 모듈·테스트 분리, 노션 요구사항·출력 계약·개인정보·미합의 9개 필드 정책은 유지한다.
-- 보존 사항: 로컬 미커밋 전처리·실험 파일은 백업 후 복원한다. 통합 문서 커밋은 해당 코드를 구현 완료 또는 원격 게시로 표시하지 않는다.
-- 이력: #14는 #11로 통합됐음을 표시하고 중복 이슈로 닫는다. 기존 커밋은 통합 Branch의 조상으로 보존한다.
-- 영향: 학교 PLAN, 이슈 #11/#14, Branch·CONTEXT·NEXT_TASK·문서 안내 링크.
-- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11), [#14 통합 이력](https://github.com/What-a-move/FocusOn/issues/14)
+관련성 결과 `UNRELATED`는 콘텐츠 관계를 나타내며 시간 기반 `driftState`와 분리한다. 유효 이탈은 15초 미만 화면 전환을 제외하고 `GENTLE` 120초 연속, `NORMAL` 최근 10분 내 30초 이상 2회, `ACTIVE` 30초 연속으로 판정한다. `RELATED`는 현재 구간을 초기화하고 `UNCERTAIN`은 누적하지 않는다. 카메라는 60초에 후보만 만들고 90초에 최신 화면·권한을 다시 확인한다. 최신 화면이 `RELATED`면 억제한다.
 
-## 결정 022 - 학교 Ollama 초기 테스트와 Mac 개발 분리
+화면 `EXCLUDED`에서는 화면 콘텐츠 분석을 중지하고 타이머와 별도 동의된 로컬 카메라 분석을 유지한다. `PRIVACY_BLOCKED`에서는 화면·카메라 분석을 중지하고 타이머는 유지한다. 카메라 원본·프레임·랜드마크는 서버·AI로 보내지 않는다. 최근 7일 개인화 휴식 추천은 P1 후보이며 MVP 기본 휴식 제안과 구분한다. 최신 제외 상태를 확인할 수 없는 동안에는 화면·카메라 분석을 모두 중지한다. 확인된 `EXCLUDED`에서만 별도 카메라 동의·권한에 따라 로컬 분석을 허용하며, 카메라 집계·전송은 별도 승인 전 금지한다.
 
-- 결정일: 2026-10-07
-- 담당 영역: AI / 이재빈
-- 상태: 확정 — 사용자 요청에 따른 개발·테스트 환경 방향. 실제 장비 검증·배포 완료를 뜻하지 않는다.
-- 근거: 최신 이재빈 관련성 노션 4.1절과 학교 PC 설치·테스트 지침서 작성 요청.
-- 결정 내용: Mac에서 검증·전처리·Graph·Hybrid 판정을 개발하고 학교 Windows GPU PC에서는 Ollama로 Qwen3 Embedding 4B·FP16 임베딩 API를 먼저 테스트한다. 추후 WSL2·Linux·vLLM으로 전환한다.
-- 기존 결정과의 관계: 결정 020의 모델·정밀도·Hybrid 방식을 유지하며 vLLM 운영 전 초기 Ollama 테스트 단계를 추가한다. 최종 출력 계약과 임계값은 이번 작업에서 변경하지 않는다.
-- 검증 경계: 합성 입력으로 벡터·GPU 사용·학교 로컬 warm 측정·Mac 왕복을 구분한다. 실제 설치와 Mac 접근은 학교 PC에서 검증해야 한다.
-- 영향: 학교 SETUP 지침, CONTEXT, NEXT_TASK, 기능 문서 안내. 원문·이미지·비밀 정보·모델 가중치는 저장소에 올리지 않는다.
-- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
+팀원 보고의 120건 비교에서 Hybrid는 99건 정답·Macro F1 0.732로 가장 높았지만 원자료와 결합식은 미확인이다. 우선 평가 후보일 뿐 구현·배포 결정이 아니다. AI 전처리는 허용된 `text`·`ocr` 입력에서 최종 `qualityScore`·`contentHash`를 생성하며, 이탈 정책은 관련성 최종 라벨·confidence를 덮어쓰지 않는다. Backend 저장 컬럼 9개는 협의 전이다.
 
-## 결정 023 - 통합 #11 학교 내부 실행 경계와 실험 정책
+### 결정 이유
 
-- 결정일: 2026-10-07
-- 상태: 구현 선택 기록. 숫자 정책·Graph 템플릿·공개 API의 팀 확정을 뜻하지 않는다.
-- 결정 내용: 결정 022에 따라 Ollama 초기 Client와 내부 전처리→Graph→Hybrid 파이프라인·합성 평가 CLI를 먼저 구현한다. 입력 콘텐츠·확정 목표·Server 검증 문맥을 분리하며 공개 API 경로·envelope·confidence는 새로 정의하지 않는다.
-- 품질 산식: 원천 품질 × (1 - 깨진 문자 비율) × 정제 문단 수 / (정제 문단 수 + 중복 제거 수 + UI 제거 수). DOM 원천 품질은 1, OCR은 capture 성공 시 인식 confidence다. Client qualityScore는 최종 품질로 신뢰하지 않는다. 이 산식은 단위 기반 초기 실험 정책이다.
-- Hybrid: 키워드는 동의어 2개 이상 일치 시 1, 1개면 0.5, 없으면 0. cosine은 [-1,1]에서 max(0,cosine)로 변환해 결합한다. 역할별 임계값·본문 커버리지·결합 비율은 `relevance_calibration.json`에 기록한 미보정 실험값이다.
-- 캐시: 목표군·사용자·run·모델 digest·Graph·정책·전처리/추출기·instruction·설정과 정제 해시를 분리한 메모리 TTL/LRU. 기본 128개/300초는 실험 설정이며 영속 멱등 처리는 Server 책임이다.
-- 안전: 제목만 있거나 본문을 입력 상한으로 잘라 대표성을 확인할 수 없으면 모델 미호출·UNCERTAIN. 응답 직전 최신 문맥을 다시 조회하고 stale/제외 결과에는 근거를 남기지 않는다.
-- 모델 확인: `qwen3-embedding:4b-fp16` 이름·정확한 manifest digest·F16·embedding capability·2560차원을 확인한다. real 모드의 digest가 없거나 모델/연결이 틀리면 fake로 대체하지 않는다. GPU 실제 사용·메모리·속도는 학교에서 별도 확인한다.
-- 영향받는 파일: `AI/src/`, `AI/evaluation/relevance_*`, 테스트·CONTEXT·NEXT_TASK·PLAN·REPORT.
-- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
+PR #15의 최신 문서 계약을 유지하면서 Notion 제품·API 정합성과 팀원 평가 보고, 현행 MVP 분석 정책을 구분하기 위해서다. 상세 AI 분석 계약은 Notion 문서 검토와 팀 승인을 기다린다.
 
-## 결정 024 - 기존 제목·본문 입력의 누락 정보 반영
+### 영향받는 파일
 
-- 결정일: 2026-10-11
-- 상태: 사용자 요청에 따른 구현 선택 기록. 새 공개 계약 또는 점수 정확도 확정을 뜻하지 않는다.
-- 근거: 김성현 OCR 입력 계약의 `pageTitle`·`appName`·`urlHost`·`text`, 이재빈 관련성 계획의 제목·대표 본문·충돌 검사.
-- 내용: 제목과 명시된 Markdown 소제목을 기존 Hybrid 방식으로 비교한다. 관련·무관 통과 근거가 함께 있으면 보류하며 제목·소제목은 본문 커버리지에서 제외한다. 본문 근거로 판정된 경우 같은 방향의 제목·소제목 ID를 함께 반환한다.
-- 전처리: 내부 `HEADING` 종류로 소제목을 구분하고 코드 fence의 언어·설명·코드 문자열을 보존한다. 공개 입력 컬럼을 추가하거나 제공되지 않은 정보를 생성하지 않는다.
-- 메타데이터: 앱·도메인은 개인정보 검사와 결과 캐시 구분에 사용한다. 임의 점수 가중치를 추가하지 않는다.
-- 버전: `school-text-v2`, `school-hybrid-v2`. 판정 버전을 캐시 범위에 포함해 구 정책 결과를 재사용하지 않는다.
-- 검증 경계: 기존 결합 비율·임계값은 미보정 실험값이다. 제목/본문 충돌 정책과 코드 입력 변경은 학교의 실제 Qwen 평가가 필요하다.
-- 영향: 통합 #11 전처리·Hybrid·파이프라인·관련 테스트와 PLAN/REPORT/CONTEXT/NEXT_TASK.
+- `AI/docs/analysis_rules.md`, `AI/docs/state_model.md`, `AI/docs/api_spec.md`
+- `AI/docs/content_acquisition_spec.md`, `AI/docs/evaluation_spec.md`
+- `AI/docs/feedback_personalization_spec.md`, `AI/docs/goal_session_spec.md`
+- `docs/API_CONTRACT.md`, `docs/DATA_PRIVACY.md`
 
-## 결정 025 - 학교 모델 연결을 Tailscale 사설 HTTPS로 진행
+### 관련 Issue·PR
 
-- 결정일: 2026-10-13
-- 상태: 연결 경로 및 실제 검증 기록. 공개 Client 연동·정확도 검증 완료를 뜻하지 않는다.
-- 근거: 학교 LAN HTTP 연결 timeout 진단 이후 사용자의 Tailscale 선택.
-- 내용: Mac과 학교 Windows PC를 같은 tailnet에 연결한다. 학교의 기존 로컬 FastAPI `127.0.0.1:8000`을 Tailscale Serve로 사설 HTTPS에 연결하고 `/health`·합성 `/api/embed` 순서로 확인한다.
-- 경계: HTTPS 인증서·tailnet 로그인과 접근 규칙을 사용한다. 기존 LAN 방화벽 허용 범위를 임의로 넓히지 않는다. 원문·토큰·키는 문서나 로그에 남기지 않는다.
-- Client: 학교 FastAPI는 두 경로만 제공하므로 기존 Ollama metadata 검증 경로와는 다르다. 실제 health 응답을 받은 뒤 필요한 Client 연동을 검토하며 TLS·모델 리비전·벡터 검증을 조용히 제거하지 않는다.
-- 검증: 같은 tailnet에서 학교 Serve `/health`·`/api/embed`에 접근해 실제 Qwen 벡터를 받았다. 모델 digest·정밀도·차원은 REPORT에 기록했다. 실제 속도·GPU telemetry·독립 정답 정확도는 별도 검증한다.
-- 영향: 학교 SETUP·CONTEXT·NEXT_TASK. Hybrid 산식·입력/출력 컬럼·더미 데이터는 이번 연결 선택으로 변경하지 않는다.
+- Issue: [#16](https://github.com/What-a-move/FocusOn/issues/16)
+- Issue: [#23](https://github.com/What-a-move/FocusOn/issues/23)
 
-## 결정 026 - 학교 Qwen 시험 결과와 Client 연동 경계
+## 결정 021 - 화면 개입 v1과 MVP 학습 정리 객체
 
-- 결정일: 2026-10-14
-- 상태: 관측된 시험 결과 및 후속 작업 기록. 모델 정확도·성능 승인이나 공개 API 확정을 뜻하지 않는다.
-- 근거: 학교 `qwen3-embedding:4b-fp16` `/health`·`/api/embed` 실측과 임시 Adapter 합성 실행.
-- 내용: 실제 벡터 반환은 확인했다. 표준 Ollama Client는 `/api/tags`·`/api/show`·`/api/version`을 요구하지만 학교 FastAPI는 `/health`·`/api/embed`만 제공해 직접 연결되지 않는다. Client가 health metadata를 검증하도록 API 계약을 맞춘 뒤 real 평가를 진행한다.
-- 검증 경계: 임시 Adapter 개발 8개 중 2개 skipped, 6개 분석 중 예상값 일치 3개·불일치 3개였다. 예상값은 독립 검수 전이라 정확도 지표가 아니다. GPU 사용률·VRAM도 수집하지 않았다. Mac 왕복과 Ollama 내부 지연은 REPORT에 따로 기록한다.
-- 영향: 학교 SETUP·REPORT·CONTEXT·NEXT_TASK와 다음 Client 작업.
-- 관련 Issue: [#11](https://github.com/What-a-move/FocusOn/issues/11)
+- 결정일: 2026-10-24
+- 상태: 확정 (사용자 공유·최종 정정 및 최신 화면 분석 5.2·5.3, 리포트 5.3 대조)
+- 결정 내용: Server가 관리하는 `v1`의 연속/반복 OR 조건은 `analysis_rules.md` 9.1을 따른다. `UNCERTAIN`은 비누적·연속 구간 종료이고 이전 30초 보류는 적용하지 않는다. 실제 전송부터의 서버 5분 cooldown과 Client의 확인 후 재집중 UI를 구분한다. 세션에 고정한 버전과 분석·개입 기록의 버전은 같아야 한다.
+- 학습 정리: `keyConcepts`는 `name`, `briefExplanation`, `sessionEvidence` 객체 최대 5개다. 서로 다른 근거 2개 미만이면 `INSUFFICIENT_DATA`이며 전체 결과는 1,200자 이하, 원문·URL·코드·개인정보는 제외한다.
+- 이유: 최신 사용자 확정과 제품 문서에 맞추고, 이전 Notion AI 분석 계약의 임계값·버전 예시가 새 세션 정책을 덮지 않게 한다.
+- 제한: AI 코드·Policy Engine 구현 완료를 뜻하지 않는다. 현재 Notion 내 차이와 rolling window 경계의 미정 부분은 `docs/NOTION_SYNC_AUDIT.md`에 기록한다.
+- 영향받는 파일: `analysis_rules.md`, `state_model.md`, `evaluation_spec.md`, `NEXT_TASK.md`, `CONTEXT.md`, `api_spec.md`, `session_note_spec.md`.
 
-## 결정 027 - 화면 메타데이터 우선·출처별 순서 보호
 
-- 결정일: 2026-10-17
-- 상태: 통합 #11 내부 구현 선택. REVIEW 화면 기획을 반영한 것으로 공통 공개 API 확정을 뜻하지 않는다.
-- 근거: 허재원 화면 분석 기획의 메타데이터 → DOM → viewport OCR 순서, `clientRunId`, `sequence`, 활성 화면 원칙과 사용자의 적용 요청.
-- 처리 속도: `APP_META`·`TAB_META`는 검토된 Goal Graph의 aliases가 같은 개념에서 2개 이상 명확히 일치할 때만 임베딩 없이 RELATED/UNRELATED를 반환한다. 근거 부족·관련/무관 충돌은 UNCERTAIN이며 Client가 DOM/OCR 단계로 진행한다.
-- 순서·중복: 기존 내부 `eventId` 입력을 `clientRunId`로 교체해 전처리 내부 event key에 매핑한다. `sessionId + contentSource + sequence`와 최신 문맥을 분석 전·중·반환 전에 확인한다. 결과에도 `clientRunId`, `sequence`, `contentSource`를 연결한다.
-- 활성 화면: Client 조정자가 현재 foreground 앱과 Chrome foreground/active tab을 기준으로 `isActiveTarget`을 만들고 AI는 검증 문맥과 일치하지 않거나 false인 입력을 `UNCERTAIN/INACTIVE_TARGET`으로 모델 호출 없이 보류한다. 실제 OS·브라우저 선택 구현은 Client 책임이다.
-- 불확실성: 메타데이터 한 단어, 빈 화면, 활성 대상 불명, 추출 실패, Graph 미지원, 상태 충돌과 stale 결과는 UNRELATED로 추측하지 않는다.
-- 제한: 임의 사용자 목표용 Graph 자동 생성은 구현하지 않았다. 현재 검토된 templateId가 없는 목표는 `GOAL_GRAPH_UNAVAILABLE`로 UNCERTAIN이다.
-- 버전: `school-hybrid-v3`. 임계값과 실제 정확도·지연 개선은 실제 Qwen 평가 전까지 확정하지 않는다.
-- 영향: 내부 Schema·Adapter·전처리 stale 검사·관련성 파이프라인·합성 평가·테스트·통합 #11 문서.
 
-## 새 결정 기록
+## Issue #11 AI 구현·평가 기록
+
+아래 결정 028 이후는 Issue #11 기능 브랜치에서 이어진 AI 내부 구현 기록이다. 최신 공통 정책과 충돌하면 위의 최신 shared-dev 결정 및 해당 기능 정합성 보고서를 따른다.
 
 ## 결정 028 - 콘텐츠 부족 시 출처별 다음 수집 단계 반환
 
@@ -723,3 +671,5 @@ Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있�
 - 본문 점수 임계값·산식·정답 fixture와 과거 실측 결과는 유지했다. 메타데이터 정책 버전은 title-hybrid-v3-mvp, 내부 graph 분석기는 school-hybrid-v7-mvp다. 세션에 고정된 기존 정책을 자동 마이그레이션하는 구현이 아니다.
 
 - 검증: 모델 없는 관련 회귀 310 passed·16 subtests passed, Streamlit 초기/입력/판정 UI 검증과 8501 health HTTP 200. 실제 Qwen/OpenAI 평가 및 Client/Server 통합은 실행하지 않았다.
+
+다음 AI 결정은 결정 051부터 추가한다.

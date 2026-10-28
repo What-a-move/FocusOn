@@ -13,6 +13,7 @@ docs/
 ├── ARCHITECTURE.md
 ├── API_CONTRACT.md
 ├── DATA_PRIVACY.md
+├── NOTION_SYNC_AUDIT.md
 ├── BRANCH_STRATEGY.md
 ├── COMMIT_CONVENTION.md
 ├── SENTENCE_WRITING.md
@@ -22,7 +23,7 @@ docs/
 
 ## 먼저 읽을 문서
 
-1. `PROJECT_CONTEXT.md` - 새 채팅에서 프로젝트 목적·MVP·정본·현재 상태를 파악하는 시작점
+1. `PROJECT_CONTEXT.md` - 새 채팅에서 프로젝트 목적·MVP 흐름·영역 구성·문서 위치를 파악하는 시작용 지도(현재 상태는 각 영역 `CONTEXT.md`)
 2. `WORKFLOW.md` - 작업 시작부터 PR까지의 전체 흐름
 3. `BRANCH_STRATEGY.md` - Branch 이름과 작업 분리 규칙
 4. `COMMIT_CONVENTION.md` - Commit 메시지 규칙
@@ -30,6 +31,8 @@ docs/
 6. Frontend 작업이면 `apps/docs/README.md`와 작업 대상 앱의 문서, Server·AI 작업이면 해당 영역의 `docs/README.md`, `docs/CONTEXT.md`, `docs/NEXT_TASK.md`, `docs/DECISION_RECORD.md`
 
 ## 문서 운영 원칙
+
+현재 구현 여부는 영역별 `CONTEXT.md`, 계약 충돌과 구현 전 확인 항목은 [문서 대조 기록](NOTION_SYNC_AUDIT.md)에서 확인한다. 과거 전체 대조 날짜와 현재 재검증 범위를 구분한다.
 
 - Frontend의 새 기능을 시작하기 전에 대상 앱의 기획 문서를 먼저 작성한다.
 - 작업 중 결정이 바뀌면 결정 기록을 바로 갱신한다.

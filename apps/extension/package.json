@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "tsc --noEmit && next build --webpack",
-    "lint": "eslint ."
+    "build": "tsc --noEmit && next build --webpack && node scripts/prepare-extension-build.mjs",
+    "lint": "eslint .",
+    "test": "node --test tests/*.test.ts"
   },
   "dependencies": {
     "@focuson/shared-types": "workspace:*",
@@ -17,9 +18,11 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/chrome": "^0.3.6",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "esbuild": "0.28.2",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.3.4",
     "globals": "^17.11.0",

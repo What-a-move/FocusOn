@@ -1,5 +1,7 @@
 # QA 규칙
 
+이 문서는 확인할 항목과 기대값이다. 체크되지 않은 항목이나 아래 설명을 테스트 통과 기록으로 사용하지 않는다. 실제 실행 결과는 해당 기능의 REPORT·QA 문서에 기록한다.
+
 ## 공통 확인
 
 - 정상 흐름이 동작한다.
@@ -17,6 +19,7 @@
 - 타이머 시작·일시정지·재개·종료가 정확하다.
 - 휴식 알림 후 사용자의 선택이 반영된다.
 - 카메라 동의 여부에 따라 카메라 분석이 분리된다.
+- 동의 응답은 `currentVersion`과 확정한 5개 consent 필드명을 포함하고, 저장 요청이 조회한 버전을 그대로 사용한다. 프로필 저장의 409로 닉네임 중복을 처리한다.
 - 학습 시작 시 화면 위에 떠 있는 두더지가 표시된다.
 - 집중 상태와 집중 이탈 상태에 맞는 두더지 표정·자세·팻말·말풍선이 표시된다.
 - 응원 문구와 남은 시간 표시 설정이 각각 반영된다.
@@ -34,20 +37,38 @@
 - 페이지 이동 후 설정된 시간에 재분석된다.
 - Desktop과의 연결이 끊겨도 오류를 안내한다.
 - Desktop 세션이 없을 때 연결 안내를 표시한다.
-
-### 세션·개입·리포트
-
-- Heartbeat 60초 무신호는 후보 처리되고 3분 안에 복구되면 세션이 유지된다.
-- 3분 동안 복구되지 않으면 마지막 서버 확정 누적 시간으로 `ABANDONED` 처리되고 늦은 heartbeat가 세션을 되살리지 않는다.
-- 앱 재실행 시 세션이 `AUTO_PAUSED`, `APP_RESTART`로 복구되고 사용자가 재개하기 전에는 시간이 누적되지 않는다.
-- `UNCERTAIN` 30초 보류·초과 종료, `RELATED` 확인 시 즉시 초기화, 15초 미만 화면 전환 제외 규칙이 적용된다.
-- 세션 시작 때 고정한 `policyVersion`이 분석 기록과 개입 이벤트에 동일하게 남는다.
-- 학습 정리에는 `overview`, `keyConcepts`, `nextStartPrompt`만 있고 `reviewQuestions`가 없다.
-- 집중 달력은 `studyDate`, 종료 확정 상태, 마지막 검증 누적 시간을 기준으로 계산한다.
+- 연결 성공 201에 토큰 3개 필드, UTC ISO 8601 만료 시각과 Extension 기기 ID가 있다. 공개 `EXTENSION`과 내부 `CHROME_EXTENSION` 변환을 확인한다.
+- 틀린 코드 1~2회는 400 `LINK_006_CODE_MISMATCH`와 숫자 `remainingAttempts`, 3번째는 410 `LINK_004_ATTEMPTS_EXCEEDED`다. 입력 수정 전 자동 재전송하지 않는다.
+- readiness 3초 polling을 중복 실행하지 않고 연결 완료·코드 만료·화면 이탈 때 정리한다. 다른 인증 API·재시도와 60회/분 한도를 공유하고 429의 대기 시간을 따른다.
 - Extension에서 세션 상태를 변경한 뒤 서버 응답을 기준으로 UI를 갱신한다.
 - Popup을 닫았다가 다시 열어도 마지막 학습 세션 상태를 복구한다.
 
+## 세션·개입·리포트
+
+- MVP 세션 생성은 5~300분·1분 단위만 허용하고 null·누락·소수·범위 밖을 거절한다. sessionOptions의 알림 채널은 1개 이상·중복 없음이며 시작 요청에는 breakSuggestionEnabled를 넣지 않는다.
+- 알림 미준비 시 Desktop이 요청 전에 차단한다. 서버는 알림 권한을 확인했다고 처리하거나 NOTIFICATION_PERMISSION을 반환하지 않는다.
+
+- Heartbeat 60초 무신호는 후보 처리되고 3분 안에 복구되면 세션이 유지된다.
+- 3분 동안 복구되지 않으면 마지막 서버 확정 누적 시간으로 `ABANDONED` 처리되고 늦은 heartbeat가 세션을 되살리지 않는다.
+- 재개 직후에는 이전 실행 구간의 heartbeat보다 새 `lastResumedAt`을 우선해 생존을 판단한다. `PAUSED`·종료 확정 세션을 자동 종료 worker가 변경하지 않는다.
+- `clientObservedAt`의 순서 비교와 서버 수신 시각을 혼동하지 않는다. 같은 시각의 재전송·감소 누적값의 검증 순서는 구현 전 계약 확인 항목이다.
+- 앱 재실행 시 세션이 `AUTO_PAUSED`, `APP_RESTART`로 복구되고 사용자가 재개하기 전에는 시간이 누적되지 않는다.
+- `v1`에서 `UNCERTAIN`은 비누적·현재 연속 구간 종료, `RELATED`는 즉시 초기화, 15초 미만 화면 전환은 제외된다. 이전 30초 보류 규칙을 새 세션에 적용하지 않는다.
+- `GENTLE` 연속 180초 초과/60초 초과 3회, `NORMAL` 연속 60초 초과/30초 초과 2회, `ACTIVE` 연속 30초 초과/20초 초과 2회 중 OR 조건을 검증한다. 반복 window는 rolling 10분이며 정확한 경계값과 그 직후를 구분한다.
+- 같은 이탈 구간의 반복 관측을 여러 횟수로 세지 않는다. cooldown 만료 뒤 오래된 후보를 발송하지 않고 새 관측에서 재평가한다.
+- 실제 전송부터 5분인 서버 cooldown과 확인 후 5분인 Desktop UI 상태를 구분한다. UI 확인이 세션·AI 판정을 변경하지 않는다.
+- 세션 시작 때 고정한 `interventionPolicyVersion: v1`이 분석·개입 기록의 `policyVersion`에도 남고 배포·일시정지·재개로 변경되지 않는다.
+- 학습 정리에는 `overview`, `keyConcepts`, `nextStartPrompt`만 있고 `reviewQuestions`가 없다.
+- 핵심 개념은 `name`, `briefExplanation`, `sessionEvidence` 객체 최대 5개이며 서로 다른 근거가 2개 미만이면 `INSUFFICIENT_DATA`다. 원문·URL·코드·개인정보와 근거 없는 설명을 포함하지 않는다.
+- 집중 달력은 `studyDate`, 종료 확정 상태, 마지막 검증 누적 시간을 기준으로 계산한다.
+- 세션 시작의 기기 IANA 시간대·누락·잘못된 값을 검증하고, VPN·PC 벽시계 변경·자정 통과가 고정 studyDate와 확정 누적 시간에 영향을 주지 않는지 확인한다. `study_date`는 처음부터 NOT NULL이다.
+- 일간 `sessions[]`는 `sessionId`, `goalTextSnapshot`, `startedAt`, `endedAt`, `accumulatedActiveMs`이며 진행 중 세션을 집계하지 않는다.
+- `DRAFT`·`ABANDONED` 후보를 DB 상태에 추가하지 않는다. `ABANDONED`는 리포트 집계에 포함하되 자동 학습 정리 작업을 생성하지 않는다.
+
 ## PR 전 체크
+
+- 목표 확인은 previousAnswers·같은 clarificationSessionId로 이어 간다. 최초 성공 응답부터 서버가 대화 ID를 제공하며 내부 AI 재시도로 질문 횟수·턴이 중복 증가하지 않는다.
+- 만료된 정상 서명 JWT는 AUTH_ACCESS_TOKEN_EXPIRED, 위조·유효하지 않은 인증은 재로그인 오류로 구분한다. 네트워크 오류만으로 토큰을 삭제하지 않는다.
 
 - [ ] 관련 기능을 직접 실행했다.
 - [ ] 예외 상황을 확인했다.

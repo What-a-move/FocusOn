@@ -1,69 +1,29 @@
 # @focuson/shared-types
 
-Desktop, Chrome Extension, Server 사이에서 함께 사용하는 TypeScript 데이터 계약 패키지다.
+Desktop과 Chrome Extension이 함께 쓰는 **서버 계약 타입**을 모아 둔 패키지다. 기준은 Notion AI 분석 계약·API 명세·세션 상태 전이 정책이다(2026-10-26, Issue #69).
 
-## 역할
+## 사용 규칙
 
-이 패키지는 여러 프로그램이 주고받는 데이터의 이름과 형태를 하나로 맞춘다.
-
-```text
-Extension가 보낸 PageInfo
-        ↓
-Server가 받는 PageInfo
-        ↓
-AI 분석에 전달할 입력
-        ↓
-Desktop·Extension에 반환하는 AnalysisResult
-```
-
-예를 들어 Extension과 Server가 서로 다른 필드명을 사용하면 연결 과정에서 오류가 생긴다.
+- **타입만 둔다.** 이 패키지는 빌드 없이 TS 원본을 내보낸다. 값(배열·함수·enum)을 넣으면 Desktop Main(`.cjs`)과 Extension `node --test`에서 불러오지 못한다.
+- 앱에서는 반드시 `import type`으로 가져온다. 컴파일 때 사라져 실행 코드에 남지 않는다.
+- 확인(parse) 함수와 허용 값 목록은 각 앱에 둔다.
+- 계약이 바뀌면 Notion → 이 패키지 → 두 앱의 확인 함수 순서로 함께 고친다.
 
 ```ts
-import type { PageInfo } from "@focuson/shared-types";
-
-const page: PageInfo = {
-  title: "React 공식 문서",
-  url: "https://react.dev",
-  text: "React 학습 자료",
-};
+import type { AnalysisRunRequest, Relation } from '@focuson/shared-types'
 ```
 
 ## 현재 타입
 
-- `FocusState`: 공개 API의 `relation` 값(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`). 처리 결과는 별도의 `analysisStatus`로 표현한다.
-- AI 내부 `SUPPORTING`은 목표 달성에 필요한 보조 활동이며 공개 `FocusState`에서는 `RELATED`로 매핑한다. 공개 enum에 별도 `SUPPORTING` 값을 추가하지 않는다.
-- `AnalysisReasonCode`: 분석 판단 근거 코드
-- `PageInfo`: 제목·주소·본문 일부 등 페이지 정보
-- `AnalysisResult`: 현재 구현 타입. 최신 계약의 `relation`·`analysisStatus` 분리를 반영해야 한다.
-
-## 앞으로 추가할 타입
-
-여러 영역에서 함께 사용하는 것이 확정된 경우에만 다음 타입을 추가한다.
-
-- `StudySessionStatus`: `DRAFT`, `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED`
-- `StudySessionSnapshot`: 현재 세션 상태와 기준 시간
-- `StudySessionCommand`: 시작·일시정지·재개·연장·종료 명령
-- `AnalysisActivityState`: 분석 작동 상태(`RUNNING`, `PAUSED`, `EXCLUDED`). 실제 공유 Type 추가는 세션 API 계약 구현 시 진행한다.
-- `AnalysisRelation`: 목표 관련성(`RELATED`, `UNRELATED`, `UNCERTAIN`)
-- `AnalysisStatus`: AI 실행 결과(`COMPLETED`, `NEEDS_CONFIRMATION`, `SKIPPED`, `ERROR`). 공개 `FocusState`와 분리한다.
-- `DevicePairing`: Desktop과 Extension 연결 상태
+| 타입 | 내용 |
+| --- | --- |
+| `Relation` | 공개 분석 관계 5개. AI는 `RELATED`·`UNRELATED`·`UNCERTAIN`만 내고, `EXCLUDED`·`PRIVACY_BLOCKED`는 클라이언트가 AI 호출 전에 정한다. AI 내부 `SUPPORTING`은 `RELATED`로 매핑한다. |
+| `ContentSource` | `APP_META`, `TAB_META`, `CHROME_DOM`, `CHROME_VIEWPORT_OCR`(P1), `DESKTOP_APP_OCR` |
+| `GuardStatus` | `EXCLUDED`, `PRIVACY_BLOCKED` |
+| `ReasonCode` | AI 판정 근거 코드 허용 목록 |
+| `SessionStatus` | 서버 세션 상태 7개 |
+| `AnalysisMetadata`, `AnalysisRunRequest`, `AnalysisRunResponse` | `POST /api/v1/sessions/{sessionId}/analysis-runs` 요청·응답 |
 
 ## 넣지 않는 것
 
-다음은 이 패키지의 책임이 아니다.
-
-- API 호출
-- 데이터베이스 접근
-- Google 로그인 처리
-- Chrome API 호출
-- AI 분석 로직
-- Spring Boot의 런타임 입력 검증
-
-TypeScript 타입은 빌드 후 실행 중에는 사라질 수 있으므로, Server는 DTO 검증을 별도로 구현해야 한다.
-
-## 사용 규칙
-
-- 여러 앱이나 서버가 함께 사용하는 타입만 추가한다.
-- 특정 화면에만 필요한 Props와 상태는 해당 앱 안에 둔다.
-- 타입을 변경하면 Desktop·Extension·Server 소비자를 함께 확인한다.
-- API 변경은 `docs/API_CONTRACT.md`에도 반영한다.
+API 호출, Chrome·Electron API, 런타임 입력 검증, 특정 화면에만 쓰는 상태. Server는 자체 DTO 검증을 따로 둔다.

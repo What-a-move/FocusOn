@@ -39,6 +39,11 @@ server/docs/
     └── 기능명-PLAN.md / 기능명-ERROR.md / 기능명-REPORT.md
 ```
 
+## 개발용 API 수동 테스트
+
+- [Swagger 실행·Google PKCE 로그인 테스트](SWAGGER_TESTING.md)
+- local은 `.env`를 자동으로 읽고 Swagger를 켠다. DB가 켜져 있으면 `bootRun`만 실행한다. docker/test는 Swagger 비활성이다.
+
 ## Backend 전용 확인 항목
 
 - API 요청·응답 형식과 HTTP 상태 코드

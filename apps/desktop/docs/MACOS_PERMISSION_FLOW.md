@@ -1,6 +1,8 @@
 # Desktop macOS 권한 흐름
 
-> 결정 상태: 권한 요청 UX와 거부 시 동작은 확정했다. 실제 권한 API 연결은 아직 구현하지 않았으며 지원 macOS와 Electron Version에서 검증한다.
+> 결정 상태: 권한 요청 UX와 거부 시 동작은 확정했다. 2026-10-22 온보딩 권한 화면용으로 화면 기록 상태 조회·시스템 설정 열기, 카메라 상태 조회·요청, 시험 알림을 Main IPC(`electron/main/permission-ipc.cts`)에 연결했다. 개발용 Electron에서 상태 조회를 확인했고, 패키징 앱의 Usage Description·재실행 필요 여부는 배포 빌드에서 다시 검증한다.
+>
+> 화면 기록이 아직 한 번도 요청되지 않았다면 `시스템 설정 열기` 직전에 캡처 목록을 한 번만 조회해 시스템 설정 목록에 FocusOn이 나타나게 한다. 알림은 macOS가 허용 상태 조회 API를 주지 않아, 사용자가 누르면 시험 알림을 보내 허용 창을 띄우고, 사용자가 알림이 보였다고 `보였어요`를 누르면 알림 권한을 준비됨으로 본다(결정 018).
 
 ## 대상 권한
 
@@ -8,7 +10,7 @@
 | --- | --- | --- |
 | Camera | 사용자 동의 기반 자세·시선 상태 분석 | 동의 전 시작 금지 |
 | Screen Recording | 화면 관련성 분석 | 권한 없으면 캡처 중지 |
-| Notification | 휴식·집중 상태 알림 | 거부해도 세션 유지 |
+| Notification | 휴식·집중 상태 알림 | 필수 (2026-10-23). 온보딩에서 시험 알림 + 사용자 확인 |
 
 Microphone은 현재 요구사항이 없으므로 요청하지 않는다.
 
@@ -52,10 +54,16 @@ Electron API가 반환하는 `not-determined`, `granted`, `denied`, `restricted`
 - 권한이 없으면 캡처 API를 반복 호출하지 않고 System Settings의 Screen Recording 안내로 이동한다.
 - 설정 변경 후 앱 재실행이 필요한지 실제 macOS Version에서 확인한다.
 - 제외 앱 또는 제외 도메인이 활성화되면 Capture와 후속 OCR·AI 처리를 함께 중지한다.
+- 맨 앞 앱 이름·번들 ID는 권한 없이 읽는다. 창 제목은 Screen Recording 권한이 있어야 읽히고, 없으면 `null`로 앱 단위로만 구분한다(Issue #54).
+- 세션 중 권한이 꺼지면 10초 안에 감지해 타이머를 멈추고(`AUTO_PAUSED`), 집중 화면에 `화면 분석 권한이 꺼졌어요.`와 `권한 확인`(시스템 설정 열기)을 보여 준다. 권한을 켠 뒤 사용자가 직접 이어 간다.
+- 지원 macOS는 14 이상이다. 대상 창 하나만 캡처하는 `SCScreenshotManager`가 14부터 있기 때문이다(결정 024).
 
 ### Notification
 
-- 핵심 기능 시작을 막는 필수 권한으로 취급하지 않는다.
+- 필수 권한이다(2026-10-23 사용자 결정, Notion `로그인 → 학습 목표 설정` 5.1과 일치). 온보딩 권한 확인 화면을 통과하려면 화면 기록과 알림이 모두 준비되어야 한다.
+- macOS는 Electron 앱에 알림 허용 상태를 알려 주는 API가 없다. 그래서 `허용하기` → Main이 시험 알림(`notification:show`, `ONBOARDING_TEST`) 전송 → 사용자에게 `방금 보낸 알림이 보였나요?`를 묻고 `보였어요`일 때만 준비됨으로 본다. `안 보였어요`면 `설정 열기`(`permission:notification:open-settings`, 시스템 설정 › 알림) → `다시 보내기`로 반복한다.
+- 서버 `onboarding-readiness`에는 알림 필드가 없어 이 조건은 Desktop 화면에서만 확인한다. 서버에는 알림 필드를 두지 않고 서버는 알림을 검증하지 않는다(결정 019·022). 사용자가 누른 `보였어요`/`안 보였어요`를 Main이 `userData/notification-readiness.json`에 기록하고, 세션 시작 때 기록이 없으면 서버에 요청하지 않고 `LOCAL_NOTIFICATION_NOT_CONFIRMED`로 막는다. 세션 설정 화면에서 바로 시험 알림을 다시 받을 수 있다.
+- 앞에 띄운 앱 이름 확인은 macOS 권한이 필요 없어 권한 화면에 두지 않는다(2026-10-24, Notion 로그인 설계서 5.1).
 - 알림을 실제로 사용하려는 시점에 먼저 용도와 빈도를 설명한다.
 - Main의 Electron Notification API로 허용한 알림 Code만 표시하고 Renderer가 임의 문구를 전달하지 않는다.
 - 거부 상태에서는 앱 내부 안내로 대체한다.

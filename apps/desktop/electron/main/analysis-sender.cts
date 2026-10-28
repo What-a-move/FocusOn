@@ -1,0 +1,84 @@
+import { randomUUID } from 'node:crypto'
+import { readFileSync, renameSync, writeFileSync } from 'node:fs'
+import type { AuthService } from './auth-service.cjs'
+import type { Observation } from './screen-observer.cjs'
+
+import type { AnalysisRunRequest, AnalysisRunResponse, Relation } from '@focuson/shared-types'
+
+export type AnalysisRun = AnalysisRunResponse
+type Sequences = { APP_META: number; DESKTOP_APP_OCR: number }
+
+const RELATIONS: readonly Relation[] = ['RELATED', 'UNRELATED', 'UNCERTAIN', 'EXCLUDED', 'PRIVACY_BLOCKED']
+// ponytail: 서버 요청 제한이 분 단위라 429면 1분 쉰다. 공통 요청 함수가 Retry-After를 넘기게 되면 그 값을 쓴다.
+const RATE_LIMIT_PAUSE_MS = 60_000
+
+/** 응답 형식을 그대로 확인한다. 값이 없거나 형식이 틀리면 null(계약 위반)이다. confidence(0~1)·reasonCode는 판정이 없으면 null일 수 있다. */
+export function parseAnalysisRun(value: unknown): AnalysisRun | null {
+  if (typeof value !== 'object' || value === null) return null
+  const { analysisRunId, relation, confidence, reasonCode, observedAt, policyVersion } = value as Record<string, unknown>
+  if (typeof analysisRunId !== 'string' || !RELATIONS.includes(relation as Relation) || typeof observedAt !== 'string' || typeof policyVersion !== 'string') return null
+  if (confidence !== null && (typeof confidence !== 'number' || confidence < 0 || confidence > 1)) return null
+  if (reasonCode !== null && typeof reasonCode !== 'string') return null
+  return { analysisRunId, relation: relation as Relation, confidence, reasonCode, observedAt, policyVersion }
+}
+
+/**
+ * 화면 관측 1건을 `POST /sessions/{id}/analysis-runs`로 보낸다 (결정 024, Notion 화면 분석 4.1·7.3).
+ * - 관측마다 새 clientRunId, 세션 안에서 1부터 늘어나는 sequence를 붙인다.
+ *   [주의] 서버는 sequence가 더 작은 결과를 늦게 온 옛날 결과로 본다. 앱을 다시 켜도 같은 세션이면 이어서 세도록 마지막 값을 파일에 둔다.
+ * - 자동으로 다시 보내지 않고 쌓아 두지 않는다. 실패하면 다음 화면 변경부터 새로 보낸다.
+ *   서버가 기록하지 못한 시간은 판단 보류와 같아 알림으로 이어지지 않는다.
+ */
+export class AnalysisSender {
+  private session: { id: string; sequences: Sequences } | null = null
+  private pausedUntil = 0
+
+  constructor(
+    private readonly auth: Pick<AuthService, 'authorizedRequest'>,
+    private readonly sequenceFile: string,
+    private readonly now: () => number = () => performance.now(),
+  ) {}
+
+  async send(sessionId: string, observation: Observation): Promise<AnalysisRun | null> {
+    if (this.now() < this.pausedUntil) return null
+    if (this.session?.id !== sessionId) this.session = { id: sessionId, sequences: this.savedSequences(sessionId) }
+    const contentSource = observation.contentSource ?? 'APP_META'
+    // 순서 번호는 같은 세션·contentSource 안에서 센다(AI 분석 계약 2.2).
+    const sequence = ++this.session.sequences[contentSource]
+    this.saveSequences(sessionId, this.session.sequences)
+    const base = { clientRunId: randomUUID(), contentSource, observedAt: observation.observedAt, sequence }
+    // [주의] 제외·민감 화면은 상태만 보낸다. 앱 이름·창 제목도 넣지 않는다. key·windowId는 보내지 않는다.
+    const body: AnalysisRunRequest = observation.guardStatus
+      ? { ...base, guardStatus: observation.guardStatus }
+      : { ...base, guardStatus: null, metadata: observation.metadata, ...(observation.contentSource === 'DESKTOP_APP_OCR' ? { contentPayload: { text: observation.text } } : {}) }
+    const result = await this.auth.authorizedRequest({
+      path: `/api/v1/sessions/${sessionId}/analysis-runs`, method: 'POST', expectedStatus: 200, parse: parseAnalysisRun, body, withDeviceId: true,
+    })
+    if (result.success) return result.data
+    if (result.error.code === 'TOO_MANY_REQUESTS') this.pausedUntil = this.now() + RATE_LIMIT_PAUSE_MS
+    return null
+  }
+
+  private savedSequences(sessionId: string): Sequences {
+    const empty = { APP_META: 0, DESKTOP_APP_OCR: 0 }
+    try {
+      const saved = JSON.parse(readFileSync(this.sequenceFile, 'utf8')) as { sessionId?: unknown; sequence?: unknown; sequences?: Partial<Record<keyof Sequences, unknown>> }
+      if (saved.sessionId !== sessionId) return empty
+      const count = (value: unknown) => Number.isSafeInteger(value) ? value as number : 0
+      // 예전 형식 { sessionId, sequence }는 APP_META 번호로 읽는다.
+      return { APP_META: count(saved.sequences?.APP_META ?? saved.sequence), DESKTOP_APP_OCR: count(saved.sequences?.DESKTOP_APP_OCR) }
+    } catch {
+      return empty
+    }
+  }
+
+  private saveSequences(sessionId: string, sequences: Sequences): void {
+    try {
+      const temp = `${this.sequenceFile}.tmp`
+      writeFileSync(temp, JSON.stringify({ sessionId, sequences }))
+      renameSync(temp, this.sequenceFile)
+    } catch {
+      // ponytail: 저장에 실패해도 이번 실행 안에서는 메모리 값으로 이어 센다. 재시작 뒤 순서가 꼬일 수 있는 드문 경우만 남는다.
+    }
+  }
+}
