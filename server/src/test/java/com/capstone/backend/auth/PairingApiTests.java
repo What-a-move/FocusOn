@@ -32,6 +32,7 @@ import com.capstone.backend.auth.service.TokenSecrets;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.user.service.OnboardingReadinessService;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
@@ -65,6 +66,7 @@ class PairingApiTests {
   @Autowired private LoginService login;
   @Autowired private TokenLifecycleService lifecycle;
   @Autowired private AccessJwtService jwt;
+  @Autowired private OnboardingReadinessService readiness;
   @Autowired private JdbcTemplate jdbc;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private Clock pairingClock;
@@ -80,6 +82,31 @@ class PairingApiTests {
         ((GoogleExchangeRequest) call.getArgument(0)).state());
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
         .addFilters(new RequestIdFilter()).build();
+  }
+
+  @Test
+  void simultaneousReadinessUpdatesKeepBothDesktopMarkers() throws Exception {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var results = race(() -> readiness.get(owner.principal(),
+        new OnboardingReadinessService.Update(true, null)),
+        () -> readiness.get(owner.principal(),
+            new OnboardingReadinessService.Update(null, true)));
+    assertEquals(List.of("SUCCESS", "SUCCESS"), results);
+    var steps = readiness.get(owner.principal(), null).steps();
+    assertTrue(steps.screenAnalysisReady());
+    assertTrue(steps.analysisExcludedDomainsStepCompleted());
+  }
+
+  @Test
+  void readinessStopsTreatingExpiredExtensionFamilyAsLinked() {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var linked = claim(owner, UUID.randomUUID().toString());
+    assertTrue(readiness.get(owner.principal(), null).steps().extensionLinked());
+    jdbc.update("update token_families set created_at=?, expires_at=? where id=?",
+        Timestamp.from(Instant.now().minusSeconds(60)),
+        Timestamp.from(Instant.now().minusSeconds(1)),
+        jwt.verify(linked.accessToken()).tokenFamilyId());
+    assertTrue(!readiness.get(owner.principal(), null).steps().extensionLinked());
   }
 
   @Test
