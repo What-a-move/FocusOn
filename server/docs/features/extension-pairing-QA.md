@@ -52,3 +52,10 @@
 - build·Checkstyle·전체 H2 JUnit 87개 성공. H2는 Flyway를 사용하지 않아 PostgreSQL의 nickname partial UNIQUE 및 제약명 매핑을 생성하지 않는다. 동시 닉네임 분기는 실제 PostgreSQL 검증으로 한정하고 동의·집중 설정 동시성은 H2에서도 유지한다.
 - 별도 PostgreSQL DB에 V1~V5 적용·Hibernate validate 및 pairing 16개와 사용자 설정 API 7개 테스트 통과. PostgreSQL 동시 요청 시작은 확인했으나 두 사전 검사 시점이 겹쳤는지는 계측하지 않았다.
 - 실제 Desktop·Extension 통합 UI QA 및 원격 PR CI는 아직 미실행이다. 이전의 V4 기반 QA 결과는 당시 기준의 이력이다.
+
+## 익명 설치 제한 리뷰 보완 (2026-10-28)
+
+- 설치별 bucket을 IP별로 분리해 한 IP의 유효 설치 기록을 최대 32개로 제한했다. 같은 IP의 기존 bucket은 기존 횟수 기준으로 계속 이용하고 다른 IP·인증 API의 저장 공간에는 영향을 주지 않는다. 형식 오류는 기존 설치별 10회 한도에 포함된다.
+- 공유 NAT에서 새 설치가 32개를 넘으면 정상 요청도 대기할 수 있고, 10,000개의 서로 다른 IP 그룹이 모두 활성인 상황은 계속 포화될 수 있다. 다중 인스턴스 공유 제한과 대규모 분산 공격 방어는 이번 수정으로 해결되지 않는다.
+
+- 독립 검토 후 최종 H2 전체 build·Checkstyle과 별도 PostgreSQL의 PairingApiTests·AuthContractTests를 통과했다. 단일 IP별 32개 상한, 다른 IP 격리, 기존 설치 10회 한도, 형식 오류 집계, 10분 만료 및 10,000개 IP 그룹 포화 복구를 테스트했다. 분산 공격 대응 능력이나 운영 규모 성능을 실측한 것은 아니다.

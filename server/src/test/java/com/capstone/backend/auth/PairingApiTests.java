@@ -82,6 +82,20 @@ class PairingApiTests {
   }
 
   @Test
+  void malformedCodesStillCountTowardInstallationLimit() {
+    String ip = UUID.randomUUID().toString();
+    String installation = UUID.randomUUID().toString();
+    for (int i = 0; i < 10; i++) {
+      var error = assertThrows(ApiException.class,
+          () -> pairing.claim(new ClaimRequest("invalid!", installation), ip));
+      assertEquals(ApiErrorCode.LINK_001_INVALID_FORMAT, error.code());
+    }
+    var blocked = assertThrows(ApiException.class,
+        () -> pairing.claim(new ClaimRequest("invalid!", installation), ip));
+    assertEquals(ApiErrorCode.TOO_MANY_REQUESTS, blocked.code());
+  }
+
+  @Test
   void desktopListsOnlyItsOwnDevicesForTokenLossRecovery() throws Exception {
     var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     var other = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
