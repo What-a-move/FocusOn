@@ -1,17 +1,21 @@
 # Backend 다음 작업
 
-## 현재 작업 (2026-10-27)
+## 현재 작업 (2026-10-28)
 
+- #58 연결과 #86 Extension 연결 해제·기기 조회는 PR #91에 제출돼 리뷰 중이다. #85 온보딩 준비 상태 PR #92는 #91에 의존한다. 두 PR 모두 dev 미병합이다.
 - Issue #83: PostgreSQL 동시 시작 테스트와 local 서버의 실계정 인증 HTTP QA를 수행했다. PR 전 최신 dev의 migration 번호를 대조한다. 개발 DB와 격리 테스트 DB에 V4 적용은 확인했다. 사용자 `UserEntity` 미커밋 변경은 별도로 보존한다.
+- Issue #38의 사용자 설정 PR #82가 dev에 병합됐다. 관련 CodeRabbit 지적을 다룬 PR #84가 dev에 병합됐다.
+- 검증: 최신 dev 통합 후 build/Checkstyle·H2 JUnit87·PostgreSQL 연결16/사용자 설정7·V1~V5 통과. 이전 기준 HTTP33·DB제약6. 실제 Frontend UI 통합은 미완료다.
+- PR 생성·병합·이슈 종료는 승인 없이 실행하지 않는다.
 
-- Issue #38: Notion 8개 API의 나머지 오류·권한 상세를 대조하고 최신 로컬 코드의 실계정 HTTP 성공 경로를 재검증한다. PostgreSQL MockMvc 및 기존 DB의 Flyway V1~V3 기록, 실행 서버 무인증 401은 확인했다. PLAN 승인·독립 리뷰·PR은 각각 실제 결과를 확인한다.
-- Issue #79: 개발용 Swagger·FocusOn JWT Authorize·Google PKCE 보조 도구. Branch `chore/#79-swagger-testing`, 기준 dev `65da4f0`.
-- 구현·독립 리뷰·build/Checkstyle·Backend62·Python10·실제 PostgreSQL HTTP32 확인을 완료했다. 실제 Google 계정 성공 테스트는 사용자 인증이 필요하다.
-- 사용자 추가 요청으로 local `.env` 자동 읽기를 적용했다. source 없이 실제 bootRun 기동6개·격리 설정7개·Backend62/build/Checkstyle 통과, 독립 리뷰 지적 없음. 결정028·Swagger QA/리뷰 문서를 따른다.
-- Swagger local 통합·별도 파일 제거 완료. 독립 리뷰 지적 없음, Backend62/build/Checkstyle·HTTP32·기본 bootRun9개 확인 통과. server에서 `./gradlew bootRun`으로 개발한다.
-- 2026-10-27 사용자가 문서 반영과 dev 대상 PR 생성을 승인했다. 원격 PR·CI·리뷰 상태는 [Issue #79](https://github.com/What-a-move/FocusOn/issues/79)에 연결된 PR에서 확인한다. merge·Issue 종료는 별도 승인한다.
-- 이전 #59 / PR #60은 dev 병합·종료됐다. 아래 내용은 당시 기록이며 현 작업으로 재개하지 않는다.
-- 사용법: [SWAGGER_TESTING.md](SWAGGER_TESTING.md).
+## 다음 순서
+
+1. PR #91·#92의 리뷰와 CI를 확인하고 지적을 수정한다. #91을 먼저 처리하며 병합·이슈 종료는 별도 승인을 받는다.
+2. Frontend 담당에게 extension-pairing-frontend-handoff.md를 전달하고 실제 앱 연결 QA. 이 AI가 Frontend 파일을 수정하지 않는다.
+3. #86 기기 조회·Extension unlink와 선행 #58 연결 코드를 PR #91에서 검토한다. 기기 선택 폐기 및 Frontend 화면은 별도 범위다. #85 readiness PR은 #91에 의존한다.
+4. #79는 PR81 병합·실제 Google QA 완료 상태이며 종료는 승인 후 진행한다.
+
+아래는 과거 작업 이력이다. 미완료 문구를 현재 지시로 재개하지 않는다.
 
 ## 이전 작업 기록
 
@@ -20,7 +24,7 @@
 - 선행 #49 / PR #51은 dev 병합·이슈 종료 완료.
 - 계획: `features/auth-lifecycle-PLAN.md`, 검증: QA·code-review·REPORT·ERROR.
 
-## 이어갈 순서
+## 과거 이어갈 순서 (현재 순서 아님)
 
 1. #59 주석 보완 커밋의 원격 CI 결과를 확인하고 병합 여부를 검토한다. merge·이슈 종료는 별도 사용자 승인.
 2. Google 실계정 OAuth 성공은 본인 인증 응답이 필요하다. 실제 서버/Keychain으로 합성 로그인 세션의 복구·회전·logout은 검증했으나 실계정 성공으로 표현하지 않는다.
@@ -36,7 +40,7 @@
 - 로그인·refresh·logout의 DB 변경 잠금 순서는 사용자→family다. 신규 인증 변경도 이 순서와 폐기 commit 경계를 확인한다.
 - 기존 V1/V2를 수정하지 않고 새 schema는 후속 migration으로 분리한다.
 
-## PR 검증 결과
+## PR 검증 결과 (아래 이전 항목은 당시 이력)
 
 PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionable comment 0건. 주석 경고 보완 후 CI를 다시 확인한다. 병합·Issue #59 종료는 사용자 별도 승인이 필요하다.
 
@@ -52,3 +56,5 @@ PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionabl
 - POST refresh IP 한도는 본문 바인딩 전 Filter에서 한 번 집계한다. 잘못된 JSON·길이초과도 301번째에429, 정상 형식은300회까지처리·301번째429다.
 - 잔여20초·refresh503·logout204 조건20회에서 성공0→20회, 불필요한refresh20→0회. Backend58·Desktop96·PostgreSQL28·실제HTTP/Keychain33건 회귀와 독립 리뷰를 통과했다. 수치는 통제된 기능 검증이며 운영성공률이 아니다.
 - 최신 dev d03c2d2 통합·문서 충돌 해소, 로그인 결정026/공유타입결정025 분리. PR #60의 push·CI·리뷰 스레드 결과를 확인하며 merge·Issue종료는 별도 승인받는다.
+
+- #58 → #86 → #85 의존 변경의 PR·병합은 승인 절차 후 순서대로 처리한다. 기기 목록 응답의 data.devices 래퍼를 Frontend와 확인하고, Frontend의 연결 취소·오류·연결 해제 UI 반영 후 실제 Desktop·Extension QA를 진행한다.

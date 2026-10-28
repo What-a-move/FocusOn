@@ -85,3 +85,12 @@ API 오류 원문 정책은 서버 ErrorCode·정본을 따른다. 로그에 토
 - [springdoc 설정](https://springdoc.org/properties)
 - [Google 네이티브 앱 OAuth](https://developers.google.com/identity/protocols/oauth2/native-app)
 - [계획](features/swagger-testing-PLAN.md), [독립 리뷰](features/swagger-testing-code-review.md), [QA](features/swagger-testing-QA.md)
+
+
+## Extension 연결 (Issue #58 브랜치)
+
+- 새 별도 키 PAIRING_SECRET_BASE64를 .env.example 형식으로 설정한다. ignored local .env에 이미 생성된 환경은 기존 bootRun 명령을 유지한다. JWT 키를 복사해 사용하지 않는다. 배포/재시작 간 키를 유지한다.
+- Desktop으로 로그인·Authorize 후 POST /api/v1/pairing-codes를 실행한다. 공개 POST /api/v1/extension-pairings에 표시 코드와 Extension installationId를 보내고 새 token으로 me/refresh를 확인한다.
+- DELETE /api/v1/pairing-codes/{pairingCodeId}는 발급 Desktop으로 호출한다. 이미 소비된 코드를 취소해도 연결은 해제되지 않는다.
+- 설치별3회 오입력은3분 잠금이다. 세부 검증·Frontend 전달은 features/extension-pairing-QA.md와 frontend-handoff.md를 따른다.
+- 기존 실행 중 서버는 재빌드 전 코드를 계속 실행한다. 브랜치 변경 후 새 API를 확인하려면 해당 코드로 서버를 다시 실행해야 한다.

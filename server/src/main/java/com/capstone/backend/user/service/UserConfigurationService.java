@@ -71,7 +71,7 @@ public class UserConfigurationService {
   /** 현재 사용자 닉네임을 변경한다. */
   @Transactional
   public MeResponse updateProfile(FocusOnPrincipal principal, UpdateProfileRequest request) {
-    UserEntity user = currentUser(principal);
+    UserEntity user = lockedUser(principal);
     String nickname = request.nickname();
     if (nickname == null || !nickname.matches("[가-힣a-zA-Z0-9]{2,12}")) {
       throw new ApiException(ApiErrorCode.PROFILE_NICKNAME_INVALID);
