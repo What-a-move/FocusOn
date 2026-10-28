@@ -45,3 +45,7 @@ Backend Issue #58의 사용자 승인 계약이다. Frontend 코드는 이 작�
 ### 추가 구현 중인 Desktop 복구 API
 
 기존 계정의 Desktop access token으로 `GET /api/v1/devices`를 호출하면 `data.devices` 배열에 본인 ACTIVE 기기의 `deviceId`, `type`(DESKTOP/EXTENSION), `name`, `lastUsedAt`, `linkedDesktopDeviceId`를 제공한다. Extension을 선택해 `DELETE /api/v1/extension-pairings/{deviceId}`로 해제하는 흐름이다. 배열 래퍼 `data.devices`는 Notion에 명시되지 않아 Frontend 확인이 필요하다. 이 문단은 구현 브랜치 기준이며 dev 배포 완료를 의미하지 않는다.
+
+### 통합 브랜치 상태
+
+`feat/#85-onboarding-readiness`에는 `feat/#86-extension-unlink`를 포함해 기기 목록·연결 해제·온보딩 준비 상태가 모두 구현되어 있다. 두 브랜치와 #58은 dev에 아직 병합되지 않았다. 앱 수준 연동은 Frontend의 기기 목록·해제 UI와 코드 취소·오류 처리를 반영한 뒤 검증해야 한다.
