@@ -21,9 +21,10 @@ export function LogCopy() {
   }
 
   return <footer className="p-foot">
-    <button className="text-btn" type="button" onClick={() => { void copy() }}>로그 복사</button>
     <span className={`small ${result === 'fail' ? 'is-fail' : 'muted'}`} role="status">
       {result === 'ok' ? '로그를 복사했어요' : result === 'fail' ? '로그를 복사하지 못했어요' : ''}
     </span>
+    {/* 버튼은 오른쪽 끝, 결과 안내는 그 왼쪽에 둔다. */}
+    <button className="text-btn" type="button" onClick={() => { void copy() }}>로그 복사</button>
   </footer>
 }
