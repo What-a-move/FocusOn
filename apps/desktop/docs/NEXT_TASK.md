@@ -4,6 +4,10 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 모듈 연동 로거 (Issue #101, `feat/101-desktop-logger`)
+- 상태: Main 로거·요청 traceId·상태 전이·알림·절전 기록 구현(2026-10-29). 남은 일: 서버가 `X-Trace-Id`를 로그에 찍으면 같은 traceId로 추적표 1·7·8번 확인, 그 뒤 REPORT.
+- 다음 Issue 후보: Extension 로거·로그 복사 버튼, 세션 상태 전이표를 shared-types로 모으는 리팩토링.
+
 - 작업명: 설정 화면 집중·분석·권한·화면 (Issue #80, `feat/80-desktop-settings`)
 - 상태: 화면·설정 IPC·화면 모드 구현(2026-10-27). 남은 일: focus-settings·analysis-excluded-domains API 병합 뒤 실제 계정 QA와 REPORT, 실제 Electron에서 화면 모드 전환·재실행 유지 확인.
 - 다음 Issue 후보: 설정 계정·기기 연결 탭(D24·D25, 계정 삭제 API는 아직 없음), 집중 기록 화면.

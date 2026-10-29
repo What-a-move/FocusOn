@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { ApiResult } from './auth-api.cjs'
 import type { AuthService } from './auth-service.cjs'
+import { log } from './logger.cjs'
 import { parseCommandResult, parseHeartbeat, parseRemoteSession } from '../shared/session-contract.cjs'
 import type { CommandResult, RemoteSession, SessionOptions, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
 
@@ -40,6 +41,8 @@ export class SessionRuntime {
   private localEvents: { sessionId: string; localEventCode: string; occurredAt: string }[] = []
   private flushing = false
   private options: SessionOptions = DEFAULT_OPTIONS
+  // 상태 전이 로그용: 직전에 알린 상태와 그 상태가 된 시각(monotonic·벽시계).
+  private last: { sessionId: string; status: SessionStatus; mono: number; wall: number } | null = null
 
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
@@ -63,7 +66,7 @@ export class SessionRuntime {
       sessionId: started.sessionId, goalText, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
       baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false,
     }
-    this.publish()
+    this.publish('start')
   }
 
   /** 세션 시작 때 고른 개입 강도·알림 채널. */
@@ -82,7 +85,7 @@ export class SessionRuntime {
     // [주의] 조회하는 사이에 새 세션이 시작됐으면 늦게 온 복구 결과로 덮어쓰지 않는다.
     if (this.state !== before) return { success: true, data: this.snapshot() }
     if (!result.success) return result
-    if (result.data === NONE || !isActive(result.data.status)) { this.state = null; this.publish(); return { success: true, data: null } }
+    if (result.data === NONE || !isActive(result.data.status)) { this.state = null; this.publish('restore'); return { success: true, data: null } }
     const remote = result.data
     this.pending.clear()
     this.options = DEFAULT_OPTIONS
@@ -92,7 +95,7 @@ export class SessionRuntime {
       targetDurationMs: remote.targetDurationMs, baseActiveMs: remote.accumulatedActiveMs, resumedAt: null, error: null, busy: false,
     }
     if (remote.status === 'RUNNING') await this.pause('APP_RESTART')
-    this.publish()
+    this.publish('restore')
     return { success: true, data: this.snapshot() }
   }
 
@@ -101,7 +104,7 @@ export class SessionRuntime {
     this.state = null
     this.pending.clear()
     this.localEvents = []
-    this.publish()
+    this.publish('logout')
   }
 
   /** 1초마다 불린다. 목표 시간에 닿으면 누적을 멈추고 확인을 기다린다. */
@@ -111,7 +114,7 @@ export class SessionRuntime {
     s.baseActiveMs = s.targetDurationMs
     s.resumedAt = null
     s.status = 'AWAITING_END_CONFIRMATION'
-    this.publish()
+    this.publish('target-reached')
   }
 
   /** 10초마다 불린다. 서버가 세션을 살아 있다고 보도록 Desktop이 확정한 누적 시간을 보낸다. */
@@ -127,7 +130,7 @@ export class SessionRuntime {
     if (!result.success && result.error.code === 'SESSION_ABANDONED') {
       // 서버가 응답 없음으로 이미 끝낸 세션은 되살리지 않는다. 서버가 확정한 시간만 남는다.
       this.settle('ABANDONED')
-      this.publish()
+      this.publish('server-abandoned')
     }
   }
 
@@ -147,7 +150,7 @@ export class SessionRuntime {
     this.settle('AUTO_PAUSED')
     s.error = SCREEN_PERMISSION_REVOKED
     this.localEvents.push({ sessionId: s.sessionId, localEventCode: SCREEN_PERMISSION_REVOKED, occurredAt: this.wallClock().toISOString() })
-    this.publish()
+    this.publish('screen-permission-lost')
     void this.flushLocalEvents()
   }
 
@@ -225,13 +228,13 @@ export class SessionRuntime {
     if (this.state !== s) return { success: false, error: { code: 'SESSION_NOT_FOUND', retryable: false } }
     s.busy = false
     if (!result.success) {
-      if (result.error.code === 'SESSION_VERSION_CONFLICT') await this.refresh(s)
+      if (result.error.code === 'SESSION_VERSION_CONFLICT') { await this.refresh(s); this.publish('version-conflict') }
       return this.fail(result.error.code)
     }
     this.pending.delete(name)
     s.version = result.data.version
     apply(s, result.data)
-    this.publish()
+    this.publish(name === 'pause' ? `pause:${intent}` : name)
     return { success: true, data: this.snapshot() as SessionSnapshot }
   }
 
@@ -263,7 +266,21 @@ export class SessionRuntime {
     }
   }
 
-  private publish(): void {
-    this.emit(this.snapshot())
+  /** 화면에 현재 상태를 알린다. 상태가 바뀌었으면 state.transition을 남긴다(trigger: 바꾼 원인). */
+  private publish(trigger = 'sync'): void {
+    const snapshot = this.snapshot()
+    const mono = this.now()
+    const wall = this.wallClock().getTime()
+    const prev = this.last
+    if (snapshot && (!prev || prev.sessionId !== snapshot.sessionId || prev.status !== snapshot.status)) {
+      const same = prev?.sessionId === snapshot.sessionId
+      const heldMono = same ? Math.round(mono - prev.mono) : 0
+      const heldWall = same ? wall - prev.wall : 0
+      // macOS 절전 중에는 monotonic clock이 멈출 수 있어 두 값이 5초 넘게 벌어지면 절전이 있었다고 표시한다.
+      log('INFO', 'state.transition', { component: 'session', sessionId: snapshot.sessionId, from: same ? prev.status : null, to: snapshot.status, trigger, heldMono, heldWall, sleepSuspected: heldWall - heldMono > 5_000 })
+      this.last = { sessionId: snapshot.sessionId, status: snapshot.status, mono, wall }
+    }
+    if (!snapshot) this.last = null
+    this.emit(snapshot)
   }
 }

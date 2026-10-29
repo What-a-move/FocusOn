@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, protocol, screen, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -12,6 +12,7 @@ import { AuthSessionStore, isTrustedAuthSender, registerAuthIpc } from './auth-i
 import { AUTH_CHANNELS } from '../shared/auth-contract.cjs'
 import { GoogleOAuthFlow } from './google-oauth.cjs'
 import { AuthApiClient, resolveAuthApiBaseUrl } from './auth-api.cjs'
+import { createLogger, initLogger, log } from './logger.cjs'
 import { MacKeychainRefreshTokenVault } from './auth-keychain.cjs'
 import { getDesktopDeviceName, getInstallationId } from './desktop-identity.cjs'
 import { AuthService } from './auth-service.cjs'
@@ -174,6 +175,20 @@ if (!hasSingleInstanceLock) {
   app.on('activate', () => showMainWindow())
 
   void app.whenReady().then(() => {
+    // 모듈 연동 로그 (Notion 모듈 연동 로깅 규칙). 개발 중에는 터미널에도 찍는다.
+    initLogger(createLogger(path.join(app.getPath('userData'), 'logs', 'focuson.log'), { echo: !app.isPackaged }))
+    // 절전 시간을 집중 시간에 넣을지는 아직 정하지 않았다. 판단 근거로 쓰도록 두 시계의 차이만 남긴다.
+    let suspendedAt: { mono: number; wall: number } | null = null
+    powerMonitor.on('suspend', () => {
+      suspendedAt = { mono: performance.now(), wall: Date.now() }
+      log('INFO', 'power.suspend', { component: 'power' })
+    })
+    powerMonitor.on('resume', () => {
+      const heldMono = suspendedAt ? Math.round(performance.now() - suspendedAt.mono) : null
+      const heldWall = suspendedAt ? Date.now() - suspendedAt.wall : null
+      log('INFO', 'power.resume', { component: 'power', heldMono, heldWall, sleepSuspected: heldMono !== null && heldWall !== null && heldWall - heldMono > 5_000 })
+      suspendedAt = null
+    })
     const apiBaseUrl = resolveAuthApiBaseUrl(process.env.FOCUSON_API_BASE_URL)
     if (apiBaseUrl && process.platform === 'darwin') {
       authService = new AuthService(

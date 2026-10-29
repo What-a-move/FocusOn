@@ -1,4 +1,5 @@
 import type { AuthService } from './auth-service.cjs'
+import { log } from './logger.cjs'
 import type { FloatingShow, InterventionAction } from '../shared/intervention-contract.cjs'
 import type { SessionOptions } from '../shared/session-contract.cjs'
 
@@ -63,6 +64,7 @@ export class InterventionWatcher {
       const payload: FloatingShow = { interventionId: next.interventionId, kind, level: options.interventionLevel, goalText, ...COPY[kind === 'BREAK' ? 'BREAK' : options.interventionLevel] }
       // 알림에 채널이 없으면 세션 시작 때 고른 채널을 쓴다.
       const channels = next.channels.length ? next.channels : options.notificationChannels
+      log('INFO', 'notify.fire', { component: 'intervention', sessionId, interventionType: next.type, channels })
       if (channels.includes('MOLE_UI')) this.deps.show(payload)
       // 소리만 골랐어도 소리 있는 알림으로 알린다. 알림과 소리를 함께 골랐으면 알림은 한 번만 띄운다.
       if (channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) this.deps.notify(payload, channels.includes('SOUND'))
