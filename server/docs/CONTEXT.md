@@ -9,6 +9,7 @@
 
 ## 현재 작업 (2026-10-28)
 
+- 2026-10-29 Issue #100: `feat/100-session-start-active`에서 세션 시작·활성 조회, V8 세션·멱등성 저장을 구현 중이다. PostgreSQL과 테스트 서버 HTTP 검증을 수행했으며 실제 계정·Extension 통합과 카메라 OS 권한 정책 확인은 남았다. 상세는 `features/session-start-active-REPORT.md`를 따른다.
 - 2026-10-28 Issue #87: `feat/87-goal-create-read`에서 수동 목표 저장·본인 상세 조회를 구현 중이다. AI 명확화 이력 검증은 선행 기능이 없어 미완료이며, 상세 검증 현황은 `features/goal-create-read-REPORT.md`를 따른다.
 
 - Issue #58, feat/#58-extension-pairing, 최초 기준 origin/dev b293bf1에서 구현하고 최신 dev 6c93515를 통합했다. server/만 수정했고 PR은 아직 생성하지 않았다.
