@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getActiveSession, unlinkThisBrowser } from './session-api'
+import { LogCopy } from './LogCopy'
 import { displayActiveMs, formatClock, type ActiveSession } from './session-model'
 import '../pairing/pairing.css'
 import './session-popup.css'
@@ -109,6 +110,7 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
           <button className="btn btn-primary" type="button" onClick={() => { void load() }}>다시 연결</button>
         </>}
       </div>
+      <LogCopy />
     </section>
   </main>
 }

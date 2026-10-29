@@ -1,4 +1,7 @@
 import { clearTokens, getInstallationId, saveTokens, storage, type TokenPair } from './extension-auth'
+import { chromeLogStore, createLogger, errorClassOf } from '../session/logger'
+
+const log = createLogger('popup', chromeLogStore, { echo: process.env.NODE_ENV !== 'production' })
 
 export type PairingError = { code: string; retryAfterSeconds?: number; remainingAttempts?: number }
 export type PairingResult = { success: true } | { success: false; error: PairingError }
@@ -37,16 +40,22 @@ export async function submitPairing(codeDisplay: string, baseUrl = resolveApiBas
   const pairingCode = codeDisplay.replace('-', '')
   if (!/^[A-Z0-9]{6}$/u.test(pairingCode)) return fail('LINK_001_INVALID_FORMAT')
 
+  // 연결 코드 요청도 다른 요청과 같은 형식으로 남긴다. 연결 코드 값은 남기지 않는다.
+  const trace = { traceId: crypto.randomUUID(), method: 'POST', path: '/api/v1/extension-pairings' }
+  const started = performance.now()
+  const durMs = () => Math.round(performance.now() - started)
+  log('INFO', 'api.request.out', trace)
   let response: Response
   try {
     response = await request(`${baseUrl}/api/v1/extension-pairings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Trace-Id': trace.traceId },
       body: JSON.stringify({ pairingCode, installationId: await getInstallationId() }),
       redirect: 'manual',
       signal: AbortSignal.timeout(10_000),
     })
-  } catch {
+  } catch (error) {
+    log('ERROR', 'api.request.fail', { ...trace, code: 'LOCAL_NETWORK_UNAVAILABLE', errorClass: error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'network', durMs: durMs() })
     return fail('LOCAL_NETWORK_UNAVAILABLE')
   }
 
@@ -60,11 +69,16 @@ export async function submitPairing(codeDisplay: string, baseUrl = resolveApiBas
     const retryAfter = Number(response.headers.get('Retry-After'))
     const details = typeof payload === 'object' && payload !== null ? (payload as { details?: { remainingAttempts?: unknown } }).details : undefined
     const remaining = typeof details?.remainingAttempts === 'number' && details.remainingAttempts >= 0 ? details.remainingAttempts : undefined
+    log(response.status < 500 ? 'WARN' : 'ERROR', 'api.request.fail', { ...trace, status: response.status, code, errorClass: errorClassOf(code, response.status), durMs: durMs() })
     return fail(code, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined, remaining)
   }
 
   const tokens = parseTokens(payload)
-  if (!tokens) return fail('SERVICE_UNAVAILABLE')
+  if (!tokens) {
+    log('ERROR', 'api.request.fail', { ...trace, status: response.status, code: 'INVALID_RESPONSE', errorClass: 'bad_response', durMs: durMs() })
+    return fail('SERVICE_UNAVAILABLE')
+  }
+  log('INFO', 'api.response.in', { ...trace, status: response.status, durMs: durMs() })
   try {
     await saveTokens(tokens)
   } catch {
