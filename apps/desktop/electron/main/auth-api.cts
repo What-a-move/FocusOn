@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto'
 import type { GoogleAuthorizationCode } from './google-oauth.cjs'
+import { errorClassOf, log, type ErrorClass } from './logger.cjs'
 
 export type AuthApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: AuthApiError }
@@ -79,7 +81,11 @@ export class AuthApiClient {
     body?: object,
     accessToken?: string,
     extraHeaders: Record<string, string> = {},
+    logFields: Record<string, unknown> = {},
   ): Promise<ApiResult<T>> {
+    // 요청을 시작하는 쪽이 traceId를 정했으면(재시도·analysis-runs) 그대로 쓰고, 없으면 여기서 만든다.
+    const traceId = extraHeaders['X-Trace-Id'] ?? randomUUID()
+    const trace = traceRequest(path, method, traceId, logFields)
     let response: Response
     try {
       response = await this.request(`${this.baseUrl}${path}`, {
@@ -88,31 +94,32 @@ export class AuthApiClient {
           ...(body ? { 'Content-Type': 'application/json' } : {}),
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           ...extraHeaders,
+          'X-Trace-Id': traceId,
         },
         body: body ? JSON.stringify(body) : undefined,
         redirect: 'manual',
         signal: AbortSignal.timeout(10_000),
       })
-    } catch {
-      return { success: false, error: NETWORK_UNAVAILABLE }
+    } catch (error) {
+      return trace.fail(NETWORK_UNAVAILABLE, undefined, isTimeout(error) ? 'timeout' : 'network')
     }
 
     // 200을 기대한 조회가 204(본문 없음)를 받으면 parse(null)로 '없음'을 판단하게 한다 (예: GET /sessions/active).
     if (response.status === 204 && expectedStatus === 200) {
       const data = parse(null)
-      return data ? { success: true, data } : { success: false, error: INVALID_RESPONSE }
+      return data ? trace.ok({ success: true, data }, 204) : trace.fail(INVALID_RESPONSE, 204)
     }
     // [주의] 로그인 요청의 redirect를 자동 추적하면 code나 token이 다른 주소로 넘어갈 수 있다.
     if (response.status !== expectedStatus) {
-      try { return { success: false, error: parseError(await response.json()) } }
-      catch { return { success: false, error: SERVICE_UNAVAILABLE } }
+      try { return trace.fail(parseError(await response.json()), response.status) }
+      catch { return trace.fail(SERVICE_UNAVAILABLE, response.status) }
     }
     try {
       const payload: unknown = await response.json()
       const data = isRecord(payload) ? parse(payload.data) : null
-      return data ? { success: true, data } : { success: false, error: INVALID_RESPONSE }
+      return data ? trace.ok({ success: true, data }, response.status) : trace.fail(INVALID_RESPONSE, response.status)
     } catch {
-      return { success: false, error: INVALID_RESPONSE }
+      return trace.fail(INVALID_RESPONSE, response.status)
     }
   }
 
@@ -130,16 +137,48 @@ export class AuthApiClient {
   }
 
   async logout(accessToken: string): Promise<ApiResult<{ loggedOut: true }>> {
+    const trace = traceRequest('/api/v1/auth/logout', 'POST', randomUUID())
     try {
       const response = await this.request(`${this.baseUrl}/api/v1/auth/logout`, {
-        method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, redirect: 'manual', signal: AbortSignal.timeout(10_000),
+        method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'X-Trace-Id': trace.traceId }, redirect: 'manual', signal: AbortSignal.timeout(10_000),
       })
       // 만료 401은 서버 폐기가 실행된 것이 아니다. 오류 코드를 서비스에 전달해 갱신 후 재시도한다.
-      if (response.status === 204) return { success: true, data: { loggedOut: true } }
-      try { return { success: false, error: parseError(await response.json()) } }
-      catch { return { success: false, error: SERVICE_UNAVAILABLE } }
-    } catch {
-      return { success: false, error: NETWORK_UNAVAILABLE }
+      if (response.status === 204) return trace.ok({ success: true, data: { loggedOut: true } }, 204)
+      try { return trace.fail(parseError(await response.json()), response.status) }
+      catch { return trace.fail(SERVICE_UNAVAILABLE, response.status) }
+    } catch (error) {
+      return trace.fail(NETWORK_UNAVAILABLE, undefined, isTimeout(error) ? 'timeout' : 'network')
     }
+  }
+}
+
+function isTimeout(error: unknown): boolean {
+  return error instanceof Error && error.name === 'TimeoutError'
+}
+
+/**
+ * 요청 하나의 OUT·IN·fail을 같은 traceId로 남긴다 (Notion 모듈 연동 로깅 규칙 3.4).
+ * analysis-runs는 판정 요청이라 decision.*, 나머지는 api.* 이름을 쓴다.
+ */
+function traceRequest(path: string, method: string, traceId: string, fields: Record<string, unknown> = {}) {
+  const kind = path.endsWith('/analysis-runs') ? 'decision' : 'api'
+  const started = performance.now()
+  const base = { ...fields, component: 'api', traceId, method, path }
+  log('INFO', `${kind}.request.out`, base)
+  const durMs = () => Math.round(performance.now() - started)
+  return {
+    traceId,
+    ok<T>(result: ApiResult<T>, status: number): ApiResult<T> {
+      // 판정 응답이면 결과값(relation)만 함께 남긴다. 본문의 다른 값은 로거가 버린다.
+      const relation = result.success && isRecord(result.data) ? result.data.relation : undefined
+      log('INFO', `${kind}.response.in`, { ...base, status, relation, durMs: durMs() })
+      return result
+    },
+    fail<T>(error: AuthApiError, status?: number, errorClass: ErrorClass = errorClassOf(error.code, status)): ApiResult<T> {
+      // 서버가 거절한 응답(4xx)은 정상 흐름에서도 생겨 WARN, 연결 실패·서버 오류는 ERROR로 남긴다.
+      const level = status !== undefined && status < 500 && error.code !== 'INVALID_RESPONSE' ? 'WARN' : 'ERROR'
+      log(level, `${kind}.request.fail`, { ...base, status, code: error.code, errorClass, durMs: durMs() })
+      return { success: false, error }
+    },
   }
 }

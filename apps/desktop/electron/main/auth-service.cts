@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { AuthSessionSnapshot, IpcResult } from '../shared/auth-contract.cjs'
 import type { AuthApiError, AuthApiClient, TokenPair, DesktopDevice, ApiResult } from './auth-api.cjs'
 import type { RefreshTokenVault } from './auth-keychain.cjs'
@@ -25,6 +26,10 @@ export type AuthorizedRequest<T> = {
   withDeviceId?: boolean
   /** 요청별 추가 헤더 (예: 세션 명령의 Idempotency-Key). 토큰 갱신 뒤 한 번 다시 보낼 때도 같은 값을 쓴다. */
   headers?: Record<string, string>
+  /** 로그를 서버와 잇는 X-Trace-Id. 없으면 요청마다 새로 만든다 (analysis-runs는 clientRunId). */
+  traceId?: string
+  /** 요청 로그에 함께 남길 값. 로거가 허용 필드만 남기고 제목·본문은 글자 수로 바꾼다. */
+  logFields?: Record<string, unknown>
 }
 const RELOGIN_REQUIRED: AuthApiError = { code: 'AUTH_RELOGIN_REQUIRED', retryable: false }
 
@@ -108,11 +113,14 @@ export class AuthService {
     if (!this.isCurrent(generation)) return this.staleRequest()
     if (request.withDeviceId && !this.deviceId) return { success: false, error: RELOGIN_REQUIRED }
 
+    // [주의] 재시도와 토큰 갱신 뒤 재전송은 같은 요청이라 traceId를 바꾸지 않는다.
+    const traceId = request.traceId ?? randomUUID()
     const send = async (): Promise<ApiResult<T>> => {
       if (!this.isCurrent(generation)) return this.staleRequest()
       const result = await this.api.call(
         request.path, request.method, request.expectedStatus, request.parse, request.body,
-        this.accessToken ?? undefined, { ...request.headers, ...(request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {}) },
+        this.accessToken ?? undefined, { ...request.headers, ...(request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {}), 'X-Trace-Id': traceId },
+        request.logFields,
       )
       return this.isCurrent(generation) ? result : this.staleRequest()
     }

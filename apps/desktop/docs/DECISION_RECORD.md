@@ -652,3 +652,15 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - `FocusSettings` 타입에 `breakSuggestionEnabled`를 넣고, 세션 시작용 `SessionOptions`(3개 필드)와 나눴다. GET 응답에 휴식 제안이 없으면 형식 오류다(Notion GET 응답 필드).
 - 화면 모드는 Main이 `nativeTheme.themeSource`로 앱 전체에 적용하고 이 기기에만 저장한다. 기존 CSS의 `prefers-color-scheme`이 그대로 따라간다.
 - 영향받는 파일: `electron/shared/settings-contract.cts`, `electron/main/settings-ipc.cts`, `electron/shared/session-contract.cts`, `features/settings/*`, `features/dashboard/AppSidebar.tsx`
+
+## 결정 030 - Main 공용 로거는 허용 필드만 남기고, 서버 요청 한 곳에서 traceId를 붙인다
+
+- 결정일: 2026-10-29 / 상태: 확정 (PM 확정 Notion 모듈 연동 로깅 규칙) / Issue #101.
+- 로거는 `electron/main/logger.cts` 하나다. JSON 한 줄을 `userData/logs/focuson.log`에 쌓고 1MB를 넘으면 `focuson.1.log`로 넘긴다. 개발 중에는 터미널에도 찍는다.
+- 마스킹은 허용 목록 방식이다. 목록 밖 필드는 버리고 `title`·`windowTitle`·`pageTitle`·`text`는 글자 수로만 바꾼다. 차단 목록 방식은 새 필드가 생길 때마다 빠뜨릴 수 있어 쓰지 않는다.
+- 모든 서버 요청이 지나가는 `AuthApiClient.call`·`logout`에서 `X-Trace-Id`를 붙이고 `api.*`(분석은 `decision.*`) OUT·IN·fail을 남긴다. `authorizedRequest`는 재시도·토큰 갱신 뒤 재전송에 같은 traceId를 쓰고, `analysis-runs`는 `clientRunId`를 traceId로 쓴다.
+- 상태 전이는 `SessionRuntime.publish()`에서 직전 상태와 비교해 남긴다. 상태를 바꾸는 곳이 여러 곳이라 각각에 넣지 않는다.
+- 절전 시간을 집중 시간에 넣을지는 정하지 않았다. `power.resume`과 `state.transition`에 monotonic·벽시계 차이(`heldMono`·`heldWall`·`sleepSuspected`)만 남긴다.
+- 쓰기는 동기 `appendFileSync`다. 요청·상태 전이 단위라 양이 적다. 초당 수백 줄이 되면 비동기 버퍼로 바꾼다.
+- 영향받는 파일: `electron/main/logger.cts`, `auth-api.cts`, `auth-service.cts`, `analysis-sender.cts`, `session-runtime.cts`, `intervention-watcher.cts`, `index.cts`
+
