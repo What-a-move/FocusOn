@@ -18,6 +18,7 @@ docs/
 ├── COMMIT_CONVENTION.md
 ├── SENTENCE_WRITING.md
 ├── QA_CONVENTION.md
+├── INTEGRATION_DEBUG.md
 └── ENVIRONMENT.md
 ```
 
@@ -32,7 +33,7 @@ docs/
 
 ## 문서 운영 원칙
 
-현재 구현 여부는 영역별 `CONTEXT.md`, 계약 충돌과 구현 전 확인 항목은 [문서 대조 기록](NOTION_SYNC_AUDIT.md)에서 확인한다. 과거 전체 대조 날짜와 현재 재검증 범위를 구분한다.
+모듈 연동 오류는 [연동 오류 추적 지침](INTEGRATION_DEBUG.md)대로 traceId와 로그로 끊긴 구간부터 찾는다. 현재 구현 여부는 영역별 `CONTEXT.md`, 계약 충돌과 구현 전 확인 항목은 [문서 대조 기록](NOTION_SYNC_AUDIT.md)에서 확인한다. 과거 전체 대조 날짜와 현재 재검증 범위를 구분한다.
 
 - Frontend의 새 기능을 시작하기 전에 대상 앱의 기획 문서를 먼저 작성한다.
 - 작업 중 결정이 바뀌면 결정 기록을 바로 갱신한다.

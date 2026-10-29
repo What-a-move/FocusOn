@@ -4,6 +4,10 @@
 
 사용자가 영역을 따로 지정하지 않고 `PR 확인해줘` 또는 비슷하게 요청하면 백엔드 PR 리뷰 요청으로 처리한다. `server/docs/PR_REVIEW_GUIDE.md`를 읽고 대상 PR을 찾은 뒤 검토와 GitHub 댓글까지 진행한다. 다른 영역을 명시한 요청에는 이 규칙을 적용하지 않는다.
 
+## 모듈 연동 오류 요청
+
+사용자가 Desktop·Extension·Backend·AI를 연결하다 난 오류를 고쳐 달라고 하거나 `로그 확인해줘`처럼 요청하면, 추측으로 코드를 고치기 전에 `docs/INTEGRATION_DEBUG.md` 순서를 따른다. 실패한 요청의 `traceId`로 모듈별 로그를 찾고, 추적표에서 끊긴 구간을 확인한 뒤 그 구간의 코드만 고친다. 끊긴 구간이 작업 중인 영역이 아니면 그 영역 코드를 직접 고치지 않고 장애 보고 양식으로 담당자에게 넘길 메시지를 만든다. 고친 뒤 같은 재현으로 추적표가 이어지는지 다시 확인한다.
+
 ## 새 채팅에서 프로젝트 학습 요청
 
 사용자가 `FocusOn 학습해`처럼 짧게 요청하면 추가 설명을 요구하지 말고 이 저장소의 시작 문서를 읽는다. `docs/PROJECT_CONTEXT.md`에서 전체 흐름과 Notion 정본 링크를 확인하고, `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, `docs/DATA_PRIVACY.md`, `docs/WORKFLOW.md` 및 각 영역의 `CONTEXT.md`, `NEXT_TASK.md`, `DECISION_RECORD.md`를 읽는다. 관련 Notion에 접근할 수 있으면 현재 내용을 확인한다. 확정 정책·제안·실제 구현 상태를 구분하고, 접근하지 못한 정본은 확인했다고 말하지 않는다. 학습 요청만 받은 경우 파일은 수정하지 않고 핵심 내용과 남은 충돌을 짧게 보고한다.
@@ -28,6 +32,7 @@
 - 기능 범위를 임의로 넓히지 않고, 추가 작업은 Issue로 분리한다.
 - Issue Branch의 PR 대상은 `dev`로 설정하고, `dev`에서 `main`으로 가는 PR은 최종 통합 시에만 생성한다.
 - 카메라·화면·페이지 데이터는 루트 `docs/DATA_PRIVACY.md` 기준을 따른다.
+- **로그:** 코드에 로그를 넣을 때는 `console.log`·`System.out`·`print`를 직접 쓰지 않고 그 영역의 공용 로거만 쓴다. 형식·event 이름·traceId 규칙은 Notion `모듈 연동 로깅 규칙`과 `docs/ARCHITECTURE.md` 로그·추적 원칙을 따른다. 정본 목록 밖의 event 이름을 만들지 않고, 잡은 예외는 WARN 이상으로 남기며, 제목·본문·URL 전체·토큰·개인정보는 로그에 넣지 않는다. 새 외부 호출을 추가하면 보내는 쪽 OUT과 받는 쪽 IN을 같은 traceId로 남긴다.
 - 제품 범위나 확정 계약이 바뀌면 `docs/PROJECT_CONTEXT.md`의 요약도 같은 작업에서 갱신한다. 단순 진행 상황은 각 영역의 `CONTEXT.md`와 `NEXT_TASK.md`에 기록한다.
 
 ## 작업 종료 전
