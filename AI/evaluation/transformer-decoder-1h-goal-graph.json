@@ -1,0 +1,17 @@
+{
+  "template_id": "generated:goal-transformer-decoder-1h:v1",
+  "version": "confirmed-goal-profile-v1",
+  "goal_text": "트랜스포머 디코더 공부",
+  "concepts": [
+    {
+      "id": "direct-1",
+      "description": "트랜스포머 디코더 공부",
+      "aliases": [
+        "트랜스포머 디코더 공부"
+      ],
+      "role": "DIRECT",
+      "connection": "confirmed-goal:goal-transformer-decoder-1h:v1:direct-1"
+    }
+  ],
+  "unrelated_topics": []
+}

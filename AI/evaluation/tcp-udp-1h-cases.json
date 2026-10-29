@@ -1,0 +1,154 @@
+{
+  "goal": {
+    "goalId": "goal-tcpudp-1h",
+    "goalVersion": 1,
+    "text": "TCP와 UDP의 차이를 이해하고 상황별로 적절한 전송 프로토콜 선택하기",
+    "confirmed": true
+  },
+  "cases": [
+    {
+      "caseId": "tcpudp-00m",
+      "purpose": "00분 시점의 가상 화면: 직접 학습: 전송 방식과 신뢰성 비교",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "TCP와 UDP의 전송 방식 비교",
+      "text": "TCP는 연결을 설정하고 바이트 스트림을 전달하는 전송 계층 프로토콜입니다. 데이터의 순서를 유지하고 손실이 발생하면 재전송하는 기능을 제공합니다. UDP는 데이터그램 단위로 전달하며 프로토콜 자체에서는 도착이나 순서를 보장하지 않습니다. 통신 요구사항에 따라 신뢰성, 지연, 구현 복잡도를 비교하여 전송 방식을 선택해야 합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-05m",
+      "purpose": "05분 시점의 가상 화면: 관련 자료: 목표 용어를 직접 반복하지 않는 연결 수립 설명",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "연결 수립 과정과 세 방향 핸드셰이크",
+      "text": "클라이언트가 SYN을 보내면 서버는 SYN과 ACK를 응답하고 클라이언트가 ACK를 보내 연결을 수립합니다. 양쪽은 초기 순서 번호를 교환하여 이후 바이트의 위치를 구분합니다. 연결 수립에는 통신이 필요하므로 새 연결의 시작 비용과 이미 연결된 상태의 데이터 전송 시간을 구분해서 측정해야 합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-10m",
+      "purpose": "10분 시점의 가상 화면: 직접 학습: UDP의 보장 범위와 한계",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "UDP 소켓과 데이터그램",
+      "text": "UDP 소켓은 데이터그램을 목적지 주소와 포트로 전송합니다. 수신 애플리케이션은 전송된 데이터그램의 경계를 유지한 채 데이터를 받습니다. UDP 패킷이 손실되거나 순서가 달라지는 경우를 처리해야 한다면 애플리케이션에서 별도의 순서 번호나 재전송 정책을 설계할 수 있습니다. UDP를 사용한다는 이유만으로 모든 환경에서 응답이 빠르다고 단정할 수는 없습니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-15m",
+      "purpose": "15분 시점의 가상 화면: 딴짓: 학습과 관계없는 쇼핑",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "운동화 신상품과 할인 행사",
+      "text": "오늘 공개된 운동화의 색상별 재고와 사이즈를 확인합니다. 검은색 제품과 흰색 제품의 사진을 비교하고 구매 후기에서 발볼과 착화감을 살펴봅니다. 장바구니에 제품을 담은 뒤 배송비와 쿠폰 적용 금액을 계산합니다. 이번 주말에 입을 바지와 어울리는 디자인을 고른 다음 다른 쇼핑몰에서도 판매 가격을 비교합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-20m",
+      "purpose": "20분 시점의 가상 화면: 직접 학습: 신뢰성 제공 과정",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "TCP 순서 번호와 재전송",
+      "text": "TCP는 전송한 바이트를 순서 번호로 구분하고 ACK를 이용해 수신 확인 정보를 전달합니다. 손실을 감지하면 필요한 데이터를 재전송하며 수신 측은 바이트를 순서에 맞게 애플리케이션에 제공합니다. 재전송 때문에 뒤에 도착한 데이터가 바로 전달되지 못할 수 있으므로, 신뢰성과 지연 사이의 요구사항을 함께 검토해야 합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-25m",
+      "purpose": "25분 시점의 가상 화면: 혼합 화면: 학습 설명과 게임 활동이 함께 존재",
+      "expectedLabel": "UNCERTAIN",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "현재 브라우저 화면의 텍스트",
+      "text": "TCP와 UDP의 차이를 정리합니다. TCP는 바이트 순서와 재전송을 제공하고 UDP는 데이터그램을 전달합니다. 파일의 모든 내용을 정확히 받는 일이 중요하다면 신뢰성을 고려해야 합니다. 통신 목적에 맞게 전송 방식을 선택하는 연습을 진행합니다.\n\n친구들과 온라인 게임 경쟁전을 시작합니다. 새로운 캐릭터의 스킬 순서와 아이템 조합을 확인하고 상대 팀의 움직임에 맞춰 공격 경로를 바꿉니다. 이번 판에서 승리하면 얻는 보상으로 한정 스킨을 구매할 계획입니다. 다음 경기에서도 같은 팀으로 참가할 예정입니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-30m",
+      "purpose": "30분 시점의 가상 화면: 관련 활동: 상황별 프로토콜 선택 연습",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "실시간 음성과 파일 전송의 요구사항",
+      "text": "실시간 음성 통신에서는 늦게 도착한 음성 조각을 기다리기보다 일부 손실을 허용하는 설계가 적절할 수 있습니다. 반대로 파일을 내려받을 때는 전체 바이트가 정확한 순서로 전달되어야 합니다. 이러한 요구사항을 바탕으로 UDP 기반의 실시간 전송 설계와 TCP 기반의 신뢰성 있는 전송 설계를 비교합니다. 최종 선택은 애플리케이션의 손실 허용 범위와 지연 제한을 기준으로 합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-35m",
+      "purpose": "35분 시점의 가상 화면: 딴짓: 게임 공략과 플레이",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "게임 캐릭터 장비 추천과 경쟁전",
+      "text": "공격 속도가 빠른 캐릭터에게 어울리는 무기와 장신구를 선택합니다. 방어력을 올리는 장비와 치명타 확률을 올리는 장비의 효과를 비교하고 연습장에서 연속 공격을 시도합니다. 친구가 접속하면 함께 랭크 경기에 참가해 시즌 점수를 올릴 예정입니다. 승리 후에는 획득한 재화로 캐릭터 외형을 바꾸고 다음 경기를 준비합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-40m",
+      "purpose": "40분 시점의 가상 화면: 관련 활동: 프로토콜 동작 관찰",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "Wireshark에서 TCP와 UDP 패킷 비교",
+      "text": "패킷 캡처 목록에서 TCP와 UDP를 필터링하여 헤더와 전송 흐름을 비교합니다. TCP 흐름에서는 연결 수립과 ACK를 확인하고 재전송으로 표시된 구간을 찾아봅니다. UDP 흐름에서는 데이터그램의 출발지 포트, 목적지 포트와 길이를 확인합니다. 캡처 내용만으로 애플리케이션의 실제 처리 시간을 모두 알 수는 없으므로 프로토콜 동작 관찰과 성능 측정을 구분합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-45m",
+      "purpose": "45분 시점의 가상 화면: 관련 활동: 학습 내용 정리",
+      "expectedLabel": "RELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "TCP/UDP 선택 기준 정리",
+      "text": "TCP와 UDP를 비교할 때 연결 수립 여부, 메시지 경계, 순서 보장, 손실 처리 책임을 각각 정리합니다. TCP에서는 애플리케이션 메시지 길이를 별도로 구분해야 할 수 있고, UDP에서는 데이터그램 경계를 유지하지만 손실 처리 방식은 따로 결정해야 합니다. 어떤 프로토콜이 무조건 우수하다고 결론내리지 않고 목표 서비스의 요구사항에 맞춰 선택 이유를 설명합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-50m",
+      "purpose": "50분 시점의 가상 화면: 딴짓: 여행 계획",
+      "expectedLabel": "UNRELATED",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "주말 여행 숙소와 관광 일정",
+      "text": "바닷가 근처 숙소의 객실 사진과 예약 가능 날짜를 확인합니다. 역에서 숙소까지 이동하는 방법과 주변 식당의 영업시간을 찾아보고 여행 예산을 계산합니다. 첫날에는 해변을 걷고 둘째 날에는 전망대와 시장을 방문할 계획입니다. 친구들에게 보여줄 후보 숙소를 고른 다음 객실 크기와 취소 조건을 비교합니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    },
+    {
+      "caseId": "tcpudp-55m",
+      "purpose": "55분 시점의 가상 화면: 혼합 화면: 복습 자료와 요리 콘텐츠가 함께 존재",
+      "expectedLabel": "UNCERTAIN",
+      "contentSource": "CHROME_DOM",
+      "contentType": "DOCUMENT",
+      "pageTitle": "화면에 함께 열린 두 문서",
+      "text": "TCP와 UDP의 전송 특성을 비교하는 복습 문제를 풉니다. TCP의 순서 보장과 재전송이 필요한 상황을 고르고 UDP 데이터그램을 사용하는 경우의 손실 처리 책임을 설명합니다. 파일 전송과 실시간 통신에서 각각 어떤 요구사항이 중요한지 답안을 작성합니다.\n\n저녁 메뉴를 정하기 위해 파스타와 볶음밥 레시피를 비교합니다. 냉장고에 남아 있는 재료를 확인하고 양파와 고기를 손질하는 순서를 읽습니다. 팬을 예열한 다음 재료를 넣고 볶는 시간을 맞추며, 소금과 후추로 간을 조절하는 방법을 살펴봅니다.",
+      "extractionStatus": "SUCCESS",
+      "isSensitive": false,
+      "isExcluded": false
+    }
+  ]
+}

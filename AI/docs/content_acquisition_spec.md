@@ -1,11 +1,13 @@
 # 콘텐츠 수집·추출 계약
 
+> 2026-10-26 MVP 화면 수집 규칙: 메타데이터의 RELATED만 확정한다. UNRELATED·UNCERTAIN은 현재 대상과 Privacy Guard가 유효한 경우 Chrome DOM 또는 Desktop OCR로 재확인한다. Chrome viewport OCR은 P1이며 DOM으로 부족하면 UNCERTAIN이다. Desktop은 Chrome 창을 OCR로 대신 분석하지 않는다. 아래 과거 Chrome OCR 제안은 MVP 실행 경로에 적용하지 않는다. [적용 보고서](features/screen-analysis-contract-v1-REPORT.md).
+
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안, 미구현
 - 버전: `0.2.0-draft`
-- 기준일: 2026-09-22
-- 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
+- 기준일: 2026-09-30
+- 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3), [#11](https://github.com/What-a-move/FocusOn/issues/11)
 - 관련 규칙: `AI-PRIV-001`, `AI-PRIV-002`, `AI-PIPE-001`, `AI-FAIL-001`, `AI-STALE-001`, `AI-VISION-001`, `AI-VISION-002`, `AI-VISION-003`
 
 이 문서는 Chrome Extension, macOS 네이티브 OCR 프로그램, Server와 AI 사이의 콘텐츠 수집 경계를 정의한다. 현재 Extension의 Content Script와 Service Worker는 진입 파일만 있고 이 계약은 아직 구현되지 않았다.
@@ -27,7 +29,7 @@
 | Chrome Extension 로컬 OCR | 허용된 가시 영역의 브라우저 호환 OCR과 품질 메타데이터 | 원본 이미지 업로드, 학습 관련성 판단 |
 | macOS 네이티브 모듈 | Desktop 허용 화면의 Apple Vision OCR, 이미지 메모리 처리, OCR 품질 메타데이터 | 외부 이미지 업로드, 학습 관련성 판단 |
 | Server | 인증·소유권·최신 버전·크기 제한 검증, AI 중계 | 브라우저 DOM 직접 수집 |
-| AI | 허용 텍스트 전처리, 최종 `qualityScore`·`contentHash` 생성, 관련성 분석 | 원본 화면·전체 DOM 수신, 브라우저 제어 |
+| AI | 정제 문단 검증, 품질 2차 확인, 관련성 분석 | 원본 화면·전체 DOM 수신, 브라우저 제어 |
 
 ## 2. 전체 흐름
 
@@ -67,7 +69,7 @@
 - H1·본문·코드·표 등 주요 영역 변경
 - 사용자가 의미 있는 새 구간으로 이동한 경우
 - 같은 페이지의 체류 정책 재평가 시점
-- 목표·제외 설정 변경 (화면 판정 피드백은 MVP 제외)
+- 목표·피드백·제외 설정 변경
 
 광고 애니메이션, 댓글 수, 시계, 작은 배지와 반복 렌더링은 기본 재분석 트리거에서 제외한다.
 
@@ -75,7 +77,9 @@
 
 - 탐색마다 증가하는 `navigationId`를 발급한다.
 - DOM 변경은 짧은 안정화 구간으로 묶되 대기 시간은 설정으로 관리한다.
-- Client는 동일 탐색·추출기 버전의 반복 이벤트를 로컬 지문으로 묶을 수 있다. 이 지문은 AI의 최종 `contentHash`와 Server의 `eventId` 멱등 처리를 대신하지 않는다.
+- 콘텐츠 분석은 사용자 범위, `goalVersion`, 정제 콘텐츠 해시, 추출기·전처리·모델·정책 버전이 모두 같은 경우에만 재사용한다.
+- 정제 콘텐츠 해시만 같으면 이전 분석 결과를 재사용하지 않는다.
+- Client는 같은 탐색·추출기 버전의 반복 이벤트를 로컬 지문으로 묶을 수 있다. 이 지문은 AI의 최종 `contentHash`나 Server의 `eventId` 멱등 검증을 대체하지 않는다.
 - 체류 시간 변화는 콘텐츠 임베딩 재생성 없이 흐름 정책만 재계산한다.
 - 새 이벤트가 생기면 이전 탐색의 대기 작업을 취소하거나 결과를 무시한다.
 
@@ -85,7 +89,7 @@
 
 모든 조건을 통과해야 수집을 시작한다.
 
-1. Notion의 `sessionStatus=RUNNING`이고 현재 세션·탐색 식별자가 유효하다.
+1. `sessionStatus=ACTIVE`이고 활성 `runId`가 있다.
 2. 브라우저 창과 대상 탭이 실제 활성 상태다.
 3. 사용자 제외 도메인·앱에 해당하지 않는다.
 4. 로그인·결제·인증·메신저 등 민감 화면이 아니다.
@@ -111,44 +115,72 @@
 
 ## 6. 정제 콘텐츠 계약
 
-AI로 전달하는 최소 단위는 전체 HTML이나 원본 OCR이 아니라 로컬 개인정보 검사를 통과한 허용 텍스트와 추출 메타데이터다. 다음 `text`·`ocr` 형태는 팀원이 요청한 **제안형 내부 계약**이며 공개 API Schema와 9개 Backend 저장 컬럼은 협의 전이다.
+AI로 전달하는 최소 단위는 전체 HTML이나 평문 덩어리가 아니라 구조를 보존한 문단이다.
 
 ```json
 {
+  "contentHash": "sanitized-content-hash",
   "pageType": "QA",
   "title": "JWT 인증 필터 오류 해결",
-  "text": "인증 필터 순서를 확인하는 공개 예제",
-  "ocr": null,
+  "passages": [
+    {
+      "id": "passage-001",
+      "kind": "CODE",
+      "text": "인증 필터 순서를 확인하는 공개 예제",
+      "order": 1
+    }
+  ],
   "extractionMethod": "DOM",
   "extractionStatus": "SUCCESS",
   "extractorVersion": "proposal-1"
 }
 ```
 
-OCR 경로에서는 `ocr`에 로컬 엔진의 상태·인식 품질 메타데이터만 넣는다. 원본 이미지, 전체 DOM, 차단된 OCR 원문은 전달하지 않는다. AI 전처리는 `text`를 정제·분할하고 최종 `qualityScore`와 정제 콘텐츠 `contentHash`를 생성한다. Client의 OCR 인식 신뢰도나 1차 품질값을 최종 `qualityScore`로 복사하지 않는다. 수치 범위·출력 필드 위치·Backend 검토 예정 9개 컬럼은 합의 전까지 미확정이다.
+### 6.1 분석 요청 필드
 
-```json
-{
-  "text": "인증 필터 순서를 확인하는 공개 예제",
-  "ocr": {
-    "status": "SUCCESS",
-    "recognitionConfidence": 0.91,
-    "engine": "APPLE_VISION"
-  }
-}
-```
+Client와 Server가 AI에 전달할 입력 후보는 다음과 같다. 최종 필드명과 enum은 소비 주체 계약에서 확정한다.
 
-위 `ocr` 하위 필드는 예시이지 확정 Schema가 아니다. Chrome과 macOS의 OCR 실행 경로는 각각 8.1, 8.2절을 따른다.
+Issue #10의 Client·Server 계약이 확정되면 세 구성요소가 사용하는 JSON 필드명과 enum을 하나로 통일한다. 통일 전까지 아래 이름을 영구 API 계약이나 구현 상수로 고정하지 않는다.
 
-### 6.1 AI 전처리 문단 규칙
+| 구분 | 필드 |
+| --- | --- |
+| 식별·버전 | `sessionId`, `runId`, `goalId`, `goalVersion`, `eventId`, `navigationId`, `observedAt` |
+| 실행 상태 | `sessionStatus`, `exclusionMode` |
+| 콘텐츠 메타데이터 | `contentSource`, `contentType`, `appName`, `pageTitle`, `urlHost` |
+| 정제 입력 | `text`, `extractionStatus`, `qualityScore`, `isSensitive`, `isExcluded` |
+| OCR 선택 필드 | `ocr.confidence`, `ocr.captureStatus` |
 
-- AI가 분할한 문단 `id`는 현재 요청 안에서 고유하고 응답 근거 검증에 사용한다.
+- `contentSource` 후보는 `APP_META`, `TAB_META`, `CHROME_DOM`, `CHROME_VIEWPORT_OCR`, `DESKTOP_APP_OCR`다.
+- `extractionStatus`는 `SUCCESS`, `PARTIAL`, `FAILED`, `EXCLUDED`, `UNSUPPORTED`만 사용한다.
+- `DUPLICATE`, `BLACK_SCREEN`, `EMPTY_CAPTURE`, `OCR_FAILED`, `DOM_UNAVAILABLE`, `LOW_CONFIDENCE`, `PRIVACY_BLOCKED`는 실패·제외 사유나 조건이며 `extractionStatus`에 추가하지 않는다.
+- `EXCLUDED` 또는 `PRIVACY_BLOCKED`이면 AI를 호출하지 않는다.
+- 추출 실패나 낮은 품질은 `UNCERTAIN` 또는 무알림으로 처리하며 `UNRELATED`나 이탈 판정으로 변환하지 않는다.
+- AI는 Client가 DOM 또는 OCR로 추출하고 정제한 텍스트와 최소 메타데이터만 받는다. Server는 인증과 소유권을 검증한다.
+- AI 전처리는 허용된 `text`를 정제·분할하고 최종 `qualityScore`와 정제 콘텐츠 `contentHash`를 생성한다. Client의 OCR 인식 신뢰도나 입력 품질값을 최종 `qualityScore`로 그대로 복사하지 않는다.
+- OCR 입력에는 로컬 엔진의 상태·인식 품질 메타데이터만 포함한다. 원본 이미지·전체 DOM·차단된 OCR 원문은 보내지 않는다. `ocr` 하위 필드 예시는 계약 합의 전까지 확정 Schema가 아니다.
+- Backend 검토 예정 컬럼 9개의 이름·위치·저장 책임은 담당 영역 협의 전까지 미확정이다.
+
+### 6.2 문단 규칙
+
+- `id`는 현재 요청 안에서 고유하고 응답 근거 검증에 사용한다.
 - `kind`는 제목·본문·코드·표·자막·OCR 등 제한 enum으로 관리한다.
 - 문장·코드·표의 순서와 부정 표현을 임의로 고치지 않는다.
 - 목표 키워드가 있는 부분만 남기지 않고 대표 문단을 일부 포함한다.
 - 제목과 Domain은 개인정보 검사 후 필요한 최소 형태만 사용한다.
 - 전체 URL, 쿼리, Fragment, 폼 입력값과 `contenteditable` 값은 제외한다.
-- 문단 수·개별 길이·전체 요청 크기는 평가 후 설정으로 확정한다.
+- 대표 문단은 최대 8개, 문단당 최대 800자, 전체 요청은 최대 6,000자를 초기 실험값으로 사용한다.
+- 위 수치는 평가 전 확정 상수가 아니며 설정으로 관리한다.
+
+### 6.3 텍스트 전처리 순서
+
+1. 앞뒤 공백을 제거한다.
+2. 불필요한 공백과 연속 줄바꿈을 정리하되 코드와 표의 줄 구조는 보존한다.
+3. 완전히 동일한 문장만 중복 제거한다.
+4. `닫기`, `확인`, `공유`처럼 문맥이 없는 짧은 UI 조각을 제거한다.
+5. 문단 경계를 기준으로 분리한다.
+6. 긴 문단은 1,000~1,500자 단위로 나누고 100~200자를 겹친다.
+
+전처리 수치는 초기 실험값이다. 현재 순수 전처리 모듈은 더 엄격한 외부 요청 상한인 문단당 최대 800자를 설정 기본값으로 사용한다. 긴 문단 청크 1,000~1,500자 기준은 Issue #10의 JSON 계약과 출력 단위가 확정될 때까지 구현 상수로 고정하지 않는다. 짧은 코드, 오류 메시지, 제목은 길이만으로 제거하지 않는다.
 
 ## 7. 개인정보와 민감정보 검사
 
@@ -163,6 +195,10 @@ OCR 경로에서는 `ocr`에 로컬 엔진의 상태·인식 품질 메타데이
 ### 7.2 문자열 검사
 
 이메일·전화번호·주소·JWT·Bearer Token·알려진 API Key Prefix·결제 카드 후보를 제거하거나 전송을 중지한다. 마스킹만으로 안전하다고 단정하지 않는다. 안전하게 분리할 수 없으면 `PRIVACY_BLOCKED`로 종료하고 발견한 문자열은 로그에 남기지 않는다.
+
+- 원본 DOM, OCR 원문, 전체 URL, 검색어와 화면 이미지는 DB, 로그, 큐와 체크포인트에 저장하지 않는다.
+- 추론에는 개인정보 검사를 통과한 정제 텍스트와 청크만 사용한다.
+- 외부 모델 전송은 별도 합의와 사용자 고지 없이 활성화하지 않는다.
 
 ## 8. Client별 OCR 계약
 
@@ -267,7 +303,17 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 | `EXCLUDED` | 정책상 수집 금지 | 캡처·전송·AI 미호출 |
 | `UNSUPPORTED` | 안전한 추출 경로가 없음 | 미지원 표시, 외부 우회 금지 |
 
-문자 수 하나로 품질을 정하지 않는다. 유형별 필수 영역, 메뉴 비율, 중복률, 언어, OCR 품질, 코드·표 순서 보존과 대표 문단 존재를 함께 평가한다. 최종 `qualityScore`는 AI 전처리 책임이다. OCR 실패·Timeout·권한 거부와 콘텐츠 중복은 서로 다른 사유로 남기며 `UNRELATED`로 바꾸지 않는다.
+문자 수 하나로 품질을 정하지 않는다. 유형별 필수 영역, 메뉴 비율, 중복률, 언어, OCR 품질, 코드·표 순서 보존과 대표 문단 존재를 함께 평가한다.
+
+초기 실험 기준은 다음과 같다.
+
+- 정제 텍스트가 존재한다.
+- 일반 텍스트 길이가 30자 이상이다.
+- `qualityScore`가 0.70 이상이다.
+- 깨진 문자 비율이 20% 이하다.
+- 유효 청크가 1개 이상이다.
+
+이 기준은 단독 판정 조건이 아니다. 짧은 코드, 오류 메시지와 제목은 길이가 짧아도 유효할 수 있으며, 기준 미달을 곧바로 `UNRELATED`나 이탈로 해석하지 않는다.
 
 ## 11. 취소와 오래된 결과
 
@@ -277,10 +323,12 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 - 목표 버전 변경
 - 세션 일시정지·종료
 - 제외 설정 변경
-- 화면 판정 피드백 적용 (후속 기능, MVP 제외)
+- 사용자 피드백으로 현재 판정 변경
 - 개인정보 Gate 실패
 
 취소가 실제 연산을 즉시 멈추지 못하더라도 결과 적용 전 버전을 다시 확인한다. 늦은 결과는 캐시에 넣기 전에도 유효 범위를 검사한다.
+
+결과를 적용하기 직전에 현재 `runId`, `goalVersion`, `eventId`, `navigationId`, 세션 상태와 제외 상태를 다시 검증한다. 같은 `eventId`의 재전송은 중복 처리하지 않는다.
 
 ## 12. 오류와 Fallback
 

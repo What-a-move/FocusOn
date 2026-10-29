@@ -25,6 +25,8 @@ AI 작업은 다음 문서를 순서대로 확인한다.
 
 기능 개발은 루트 작업 규칙에 따라 GitHub Issue와 Issue 번호 Branch에서 진행한다. 기능별 PLAN·ERROR·REPORT와 Issue·PR의 역할은 프로젝트 공통 규칙이 정리되기 전까지 기존 지침을 따른다.
 
+학교 캡스톤 구현·테스트 작업은 [기능 문서 안내](features/README.md)의 통합 #11 PLAN에서 시작한다. 해당 PLAN은 최신 이재빈 노션을 반영하며 기존 후보 비교·사용자 판정 수정 제안과 구분한다.
+
 ## 문서 상태 구분
 
 - `확정`: `DECISION_RECORD.md`의 확정 결정 또는 루트 개인정보 기준에 근거한다.
@@ -83,6 +85,10 @@ AI/docs/
 | `data_lifecycle.md` | 수집·전송·저장·삭제 경계 | 사용자 UI 상세 |
 | `prompt_guide.md` | 모델 신뢰 경계와 구조화 출력 | 최종 알림·차단 결정 |
 | `evaluation_spec.md` | 데이터 세트·지표·출시 차단 조건 | 실제 사용자 원문 |
+
+RTX A4000에서 유사도 방식별 기준·결과 양식·평가 절차를 확인하려면 [유사도 평가 지침](../evaluation/SIMILARITY_EVALUATION_GUIDE.md)을 읽는다.
+
+전달용 최신 지표와 측정 한계는 [Hybrid 관련성 판단 성능지표](features/hybrid-relevance-performance-metrics.md)를 따른다. 확정 목표 5개·합성 20건의 실제 API 테스트와 이전 JWT 4건을 구분하며 독립 정확도 검증 결과가 아니다.
 
 현재 별도 기능 PLAN:
 

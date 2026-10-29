@@ -1,0 +1,249 @@
+{
+  "version": "followup-context-controls-v1",
+  "provenance": {
+    "synthetic": true,
+    "labelsLockedBeforeModelRun": true,
+    "independentlyHumanReviewed": false,
+    "purpose": "새 목표와 후속 설명 표현, 다른 활동·혼합·단독 일반 문장 대조. 원래72건의 문장 복사 없음."
+  },
+  "groups": [
+    {
+      "split": "new-synthetic-controls",
+      "goal": {
+        "goalId": "goal-mqtt",
+        "goalVersion": 1,
+        "text": "MQTT QoS와 메시지 전달 보장 수준 이해하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-followup-a",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "MQTT의 QoS 0은 메시지를 한 번 보내고 전달을 보장하지 않는다. QoS 1은 수신 확인과 재전송으로 최소 한 번 전달하므로 중복을 고려한다. QoS 2는 추가 핸드셰이크로 정확히 한 번 전달하는 절차를 제공한다.\n\n앞에서 본 동작을 다른 입력으로 반복해 보고 차이를 설명해 보세요."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-followup-b",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "MQTT의 QoS 0은 메시지를 한 번 보내고 전달을 보장하지 않는다. QoS 1은 수신 확인과 재전송으로 최소 한 번 전달하므로 중복을 고려한다. QoS 2는 추가 핸드셰이크로 정확히 한 번 전달하는 절차를 제공한다.\n\n방금 설명한 항목을 순서에 맞게 요약해 둔다."
+        },
+        {
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-followup-c-ocr",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "MQTT의 QoS 0은 메시지를 한 번 보내고 전달을 보장하지 않는다. QoS 1은 수신 확인과 재전송으로 최소 한 번 전달하므로 중복을 고려한다. QoS 2는 추가 핸드셰이크로 정확히 한 번 전달하는 절차를 제공한다.\n\n위 내용을 참고해 결과를 단계별로 요약하고 비교합니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-direct",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "MQTT의 QoS 0은 메시지를 한 번 보내고 전달을 보장하지 않는다. QoS 1은 수신 확인과 재전송으로 최소 한 번 전달하므로 중복을 고려한다. QoS 2는 추가 핸드셰이크로 정확히 한 번 전달하는 절차를 제공한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-mixed-reference",
+          "expectedLabel": "UNCERTAIN",
+          "pageTitle": "활동 자료",
+          "text": "MQTT의 QoS 0은 메시지를 한 번 보내고 전달을 보장하지 않는다. QoS 1은 수신 확인과 재전송으로 최소 한 번 전달하므로 중복을 고려한다. QoS 2는 추가 핸드셰이크로 정확히 한 번 전달하는 절차를 제공한다.\n\n위 내용을 참고해 친구들과 게임을 플레이하고 캐릭터의 아이템 조합과 승리 장면을 비교한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-mixed-independent",
+          "expectedLabel": "UNCERTAIN",
+          "pageTitle": "활동 자료",
+          "text": "MQTT의 QoS 0은 메시지를 한 번 보내고 전달을 보장하지 않는다. QoS 1은 수신 확인과 재전송으로 최소 한 번 전달하므로 중복을 고려한다. QoS 2는 추가 핸드셰이크로 정확히 한 번 전달하는 절차를 제공한다.\n\n친구들과 랭크 게임을 하며 새 캐릭터로 승리하는 영상을 시청한다. 마지막 한타에서 궁극기를 사용하는 타이밍과 아이템 조합을 살펴본다. 댓글에서 재미있는 장면과 다음 경기 하이라이트를 이야기한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-generic-alone",
+          "expectedLabel": "UNCERTAIN",
+          "pageTitle": "활동 자료",
+          "text": "앞의 설명과 결과를 비교하여 정리한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "mqtt-game-alone",
+          "expectedLabel": "UNRELATED",
+          "pageTitle": "활동 자료",
+          "text": "친구들과 랭크 게임을 하며 새 캐릭터로 승리하는 영상을 시청한다. 마지막 한타에서 궁극기를 사용하는 타이밍과 아이템 조합을 살펴본다. 댓글에서 재미있는 장면과 다음 경기 하이라이트를 이야기한다."
+        }
+      ]
+    },
+    {
+      "split": "new-synthetic-controls",
+      "goal": {
+        "goalId": "goal-redis",
+        "goalVersion": 1,
+        "text": "Redis TTL과 캐시 만료 정책 이해하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-followup-a",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "Redis에서 EXPIRE 명령으로 키에 TTL을 지정하면 시간이 지난 키가 만료된다. TTL 명령으로 남은 시간을 확인하고, PERSIST는 만료 설정을 제거한다. 캐시 만료 시간은 원본 데이터 변경 주기와 갱신 방식에 맞춰 설정한다.\n\n앞에서 본 동작을 다른 입력으로 반복해 보고 차이를 설명해 보세요."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-followup-b",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "Redis에서 EXPIRE 명령으로 키에 TTL을 지정하면 시간이 지난 키가 만료된다. TTL 명령으로 남은 시간을 확인하고, PERSIST는 만료 설정을 제거한다. 캐시 만료 시간은 원본 데이터 변경 주기와 갱신 방식에 맞춰 설정한다.\n\n방금 설명한 항목을 순서에 맞게 요약해 둔다."
+        },
+        {
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-followup-c-ocr",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "Redis에서 EXPIRE 명령으로 키에 TTL을 지정하면 시간이 지난 키가 만료된다. TTL 명령으로 남은 시간을 확인하고, PERSIST는 만료 설정을 제거한다. 캐시 만료 시간은 원본 데이터 변경 주기와 갱신 방식에 맞춰 설정한다.\n\n위 내용을 참고해 결과를 단계별로 요약하고 비교합니다.",
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-direct",
+          "expectedLabel": "RELATED",
+          "pageTitle": "활동 자료",
+          "text": "Redis에서 EXPIRE 명령으로 키에 TTL을 지정하면 시간이 지난 키가 만료된다. TTL 명령으로 남은 시간을 확인하고, PERSIST는 만료 설정을 제거한다. 캐시 만료 시간은 원본 데이터 변경 주기와 갱신 방식에 맞춰 설정한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-mixed-reference",
+          "expectedLabel": "UNCERTAIN",
+          "pageTitle": "활동 자료",
+          "text": "Redis에서 EXPIRE 명령으로 키에 TTL을 지정하면 시간이 지난 키가 만료된다. TTL 명령으로 남은 시간을 확인하고, PERSIST는 만료 설정을 제거한다. 캐시 만료 시간은 원본 데이터 변경 주기와 갱신 방식에 맞춰 설정한다.\n\n위 내용을 참고해 친구들과 게임을 플레이하고 캐릭터의 아이템 조합과 승리 장면을 비교한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-mixed-independent",
+          "expectedLabel": "UNCERTAIN",
+          "pageTitle": "활동 자료",
+          "text": "Redis에서 EXPIRE 명령으로 키에 TTL을 지정하면 시간이 지난 키가 만료된다. TTL 명령으로 남은 시간을 확인하고, PERSIST는 만료 설정을 제거한다. 캐시 만료 시간은 원본 데이터 변경 주기와 갱신 방식에 맞춰 설정한다.\n\n친구들과 랭크 게임을 하며 새 캐릭터로 승리하는 영상을 시청한다. 마지막 한타에서 궁극기를 사용하는 타이밍과 아이템 조합을 살펴본다. 댓글에서 재미있는 장면과 다음 경기 하이라이트를 이야기한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-generic-alone",
+          "expectedLabel": "UNCERTAIN",
+          "pageTitle": "활동 자료",
+          "text": "앞의 설명과 결과를 비교하여 정리한다."
+        },
+        {
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "urlHost": "synthetic-study.example",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "caseId": "redis-game-alone",
+          "expectedLabel": "UNRELATED",
+          "pageTitle": "활동 자료",
+          "text": "친구들과 랭크 게임을 하며 새 캐릭터로 승리하는 영상을 시청한다. 마지막 한타에서 궁극기를 사용하는 타이밍과 아이템 조합을 살펴본다. 댓글에서 재미있는 장면과 다음 경기 하이라이트를 이야기한다."
+        }
+      ]
+    }
+  ]
+}

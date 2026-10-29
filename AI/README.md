@@ -1,71 +1,63 @@
 # FocusOn AI
 
-FocusOn AI는 사용자의 학습 목표와 현재 화면·페이지 정보를 비교해 활동 관련성을 판단하고, 이후 학습 흐름과 사용자 상태를 보조 분석하는 Python 서비스다.
+현재 실행 경로는 **Kiwi 키워드 + Qwen 벡터 Hybrid 관련성 평가**다. 사용하지 않는 목표 Graph 생성 Prompt, OpenAI 생성 Client, ChromaDB 저장소, Graph 분석기와 7가지 이전 비교 경로는 2026-10-28 제거했다.
 
-## 담당 기능
+## 실행
 
-### MVP
+저장소 루트에서 실행한다.
 
-- 자연어 학습 목표의 명확성 검사와 사용자 확인·추천·질문 보조
-- Chrome Extension DOM·내부 로컬 OCR과 macOS Desktop Apple Vision OCR에서 전달된 정제 텍스트의 품질 확인
-- 목표와 현재 콘텐츠의 관련성 판단
-- MVP 기본 휴식 제안에 필요한 최소 결과 제공
-- 규칙 기반 판단, 임베딩 유사도, 필요한 경우 LLM을 사용하는 단계적 분석
-- 추출·분석·관련성·이탈 흐름·권장 행동을 분리한 상태와 근거 반환
-
-### 후속 기능 또는 출시 결정 필요
-
-- 최근 7일 최소 집계와 규칙 기반 개인화 휴식 추천(P1 후보)
-- 페이지 이동과 체류 시간을 이용한 학습 흐름·목표 이탈 분석
-- 클라이언트 MediaPipe가 계산한 얼굴·시선·자세 상태값의 보조 분석
-- YouTube 자막, PDF 추출 텍스트 등 외부 콘텐츠 분석
-- PDF·Canvas·이미지·슬라이드 대상 ColPali 비교 실험
-
-카메라 로컬 분석은 Notion 기준 선택 동의 기반 MVP 후보이며 출시 전 별도 승인이 필요하다. 승인된 경우 AI에는 ON·유효 세션·비제외 상태에서 생성한 5분 버킷 또는 세션 종료 최소 요약의 집계값(`activeStudySeconds`, `cameraEnabledSeconds`, `validSignalSeconds`, `sustainedAwayEventCount`, `localNudgeShownCount`, `cameraState`, `signalQuality`, `consentVersion`, `sourceVersion`)만 전달한다. `EXCLUDED`의 카메라 집계·전송은 별도 승인 전 금지하고, `PRIVACY_BLOCKED`에서는 카메라 분석·집계·전송을 중단한다. 원본 영상·프레임·랜드마크·연속 시선·얼굴 방향 좌표는 전달하지 않는다.
-
-관련성, 학습 흐름, 사용자 상태는 하나의 판단으로 섞지 않고 별도 분석 모듈과 API로 분리한다. `SUPPORTING`은 AI 내부의 보조 학습 라벨이며 제품 표시에서는 `RELATED`의 보조 유형으로 매핑한다. `OFF_TASK`는 제품의 `UNRELATED`, `UNAVAILABLE`은 제품의 `UNCERTAIN`과 상세 처리 실패 상태로 매핑한다.
-
-## 분석 흐름
-
-```text
-Client별 제외·권한 검사
-  → Chrome: DOM 우선, 부족할 때 Extension 내부 로컬 OCR
-  → macOS Desktop: 허용된 활성 앱 화면의 Apple Vision 로컬 OCR
-  → 개인정보·품질 검사
-  → Spring Server의 인증·소유권·버전 검증
-  → AI 입력 검증·텍스트 정제
-  → 규칙 기반 판단
-  → 임베딩 유사도 판단
-  → 애매한 경우 LLM 또는 FocusSessionAgent 정밀 판단
-  → 관련성·흐름·행동 상태 분리
-  → Server가 결과 저장
-  → Extension·웹 대시보드가 상태·알림·기록 표시
+```bash
+python3 -m pip install -r AI/evaluation/requirements-streamlit.txt
+python3 -m streamlit run AI/evaluation/similarity_streamlit.py --server.address 127.0.0.1 --server.port 8501
 ```
 
-## 현재 상태
+브라우저에서 `http://127.0.0.1:8501`을 연다. 확정 목표와 추출 JSON을 넣고 **비교하기**를 누른다. Qwen API는 화면의 주소 또는 `FOCUSON_EMBEDDING_URL`로 지정한다. 실제 학교 연결은 [학교 임베딩 연결 지침](docs/features/school-ollama-embedding-SETUP.md)을 따른다.
 
-- Python 디렉터리와 모듈 파일만 구성되어 있으며 실행 가능한 코드는 아직 없다.
-- 관련성 API, 분석 기준, Prompt 계약은 문서 초안까지 작성했다.
-- 목표 보조와 세션·분석 상태 계약은 Notion MVP 기준으로 갱신했다. 개인화 휴식은 P1 후보 초안이다.
-- FastAPI, Pydantic, 임베딩 모델, LLM 공급자, 캐시 저장소는 구현 전 검토·확정한다.
-- 원본 화면과 원본 카메라 영상은 AI 입력·저장 대상으로 사용하지 않는다.
-- ColPali는 정식 기본 경로가 아니라 시각 구조 콘텐츠의 실험 경로다.
+## 현재 처리 과정
+
+1. 목표·입력 형식, 제외·민감정보·현재 관측 문맥·추출 품질을 검사한다.
+2. Kiwi가 목표·제목·본문의 명사·고유명사·기술 식별자를 정규화한다. 조사·어미·불용어를 제외하고 같은 토큰을 비교한다. 동의어·별칭·선수 개념을 생성하지 않는다.
+3. 학교 Qwen API의 `/api/embed`로 목표 질의와 정제 본문·제목/소제목 문맥·설명+코드 묶음의 벡터를 받는다. 모델 메타데이터 API를 반복 호출하지 않는다.
+4. 원래 본문의 코사인 유사도에 목표 키워드 적중을 보강하고, 관련·무관 근거와 커버리지를 계산한다.
+5. `RELATED`·`UNRELATED`·`UNCERTAIN`, 근거, 점수, 사유, 다음 입력 출처, 처리 시간을 표시한다.
+
+현재 점수·근거 정책과 고정 보정값은 이번 정리에서 변경하지 않았다.
+
+- 본문: `body-context-hybrid-v3`, `kiwi-weighted-terms-v3`, `dependent-followup-v2`.
+- `K = 적중한 목표 용어 가중치 합 / 전체 목표 용어 가중치 합`. 넓은 용어는 0.25, 나머지는 1.0인 제한된 규칙이다.
+- `S = max(0, cosine)`, `H = S + 0.20 × K × (1 − S)`.
+- 현재 합성 개발 자료에서 선택한 관련 기준은 원래 본문 V≥0.30 및 본문/문맥 H≥0.35다. 무관 후보는 본문 V≤0.25, UNRELATED는 무관 커버리지≥0.70·본문80자·완전 추출과 충돌 없음이 필요하다. 관련 커버리지 60%를 최소 판정 조건으로 쓰지 않는다.
+- 메타데이터는 `title-hybrid-v3-mvp` 별도 경로다. 실제 제목 V≥0.55/H≥0.60의 RELATED만 확정하고, 정상 non-RELATED 입력은 Chrome DOM 또는 Desktop OCR로 재확인을 요청한다. 본문 길이·커버리지는 적용하지 않는다.
+- 점수는 검증된 판정 confidence가 아니다. 수치의 선택·한계·합성 평가 이력은 [Hybrid 평가 보고서](docs/features/graphless-hybrid-calibration-REPORT.md)에 있다.
+
+## 입력·출력 범위
+
+- 단일 JSON·배열·`cases` 최대 30개, 사례당 현재 화면 observation 1개를 지원한다. 데이터셋 `goal.text`와 목표 칸이 다르면 모델 호출 전에 거부한다.
+- 공개 계약의 중첩 `metadata`/`contentPayload.text` 입력을 변환한다. DOM/OCR 본문은 최대 2,000자다.
+- APP_META·TAB_META → RELATED면 종료, 그 외 정상 결과는 Desktop OCR·Chrome DOM 재확인을 표시한다. Chrome viewport OCR은 P1이며 현재 입력으로도 모델을 호출하지 않는다.
+- Desktop OCR에는 인식 품질 정보가 필요하다. 공개 계약에 없는 OCR 품질을 임의 상수로 채우지 않는다. 캡처·OCR 실행과 민감정보 사전 제거는 Client 담당이다.
+- 내부 `templateId`·`goalProfile`은 이전 입력의 호환을 위해 받아도 점수나 목표 확장에 사용하지 않는다. 새로운 공개 필드로 요구하지 않는다.
+- 기대 라벨은 판정·모델 입력에서 제외한다. 실패·분석 불가를 정답 UNCERTAIN으로 집계하지 않는다.
+- 화면 원문·결과는 파일·DB에 자동 저장하지 않는다. 벡터는 해시 기반 메모리 캐시(512개/300초)에서 재사용하고 매 실행 점수와 판정을 다시 계산한다. OpenAI·Graph·ChromaDB 호출이 없다.
+
+## 구현 상태와 검증
+
+입력 전처리, Qwen Client, Kiwi Hybrid, Streamlit, 공개 요청 변환·응답 검증 도구가 있다. 공개 FastAPI 라우트와 실제 Backend 연결, 보정된 confidence, 운영 중복/역순 결과 적용, 이탈 집계·알림은 후속 작업이다. 이전 Graph 분석기의 캐시·단계별 callback은 제거됐으며 Streamlit의 다음 출처 표시는 실제 수집 실행이 아니다.
+
+```bash
+PYTHONPATH=AI:. python3 -m pytest AI/tests -q
+```
+
+회귀 테스트는 합성 벡터·HTTP Mock·Streamlit UI를 검증한다. 실제 Qwen 정확도·운영 성능 평가는 별도로 수행한다. 개발 자료 보정 CLI는 유지한다.
+
+```bash
+PYTHONPATH=AI:. python3 -m AI.evaluation.calibrate_graphless --help
+```
 
 ## 문서
 
 - [AI 문서 안내](docs/README.md)
-- [현재 컨텍스트](docs/CONTEXT.md)
-- [다음 작업](docs/NEXT_TASK.md)
-- [결정 기록](docs/DECISION_RECORD.md)
-- [AI 개발 규칙 초안](docs/DEVELOPMENT_RULES.md)
-- [목표·세션·회차 모델](docs/goal_session_spec.md)
-- [콘텐츠 수집·추출 계약](docs/content_acquisition_spec.md)
-- [상태 모델](docs/state_model.md)
-- [API 명세](docs/api_spec.md)
-- [분석 기준](docs/analysis_rules.md)
-- [FocusSessionAgent 실행 계약](docs/focus_session_agent_spec.md)
-- [사용자 피드백·개인화 명세](docs/feedback_personalization_spec.md)
-- [AI 학습 노트 생성 명세](docs/session_note_spec.md)
-- [데이터 수명](docs/data_lifecycle.md)
-- [프롬프트 가이드](docs/prompt_guide.md)
-- [평가 명세](docs/evaluation_spec.md)
+- [현재 상태](docs/CONTEXT.md) / [다음 작업](docs/NEXT_TASK.md) / [결정 기록](docs/DECISION_RECORD.md)
+- [현재 화면 분석 계약 경계](docs/features/screen-analysis-contract-v1-REPORT.md)
+- [평가 절차](evaluation/SIMILARITY_EVALUATION_GUIDE.md)
+- [공개 계약 요약](../docs/API_CONTRACT.md) / [개인정보 기준](../docs/DATA_PRIVACY.md)

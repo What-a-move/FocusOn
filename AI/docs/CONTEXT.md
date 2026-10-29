@@ -131,3 +131,18 @@ Client별 사전 제외·권한 검사
 - 모델·프롬프트·임계값 결정
 - 발생한 오류와 평가 결과
 - 다음 작업과 선행 조건
+
+## Issue #11 AI 구현 상태 (PR #43)
+
+- 이 PR에는 AI 내부 입력 검증·전처리·관련성 분석, Streamlit 평가 경로, 공개 계약 변환/응답 검증 코드가 포함되어 있다. 실제 Server HTTP route와 Client 수집부터 결과 적용까지의 운영 왕복은 연결되지 않았다.
+- 현재 실행 경로는 `graphless_hybrid`와 `streamlit_runner.compare_graphless`의 Kiwi + Qwen Hybrid다. 2026-10-28 미사용 Graph 분석기·생성 Prompt·OpenAI Client·ChromaDB 저장소·이전 7방식 비교/평가 CLI를 제거했다. 공용 벡터 수학은 `src/analysis/vector_math.py`로 분리했다. 고정 retrieval 지침·점수·임계값·입력/기대 라벨은 변경하지 않았다.
+- 최신 전달 계약 기준 메타데이터는 RELATED만 확정한다. 그 외의 정상 관측은 Chrome DOM 또는 Desktop OCR로 확인하고, Chrome viewport OCR은 P1로 보류한다. DOM/OCR text 한도는 2,000자다. Client 캡처·민감정보 제거와 Server의 실행 문맥 제공은 각 담당 영역이다.
+- 공개 응답 confidence 보정/독립 검증, 실제 Backend·Client 연결 및 비동기 결과 순서 검증은 남아 있다. 상세 범위와 기존 점검 기록은 `features/screen-analysis-contract-v1-REPORT.md` 및 `NEXT_TASK.md`를 따른다.
+
+- Graph 분석기에만 있던 운영 후보의 이벤트 캐시/단계별 수집 callback은 현재 실행 경로로 이식하지 않았다. 현재 평가의 해시 기반 벡터 재사용과 제품 이벤트 멱등·역순 결과 적용은 별개다. Backend 통합 시 후자를 구현·검증해야 한다. 과거 Graph 평가 결과는 이력으로 남긴다.
+
+### 2026-10-28 Graph 미사용 코드 정리 검증
+
+- 임시 Python 3.11 환경의 전체 AI 회귀: 262 passed, 16 subtests passed. 실제 Qwen/OpenAI 요청 없이 HTTP Mock·합성 벡터·Kiwi·Streamlit UI를 검사했다.
+- 기존 고정 48건을 삭제 전 HEAD와 정리 후 코드에 동일한 합성 벡터로 실행했다. 시간/삭제한 Graph 진단 필드를 제외한 라벨·점수·근거·커버리지·임베딩 입력 해시가 모두 동일했다. 실제 모델 정확도 재평가를 뜻하지 않는다.
+- 기존 임시 Streamlit 의존성 경로의 소스가 없어 첫 UI 수집에 실패했고, 저장소 requirements로 별도 임시 venv를 구성해 전체 검사를 통과했다. 기존 .env·DB·LangSmith 파일은 변경하지 않았다.

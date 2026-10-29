@@ -1,0 +1,516 @@
+{
+  "version": "synthetic-school-v2",
+  "synthetic": true,
+  "annotationStatus": "Planning-derived v2 expectations for school-text-v2/school-hybrid-v4; independent human review pending; fake vectors validate logic only",
+  "cases": [
+    {
+      "caseId": "dev-state-direct",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "## useState 객체 상태\n\nuseState 상태 업데이트에서는 객체 상태를 직접 수정하지 않고 새로운 객체를 상태 변경 함수에 전달합니다.",
+      "expected": "RELATED",
+      "role": "DIRECT",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "appName": "Google Chrome",
+        "urlHost": "react.dev",
+        "pageTitle": "useState 객체 상태 업데이트"
+      }
+    },
+    {
+      "caseId": "dev-state-prerequisite",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "## 객체 복사와 전개 구문\n\nJavaScript 객체 복사와 전개 구문은 기존 속성을 유지하면서 새 속성을 덮어쓰는 방법입니다.",
+      "expected": "RELATED",
+      "role": "PREREQUISITE",
+      "fakePassageVectors": [
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "appName": "Google Chrome",
+        "urlHost": "developer.mozilla.org",
+        "pageTitle": "JavaScript 객체 복사와 전개 구문"
+      }
+    },
+    {
+      "caseId": "dev-unrelated-title-related-body",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "## React DevTools 상태 확인\n\nReact DevTools를 열어서 객체의 상태 확인을 수행하고 렌더링 이후 변경 내용을 점검합니다.",
+      "expected": "UNCERTAIN",
+      "role": "SUPPORTING",
+      "fakePassageVectors": [
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "pageTitle": "노래 가사와 앨범 소개"
+      }
+    },
+    {
+      "caseId": "dev-code-language-entity",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "### useState 상태 업데이트\n\n```javascript title=\"state.js\"\nsetState({...prev, x: 1});\nconst literal = \"&lt;\";\n```",
+      "input": {
+        "contentType": "DOCUMENT",
+        "pageTitle": "useState 객체 상태 코드 예제"
+      },
+      "expected": "RELATED",
+      "role": "DIRECT",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "caseId": "dev-title-heading-only",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "# useState 객체 상태\n\n## useState 상태 업데이트",
+      "expected": "UNCERTAIN",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "pageTitle": "useState 객체 상태 업데이트"
+      }
+    },
+    {
+      "caseId": "dev-ocr-no-title",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "useState를 사용할 때 객체 상태 업데이트에는 새로운 객체를 상태 변경 함수로 전달해야 합니다.",
+      "input": {
+        "contentSource": "DESKTOP_APP_OCR",
+        "appName": "Preview",
+        "pageTitle": "",
+        "urlHost": "",
+        "ocr": {
+          "confidence": 0.91,
+          "captureStatus": "SUCCESS"
+        }
+      },
+      "expected": "RELATED",
+      "role": "DIRECT",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "caseId": "dev-black-screen",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "검은 캡처에서 인식했다고 전달된 텍스트는 분석에 쓰지 않습니다.",
+      "input": {
+        "contentSource": "DESKTOP_APP_OCR",
+        "appName": "Preview",
+        "pageTitle": "useState 객체 상태 업데이트",
+        "urlHost": "",
+        "ocr": {
+          "confidence": 0.99,
+          "captureStatus": "BLACK_SCREEN"
+        }
+      },
+      "expected": "UNCERTAIN",
+      "fakePassageVectors": []
+    },
+    {
+      "caseId": "dev-long-title-insufficient-body",
+      "split": "development",
+      "templateId": "react-object-state",
+      "goal": "React useState로 객체 상태 변경하기",
+      "text": "## useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개 useState 객체 상태 업데이트 소개\n\nuseState 상태 업데이트 광고\n\n지역 전시장의 개장 일정과 행사장 입장 안내를 자세히 소개합니다. 관람객 안내와 교통편, 전시 구성, 입장 방법과 시설 이용에 대한 본문이 이어집니다.",
+      "expected": "UNCERTAIN",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "input": {
+        "pageTitle": "useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내 useState 객체 상태 업데이트 안내"
+      }
+    },
+    {
+      "caseId": "eval-jwt-supporting",
+      "split": "evaluation",
+      "templateId": "jwt-auth",
+      "goal": "JWT 인증 구현",
+      "text": "## Spring Security 필터 순서와 인증 오류\n\nJWT 인증 요청의 403 인증 오류는 Spring Security 필터 순서를 점검하여 해결할 수 있습니다.",
+      "expected": "RELATED",
+      "role": "SUPPORTING",
+      "fakePassageVectors": [
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "appName": "Google Chrome",
+        "urlHost": "example.com",
+        "pageTitle": "JWT 403 인증 오류와 Spring Security"
+      }
+    },
+    {
+      "caseId": "eval-vector-poster",
+      "split": "evaluation",
+      "templateId": "model-finetuning",
+      "goal": "언어 모델 파인튜닝",
+      "text": "## 벡터 그래픽 포스터 인쇄\n\nIllustrator에서 벡터 그래픽 포스터를 제작하고 인쇄용 색상을 설정합니다.",
+      "expected": "UNRELATED",
+      "fakePassageVectors": [
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "pageTitle": "Illustrator 벡터 그래픽 포스터 제작"
+      }
+    },
+    {
+      "caseId": "eval-related-title-unrelated-body",
+      "split": "evaluation",
+      "templateId": "javascript-promise",
+      "goal": "JavaScript Promise 학습",
+      "text": "Promise라는 노래의 가사와 새 앨범을 소개하는 음악 자료입니다.",
+      "expected": "UNCERTAIN",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "pageTitle": "JavaScript Promise resolve reject await 비동기 처리"
+      }
+    },
+    {
+      "caseId": "eval-heading-body-conflict",
+      "split": "evaluation",
+      "templateId": "javascript-promise",
+      "goal": "JavaScript Promise 학습",
+      "text": "## Promise resolve reject 비동기 처리\n\n새 노래의 가사와 앨범 발매 소식을 소개하고 singer의 음악 활동을 정리한 자료입니다.",
+      "expected": "UNCERTAIN",
+      "fakePassageVectors": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "pageTitle": ""
+      }
+    },
+    {
+      "caseId": "eval-partial",
+      "split": "evaluation",
+      "templateId": "jwt-auth",
+      "goal": "JWT 인증 구현",
+      "text": "JWT 토큰 검증은 서명과 만료 시각을 검사하는 인증 필터에서 수행합니다.",
+      "input": {
+        "extractionStatus": "PARTIAL",
+        "pageTitle": "일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내 일반 자료 안내"
+      },
+      "expected": "RELATED",
+      "role": "DIRECT",
+      "fakePassageVectors": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "caseId": "eval-unrelated-title-related-body",
+      "split": "evaluation",
+      "templateId": "react-basics",
+      "goal": "React 기초 학습",
+      "text": "React 컴포넌트와 component의 렌더링 및 hook 사용법을 설명하는 기초 학습 자료입니다.",
+      "expected": "UNCERTAIN",
+      "fakePassageVectors": [
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "input": {
+        "pageTitle": "노래 가사 앨범 소개"
+      }
+    },
+    {
+      "caseId": "eval-excluded",
+      "split": "evaluation",
+      "templateId": "jwt-auth",
+      "goal": "JWT 인증 구현",
+      "text": "수집 제외 정책이 적용된 합성 페이지의 텍스트입니다.",
+      "input": {
+        "isExcluded": true,
+        "appName": "Google Chrome",
+        "pageTitle": "JWT 인증 필터 문서",
+        "urlHost": "example.com"
+      },
+      "expected": "EXCLUDED",
+      "fakePassageVectors": []
+    },
+    {
+      "caseId": "eval-sensitive",
+      "split": "evaluation",
+      "templateId": "jwt-auth",
+      "goal": "JWT 인증 구현",
+      "text": "## JWT 인증 필터\n\n```javascript\nconst contact = \"synthetic&#64;example.invalid\";\n```",
+      "expected": "PRIVACY_BLOCKED",
+      "fakePassageVectors": [],
+      "input": {
+        "pageTitle": "JWT 인증 필터 코드 예제"
+      }
+    }
+  ]
+}
