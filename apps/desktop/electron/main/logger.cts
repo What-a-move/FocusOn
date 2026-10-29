@@ -42,10 +42,11 @@ export function createLogger(file: string, options: { now?: () => Date; echo?: b
   try { fs.mkdirSync(path.dirname(file), { recursive: true }) } catch { /* 쓰기 실패와 같이 아래에서 건너뛴다 */ }
   return (level, event, fields = {}) => {
     const { component = 'main', ...rest } = fields
-    const line = JSON.stringify({ ts: now().toISOString(), level, module: 'desktop', component, event, traceId: null, durMs: 0, ...sanitize(rest) })
-    if (options.echo) console.log(line)
     // ponytail: 동기 쓰기. 요청·상태 전이 단위라 양이 적다. 초당 수백 줄이 되면 비동기 버퍼로 바꾼다.
+    // [주의] 직렬화 실패(BigInt·순환 참조)도 여기서 삼킨다. 로그 때문에 서버 요청이 멈추면 안 된다.
     try {
+      const line = JSON.stringify({ ts: now().toISOString(), level, module: 'desktop', component, event, traceId: null, durMs: 0, ...sanitize(rest) })
+      if (options.echo) console.log(line)
       if (fs.existsSync(file) && fs.statSync(file).size > MAX_BYTES) fs.renameSync(file, rotated)
       fs.appendFileSync(file, line + '\n')
     } catch {

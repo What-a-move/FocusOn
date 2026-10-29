@@ -11,6 +11,8 @@ const COPY = {
   BREAK: { say: '최근에 세 번 흐트러졌어.', sub: '잠깐 쉬었다 갈까?' },
 } as const
 
+const CHANNELS: readonly string[] = ['MOLE_UI', 'MACOS_NOTIFICATION', 'SOUND']
+
 export type PendingIntervention = { interventionId: string; type: string; channels: string[] }
 
 /**
@@ -63,11 +65,12 @@ export class InterventionWatcher {
       const kind = next.type.includes('BREAK') ? 'BREAK' : 'OFF_TASK'
       const payload: FloatingShow = { interventionId: next.interventionId, kind, level: options.interventionLevel, goalText, ...COPY[kind === 'BREAK' ? 'BREAK' : options.interventionLevel] }
       // 알림에 채널이 없으면 세션 시작 때 고른 채널을 쓴다.
-      const channels = next.channels.length ? next.channels : options.notificationChannels
-      log('INFO', 'notify.fire', { component: 'intervention', sessionId, interventionType: next.type, channels })
+      // 아는 채널만 쓴다. 서버가 모르는 값만 보내면 알림도 로그도 남기지 않는다.
+      const channels = (next.channels.length ? next.channels : options.notificationChannels).filter((channel) => CHANNELS.includes(channel))
       if (channels.includes('MOLE_UI')) this.deps.show(payload)
       // 소리만 골랐어도 소리 있는 알림으로 알린다. 알림과 소리를 함께 골랐으면 알림은 한 번만 띄운다.
       if (channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) this.deps.notify(payload, channels.includes('SOUND'))
+      if (channels.length) log('INFO', 'notify.fire', { component: 'intervention', sessionId, interventionType: next.type, channels })
     } finally {
       this.polling = false
     }

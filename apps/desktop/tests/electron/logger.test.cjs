@@ -115,3 +115,30 @@ test('세션 상태가 바뀔 때마다 from·to·trigger와 머문 시간을 �
     { from: 'RUNNING', to: 'PAUSED', trigger: 'pause:USER', heldMono: 1000, heldWall: 600_000, sleepSuspected: true },
   ])
 })
+
+test('직렬화할 수 없는 값이 와도 로거가 예외를 밖으로 내보내지 않는다', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'focuson-log-'))
+  const log = createLogger(path.join(dir, 'focuson.log'))
+  assert.doesNotThrow(() => log('INFO', 'session.start', { sessionId: 10n }))
+  fs.rmSync(dir, { recursive: true })
+})
+
+test('로그아웃으로 세션이 사라지면 to: null 전이를 남긴다', () => {
+  const lines = capture()
+  const runtime = new SessionRuntime({ authorizedRequest: async () => ({ success: false, error: { code: 'X', retryable: false } }) }, () => {}, { screen: () => true, notification: () => true }, () => 0, () => new Date(0))
+  runtime.begin({ sessionId: '901', status: 'RUNNING', version: 1, targetDurationMs: 600_000, accumulatedActiveMs: 0 }, '목표')
+  runtime.reset()
+  const last = lines.filter((line) => line.event === 'state.transition').at(-1)
+  assert.deepEqual({ from: last.from, to: last.to, trigger: last.trigger }, { from: 'RUNNING', to: null, trigger: 'logout' })
+})
+
+test('모르는 알림 채널만 오면 알림도 notify.fire도 남기지 않는다', async () => {
+  const lines = capture()
+  const { InterventionWatcher } = require('../../dist-electron/main/intervention-watcher.cjs')
+  const shown = []
+  const auth = { authorizedRequest: async (request) => ({ success: true, data: request.parse([{ interventionId: 'i-1', type: 'OFF_TASK', status: 'PENDING', channels: ['<script>'] }]) }) }
+  const watcher = new InterventionWatcher({ auth, show: (p) => shown.push(p), notify: (p) => shown.push(p), pause: async () => ({ success: true }), isCurrent: () => true })
+  await watcher.poll('901', '목표', { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false })
+  assert.deepEqual(shown, [])
+  assert.equal(lines.some((line) => line.event === 'notify.fire'), false)
+})

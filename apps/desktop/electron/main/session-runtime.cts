@@ -280,7 +280,10 @@ export class SessionRuntime {
       log('INFO', 'state.transition', { component: 'session', sessionId: snapshot.sessionId, from: same ? prev.status : null, to: snapshot.status, trigger, heldMono, heldWall, sleepSuspected: heldWall - heldMono > 5_000 })
       this.last = { sessionId: snapshot.sessionId, status: snapshot.status, mono, wall }
     }
-    if (!snapshot) this.last = null
+    if (!snapshot && prev) {
+      log('INFO', 'state.transition', { component: 'session', sessionId: prev.sessionId, from: prev.status, to: null, trigger, heldMono: Math.round(mono - prev.mono), heldWall: wall - prev.wall, sleepSuspected: (wall - prev.wall) - (mono - prev.mono) > 5_000 })
+      this.last = null
+    }
     this.emit(snapshot)
   }
 }
