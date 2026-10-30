@@ -1,9 +1,12 @@
 import { resolveApiBase } from '../pairing/pairing-api'
 import { chromeTokenStore, clearTokens, getDeviceId } from '../pairing/extension-auth'
 import { createApiClient, type ApiResult } from './api-client'
+import { chromeLogStore, createLogger } from './logger'
 import { parseActiveSession, type ActiveSession } from './session-model'
 
-const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore })
+// 팝업과 service worker 둘 다 이 모듈을 쓴다. window가 없으면 service worker다.
+const component = typeof window === 'undefined' ? 'service-worker' : 'popup'
+const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore, log: createLogger(component, chromeLogStore, { echo: process.env.NODE_ENV !== 'production' }) })
 
 /** 활성 세션. 없으면 null. */
 export async function getActiveSession(): Promise<ApiResult<ActiveSession | null>> {

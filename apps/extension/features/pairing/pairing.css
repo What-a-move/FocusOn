@@ -61,6 +61,8 @@
 .pairing-stage .p-body p { font-size: 14px; line-height: 1.65; }
 .pairing-stage .p-body .center .poki { width: auto; height: 96px; display: block; margin: 0 auto 10px; object-fit: contain; }
 .pairing-stage .muted { color: var(--muted); }
+.pairing-stage .p-foot { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--line); }
+.pairing-stage .p-foot .is-fail { color: var(--danger); }
 .pairing-stage .small { font-size: 12px !important; line-height: 1.6 !important; }
 .pairing-stage .code { width: 100%; height: 56px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--field); font-size: 26px; font-weight: 700; letter-spacing: .18em; text-align: center; text-transform: uppercase; font-variant-numeric: tabular-nums; outline: none; }
 .pairing-stage .code::placeholder { color: var(--faint); }
