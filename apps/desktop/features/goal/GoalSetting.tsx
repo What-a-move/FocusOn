@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ConfirmationSource, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
 import { CONFIRMED_GOAL_KEY, goalApi, goalLength, MAX_QUESTIONS, type ClarifyResult } from './goal-api'
+import { errorText } from '../../app/lib/error-text'
 import '../onboarding/onboarding.css'
 import './goal.css'
 
@@ -154,7 +155,7 @@ export function GoalSetting() {
     setBusy(false)
     if (!result.success) {
       if (result.error.code === 'GOAL_TEXT_INVALID') { setDraft(review.goal); toEntry('목표는 2~40자로 적어 주세요.'); setHint({ text: '목표는 2~40자로 적어 주세요.', error: true }); return }
-      setFeedback({ title: '목표를 저장하지 못했어요.', body: result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? '인터넷 연결을 확인한 뒤 다시 눌러 주세요.' : '잠시 후 다시 눌러 주세요.' })
+      setFeedback({ title: '목표를 저장하지 못했어요.', body: errorText(result.error) })
       return
     }
     try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify({ goalId: result.data.goalId, goalText: result.data.goalText })) } catch { /* 저장소를 못 써도 목표는 서버에 저장됐다. */ }

@@ -68,6 +68,11 @@ const permCopy: Record<PermName, { title: string; required: boolean; idle: strin
 }
 
 const idle: PermState = { state: 'idle', error: null }
+// macOS가 설정 창 열기를 거절한 경우다. 서버 문제가 아니므로 직접 여는 길을 알려 준다.
+const SETTINGS_NOT_OPENED: Record<'screen' | 'notify', Notice> = {
+  screen: { title: '시스템 설정을 열지 못했어요.', body: '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 직접 켜 주세요.' },
+  notify: { title: '시스템 설정을 열지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 직접 켜 주세요.' },
+}
 const NOTIFY_BLOCKED: Record<PermState['state'], string> = {
   idle: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.',
   requested: '시험 알림이 보였다면 ‘보였어요’를 눌러 주세요.',
@@ -129,7 +134,7 @@ export function PermissionsStep() {
     const setScreen = (next: PermState) => setPerms((current) => ({ ...current, screen: next }))
     if (!result.success) {
       if (!silent) {
-        const notice = describeError(result.error)
+        const notice = describeError(result.error, '화면 기록 권한을 확인하지 못했어요.')
         setScreen({ state: 'opened', error: `${notice.title} ${notice.body}` })
         setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
       }
@@ -157,7 +162,7 @@ export function PermissionsStep() {
     const current = perms[name]
     if (name === 'screen' && current.state === 'idle') {
       const result = await onboardingApi.openScreenRecordingSettings()
-      if (!result.success || !result.data.opened) return failPerm(name, 'idle', result.success ? describeError({ code: 'SERVICE_UNAVAILABLE', retryable: true }) : describeError(result.error))
+      if (!result.success || !result.data.opened) return failPerm(name, 'idle', result.success ? SETTINGS_NOT_OPENED.screen : describeError(result.error, '시스템 설정을 열지 못했어요.'))
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return
@@ -165,20 +170,20 @@ export function PermissionsStep() {
     if (name === 'screen') return recheckScreen(false)
     if (name === 'camera') {
       const result = await onboardingApi.requestCamera()
-      if (!result.success) return failPerm(name, current.state, describeError(result.error))
+      if (!result.success) return failPerm(name, current.state, describeError(result.error, '카메라 권한을 요청하지 못했어요.'))
       setPerm(name, { state: result.data.granted ? 'granted' : 'denied', error: null })
       if (result.data.granted) setPrompt({ text: '카메라도 준비됐어요!', error: false })
       return
     }
     if (current.state === 'denied') {
       const result = await onboardingApi.openNotificationSettings()
-      if (!result.success || !result.data.opened) return failPerm(name, 'denied', result.success ? describeError({ code: 'SERVICE_UNAVAILABLE', retryable: true }) : describeError(result.error))
+      if (!result.success || !result.data.opened) return failPerm(name, 'denied', result.success ? SETTINGS_NOT_OPENED.notify : describeError(result.error, '시스템 설정을 열지 못했어요.'))
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return
     }
     const result = await onboardingApi.requestNotifications()
-    if (!result.success) return failPerm(name, current.state, describeError(result.error))
+    if (!result.success) return failPerm(name, current.state, describeError(result.error, '시험 알림을 보내지 못했어요.'))
     setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
     setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림을 보내지 못했어요.', error: true })
   }
@@ -217,7 +222,7 @@ export function PermissionsStep() {
     const result = await onboardingApi.savePermissionsStep({ consents: [...accepted], cameraConsent })
     setSaving(false)
     if (!result.success) {
-      setFeedback(describeError(result.error))
+      setFeedback(describeError(result.error, '동의와 권한을 저장하지 못했어요.'))
       return
     }
     router.push('/onboarding/sites/')

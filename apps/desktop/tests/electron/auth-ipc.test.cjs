@@ -79,14 +79,16 @@ test('Google 로그인 시작과 다시 시작은 계약대로 상태를 바꾼�
 
 test('설정 누락 또는 브라우저 실패를 로그인 성공으로 취급하지 않는다', async () => {
   const store = new AuthSessionStore(() => {})
-  assert.equal((await beginGoogleLogin(store, null)).success, false)
+  // 설정 누락은 다시 눌러도 같으므로 retryable이 아니고, 브라우저 실패와 다른 code로 화면에 원인을 알린다.
+  assert.deepEqual(await beginGoogleLogin(store, null), { success: false, error: { code: 'LOCAL_APP_CONFIG_MISSING', retryable: false } })
   assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
 
   const result = await beginGoogleLogin(store, { start: async () => false })
-  assert.deepEqual(result, { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: false } })
+  assert.deepEqual(result, { success: false, error: { code: 'LOCAL_BROWSER_OPEN_FAILED', retryable: true } })
   assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
+  assert.equal(store.getSnapshot().error.code, 'LOCAL_BROWSER_OPEN_FAILED')
 
   const thrown = await beginGoogleLogin(store, { start: async () => { throw new Error('secret internal error') } })
-  assert.deepEqual(thrown, { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: false } })
+  assert.deepEqual(thrown, { success: false, error: { code: 'LOCAL_BROWSER_OPEN_FAILED', retryable: true } })
   assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
 })

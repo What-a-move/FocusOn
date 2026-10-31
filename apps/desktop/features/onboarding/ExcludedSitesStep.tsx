@@ -60,13 +60,13 @@ export function ExcludedSitesStep() {
     const savedApps = await analysisApi.saveExcludedApps(apps)
     if (!savedApps.success) {
       setSaving(false)
-      setFeedback({ title: '제외 앱을 저장하지 못했어요.', body: '잠시 후 다시 눌러 주세요.' })
+      setFeedback(describeError(savedApps.error, '제외 앱을 저장하지 못했어요.'))
       return
     }
     const result = await onboardingApi.saveExcludedSites(sites)
     setSaving(false)
     if (!result.success) {
-      setFeedback(describeError(result.error))
+      setFeedback(describeError(result.error, '제외 사이트를 저장하지 못했어요.'))
       return
     }
     router.push('/onboarding/done/')
