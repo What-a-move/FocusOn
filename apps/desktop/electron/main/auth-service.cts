@@ -6,6 +6,9 @@ import type { GoogleOAuthOutcome } from './google-oauth.cjs'
 import { AuthSessionStore } from './auth-ipc.cjs'
 
 const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryable: false }
+// [유지보수] 화면이 원인을 알려 줄 수 있게 서버 장애와 Mac 쪽 실패(Keychain·Google 로그인 창)를 나눈다.
+const KEYCHAIN_UNAVAILABLE: AuthApiError = { code: 'LOCAL_KEYCHAIN_UNAVAILABLE', retryable: true }
+const GOOGLE_LOGIN_FAILED: AuthApiError = { code: 'LOCAL_GOOGLE_LOGIN_FAILED', retryable: true }
 // 서버가 Access Token 만료를 알릴 때 쓰는 공통 code (API_CONTRACT 공통 오류 코드)
 const ACCESS_TOKEN_EXPIRED = 'AUTH_ACCESS_TOKEN_EXPIRED'
 // 만료 직전 토큰으로 요청하다 실패하지 않도록 30초 여유를 두고 미리 갱신한다.
@@ -208,7 +211,7 @@ export class AuthService {
       this.publish('SIGNED_IN', null, identity.data)
     } catch {
       // [주의] Keychain이 잠겼다면 토큰이 없다고 단정하거나 파일 저장소로 우회하지 않는다.
-      if (this.isCurrent(generation)) this.publish('OFFLINE', SERVICE_UNAVAILABLE)
+      if (this.isCurrent(generation)) this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
     }
   }
 
@@ -235,8 +238,8 @@ export class AuthService {
       return forLogout || this.isCurrent(generation) ? result : this.staleRequest()
     } catch {
       this.forget()
-      if (this.isCurrent(generation)) this.publish('OFFLINE', SERVICE_UNAVAILABLE)
-      return { success: false, error: SERVICE_UNAVAILABLE }
+      if (this.isCurrent(generation)) this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
+      return { success: false, error: KEYCHAIN_UNAVAILABLE }
     }
   }
 
@@ -253,9 +256,9 @@ export class AuthService {
           // Keychain 조회 실패도 화면을 복구 가능한 상태로 바꾼다. 새 로그인에는 적용하지 않는다.
           if (this.isCurrent(generation)) {
             this.forget()
-            this.publish('OFFLINE', SERVICE_UNAVAILABLE)
+            this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
           }
-          return { success: false, error: SERVICE_UNAVAILABLE }
+          return { success: false, error: KEYCHAIN_UNAVAILABLE }
         }
       })
       this.refreshPromise = work
@@ -284,7 +287,7 @@ export class AuthService {
       return
     }
     if (outcome.type === 'failed') {
-      this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
+      this.publish('SIGNED_OUT', GOOGLE_LOGIN_FAILED)
       return
     }
 
@@ -306,7 +309,7 @@ export class AuthService {
       } catch {
         // [주의] 안전한 저장에 실패하면 서버가 토큰을 줬어도 로그인 완료로 표시하지 않는다.
         await this.api.logout(result.data.accessToken)
-        if (generation === this.generation) this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
+        if (generation === this.generation) this.publish('SIGNED_OUT', KEYCHAIN_UNAVAILABLE)
         return
       }
       if (generation !== this.generation) {
@@ -377,8 +380,8 @@ export class AuthService {
       await this.vault.clear()
     } catch {
       this.forget()
-      if (this.isCurrent(generation)) this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
-      return { success: false, error: SERVICE_UNAVAILABLE }
+      if (this.isCurrent(generation)) this.publish('SIGNED_OUT', KEYCHAIN_UNAVAILABLE)
+      return { success: false, error: KEYCHAIN_UNAVAILABLE }
     }
     this.forget()
     if (this.isCurrent(generation)) this.publish('SIGNED_OUT')
@@ -391,7 +394,7 @@ export class AuthService {
     const clearedGeneration = ++this.generation
     this.forget()
     let failure = error
-    try { if (deleteStoredToken) await this.vault.clear() } catch { failure = SERVICE_UNAVAILABLE }
+    try { if (deleteStoredToken) await this.vault.clear() } catch { failure = KEYCHAIN_UNAVAILABLE }
     if (this.isCurrent(clearedGeneration)) this.publish('SIGNED_OUT', failure)
   }
 }

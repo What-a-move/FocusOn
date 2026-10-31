@@ -181,7 +181,7 @@
 .fo-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
 .fo-dialog-actions.single { grid-template-columns: 1fr; }
 .fo-dialog-actions .fo-button { min-width: 0; }
-.fo-toast { position: fixed; bottom: 40px; left: calc(50% + 116px); display: inline-flex; align-items: center; gap: 14px; padding: 10px 18px; border-radius: 12px; background: var(--fo-ink); color: var(--fo-surface); font-size: 14px; font-weight: 600; opacity: 0; transform: translate(-50%, 20px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+.fo-toast { position: fixed; bottom: 40px; left: calc(50% + 116px); display: inline-flex; align-items: center; gap: 14px; width: max-content; max-width: min(520px, calc(100vw - 280px)); padding: 10px 18px; border-radius: 12px; background: var(--fo-ink); color: var(--fo-surface); font-size: 14px; font-weight: 600; opacity: 0; transform: translate(-50%, 20px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
 .fo-toast.is-visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .fo-toast:has(button) { padding-right: 10px; }
 .fo-toast button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--fo-surface) 16%, transparent); color: var(--fo-surface); font-size: 13px; font-weight: 700; cursor: pointer; }

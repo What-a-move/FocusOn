@@ -70,7 +70,7 @@ if (!hasSingleInstanceLock) {
         // [주의] API 설정이 없으면 callback 수신만으로 로그인 성공을 만들지 않는다.
         authStore.publish({
           status: 'SIGNED_OUT', user: null, onboardingStatus: null,
-          error: outcome.type === 'cancelled' ? null : { code: 'SERVICE_UNAVAILABLE', retryable: false },
+          error: outcome.type === 'cancelled' ? null : { code: 'LOCAL_APP_CONFIG_MISSING', retryable: false },
         })
       }
     },

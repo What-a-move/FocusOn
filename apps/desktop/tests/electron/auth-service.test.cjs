@@ -118,6 +118,15 @@ test('Keychain 저장이 실패하면 발급된 서버 토큰을 폐기하고 �
 
   assert.equal(revoked, 'access-secret')
   assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
+  assert.equal(store.getSnapshot().error.code, 'LOCAL_KEYCHAIN_UNAVAILABLE')
+})
+
+test('Google 로그인 창이 실패로 끝나면 서버 장애가 아닌 Google 로그인 실패로 알린다', async () => {
+  const store = new AuthSessionStore(() => {})
+  const service = new AuthService(store, {}, createVault(null), async () => { throw new Error('unused') })
+  await service.handleOAuthOutcome({ type: 'failed' })
+  assert.equal(store.getSnapshot().status, 'SIGNED_OUT')
+  assert.equal(store.getSnapshot().error.code, 'LOCAL_GOOGLE_LOGIN_FAILED')
 })
 
 test('동시에 만료된 요청은 refresh 한 번을 공유한다', async () => {

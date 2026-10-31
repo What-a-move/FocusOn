@@ -39,7 +39,7 @@ export function NicknameStep() {
       return
     }
 
-    const notice = describeError(result.error)
+    const notice = describeError(result.error, '닉네임을 확인하지 못했어요.')
     const duplicate = result.error.code === 'PROFILE_NICKNAME_DUPLICATE'
     // [디자인] 같은 오류를 하단 바에 한 번 더 띄우지 않는다.
     setHint({ kind: 'error', text: duplicate ? '이미 사용 중인 닉네임이에요. 다른 이름을 적어 주세요.' : `${notice.title} ${notice.body}`, field: duplicate })

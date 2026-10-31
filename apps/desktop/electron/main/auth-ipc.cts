@@ -7,7 +7,9 @@ import type { GoogleOAuthFlow } from './google-oauth.cjs'
 import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: false } } as const
+// Google Client ID·Backend 주소가 빠진 앱이다. 다시 눌러도 같으므로 retryable이 아니다.
+const APP_CONFIG_MISSING = { success: false, error: { code: 'LOCAL_APP_CONFIG_MISSING', retryable: false } } as const
+const BROWSER_OPEN_FAILED = { success: false, error: { code: 'LOCAL_BROWSER_OPEN_FAILED', retryable: true } } as const
 
 // [주의] Channel 이름을 아는 것만으로 호출을 허용하지 않는다. 현재 앱의 Main Frame에서 왔는지도 확인한다.
 export function isTrustedAuthSender(
@@ -64,7 +66,7 @@ export async function beginGoogleLogin(
   store: AuthSessionStore,
   oauthFlow: Pick<GoogleOAuthFlow, 'start' | 'dispose'> | null,
 ): Promise<IpcResult<{ started: boolean }>> {
-  if (!oauthFlow) return SERVICE_UNAVAILABLE
+  if (!oauthFlow) return APP_CONFIG_MISSING
   // [유지보수] 브라우저 탭을 닫아 callback이 오지 않아도 바로 다시 시도할 수 있게 이전 시도를 정리하고 새로 시작한다.
   // 새 시도는 state·verifier가 새로 만들어지므로 이전 callback은 더 이상 받지 않는다.
   if (store.getSnapshot().status === 'AUTHENTICATING') oauthFlow.dispose()
@@ -77,8 +79,8 @@ export async function beginGoogleLogin(
     // [주의] 브라우저·포트의 내부 오류 메시지는 Renderer에 전달하지 않는다.
   }
   if (!started) {
-    store.publish({ status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: SERVICE_UNAVAILABLE.error })
-    return SERVICE_UNAVAILABLE
+    store.publish({ status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: BROWSER_OPEN_FAILED.error })
+    return BROWSER_OPEN_FAILED
   }
   return { success: true, data: { started: true } }
 }
@@ -103,14 +105,14 @@ export function registerAuthIpc(
 
   ipcMain.handle(AUTH_CHANNELS.retrySession, async (event, ...args: unknown[]): Promise<IpcResult<AuthSessionSnapshot>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
-    if (!authService) return SERVICE_UNAVAILABLE
+    if (!authService) return APP_CONFIG_MISSING
     await authService.restore()
     return { success: true, data: store.getSnapshot() }
   })
 
   ipcMain.handle(AUTH_CHANNELS.startGoogleLogin, async (event, ...args: unknown[]): Promise<IpcResult<{ started: boolean }>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
-    if (!authService) return SERVICE_UNAVAILABLE
+    if (!authService) return APP_CONFIG_MISSING
     await authService.ready()
     // [주의] 이미 진행 중인 code 교환이 늦게 끝나도 새 시도를 덮어쓰지 않도록 이전 시도를 무효화한다.
     authService.invalidatePendingLogin()
@@ -119,7 +121,7 @@ export function registerAuthIpc(
 
   ipcMain.handle(AUTH_CHANNELS.logout, async (event, ...args: unknown[]): Promise<IpcResult<{ loggedOut: true }>> => {
     if (!accepts(event, args)) return INVALID_REQUEST
-    if (!authService) return SERVICE_UNAVAILABLE
+    if (!authService) return APP_CONFIG_MISSING
     oauthFlow?.dispose()
     return authService.logout()
   })

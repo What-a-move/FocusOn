@@ -5,24 +5,12 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
 import { selectAuthView } from './lib/auth-view'
+import { errorText } from './lib/error-text'
 import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
 import { HomeDashboard } from '../features/dashboard/HomeDashboard'
 
 const signedOut: AuthSessionSnapshot = {
   revision: 0, status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: null,
-}
-
-function errorMessage(error: IpcError | null): string | null {
-  if (!error) return null
-  switch (error.code) {
-    case 'LOCAL_NETWORK_UNAVAILABLE': return '인터넷 연결을 확인하고 다시 시도해 주세요.'
-    case 'AUTH_RELOGIN_REQUIRED':
-    case 'AUTH_TOKEN_REUSE_DETECTED':
-    case 'AUTH_OAUTH_REAUTH_REQUIRED': return '로그인 정보가 만료됐어요. Google로 다시 로그인해 주세요.'
-    case 'AUTH_DEVICE_LIMIT_EXCEEDED': return '로그인 가능한 Desktop 3대를 모두 사용 중이에요. 기존 기기를 해제한 뒤 다시 시도해 주세요.'
-    case 'SERVICE_UNAVAILABLE': return '로그인 서비스를 사용할 수 없어요. 잠시 후 다시 시도해 주세요.'
-    default: return error.retryable ? '요청을 마치지 못했어요. 잠시 후 다시 시도해 주세요.' : '로그인을 마치지 못했어요. 다시 시도해 주세요.'
-  }
 }
 
 function Logo({ className = '' }: { className?: string }) {
@@ -34,7 +22,7 @@ function Logo({ className = '' }: { className?: string }) {
 
 function Alert({ message }: { message: string | null }) {
   if (!message) return null
-  return <div className="fo-notice" role="alert"><strong>요청을 마치지 못했어요.</strong><span>{message}</span></div>
+  return <div className="fo-notice" role="alert"><strong>로그인하지 못했어요.</strong><span>{message}</span></div>
 }
 
 function LoadingScreen() {
@@ -58,7 +46,7 @@ function LoginScreen({ onLogin, onRetry, busy, authenticating, message, availabl
           <span>{busy ? '연결하는 중…' : offline ? '연결 다시 확인하기' : authenticating ? 'Google 로그인 다시 열기' : 'Google로 계속하기'}</span>
         </button>
         <div className="fo-login-state" aria-live="polite">
-          {offline ? <div className="fo-notice" role="alert"><strong>인터넷에 연결되어 있지 않아요.</strong><span>{message ?? '연결을 확인한 뒤 다시 시도해 주세요.'}</span></div> : <Alert message={message} />}
+          {offline ? <div className="fo-notice" role="alert"><strong>로그인 상태를 확인하지 못했어요.</strong><span>{message ?? errorText({ code: 'LOCAL_NETWORK_UNAVAILABLE' })}</span></div> : <Alert message={message} />}
           {(busy || authenticating) && <div className="fo-notice is-info" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
           {!available && <p className="fo-app-only">Google 로그인은 FocusOn 데스크톱 앱에서 사용할 수 있어요.</p>}
         </div>
@@ -138,7 +126,8 @@ export default function Page() {
   }
 
   const view = selectAuthView(snapshot)
-  const message = errorMessage(requestError ?? snapshot?.error ?? null)
+  const shownError = requestError ?? snapshot?.error ?? null
+  const message = shownError ? errorText(shownError) : null
   if (view === 'loading') return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
   if (view === 'home' && snapshot?.user) return <HomeDashboard name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />

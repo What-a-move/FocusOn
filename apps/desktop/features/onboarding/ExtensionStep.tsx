@@ -26,7 +26,7 @@ export function ExtensionStep() {
     if (!result.success) {
       setCode('')
       setStatus('error')
-      const reason = describeError(result.error)
+      const reason = describeError(result.error, '연결 코드를 받지 못했어요.')
       setHint({ kind: 'error', text: `${reason.title} ${reason.body}` })
       return
     }
