@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import tools.jackson.databind.json.JsonMapper;
 
 /** 내장 서버에서 실제 오류 디스패치와 인증 경계를 확인한다. */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -36,6 +37,11 @@ class MissingEndpointHttpTests {
     var response = send("/api/v1/reports/calendar?month=2026-10", "Bearer valid");
     assertEquals(404, response.statusCode());
     assertFalse(response.body().contains("AUTH_RELOGIN_REQUIRED"));
+    var body = JsonMapper.builder().build().readTree(response.body());
+    assertEquals("NOT_FOUND", body.path("code").asString());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        body.path("requestId").asString().startsWith("req_"));
+    assertFalse(body.has("path"));
   }
 
   @Test

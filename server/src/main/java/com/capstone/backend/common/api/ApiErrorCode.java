@@ -22,6 +22,7 @@ public enum ApiErrorCode {
   SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "잠시 후 다시 시도해 주세요.", true),
   REQUEST_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "요청 시간이 초과됐습니다.", true),
   VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "요청 값을 확인해 주세요.", false),
+  NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 경로를 찾을 수 없습니다.", false),
   GOAL_TEXT_INVALID(HttpStatus.BAD_REQUEST, "목표는 2자 이상 40자 이하여야 합니다.", false),
   GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "목표를 찾을 수 없습니다.", false),
   PROFILE_NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "닉네임을 확인해 주세요.", false),

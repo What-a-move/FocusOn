@@ -6,3 +6,5 @@
 - 무인증·위조·만료 토큰 오류의 보안 경계도 확인했다. 인증 서비스는 테스트 대역이며
   실제 JWT·PostgreSQL·Desktop 왕복은 검증하지 않았다.
 - `./gradlew build`: Checkstyle 및 전체 테스트 통과.
+- CodeRabbit 지적을 반영해 응답 본문에 `NOT_FOUND`와 서버 발급 `requestId`가 있고
+  요청 경로는 없는지 내장 서버 테스트에 추가했다. 정본 오류 코드 동기화는 미확인이다.
