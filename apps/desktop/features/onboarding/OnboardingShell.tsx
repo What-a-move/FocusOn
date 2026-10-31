@@ -81,12 +81,16 @@ export function OnboardingShell({
 
         <footer className="footer">
           <div className="footer-inner">
-            {feedback ? (
-              <div className={`feedback${feedback.info ? ' is-info' : ''}`} role={feedback.info ? 'status' : 'alert'} key={feedback.title}>
-                {!feedback.info && <span className="feedback-icon" aria-hidden="true">!</span>}
+            {/* [접근성] 안내용 status 영역은 처음부터 붙여 둬야 내용이 바뀔 때 읽힌다. 오류는 그때 붙는 alert로 읽힌다. */}
+            <div className="feedback-slot" role="status">
+              {feedback?.info && <div className="feedback is-info" key={feedback.title}><div><strong>{feedback.title}</strong><span>{feedback.body}</span></div></div>}
+            </div>
+            {feedback && !feedback.info && (
+              <div className="feedback" role="alert" key={feedback.title}>
+                <span className="feedback-icon" aria-hidden="true">!</span>
                 <div><strong>{feedback.title}</strong><span>{feedback.body}</span></div>
               </div>
-            ) : null}
+            )}
             <span className="spacer" />
             {/* [유지보수] 조건이 부족해도 버튼은 눌리게 두고, 막힌 이유는 하단 바에서 알려 준다 (원본 HTML 동작). */}
             <button className={`btn btn-primary next${next.blocked ? ' is-blocked' : ''}`} type="button" onClick={next.onClick} disabled={next.busy}>

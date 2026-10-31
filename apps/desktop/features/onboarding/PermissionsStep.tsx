@@ -68,6 +68,13 @@ const permCopy: Record<PermName, { title: string; required: boolean; idle: strin
 }
 
 const idle: PermState = { state: 'idle', error: null }
+const NOTIFY_BLOCKED: Record<PermState['state'], string> = {
+  idle: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.',
+  requested: '시험 알림이 보였다면 ‘보였어요’를 눌러 주세요.',
+  denied: '‘설정 열기’로 알림을 켠 뒤 ‘다시 보내기’를 눌러 주세요.',
+  opened: '알림을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.',
+  granted: '',
+}
 
 // [유지보수] 화면 기록은 macOS가 앱 안에서 허용 창을 띄우지 않는다. 시스템 설정을 연 뒤 돌아와서 다시 확인한다.
 function permText(name: PermName, perm: PermState): string {
@@ -199,11 +206,11 @@ export function PermissionsStep() {
       return
     }
     if (!screenReady) {
-      setFeedback({ title: '화면 기록 권한이 필요해요.', body: '‘설정 열기’로 시스템 설정을 열어 화면 기록을 켜 주세요.', info: true })
+      setFeedback({ title: '화면 기록 권한이 필요해요.', body: perms.screen.state === 'idle' ? '‘설정 열기’로 시스템 설정을 열어 화면 기록을 켜 주세요.' : '시스템 설정에서 화면 기록을 켠 뒤 ‘다시 확인’을 눌러 주세요.', info: true })
       return
     }
     if (!notifyReady) {
-      setFeedback({ title: '알림 권한이 필요해요.', body: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.', info: true })
+      setFeedback({ title: '알림 권한이 필요해요.', body: NOTIFY_BLOCKED[perms.notify.state], info: true })
       return
     }
     setSaving(true)

@@ -292,8 +292,12 @@ export function GoalSetting() {
 
       <footer className="footer">
         <div className="footer-inner">
-          {feedback && <div className={`feedback${feedback.info ? ' is-info' : ''}`} role={feedback.info ? 'status' : 'alert'}>
-            {!feedback.info && <span className="feedback-icon" aria-hidden="true">!</span>}
+          {/* [접근성] 안내용 status 영역은 처음부터 붙여 둬야 내용이 바뀔 때 읽힌다. */}
+          <div className="feedback-slot" role="status">
+            {feedback?.info && <div className="feedback is-info"><div><strong>{feedback.title}</strong><span>{feedback.body}</span></div></div>}
+          </div>
+          {feedback && !feedback.info && <div className="feedback" role="alert">
+            <span className="feedback-icon" aria-hidden="true">!</span>
             <div><strong>{feedback.title}</strong><span>{feedback.body}</span></div>
           </div>}
           {showSecondary && <button className="btn btn-ghost" type="button" onClick={secondary} disabled={busy}>{secondaryLabel}</button>}

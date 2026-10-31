@@ -210,7 +210,7 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
         <strong>필수 권한</strong>
         {!unknown && <span className={`fo-badge ${off ? 'bad' : 'ok'}`}>{off ? `${off}개 꺼져 있음` : '모두 허용됨'}</span>}
       </div>
-      {off > 0 && <div className="fo-notice is-info fo-perm-alert" role="status"><strong>필수 권한을 켜야 집중을 시작할 수 있어요.</strong><span>아래 버튼으로 시스템 설정을 열어 켜 주세요.</span></div>}
+      {off > 0 && <div className="fo-notice is-info fo-perm-alert" role="status"><strong>필수 권한을 켜야 집중을 시작할 수 있어요.</strong><span>아래에서 꺼진 권한의 버튼을 눌러 주세요.</span></div>}
       <div className="fo-perm-list">
         <PermissionRow name="화면 기록" desc="필요할 때만 화면 글자 읽기" granted={screen}
           error={screenStep === 'stuck' ? '아직 꺼져 있어요. 켰다면 앱을 다시 열어 주세요.' : null}

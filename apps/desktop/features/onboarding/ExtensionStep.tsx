@@ -49,7 +49,7 @@ export function ExtensionStep() {
       setNow(current)
       if (current >= deadline) {
         setStatus('expired')
-        setHint({ kind: '', text: '' })
+        setHint({ kind: '', text: '연결 코드가 만료됐어요.' })
       }
     }, 1000)
     return () => clearInterval(timer)
@@ -77,7 +77,7 @@ export function ExtensionStep() {
   const prompt = status === 'connected'
     ? { text: '연결됐어요! 잘하셨어요.', error: false }
     : status === 'expired'
-      ? { text: '코드가 만료됐어요. 새 코드를 받아 주세요.', error: false }
+      ? { text: '새 코드를 받아 주세요!', error: false }
       : { text: 'Chrome이랑 연결해 볼까요?', error: false }
 
   function goNext() {
