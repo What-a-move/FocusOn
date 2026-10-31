@@ -27,7 +27,7 @@
 
 ## 재현 방법
 
-1. `apps/extension`에서 `pnpm build`를 실행한다.
+1. 수정 전 커밋(`a901187`)을 체크아웃하고 `apps/extension`에서 `pnpm build`를 실행한다. 지금의 `pnpm build`는 후처리에서 `_` 이름을 없애므로 재현되지 않는다.
 2. Chrome `chrome://extensions` → 개발자 모드 → 압축해제된 확장 프로그램을 로드합니다 → `out/` 선택.
 
 ## 기대 결과
