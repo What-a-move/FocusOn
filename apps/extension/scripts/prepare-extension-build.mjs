@@ -3,7 +3,7 @@
 // → 인라인 스크립트를 같은 순서의 외부 파일로 옮긴다. (docs/features/pairing-flow-inline-script-csp-ERROR.md)
 import { build } from 'esbuild'
 import { createHash } from 'node:crypto'
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -33,6 +33,18 @@ for (const file of pages) {
   await writeFile(file, html)
   if (/<script>/u.test(html)) throw new Error(`인라인 스크립트가 남았습니다: ${file}`)
 }
+// Chrome은 최상위의 '_'로 시작하는 파일·폴더를 예약 이름으로 보고 Extension 로딩을 거부한다. (docs/features/extension-build-reserved-filename-ERROR.md)
+// - RSC 데이터(__next.*.txt)는 정적 팝업에서 없어도 일반 페이지 이동으로 동작하므로 지운다. 404 페이지(_not-found)도 쓰지 않는다.
+// - 정적 자원 폴더 _next는 next로 바꾸고 HTML·JS·CSS 안의 '/_next/' 경로도 함께 바꾼다(Next 런타임은 이 경로로 청크 위치를 찾는다).
+for (const file of (await walk(out)).filter((name) => path.basename(name).startsWith('__next.'))) await rm(file)
+await rm(path.join(out, '_not-found'), { recursive: true, force: true })
+await rename(path.join(out, '_next'), path.join(out, 'next'))
+for (const file of (await walk(out)).filter((name) => /\.(html|js|css|json|txt)$/u.test(name))) {
+  const text = await readFile(file, 'utf8')
+  if (text.includes('/_next/')) await writeFile(file, text.replaceAll('/_next/', '/next/'))
+}
+const reserved = (await readdir(out)).filter((name) => name.startsWith('_'))
+if (reserved.length) throw new Error(`Chrome 예약 이름이 남았습니다: ${reserved.join(', ')}`)
 // Service Worker(TypeScript)를 한 파일로 묶는다. API 주소는 팝업과 같은 빌드 환경 변수를 쓴다.
 // [주의] next build는 .env 파일을 읽지만 이 스크립트는 따로 실행된다. Next와 같은 우선순위로 읽는다(이미 있는 값은 덮지 않음).
 for (const file of ['.env.production.local', '.env.local', '.env.production', '.env']) {
