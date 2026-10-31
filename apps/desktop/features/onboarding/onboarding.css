@@ -193,7 +193,7 @@
 .onboarding-window .choice-text strong { display: block; font-size: 17px; font-weight: 700; line-height: 1.4; }
 .onboarding-window .choice-text small { display: block; margin-top: 3px; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .onboarding-window .tag { flex: 0 0 auto; padding: 4px 10px; border-radius: 99px; background: var(--field); color: var(--ink); font-size: 13px; font-weight: 700; }
-.onboarding-window .tag.required { background: var(--danger-soft); color: var(--danger); }
+.onboarding-window .tag.required { background: var(--field); color: var(--ink); }
 .onboarding-window .choice.all { min-height: 60px; background: var(--field); }
 .onboarding-window .choice.all[aria-checked='true'] { background: var(--gold-tint); }
 .onboarding-window .choice.all strong { font-size: 18px; }
@@ -216,7 +216,6 @@
 .onboarding-window .perm[data-state='granted'] { border-color: var(--success-line); }
 .onboarding-window .perm-state { width: 26px; height: 26px; flex: 0 0 26px; display: grid; place-items: center; border: 1.5px solid var(--dim); border-radius: 50%; color: transparent; font-size: 14px; font-weight: 700; }
 .onboarding-window .perm[data-state='granted'] .perm-state { border-color: var(--success); background: var(--success); color: #fff; animation: onboarding-pop-in .55s var(--ease); }
-.onboarding-window .perm[data-state='denied'] .perm-state { border-color: var(--danger); color: var(--danger); }
 .onboarding-window .perm .choice-text strong { display: flex; align-items: center; gap: 8px; }
 .onboarding-window .perm-desc.is-error { color: var(--danger); font-weight: 600; }
 .onboarding-window .perm-action { flex: 0 0 auto; min-width: 0; height: 44px; padding: 0 16px; font-size: 15px; }
@@ -241,7 +240,6 @@
 .onboarding-window .timer { flex: 1; height: 6px; overflow: hidden; border-radius: 99px; background: var(--track); }
 .onboarding-window .timer i { display: block; width: 0; height: 100%; background: var(--gold); transition: width 1s linear; }
 .onboarding-window .countdown { min-width: 48px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
-.onboarding-window .countdown.is-low { color: var(--danger); }
 .onboarding-window .steps-guide { margin: 20px 0 0; padding-left: 20px; list-style: decimal; color: var(--muted); font-size: 15px; line-height: 1.9; }
 .onboarding-window .steps-guide b { color: var(--ink); font-weight: 700; }
 .onboarding-window .steps-guide code { padding: 1px 6px; border-radius: 6px; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; letter-spacing: .04em; }
@@ -259,8 +257,10 @@
 /* 하단 바: 막힌 이유만 버튼 옆에 */
 .onboarding-window .footer { flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--surface); }
 .onboarding-window .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(980px, calc(100% - 64px)); margin: 0 auto; padding: 20px 0 40px; }
+.onboarding-window .feedback-slot { display: contents; }
 .onboarding-window .feedback { display: flex; align-items: flex-start; gap: 10px; min-width: 0; font-size: 15px; line-height: 1.5; animation: onboarding-rise-in .55s var(--ease); }
 .onboarding-window .feedback strong { display: block; color: var(--danger); font-size: 16px; }
+.onboarding-window .feedback.is-info strong { color: var(--ink); }
 .onboarding-window .feedback-icon { width: 20px; height: 20px; flex: 0 0 20px; margin-top: 2px; display: grid; place-items: center; border-radius: 50%; background: var(--danger); color: #fff; font-size: 13px; font-weight: 700; }
 .onboarding-window .spacer { flex: 1; }
 .onboarding-window .next { min-width: 140px; height: 56px; font-size: 17px; }

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { CHANNELS, LEVELS, PREVIEW } from '../session/SessionSetup'
 import { sessionApi, type NotificationChannel } from '../session/session-api'
 import { onboardingApi } from '../onboarding/onboarding-api'
-import { SettingsShell, ToastView, failText, useToast } from './SettingsShell'
+import { LoadError, SettingsShell, ToastView, failText, useToast } from './SettingsShell'
 import { settingsApi, type FocusSettings, type ThemeSource } from './settings-api'
 
 // 시안의 계정·기기 연결 탭은 다음 Issue에서 만든다(settings-PLAN.md).
@@ -100,10 +100,7 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
 
   if (view.status === 'loading') return <p className="fo-settings-status" role="status">집중 설정을 불러오고 있어요.</p>
   // [주의] 읽지 못했을 때 기본값을 보여 주거나 저장하지 않는다. 서버 값을 덮어쓸 수 있다.
-  if (view.status === 'error') return <div className="fo-settings-load-error">
-    <div className="fo-notice" role="alert"><strong>{failText(view.code, '집중 설정을 불러오지')}</strong></div>
-    <button className="fo-small-btn" type="button" onClick={() => { void load() }}>다시 시도</button>
-  </div>
+  if (view.status === 'error') return <LoadError code={view.code} what="집중 설정을" onRetry={() => { void load() }} />
 
   const settings = view.data
   async function save(next: FocusSettings) {
@@ -213,7 +210,7 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
         <strong>필수 권한</strong>
         {!unknown && <span className={`fo-badge ${off ? 'bad' : 'ok'}`}>{off ? `${off}개 꺼져 있음` : '모두 허용됨'}</span>}
       </div>
-      {off > 0 && <div className="fo-notice fo-perm-alert" role="alert"><strong>필수 권한이 꺼져 있어 집중을 시작할 수 없어요.</strong><span>시스템 설정에서 켠 뒤 ‘다시 확인’을 눌러 주세요.</span></div>}
+      {off > 0 && <div className="fo-notice is-info fo-perm-alert" role="status"><strong>필수 권한을 켜야 집중을 시작할 수 있어요.</strong><span>아래에서 꺼진 권한의 버튼을 눌러 주세요.</span></div>}
       <div className="fo-perm-list">
         <PermissionRow name="화면 기록" desc="필요할 때만 화면 글자 읽기" granted={screen}
           error={screenStep === 'stuck' ? '아직 꺼져 있어요. 켰다면 앱을 다시 열어 주세요.' : null}
@@ -240,7 +237,7 @@ function PermissionRow({ name, desc, granted, error, action }: {
     <span className="fo-perm-icon">{granted === false ? OFF : CHECK}</span>
     <div aria-label={`${name}, ${granted === null ? '확인하지 못함' : granted ? '허용됨' : '꺼져 있음'}`}>
       <b>{name}</b>
-      <small className={error ? 'fo-error-line' : undefined}>{error ?? state}</small>
+      <small className={error ? 'fo-note-line' : undefined}>{error ?? state}</small>
     </div>
     {action ? <button className="fo-small-btn" type="button" disabled={busy} onClick={async () => { setBusy(true); await action.run(); setBusy(false) }}>{action.label}</button> : <span />}
   </div>

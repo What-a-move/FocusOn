@@ -11,7 +11,7 @@ import './goal.css'
 type View = 'entry' | 'questions' | 'candidates' | 'review' | 'done'
 type QuestionMode = 'term' | 'scope' | 'multi'
 type Line = { text: string; error?: boolean; typing?: boolean }
-type Feedback = { title: string; body: string } | null
+type Feedback = { title: string; body: string; info?: boolean } | null
 type Review = { goal: string; caption: string; source: ConfirmationSource }
 
 const EXAMPLES = ['React Query 캐싱 방식 이해하기', '미적분 적분 문제 풀기', '캡스톤 발표 자료 정리하기']
@@ -180,11 +180,11 @@ export function GoalSetting() {
     if (view === 'entry') { if (validDraft()) void clarify(draft.trim(), answers); return }
     if (view === 'questions' && question) {
       if (question.mode === 'scope') {
-        if (goalLength(scopeAnswer) < 2) { setFeedback({ title: '답을 적어 주세요.', body: '이번에 할 부분을 2자 이상으로 적어 주세요.' }); return }
+        if (goalLength(scopeAnswer) < 2) { setFeedback({ title: '답을 적어 주세요.', body: '이번에 할 부분을 2자 이상으로 적어 주세요.', info: true }); return }
         void clarify(draft.trim(), [...answers, { question: question.text, answer: scopeAnswer.trim() }])
         return
       }
-      if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.' }); return }
+      if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
       if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'AI_CONFIRMED'); return }
       if (selected === 0) { void clarify(draft.trim(), [...answers, { question: question.text, answer: '맞아요' }]); return }
       // 아니에요: 문장을 고치게 한다. 이 질문도 횟수에 들어간다.
@@ -194,7 +194,7 @@ export function GoalSetting() {
       return
     }
     if (view === 'candidates') {
-      if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.' }); return }
+      if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
       toReview(candidates.options[selected], '고른 목표', 'AI_CONFIRMED')
       return
     }
@@ -292,7 +292,11 @@ export function GoalSetting() {
 
       <footer className="footer">
         <div className="footer-inner">
-          {feedback && <div className="feedback" role="alert">
+          {/* [접근성] 안내용 status 영역은 처음부터 붙여 둬야 내용이 바뀔 때 읽힌다. */}
+          <div className="feedback-slot" role="status">
+            {feedback?.info && <div className="feedback is-info"><div><strong>{feedback.title}</strong><span>{feedback.body}</span></div></div>}
+          </div>
+          {feedback && !feedback.info && <div className="feedback" role="alert">
             <span className="feedback-icon" aria-hidden="true">!</span>
             <div><strong>{feedback.title}</strong><span>{feedback.body}</span></div>
           </div>}

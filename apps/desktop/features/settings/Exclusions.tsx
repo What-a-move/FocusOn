@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { DOMAIN, MAX_SITES, normalizeDomain } from '../onboarding/ExcludedSitesStep'
 import { analysisApi, type ExcludedApp, type InstalledApp } from '../onboarding/onboarding-api'
-import { SettingsShell, ToastView, failText, useToast, type Toast } from './SettingsShell'
+import { LoadError, SettingsShell, ToastView, failText, useToast, type Toast } from './SettingsShell'
 import { settingsApi } from './settings-api'
 
 const MAX_APPS = 50
@@ -221,10 +221,7 @@ function ExclusionList<T>({ view, saving, justAdded, title, sub, empty, toItems,
   const [pending, setPending] = useState<Item | null>(null)
 
   if (view.status === 'loading') return <p className="fo-settings-status" role="status">목록을 불러오고 있어요.</p>
-  if (view.status === 'error') return <div className="fo-settings-load-error">
-    <div className="fo-notice" role="alert"><strong>{failText(view.code, '목록을 불러오지')}</strong></div>
-    <button className="fo-small-btn" type="button" onClick={onRetry}>다시 시도</button>
-  </div>
+  if (view.status === 'error') return <LoadError code={view.code} what="제외 목록을" onRetry={onRetry} />
 
   const items = toItems(view.data)
   if (items.length === 0) return <div className="fo-ex-empty">
