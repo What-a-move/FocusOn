@@ -8,3 +8,5 @@
 - `./gradlew build`: Checkstyle 및 전체 테스트 통과.
 - CodeRabbit 지적을 반영해 응답 본문에 `NOT_FOUND`와 서버 발급 `requestId`가 있고
   요청 경로는 없는지 내장 서버 테스트에 추가했다. 정본 오류 코드 동기화는 미확인이다.
+- 추가 재리뷰에서 405 오류의 공통 형식 누락을 재현하고 `METHOD_NOT_ALLOWED` 응답과
+  requestId·경로 비노출 테스트를 추가했다. 404·405 이외의 오류 전달은 기존 동작이다.

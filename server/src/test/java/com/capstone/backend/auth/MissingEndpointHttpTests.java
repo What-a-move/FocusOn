@@ -45,6 +45,22 @@ class MissingEndpointHttpTests {
   }
 
   @Test
+  void unsupportedMethodUsesCommonErrorBody() throws Exception {
+    when(authentication.authenticate("valid"))
+        .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
+    var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+        + "/api/v1/auth/me")).header("Authorization", "Bearer valid")
+        .POST(HttpRequest.BodyPublishers.noBody()).build();
+    var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    assertEquals(405, response.statusCode());
+    var body = JsonMapper.builder().build().readTree(response.body());
+    assertEquals("METHOD_NOT_ALLOWED", body.path("code").asString());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        body.path("requestId").asString().startsWith("req_"));
+    assertFalse(body.has("path"));
+  }
+
+  @Test
   void authenticationRemainsRequiredAndErrorIsNotPublic() throws Exception {
     when(authentication.authenticate(anyString()))
         .thenThrow(new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));

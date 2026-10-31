@@ -10,7 +10,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
-/** 미구현 API의 내부 오류 전달을 공통 오류 형식으로 변환한다. */
+/** API의 내부 오류 전달을 원래 상태를 보존한 공통 오류 형식으로 변환한다. */
 @Component
 public class ApiErrorAttributes extends DefaultErrorAttributes {
   @Override
@@ -19,18 +19,24 @@ public class ApiErrorAttributes extends DefaultErrorAttributes {
         RequestAttributes.SCOPE_REQUEST);
     Object uri = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI,
         RequestAttributes.SCOPE_REQUEST);
-    if (Integer.valueOf(404).equals(status) && uri instanceof String path
+    if (status instanceof Integer statusCode && (statusCode == 404 || statusCode == 405)
+        && uri instanceof String path
         && (path.equals("/api/v1") || path.startsWith("/api/v1/"))
         && request instanceof ServletWebRequest servletRequest) {
-      var body = ApiErrorResponse.of(ApiErrorCode.NOT_FOUND, null,
-          RequestIdFilter.from(servletRequest.getRequest()), Map.of());
+      String code = switch (statusCode) {
+        case 404 -> ApiErrorCode.NOT_FOUND.name();
+        case 405 -> "METHOD_NOT_ALLOWED";
+        default -> "HTTP_ERROR";
+      };
+      String message = statusCode == 404 ? ApiErrorCode.NOT_FOUND.defaultMessage()
+          : "요청 방식이 허용되지 않습니다.";
       Map<String, Object> result = new LinkedHashMap<>();
-      result.put("code", body.code());
-      result.put("message", body.message());
-      result.put("retryable", body.retryable());
-      result.put("retryAfterSeconds", body.retryAfterSeconds());
-      result.put("requestId", body.requestId());
-      result.put("details", body.details());
+      result.put("code", code);
+      result.put("message", message);
+      result.put("retryable", false);
+      result.put("retryAfterSeconds", null);
+      result.put("requestId", RequestIdFilter.from(servletRequest.getRequest()));
+      result.put("details", Map.of());
       return result;
     }
     return super.getErrorAttributes(request, options);
