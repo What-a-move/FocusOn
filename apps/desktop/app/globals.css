@@ -74,6 +74,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--fo-focus); 
 .fo-notice { padding: 14px 16px; border: 1px solid var(--fo-danger-line); border-radius: 12px; background: var(--fo-danger-soft); color: var(--fo-danger); font-size: 14px; line-height: 1.6; text-align: left; }
 .fo-notice strong, .fo-notice span { display: block; }
 .fo-notice span { margin-top: 4px; color: var(--fo-ink); }
+/* 오류가 아닌 안내(진행 중·막힌 이유). 빨간색을 쓰지 않는다. */
+.fo-notice.is-info { border-color: var(--fo-line); background: var(--fo-field); color: var(--fo-ink); }
 
 /* 로그인: 중앙의 문구와 오른쪽 포키 배치를 원본 시안의 480/460 열에 맞춘다. */
 .fo-auth-window { display: flex; flex-direction: column; min-height: 100dvh; overflow: auto; background: var(--fo-surface); }

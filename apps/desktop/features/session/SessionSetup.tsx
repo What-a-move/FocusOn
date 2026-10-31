@@ -145,14 +145,14 @@ export function SessionSetup() {
     const sent = await sessionApi.sendTestNotification()
     if (!sent.success || !sent.data.shown) { setFeedback({ title: '알림을 보내지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 다시 보내 주세요.' }); setNotifyCheck('denied'); return }
     setNotifyCheck('sent')
-    setFeedback({ title: '방금 보낸 알림이 보였나요?', body: '화면 오른쪽 위에 FocusOn 알림이 떴는지 확인해 주세요.' })
+    setFeedback({ title: '방금 보낸 알림이 보였나요?', body: '화면 오른쪽 위에 FocusOn 알림이 떴는지 확인해 주세요.', info: true })
   }
   const answerTest = async (seen: boolean) => {
     const saved = await sessionApi.confirmNotification(seen)
     if (!saved.success) { setFeedback({ title: '알림 확인을 저장하지 못했어요.', body: '다시 눌러 주세요.' }); return }
     if (seen) { setNotifyCheck(null); setFeedback({ title: '알림을 확인했어요.', body: '‘집중 시작하기’를 다시 눌러 주세요.', info: true }); return }
     setNotifyCheck('denied')
-    setFeedback({ title: '알림이 꺼져 있는 것 같아요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.' })
+    setFeedback({ title: '알림이 꺼져 있는 것 같아요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.', info: true })
     void sessionApi.openNotificationSettings()
   }
 

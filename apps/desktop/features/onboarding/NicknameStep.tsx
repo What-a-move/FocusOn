@@ -48,7 +48,7 @@ export function NicknameStep() {
 
   async function goNext() {
     if (!checked) {
-      setFeedback({ title: '닉네임 중복 확인이 필요해요.', body: '닉네임을 입력하고 ‘중복 확인’을 눌러 주세요.' })
+      setFeedback({ title: '닉네임 중복 확인이 필요해요.', body: '닉네임을 입력하고 ‘중복 확인’을 눌러 주세요.', info: true })
       return
     }
     router.push('/onboarding/extension/')

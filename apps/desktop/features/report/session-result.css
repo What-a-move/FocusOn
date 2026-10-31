@@ -12,6 +12,7 @@
 /* 위: 포키 · 제목 · 큰 시간 */
 .result-window .hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
 .result-window .hero.is-missing { grid-template-columns: auto minmax(0, 1fr); border-bottom: 0; padding-bottom: 8px; }
+.result-window .hero-sub { margin: 10px 0 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
 .result-window .hero .poki { width: auto; height: 140px; }
 .result-window .kicker { margin: 0; color: var(--muted); font-size: 15px; font-weight: 600; }
 .result-window h1 { margin: 4px 0 0; font-size: 34px; font-weight: 700; letter-spacing: -.03em; animation: result-up .55s .1s var(--ease) backwards; }
@@ -84,7 +85,9 @@
 .result-window .notice { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--danger-line); border-radius: 14px; background: var(--danger-soft); color: var(--danger); font-size: 15px; line-height: 1.6; }
 .result-window .notice strong { display: block; font-weight: 700; }
 .result-window .notice span { display: block; color: var(--ink); }
-.result-window .retry { align-self: flex-start; margin-top: 16px; }
+/* 기록 없음·불러오기 실패: 내용이 짧으므로 제목과 버튼을 한 덩어리로 화면 가운데에 둔다. */
+.result-window .report.is-empty { justify-content: center; align-items: center; }
+.result-window .report.is-empty .actions { justify-content: center; margin-top: 28px; padding-top: 0; border-top: 0; }
 
 .result-window .actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: auto; padding-top: 24px; border-top: 1px solid var(--line); }
 .result-window .actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; padding: 0 22px; text-decoration: none; }

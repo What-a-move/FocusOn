@@ -133,7 +133,7 @@ export function PermissionsStep() {
       setPrompt({ text: '좋아요, 준비됐어요!', error: false })
     } else if (!silent) {
       setScreen({ state: 'denied', error: null })
-      setPrompt({ text: '아직 꺼져 있는 것 같아요.', error: true })
+      setPrompt({ text: '아직 꺼져 있는 것 같아요.', error: false })
     }
   }, [])
 
@@ -190,7 +190,7 @@ export function PermissionsStep() {
   async function goNext() {
     if (view === 'consents') {
       if (!allAccepted) {
-        setFeedback({ title: '필수 항목에 동의해 주세요.', body: '필수 항목 3개에 모두 동의해야 시작할 수 있어요.' })
+        setFeedback({ title: '필수 항목에 동의해 주세요.', body: '필수 항목 3개에 모두 동의해야 시작할 수 있어요.', info: true })
         return
       }
       setView('permission')
@@ -199,11 +199,11 @@ export function PermissionsStep() {
       return
     }
     if (!screenReady) {
-      setFeedback({ title: '화면 기록 권한이 필요해요.', body: '시스템 설정에서 FocusOn을 켠 뒤 ‘다시 확인’을 눌러 주세요.' })
+      setFeedback({ title: '화면 기록 권한이 필요해요.', body: '‘설정 열기’로 시스템 설정을 열어 화면 기록을 켜 주세요.', info: true })
       return
     }
     if (!notifyReady) {
-      setFeedback({ title: '알림 권한이 필요해요.', body: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.' })
+      setFeedback({ title: '알림 권한이 필요해요.', body: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.', info: true })
       return
     }
     setSaving(true)
@@ -300,7 +300,7 @@ export function PermissionsStep() {
                   <span className="perm-state" aria-hidden="true">{perm.state === 'denied' ? '!' : '✓'}</span>
                   <span className="choice-text">
                     <strong>{copy.title} <span className={`tag${copy.required ? ' required' : ''}`}>{copy.required ? '필수' : '선택'}</span></strong>
-                    <small className={`perm-desc${perm.error || (perm.state === 'denied' && copy.required) ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
+                    <small className={`perm-desc${perm.error ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
                   </span>
                   {perm.state === 'granted'
                     ? <span className="perm-done">허용됨</span>

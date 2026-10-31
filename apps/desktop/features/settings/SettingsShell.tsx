@@ -62,6 +62,15 @@ export function ToastView({ toast, onHide }: { toast: Toast | null; onHide: () =
 }
 
 /** 저장·조회 실패 안내. 오프라인이면 연결을 먼저 확인하도록 알려 준다. */
+/** 처음 불러오기 실패. 제목·할 일·다시 시도를 한 상자에 둔다 (홈 달력 오류와 같은 모양). */
+export function LoadError({ code, what, onRetry }: { code: string; what: string; onRetry: () => void }) {
+  return <div className="fo-notice fo-load-error" role="alert">
+    <strong>{what} 불러오지 못했어요.</strong>
+    <span>{code === 'LOCAL_NETWORK_UNAVAILABLE' ? '인터넷 연결을 확인한 뒤 다시 시도해 주세요.' : '잠시 후 다시 시도해 주세요.'}</span>
+    <button className="fo-small-btn" type="button" onClick={onRetry}>다시 시도</button>
+  </div>
+}
+
 export function failText(code: string, action = '저장하지'): string {
   return code === 'LOCAL_NETWORK_UNAVAILABLE' ? `${action} 못했어요. 인터넷 연결을 확인해 주세요.` : `${action} 못했어요. 잠시 후 다시 시도해 주세요.`
 }

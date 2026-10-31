@@ -87,7 +87,7 @@ export function SessionResult() {
   return <main className="app-window onboarding-window result-window">
     <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     <div className="scroll">
-      <div className="report">
+      <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
         {view.kind !== 'ready' ? <>
           <header className="hero is-missing">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -95,17 +95,14 @@ export function SessionResult() {
             <div>
               <p className="kicker">집중 리포트</p>
               <h1>{view.kind === 'missing' ? '기록을 찾을 수 없어요' : '기록을 불러오지 못했어요'}</h1>
+              {/* [디자인] 제목이 이미 상황을 말하므로 같은 뜻의 상자를 겹쳐 두지 않고 할 일만 한 줄로 둔다. */}
+              <p className="hero-sub" role={view.kind === 'error' ? 'alert' : undefined}>{view.kind === 'missing' ? '홈에서 집중 기록을 다시 열어 주세요.' : '인터넷 연결을 확인한 뒤 다시 시도해 주세요.'}</p>
             </div>
           </header>
-          <div className="notice is-error" role="alert">
-            {view.kind === 'missing'
-              ? <><strong>요청한 집중 기록을 찾지 못했어요.</strong><span>홈에서 다시 확인해 주세요.</span></>
-              : <><strong>집중 기록을 불러오지 못했어요.</strong><span>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</span></>}
-          </div>
-          {view.kind === 'error' && sessionId && <button className="btn btn-ghost retry" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
         </> : <ResultBody summary={view.summary} learning={view.learning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
 
         <div className="actions">
+          {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
           <Link className="btn btn-primary" href="/">홈으로 <span aria-hidden="true">→</span></Link>
         </div>
       </div>

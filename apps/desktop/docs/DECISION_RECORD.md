@@ -664,3 +664,13 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 쓰기는 동기 `appendFileSync`다. 요청·상태 전이 단위라 양이 적다. 초당 수백 줄이 되면 비동기 버퍼로 바꾼다.
 - 영향받는 파일: `electron/main/logger.cts`, `auth-api.cts`, `auth-service.cts`, `analysis-sender.cts`, `session-runtime.cts`, `intervention-watcher.cts`, `index.cts`
 
+
+## 결정 031 - 빨간색은 실제 오류에만 쓰고, 안내·상태는 기본색으로 보여 준다
+
+- 결정일: 2026-10-31 / 상태: 확정 (PM 결정) / Issue #110.
+- 빨간 글씨·테두리·`!` 아이콘은 요청 실패, 입력 형식 오류, 집중 중 권한이 꺼져 세션이 멈춘 경우에만 쓴다.
+- `필수` 태그, 다음으로 못 넘어가는 이유, 로그인 진행 중, 연결 코드 만료·남은 시간, 권한 꺼짐 배지, 글자 수 한도처럼 사용자가 할 일을 알려 주는 안내는 기본색(`--ink`·`--muted`)으로 둔다. 화면 안내 상자는 `fo-notice is-info`, 온보딩·목표 안내는 `Notice.info`/`.feedback.is-info`를 쓴다.
+- 같은 오류를 두 곳에 띄우지 않는다. 제목이 상황을 말하면 본문에는 할 일 한 줄만 둔다. 불러오기 실패는 제목·할 일·`다시 시도` 버튼을 한 상자(`LoadError`)에 넣는다.
+- 안내 문구에는 화면에 실제로 있는 버튼 이름만 쓴다.
+- 이유: 정상 흐름인데 빨간 안내가 떠서 오류로 착각한다는 PM 피드백.
+- 영향받는 파일: `features/onboarding/*`, `features/goal/*`, `features/session/SessionSetup.tsx`, `features/settings/*`, `features/report/SessionResult.tsx`, `features/dashboard/HomeDashboard.tsx`, `app/page.tsx`, `app/globals.css`

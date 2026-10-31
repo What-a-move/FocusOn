@@ -26,8 +26,8 @@ export function ExtensionStep() {
     if (!result.success) {
       setCode('')
       setStatus('error')
-      setHint({ kind: 'error', text: '연결 코드를 받지 못했어요. ‘새 코드 받기’를 눌러 다시 시도해 주세요.' })
-      setFeedback(describeError(result.error))
+      const reason = describeError(result.error)
+      setHint({ kind: 'error', text: `${reason.title} ${reason.body}` })
       return
     }
     setCode(result.data.code.replace('-', ''))
@@ -49,7 +49,7 @@ export function ExtensionStep() {
       setNow(current)
       if (current >= deadline) {
         setStatus('expired')
-        setHint({ kind: 'error', text: '시간이 지나 코드가 만료됐어요.' })
+        setHint({ kind: '', text: '' })
       }
     }, 1000)
     return () => clearInterval(timer)
@@ -77,14 +77,14 @@ export function ExtensionStep() {
   const prompt = status === 'connected'
     ? { text: '연결됐어요! 잘하셨어요.', error: false }
     : status === 'expired'
-      ? { text: '코드가 만료됐어요. 새 코드를 받아 주세요.', error: true }
+      ? { text: '코드가 만료됐어요. 새 코드를 받아 주세요.', error: false }
       : { text: 'Chrome이랑 연결해 볼까요?', error: false }
 
   function goNext() {
     if (status !== 'connected') {
       setFeedback(status === 'expired'
-        ? { title: '연결 코드가 만료됐어요.', body: '‘새 코드 받기’를 눌러 다시 연결해 주세요.' }
-        : { title: 'Chrome 연결이 필요해요.', body: '확장 프로그램에 연결 코드를 입력해 주세요.' })
+        ? { title: '연결 코드가 만료됐어요.', body: '‘새 코드 받기’를 눌러 다시 연결해 주세요.', info: true }
+        : { title: 'Chrome 연결이 필요해요.', body: '확장 프로그램에 연결 코드를 입력해 주세요.', info: true })
       return
     }
     router.push('/onboarding/permissions/')
@@ -107,10 +107,12 @@ export function ExtensionStep() {
       </div>
 
       <div className="code-meta">
-        <div className="timer" aria-hidden="true"><i style={{ width: status === 'connected' ? '100%' : `${(left / CODE_TTL_MS) * 100}%` }} /></div>
-        <span className={`countdown${status === 'waiting' && seconds <= 60 ? ' is-low' : ''}`}>
-          {status === 'connected' ? '완료' : status === 'waiting' ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : '0:00'}
-        </span>
+        {code ? <>
+          <div className="timer" aria-hidden="true"><i style={{ width: status === 'connected' ? '100%' : `${(left / CODE_TTL_MS) * 100}%` }} /></div>
+          <span className="countdown">
+            {status === 'connected' ? '완료' : status === 'waiting' ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : '0:00'}
+          </span>
+        </> : <span className="spacer" />}
         <button className="link-button" type="button" disabled={status === 'loading' || status === 'connected'} onClick={() => { void issue() }}>
           새 코드 받기
         </button>

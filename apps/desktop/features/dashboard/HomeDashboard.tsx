@@ -74,7 +74,7 @@ function Calendar({ today, month, view, onMove, onRetry }: {
     </div>}
     {view.status === 'loading' && <div className="fo-calendar-state" role="status"><strong>집중 달력을 불러오고 있어요.</strong><span>잠시만 기다려 주세요.</span></div>}
     {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>집중 달력을 불러오지 못했어요.</strong><span>확인되지 않은 날짜에는 포키를 표시하지 않아요.</span><span>잠시 후 다시 시도해 주세요.</span>
+      <strong>집중 달력을 불러오지 못했어요.</strong><span>잠시 후 다시 시도해 주세요.</span>
       <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
     </div>}
     {view.status === 'offline' && <div className="fo-calendar-state is-error" role="alert">

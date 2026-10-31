@@ -82,8 +82,8 @@ export function OnboardingShell({
         <footer className="footer">
           <div className="footer-inner">
             {feedback ? (
-              <div className="feedback" role="alert" key={feedback.title}>
-                <span className="feedback-icon" aria-hidden="true">!</span>
+              <div className={`feedback${feedback.info ? ' is-info' : ''}`} role={feedback.info ? 'status' : 'alert'} key={feedback.title}>
+                {!feedback.info && <span className="feedback-icon" aria-hidden="true">!</span>}
                 <div><strong>{feedback.title}</strong><span>{feedback.body}</span></div>
               </div>
             ) : null}

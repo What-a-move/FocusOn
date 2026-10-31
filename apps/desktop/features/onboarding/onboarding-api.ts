@@ -77,7 +77,8 @@ export const analysisApi = {
   saveExcludedApps: (apps: ExcludedApp[]) => viaAnalysis((api) => api.saveExcludedApps({ apps }), (data) => data.apps),
 }
 
-export type Notice = { title: string; body: string }
+// info: 오류가 아닌 안내(막힌 이유 등). 빨간색·느낌표 없이 보여 준다.
+export type Notice = { title: string; body: string; info?: boolean }
 
 export function describeError(error: ApiError): Notice {
   switch (error.code) {
