@@ -33,4 +33,13 @@ Google Cloud에서 **데스크톱 앱** 유형의 OAuth Client ID를 만든 뒤 
 FOCUSON_GOOGLE_CLIENT_ID=발급받은-데스크톱-클라이언트-ID FOCUSON_API_BASE_URL=http://127.0.0.1:8080 pnpm --filter @focuson/desktop dev:electron
 ```
 
+### 권한 QA 실행
+
+터미널에서 `dev:electron`으로 실행하면 macOS가 화면 기록 권한을 Electron이 아니라 **그 터미널 앱** 기준으로 판단한다. 화면 기록·알림처럼 권한을 확인할 때는 Electron을 독립 앱으로 실행하고 `.env` 값을 `--env`로 넘긴다. 시스템 설정 목록에는 `FocusOn`이 아니라 `Electron`으로 보이며, 권한을 바꾼 뒤에는 앱을 다시 실행해야 반영된다. 서명 없는 개발 앱은 macOS가 알림을 거절한다(`docs/features/settings-dev-notification-unsigned-ERROR.md`).
+
+```bash
+pnpm --filter @focuson/desktop build:electron
+cd apps/desktop && args=(); while IFS= read -r l; do [[ "$l" =~ ^[A-Z_]+= ]] && args+=(--env "$l"); done < .env; open -n -a "$(node -p "require('electron')" | sed 's#/Contents/MacOS/Electron##')" "${args[@]}" --args "$PWD"
+```
+
 현재 Main은 기본 브라우저와 `127.0.0.1`의 임시 callback listener로 Google code를 받은 뒤 Backend `google/exchange`에 전달한다. 성공 응답의 Access Token은 Main 메모리, Refresh Token은 macOS Keychain에 저장한다. 앱 재시작 시 refresh·auth/me로 상태를 복구하고 로그아웃은 서버 폐기 후 Keychain을 비운다. Renderer는 로그인 버튼과 인증 상태별 화면을 제공한다. 서버가 `onboardingStatus: INCOMPLETE`를 주면 온보딩 첫 화면, `COMPLETED`를 주면 홈을 표시한다. 닉네임 중복 확인·저장과 온보딩 다음 단계, 홈의 목표 설정·기록 API는 후속 작업이다. Backend 인증 API가 준비되지 않았으면 실제 로그인 성공으로 처리하지 않는다. Client ID나 Backend origin 설정이 없으면 브라우저를 열지 않는다.
