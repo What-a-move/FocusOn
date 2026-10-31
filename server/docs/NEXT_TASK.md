@@ -1,5 +1,9 @@
 # Backend 다음 작업
 
+## 현재 우선 작업: Issue #116
+
+서버 요청 추적 구현의 독립 코드 리뷰와 QA 후속 검증을 진행한다. `features/server-tracing-PLAN.md`와 `server-tracing-QA.md`를 참조한다. PR 생성·병합은 사용자와 합의된 절차를 따른다. 세션 기반과 가짜 분석 판정기는 별도 작업이다.
+
 ## 현재 작업 (2026-10-28)
 
 - 2026-10-28 Issue #87: 목표 생성·상세 조회를 구현 중이다. 사용자가 Swagger 테스트, Notion 경로·메서드 일치 및 `goals` 테이블 생성을 확인했다. AI 명확화 세션 검증은 해당 기능이 준비된 뒤 연동해야 한다. 기존 닉네임 동시성 테스트 실패와 수동 테스트의 세부 결과를 확인한다. 상세는 `features/goal-create-read-REPORT.md`를 따른다.

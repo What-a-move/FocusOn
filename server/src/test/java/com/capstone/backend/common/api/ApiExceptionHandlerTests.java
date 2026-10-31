@@ -3,6 +3,8 @@ package com.capstone.backend.common.api;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -10,11 +12,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -89,6 +96,47 @@ class ApiExceptionHandlerTests {
         .andExpect(status().isMethodNotAllowed());
   }
 
+  @Test
+  void validationLogContainsFieldTypeButNotRejectedValue() throws Exception {
+    Logger logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
+    var appender = new ListAppender<ILoggingEvent>();
+    appender.start();
+    logger.addAppender(appender);
+    try {
+      mvc.perform(post("/api/v1/probe/validate")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"value\":\"   \"}"))
+          .andExpect(status().isBadRequest());
+      var fields = appender.list.getFirst().getKeyValuePairs().toString();
+      assertTrue(fields.contains("validate.fail"));
+      assertTrue(fields.contains("field=\"value\""));
+      assertTrue(fields.contains("expectedType=\"String\""));
+      assertFalse(fields.contains("   "));
+    } finally {
+      logger.detachAppender(appender);
+      appender.stop();
+    }
+  }
+
+  @Test
+  void databaseFailureLogsSafeStageWithoutExceptionMessage() throws Exception {
+    Logger logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
+    var appender = new ListAppender<ILoggingEvent>();
+    appender.start();
+    logger.addAppender(appender);
+    try {
+      mvc.perform(get("/api/v1/probe/db-failure").servletPath("/api/v1/probe/db-failure"))
+          .andExpect(status().isInternalServerError());
+      var fields = appender.list.getLast().getKeyValuePairs().toString();
+      assertTrue(fields.contains("stage=\"database\""));
+      assertTrue(fields.contains("code=\"INTERNAL_ERROR\""));
+      assertFalse(fields.contains("database-private-secret"));
+    } finally {
+      logger.detachAppender(appender);
+      appender.stop();
+    }
+  }
+
   @RestController
   @RequestMapping("/api/v1/probe")
   static class ProbeController {
@@ -110,6 +158,11 @@ class ApiExceptionHandlerTests {
     @GetMapping("/failure")
     void failure() {
       throw new IllegalStateException("internal-secret");
+    }
+
+    @GetMapping("/db-failure")
+    void databaseFailure() {
+      throw new DataAccessResourceFailureException("database-private-secret");
     }
   }
 

@@ -2,8 +2,7 @@ package com.capstone.backend.common.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -17,14 +16,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 /** Controller에서 발생한 오류를 FocusOn 공통 응답 형식으로 변환한다. */
 @RestControllerAdvice(basePackages = "com.capstone.backend")
 public class ApiExceptionHandler {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
-
   /** 도메인에서 지정한 오류와 429 대기 시간을 공통 형식으로 반환한다. */
   @ExceptionHandler(ApiException.class)
   public ResponseEntity<ApiErrorResponse> handleApiException(
       ApiException exception, HttpServletRequest request) {
     String requestId = RequestIdFilter.from(request);
     ApiErrorCode code = exception.code();
+    request.setAttribute(RequestIdFilter.ERROR_CODE_ATTRIBUTE, code);
+    request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE, SafeApiLog.Stage.REQUEST);
     ApiErrorResponse body = ApiErrorResponse.of(
         code, exception.retryAfterSeconds(), requestId, exception.details());
     ResponseEntity.BodyBuilder response = ResponseEntity.status(code.status());
@@ -45,6 +44,24 @@ public class ApiExceptionHandler {
   public ResponseEntity<ApiErrorResponse> handleValidation(
       Exception exception, HttpServletRequest request) {
     // 원문 입력이나 프레임워크 예외 메시지는 details와 로그에 포함하지 않는다.
+    request.setAttribute(RequestIdFilter.ERROR_CODE_ATTRIBUTE, ApiErrorCode.VALIDATION_ERROR);
+    request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE, SafeApiLog.Stage.VALIDATION);
+    if (exception instanceof MethodArgumentNotValidException validation) {
+      boolean logged = false;
+      for (var fieldError : validation.getBindingResult().getFieldErrors()) {
+        String field = fieldError.getField();
+        if (field.matches("[A-Za-z][A-Za-z0-9]{0,63}")) {
+          Class<?> type = validation.getBindingResult().getFieldType(field);
+          SafeApiLog.validationFailure(field, type);
+          logged = true;
+        }
+      }
+      if (!logged) {
+        SafeApiLog.validationFailure(null, null);
+      }
+    } else {
+      SafeApiLog.validationFailure(null, null);
+    }
     return error(ApiErrorCode.VALIDATION_ERROR, RequestIdFilter.from(request));
   }
 
@@ -53,9 +70,11 @@ public class ApiExceptionHandler {
   public ResponseEntity<ApiErrorResponse> handleUnexpected(
       Exception exception, HttpServletRequest request) {
     String requestId = RequestIdFilter.from(request);
+    request.setAttribute(RequestIdFilter.ERROR_CODE_ATTRIBUTE, ApiErrorCode.INTERNAL_ERROR);
+    request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE,
+        exception instanceof DataAccessException ? SafeApiLog.Stage.DATABASE
+            : SafeApiLog.Stage.SERVER);
     // 예외 메시지와 stack trace에는 요청 본문·토큰이 포함될 수 있어 기록하지 않는다.
-    LOGGER.error("Unhandled API failure requestId={} code={} status=500",
-        requestId, ApiErrorCode.INTERNAL_ERROR.name());
     return error(ApiErrorCode.INTERNAL_ERROR, requestId);
   }
 

@@ -5,6 +5,7 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.common.api.SafeApiLog;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -56,6 +57,8 @@ public class ApiSecurityConfiguration {
 
   private static void writeError(HttpServletRequest request, HttpServletResponse response,
       ObjectMapper json, ApiException exception) throws IOException {
+    request.setAttribute(RequestIdFilter.ERROR_CODE_ATTRIBUTE, exception.code());
+    request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE, SafeApiLog.Stage.SECURITY);
     response.setStatus(exception.code().status().value());
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
