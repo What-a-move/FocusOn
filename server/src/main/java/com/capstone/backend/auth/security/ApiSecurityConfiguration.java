@@ -5,6 +5,7 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.common.api.RequestIdFilter;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,7 @@ public class ApiSecurityConfiguration {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .requestCache(cache -> cache.disable())
         .authorizeHttpRequests(auth -> auth
+            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/v1/auth/google/exchange",
                 "/api/v1/auth/refresh", "/api/v1/extension-pairings").permitAll()
             .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
