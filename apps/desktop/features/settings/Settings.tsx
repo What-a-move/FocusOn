@@ -6,19 +6,21 @@ import Link from 'next/link'
 import { CHANNELS, LEVELS, PREVIEW } from '../session/SessionSetup'
 import { sessionApi, type NotificationChannel } from '../session/session-api'
 import { onboardingApi } from '../onboarding/onboarding-api'
+import { AccountPanel, DevicesPanel } from './AccountPanels'
 import { LoadError, SettingsShell, ToastView, failText, useToast } from './SettingsShell'
 import { settingsApi, type FocusSettings, type ThemeSource } from './settings-api'
 
-// 시안의 계정·기기 연결 탭은 다음 Issue에서 만든다(settings-PLAN.md).
 const TABS = [
+  { id: 'account', label: '계정', poki: 'poki-floating-cheer-v7.png' },
   { id: 'focus', label: '집중', poki: 'poki-floating-master-v3.png' },
   { id: 'analysis', label: '분석·권한', poki: 'poki-floating-curious-v8.png' },
+  { id: 'devices', label: '기기 연결', poki: 'poki-floating-logo-base-v1.png' },
   { id: 'general', label: '화면', poki: 'poki-floating-sleepy-v7.png' },
 ] as const
 type TabId = (typeof TABS)[number]['id']
 const THEMES: { value: ThemeSource; label: string }[] = [{ value: 'light', label: '라이트' }, { value: 'dark', label: '다크' }, { value: 'system', label: 'macOS 설정 따르기' }]
 
-// 고른 탭은 주소 #focus·#analysis·#general로 남긴다. 정적 화면을 만들 때는 주소가 없어 첫 탭이다.
+// 고른 탭은 주소 #account·#focus·#analysis·#devices·#general로 남긴다. 주소가 없으면(정적 화면 포함) 집중 탭이다.
 const subscribeHash = (callback: () => void) => { addEventListener('hashchange', callback); return () => removeEventListener('hashchange', callback) }
 const readTab = (): TabId => TABS.find((tab) => `#${tab.id}` === location.hash)?.id ?? 'focus'
 function openTab(id: TabId) {
@@ -75,8 +77,10 @@ export function Settings() {
         <Image className="fo-settings-poki" key={current.poki} src={`/design/${current.poki}`} alt="" width={240} height={240} priority />
       </div>
       <section className="fo-settings-panel" id={tab} role="tabpanel" aria-labelledby={`tab-${tab}`} key={tab}>
+        {tab === 'account' && <AccountPanel showToast={showToast} />}
         {tab === 'focus' && <FocusPanel showToast={showToast} />}
         {tab === 'analysis' && <AnalysisPanel showToast={showToast} />}
+        {tab === 'devices' && <DevicesPanel showToast={showToast} />}
         {tab === 'general' && <GeneralPanel showToast={showToast} />}
       </section>
     </div>

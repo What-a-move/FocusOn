@@ -4,7 +4,8 @@ import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
 import { isValidDomainList } from '../shared/onboarding-contract.cjs'
 import { isFocusSettingsInput, parseFocusSettings, type FocusSettings } from '../shared/session-contract.cjs'
-import { SETTINGS_CHANNELS, isThemeSource, type ThemeSource } from '../shared/settings-contract.cjs'
+import { parseReadiness } from '../shared/onboarding-contract.cjs'
+import { SETTINGS_CHANNELS, isDeviceId, isThemeSource, parseConsentList, parseDeviceStatus, type ConsentList, type DeviceStatus, type ThemeSource } from '../shared/settings-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -19,7 +20,7 @@ const parseDomains = (value: unknown): { domains: string[] } | null => (isRecord
 
 /** 설정 화면 Backend 계약 (Notion FocusOn API 명세서 focus-settings·analysis-excluded-domains). */
 export class SettingsService {
-  constructor(private readonly auth: Pick<AuthService, 'authorizedRequest'>) {}
+  constructor(private readonly auth: Pick<AuthService, 'authorizedRequest' | 'currentDeviceId' | 'updateOnboardingStatus'>) {}
 
   /** 전체 객체를 저장한다. 서버가 저장한 값을 돌려준다(200 저장된 설정 전체). */
   saveFocusSettings(input: FocusSettings): Promise<ApiResult<FocusSettings>> {
@@ -33,6 +34,48 @@ export class SettingsService {
   /** 전체 교체. [주의] 온보딩과 달리 onboarding-readiness 단계 완료는 기록하지 않는다. */
   saveExcludedDomains(domains: string[]): Promise<ApiResult<{ domains: string[] }>> {
     return this.auth.authorizedRequest({ path: '/api/v1/users/me/analysis-excluded-domains', method: 'PUT', expectedStatus: 200, parse: parseDomains, body: { domains }, withDeviceId: true })
+  }
+
+  getConsents(): Promise<ApiResult<ConsentList>> {
+    return this.auth.authorizedRequest({ path: '/api/v1/users/me/consents', method: 'GET', expectedStatus: 200, parse: parseConsentList })
+  }
+
+  /**
+   * 화면 분석 동의를 철회하거나 다시 동의한다. 화면에 보여 준 문서와 같은 버전으로 저장되도록 서버의 현재 버전을 쓴다.
+   * 철회하면 서버 온보딩 상태가 미완료가 되어 새 집중을 시작할 수 없다. 바뀐 상태를 화면 상태에도 반영한다.
+   */
+  async setScreenConsent(granted: boolean): Promise<ApiResult<ConsentList>> {
+    const current = await this.getConsents()
+    if (!current.success) return current
+    if (!current.data.currentVersion) return { success: false, error: { code: 'INVALID_RESPONSE', retryable: false } }
+    const saved = await this.auth.authorizedRequest({
+      path: '/api/v1/users/me/consents/SCREEN_ANALYSIS', method: 'PUT', expectedStatus: 200, parse: (value) => (isRecord(value) ? {} : null),
+      body: { isGranted: granted, consentVersion: current.data.currentVersion, consentSource: 'DESKTOP_SETTINGS' },
+    })
+    if (!saved.success) return saved
+    await this.syncOnboardingStatus()
+    return this.getConsents()
+  }
+
+  getDevices(): Promise<ApiResult<DeviceStatus>> {
+    return this.auth.authorizedRequest({ path: '/api/v1/devices', method: 'GET', expectedStatus: 200, parse: (value) => parseDeviceStatus(value, this.auth.currentDeviceId()) })
+  }
+
+  /** 이 Desktop에 연결된 Extension만 해제한다. 해제하면 온보딩 상태가 Extension 단계로 돌아간다. */
+  async unlinkExtension(deviceId: string): Promise<ApiResult<DeviceStatus>> {
+    const devices = await this.getDevices()
+    if (!devices.success) return devices
+    if (devices.data.extension?.deviceId !== deviceId) return { success: false, error: { code: 'DEVICE_NOT_FOUND', retryable: false } }
+    const removed = await this.auth.authorizedRequest({ path: `/api/v1/extension-pairings/${deviceId}`, method: 'DELETE', expectedStatus: 204, parse: () => ({}) })
+    if (!removed.success) return removed
+    await this.syncOnboardingStatus()
+    return this.getDevices()
+  }
+
+  // 실패해도 철회·해제 결과는 그대로다. 다음 화면 이동 때 readiness를 다시 읽는다.
+  private async syncOnboardingStatus(): Promise<void> {
+    const readiness = await this.auth.authorizedRequest({ path: '/api/v1/users/me/onboarding-readiness', method: 'GET', expectedStatus: 200, parse: parseReadiness })
+    if (readiness.success) this.auth.updateOnboardingStatus(readiness.data.onboardingStatus)
   }
 }
 
@@ -80,6 +123,18 @@ export function registerSettingsIpc(
     SETTINGS_CHANNELS.excludedDomainsSave,
     (args) => args.length === 1 && onlyKeys(args[0], ['domains']) && isValidDomainList(args[0].domains),
     (s, args) => s.saveExcludedDomains((args[0] as { domains: string[] }).domains),
+  )
+  handle(SETTINGS_CHANNELS.consentsGet, (args) => args.length === 0, (s) => s.getConsents())
+  handle(
+    SETTINGS_CHANNELS.screenConsentSet,
+    (args) => args.length === 1 && onlyKeys(args[0], ['granted']) && typeof args[0].granted === 'boolean',
+    (s, args) => s.setScreenConsent((args[0] as { granted: boolean }).granted),
+  )
+  handle(SETTINGS_CHANNELS.devicesGet, (args) => args.length === 0, (s) => s.getDevices())
+  handle(
+    SETTINGS_CHANNELS.extensionUnlink,
+    (args) => args.length === 1 && onlyKeys(args[0], ['deviceId']) && isDeviceId(args[0].deviceId),
+    (s, args) => s.unlinkExtension((args[0] as { deviceId: string }).deviceId),
   )
 
   ipcMain.handle(SETTINGS_CHANNELS.themeGet, (event, ...args: unknown[]): IpcResult<{ theme: ThemeSource }> => {

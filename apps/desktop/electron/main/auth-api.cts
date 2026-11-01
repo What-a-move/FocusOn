@@ -75,7 +75,7 @@ export class AuthApiClient {
   // [유지보수] 인증 API와 이후 인증이 필요한 API가 같은 요청·오류 해석 규칙을 쓰도록 공개한다. 토큰 처리는 AuthService가 맡는다.
   async call<T>(
     path: string,
-    method: 'GET' | 'POST' | 'PUT',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     expectedStatus: number,
     parse: (value: unknown) => T | null,
     body?: object,
@@ -113,6 +113,11 @@ export class AuthApiClient {
     if (response.status !== expectedStatus) {
       try { return trace.fail(parseError(await response.json()), response.status) }
       catch { return trace.fail(SERVICE_UNAVAILABLE, response.status) }
+    }
+    // 본문 없는 성공(204)을 기대한 요청(예: DELETE)은 parse(null)로 결과를 만든다.
+    if (expectedStatus === 204) {
+      const data = parse(null)
+      return data ? trace.ok({ success: true, data }, 204) : trace.fail(INVALID_RESPONSE, 204)
     }
     try {
       const payload: unknown = await response.json()

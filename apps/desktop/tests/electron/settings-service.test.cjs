@@ -62,3 +62,57 @@ test('화면 모드는 이 기기에 저장하고, 없거나 깨진 파일이면
   assert.equal(preference.read(), 'system')
   fs.rmSync(dir, { recursive: true })
 })
+
+function accountFixture(routes) {
+  const requests = []
+  const statuses = []
+  const service = new SettingsService({
+    currentDeviceId: () => '10',
+    updateOnboardingStatus: (status) => statuses.push(status),
+    authorizedRequest: async (request) => {
+      requests.push(request)
+      const reply = routes[`${request.method} ${request.path}`]
+      const raw = typeof reply === 'function' ? reply(request) : reply
+      if (raw && raw.fail) return { success: false, error: { code: raw.fail, retryable: false } }
+      const data = request.parse(raw)
+      return data ? { success: true, data } : { success: false, error: { code: 'INVALID_RESPONSE', retryable: false } }
+    },
+  })
+  return { service, requests, statuses }
+}
+
+const consents = (screen) => ({ currentVersion: '2026-09-17', consents: [
+  { consentType: 'TERMS_OF_SERVICE', isGranted: true, consentVersion: '2026-09-17', grantedAt: '2026-10-30T10:00:00Z', withdrawnAt: null },
+  { consentType: 'SCREEN_ANALYSIS', isGranted: screen, consentVersion: '2026-09-17', grantedAt: '2026-10-30T10:00:00Z', withdrawnAt: screen ? null : '2026-11-02T01:00:00Z' },
+] })
+
+test('화면 분석 동의 철회는 서버 현재 버전으로 PUT하고 온보딩 상태를 다시 읽어 반영한다', async () => {
+  let granted = true
+  const { service, requests, statuses } = accountFixture({
+    'GET /api/v1/users/me/consents': () => consents(granted),
+    'PUT /api/v1/users/me/consents/SCREEN_ANALYSIS': (request) => { granted = request.body.isGranted; return { consentType: 'SCREEN_ANALYSIS' } },
+    'GET /api/v1/users/me/onboarding-readiness': { onboardingStatus: 'INCOMPLETE', currentStep: 'PERMISSIONS_AND_CONSENTS', steps: { profileCompleted: true, extensionLinked: true, screenAnalysisReady: true, requiredConsentsCompleted: false, analysisExcludedDomainsStepCompleted: true } },
+  })
+  const result = await service.setScreenConsent(false)
+  assert.equal(result.data.items.find((item) => item.type === 'SCREEN_ANALYSIS').granted, false)
+  assert.deepEqual(requests.find((r) => r.method === 'PUT').body, { isGranted: false, consentVersion: '2026-09-17', consentSource: 'DESKTOP_SETTINGS' })
+  assert.deepEqual(statuses, ['INCOMPLETE'])
+})
+
+test('기기 목록에서 이 Desktop에 연결된 Extension만 고르고, 다른 기기는 해제하지 않는다', async () => {
+  let linked = true
+  const { service, requests } = accountFixture({
+    'GET /api/v1/devices': () => ({ devices: [
+      { deviceId: '10', type: 'DESKTOP', name: 'Mac', lastUsedAt: null, linkedDesktopDeviceId: null },
+      { deviceId: '21', type: 'EXTENSION', name: 'Chrome', lastUsedAt: null, linkedDesktopDeviceId: '99' },
+      ...(linked ? [{ deviceId: '22', type: 'EXTENSION', name: 'Chrome', lastUsedAt: '2026-11-02T01:00:00Z', linkedDesktopDeviceId: '10' }] : []),
+    ] }),
+    'DELETE /api/v1/extension-pairings/22': () => { linked = false; return null },
+    'GET /api/v1/users/me/onboarding-readiness': { fail: 'SERVICE_UNAVAILABLE' },
+  })
+  assert.equal((await service.getDevices()).data.extension.deviceId, '22')
+  assert.equal((await service.unlinkExtension('21')).error.code, 'DEVICE_NOT_FOUND')
+  assert.equal(requests.some((r) => r.method === 'DELETE' && r.path.endsWith('/21')), false)
+  const after = await service.unlinkExtension('22')
+  assert.deepEqual(after, { success: true, data: { extension: null } }, 'readiness 조회가 실패해도 해제 결과는 돌려준다')
+})

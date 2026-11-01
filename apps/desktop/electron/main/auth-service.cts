@@ -21,7 +21,7 @@ const wait = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve
 
 export type AuthorizedRequest<T> = {
   path: string
-  method: 'GET' | 'POST' | 'PUT'
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
   expectedStatus: number
   parse: (value: unknown) => T | null
   body?: object
@@ -169,6 +169,11 @@ export class AuthService {
     const { revision: _revision, ...snapshot } = this.store.getSnapshot()
     if (snapshot.status !== 'SIGNED_IN' || !snapshot.user || snapshot.onboardingStatus === onboardingStatus) return
     this.store.publish({ ...snapshot, onboardingStatus })
+  }
+
+  /** 로그인 때 받은 이 Desktop의 deviceId. 연결된 Extension을 고를 때 쓴다. */
+  currentDeviceId(): string | null {
+    return this.deviceId
   }
 
   currentNickname(): string | null {

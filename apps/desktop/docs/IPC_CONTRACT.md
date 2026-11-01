@@ -249,6 +249,10 @@ Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Ma
 | `settings:excluded-domains:save` | `{ domains }` (최대 50개, 정규화한 host) | `{ domains }` | `PUT /api/v1/users/me/analysis-excluded-domains` (전체 교체, `X-Device-Id`) |
 | `app:theme:get` | `void` | `{ theme: light \| dark \| system }` | — |
 | `app:theme:set` | `{ theme: light \| dark \| system }` | `{ theme }` | — (`nativeTheme.themeSource` + `userData/preferences.json`) |
+| `settings:consents:get` | `void` | `{ currentVersion, items: [{ type, granted, version, grantedAt, withdrawnAt }] }` | `GET /api/v1/users/me/consents` |
+| `settings:screen-consent:set` | `{ granted: boolean }` | 동의 목록 | `PUT /api/v1/users/me/consents/SCREEN_ANALYSIS` (서버 `currentVersion`, `consentSource: DESKTOP_SETTINGS`) 뒤 readiness를 다시 읽어 `onboardingStatus` 반영 |
+| `settings:devices:get` | `void` | `{ extension: { deviceId, name, lastUsedAt } \| null }` | `GET /api/v1/devices` 중 `type=EXTENSION`·`linkedDesktopDeviceId`가 이 Desktop인 항목 |
+| `settings:extension:unlink` | `{ deviceId }` (숫자 문자열) | 기기 상태 | 이 Desktop에 연결된 Extension일 때만 `DELETE /api/v1/extension-pairings/{id}`(204) 뒤 readiness 반영 (Issue #127) |
 
 - 집중 설정 조회는 기존 `session:focus-settings:get`을 쓴다. 저장은 바꿀 때마다 전체 객체를 보내고, `cameraAnalysisEnabled`는 읽은 값을 그대로 돌려보낸다(카메라 분석 미구현).
 - 설정 화면의 제외 사이트 저장은 온보딩 `onboarding:excluded-domains:save`와 달리 `onboarding-readiness` 단계 완료를 기록하지 않는다.

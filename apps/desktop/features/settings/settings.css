@@ -206,3 +206,24 @@
 @media (prefers-reduced-motion: reduce) {
   .fo-settings *, .fo-settings *::before, .fo-settings *::after { animation: none !important; transition: none !important; }
 }
+
+/* 계정(D25) · 기기 연결(D24). 철회·해제·삭제는 오류가 아니라 기본 버튼색이다(결정 031). */
+.fo-account-hero { display: flex; align-items: center; gap: 16px; }
+.fo-account-avatar { flex: 0 0 56px; width: 56px; height: 56px; border: 1.5px solid var(--fo-line); border-radius: 50%; background: var(--fo-gold-soft) url('/design/poki-floating-logo-base-v1.png') 50% 62% / 165% no-repeat; }
+.fo-account-name { font-size: 20px; }
+.fo-account-hero .fo-text-input { max-width: 320px; height: 44px; }
+.fo-account-hero small.fo-hint { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.fo-account-actions { display: flex; gap: 8px; }
+.fo-danger-zone { padding-top: 8px; border-top: 1px solid var(--fo-line); }
+.fo-danger-label { margin: 12px 0 0; color: var(--fo-muted); font-size: 13px; font-weight: 600; }
+.fo-docs-dialog { width: min(520px, calc(100% - 48px)); overflow-y: auto; }
+.fo-docs-dialog h3 { margin: 22px 0 0; font-size: 16px; font-weight: 700; }
+.fo-docs-dialog dl { display: grid; grid-template-columns: 88px 1fr; gap: 6px 12px; margin: 10px 0 0; font-size: 14px; line-height: 1.6; }
+.fo-docs-dialog dt { color: var(--fo-muted); font-weight: 600; }
+.fo-docs-dialog dd { margin: 0; }
+.fo-device { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1.5px solid var(--fo-line); border-radius: 16px; }
+.fo-device-icon { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; background: var(--fo-field); color: var(--fo-ink); }
+.fo-device-icon svg { width: 22px; height: 22px; }
+.fo-link-code { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding: 16px 20px; border-radius: 16px; background: var(--fo-gold-soft); animation: fo-settings-rise .4s var(--fo-pop) both; }
+.fo-link-code b { font-size: 28px; font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.fo-link-code small + small { margin-top: 2px; font-variant-numeric: tabular-nums; }

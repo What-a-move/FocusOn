@@ -4,59 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
 import { describeError, onboardingApi, type Notice } from './onboarding-api'
-
-type Detail = { title: string; rows: [string, string][] }
-type Consent = { id: string; title: string; summary?: string; detail: Detail }
-
-const requiredConsents: Consent[] = [
-  {
-    id: 'terms',
-    title: '서비스 이용약관',
-    detail: { title: '서비스 이용약관', rows: [
-      ['목적', '서비스 이용 조건과 책임 범위 안내'],
-      ['처리 항목', '동의 여부와 동의 시각'],
-      ['보유 기간', '철회하거나 계정을 삭제한 뒤 3년 (동의 이력만)'],
-      ['거부 권리', '동의하지 않을 수 있어요.'],
-      ['거부 시 영향', 'FocusOn을 이용할 수 없어요.'],
-      ['버전', 'v1.0'],
-    ] },
-  },
-  {
-    id: 'privacy',
-    title: '개인정보 처리방침',
-    summary: 'Google 계정 식별자, 닉네임, 목표, 집중 기록',
-    detail: { title: '개인정보 처리방침', rows: [
-      ['목적', '계정 관리, 집중 기록과 리포트 제공'],
-      ['처리 항목', 'Google 계정 식별자, 닉네임, 목표, 세션 시간·기록, 연결한 기기 정보'],
-      ['보유 기간', '집중 기록·리포트는 세션 종료 후 1년. 계정을 삭제하면 30일 안에 삭제해요.'],
-      ['거부 권리', '동의하지 않을 수 있어요.'],
-      ['거부 시 영향', '계정을 만들 수 없어요.'],
-      ['버전', 'v1.0'],
-    ] },
-  },
-  {
-    id: 'screen-analysis',
-    title: '화면 분석',
-    summary: '지금 보는 화면이 목표와 관련 있는지만 확인해요',
-    detail: { title: '화면 분석', rows: [
-      ['목적', '집중 중에 보는 앱·페이지가 목표와 관련 있는지 확인'],
-      ['처리 항목', '앱 이름, 탭 제목·도메인, 필요할 때만 보이는 화면의 글자. 판단 결과만 저장하고 화면 원문·캡처는 저장하지 않아요.'],
-      ['보유 기간', '분석 결과는 세션 종료 후 90일 (그 뒤엔 합계만 남겨요)'],
-      ['거부 권리', '동의하지 않을 수 있어요.'],
-      ['거부 시 영향', '집중 세션을 시작할 수 없어요.'],
-      ['버전', 'v1.0'],
-    ] },
-  },
-]
-
-const cameraDetail: Detail = { title: '카메라 분석', rows: [
-  ['목적', '화면만으로 알기 어려운, 오래 자리를 비운 순간을 보조로 알아차리기'],
-  ['처리 항목', '얼굴이 보이는지, 시선이 화면 쪽인지 같은 상태 신호. 영상·사진은 저장하거나 보내지 않아요.'],
-  ['보유 기간', '상태 기록은 세션 종료 후 1년'],
-  ['거부 권리', '선택 항목이라 켜지 않아도 돼요.'],
-  ['거부 시 영향', '화면 분석만으로 정상 이용할 수 있어요. 설정에서 언제든 켜고 끌 수 있어요.'],
-  ['버전', 'v1.0'],
-] }
+import { cameraDetail, requiredConsents, type Detail } from './consent-docs'
 
 type PermName = 'screen' | 'camera' | 'notify'
 type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied' | 'requested'; error: string | null }
