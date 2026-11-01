@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AppSidebar } from './AppSidebar'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
@@ -68,9 +69,12 @@ function Calendar({ today, month, view, onMove, onRetry }: {
         const studied = !future && active.has(key)
         const classes = ['fo-calendar-day', key === dayKey(today) ? 'today' : '', future ? 'future' : '', studied ? 'completed' : ''].filter(Boolean).join(' ')
         const style = studied ? { animationDelay: `${0.3 + order++ * 0.07}s` } : undefined
-        return <span className={classes} style={style} key={key} aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일${studied ? ', 집중 기록 있음' : ', 기록 없음'}`}>
-          {studied ? <span className="fo-poki-face" aria-hidden="true" /> : date.getDate()}
-        </span>
+        const label = `${date.getMonth() + 1}월 ${date.getDate()}일${studied ? ', 집중 기록 있음' : ', 기록 없음'}`
+        const content = studied ? <span className="fo-poki-face" aria-hidden="true" /> : date.getDate()
+        // 오늘까지의 날짜는 그날 집중 기록으로 간다.
+        return future
+          ? <span className={classes} key={key} aria-label={label}>{content}</span>
+          : <Link className={classes} style={style} key={key} href={`/records/?date=${key}`} aria-label={label}>{content}</Link>
       })}
     </div>}
     {view.status === 'loading' && <div className="fo-calendar-state" role="status"><strong>집중 달력을 불러오고 있어요.</strong><span>잠시만 기다려 주세요.</span></div>}
@@ -98,11 +102,11 @@ function RecentGoals({ view, onRetry }: { view: RecentView; onRetry: () => void 
       {view.items.length === 0 && <li className="fo-records-empty"><strong>아직 기록이 없어요</strong><span>첫 집중을 마치면 여기에 나타나요.</span></li>}
       {view.items.map((item) => {
         const ended = new Date(item.endedAt ?? item.startedAt)
-        return <li key={item.sessionId}><div className="fo-recent-item">
+        return <li key={item.sessionId}><Link className="fo-recent-item" href={item.endedAt ? `/session-result/?session=${encodeURIComponent(item.sessionId)}` : '/session/'}>
           <span className="fo-recent-day" aria-hidden="true"><b>{ended.getDate()}</b><small>{ended.getMonth() + 1}월</small></span>
           <div><span className="fo-recent-goal">{item.goal}</span><small className="fo-recent-date">{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(ended)}</small></div>
           <span className="fo-recent-time">{Math.round(item.activeMs / 60000)}분</span>
-        </div></li>
+        </Link></li>
       })}
     </ul>}
   </>

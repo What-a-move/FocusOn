@@ -1,0 +1,79 @@
+/* 집중 기록 — FocusOn-design/records.html을 옮겼다. 사이드바·창 틀·색 토큰은 설정 화면(.fo-settings)과 같다. */
+.fo-records { width: min(1040px, calc(100% - 80px)); margin: 0 auto; padding: clamp(16px, 6vh, 72px) 0 40px; }
+.fo-records-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.fo-records-tools { display: flex; align-items: center; gap: 4px; }
+.fo-icon-tool { position: relative; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--fo-ink); cursor: pointer; transition: background .15s ease; }
+.fo-icon-tool svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.fo-icon-tool:hover:not(:disabled) { background: var(--fo-field); }
+.fo-icon-tool:disabled { color: var(--fo-dim); cursor: default; }
+.fo-date-picker input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.fo-week-range { min-width: 132px; font-size: 15px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+.fo-text-tool { height: 36px; margin-left: 8px; padding: 0 14px; border: 1.5px solid var(--fo-line); border-radius: 10px; background: none; color: var(--fo-ink); font-size: 14px; font-weight: 700; cursor: pointer; }
+.fo-text-tool:hover:not(:disabled) { background: var(--fo-field); }
+.fo-text-tool:disabled { color: var(--fo-faint); cursor: default; }
+.fo-icon-tool:focus-visible, .fo-text-tool:focus-visible, .fo-date-picker:focus-within { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+
+/* 주간 막대: 하루 집중 시간을 높이로 */
+.fo-week-wrap { --bar-h: 112px; display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: end; margin-top: 28px; }
+.fo-week-total { padding-bottom: 46px; }
+.fo-week-total span { display: block; color: var(--fo-muted); font-size: 13px; font-weight: 600; }
+.fo-week-total strong { display: block; margin-top: 4px; font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.fo-week-total em { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 13px; font-style: normal; }
+.fo-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.fo-day { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 8px; border: 0; border-radius: 14px; background: none; color: var(--fo-ink); cursor: pointer; transition: background .15s ease; }
+.fo-day:hover:not(:disabled) { background: var(--fo-field); }
+.fo-day:disabled { cursor: default; opacity: .4; }
+.fo-day:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-bar-area { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: var(--bar-h); width: 100%; }
+.fo-bar-val { height: 18px; color: var(--fo-muted); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .2s ease; }
+.fo-bar { width: 6px; height: 6px; border-radius: 50%; background: var(--fo-track); transform-origin: bottom; }
+.fo-day.has-record .fo-bar { width: min(36px, 60%); min-height: 4px; border-radius: 8px 8px 4px 4px; background: color-mix(in srgb, var(--fo-gold) 45%, transparent); animation: fo-bar-grow .55s cubic-bezier(.2, .8, .2, 1) both; }
+.fo-day[aria-pressed="true"] .fo-bar { background: var(--fo-gold); }
+.fo-day[aria-pressed="true"].has-record .fo-bar-val { opacity: 1; color: var(--fo-ink); }
+.fo-day-name { margin-top: 6px; color: var(--fo-muted); font-size: 12px; font-weight: 600; }
+.fo-day.is-today .fo-day-name { color: var(--fo-ink); }
+.fo-day-num { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; transition: background .15s ease, color .15s ease; }
+.fo-day[aria-pressed="true"] .fo-day-num { background: var(--fo-ink); color: var(--fo-surface); }
+@keyframes fo-bar-grow { from { transform: scaleY(0); } to { transform: none; } }
+
+/* 고른 날: 구분선 아래 큰 숫자 하나, 그다음 회차 목록 */
+.fo-day-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--fo-line); }
+.fo-day-summary { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; }
+.fo-day-date { width: 100%; color: var(--fo-muted); font-size: 14px; font-weight: 600; }
+.fo-day-time { font-size: 44px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.fo-day-time small { margin: 0 4px 0 2px; font-size: 20px; font-weight: 600; }
+.fo-day-count { color: var(--fo-muted); font-size: 15px; }
+.fo-swap { animation: fo-settings-fade .4s var(--fo-pop) both; }
+
+.fo-timeline { position: relative; margin: 20px 0 0; padding: 0; list-style: none; }
+.fo-timeline li { position: relative; padding-left: 92px; animation: fo-settings-rise .55s var(--fo-pop) both; }
+.fo-timeline li:nth-child(2) { animation-delay: .05s; }
+.fo-timeline li:nth-child(3) { animation-delay: .1s; }
+.fo-timeline li::before { position: absolute; top: 0; bottom: 0; left: 71px; width: 2px; background: var(--fo-line); content: ""; }
+.fo-timeline li:first-child::before { top: 30px; }
+.fo-timeline li:last-child::before { bottom: calc(100% - 30px); }
+.fo-timeline li:only-child::before { display: none; }
+.fo-clock { position: absolute; top: 20px; left: 0; width: 56px; color: var(--fo-muted); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.fo-dot { position: absolute; top: 24px; left: 66px; width: 12px; height: 12px; border: 3px solid var(--fo-gold); border-radius: 50%; background: var(--fo-surface); }
+.fo-entry { display: flex; align-items: center; gap: 16px; padding: 14px 16px; margin: 4px 0; border-radius: 14px; color: inherit; text-decoration: none; transition: background .15s ease; }
+.fo-entry:hover { background: var(--fo-field); }
+.fo-entry:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-entry-main { flex: 1; min-width: 0; }
+.fo-entry-goal { display: block; overflow: hidden; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.fo-entry-sub { display: block; margin-top: 3px; color: var(--fo-muted); font-size: 13px; }
+.fo-entry-time { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fo-entry-arrow { color: var(--fo-faint); font-size: 20px; transition: transform .15s ease; }
+.fo-entry:hover .fo-entry-arrow { transform: translateX(3px); color: var(--fo-ink); }
+
+.fo-records-empty { display: flex; flex-direction: column; align-items: center; padding: 32px 0 8px; text-align: center; }
+.fo-records-empty img { width: auto; height: 120px; animation: fo-settings-pop .55s var(--fo-pop) both; }
+.fo-records-empty h2 { margin: 16px 0 0; color: var(--fo-ink); font-size: 18px; font-weight: 700; }
+.fo-records-empty .fo-button { display: inline-grid; place-items: center; margin-top: 20px; text-decoration: none; }
+.fo-records-skeleton i { display: block; height: 56px; margin-bottom: 10px; border-radius: 14px; background: linear-gradient(90deg, var(--fo-track), var(--fo-field), var(--fo-track)); background-size: 200% 100%; animation: fo-records-shimmer 1.2s linear infinite; }
+@keyframes fo-records-shimmer { to { background-position: -200% 0; } }
+
+@media (max-height: 760px) { .fo-records { padding-top: 16px; } .fo-week-wrap { --bar-h: 84px; margin-top: 16px; } .fo-day-section { margin-top: 20px; padding-top: 18px; } .fo-day-time { font-size: 38px; } }
+@media (max-height: 600px) { .fo-week-wrap { --bar-h: 64px; } .fo-day-time { font-size: 32px; } .fo-entry { padding: 10px 16px; } }
+@media (max-width: 1000px) { .fo-week-wrap { grid-template-columns: 1fr; gap: 12px; } .fo-week-total { display: flex; align-items: baseline; gap: 10px; padding: 0; } .fo-week-total strong { margin: 0; font-size: 20px; } .fo-week-total em { margin: 0; } }
+@media (max-width: 900px) { .fo-records { width: calc(100% - 48px); } .fo-week-range { min-width: 0; } .fo-timeline li { padding-left: 76px; } .fo-timeline li::before { left: 59px; } .fo-dot { left: 54px; } .fo-clock { width: 44px; } }
+@media (prefers-reduced-motion: reduce) { .fo-day.has-record .fo-bar, .fo-timeline li, .fo-swap, .fo-records-empty img { animation: none; } }

@@ -4,8 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: 집중 기록 화면 (`records.html`)
-- 상태: 다음 작업(2026-11-01). 사이드바 `집중 기록`과 홈 달력 날짜 클릭이 들어갈 화면. 리포트 API는 서버에 아직 없어 화면·IPC를 먼저 만들고 API 병합 뒤 실제 QA를 한다.
+- 작업명: 집중 기록 화면 (Issue #121, `feat/121-desktop-records`)
+- 상태: 주간 막대·하루 기록·빈 날·오류 상태, 홈 달력 날짜·지난 목표·사이드바 연결 구현(2026-11-01). 남은 일: 리포트 API(`reports/calendar`·`reports/daily`) 병합 뒤 실제 계정 QA와 REPORT.
+- 다음 Issue 후보: 학습 노트(`notes.html`·`study-review.html`), 설정 계정·기기 연결 탭(D24·D25).
 
 - 작업명: 모듈 연동 로거 (Issue #101, `feat/101-desktop-logger`)
 - 상태: Main 로거·요청 traceId·상태 전이·알림·절전 기록 구현(2026-10-29). 남은 일: 서버가 `X-Trace-Id`를 로그에 찍으면 같은 traceId로 추적표 1·7·8번 확인, 그 뒤 REPORT.
