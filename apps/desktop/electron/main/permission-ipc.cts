@@ -90,7 +90,20 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
     if (!Notification.isSupported()) return { success: true, data: { shown: false } }
     const { titleCode, bodyCode } = args[0]
     // macOS는 앱이 처음 알림을 보낼 때 허용 여부를 묻는다. 알림 상태를 직접 조회하는 API는 없다.
-    new Notification({ title: NOTIFICATION_TEXT[titleCode].title, body: NOTIFICATION_TEXT[bodyCode].body, silent: true }).show()
-    return { success: true, data: { shown: true } }
+    const shown = await showAndWait(new Notification({ title: NOTIFICATION_TEXT[titleCode].title, body: NOTIFICATION_TEXT[bodyCode].body, silent: true }))
+    return { success: true, data: { shown } }
+  })
+}
+
+/**
+ * 알림을 띄우고 macOS의 결과(show·failed)를 기다린다. 거절되면(`UNErrorDomain 1` 등) false다.
+ * 허용 창이 떠 있어 답이 늦으면 보냈다고 보고, 실제로 보였는지는 사용자의 ‘보였어요’로 확인한다.
+ */
+export function showAndWait(notification: Pick<Notification, 'once' | 'show'>, timeoutMs = 3000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(true), timeoutMs)
+    notification.once('show', () => { clearTimeout(timer); resolve(true) })
+    notification.once('failed', () => { clearTimeout(timer); resolve(false) })
+    notification.show()
   })
 }
