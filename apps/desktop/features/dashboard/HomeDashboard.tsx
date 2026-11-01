@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { AppSidebar } from './AppSidebar'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
+import { errorText } from '../../app/lib/error-text'
 import './dashboard.css'
 
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
@@ -12,10 +13,10 @@ const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
 type CalendarView =
   | { status: 'loading' }
   | { status: 'ready'; data: CalendarMonth }
-  | { status: 'error' }
+  | { status: 'error'; code: string }
   // 오프라인이면 이전에 확인한 값만 그 시각과 함께 보여 준다. 현재 값처럼 단정하지 않는다.
   | { status: 'offline'; cached: { data: CalendarMonth; loadedAt: Date } | null }
-type RecentView = { status: 'loading' } | { status: 'ready'; items: DailySession[] } | { status: 'error' }
+type RecentView = { status: 'loading' } | { status: 'ready'; items: DailySession[] } | { status: 'error'; code: string }
 
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 
@@ -74,7 +75,7 @@ function Calendar({ today, month, view, onMove, onRetry }: {
     </div>}
     {view.status === 'loading' && <div className="fo-calendar-state" role="status"><strong>집중 달력을 불러오고 있어요.</strong><span>잠시만 기다려 주세요.</span></div>}
     {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>집중 달력을 불러오지 못했어요.</strong><span>잠시 후 다시 시도해 주세요.</span>
+      <strong>집중 달력을 불러오지 못했어요.</strong><span>{errorText(view)}</span>
       <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
     </div>}
     {view.status === 'offline' && <div className="fo-calendar-state is-error" role="alert">
@@ -90,7 +91,7 @@ function RecentGoals({ view, onRetry }: { view: RecentView; onRetry: () => void 
     <div className="fo-panel-head"><h2 id="recent-title">지난 목표</h2></div>
     {view.status === 'loading' && <p className="fo-recent-loading" role="status">기록을 불러오고 있어요.</p>}
     {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>지난 목표를 불러오지 못했어요.</strong><span>잠시 후 다시 시도해 주세요.</span>
+      <strong>지난 목표를 불러오지 못했어요.</strong><span>{errorText(view)}</span>
       <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
     </div>}
     {view.status === 'ready' && <ul className="fo-recent-list">
@@ -150,16 +151,16 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
     if (result.success) cache.current.set(key, { data: result.data, loadedAt: new Date() })
     if (calendarRequest === latestCalendar.current) {
       setCalendar(result.success ? { status: 'ready', data: result.data }
-        : result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? { status: 'offline', cached: cache.current.get(key) ?? null } : { status: 'error' })
+        : result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? { status: 'offline', cached: cache.current.get(key) ?? null } : { status: 'error', code: result.error.code })
     }
     // 상단 요약과 지난 목표는 이번 달 기준이다. 다른 달로 넘겨도 이번 달 응답은 끝까지 반영한다.
     if (!isCurrentMonth || summaryRequest !== latestSummary.current) return
-    if (!result.success) { setCurrent('error'); setRecent({ status: 'error' }); return }
+    if (!result.success) { setCurrent('error'); setRecent({ status: 'error', code: result.error.code }); return }
     setCurrent(result.data)
     setRecent({ status: 'loading' })
     const sessions = await loadRecentSessions(result.data, dayKey(now))
     if (summaryRequest !== latestSummary.current) return
-    setRecent(sessions.success ? { status: 'ready', items: sessions.data } : { status: 'error' })
+    setRecent(sessions.success ? { status: 'ready', items: sessions.data } : { status: 'error', code: sessions.error.code })
   }, [])
 
   useEffect(() => {
@@ -182,7 +183,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
         </ul>
       </header>
       <div className="fo-dashboard">
-        {message && <div className="fo-notice" role="alert"><strong>요청을 마치지 못했어요.</strong><span>{message}</span></div>}
+        {message && <div className="fo-notice" role="alert"><strong>로그아웃하지 못했어요.</strong><span>{message}</span></div>}
         <section className="fo-hero" aria-labelledby="focus-title">
           <div className="fo-poki-stage"><Image src="/design/poki-main-planning.png" alt="체크리스트를 든 포키" width={220} height={220} priority /></div>
           <div>

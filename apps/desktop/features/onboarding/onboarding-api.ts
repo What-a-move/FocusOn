@@ -1,6 +1,7 @@
 import type { PermissionsApi } from '../../electron/shared/permission-contract.cjs'
 import type { AnalysisApi, ExcludedApp, InstalledApp } from '../../electron/shared/analysis-contract.cjs'
 import type { OnboardingApi as MainOnboardingApi, OnboardingReadiness, OnboardingStep, OnboardingSummary, RequiredConsent } from '../../electron/shared/onboarding-contract.cjs'
+import { errorText } from '../../app/lib/error-text'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -80,15 +81,11 @@ export const analysisApi = {
 // info: 오류가 아닌 안내(막힌 이유 등). 빨간색·느낌표 없이 보여 준다.
 export type Notice = { title: string; body: string; info?: boolean }
 
-export function describeError(error: ApiError): Notice {
+/** title: 무엇을 못 했는지(화면이 정한다). body: 왜·무엇을 하면 되는지(errorText). */
+export function describeError(error: ApiError, title: string): Notice {
   switch (error.code) {
     case 'PROFILE_NICKNAME_DUPLICATE': return { title: '이미 사용 중인 닉네임이에요.', body: '다른 닉네임을 입력해 주세요.' }
     case 'PROFILE_NICKNAME_INVALID': return { title: '닉네임 형식을 확인해 주세요.', body: '2~12자의 한글·영문·숫자만 쓸 수 있어요.' }
-    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '인터넷에 연결되어 있지 않아요.', body: '연결을 확인한 뒤 다시 시도해 주세요.' }
-    case 'TOO_MANY_REQUESTS': return { title: '요청이 너무 잦았어요.', body: '잠시 후 다시 시도해 주세요.' }
-    case 'AUTH_RELOGIN_REQUIRED':
-    case 'AUTH_TOKEN_REUSE_DETECTED':
-    case 'AUTH_OAUTH_REAUTH_REQUIRED': return { title: '로그인이 만료됐어요.', body: 'Google로 다시 로그인해 주세요.' }
-    default: return { title: '요청을 마치지 못했어요.', body: '잠시 후 다시 시도해 주세요.' }
+    default: return { title, body: errorText(error) }
   }
 }

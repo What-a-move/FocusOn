@@ -674,3 +674,12 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 안내 문구에는 화면에 실제로 있는 버튼 이름만 쓴다.
 - 이유: 정상 흐름인데 빨간 안내가 떠서 오류로 착각한다는 PM 피드백.
 - 영향받는 파일: `features/onboarding/*`, `features/goal/*`, `features/session/SessionSetup.tsx`, `features/settings/*`, `features/report/SessionResult.tsx`, `features/dashboard/HomeDashboard.tsx`, `app/page.tsx`, `app/globals.css`
+
+## 결정 032 - 오류 제목은 무엇을 못 했는지, 본문은 원인과 할 일을 공용 함수 하나로 쓴다
+
+- 결정일: 2026-11-01 / 상태: 확정 (PM 요청) / Issue #114.
+- 제목은 화면이 정한다(예: `로그인하지 못했어요.`, `목표를 저장하지 못했어요.`). `요청을 마치지 못했어요.`처럼 무엇을 못 했는지 없는 제목은 쓰지 않는다.
+- 본문은 `app/lib/error-text.ts`의 `errorText(error)`에서만 만든다. 코드별로 원인 + 할 일 한 문장이다. 기다려도 풀리지 않는 오류(설정 누락·입력 오류·만료)에는 `잠시 후 다시`를 쓰지 않는다.
+- 같은 `SERVICE_UNAVAILABLE`로 묶였던 로그인 실패를 Desktop 내부 code로 나눈다: `LOCAL_APP_CONFIG_MISSING`, `LOCAL_BROWSER_OPEN_FAILED`, `LOCAL_GOOGLE_LOGIN_FAILED`, `LOCAL_KEYCHAIN_UNAVAILABLE`. 서버 오류 코드·API는 바꾸지 않는다. 화면 전용 code(`LOCAL_SCREEN_PERMISSION_REVOKED` 등)는 해당 화면이 먼저 처리하고 나머지만 공용 함수로 넘긴다.
+- 이유: 앱 설정 누락인데 "잠시 후 다시 시도해 주세요"가 떠서 사용자가 원인을 알 수 없었다(PM 피드백, 2026-10-30).
+- 영향받는 파일: `app/lib/error-text.ts`, `app/page.tsx`, `features/*` 오류 표시부, `electron/main/auth-ipc.cts`, `auth-service.cts`, `index.cts`

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from './session-api'
+import { errorText } from '../../app/lib/error-text'
 import '../onboarding/onboarding.css'
 import './focus-session.css'
 
@@ -19,14 +20,13 @@ function formatClock(ms: number): string {
   return hours ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
-function errorText(code: string): string {
+function sessionErrorText(code: string): string {
   switch (code) {
     case 'LOCAL_SCREEN_PERMISSION_REVOKED': return '화면 기록 권한이 꺼져 있어요. 시스템 설정에서 켠 뒤 다시 눌러 주세요.'
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return '알림이 보이는지 확인이 필요해요. 세션 설정에서 시험 알림을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_START_REQUIREMENT_MISSING': return '화면 기록 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_VERSION_CONFLICT': return '다른 곳에서 상태가 바뀌어 최신 상태로 맞췄어요. 확인한 뒤 다시 눌러 주세요.'
-    case 'LOCAL_NETWORK_UNAVAILABLE': return '인터넷 연결을 확인한 뒤 다시 눌러 주세요.'
-    default: return '요청을 마치지 못했어요. 잠시 후 다시 눌러 주세요.'
+    default: return errorText({ code })
   }
 }
 
@@ -150,7 +150,7 @@ export function FocusSession() {
           <p><strong>화면 분석 권한이 꺼졌어요.</strong>그래서 타이머와 분석을 멈췄어요.<br />권한을 켠 뒤 직접 이어 가 주세요.</p>
           <button className="btn btn-danger" type="button" onClick={() => { void window.focusOn?.permissions.openScreenSettings() }}>권한 확인</button>
         </div>}
-        {snapshot.error && !permissionLost && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{errorText(snapshot.error)}</p>}
+        {snapshot.error && !permissionLost && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{sessionErrorText(snapshot.error)}</p>}
       </div>
     </section>
 
@@ -161,7 +161,7 @@ export function FocusSession() {
       <p>{activeDialog === 'finish' ? '지금까지 집중한 시간을 기록하고 이번 회차를 마칩니다.'
         : activeDialog === 'extend' ? '얼마나 더 할까요? 같은 회차로 이어져요.' : '타이머와 분석은 멈췄어요.\n끝내거나 같은 목표로 더 공부할 수 있어요.'}</p>
       {activeDialog === 'timeup' && <div className="time-facts"><div><span>집중한 시간</span> <b>{Math.floor(elapsed / 60000)}분</b></div></div>}
-      {snapshot.error && activeDialog && <p className="dialog-error" role="alert">{errorText(snapshot.error)}</p>}
+      {snapshot.error && activeDialog && <p className="dialog-error" role="alert">{sessionErrorText(snapshot.error)}</p>}
       {activeDialog === 'finish' && <div className="dialog-actions"><div className="row">
         <button className="btn btn-ghost" type="button" onClick={() => setDialog(null)}>계속하기</button>
         <button className="btn btn-primary" type="button" onClick={() => { void end() }} disabled={snapshot.busy}>{snapshot.busy ? '끝내는 중…' : '끝내기'}</button>
