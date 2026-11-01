@@ -79,10 +79,12 @@ export class SessionRuntime {
 
   /** 앱을 다시 켰을 때 서버의 활성 세션을 이어받는다. 실행 중이었다면 사용자 확인 없이 다시 세지 않도록 APP_RESTART로 멈춘다. */
   restore(): Promise<ApiResult<SessionSnapshot | null>> {
+    // [유지보수] 홈과 집중 화면이 동시에 물어도 서버 조회·APP_RESTART 일시정지는 한 번만 보내고, 끝날 때까지 같은 결과를 기다린다.
+    if (this.restoring) return this.restoring
     if (this.state && isActive(this.state.status)) return Promise.resolve({ success: true, data: this.snapshot() })
-    // [유지보수] 홈과 집중 화면이 동시에 물어도 서버 조회·APP_RESTART 일시정지는 한 번만 보낸다.
-    this.restoring ??= this.loadActive().finally(() => { this.restoring = null })
-    return this.restoring
+    const restoring = this.loadActive().finally(() => { if (this.restoring === restoring) this.restoring = null })
+    this.restoring = restoring
+    return restoring
   }
 
   private async loadActive(): Promise<ApiResult<SessionSnapshot | null>> {
@@ -98,18 +100,17 @@ export class SessionRuntime {
     const remote = result.data
     this.pending.clear()
     this.options = DEFAULT_OPTIONS
-    this.state = {
-      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status, version: remote.version,
+    // [주의] 실행 중이었어도 꺼져 있던 동안을 세지 않도록 처음부터 멈춤으로 둔다. 서버에는 APP_RESTART로 알린다.
+    const restored: State = {
+      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status === 'RUNNING' ? 'AUTO_PAUSED' : remote.status, version: remote.version,
       // [주의] 꺼져 있던 동안의 시간은 서버가 마지막으로 확정한 값만 쓴다. 로컬에서 추정해 더하지 않는다(resumedAt 없음).
       targetDurationMs: remote.targetDurationMs, baseActiveMs: remote.accumulatedActiveMs, resumedAt: null, error: null, busy: false,
     }
+    this.state = restored
     if (remote.status === 'RUNNING') {
       const paused = await this.pause('APP_RESTART')
-      // [주의] 서버에 알리지 못해도 꺼져 있던 동안처럼 세지 않는다. Main 타이머와 화면이 어긋나지 않게 로컬에서 먼저 멈춘다.
-      if (!paused.success && this.state?.status === 'RUNNING') {
-        this.settle('AUTO_PAUSED')
-        this.state.error = RESTART_PAUSE_UNSYNCED
-      }
+      // 그사이 로그아웃·새 시작으로 상태가 바뀌었으면 이 복구의 실패를 새 상태에 붙이지 않는다.
+      if (!paused.success && this.state === restored) { restored.error = RESTART_PAUSE_UNSYNCED; this.publish() }
     }
     this.publish('restore')
     return { success: true, data: this.snapshot() }
@@ -118,6 +119,7 @@ export class SessionRuntime {
   /** 로그아웃하면 다음 사용자가 이전 세션을 보지 않도록 비운다. */
   reset(): void {
     this.state = null
+    this.restoring = null
     this.pending.clear()
     this.localEvents = []
     this.publish('logout')
@@ -151,7 +153,8 @@ export class SessionRuntime {
   }
 
   pause(reason: 'USER' | 'APP_RESTART' = 'USER'): Promise<ApiResult<SessionSnapshot>> {
-    return this.command('pause', reason, ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
+    // APP_RESTART는 복구 때 이미 로컬에서 멈춘 세션(AUTO_PAUSED)을 서버에 알린다.
+    return this.command('pause', reason, reason === 'APP_RESTART' ? ['AUTO_PAUSED'] : ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
       this.settle(data.status ?? (reason === 'USER' ? 'PAUSED' : 'AUTO_PAUSED'), data.accumulatedActiveMs)
     })
   }
