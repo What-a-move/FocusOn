@@ -20,16 +20,23 @@ public final class SessionDtos {
   public enum NotificationChannel { MOLE_UI, MACOS_NOTIFICATION, SOUND }
 
   /** 세션에 고정할 집중 설정이다. */
-  public record SessionOptions(@NotNull InterventionLevel interventionLevel,
-      @NotEmpty List<@NotNull NotificationChannel> notificationChannels,
-      @NotNull Boolean cameraAnalysisEnabled) {}
+  public record SessionOptions(
+      @NotNull @Schema(example = "NORMAL") InterventionLevel interventionLevel,
+      @NotEmpty @Schema(example = "[\"MOLE_UI\", \"MACOS_NOTIFICATION\"]")
+      List<@NotNull NotificationChannel> notificationChannels,
+      @NotNull @Schema(example = "false",
+          description = "카메라 분석 사용 여부. 서버는 저장된 카메라 동의를 확인합니다.")
+      Boolean cameraAnalysisEnabled) {}
 
   /** Desktop에서 확인한 화면 분석 준비 상태다. */
-  public record StartReadiness(@NotNull Boolean screenAnalysisReady) {}
+  public record StartReadiness(
+      @NotNull @Schema(example = "true", description = "Desktop이 확인한 화면 기록 준비 상태")
+      Boolean screenAnalysisReady) {}
 
   /** 세션 시작 요청이다. */
   public record StartRequest(@NotBlank @Schema(example = "12") String goalId,
-      @NotNull @Digits(integer = 8, fraction = 0) @Schema(example = "1800000")
+      @NotNull @Digits(integer = 8, fraction = 0)
+      @Schema(example = "1800000", description = "5~300분, 1분 단위의 밀리초")
       BigDecimal targetDurationMs,
       @Schema(example = "Asia/Seoul") String timeZone,
       @NotNull @Valid SessionOptions sessionOptions,

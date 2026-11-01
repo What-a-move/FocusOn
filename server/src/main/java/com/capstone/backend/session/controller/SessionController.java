@@ -39,7 +39,9 @@ public class SessionController {
   /** Desktop에서 세션을 시작한다. */
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @Operation(summary = "학습 세션 시작")
+  @Operation(summary = "학습 세션 시작",
+      description = "Desktop 기기와 연결·동의 등 시작 조건을 확인합니다. "
+          + "카메라 OS 권한은 서버에 전달되지 않아 Desktop에서 확인해야 합니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "세션 시작 성공"),
       @ApiResponse(responseCode = "400", description = "요청 값 또는 헤더 오류",
