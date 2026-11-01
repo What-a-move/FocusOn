@@ -100,6 +100,55 @@ test('앱 재실행: 실행 중이던 세션은 서버 확정 시간으로 APP_R
   assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
 })
 
+test('앱 재실행: 일시정지를 서버에 알리지 못해도 로컬에서 멈추고 실패를 알린다', async () => {
+  const active = { sessionId: '901', status: 'RUNNING', version: 3, goalTextSnapshot: '미적분 풀기', targetDurationMs: 600000, accumulatedActiveMs: 200000 }
+  const { runtime, advance } = setup({
+    'GET /api/v1/sessions/active': { success: true, data: active },
+    'POST /api/v1/sessions/901/pause': { success: false, error: { code: 'NOT_FOUND', retryable: false } },
+  })
+  await runtime.restore()
+  advance(60000)
+  assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 200000, '멈춘 뒤에는 세지 않음')
+  assert.equal(runtime.snapshot().error, 'LOCAL_RESTART_PAUSE_UNSYNCED')
+})
+
+test('동시에 복구를 물어도 활성 세션 조회는 한 번만 보낸다', async () => {
+  const { runtime, calls } = setup({ 'GET /api/v1/sessions/active': (request) => ({ success: true, raw: request.parse(null) }) })
+  await Promise.all([runtime.restore(), runtime.restore()])
+  assert.equal(calls.filter((call) => call.path === '/api/v1/sessions/active').length, 1)
+})
+
+test('복구 일시정지를 기다리는 동안에도 실행 중으로 보이지 않고, 다른 조회는 같은 결과를 기다린다', async () => {
+  let release
+  const active = { sessionId: '901', status: 'RUNNING', version: 3, goalTextSnapshot: '미적분 풀기', targetDurationMs: 600000, accumulatedActiveMs: 200000 }
+  const { runtime, events } = setup({
+    'GET /api/v1/sessions/active': { success: true, data: active },
+    'POST /api/v1/sessions/901/pause': () => new Promise((resolve) => { release = () => resolve({ success: true, data: { status: 'AUTO_PAUSED', version: 4, accumulatedActiveMs: 200000 } }) }),
+  })
+  const first = runtime.restore()
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.ok(events.every((snapshot) => !snapshot || snapshot.status !== 'RUNNING'), '기다리는 동안 RUNNING을 내보내지 않음')
+  const second = runtime.restore()
+  release()
+  assert.equal((await first).data.status, 'AUTO_PAUSED')
+  assert.equal((await second).data.status, 'AUTO_PAUSED')
+})
+
+test('로그아웃하면 진행 중이던 복구를 버리고 다음 로그인은 다시 조회한다', async () => {
+  let release
+  let gets = 0
+  const { runtime } = setup({
+    'GET /api/v1/sessions/active': (request) => { gets++; return gets === 1 ? new Promise((resolve) => { release = () => resolve({ success: false, error: { code: 'AUTH_RELOGIN_REQUIRED', retryable: false } }) }) : { success: true, raw: request.parse(null) } },
+  })
+  const stale = runtime.restore()
+  runtime.reset()
+  await runtime.restore()
+  release()
+  await stale
+  assert.equal(gets, 2)
+})
+
 test('활성 세션이 없다는 204 응답은 null로 끝난다', async () => {
   const { runtime } = setup({ 'GET /api/v1/sessions/active': (request) => ({ success: true, raw: request.parse(null) }) })
   const result = await runtime.restore()

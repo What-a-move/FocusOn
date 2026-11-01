@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useOngoingSession } from '../session/useOngoingSession'
 import './dashboard.css'
 
 // 아직 화면이 없는 메뉴는 링크 없이 보여 준다. 화면이 생기면 href를 채운다.
@@ -17,12 +18,15 @@ export type SidebarPage = (typeof NAVIGATION)[number]['key']
 
 /** 홈과 하위 화면이 함께 쓰는 사이드바 (fo-base.css `.sidebar`). 하위 화면에서도 그대로 남고 내용만 바뀐다. */
 export function AppSidebar({ active, name, onLogout, busy }: { active: SidebarPage; name: string; onLogout: () => void; busy: boolean }) {
+  // 진행 중인 집중이 있으면 `집중 시작`은 새 목표 대신 그 집중으로 돌아간다(서버는 사용자당 진행 중 세션 1개).
+  const ongoing = useOngoingSession()
   return <aside className="fo-sidebar" aria-label="주 메뉴">
     <span className="fo-logo fo-sidebar-logo">
       <Image className="fo-logo-light" src="/design/focuson-logo.png" alt="FocusOn" width={2172} height={724} priority />
       <Image className="fo-logo-dark" src="/design/focuson-logo-dark.png" alt="FocusOn" width={2172} height={724} priority />
     </span>
-    <nav className="fo-nav">{NAVIGATION.map(({ key, label, asset, href }) => {
+    <nav className="fo-nav">{NAVIGATION.map(({ key, label, asset, href: base }) => {
+      const href = key === 'start' && ongoing ? '/session/' : base
       const current = key === active
       const content = <><Image src={`/design/${asset}`} alt="" width={28} height={28} /><span>{label}</span></>
       const className = `fo-nav-item${current ? ' active' : ''}`

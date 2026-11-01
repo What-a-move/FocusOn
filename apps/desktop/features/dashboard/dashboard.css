@@ -50,6 +50,8 @@ a.fo-nav-item:focus-visible { outline: 3px solid var(--fo-focus); outline-offset
 /* 포인트: '집중'에 금색 밑줄이 그어진다. */
 .fo-hl { position: relative; isolation: isolate; white-space: nowrap; }
 .fo-hl::after { position: absolute; right: -2px; bottom: 3px; left: -2px; z-index: -1; height: 10px; border-radius: 99px; background: var(--fo-gold); content: ''; opacity: .6; transform: scaleX(0); transform-origin: left; animation: fo-draw .6s .45s cubic-bezier(.2, .8, .2, 1) forwards; }
+.fo-hero-goal { margin: 10px 0 0; overflow: hidden; color: var(--fo-muted); font-size: 18px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.fo-hero-goal + .fo-goal-button { margin-top: 20px; }
 .fo-goal-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 196px; height: 56px; margin-top: 26px; font-size: 17px; }
 .fo-goal-button span { transition: transform .2s ease; }
 .fo-goal-button:hover span { transform: translateX(4px); }

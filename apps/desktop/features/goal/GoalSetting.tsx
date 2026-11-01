@@ -133,8 +133,9 @@ export function GoalSetting() {
     if (!result.success) {
       const offline = result.error.code === 'LOCAL_NETWORK_UNAVAILABLE'
       setManual('error')
-      toEntry('2~40자', { text: offline ? '인터넷이 끊겼어요.\n지금 문구로 시작해도 괜찮아요!' : '앗, 지금은 확인이 어려워요.\n지금 문구로 시작해도 괜찮아요!', error: true })
-      setFeedback({ title: offline ? '인터넷 연결을 확인해 주세요.' : '목표를 확인하지 못했어요.', body: '입력한 문구 그대로 시작할 수 있어요.' })
+      // [디자인] 실패는 하단 안내에서 한 번만 말한다. 포키 말풍선은 오류색 없이 다음 행동만 권한다.
+      toEntry('2~40자', offline ? undefined : { text: '지금 문구 그대로 시작해도 괜찮아요!' })
+      setFeedback({ title: '목표를 확인하지 못했어요.', body: offline ? errorText(result.error) : 'AI 확인을 지금 쓸 수 없어요. 입력한 문구로 시작할 수 있어요.' })
       return
     }
     if (result.data.clarificationSessionId) setClarificationSessionId(result.data.clarificationSessionId)

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AppSidebar } from './AppSidebar'
+import { useOngoingSession } from '../session/useOngoingSession'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
 import { errorText } from '../../app/lib/error-text'
 import './dashboard.css'
@@ -124,6 +125,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const latestCalendar = useRef(0)
   const latestSummary = useRef(0)
   const shownDay = useRef('')
+  const ongoing = useOngoingSession()
 
   useEffect(() => {
     // [유지보수] 정적 빌드 시각과 실행 시각이 달라도 날짜가 어긋나지 않게 실행 후 계산한다.
@@ -191,8 +193,15 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
         <section className="fo-hero" aria-labelledby="focus-title">
           <div className="fo-poki-stage"><Image src="/design/poki-main-planning.png" alt="체크리스트를 든 포키" width={220} height={220} priority /></div>
           <div>
-            <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">오늘은 뭐에 <span className="fo-hl">집중</span>할까요?</h1>
-            <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/goal/')}>목표 설정하기 <span aria-hidden="true">→</span></button>
+            {/* 진행 중인 집중이 있으면 새 목표 대신 그 집중으로 돌아가게 한다(서버는 사용자당 진행 중 세션 1개). */}
+            {ongoing ? <>
+              <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">진행 중인 <span className="fo-hl">집중</span>이 있어요</h1>
+              <p className="fo-hero-goal fo-rise" style={{ animationDelay: '.25s' }}>{ongoing.goalText}</p>
+              <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/session/')}>집중 화면으로 <span aria-hidden="true">→</span></button>
+            </> : <>
+              <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">오늘은 뭐에 <span className="fo-hl">집중</span>할까요?</h1>
+              <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/goal/')}>목표 설정하기 <span aria-hidden="true">→</span></button>
+            </>}
           </div>
         </section>
         <div className="fo-dashboard-grid">

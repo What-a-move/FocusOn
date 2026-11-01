@@ -24,6 +24,8 @@ type State = {
 const DEFAULT_OPTIONS: SessionOptions = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
 const NONE = Symbol('no-active-session')
 const SCREEN_PERMISSION_REVOKED = 'LOCAL_SCREEN_PERMISSION_REVOKED'
+// 재실행 뒤 APP_RESTART 일시정지를 서버에 알리지 못했다. 로컬에서는 멈춰 있고 사용자가 직접 이어 간다.
+const RESTART_PAUSE_UNSYNCED = 'LOCAL_RESTART_PAUSE_UNSYNCED'
 const ACTIVE: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING']
 const isActive = (status: SessionStatus) => ACTIVE.includes(status)
 
@@ -39,6 +41,7 @@ export class SessionRuntime {
   private pending = new Map<Command, { intent: string; key: string; body?: object }>()
   // 서버에 아직 알리지 못한 로컬 이벤트. 다음 heartbeat 주기에 순서대로 다시 보낸다.
   private localEvents: { sessionId: string; localEventCode: string; occurredAt: string }[] = []
+  private restoring: Promise<ApiResult<SessionSnapshot | null>> | null = null
   private flushing = false
   private options: SessionOptions = DEFAULT_OPTIONS
   // 상태 전이 로그용: 직전에 알린 상태와 그 상태가 된 시각(monotonic·벽시계).
@@ -75,8 +78,16 @@ export class SessionRuntime {
   }
 
   /** 앱을 다시 켰을 때 서버의 활성 세션을 이어받는다. 실행 중이었다면 사용자 확인 없이 다시 세지 않도록 APP_RESTART로 멈춘다. */
-  async restore(): Promise<ApiResult<SessionSnapshot | null>> {
-    if (this.state && isActive(this.state.status)) return { success: true, data: this.snapshot() }
+  restore(): Promise<ApiResult<SessionSnapshot | null>> {
+    // [유지보수] 홈과 집중 화면이 동시에 물어도 서버 조회·APP_RESTART 일시정지는 한 번만 보내고, 끝날 때까지 같은 결과를 기다린다.
+    if (this.restoring) return this.restoring
+    if (this.state && isActive(this.state.status)) return Promise.resolve({ success: true, data: this.snapshot() })
+    const restoring = this.loadActive().finally(() => { if (this.restoring === restoring) this.restoring = null })
+    this.restoring = restoring
+    return restoring
+  }
+
+  private async loadActive(): Promise<ApiResult<SessionSnapshot | null>> {
     const before = this.state
     // 활성 세션이 없으면 서버는 204를 준다(parse(null) → NONE).
     const result = await this.auth.authorizedRequest<RemoteSession | typeof NONE>({
@@ -89,12 +100,18 @@ export class SessionRuntime {
     const remote = result.data
     this.pending.clear()
     this.options = DEFAULT_OPTIONS
-    this.state = {
-      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status, version: remote.version,
+    // [주의] 실행 중이었어도 꺼져 있던 동안을 세지 않도록 처음부터 멈춤으로 둔다. 서버에는 APP_RESTART로 알린다.
+    const restored: State = {
+      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status === 'RUNNING' ? 'AUTO_PAUSED' : remote.status, version: remote.version,
       // [주의] 꺼져 있던 동안의 시간은 서버가 마지막으로 확정한 값만 쓴다. 로컬에서 추정해 더하지 않는다(resumedAt 없음).
       targetDurationMs: remote.targetDurationMs, baseActiveMs: remote.accumulatedActiveMs, resumedAt: null, error: null, busy: false,
     }
-    if (remote.status === 'RUNNING') await this.pause('APP_RESTART')
+    this.state = restored
+    if (remote.status === 'RUNNING') {
+      const paused = await this.pause('APP_RESTART')
+      // 그사이 로그아웃·새 시작으로 상태가 바뀌었으면 이 복구의 실패를 새 상태에 붙이지 않는다.
+      if (!paused.success && this.state === restored) { restored.error = RESTART_PAUSE_UNSYNCED; this.publish() }
+    }
     this.publish('restore')
     return { success: true, data: this.snapshot() }
   }
@@ -102,6 +119,7 @@ export class SessionRuntime {
   /** 로그아웃하면 다음 사용자가 이전 세션을 보지 않도록 비운다. */
   reset(): void {
     this.state = null
+    this.restoring = null
     this.pending.clear()
     this.localEvents = []
     this.publish('logout')
@@ -135,7 +153,8 @@ export class SessionRuntime {
   }
 
   pause(reason: 'USER' | 'APP_RESTART' = 'USER'): Promise<ApiResult<SessionSnapshot>> {
-    return this.command('pause', reason, ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
+    // APP_RESTART는 복구 때 이미 로컬에서 멈춘 세션(AUTO_PAUSED)을 서버에 알린다.
+    return this.command('pause', reason, reason === 'APP_RESTART' ? ['AUTO_PAUSED'] : ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
       this.settle(data.status ?? (reason === 'USER' ? 'PAUSED' : 'AUTO_PAUSED'), data.accumulatedActiveMs)
     })
   }
