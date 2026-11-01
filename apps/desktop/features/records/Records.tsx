@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { dashboardApi, dayKey, monthKey, type DailySession } from '../dashboard/dashboard-api'
+import type { DailyReport } from '../../electron/shared/report-contract.cjs'
 import { LoadError, SettingsShell } from '../settings/SettingsShell'
 import './records.css'
 
@@ -27,7 +28,7 @@ export function Records() {
   const [selected, setSelected] = useState<string | null>(null)
   // 기록 있음(서버 hasStudyActivity)인 날만 분으로 담는다.
   const [week, setWeek] = useState<Load<Record<string, number>>>({ status: 'loading' })
-  const [day, setDay] = useState<Load<DailySession[]>>({ status: 'loading' })
+  const [day, setDay] = useState<Load<DailyReport>>({ status: 'loading' })
   const weekRequest = useRef(0)
   const dayRequest = useRef(0)
   const shownWeek = useRef('')
@@ -60,7 +61,7 @@ export function Records() {
     const result = await dashboardApi.getDaily(key)
     if (id !== dayRequest.current) return
     setDay(result.success
-      ? { status: 'ready', data: [...result.data.sessions].sort((a, b) => a.startedAt.localeCompare(b.startedAt)) }
+      ? { status: 'ready', data: { ...result.data, sessions: [...result.data.sessions].sort((a, b) => a.startedAt.localeCompare(b.startedAt)) } }
       : { status: 'error', code: result.error.code })
   }, [])
 
@@ -132,21 +133,23 @@ export function Records() {
       <section className="fo-day-section" aria-label={`${longDate.format(fromKey(selected))} 기록`}>
         {error ? <LoadError code={error.code} what="기록을" onRetry={retry} />
           : day.status === 'loading' ? <div className="fo-records-skeleton" aria-hidden="true"><i /><i /><i /></div>
-          : day.status === 'ready' && <DayRecords date={selected} today={today} sessions={day.data} />}
+          : day.status === 'ready' && <DayRecords date={selected} today={today} report={day.data} />}
       </section>
     </div>
   </SettingsShell>
 }
 
-function DayRecords({ date, today, sessions }: { date: string; today: string; sessions: DailySession[] }) {
-  const total = Math.floor(sessions.reduce((sum, item) => sum + item.activeMs, 0) / 60000)
+function DayRecords({ date, today, report }: { date: string; today: string; report: DailyReport }) {
+  // [주의] 하루 총합은 서버가 종료 확정 세션만으로 계산한 값을 쓴다. 진행 중 회차의 현재 시간은 목록에만 보인다(리포트 설계서 2.2).
+  const { sessions } = report
+  const total = Math.floor(report.totalActiveMs / 60000)
   return <div className="fo-swap" key={date}>
     <div className="fo-day-summary">
       <span className="fo-day-date">{longDate.format(fromKey(date))}{date === today ? ' · 오늘' : ''}</span>
       <span className="fo-day-time" aria-label="이날 집중한 시간">
         {total >= 60 ? <><b>{Math.floor(total / 60)}</b><small>시간</small><b>{total % 60}</b><small>분</small></> : <><b>{total}</b><small>분</small></>}
       </span>
-      <span className="fo-day-count">{sessions.length}회</span>
+      <span className="fo-day-count">{sessions.filter((item) => item.endedAt).length}회</span>
     </div>
     {sessions.length === 0 ? <div className="fo-records-empty">
       <Image src="/design/poki-floating-sleepy-v7.png" alt="졸고 있는 포키" width={240} height={240} />
