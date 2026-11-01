@@ -42,4 +42,14 @@ pnpm --filter @focuson/desktop build:electron
 cd apps/desktop && args=(); while IFS= read -r l; do [[ "$l" =~ ^[A-Z_]+= ]] && args+=(--env "$l"); done < .env; open -n -a "$(node -p "require('electron')" | sed 's#/Contents/MacOS/Electron##')" "${args[@]}" --args "$PWD"
 ```
 
+개발 실행에서 자주 보이는 문구와 뜻은 다음과 같다.
+
+- `이 앱에 로그인 설정이 빠져 있어…`: `.env`를 불러오지 않고 실행했다. 위 명령처럼 `--env`로 넘기거나 `set -a && source .env && set +a` 뒤 `pnpm dev:electron`으로 실행한다.
+- `알림을 보내지 못했어요` / 온보딩 알림 줄의 `설정 열기`: 서명 없는 개발 앱이라 macOS가 시험 알림을 거절했다. 알림 목록에 `Electron`도 나오지 않으므로 설정으로는 풀 수 없다. 알림 QA는 서명한 빌드에서 한다. 개발 중에 알림 단계를 넘기려면 이 기기의 알림 확인을 직접 기록한 뒤 앱을 다시 열거나 권한 단계로 다시 들어간다(온보딩·집중 준비가 이 기록을 읽는다).
+- 권한 목록에서 찾을 이름은 `FocusOn`이 아니라 `Electron`이다.
+
+```bash
+echo '{"confirmed":true}' > ~/Library/Application\ Support/@focuson/desktop/notification-readiness.json
+```
+
 현재 Main은 기본 브라우저와 `127.0.0.1`의 임시 callback listener로 Google code를 받은 뒤 Backend `google/exchange`에 전달한다. 성공 응답의 Access Token은 Main 메모리, Refresh Token은 macOS Keychain에 저장한다. 앱 재시작 시 refresh·auth/me로 상태를 복구하고 로그아웃은 서버 폐기 후 Keychain을 비운다. Renderer는 로그인 버튼과 인증 상태별 화면을 제공한다. 서버가 `onboardingStatus: INCOMPLETE`를 주면 온보딩 첫 화면, `COMPLETED`를 주면 홈을 표시한다. 닉네임 중복 확인·저장과 온보딩 다음 단계, 홈의 목표 설정·기록 API는 후속 작업이다. Backend 인증 API가 준비되지 않았으면 실제 로그인 성공으로 처리하지 않는다. Client ID나 Backend origin 설정이 없으면 브라우저를 열지 않는다.

@@ -51,8 +51,8 @@ failed=작업을 완료할 수 없습니다.(UNErrorDomain 오류 1.)
 
 - 추정 원인: 집중 모드 또는 알림 설정에서 앱을 꺼 두었다.
 - 실제 원인: `UNErrorDomain 1`은 알림이 허용되지 않았다는 뜻이다. 개발용 `Electron.app`은 adhoc 서명이라 macOS가 허용 창 없이 거절하고 알림 목록에도 등록하지 않는다. 또 `permission-ipc.cts`의 시험 알림은 `Notification`의 `failed` 이벤트를 듣지 않고 항상 `shown: true`를 돌려준다.
-- 해결 방법: 이번 QA는 시험 알림을 확인 불가로 기록했다. 실제 확인은 서명된 빌드(Apple Development 인증서 이상)로 한다. 실패를 화면에 알리는 수정은 오류 문구 개선 작업에서 한다.
-- 변경 파일: 없음
+- 해결 방법: 이번 QA는 시험 알림을 확인 불가로 기록했다. 실제 확인은 서명된 빌드(Apple Development 인증서 이상)로 한다. 이후 Issue #117에서 시험 알림이 `failed`를 기다려 `shown: false`를 돌려주게 고쳤다. 개발 중 알림 단계는 README의 명령으로 알림 확인을 기록해 넘긴다.
+- 변경 파일: `electron/main/permission-ipc.cts`, `features/onboarding/PermissionsStep.tsx`, `features/settings/Settings.tsx`, `README.md` (Issue #117)
 
 ## 확인 결과
 
@@ -63,5 +63,5 @@ failed=작업을 완료할 수 없습니다.(UNErrorDomain 오류 1.)
 
 ## 재발 방지 및 남은 작업
 
-- 시험 알림이 `failed`를 받으면 화면에 실패와 할 일을 보여 준다.
+- [x] 시험 알림이 `failed`를 받으면 화면에 실패와 할 일을 보여 준다. (Issue #117)
 - 알림 QA는 서명된 빌드로 한다.

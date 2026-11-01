@@ -149,6 +149,14 @@ export function PermissionsStep() {
     }
   }, [])
 
+  // [유지보수] 이 기기에서 이미 시험 알림을 확인했다면 다시 묻지 않는다(설정·집중 준비에서 확인한 경우 포함).
+  useEffect(() => {
+    if (view !== 'permission') return
+    void onboardingApi.getNotificationStatus().then((result) => {
+      if (result.success && result.data.confirmed) setPerms((current) => current.notify.state === 'idle' ? { ...current, notify: { state: 'granted', error: null } } : current)
+    })
+  }, [view])
+
   useEffect(() => {
     if (view !== 'permission') return
     queueMicrotask(() => { void recheckScreen(true) })

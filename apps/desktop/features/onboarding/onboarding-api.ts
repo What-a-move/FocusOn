@@ -59,6 +59,8 @@ export const onboardingApi = {
     ({ shown }) => ({ requested: shown }),
   ),
   openNotificationSettings: () => viaPermissions((api) => api.openNotificationSettings(), same),
+  /** 이 기기에 저장된 시험 알림 확인(‘보였어요’) 결과. */
+  getNotificationStatus: () => viaPermissions((api) => api.getNotificationStatus(), same),
   /** 시험 알림을 본 사용자 확인을 이 기기에 기록한다. 세션 시작 때 Desktop이 이 기록으로 알림 준비를 막는다(결정 022). */
   confirmNotification: (seen: boolean) => viaPermissions((api) => api.confirmNotification({ seen }), same),
   savePermissionsStep: (input: { consents: string[]; cameraConsent: boolean }) => viaOnboarding(

@@ -191,7 +191,8 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
   async function notificationAction() {
     if (!notificationSent) {
       const result = await sessionApi.sendTestNotification()
-      if (!result.success || !result.data.shown) return showToast({ text: '시험 알림을 보내지 못했어요. 시스템 설정에서 알림을 켜 주세요.' })
+      if (!result.success) return showToast({ text: failText(result.error.code, '시험 알림을 보내지') })
+      if (!result.data.shown) return showToast({ text: '시험 알림을 보내지 못했어요. 시스템 설정 › 알림에서 FocusOn을 켜 주세요.' })
       setNotificationSent(true)
       return
     }
