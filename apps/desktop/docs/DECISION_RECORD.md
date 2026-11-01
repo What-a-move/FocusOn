@@ -683,3 +683,10 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 같은 `SERVICE_UNAVAILABLE`로 묶였던 로그인 실패를 Desktop 내부 code로 나눈다: `LOCAL_APP_CONFIG_MISSING`, `LOCAL_BROWSER_OPEN_FAILED`, `LOCAL_GOOGLE_LOGIN_FAILED`, `LOCAL_KEYCHAIN_UNAVAILABLE`. 서버 오류 코드·API는 바꾸지 않는다. 화면 전용 code(`LOCAL_SCREEN_PERMISSION_REVOKED` 등)는 해당 화면이 먼저 처리하고 나머지만 공용 함수로 넘긴다.
 - 이유: 앱 설정 누락인데 "잠시 후 다시 시도해 주세요"가 떠서 사용자가 원인을 알 수 없었다(PM 피드백, 2026-10-30).
 - 영향받는 파일: `app/lib/error-text.ts`, `app/page.tsx`, `features/*` 오류 표시부, `electron/main/auth-ipc.cts`, `auth-service.cts`, `index.cts`
+
+## 결정 033 - 시스템 문구는 해요체, 집중 기록의 주간 막대는 MVP에 둔다
+
+- 결정일: 2026-11-01 / 상태: 확정 (PM 결정, Notion 정합성 점검) / Issue #121.
+- 시스템 문구(로그인·권한·네트워크·오류·안내)는 해요체(`-요`)로 쓴다. `-습니다`는 쓰지 않는다. 포키 말풍선만 반말이다. Notion `UX 문구 · 알림 문구 정책`·`공통 Error Code 정책`의 예시 문구를 해요체로 맞췄다.
+- 집중 기록 화면의 주간 막대는 달력 API(`reports/calendar`)로 하루별 합계를 보여 주고 날짜를 고르는 용도라 MVP에 둔다. 주별 비교·추이 분석과 기간 히스토리는 P1로 남는다. Notion 리포트 설계서 1.1·1.2·2.4에 이 구분을 적었다.
+- 하루 총합은 서버의 종료 확정 `totalActiveMs`만 쓴다. 진행 중 회차는 목록에 `진행 중`으로만 보인다(리포트 설계서 2.2).
