@@ -20,9 +20,17 @@ function Logo({ className = '' }: { className?: string }) {
   </span>
 }
 
-function Alert({ message }: { message: string | null }) {
+type AuthAction = 'login' | 'retry' | 'logout'
+// 오류 제목은 마지막으로 한 동작 기준이다. 로그아웃 정리가 실패해도 로그인 화면으로 오기 때문이다.
+const FAILED_TITLE: Record<AuthAction, string> = {
+  login: '로그인하지 못했어요.',
+  retry: '로그인 상태를 확인하지 못했어요.',
+  logout: '로그아웃을 마치지 못했어요.',
+}
+
+function Alert({ message, action }: { message: string | null; action: AuthAction }) {
   if (!message) return null
-  return <div className="fo-notice" role="alert"><strong>로그인하지 못했어요.</strong><span>{message}</span></div>
+  return <div className="fo-notice" role="alert"><strong>{FAILED_TITLE[action]}</strong><span>{message}</span></div>
 }
 
 function LoadingScreen() {
@@ -32,8 +40,8 @@ function LoadingScreen() {
   </main>
 }
 
-function LoginScreen({ onLogin, onRetry, busy, authenticating, message, available, offline }: {
-  onLogin: () => void; onRetry: () => void; busy: boolean; authenticating: boolean; message: string | null; available: boolean; offline: boolean
+function LoginScreen({ onLogin, onRetry, busy, authenticating, message, action, available, offline }: {
+  onLogin: () => void; onRetry: () => void; busy: boolean; authenticating: boolean; message: string | null; action: AuthAction; available: boolean; offline: boolean
 }) {
   return <main className="fo-auth-window">
     <div className="fo-auth-brand"><Logo /></div>
@@ -46,7 +54,7 @@ function LoginScreen({ onLogin, onRetry, busy, authenticating, message, availabl
           <span>{busy ? '연결하는 중…' : offline ? '연결 다시 확인하기' : authenticating ? 'Google 로그인 다시 열기' : 'Google로 계속하기'}</span>
         </button>
         <div className="fo-login-state" aria-live="polite">
-          {offline ? <div className="fo-notice" role="alert"><strong>로그인 상태를 확인하지 못했어요.</strong><span>{message ?? errorText({ code: 'LOCAL_NETWORK_UNAVAILABLE' })}</span></div> : <Alert message={message} />}
+          {offline ? <div className="fo-notice" role="alert"><strong>로그인 상태를 확인하지 못했어요.</strong><span>{message ?? errorText({ code: 'LOCAL_NETWORK_UNAVAILABLE' })}</span></div> : <Alert message={message} action={action} />}
           {(busy || authenticating) && <div className="fo-notice is-info" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
           {!available && <p className="fo-app-only">Google 로그인은 FocusOn 데스크톱 앱에서 사용할 수 있어요.</p>}
         </div>
@@ -73,6 +81,7 @@ export default function Page() {
   const [snapshot, setSnapshot] = useState<AuthSessionSnapshot | null>(null)
   const [requestError, setRequestError] = useState<IpcError | null>(null)
   const [busy, setBusy] = useState(false)
+  const [action, setAction] = useState<AuthAction>('login')
   const [available, setAvailable] = useState(true)
 
   useEffect(() => {
@@ -100,7 +109,7 @@ export default function Page() {
   const login = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null)
+    setBusy(true); setRequestError(null); setAction('login')
     try { const result = await auth.startGoogleLogin(); if (!result.success) setRequestError(result.error) }
     catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
     finally { setBusy(false) }
@@ -108,7 +117,7 @@ export default function Page() {
   const retry = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null)
+    setBusy(true); setRequestError(null); setAction('retry')
     try {
       const result = await auth.retrySession()
       if (result.success) setSnapshot((current) => !current || result.data.revision > current.revision ? result.data : current)
@@ -119,7 +128,7 @@ export default function Page() {
   const logout = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null)
+    setBusy(true); setRequestError(null); setAction('logout')
     try { const result = await auth.logout(); if (!result.success) setRequestError(result.error) }
     catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
     finally { setBusy(false) }
@@ -131,5 +140,5 @@ export default function Page() {
   if (view === 'loading') return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
   if (view === 'home' && snapshot?.user) return <HomeDashboard name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
-  return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} available={available} offline={view === 'offline'} />
+  return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} action={action} available={available} offline={view === 'offline'} />
 }

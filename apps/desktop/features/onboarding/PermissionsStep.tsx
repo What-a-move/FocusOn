@@ -68,7 +68,7 @@ const permCopy: Record<PermName, { title: string; required: boolean; idle: strin
 }
 
 const idle: PermState = { state: 'idle', error: null }
-// macOS가 설정 창 열기를 거절한 경우다. 서버 문제가 아니므로 직접 여는 길을 알려 준다.
+// 설정 창을 열지 못한 경우다. 직접 여는 길을 알리고, 켠 뒤 ‘다시 확인’·‘다시 보내기’를 누를 수 있게 opened로 둔다.
 const SETTINGS_NOT_OPENED: Record<'screen' | 'notify', Notice> = {
   screen: { title: '시스템 설정을 열지 못했어요.', body: '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 직접 켜 주세요.' },
   notify: { title: '시스템 설정을 열지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 직접 켜 주세요.' },
@@ -162,7 +162,7 @@ export function PermissionsStep() {
     const current = perms[name]
     if (name === 'screen' && current.state === 'idle') {
       const result = await onboardingApi.openScreenRecordingSettings()
-      if (!result.success || !result.data.opened) return failPerm(name, 'idle', result.success ? SETTINGS_NOT_OPENED.screen : describeError(result.error, '시스템 설정을 열지 못했어요.'))
+      if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.screen)
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return
@@ -177,7 +177,7 @@ export function PermissionsStep() {
     }
     if (current.state === 'denied') {
       const result = await onboardingApi.openNotificationSettings()
-      if (!result.success || !result.data.opened) return failPerm(name, 'denied', result.success ? SETTINGS_NOT_OPENED.notify : describeError(result.error, '시스템 설정을 열지 못했어요.'))
+      if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.notify)
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return

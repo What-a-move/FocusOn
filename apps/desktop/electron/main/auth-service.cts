@@ -332,11 +332,12 @@ export class AuthService {
       let result: IpcResult<{ loggedOut: true }>
       try { result = await this.logoutSession(generation) }
       catch {
+        // API 실패는 결과로 돌아오므로 여기 오는 것은 갱신 중 Keychain 읽기 실패다.
         if (this.isCurrent(generation)) {
           this.forget()
-          this.publish('OFFLINE', SERVICE_UNAVAILABLE)
+          this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
         }
-        result = { success: false, error: SERVICE_UNAVAILABLE }
+        result = { success: false, error: KEYCHAIN_UNAVAILABLE }
       }
       // 서버 장애로 logout이 실패하면 보존한 로그인은 새 요청에 계속 쓸 수 있어야 한다.
       // 이미 시작된 이전 요청은 generation이 달라 재전송되지 않는다.
