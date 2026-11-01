@@ -8,7 +8,7 @@ import './dashboard.css'
 const NAVIGATION = [
   { key: 'home', label: '홈', asset: 'nav-home.png', href: '/' },
   { key: 'start', label: '집중 시작', asset: 'nav-start.svg', href: '/goal/' },
-  { key: 'records', label: '집중 기록', asset: 'nav-records.png', href: null },
+  { key: 'records', label: '집중 기록', asset: 'nav-records.png', href: '/records/' },
   { key: 'notes', label: '학습 노트', asset: 'nav-notes.svg', href: null },
   { key: 'settings', label: '설정', asset: 'nav-settings.png', href: '/settings/' },
 ] as const

@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppSidebar } from '../dashboard/AppSidebar'
+import { AppSidebar, type SidebarPage } from '../dashboard/AppSidebar'
 import { errorText } from '../../app/lib/error-text'
 import './settings.css'
 
-/** 설정 하위 화면의 틀. 홈과 같은 사이드바를 두고, 로그인이 풀리면 첫 화면(로그인)으로 돌려보낸다. */
-export function SettingsShell({ children }: { children: ReactNode }) {
+/** 사이드바가 있는 하위 화면(설정·집중 기록)의 틀. 로그인이 풀리면 첫 화면(로그인)으로 돌려보낸다. */
+export function SettingsShell({ children, active = 'settings' }: { children: ReactNode; active?: SidebarPage }) {
   const router = useRouter()
   const [name, setName] = useState('FocusOn 사용자')
   const [busy, setBusy] = useState(false)
@@ -34,7 +34,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
   }
 
   return <main className="fo-home-window">
-    <AppSidebar active="settings" name={name} onLogout={() => { void logout() }} busy={busy} />
+    <AppSidebar active={active} name={name} onLogout={() => { void logout() }} busy={busy} />
     <div className="fo-settings">{children}</div>
   </main>
 }
