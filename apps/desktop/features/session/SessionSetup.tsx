@@ -159,7 +159,6 @@ export function SessionSetup() {
   }
 
   return <main className="app-window onboarding-window setup-window">
-    <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     <div className="layout">
       <section className="sheet" aria-labelledby="setup-title"><div className="sheet-inner">
         <Link className="back-link" href="/"><span aria-hidden="true">←</span>홈으로</Link>

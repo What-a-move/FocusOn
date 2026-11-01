@@ -74,7 +74,6 @@ export function FocusSession() {
 
   if (!snapshot) {
     return <main className="app-window onboarding-window focus-window">
-      <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
       <section className="finished">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="poki" src={POKI.curious} alt="궁금해하는 포키" />
@@ -112,7 +111,6 @@ export function FocusSession() {
   if (finished) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
 
   return <main className={`app-window onboarding-window focus-window${paused ? ' is-paused' : ''}`}>
-    <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     {/* 집중 중에도 홈으로 나갈 수 있다. 타이머는 Main에서 계속 센다. */}
     <Link className="home-link" href="/"><span aria-hidden="true">←</span>홈</Link>
     <section className="stage" aria-labelledby="goal-text">

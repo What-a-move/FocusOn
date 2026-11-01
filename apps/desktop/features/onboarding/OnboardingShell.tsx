@@ -43,10 +43,6 @@ export function OnboardingShell({
 
   return (
     <main className="app-window onboarding-window">
-      <header className="titlebar">
-        <div className="window-controls" aria-hidden="true"><i /><i /><i /></div>
-      </header>
-
       <div className="flow">
         <div className="top">
           {onBack ? (

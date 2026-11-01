@@ -109,12 +109,6 @@
 .onboarding-window p { text-wrap: pretty; }
 
 /* 창 상단 */
-.onboarding-window .titlebar { position: relative; z-index: 2; height: 28px; flex: 0 0 28px; display: flex; align-items: center; padding: 0 20px; }
-.onboarding-window .window-controls { display: flex; gap: 8px; }
-.onboarding-window .window-controls i { width: 12px; height: 12px; border-radius: 50%; }
-.onboarding-window .window-controls i:nth-child(1) { background: #ff5f57; }
-.onboarding-window .window-controls i:nth-child(2) { background: #febc2e; }
-.onboarding-window .window-controls i:nth-child(3) { background: #28c840; }
 .onboarding-window .flow { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
 /* 진행 바 */
