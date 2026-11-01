@@ -229,7 +229,6 @@ export function GoalSetting() {
   const pokiAlt = view === 'questions' || view === 'candidates' ? '궁금해하는 포키' : '체크리스트를 든 포키'
 
   return <main className="app-window onboarding-window goal-window">
-    <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     <div className="flow">
       <div className="top">
         <Link className="close" href="/" aria-label="목표 설정 닫고 홈으로">✕</Link>

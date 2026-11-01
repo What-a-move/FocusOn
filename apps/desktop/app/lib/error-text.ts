@@ -7,6 +7,8 @@ export function errorText(error: { code: string }): string {
     case 'SERVICE_UNAVAILABLE':
     case 'INTERNAL_ERROR': return 'FocusOn이 지금 요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.'
     case 'REQUEST_TIMEOUT': return 'FocusOn 서버의 응답이 너무 늦어요. 잠시 후 다시 시도해 주세요.'
+    // 서버에 아직 없는 API(404). 기다려도 풀리지 않으니 "잠시 후"를 쓰지 않는다.
+    case 'NOT_FOUND': return '이 기능은 아직 준비 중이에요. 준비되면 바로 쓸 수 있어요.'
     case 'INVALID_RESPONSE': return '서버 응답을 읽지 못했어요. 앱을 다시 실행한 뒤 시도해 주세요.'
     case 'TOO_MANY_REQUESTS': return '짧은 시간에 요청이 많았어요. 1분쯤 뒤에 다시 시도해 주세요.'
     case 'VALIDATION_ERROR': return '입력한 값을 확인한 뒤 다시 시도해 주세요.'

@@ -71,6 +71,7 @@
 
 - Issue #80(2026-10-27): 설정 화면(`/settings/`, `settings.html`) 집중·분석·권한·화면 탭과 분석 제외 목록(`/settings/exclusions/`, `exclusions.html`)을 구현했다(결정 029). 홈 사이드바를 `AppSidebar`로 꺼내 `홈`·`설정`을 링크로 연결했다. 집중 설정은 `PUT focus-settings`로 바꿀 때마다 저장하고 실패하면 되돌린다. 제외 사이트는 서버 전체 교체, 제외 앱은 이 기기에 저장한다. 화면 모드는 `nativeTheme`으로 앱 전체에 적용한다. focus-settings·제외 도메인 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 6가지 상태와 저장·되돌리기·권한 다시 확인을 확인했다. 계정·기기 연결 탭은 다음 Issue다.
 - Issue #80 QA(2026-10-31): 실제 Google 계정과 로컬 Docker 서버로 집중 설정·제외 사이트 저장, 제외 앱·화면 모드 재실행 유지, 서버 끊김 시 조회 재시도를 로그·DB로 확인했다(`settings-REPORT.md`). 서버에 없는 API가 `401 AUTH_RELOGIN_REQUIRED`로 응답해 홈에서 로그아웃되는 문제는 백엔드에 요청했다(`settings-missing-api-relogin-ERROR.md`). 권한 QA는 `open -a`로 실행해야 한다(README).
+- 오류 표시 정리(2026-11-01): 빨간색은 실제 오류에만 쓴다(결정 031, #111). 오류 제목은 무엇을 못 했는지, 본문은 `app/lib/error-text.ts`의 원인·할 일 문구다(결정 032, #115). 로그인 실패는 `LOCAL_APP_CONFIG_MISSING`·`LOCAL_BROWSER_OPEN_FAILED`·`LOCAL_GOOGLE_LOGIN_FAILED`·`LOCAL_KEYCHAIN_UNAVAILABLE`로 나뉜다. 시험 알림은 macOS가 거절하면 `shown: false`다(#118). 서버는 없는 API에 `404 NOT_FOUND`를 준다(백엔드 #112). Desktop은 "아직 준비 중"으로 안내하고 로그아웃하지 않는다(#119).
 
 ### 아직 진행하지 않은 작업
 

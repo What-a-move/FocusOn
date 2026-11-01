@@ -86,7 +86,6 @@ export function SessionResult() {
 
   if (view.kind === 'loading') return <main className="app-window onboarding-window result-window" aria-busy="true" />
   return <main className="app-window onboarding-window result-window">
-    <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     <div className="scroll">
       <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
         {view.kind !== 'ready' ? <>
