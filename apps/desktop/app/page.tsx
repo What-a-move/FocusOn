@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
@@ -21,7 +21,8 @@ function Logo({ className = '' }: { className?: string }) {
 }
 
 type AuthAction = 'login' | 'retry' | 'logout'
-// 오류 제목은 마지막으로 한 동작 기준이다. 로그아웃 정리가 실패해도 로그인 화면으로 오기 때문이다.
+// 오류 제목은 그 오류가 생길 때 진행 중이던 동작 기준이다. 로그아웃 정리가 실패해도 로그인 화면으로 오기 때문이다.
+// 동작과 상관없이(만료 등) 생긴 오류는 로그인 기준으로 본다.
 const FAILED_TITLE: Record<AuthAction, string> = {
   login: '로그인하지 못했어요.',
   retry: '로그인 상태를 확인하지 못했어요.',
@@ -81,6 +82,8 @@ export default function Page() {
   const [snapshot, setSnapshot] = useState<AuthSessionSnapshot | null>(null)
   const [requestError, setRequestError] = useState<IpcError | null>(null)
   const [busy, setBusy] = useState(false)
+  // 진행 중인 동작. 그동안 도착한 Snapshot 오류와 요청 오류에 이 동작을 붙인다.
+  const running = useRef<AuthAction | null>(null)
   const [action, setAction] = useState<AuthAction>('login')
   const [available, setAvailable] = useState(true)
 
@@ -96,6 +99,7 @@ export default function Page() {
       if (!active) return
       setSnapshot((current) => !current || next.revision > current.revision ? next : current)
       setRequestError(null)
+      setAction(running.current ?? 'login')
     }
     const unsubscribe = auth.onSessionChanged(applySnapshot)
     void auth.getSession().then((result) => {
@@ -109,29 +113,29 @@ export default function Page() {
   const login = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null); setAction('login')
+    setBusy(true); setRequestError(null); setAction('login'); running.current = 'login'
     try { const result = await auth.startGoogleLogin(); if (!result.success) setRequestError(result.error) }
     catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
-    finally { setBusy(false) }
+    finally { setBusy(false); running.current = null }
   }
   const retry = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null); setAction('retry')
+    setBusy(true); setRequestError(null); setAction('retry'); running.current = 'retry'
     try {
       const result = await auth.retrySession()
       if (result.success) setSnapshot((current) => !current || result.data.revision > current.revision ? result.data : current)
       else setRequestError(result.error)
     } catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
-    finally { setBusy(false) }
+    finally { setBusy(false); running.current = null }
   }
   const logout = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null); setAction('logout')
+    setBusy(true); setRequestError(null); setAction('logout'); running.current = 'logout'
     try { const result = await auth.logout(); if (!result.success) setRequestError(result.error) }
     catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
-    finally { setBusy(false) }
+    finally { setBusy(false); running.current = null }
   }
 
   const view = selectAuthView(snapshot)
