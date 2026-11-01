@@ -22,6 +22,7 @@ function formatClock(ms: number): string {
 
 function sessionErrorText(code: string): string {
   switch (code) {
+    case 'LOCAL_RESTART_PAUSE_UNSYNCED': return '멈춘 상태를 서버에 알리지 못했어요. 연결을 확인한 뒤 ‘이어\u00a0하기’를 눌러 주세요.'
     case 'LOCAL_SCREEN_PERMISSION_REVOKED': return '화면 기록 권한이 꺼져 있어요. 시스템 설정에서 켠 뒤 다시 눌러 주세요.'
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return '알림이 보이는지 확인이 필요해요. 세션 설정에서 시험 알림을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_START_REQUIREMENT_MISSING': return '화면 기록 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.'

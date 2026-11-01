@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 목표 → 집중 시작 실제 연동 QA 후속 (Issue #125, `fix/125-desktop-session-qa`)
+- 상태: 백엔드 #124(세션 시작·활성 조회)로 실제 QA(2026-11-01). 목표 저장·세션 시작·재실행 복구 확인, 목표 확인 실패 중복 안내·진행 중 집중 복귀 길·복구 실패 문구 수정. 남은 일: 서버 `heartbeats`·`pause`·`resume`·`end`·`interventions`·`goals/clarify` 병합 뒤 집중 화면 전체 QA와 목표·세션 설정 REPORT.
+
 - 작업명: 집중 기록 화면 (Issue #121, `feat/121-desktop-records`)
 - 상태: 주간 막대·하루 기록·빈 날·오류 상태, 홈 달력 날짜·지난 목표·사이드바 연결 구현(2026-11-01). 남은 일: 리포트 API(`reports/calendar`·`reports/daily`) 병합 뒤 실제 계정 QA와 REPORT.
 - 다음 Issue 후보: 학습 노트(`notes.html`·`study-review.html`), 설정 계정·기기 연결 탭(D24·D25).

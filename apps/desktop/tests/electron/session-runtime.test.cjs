@@ -100,6 +100,25 @@ test('앱 재실행: 실행 중이던 세션은 서버 확정 시간으로 APP_R
   assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
 })
 
+test('앱 재실행: 일시정지를 서버에 알리지 못해도 로컬에서 멈추고 실패를 알린다', async () => {
+  const active = { sessionId: '901', status: 'RUNNING', version: 3, goalTextSnapshot: '미적분 풀기', targetDurationMs: 600000, accumulatedActiveMs: 200000 }
+  const { runtime, advance } = setup({
+    'GET /api/v1/sessions/active': { success: true, data: active },
+    'POST /api/v1/sessions/901/pause': { success: false, error: { code: 'NOT_FOUND', retryable: false } },
+  })
+  await runtime.restore()
+  advance(60000)
+  assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 200000, '멈춘 뒤에는 세지 않음')
+  assert.equal(runtime.snapshot().error, 'LOCAL_RESTART_PAUSE_UNSYNCED')
+})
+
+test('동시에 복구를 물어도 활성 세션 조회는 한 번만 보낸다', async () => {
+  const { runtime, calls } = setup({ 'GET /api/v1/sessions/active': (request) => ({ success: true, raw: request.parse(null) }) })
+  await Promise.all([runtime.restore(), runtime.restore()])
+  assert.equal(calls.filter((call) => call.path === '/api/v1/sessions/active').length, 1)
+})
+
 test('활성 세션이 없다는 204 응답은 null로 끝난다', async () => {
   const { runtime } = setup({ 'GET /api/v1/sessions/active': (request) => ({ success: true, raw: request.parse(null) }) })
   const result = await runtime.restore()
