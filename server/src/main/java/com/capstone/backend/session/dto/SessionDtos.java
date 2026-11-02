@@ -8,11 +8,12 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-/** 세션 시작과 활성 조회의 요청·응답이다. */
+/** 세션 요청과 응답이다. */
 public final class SessionDtos {
   private SessionDtos() {}
 
@@ -50,4 +51,20 @@ public final class SessionDtos {
   /** 사용자의 활성 세션 정보다. */
   public record ActiveResponse(String sessionId, SessionStatus status, long version,
       String goalTextSnapshot, long targetDurationMs, long accumulatedActiveMs) {}
+
+  /** 일시정지의 사용자 및 자동 복구 사유다. */
+  public enum PauseReason { USER, REQUIRED_PERMISSION, EXTENSION_UNLINKED, APP_RESTART, SYSTEM }
+
+  /** Desktop이 측정한 누적 시간으로 세션 일시정지를 요청한다. */
+  public record PauseRequest(@NotNull @Schema(example = "USER") PauseReason pauseReason,
+      @NotNull @PositiveOrZero @Schema(example = "1500000") Long accumulatedActiveMs) {}
+
+  /** 일시정지 후 서버가 확정한 상태다. */
+  public record PauseResponse(SessionStatus status, long version, long accumulatedActiveMs) {}
+
+  /** 화면 분석 준비 상태와 함께 세션 재개를 요청한다. */
+  public record ResumeRequest(@NotNull @Valid StartReadiness readiness) {}
+
+  /** 재개된 세션과 서버가 기록한 재개 시각이다. */
+  public record ResumeResponse(SessionStatus status, long version, Instant lastResumedAt) {}
 }

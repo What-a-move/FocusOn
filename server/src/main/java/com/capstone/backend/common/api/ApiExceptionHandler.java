@@ -27,7 +27,7 @@ public class ApiExceptionHandler {
     ApiErrorCode code = exception.code();
     ApiErrorResponse body = ApiErrorResponse.of(
         code, exception.retryAfterSeconds(), requestId, exception.details());
-    ResponseEntity.BodyBuilder response = ResponseEntity.status(code.status());
+    ResponseEntity.BodyBuilder response = ResponseEntity.status(exception.status());
     if (exception.retryAfterSeconds() != null) {
       response.header(HttpHeaders.RETRY_AFTER, exception.retryAfterSeconds().toString());
     }

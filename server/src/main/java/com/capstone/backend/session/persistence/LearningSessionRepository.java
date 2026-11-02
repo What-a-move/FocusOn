@@ -13,4 +13,7 @@ public interface LearningSessionRepository extends JpaRepository<LearningSession
   /** 특정 목표를 참조하는 활성 세션이 있는지 확인한다. */
   boolean existsByUserIdAndGoalIdAndStatusIn(Long userId, Long goalId,
       Collection<SessionStatus> statuses);
+
+  /** 현재 사용자에게 속한 세션만 조회한다. */
+  Optional<LearningSessionEntity> findByIdAndUserId(Long id, Long userId);
 }
