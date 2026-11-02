@@ -13,7 +13,10 @@
 @keyframes fo-settings-fade { from { opacity: 0; } to { opacity: 1; } }
 
 /* 세로 간격은 창 높이에 맞춰 늘고 줄어든다 */
-.fo-settings-page { width: min(820px, calc(100% - 80px)); margin: 0 auto; padding: clamp(16px, 6vh, 72px) 0 40px; }
+/* 사이드바 화면 공통: 내용 시작은 창 높이에 맞춰 32~64px. 세로로 꽉 채워, 짧은 상태(오류·빈 화면)를 남은 공간 가운데에 둘 수 있게 한다. */
+.fo-settings-page { display: flex; flex-direction: column; min-height: 100%; width: min(820px, calc(100% - 80px)); margin: 0 auto; padding: clamp(32px, 6vh, 64px) 0 40px; }
+.fo-settings-page > .fo-settings-panel { flex: 1; display: flex; flex-direction: column; }
+.fo-settings-panel > .fo-error-state:only-child { margin: auto; }
 .fo-settings h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
 
 /* 머리: 제목·탭 왼쪽, 탭마다 다른 포키 오른쪽 */
@@ -33,8 +36,6 @@
 /* 탭을 바꾸면 줄들이 차례로 올라온다 */
 .fo-settings-panel > * { animation: fo-settings-rise .55s var(--fo-pop) both; animation-delay: calc(var(--n, 0) * 50ms); }
 .fo-settings-status { margin: 0; color: var(--fo-muted); font-size: 15px; }
-.fo-load-error { max-width: 520px; }
-.fo-load-error .fo-small-btn { margin-top: 12px; }
 
 /* 설정 줄: 이름 · 조작 */
 .fo-row { display: flex; align-items: center; gap: 16px; min-height: clamp(48px, 10vh, 96px); padding: 4px 0; }
@@ -115,7 +116,7 @@
 .fo-shot.system .fo-shot-half.dark { clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
 
 /* 분석 제외 목록 */
-.fo-exclusions { padding-top: 36px; }
+
 .fo-back-link { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; color: var(--fo-muted); font-size: 15px; font-weight: 600; text-decoration: none; }
 .fo-back-link:hover { color: var(--fo-ink); }
 .fo-exclusions h1 { margin-top: 12px; }
@@ -188,7 +189,7 @@
 
 @media (max-height: 760px) { .fo-settings-poki { height: 92px; } }
 @media (max-height: 640px) {
-  .fo-settings-page { padding: 16px 0 24px; }
+  .fo-settings-page { padding: 24px 0 24px; }
   .fo-settings-panel { padding-top: 20px; }
   .fo-settings-panel > * + * { margin-top: 20px; }
   .fo-row { min-height: 50px; }

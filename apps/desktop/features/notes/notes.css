@@ -1,5 +1,8 @@
 /* 학습 노트 — FocusOn-design/study-review.html · fo-base.css `.notebook`을 옮겼다. 사이드바·색 토큰은 설정 화면(.fo-settings)과 같다. */
-.fo-note-page { --paper: #fdfcf9; --paper-edge: #ebe6dc; --rule: #f1ede5; --nb-line: 32px; width: min(1040px, calc(100% - 80px)); margin: 0 auto; padding: clamp(16px, 4vh, 40px) 0 40px; }
+.fo-note-page { --paper: #fdfcf9; --paper-edge: #ebe6dc; --rule: #f1ede5; --nb-line: 32px; display: flex; flex-direction: column; min-height: 100%; width: min(1040px, calc(100% - 80px)); margin: 0 auto; padding: clamp(32px, 6vh, 64px) 0 40px; }
+/* 노트가 아닌 짧은 상태(정리 중·실패·기록 없음·오류)는 남은 공간 가운데에 둔다. */
+.fo-note-page > .fo-note-status, .fo-note-page > .fo-error-state { margin-block: auto; }
+.fo-note-page > .fo-error-state { margin-inline: auto; }
 @media (prefers-color-scheme: dark) { .fo-note-page { --paper: #1a1a1c; --paper-edge: #2c2c31; --rule: #232327; } }
 .fo-back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--fo-muted); font-size: 15px; font-weight: 600; text-decoration: none; }
 .fo-back-link:hover { color: var(--fo-ink); }
@@ -48,4 +51,3 @@
 @media (max-height: 760px) { .fo-note-page { --nb-line: 28px; } .fo-nb-title { font-size: 22px; } .fo-nb-text, .fo-nb-next, .fo-nb-concepts b { font-size: 15px; } }
 @media (max-width: 860px) { .fo-note-page { width: calc(100% - 48px); } .fo-nb-concepts { grid-template-columns: 1fr; } .fo-notebook { padding-inline: 28px; } }
 @media (prefers-reduced-motion: reduce) { .fo-notebook, .fo-nb-write, .fo-note-status img, .fo-note-status img.is-turning, .fo-dots i { animation: none; } }
-.fo-note-page .fo-load-error { margin-top: 16px; }

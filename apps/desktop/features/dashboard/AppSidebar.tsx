@@ -35,7 +35,8 @@ export function AppSidebar({ active, name, onLogout, busy }: { active: SidebarPa
         : <span className={className} aria-current={current ? 'page' : undefined} key={key}>{content}</span>
     })}</nav>
     <div className="fo-sidebar-spacer" />
-    <div className="fo-profile"><span className="fo-profile-avatar" aria-hidden="true" /><div><strong>{name}</strong><small>Google 계정</small></div></div>
+    {/* 프로필을 누르면 설정의 계정 탭으로 간다. */}
+    <Link className="fo-profile" href="/settings/#account" aria-label={`${name} 계정 설정`}><span className="fo-profile-avatar" aria-hidden="true" /><div><strong>{name}</strong><small>Google 계정</small></div></Link>
     <button className="fo-sidebar-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? '로그아웃 중…' : '로그아웃'}</button>
   </aside>
 }

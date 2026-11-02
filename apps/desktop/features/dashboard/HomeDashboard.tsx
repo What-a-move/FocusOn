@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { AppSidebar } from './AppSidebar'
 import { useOngoingSession } from '../session/useOngoingSession'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
-import { errorText } from '../../app/lib/error-text'
+import { LoadError } from '../../app/lib/LoadError'
 import './dashboard.css'
 
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
@@ -59,7 +59,7 @@ function Calendar({ today, month, view, onMove, onRetry }: {
       </div>
     </div>
     {view.status === 'loading' && <div className="fo-skeleton" aria-hidden="true">{Array.from({ length: 35 }, (_, index) => <i key={index} />)}</div>}
-    {view.status !== 'loading' && view.status !== 'error' && <div className="fo-calendar-grid" key={monthKey(month)} aria-label={`${month.getFullYear()}년 ${month.getMonth() + 1}월 집중 달력`}>
+    {(view.status === 'ready' || (view.status === 'offline' && view.cached)) && <div className="fo-calendar-grid" key={monthKey(month)} aria-label={`${month.getFullYear()}년 ${month.getMonth() + 1}월 집중 달력`}>
       {WEEKDAYS.map((day) => <span className="fo-weekday" key={day}>{day}</span>)}
       {Array.from({ length: offset }, (_, index) => <span key={`blank-${index}`} />)}
       {Array.from({ length: days }, (_, index) => {
@@ -79,15 +79,10 @@ function Calendar({ today, month, view, onMove, onRetry }: {
       })}
     </div>}
     {view.status === 'loading' && <div className="fo-calendar-state" role="status"><strong>집중 달력을 불러오고 있어요.</strong><span>잠시만 기다려 주세요.</span></div>}
-    {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>집중 달력을 불러오지 못했어요.</strong><span>{errorText(view)}</span>
-      <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
-    </div>}
-    {view.status === 'offline' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>인터넷에 연결되어 있지 않아요.</strong>
-      <span>{view.cached ? `${timeFormat.format(view.cached.loadedAt)}에 마지막으로 확인한 기록만 보여 드려요.` : '확인된 기록이 없어 포키를 표시하지 않아요.'}</span>
-      <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
-    </div>}
+    {view.status === 'error' && <LoadError compact code={view.code} what="집중 달력을" onRetry={onRetry} />}
+    {view.status === 'offline' && (view.cached
+      ? <p className="fo-calendar-note" role="status">인터넷 연결이 끊겨 {timeFormat.format(view.cached.loadedAt)}에 확인한 기록을 보여 드려요.<button type="button" onClick={onRetry}>다시 시도</button></p>
+      : <LoadError compact code="LOCAL_NETWORK_UNAVAILABLE" what="집중 달력을" onRetry={onRetry} />)}
   </>
 }
 
@@ -95,10 +90,7 @@ function RecentGoals({ view, onRetry }: { view: RecentView; onRetry: () => void 
   return <>
     <div className="fo-panel-head"><h2 id="recent-title">지난 목표</h2></div>
     {view.status === 'loading' && <p className="fo-recent-loading" role="status">기록을 불러오고 있어요.</p>}
-    {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>지난 목표를 불러오지 못했어요.</strong><span>{errorText(view)}</span>
-      <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
-    </div>}
+    {view.status === 'error' && <LoadError compact code={view.code} what="지난 목표를" onRetry={onRetry} />}
     {view.status === 'ready' && <ul className="fo-recent-list">
       {view.items.length === 0 && <li className="fo-records-empty"><strong>아직 기록이 없어요</strong><span>첫 집중을 마치면 여기에 나타나요.</span></li>}
       {view.items.map((item) => {

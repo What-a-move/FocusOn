@@ -63,13 +63,7 @@ export function ToastView({ toast, onHide }: { toast: Toast | null; onHide: () =
 }
 
 /** 처음 불러오기 실패. 제목·할 일·다시 시도를 한 상자에 둔다 (홈 달력 오류와 같은 모양). */
-export function LoadError({ code, what, onRetry }: { code: string; what: string; onRetry: () => void }) {
-  return <div className="fo-notice fo-load-error" role="alert">
-    <strong>{what} 불러오지 못했어요.</strong>
-    <span>{errorText({ code })}</span>
-    <button className="fo-small-btn" type="button" onClick={onRetry}>다시 시도</button>
-  </div>
-}
+export { LoadError } from '../../app/lib/LoadError'
 
 /** 저장 실패 토스트. 무엇을 못 했는지 + 원인·할 일. */
 export function failText(code: string, action = '저장하지'): string {

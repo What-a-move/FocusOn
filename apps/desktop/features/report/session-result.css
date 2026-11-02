@@ -6,7 +6,7 @@
 }
 
 .result-window .scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.result-window .report { width: min(1040px, calc(100% - 64px)); min-height: 100%; margin: 0 auto; padding: 16px 0 40px; display: flex; flex-direction: column; }
+.result-window .report { width: min(1040px, calc(100% - 64px)); min-height: 100%; margin: 0 auto; padding: clamp(32px, 6vh, 64px) 0 40px; display: flex; flex-direction: column; }
 @keyframes result-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* 위: 포키 · 제목 · 큰 시간 */
@@ -94,7 +94,7 @@
 .result-window .actions .btn:hover span { transform: translateX(4px); }
 
 @media (max-height: 760px) {
-  .result-window .report { padding-top: 8px; padding-bottom: 26px; }
+  .result-window .report { padding-top: 24px; padding-bottom: 26px; }
   .result-window .hero .poki { height: 112px; }
   .result-window h1 { font-size: 30px; }
   .result-window .big-time { font-size: 54px; }

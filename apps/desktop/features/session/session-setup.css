@@ -8,7 +8,7 @@
 .setup-window .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); }
 
 /* 왼쪽: 준비 시트 (카드 중첩 없이 구분선으로만 나눔) */
-.setup-window .sheet { min-width: 0; overflow-y: auto; padding: 24px clamp(32px, 6vw, 72px) 0; }
+.setup-window .sheet { min-width: 0; overflow-y: auto; padding: clamp(32px, 6vh, 64px) clamp(32px, 6vw, 72px) 0; }
 .setup-window .sheet-inner { max-width: 720px; margin: 0 auto; }
 .setup-window .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 15px; font-weight: 600; text-decoration: none; }
 .setup-window .back-link:hover { color: var(--ink); }
