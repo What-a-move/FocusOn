@@ -1,5 +1,7 @@
 /* 집중 기록 — FocusOn-design/records.html을 옮겼다. 사이드바·창 틀·색 토큰은 설정 화면(.fo-settings)과 같다. */
-.fo-records { width: min(1040px, calc(100% - 80px)); margin: 0 auto; padding: clamp(16px, 6vh, 72px) 0 40px; }
+.fo-records { display: flex; flex-direction: column; min-height: 100%; width: min(1040px, calc(100% - 80px)); margin: 0 auto; padding: clamp(32px, 6vh, 64px) 0 40px; }
+/* 주간을 불러오지 못하면 막대 자리 대신 오류 상자만 남은 공간 가운데에 둔다. */
+.fo-records > .fo-error-state { margin: auto; }
 .fo-records-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .fo-records-tools { display: flex; align-items: center; gap: 4px; }
 .fo-icon-tool { position: relative; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--fo-ink); cursor: pointer; transition: background .15s ease; }
@@ -72,7 +74,7 @@
 .fo-records-skeleton i { display: block; height: 56px; margin-bottom: 10px; border-radius: 14px; background: linear-gradient(90deg, var(--fo-track), var(--fo-field), var(--fo-track)); background-size: 200% 100%; animation: fo-records-shimmer 1.2s linear infinite; }
 @keyframes fo-records-shimmer { to { background-position: -200% 0; } }
 
-@media (max-height: 760px) { .fo-records { padding-top: 16px; } .fo-week-wrap { --bar-h: 84px; margin-top: 16px; } .fo-day-section { margin-top: 20px; padding-top: 18px; } .fo-day-time { font-size: 38px; } }
+@media (max-height: 760px) { .fo-records { padding-top: 24px; } .fo-week-wrap { --bar-h: 84px; margin-top: 16px; } .fo-day-section { margin-top: 20px; padding-top: 18px; } .fo-day-time { font-size: 38px; } }
 @media (max-height: 600px) { .fo-week-wrap { --bar-h: 64px; } .fo-day-time { font-size: 32px; } .fo-entry { padding: 10px 16px; } }
 @media (max-width: 1000px) { .fo-week-wrap { grid-template-columns: 1fr; gap: 12px; } .fo-week-total { display: flex; align-items: baseline; gap: 10px; padding: 0; } .fo-week-total strong { margin: 0; font-size: 20px; } .fo-week-total em { margin: 0; } }
 @media (max-width: 900px) { .fo-records { width: calc(100% - 48px); } .fo-week-range { min-width: 0; } .fo-timeline li { padding-left: 76px; } .fo-timeline li::before { left: 59px; } .fo-dot { left: 54px; } .fo-clock { width: 44px; } }

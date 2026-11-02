@@ -105,7 +105,7 @@ export function AccountPanel({ showToast }: { showToast: ShowToast }) {
       </div> : <button className="fo-small-btn" type="button" onClick={() => { setDraft(nickname); setNameError(''); setEditing(true) }}>닉네임 변경</button>}
     </div>
 
-    {consents.status === 'error' ? <LoadError code={consents.code} what="동의 내역을" onRetry={() => { void load() }} /> : <div>
+    {consents.status === 'error' ? <LoadError compact code={consents.code} what="동의 내역을" onRetry={() => { void load() }} /> : <div>
       <div className="fo-row">
         <div className="fo-row-copy"><strong>동의 내역</strong><small>{consents.status === 'loading' ? '불러오고 있어요' : `필수 3개 · ${screen?.granted ? '모두 동의함' : '화면 분석 철회함'}`}</small></div>
         <button className="fo-small-btn" type="button" onClick={() => { docsRef.current?.showModal(); docsRef.current?.scrollTo(0, 0) }}>전문 보기</button>

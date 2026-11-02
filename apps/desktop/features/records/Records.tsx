@@ -130,11 +130,11 @@ export function Records() {
         </div>
       </div>}
 
-      <section className="fo-day-section" aria-label={`${longDate.format(fromKey(selected))} 기록`}>
+      {week.status === 'error' ? <LoadError code={week.code} what="기록을" onRetry={retry} /> : <section className="fo-day-section" aria-label={`${longDate.format(fromKey(selected))} 기록`}>
         {error ? <LoadError code={error.code} what="기록을" onRetry={retry} />
           : day.status === 'loading' ? <div className="fo-records-skeleton" aria-hidden="true"><i /><i /><i /></div>
           : day.status === 'ready' && <DayRecords date={selected} today={today} report={day.data} />}
-      </section>
+      </section>}
     </div>
   </SettingsShell>
 }

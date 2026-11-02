@@ -112,7 +112,7 @@
 .onboarding-window .flow { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
 /* 진행 바 */
-.onboarding-window .top { display: flex; align-items: center; gap: 16px; width: min(980px, calc(100% - 64px)); margin: 20px auto 0; }
+.onboarding-window .top { display: flex; align-items: center; gap: 16px; width: min(980px, calc(100% - 64px)); margin: clamp(28px, 5vh, 48px) auto 0; }
 .onboarding-window .back { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--ink); font-size: 22px; line-height: 1; text-decoration: none; cursor: pointer; }
 .onboarding-window .back:hover:not(:disabled) { background: var(--field); }
 .onboarding-window .back:disabled { visibility: hidden; }
@@ -274,7 +274,7 @@
 
 /* 낮은 창: 스크롤 없이 들어가게 */
 @media (max-height: 680px) and (min-width: 761px) {
-  .onboarding-window .top { margin-top: 12px; }
+  .onboarding-window .top { margin-top: 20px; }
   .onboarding-window .step { padding: 16px 0; gap: 48px; grid-template-columns: 240px minmax(0, 1fr); }
   .onboarding-window .poki { width: 150px; height: 150px; }
   .onboarding-window .bubble { padding: 12px 18px; font-size: 17px; }
