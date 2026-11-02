@@ -54,7 +54,12 @@ export class SettingsService {
     })
     if (!saved.success) return saved
     await this.syncOnboardingStatus()
-    return this.getConsents()
+    // [주의] 저장은 이미 끝났다. 다시 읽기가 실패해도 실패로 보이지 않게 저장한 값으로 목록을 맞춘다.
+    const after = await this.getConsents()
+    if (after.success) return after
+    const now = new Date().toISOString()
+    return { success: true, data: { ...current.data, items: current.data.items.map((item) => item.type !== 'SCREEN_ANALYSIS' ? item
+      : { ...item, granted, grantedAt: granted ? now : item.grantedAt, withdrawnAt: granted ? null : now }) } }
   }
 
   getDevices(): Promise<ApiResult<DeviceStatus>> {
@@ -69,7 +74,9 @@ export class SettingsService {
     const removed = await this.auth.authorizedRequest({ path: `/api/v1/extension-pairings/${deviceId}`, method: 'DELETE', expectedStatus: 204, parse: () => ({}) })
     if (!removed.success) return removed
     await this.syncOnboardingStatus()
-    return this.getDevices()
+    // 해제는 이미 끝났다. 다시 읽기가 실패해도 연결 없음으로 보여 준다.
+    const after = await this.getDevices()
+    return after.success ? after : { success: true, data: { extension: null } }
   }
 
   // 실패해도 철회·해제 결과는 그대로다. 다음 화면 이동 때 readiness를 다시 읽는다.

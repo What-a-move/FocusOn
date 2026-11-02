@@ -81,7 +81,9 @@ export function AccountPanel({ showToast }: { showToast: ShowToast }) {
   }
 
   async function logout() {
-    await window.focusOn?.auth.logout()
+    const result = await window.focusOn?.auth.logout()
+    // 서버 로그아웃이 실패하면 로그인이 남아 있으므로 첫 화면으로 보내지 않는다.
+    if (!result?.success) return showToast({ text: failText(result?.error.code ?? 'SERVICE_UNAVAILABLE', '로그아웃하지') })
     router.replace('/')
   }
 
@@ -165,22 +167,29 @@ export function DevicesPanel({ showToast }: { showToast: ShowToast }) {
   // ponytail: 실시간 알림 채널이 생기면 polling 대신 구독으로 바꾼다.
   useEffect(() => {
     if (!code) return
+    // 이 코드에 대한 확인만 반영한다. 코드를 닫거나 새로 받으면 늦게 온 결과는 버리고, 확인 요청은 겹치지 않게 한다.
+    let active = true
+    let checking = false
     const tick = setInterval(() => {
       const current = Date.now()
       setNow(current)
       if (current >= code.expiresAt) setCode(null)
     }, 1000)
     const poll = setInterval(() => {
-      void load().then((result) => {
-        if (!result.success || !result.data.extension) return
+      if (checking) return
+      checking = true
+      void settingsApi.getDevices().then((result) => {
+        checking = false
+        if (!active || !result.success || !result.data.extension) return
+        setView({ status: 'ready', data: result.data })
         setCode(null)
         showToast({ text: 'Chrome 확장과 연결됐어요' })
         // 해제로 미완료가 됐던 온보딩 상태를 서버 기준으로 다시 맞춘다. 그래야 홈이 동의·연결 화면으로 가지 않는다.
         void onboardingApi.getReadiness()
       })
     }, POLL_MS)
-    return () => { clearInterval(tick); clearInterval(poll) }
-  }, [code, load, showToast])
+    return () => { active = false; clearInterval(tick); clearInterval(poll) }
+  }, [code, showToast])
 
   async function issue() {
     setIssuing(true)

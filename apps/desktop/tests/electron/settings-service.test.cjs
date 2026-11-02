@@ -116,3 +116,23 @@ test('기기 목록에서 이 Desktop에 연결된 Extension만 고르고, 다�
   const after = await service.unlinkExtension('22')
   assert.deepEqual(after, { success: true, data: { extension: null } }, 'readiness 조회가 실패해도 해제 결과는 돌려준다')
 })
+
+test('동의 저장·연결 해제가 끝났으면 다시 읽기가 실패해도 성공으로 돌려준다', async () => {
+  let reads = 0
+  const { service } = accountFixture({
+    'GET /api/v1/users/me/consents': () => (++reads === 1 ? consents(true) : { fail: 'SERVICE_UNAVAILABLE' }),
+    'PUT /api/v1/users/me/consents/SCREEN_ANALYSIS': { consentType: 'SCREEN_ANALYSIS' },
+    'GET /api/v1/users/me/onboarding-readiness': { fail: 'SERVICE_UNAVAILABLE' },
+  })
+  const result = await service.setScreenConsent(false)
+  assert.equal(result.success, true)
+  assert.equal(result.data.items.find((item) => item.type === 'SCREEN_ANALYSIS').granted, false)
+
+  let listed = 0
+  const devices = accountFixture({
+    'GET /api/v1/devices': () => (++listed === 1 ? { devices: [{ deviceId: '22', type: 'EXTENSION', name: 'Chrome', lastUsedAt: null, linkedDesktopDeviceId: '10' }] } : { fail: 'SERVICE_UNAVAILABLE' }),
+    'DELETE /api/v1/extension-pairings/22': null,
+    'GET /api/v1/users/me/onboarding-readiness': { fail: 'SERVICE_UNAVAILABLE' },
+  })
+  assert.deepEqual(await devices.service.unlinkExtension('22'), { success: true, data: { extension: null } })
+})
