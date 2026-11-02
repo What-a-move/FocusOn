@@ -16,6 +16,11 @@ public final class GoalDtos {
       @NotNull ConfirmationSource confirmationSource,
       @Schema(description = "AI 명확화 대화 ID (선택)") String clarificationSessionId) {}
 
+  /** 목표 문구 수정 요청이다. */
+  @Schema(example = "{\"goalText\":\"Spring Security 인증 복습\"}")
+  public record UpdateGoalRequest(
+      @Schema(example = "Spring Security 인증 복습") String goalText) {}
+
   /** 저장하거나 조회한 목표의 공개 정보다. */
   public record GoalResponse(String goalId, String goalText,
       ConfirmationSource confirmationSource) {}
