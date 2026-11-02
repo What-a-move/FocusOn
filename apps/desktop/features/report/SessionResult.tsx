@@ -16,7 +16,8 @@ const REVIEW = {
   GENERATING: { kind: 'pending', icon: 'spinner', heading: '학습 내용을 정리하고 있어요', copy: '잠시만 기다려 주세요.' },
   READY: { kind: 'ready', icon: '✓', heading: '학습 정리가 준비됐어요', copy: '' },
   INSUFFICIENT_DATA: { kind: 'neutral', icon: '–', heading: '이번에는 학습 기록만 남겼어요', copy: '정리할 내용이 부족했어요.' },
-  FAILED: { kind: 'error', icon: '!', heading: '학습 정리를 만들지 못했어요.', copy: '집중 기록은 그대로 남아 있어요.' },
+  // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
+  FAILED: { kind: 'neutral', icon: '–', heading: '학습 정리를 만들지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
   UNKNOWN: { kind: 'neutral', icon: '–', heading: '학습 정리 상태를 확인하지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
 } as const
 
@@ -168,7 +169,7 @@ function ResultBody({ summary, learning, shownMinutes, shownSeconds }: { summary
 
         <section className="block review-block" aria-labelledby="review-title">
           <div className="block-head"><h2 id="review-title">학습 정리</h2></div>
-          <div className={`review-row is-${review.kind}`} role={review.kind === 'error' ? 'alert' : 'status'}>
+          <div className={`review-row is-${review.kind}`} role="status">
             <span className="state-icon" aria-hidden="true">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {review.icon === 'spinner' ? <img className="poki-turn" src="/design/poki-floating-logo-base-v1.png" alt="" /> : review.icon}
@@ -177,6 +178,8 @@ function ResultBody({ summary, learning, shownMinutes, shownSeconds }: { summary
               <strong>{review.heading}</strong>
               {(learning?.status === 'READY' ? learning.overview : review.copy) && <span>{learning?.status === 'READY' ? learning.overview : review.copy}</span>}
             </div>
+            {/* 정리가 끝났으면 핵심 개념·다음 시작 지점까지 담은 학습 노트로 간다(study-review). */}
+            {learning?.status === 'READY' && <Link className="btn btn-ghost review-open" href={`/notes/?session=${encodeURIComponent(summary.sessionId)}`}>정리 보기</Link>}
           </div>
         </section>
       </div>
