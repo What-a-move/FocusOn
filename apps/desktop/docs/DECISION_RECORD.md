@@ -700,3 +700,12 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 철회·해제·삭제는 오류가 아니므로 빨간 버튼을 쓰지 않고 기본 버튼 + 확인 창으로 묻는다(결정 031).
 - 동의 문서 요약은 온보딩과 설정이 `features/onboarding/consent-docs.ts`를 함께 쓴다. 문서 표시 버전(`v1.0`)과 서버 동의 버전(`2026-09-17`)이 달라 설정 요약에는 버전을 표시하지 않는다. 둘을 맞추는 일은 별도 작업이다.
 - 영향받는 파일: `electron/main/settings-ipc.cts`, `auth-api.cts`(DELETE·204), `auth-service.cts`(`currentDeviceId`), `electron/shared/settings-contract.cts`, `features/settings/AccountPanels.tsx`, `Settings.tsx`
+
+## 결정 035 - 베타 API 형식: 알림 type 두 가지, 리포트 요약 필드, AI 실패는 UNCERTAIN
+
+- 결정일: 2026-11-02 / 상태: 확정 (PM 결정, Notion API 명세 반영) / Issue #135.
+- 베타 흐름(목표 → 집중 → 이탈 알림 → 종료 → 집중 리포트)에 필요한 API를 Desktop·Extension 실제 호출 형식 그대로 `apps/docs/BETA-API-HANDOFF.md`에 정리했다. Notion API 명세와 대조해 클라이언트는 명세와 같음을 확인했고, 서버가 이 형식에 맞춘다.
+- 상태 명령(pause·resume·extend·end)에는 Notion대로 `X-Device-Id`를 보내지 않는다. resume 본문은 `readiness`, summary 제목은 `goalSnapshot`으로 명세 그대로 둔다.
+- 알림 목록 항목에 `interventionId`를 넣고 `type`은 `OFF_TASK`·`BREAK_SUGGESTION` 두 가지로 정한다. Desktop은 그 밖의 type을 표시하지 않는다(예전에는 이름에 `BREAK`가 없으면 모두 이탈 알림으로 보였다).
+- AI 장애·시간 초과는 `UNCERTAIN`·`ANALYSIS_UNAVAILABLE`로 응답하고, 베타까지 AI가 없으면 서버 임시 규칙 판정을 같은 응답 형식으로 쓸 수 있다.
+- 영향받는 파일: `electron/main/intervention-watcher.cts`, `tests/electron/intervention-watcher.test.cjs`, `apps/docs/BETA-API-HANDOFF.md`, 루트 `docs/API_CONTRACT.md`
