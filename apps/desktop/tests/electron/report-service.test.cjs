@@ -63,7 +63,7 @@ test('핵심 개념은 이름·설명이 있는 것만 최대 5개 받고 다음
   const concept = (name) => ({ name, briefExplanation: `${name} 설명`, sessionEvidence: '예제로 확인함' })
   const parsed = parseLearningSummary({
     learningSummaryStatus: 'READY', overview: '요약', nextStartPrompt: '예제 5번 풀기',
-    keyConcepts: [concept('극한'), { name: '설명 없음' }, concept('좌극한'), concept('우극한'), concept('약분'), concept('연속'), concept('여섯째')],
+    keyConcepts: [concept('극한'), { name: '설명 없음' }, { name: '  ', briefExplanation: '  ' }, concept('좌극한'), concept('우극한'), concept('약분'), concept('연속'), concept('여섯째')],
   })
   assert.deepEqual(parsed.keyConcepts.map((item) => item.name), ['극한', '좌극한', '우극한', '약분', '연속'])
   assert.equal(parsed.nextStartPrompt, '예제 5번 풀기')

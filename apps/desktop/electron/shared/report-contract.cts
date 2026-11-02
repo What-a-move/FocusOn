@@ -124,10 +124,10 @@ export function parseSessionSummary(value: unknown): SessionSummary | null {
 
 export function parseLearningSummary(value: unknown): LearningSummary | null {
   if (!isRecord(value) || !LEARNING_STATUSES.includes(value.learningSummaryStatus as LearningSummaryStatus)) return null
-  const text = (field: unknown) => (typeof field === 'string' && field ? field : null)
+  const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)
   // 핵심 개념은 최대 5개. 형식이 맞지 않는 항목은 버린다(이름·설명이 없는 개념은 노트에 쓸 수 없다).
   const concepts = Array.isArray(value.keyConcepts) ? value.keyConcepts : []
   const keyConcepts = concepts.flatMap((item): KeyConcept[] => isRecord(item) && text(item.name) && text(item.briefExplanation)
-    ? [{ name: item.name as string, briefExplanation: item.briefExplanation as string, sessionEvidence: text(item.sessionEvidence) }] : []).slice(0, 5)
+    ? [{ name: text(item.name) as string, briefExplanation: text(item.briefExplanation) as string, sessionEvidence: text(item.sessionEvidence) }] : []).slice(0, 5)
   return { status: value.learningSummaryStatus as LearningSummaryStatus, overview: text(value.overview), keyConcepts, nextStartPrompt: text(value.nextStartPrompt) }
 }

@@ -65,14 +65,22 @@ export function StudyNote() {
 
   // 정리 중이면 5초마다 다시 묻는다. 완료·근거 부족·실패가 되면 멈춘다(리포트 설계서 2.1).
   const waiting = view.kind === 'ready' && (view.learning.status === 'QUEUED' || view.learning.status === 'GENERATING')
+  // 요청은 하나씩만 보내고, 화면을 떠난 뒤 온 응답은 버린다. 다시 해도 안 되는 실패(기록 없음 등)면 멈추고 알린다.
   useEffect(() => {
     if (!waiting || !sessionId) return
+    let active = true
+    let checking = false
     const timer = setInterval(() => {
+      if (checking) return
+      checking = true
       void sessionResultApi.getLearningSummary(sessionId).then((result) => {
+        checking = false
+        if (!active) return
         if (result.success) setView((current) => current.kind === 'ready' ? { ...current, learning: result.data } : current)
+        else if (!result.error.retryable) setView(result.error.code === 'SESSION_NOT_FOUND' ? { kind: 'missing' } : { kind: 'error', code: result.error.code })
       })
     }, POLL_MS)
-    return () => clearInterval(timer)
+    return () => { active = false; clearInterval(timer) }
   }, [waiting, sessionId])
 
   const back = sessionId ? `/session-result/?session=${encodeURIComponent(sessionId)}` : '/'
@@ -118,7 +126,7 @@ function Notebook({ summary, learning }: { summary: SessionSummary; learning: Le
     <header className="fo-nb-head">
       <div><p className="fo-nb-meta">{metaOf(summary)}</p><h1 {...write('fo-nb-title')}>{summary.goalText}</h1></div>
       <button className={`fo-nb-copy${tip !== '복사' ? ' is-done' : ''}`} type="button" data-tip={tip} aria-label={tip === '복사' ? '노트 복사' : tip} onClick={() => { void copy() }}>
-        {tip === '복사'
+        {tip !== '복사했어요'
           ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
           : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>}
       </button>

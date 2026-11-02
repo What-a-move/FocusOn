@@ -47,5 +47,5 @@
 
 @media (max-height: 760px) { .fo-note-page { --nb-line: 28px; } .fo-nb-title { font-size: 22px; } .fo-nb-text, .fo-nb-next, .fo-nb-concepts b { font-size: 15px; } }
 @media (max-width: 860px) { .fo-note-page { width: calc(100% - 48px); } .fo-nb-concepts { grid-template-columns: 1fr; } .fo-notebook { padding-inline: 28px; } }
-@media (prefers-reduced-motion: reduce) { .fo-notebook, .fo-nb-write, .fo-note-status img { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .fo-notebook, .fo-nb-write, .fo-note-status img, .fo-note-status img.is-turning, .fo-dots i { animation: none; } }
 .fo-note-page .fo-load-error { margin-top: 16px; }
