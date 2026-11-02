@@ -24,13 +24,15 @@ router = APIRouter(prefix="/internal/v1/goals", tags=["goal-assistance"])
 
 
 async def get_goal_workflow() -> AsyncIterator[GoalAssistanceWorkflow]:
-    settings = get_settings()
+    # Backend owns request-level retries; avoid multiplying them in provider SDKs.
+    settings = get_settings().model_copy(update={"goal_assistance_max_retries": 0})
     judgments = TypeSafeJevClient(settings)
     generator = OpenAIGoalGenerationClient(settings)
     try:
         yield GoalAssistanceWorkflow(settings, judgments, generator)
     finally:
         await judgments.aclose()
+        await generator.aclose()
 
 
 WorkflowDependency = Annotated[GoalAssistanceWorkflow, Depends(get_goal_workflow)]

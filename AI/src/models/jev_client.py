@@ -18,10 +18,7 @@ from typesafe_sdk import (
     TypeSafeUnprocessableEntityError,
 )
 
-from src.analysis.goal_analyzer import (
-    GoalAssessment,
-    GeneratedResultVerification,
-)
+from src.analysis.goal_analyzer import GoalAssessment, GeneratedResultVerification
 from src.analysis.goal_assessment_contract import (
     build_goal_assessment_question_specs,
     build_goal_assessment_state,
@@ -33,35 +30,11 @@ from src.models.errors import (
     ModelConfigurationError,
     ModelUnavailableError,
 )
-
-
-def _summarize_goal_request(request: GoalClarifyRequest) -> dict[str, Any]:
-    return {
-        "requestId": request.request_id,
-        "originalTextLength": len(request.original_text),
-        "hasSelectedGoalText": request.selected_goal_text is not None,
-        "selectedGoalTextLength": (
-            len(request.selected_goal_text) if request.selected_goal_text else 0
-        ),
-        "clarificationAnswersCount": len(request.clarification_answers),
-    }
-
-
-def _trace_jev_assessment_inputs(inputs: dict[str, Any]) -> dict[str, Any]:
-    request = inputs.get("request")
-    if not isinstance(request, GoalClarifyRequest):
-        return {"input": "unavailable"}
-    return {"request": _summarize_goal_request(request)}
-
-
-def _trace_jev_assessment_outputs(output: GoalAssessment) -> dict[str, Any]:
-    return {
-        "isUsableGoal": output.is_usable_goal,
-        "hasMultipleMainGoals": output.has_multiple_main_goals,
-        "hasUnclearTerm": output.has_unclear_term,
-        "specificityLevel": output.specificity_level,
-        "specificityConfidence": output.specificity_confidence,
-    }
+from src.models.langsmith_tracing import (
+    summarize_goal_request,
+    trace_goal_assessment_inputs,
+    trace_goal_assessment_outputs,
+)
 
 
 def _trace_jev_verification_inputs(inputs: dict[str, Any]) -> dict[str, Any]:
@@ -74,7 +47,7 @@ def _trace_jev_verification_inputs(inputs: dict[str, Any]) -> dict[str, Any]:
         ),
     }
     if isinstance(request, GoalClarifyRequest):
-        summarized["request"] = _summarize_goal_request(request)
+        summarized["request"] = summarize_goal_request(request)
     return summarized
 
 
@@ -142,8 +115,8 @@ class TypeSafeJevClient:
         name="jev_assess_goal",
         run_type="tool",
         tags=["jev", "typesafe", "goal-assistance"],
-        process_inputs=_trace_jev_assessment_inputs,
-        process_outputs=_trace_jev_assessment_outputs,
+        process_inputs=trace_goal_assessment_inputs,
+        process_outputs=trace_goal_assessment_outputs,
     )
     async def assess_goal(self, request: GoalClarifyRequest) -> GoalAssessment:
         if self._client is None:

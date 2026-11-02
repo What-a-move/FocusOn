@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -41,16 +41,46 @@ class ProfileSource(StrEnum):
 
 
 class ClarificationAnswer(CamelModel):
-    question_id: str = Field(min_length=1, max_length=100)
+    question_id: str | None = Field(default=None, min_length=1, max_length=100, exclude=True)
     question: str = Field(min_length=1)
     answer: str = Field(min_length=1)
 
 
 class GoalClarifyRequest(CamelModel):
     request_id: str = Field(min_length=1, max_length=100)
-    original_text: str = Field(min_length=1)
+    original_text: str = Field(
+        min_length=1,
+        validation_alias=AliasChoices("goalText", "originalText"),
+        serialization_alias="goalText",
+    )
     selected_goal_text: str | None = None
-    clarification_answers: list[ClarificationAnswer] = Field(default_factory=list)
+    clarification_answers: list[ClarificationAnswer] = Field(
+        default_factory=list, max_length=2,
+        validation_alias=AliasChoices("previousAnswers", "clarificationAnswers"),
+        serialization_alias="previousAnswers",
+    )
+    conversation_turn: int = Field(ge=0, le=2, strict=True)
+    clarification_session_id: str | None = Field(default=None, min_length=1, max_length=100)
+
+    @model_validator(mode="before")
+    @classmethod
+    def adapt_legacy_turn(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        value = dict(value)
+        if "conversationTurn" not in value and "conversation_turn" not in value:
+            if "goalText" in value:
+                raise ValueError("conversationTurn is required for goalText requests")
+            answers = value.get("previousAnswers", value.get("clarificationAnswers", value.get("clarification_answers", [])))
+            if isinstance(answers, list):
+                value["conversationTurn"] = len(answers)
+        return value
+
+    @model_validator(mode="after")
+    def require_matching_turn(self) -> GoalClarifyRequest:
+        if self.conversation_turn != len(self.clarification_answers):
+            raise ValueError("conversationTurn must match previousAnswers count")
+        return self
 
     @field_validator("original_text", "selected_goal_text")
     @classmethod
@@ -121,6 +151,7 @@ class GoalProfileDraft(CamelModel):
 
 class GoalClarifyData(CamelModel):
     clarity_status: ClarityStatus
+    clarification_session_id: str | None = None
     interpreted_goal: str | None = None
     recommended_goals: list[RecommendedGoal] = Field(default_factory=list, max_length=3)
     question: ClarificationQuestion | None = None

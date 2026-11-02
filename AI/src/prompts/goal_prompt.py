@@ -56,6 +56,7 @@ def question_prompt(request: GoalClarifyRequest, status: ClarityStatus) -> str:
                 "Keep allowCustomAnswer true.",
                 "For UNRECOGNIZED_TERM, ask whether a likely interpretation is correct without asserting it.",
                 "Do not ask more than one thing in the question.",
+                "Do not repeat a question already present in clarificationAnswers.",
             ],
         },
         ensure_ascii=False,

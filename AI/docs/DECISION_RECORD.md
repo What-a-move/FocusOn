@@ -681,4 +681,187 @@ JEV `specificity_level`의 `CLEAR` 기준을 2.50에서 2.00으로, 추천(`NEED
 
 ## 새 결정 기록
 
-다음 결정은 `결정 029`부터 추가한다.
+## 결정 029 - 로컬 목표 보조 테스트의 LangSmith 원문 Trace opt-in
+
+- 결정일: 2026-09-30
+- 담당 영역: AI
+- 상태: 확정
+
+### 결정 내용
+
+로컬 수동 테스트에서 `LANGSMITH_TRACE_RAW_GOAL_TEXT=true`를 명시한 경우에만 LangSmith 입력에 `originalText`, `selectedGoalText`, `clarificationAnswers`를 기록한다. 기본값과 공유·통합·배포 환경의 값은 `false`다.
+
+Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기록하며, 그 아래 `jev_assess_goal`과 `laya_assess_goal`을 함께 표시한다. 두 모델 output에는 각자의 네 typed judgment와 현재 Router 상태를 기록한다.
+
+### 결정 이유
+
+목표 원문이 완전히 제거된 trace는 반복 테스트의 입력과 정답 기대를 대응할 수 없어 JEV와 Laya의 경계 사례를 분석하기 어려웠다. 로컬에서 개발자가 직접 입력한 테스트 query에 한해 opt-in으로 원문을 보이면 모델 비교와 라우팅 분석이 가능하다. 다만 실제 사용자 입력의 외부 trace 전송은 서비스화 전에 별도 개인정보·보존·접근 정책으로 검토한다.
+
+### 영향 범위
+
+- `AI/src/models/langsmith_tracing.py`
+- `AI/src/models/jev_client.py`, `AI/src/models/laya_client.py`
+- `AI/streamlit_app.py`, `AI/.env.example`, `AI/README.md`
+- `docs/DATA_PRIVACY.md`, `AI/docs/CONTEXT.md`, `AI/docs/NEXT_TASK.md`
+
+## 결정 030 - MVP 화면·카메라 분석 정책 문서 동기화
+
+- 결정일: 2026-10-01
+- 담당 영역: AI·Server·Desktop·Extension·공통 개인정보 정책
+- 상태: 제안 (Notion 기준 반영, 최종 팀 검토 필요)
+
+### 기준
+
+[AI 분석 계약](https://app.notion.com/p/AI-3de0b6e5e64c80fbb0bccb985e38002c)의 현재 MVP 정책을 Markdown 계약에 동기화한다. 이 Notion 페이지는 `REVIEW` 상태이므로 본 기록은 문서 반영 사실을 남기며 최종 팀 승인이나 구현 완료를 의미하지 않는다.
+
+### MVP 문서 기준
+
+- 목표 문장 확인·수정과 화면 관련성 판정 수정·삭제는 별개다. AI 명확화 질문은 대화 전체 최대 2회이고, 여러 목표가 입력되면 최종적으로 하나를 선택한다.
+- 화면 관련성 confidence `0.75` 미만은 `UNCERTAIN`으로 처리한다. 15초 미만 화면 전환은 이탈 누적에서 제외한다. 약하게 120초 연속, 보통 최근 10분 안에 30초 이상 이탈 2회, 적극적으로 30초 연속을 적용한다.
+- `RELATED`는 현재 이탈 구간과 카메라 알림 후보를 초기화하고, `UNCERTAIN`은 이탈 시간에 누적하지 않는다.
+- 카메라 `AWAY` 60초에 후보를 만들고 90초 지속 시 최종 조건을 확인한다. 최신 화면이 `RELATED`면 알림 후보를 억제한다.
+- `EXCLUDED`는 화면 분석을 중단하되 유효한 사용자 동의 아래 카메라 분석은 계속할 수 있다. `PRIVACY_BLOCKED`에서는 화면·카메라 분석을 모두 중단한다.
+- 화면 관련성 판정 수정·삭제, 그 결과 저장과 개인화는 MVP에서 제외한다. 기존 결정 013은 후속 기능 검토용 제안으로 남기며 MVP에 적용하지 않는다.
+
+### 영향 범위
+
+- `AI/docs/analysis_rules.md`, `state_model.md`, `api_spec.md`
+- `AI/docs/feedback_personalization_spec.md`, `evaluation_spec.md`, `data_lifecycle.md`
+- `AI/docs/goal_session_spec.md`, `DEVELOPMENT_RULES.md`, `docs/DATA_PRIVACY.md`
+
+## 새 결정 기록
+
+## 결정 031 - 목표 후보 검증·Repair 제한 병렬 실행
+
+- 결정일: 2026-10-02
+- 담당 영역: AI
+- 상태: 실험 (Live 지연·Rate Limit 검증 필요)
+
+### 결정 내용
+
+추천 후보별 JEV 검증과 실패 후보별 OpenAI Repair를 서로 독립된 항목끼리 병렬 실행한다. 동시 호출 수는 응답 계약의 후보 최대 개수인 3개를 넘지 않는다. 결과 순서는 입력 후보 순서에 맞춰 보존하며, 일부 병렬 요청 실패는 기존과 같이 Workflow 실패로 처리한다.
+
+`NEEDS_QUESTION`의 질문 생성은 현재 OpenAI 구조화 요청 1회이므로 이 변경의 병렬화 대상이 아니다. 질문 생성 지연은 실제 요청 시간을 별도로 측정한 뒤 후속 최적화를 결정한다.
+
+### 결정 이유
+
+후보별 JEV 검증과 Repair는 서로의 결과를 기다릴 필요가 없으며, 기존 순차 실행에서는 최대 3회의 네트워크 대기가 누적된다. 제한된 병렬 실행으로 사용자 대기 시간을 줄이되, 후보 수와 동시 요청을 제한해 요청 폭증을 막는다.
+
+### 영향 범위
+
+- `AI/src/workflow/goal_assistance.py`
+- `AI/tests/test_goal_workflow.py`
+- `AI/docs/features/goal-assistance-PLAN.md`, `CONTEXT.md`, `NEXT_TASK.md`
+
+## 결정 032 - Streamlit 질문 답변의 목표 입력 반영
+
+- 결정일: 2026-10-02
+- 담당 영역: AI (로컬 Streamlit 테스트 화면)
+- 상태: 구현 (사용성 Live 확인 필요)
+
+### 결정 내용
+
+사용자가 Streamlit 확인 질문에 답하면 해당 답변 문구를 현재 목표 입력값 뒤에 반영하고, 업데이트된 목표 문장으로 다음 JEV 판단을 실행한다. 같은 답변이 이미 목표 문장에 포함된 경우 중복 추가하지 않는다. 사용자는 업데이트된 목표 문장을 계속 수정할 수 있으며, 기존과 같이 `CLEAR` 결과를 별도로 최종 확인하기 전에는 저장하지 않는다.
+
+### 결정 이유
+
+질문 답변과 목표 입력란이 분리되어 보이는 문제를 줄이고, 사용자가 자신의 답변이 목표에 어떻게 반영되었는지 확인·수정할 수 있게 한다. 최종 목표의 승인은 여전히 사용자에게 남긴다.
+
+### 영향 범위
+
+- `AI/streamlit_app.py`
+- `AI/tests/test_streamlit_app.py`
+- `AI/docs/features/goal-assistance-PLAN.md`, `CONTEXT.md`, `NEXT_TASK.md`
+
+## 결정 033 - 확인 질문 생성 2건 제한 병렬 경주
+
+- 결정일: 2026-10-02
+- 담당 영역: AI
+- 상태: 실험 (실제 지연·비용 평가 필요)
+
+### 결정 내용
+
+`NEEDS_QUESTION`, `UNRECOGNIZED_TERM` 및 검증 실패 fallback의 확인 질문 생성에서 동일한 구조화 OpenAI 요청을 최대 2건 동시에 실행한다. 먼저 도착한 유효한 질문 하나만 응답에 포함하고 나머지 대기 작업은 취소한다. 이전에 이미 답한 질문은 선택하지 않고 다른 결과를 기다린다. 두 결과가 모두 이전 질문을 반복하면 응답 검증 오류로 처리한다. `OPENAI_QUESTION_PARALLELISM=1`로 단일 호출을 선택할 수 있다.
+
+### 결정 이유
+
+이전 결정 031은 후보 검증과 Repair만 병렬화했으며 질문 생성 지연에는 직접 영향을 주지 않았다. 사용자가 요청한 질문 생성 속도 개선을 실제 경로에 적용한다. 외부 제공자가 취소된 요청을 이미 처리했을 수 있어 호출량과 비용은 최대 두 배까지 늘 수 있다. 속도 향상도 Live 측정 전에는 확정할 수 없다.
+
+### 영향 범위
+
+- `AI/src/models/llm_client.py`, `AI/src/config.py`, `AI/src/prompts/goal_prompt.py`
+- `AI/tests/test_model_clients.py`, `AI/.env.example`
+- 목표 보조 기획·결과·컨텍스트·다음 작업 문서
+
+## 결정 034 - 확인 질문 스트리밍과 4.5초 제한 시간
+
+- 결정일: 2026-10-02
+- 담당 영역: AI
+- 상태: 실험 (Live 지연·비용·질문 품질 검증 필요)
+
+### 결정 내용
+
+Streamlit에서 OpenAI Responses 스트림의 질문 문구를 초안으로 순차 표시한다. 최종 응답은 기존 `ClarificationQuestion` Schema 검증을 통과해야 선택지로 표시한다. 질문 생성은 기본 4.5초 안에 유효한 결과가 없으면 상태에 맞는 로컬 기본 질문을 반환한다. 두 요청이 모두 일시 실패·Schema 오류·기존 질문 반복인 경우도 로컬 기본 질문을 사용하며, 설정·인증 오류는 표시한다. 이로써 결정 033의 반복 질문 검증 오류 처리를 대체한다. 이 제한 시간에는 최초 JEV 판단과 Streamlit 렌더링은 포함하지 않는다. 병렬 생성 두 요청 중 한 건은 스트리밍하고 다른 건은 기존 구조화 호출로 유지한다.
+
+### 결정 이유
+
+사용자는 완성된 JSON을 기다리는 동안 아무 내용도 볼 수 없었다. 초안을 실제 토큰에 맞춰 보여주고 생성 시간을 제한하면 대기 상태를 이해할 수 있으며, 지연 시에도 답변 가능한 질문을 제공할 수 있다. 초안은 최종 질문과 달라질 수 있고 로컬 기본 질문은 모델이 생성한 문구가 아니다.
+
+### 영향 범위
+
+- `AI/src/models/llm_client.py`, `fakes.py`, `AI/src/workflow/goal_assistance.py`
+- `AI/streamlit_app.py`, `AI/src/config.py`, `AI/.env.example`
+- 목표 보조 기획·결과·컨텍스트·다음 작업 문서
+
+## 결정 035 - 5초 성능 목표와 10초 이후 기본 질문 전환 분리
+
+- 결정일: 2026-10-02
+- 담당 영역: AI
+- 상태: 실험 (Live P50·P95와 비용 검증 필요)
+
+### 결정 내용
+
+결정 034의 4.5초 강제 전환을 대체한다. 질문 생성 5초는 최적화 목표이지 유효한 모델 응답을 취소할 시점이 아니다. 병렬 생성과 Streamlit 질문 초안 스트리밍은 유지하고, 유효한 모델 질문은 먼저 완성되는 즉시 반환한다. 규칙 기반 기본 질문은 생성 시작 후 기본 10초 이상 유효한 모델 질문이 없을 때만 반환한다. 두 모델 호출이 일찍 실패하거나 기존 질문만 반복해도 10초 전에는 기본 질문을 표시하지 않는다. 설정·인증 오류는 기다리지 않고 표시한다. 이 기준은 질문 생성 단계에만 적용한다.
+
+### 결정 이유
+
+4.5초에 무조건 전환하면 조금 늦게 도착할 양질의 모델 질문을 버릴 수 있다. 초기 문구를 스트리밍으로 보여 주면서 5초 목표를 별도로 측정하고, 기본 질문은 충분히 기다린 뒤 최후 수단으로 사용한다.
+
+### 영향 범위
+
+- `AI/src/models/llm_client.py`, `AI/src/config.py`, `AI/.env.example`
+- 질문 생성 테스트, Streamlit 실행 안내, 목표 보조 기획·결과·컨텍스트·다음 작업 문서
+
+## 결정 036 - 관련성 Hybrid 우선 평가와 OCR·이탈 입출력 책임 정리
+
+- 결정일: 2026-10-11
+- 담당 영역: AI·Server·Desktop·Extension 협의 필요
+- 상태: 제안 (팀원 평가 산출물·최신 Notion 본문·Backend 필드 합의 확인 전)
+
+### 결정 내용
+
+팀원이 보고한 120건 비교에서 Hybrid는 99건 정답(82.5%), Macro F1 0.732로 여섯 후보 중 가장 높았다. 관련성 분류의 다음 구현·재평가에서는 Hybrid를 우선 후보로 다룬다. 구성 신호·결합식·가중치·임계값은 아직 확인되지 않았으며, 현재 코드에 Hybrid 분류기가 구현된 것으로 기록하지 않는다. 결정 005의 단계적 처리 구조를 이 보고만으로 폐기하거나 새 운영 임계값으로 대체하지 않는다.
+
+OCR 전달은 개인정보 검사를 통과한 `text`와 `ocr` 메타데이터를 구분하는 제안형으로 정리한다. AI 전처리가 최종 `qualityScore`와 정제 콘텐츠 `contentHash`를 생성하고, 이벤트 중복·최신성은 Server/Client가 담당한다. 이탈·복귀 판단은 최종 화면 관련성 출력의 라벨·confidence를 그대로 소비하며 품질점수·유사도로 덮어쓰지 않는다. Backend가 검토할 9개 저장 컬럼과 정확한 내부 요청 Schema는 확정하지 않는다. ColPali는 현 MVP 구현 범위에서 제외하고 후속 PoC로 유지한다.
+
+### 결정 이유
+
+팀원 메시지의 비교 결과와 입출력 정리 요청을 저장소에 남기되, 재현 자료가 없는 수치를 확정 품질 또는 배포 완료로 오인하지 않기 위해서다. 기존 OCR·이탈 기능 페이지의 본문은 요청 내용과 아직 다르게 보이므로 교차 검증이 필요하다.
+
+### 영향 범위
+
+- `AI/docs/evaluation_spec.md`, `analysis_rules.md`, `content_acquisition_spec.md`, `api_spec.md`
+- `AI/docs/CONTEXT.md`, `NEXT_TASK.md`
+
+## 결정 037 - 목표 확인 요청 필드와 대화 ID·재시도 책임 일치
+
+- 결정일: 2026-10-25
+- 상태: 전달받은 팀 메시지에 따른 AI 내부 구현 기준; Backend·Desktop 통합 미검증
+- 관련 Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
+- 입력은 `goalText`, `conversationTurn`, 선택적 `clarificationSessionId`, `previousAnswers[{question,answer}]`로 통일한다. AI 내부 경로에는 `requestId`를 추가하며 공개 경로를 AI에 중복 생성하지 않는다. 내부 Python 이름·이전 JSON 입력 별칭은 이행 기간 호환하고 직렬화는 새 이름만 사용한다.
+- Backend가 대화 ID의 발급·소유권·회차·최종 목표 연결을 관리하고 AI는 전달받은 ID만 반환한다. AI는 대화 상태를 저장하지 않는다. Streamlit에서만 가상 ID를 메모리에 발급해 흐름을 시험한다.
+- 회차는 0~2이며 완료된 답변 수와 일치한다. 두 번 답한 뒤 명확하지 않으면 세 번째 AI 질문을 생성하지 않고 직접 수정·확인을 요청한다. 기존 응답 상태값과 나머지 필드는 유지한다.
+- 자동 요청 재시도는 Backend가 retryable 오류에 1초→3초, 최대 2회 수행한다. 같은 대화 ID·회차·답변을 유지하며 Desktop은 자동 재전송하지 않는다. AI HTTP 경로의 제공자 SDK 재시도는 0, 기존 병렬 후보 생성·의미 검수 Repair는 별도다.
+- Notion 연결 도구의 404 때문에 이번에는 최신 3.2 본문을 확인하지 못했다. 사용자가 직접 전달한 계약을 변경 근거로 기록한다.
+
+다음 결정은 `결정 038`부터 추가한다.

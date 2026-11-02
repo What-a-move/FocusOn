@@ -8,7 +8,11 @@ from src.analysis.goal_analyzer import GoalAssessment
 from src.api.schemas import ClarityStatus, GoalClarifyRequest
 from src.config import Settings
 from src.models.errors import ModelUnavailableError
-from streamlit_app import _build_saved_goal, _jev_assessment_rows
+from streamlit_app import (
+    _apply_answer_to_goal,
+    _build_saved_goal,
+    _jev_assessment_rows,
+)
 
 
 def test_jev_assessment_rows_include_readable_labels_and_explanations():
@@ -28,6 +32,16 @@ def test_jev_assessment_rows_include_readable_labels_and_explanations():
         "설명": "입력한 문장이 실제로 학습할 수 있는 목표일 가능성입니다.",
     }
     assert rows[3]["결과"] == "1.89 / 3"
+
+
+def test_clarification_answer_is_added_to_the_editable_goal_text_once():
+    goal = "React Query 캐싱 원리 학습"
+
+    updated = _apply_answer_to_goal(goal, "직접 구현")
+    repeated = _apply_answer_to_goal(updated, "직접 구현")
+
+    assert updated == "React Query 캐싱 원리 학습 — 직접 구현"
+    assert repeated == updated
 
 
 @pytest.mark.asyncio
@@ -61,6 +75,29 @@ def test_streamlit_test_ui_renders_without_external_calls():
     assert app.text_area[0].label == "학습 목표"
     assert app.sidebar.button[0].label == "전체 초기화"
     assert app.button[0].label == "목표 저장"
+
+
+def test_pending_answer_updates_goal_input_before_widget_render():
+    app_path = Path(__file__).resolve().parents[1] / "streamlit_app.py"
+    app = AppTest.from_file(app_path).run(timeout=10)
+    app.session_state["flow_original_text"] = "React Query 캐싱 원리 학습"
+    app.session_state["pending_clarification_answer"] = {
+        "questionId": "approach",
+        "question": "어떤 방식으로 학습할까요?",
+        "answer": "직접 구현",
+    }
+
+    app.run(timeout=10)
+
+    assert not app.exception
+    assert app.text_area[0].value == "React Query 캐싱 원리 학습 — 직접 구현"
+    assert app.session_state["clarification_answers"] == [
+        {
+            "questionId": "approach",
+            "question": "어떤 방식으로 학습할까요?",
+            "answer": "직접 구현",
+        }
+    ]
 
 
 def test_clear_result_keeps_the_jev_assessment_table_visible():
@@ -148,6 +185,8 @@ def test_only_clear_confirmed_result_can_be_saved_in_test_session():
 
     assert saved["goalText"] == "React Query 캐싱 원리 학습"
     assert saved["goalProfile"]["mainTopic"] == "React Query 캐싱"
+    with_dialog = _build_saved_goal(result | {"clarificationSessionId": "demo-dialog"})
+    assert with_dialog["clarificationSessionId"] == "demo-dialog"
     with pytest.raises(ValueError, match="명확한 목표"):
         _build_saved_goal(
             {
@@ -156,3 +195,23 @@ def test_only_clear_confirmed_result_can_be_saved_in_test_session():
                 "goalProfileDraft": None,
             }
         )
+
+
+def test_demo_request_keeps_dialog_and_uses_agreed_json_names(monkeypatch):
+    from types import SimpleNamespace
+    state = SimpleNamespace(
+        flow_original_text="캐시 학습", selected_goal_text=None,
+        clarification_session_id=None,
+        clarification_answers=[{"question": "어떤 범위인가요?", "answer": "캐시 갱신"}],
+    )
+    monkeypatch.setattr(streamlit_app.st, "session_state", state)
+    first = streamlit_app._current_request("demo-first")
+    second = streamlit_app._current_request("demo-second")
+    assert first.clarification_session_id == second.clarification_session_id
+    assert first.clarification_session_id is not None
+    serialized = second.model_dump(by_alias=True)
+    assert serialized["conversationTurn"] == 1
+    assert serialized["goalText"] == "캐시 학습"
+    assert serialized["previousAnswers"] == [{"question": "어떤 범위인가요?", "answer": "캐시 갱신"}]
+    streamlit_app._reset_flow()
+    assert state.clarification_session_id is None

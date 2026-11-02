@@ -7,6 +7,7 @@
 - 기준일: 2026-09-12
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-STATE-001`, `AI-FAIL-001`, `AI-DRIFT-001`, `AI-ACTION-001`
+- MVP 정책 기준: [AI 분석 계약](https://app.notion.com/p/AI-3de0b6e5e64c80fbb0bccb985e38002c) (`REVIEW`; 코드 구현 미완료)
 - 관련 문서: [목표·세션 모델](goal_session_spec.md), [피드백 명세](feedback_personalization_spec.md), [AI API 계약](api_spec.md)
 
 이 문서는 콘텐츠 확보 상태, AI 분석 실행 결과, 목표 관련성, 시간 기반 이탈 흐름과 사용자에게 제안할 행동을 분리한다. 공개 API의 관련성 값은 Notion 기준 5개 상태(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`)를 사용한다. `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE`은 내부 분석·정책용 세부 상태이며 API 경계에서 공개 상태로 변환한다.
@@ -66,7 +67,7 @@
 | `OBSERVING` | 무관 가능성이 있으나 체류가 짧거나 근거가 부족하다. |
 | `POSSIBLE_DRIFT` | 무관 콘텐츠의 체류 또는 반복 신호가 누적되고 있다. |
 | `DRIFT_RISK` | 충분한 지속·반복 근거로 복귀 제안을 검토할 수 있다. |
-| `RECOVERED` | 관련 자료 복귀 또는 사용자 수정으로 정상 흐름을 회복했다. |
+| `RECOVERED` | 관련 자료 복귀로 정상 흐름을 회복했다. |
 | `UNKNOWN` | 추출 실패, 미관찰 구간 또는 문맥 부족으로 판단할 수 없다. |
 
 기본 상태 전이는 다음과 같다.
@@ -81,13 +82,26 @@ POSSIBLE_DRIFT
 DRIFT_RISK
 
 OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
-   └─ 관련 자료 복귀 또는 사용자 수정 → RECOVERED → LEARNING
+   └─ 관련 자료 복귀 → RECOVERED → LEARNING
 
 추출·모델 실패 또는 미관찰 → UNKNOWN
 제외·휴식·일시정지 → 흐름 판단 중지
 ```
 
-체류 기준은 평가 전까지 실험 설정이다. `5초`, `30초`, `60초` 같은 기획서의 값은 가설이며 확정 상수가 아니다.
+### 5.1 MVP 이탈 누적 규칙
+
+화면 관련성 후보는 confidence `0.75` 이상일 때만 `RELATED` 또는 `UNRELATED`로 확정한다. 그보다 낮으면 `UNCERTAIN`이다. 화면 전환 후 15초 미만의 체류는 이탈 구간 및 반복 횟수에 포함하지 않는다.
+
+| 민감도 | 개입 검토 기준 |
+| --- | --- |
+| `GENTLE` | 연속 유효 이탈 120초 |
+| `NORMAL` | 최근 10분 안에 유효 이탈 30초 이상인 구간 2회 |
+| `ACTIVE` | 연속 유효 이탈 30초 |
+
+- `RELATED`는 현재 이탈 구간을 초기화한다.
+- `UNCERTAIN`은 이탈 시간에 합산하지 않는다. 연속 30초 이하는 진행 구간을 보류하고, 30초 초과면 현재 구간을 끝낸다.
+- 모델·추출·권한 실패와 관찰 공백은 이탈 누적에서 제외한다.
+- 상태 임계값과 알림 수명주기는 [AI 분석 규칙](analysis_rules.md)을 단일 상세 기준으로 삼는다.
 
 ## 6. 권장 행동
 
@@ -106,28 +120,28 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 
 | 조건 | 강제 결과 |
 | --- | --- |
-| `extractionStatus = EXCLUDED` | AI 미호출, `analysisStatus = SKIPPED` |
+| `extractionStatus = EXCLUDED` | 화면 AI 미호출, `analysisStatus = SKIPPED`; 카메라 동의 상태는 별도 평가 |
 | `extractionStatus = FAILED/UNSUPPORTED` | `relevanceLabel = UNAVAILABLE`, `driftState = UNKNOWN`, `recommendedAction = NO_ACTION` |
 | `analysisStatus = ERROR` | 현재 판정 적용 금지, `recommendedAction = NO_ACTION` |
-| `relevanceLabel = RELATED/SUPPORTING` | 기본 `driftState = LEARNING`; 대기 중 복귀 경고 취소 |
+| `relevanceLabel = RELATED/SUPPORTING` | 기본 `driftState = LEARNING`; 현재 이탈 구간과 화면·카메라 알림 후보 초기화 |
 | `relevanceLabel = UNCERTAIN` | `ASK_USER` 가능, 이탈 확정 금지 |
 | `relevanceLabel = OFF_TASK` 단독 | 최대 `OBSERVING`; 즉시 차단·이탈 알림 금지 |
-| 사용자 관련성 수정 | 캐시·대기 알림 무효화 후 `RECOVERED` 처리 |
+| 사용자 화면 관련성 수정 | MVP 미지원. 목표 문장 수정과 혼동하거나 피드백으로 저장하지 않음 |
 | 목표·탭·회차 버전 불일치 | 결과 폐기, 현재 상태 변경 금지 |
 
 ## 8. 공개 상태 매핑
 
-`packages/shared-types`의 `FocusState`와 Server 공개 응답은 Notion 기준 5개 상태만 사용한다. 내부 AI 상태를 그대로 Client에 전달하지 않는다.
+`packages/shared-types`의 `FocusState`와 Server 공개 응답은 Notion 기준 5개 상태만 사용한다. 내부 AI 상태를 그대로 Client에 전달하지 않는다. 공개 관련성 라벨은 콘텐츠와 목표의 관계만 나타내며, 시간 기반 `driftState`나 알림 가능 여부를 포함하지 않는다.
 
-| 내부 상태 | 공개 `FocusState` 매핑 |
+| 내부 관련성·처리 상태 | 공개 `FocusState` 매핑 |
 | --- | --- |
-| `RELATED` 또는 `SUPPORTING` + `LEARNING/RECOVERED` | `RELATED` |
-| `OFF_TASK` + `DRIFT_RISK` | `UNRELATED` |
-| `UNCERTAIN`, 짧은 `OFF_TASK`, `OBSERVING`, `POSSIBLE_DRIFT` | `UNCERTAIN` |
+| `RELATED` 또는 `SUPPORTING` | `RELATED` |
+| 최종 `OFF_TASK` (`confidence ≥ 0.75`) | `UNRELATED` |
+| `UNCERTAIN` 또는 관련성 후보 `confidence < 0.75` | `UNCERTAIN` |
 | 정책 제외 | `EXCLUDED` |
 | 개인정보·권한 차단 또는 분석 입력 차단 | `PRIVACY_BLOCKED` |
 
-내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
+짧은 `UNRELATED` 방문도 관련성 결과 자체는 `UNRELATED`다. 다만 15초 미만 전환은 유효 이탈 구간으로 세지 않고, 이탈·알림 여부는 별도 정책으로 결정한다. OCR 품질점수·임베딩 유사도·`driftState`가 최종 관련성 라벨이나 `confidence`를 덮어쓰지 않는다. 내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
 
 ## 9. 응답 적용 전 확인
 

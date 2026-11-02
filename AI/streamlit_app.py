@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from typing import Any
+from typing import Any, Callable
 from uuid import uuid4
 
 import streamlit as st
+from langsmith import traceable
 
 from src.analysis.goal_analyzer import GoalAssessment
 from src.api.schemas import ClarityStatus, GoalClarifyData, GoalClarifyRequest
@@ -18,6 +19,7 @@ from src.models.errors import (
 )
 from src.models.jev_client import TypeSafeJevClient
 from src.models.laya_client import LayaComparisonClient
+from src.models.langsmith_tracing import trace_comparative_assessment_inputs
 from src.models.llm_client import OpenAIGoalGenerationClient
 from src.workflow.goal_assistance import GoalAssistanceWorkflow
 
@@ -67,8 +69,11 @@ def _initialize_state() -> None:
     defaults: dict[str, Any] = {
         "goal_input": "",
         "flow_original_text": None,
+        "goal_update_notice": None,
+        "pending_clarification_answer": None,
         "selected_goal_text": None,
         "clarification_answers": [],
+        "clarification_session_id": None,
         "analysis_result": None,
         "analysis_error": None,
         "analysis_stage": "idle",
@@ -88,8 +93,11 @@ def _reset_flow(*, clear_input: bool = False, clear_saved: bool = False) -> None
     if clear_input:
         st.session_state.goal_input = ""
     st.session_state.flow_original_text = None
+    st.session_state.goal_update_notice = None
+    st.session_state.pending_clarification_answer = None
     st.session_state.selected_goal_text = None
     st.session_state.clarification_answers = []
+    st.session_state.clarification_session_id = None
     st.session_state.analysis_result = None
     st.session_state.analysis_error = None
     st.session_state.analysis_stage = "idle"
@@ -113,6 +121,7 @@ async def _run_assessment(
         return await workflow.assess(request)
     finally:
         await judgments.aclose()
+        await generator.aclose()
 
 
 async def _run_laya_comparison(
@@ -124,6 +133,12 @@ async def _run_laya_comparison(
     return await asyncio.to_thread(LayaComparisonClient(settings).assess_goal, request)
 
 
+@traceable(
+    name="goal_assessment_comparison",
+    run_type="chain",
+    tags=["goal-assistance", "comparison", "streamlit"],
+    process_inputs=trace_comparative_assessment_inputs,
+)
 async def _run_comparative_assessment(
     settings: Settings,
     request: GoalClarifyRequest,
@@ -144,22 +159,31 @@ async def _run_after_assessment(
     request: GoalClarifyRequest,
     assessment: GoalAssessment,
     clarity_status: ClarityStatus,
+    question_progress: Callable[[str], None] | None = None,
 ) -> GoalClarifyData:
     judgments = TypeSafeJevClient(settings)
     generator = OpenAIGoalGenerationClient(settings)
-    workflow = GoalAssistanceWorkflow(settings, judgments, generator)
+    workflow = GoalAssistanceWorkflow(
+        settings, judgments, generator, question_progress=question_progress
+    )
     try:
         return await workflow.run_after_assessment(request, assessment, clarity_status)
     finally:
         await judgments.aclose()
+        await generator.aclose()
 
 
 def _current_request(request_id: str) -> GoalClarifyRequest:
+    if st.session_state.clarification_session_id is None:
+        # Local demo only; the product Backend issues and validates this ID.
+        st.session_state.clarification_session_id = str(uuid4())
     return GoalClarifyRequest(
         request_id=request_id,
         original_text=st.session_state.flow_original_text,
         selected_goal_text=st.session_state.selected_goal_text,
         clarification_answers=st.session_state.clarification_answers,
+        conversation_turn=len(st.session_state.clarification_answers),
+        clarification_session_id=st.session_state.clarification_session_id,
     )
 
 
@@ -233,18 +257,31 @@ def _generate_after_assessment() -> None:
     request = _current_request(request_id)
     st.session_state.analysis_error = None
     st.session_state.analysis_stage = "generation"
+    question_preview = st.empty()
+    if clarity_status in {ClarityStatus.NEEDS_QUESTION, ClarityStatus.UNRECOGNIZED_TERM}:
+        question_preview.info("질문을 만들고 있어요...")
+
+    def show_question_draft(text: str) -> None:
+        question_preview.info(f"질문 초안: {text}▌")
+
     try:
         with st.spinner("질문·추천 문구와 최종 확인 정보를 생성하고 있어요..."):
             result = asyncio.run(
                 _run_after_assessment(
-                    get_settings(), request, assessment, clarity_status
+                    get_settings(),
+                    request,
+                    assessment,
+                    clarity_status,
+                    question_progress=show_question_draft,
                 )
             )
+        question_preview.empty()
         st.session_state.analysis_result = result.model_dump(
             mode="json", by_alias=True
         )
         st.session_state.analysis_stage = "done"
     except Exception as exc:
+        question_preview.empty()
         _set_analysis_error(exc)
 
 
@@ -258,9 +295,39 @@ def _submit_new_goal() -> None:
     _assess()
 
 
+def _apply_answer_to_goal(goal_text: str, answer: str) -> str:
+    """Return an editable goal draft that includes the user's clarification."""
+
+    goal_text = goal_text.strip()
+    answer = answer.strip()
+    if answer.casefold() in goal_text.casefold():
+        return goal_text
+    return f"{goal_text} — {answer}"
+
+
 def _submit_answer(question_id: str, question: str, answer: str) -> None:
+    st.session_state.pending_clarification_answer = {
+        "questionId": question_id,
+        "question": question,
+        "answer": answer.strip(),
+    }
+
+
+def _apply_pending_answer() -> None:
+    pending = st.session_state.pending_clarification_answer
+    if not pending:
+        return
+    st.session_state.pending_clarification_answer = None
+    current_goal = _apply_answer_to_goal(
+        st.session_state.flow_original_text, pending["answer"]
+    )
+    st.session_state.flow_original_text = current_goal
+    st.session_state.goal_input = current_goal
+    st.session_state.goal_update_notice = (
+        "답변을 목표 문장에 반영했습니다. 위 목표 입력란에서 확인하거나 수정할 수 있어요."
+    )
     st.session_state.clarification_answers.append(
-        {"questionId": question_id, "question": question, "answer": answer}
+        pending
     )
     _assess()
 
@@ -276,6 +343,8 @@ def _build_saved_goal(result: dict[str, Any]) -> dict[str, Any]:
     return {
         "goalText": result["interpretedGoal"],
         "goalProfile": profile,
+        **({"clarificationSessionId": result["clarificationSessionId"]}
+           if result.get("clarificationSessionId") else {}),
     }
 
 
@@ -351,6 +420,8 @@ def _render_candidates(result: dict[str, Any]) -> None:
 def _render_question(result: dict[str, Any]) -> None:
     question = result["question"]
     st.subheader("확인 질문")
+    if question["id"].startswith("fallback-"):
+        st.caption("생성이 지연되거나 완료되지 않아 기본 확인 질문을 표시했습니다.")
     st.write(question["text"])
     columns = st.columns(len(question["options"]))
     for column, option in zip(columns, question["options"], strict=True):
@@ -487,6 +558,8 @@ def _render_result() -> None:
         _render_candidates(result)
     if result["question"]:
         _render_question(result)
+    elif result["clarityStatus"] in {"NEEDS_QUESTION", "UNRECOGNIZED_TERM"}:
+        st.info("두 번의 확인 질문을 마쳤습니다. 위 목표 문장을 직접 수정하고 다시 확인해 주세요.")
     if result["goalProfileDraft"]:
         st.subheader("최종 확인")
         st.write("아래 목표와 범위를 확인한 뒤 저장해 주세요.")
@@ -513,7 +586,12 @@ def _render_result() -> None:
         st.json(
             {
                 "selectedGoalText": st.session_state.selected_goal_text,
-                "clarificationAnswers": st.session_state.clarification_answers,
+                "conversationTurn": len(st.session_state.clarification_answers),
+                "clarificationSessionId": st.session_state.clarification_session_id,
+                "previousAnswers": [
+                    {"question": item["question"], "answer": item["answer"]}
+                    for item in st.session_state.clarification_answers
+                ],
             }
         )
 
@@ -525,6 +603,7 @@ def main() -> None:
         layout="centered",
     )
     _initialize_state()
+    _apply_pending_answer()
     settings = get_settings()
     _render_configuration(settings)
 
@@ -548,6 +627,9 @@ def main() -> None:
         )
     if submitted:
         _submit_new_goal()
+
+    if st.session_state.goal_update_notice:
+        st.caption(st.session_state.goal_update_notice)
 
     _render_result()
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import Any
+from typing import Any, Callable
 
 from src.analysis.goal_analyzer import GoalAssessment, GeneratedResultVerification
 from src.api.schemas import (
@@ -66,8 +66,13 @@ class FakeGoalGenerationClient:
         )
 
     async def generate_question(
-        self, request: GoalClarifyRequest, status: ClarityStatus
+        self,
+        request: GoalClarifyRequest,
+        status: ClarityStatus,
+        on_partial: Callable[[str], None] | None = None,
     ) -> ClarificationQuestion:
+        if on_partial is not None:
+            on_partial("어떤 결과를 만드는 데 집중할까요?")
         return ClarificationQuestion(
             id="goal_detail",
             text="어떤 결과를 만드는 데 집중할까요?",

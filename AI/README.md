@@ -54,6 +54,10 @@ TYPESAFE_API_KEY=your_typesafe_key
 OPENAI_API_KEY=your_openai_key
 ```
 
+확인 질문은 기본적으로 OpenAI에 최대 2건을 동시에 요청하고 먼저 도착한 유효한 질문 하나를 표시한다. 호출량을 1건으로 제한하려면 `OPENAI_QUESTION_PARALLELISM=1`을 설정한다. 실제 지연 개선과 추가 비용은 Live 평가가 필요하다.
+
+Streamlit은 질문 문구 초안을 스트리밍으로 표시한다. 5초는 성능 목표이지 강제 종료 시점이 아니다. 유효한 모델 질문은 먼저 완성되는 즉시 표시하고, 기본 10초(`OPENAI_QUESTION_DEADLINE_SECONDS`)가 지나도록 유효한 질문이 없을 때만 로컬 기본 질문을 보여준다. 두 호출이 모두 일찍 실패해도 10초 전에는 기본 질문으로 바꾸지 않으며, 설정·인증 오류는 바로 표시한다. 이 대기 기준은 질문 생성 단계에만 적용된다.
+
 ```bash
 cd AI
 python -m streamlit run streamlit_app.py
@@ -62,6 +66,8 @@ python -m streamlit run streamlit_app.py
 ## Laya 비교 판단
 
 Streamlit 목표 설정 화면은 JEV와 같은 입력·네 가지 판단 질문을 로컬 `convaiinnovations/laya-multilingual`에도 전달해 비교 표로 표시한다. Laya 결과는 비교 전용이며 실제 상태, 질문·추천 생성, GoalProfile, 저장 흐름에는 사용하지 않는다.
+
+로컬 수동 테스트에서 LangSmith에 목표 원문과 후속 답변을 함께 남겨 비교하려면 `AI/.env`에 `LANGSMITH_TRACING=true`, `LANGSMITH_TRACE_RAW_GOAL_TEXT=true`를 설정한다. 이 설정은 로컬 테스트에만 사용하며 공유·배포 환경에서는 `false`를 유지한다.
 
 처음 실행하기 전 의존성을 설치해야 하며, 첫 Laya 비교 시 공개 모델 체크포인트를 내려받을 수 있다.
 

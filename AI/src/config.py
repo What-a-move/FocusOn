@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     openai_reasoning_effort: str = "minimal"
     openai_verbosity: str = "low"
     openai_max_completion_tokens: int = Field(default=600, ge=100, le=2_000)
+    openai_question_parallelism: int = Field(default=2, ge=1, le=2)
+    openai_question_deadline_seconds: float = Field(default=10.0, ge=10)
 
     laya_comparison_enabled: bool = True
     laya_comparison_model: str = "convaiinnovations/laya-multilingual"

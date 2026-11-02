@@ -4,6 +4,8 @@ import os
 from functools import lru_cache
 from typing import Any
 
+from langsmith import traceable
+
 from src.analysis.goal_analyzer import GoalAssessment
 from src.analysis.goal_assessment_contract import (
     build_goal_assessment_question_specs,
@@ -12,6 +14,10 @@ from src.analysis.goal_assessment_contract import (
 from src.api.schemas import GoalClarifyRequest
 from src.config import Settings
 from src.models.errors import InvalidModelResponseError, ModelUnavailableError
+from src.models.langsmith_tracing import (
+    trace_goal_assessment_inputs,
+    trace_goal_assessment_outputs,
+)
 
 
 class LayaComparisonClient:
@@ -38,6 +44,13 @@ class LayaComparisonClient:
                 "Laya 비교 모델을 불러오지 못했습니다. 네트워크·디스크 공간·모델 다운로드 상태를 확인해 주세요."
             ) from exc
 
+    @traceable(
+        name="laya_assess_goal",
+        run_type="tool",
+        tags=["laya", "goal-assistance", "comparison"],
+        process_inputs=trace_goal_assessment_inputs,
+        process_outputs=trace_goal_assessment_outputs,
+    )
     def assess_goal(self, request: GoalClarifyRequest) -> GoalAssessment:
         """Run the same state and four typed questions used by JEV, locally."""
 

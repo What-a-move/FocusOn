@@ -90,6 +90,8 @@
 
 관련성은 공개 API의 `relation` 필드로 표현한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 `analysisStatus`이며 오류 코드가 아니다. 개인정보 차단·제외처럼 관련성 판정을 하지 않은 상태와 `RELATED`·`UNRELATED` 관계값을 한 enum으로 합치지 않는다.
 
+`EXCLUDED`는 화면·페이지 분석이 제외된 상태다. 사용자의 카메라 동의가 유효하면 카메라 신호 분석은 별도로 계속될 수 있다. `PRIVACY_BLOCKED`에서는 화면 분석과 카메라 분석을 모두 중단한다. 화면 관련성 상태와 카메라 신호 상태는 서로 덮어쓰지 않는다.
+
 ## 분석 작동 상태 (`AnalysisActivityState`)
 
 | 상태 | 의미 |

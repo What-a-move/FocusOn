@@ -1,9 +1,17 @@
+import asyncio
 import json
 from types import SimpleNamespace
 
 import pytest
 
-from src.api.schemas import ClarityStatus, GoalClarifyRequest, RecommendedGoal
+from src.api.schemas import (
+    ClarityStatus,
+    ClarificationQuestion,
+    GoalClarifyRequest,
+    GoalQuestionOption,
+    RecommendedGoal,
+)
+from src.analysis.goal_analyzer import GoalAssessment
 from src.analysis.goal_assessment_contract import (
     build_goal_assessment_question_specs,
     build_goal_assessment_state,
@@ -11,6 +19,12 @@ from src.analysis.goal_assessment_contract import (
 from src.config import Settings
 from src.models.jev_client import TypeSafeJevClient
 from src.models.laya_client import LayaComparisonClient
+from src.models.langsmith_tracing import (
+    RAW_GOAL_TEXT_ENV,
+    summarize_goal_request,
+    trace_goal_assessment_outputs,
+)
+from src.models.errors import ModelUnavailableError
 from src.models.llm_client import OpenAIGoalGenerationClient
 from src.prompts.goal_prompt import candidate_prompt, profile_prompt
 
@@ -27,6 +41,52 @@ class CapturingSystemOne:
 
 def noul(value):
     return SimpleNamespace(noul=value)
+
+
+def test_langsmith_goal_trace_is_redacted_by_default(monkeypatch):
+    monkeypatch.delenv(RAW_GOAL_TEXT_ENV, raising=False)
+    request = GoalClarifyRequest(
+        request_id="req-trace",
+        original_text="React Query 캐시 무효화 구현하기",
+    )
+
+    trace_input = summarize_goal_request(request)
+
+    assert trace_input["traceInputMode"] == "redacted"
+    assert "originalText" not in trace_input
+
+
+def test_langsmith_goal_trace_can_include_raw_local_test_input(monkeypatch):
+    monkeypatch.setenv(RAW_GOAL_TEXT_ENV, "true")
+    request = GoalClarifyRequest.model_validate(
+        {
+            "requestId": "req-trace",
+            "originalText": "React Query 캐시 무효화 구현하기",
+            "selectedGoalText": "React Query staleTime 학습",
+            "clarificationAnswers": [
+                {
+                    "questionId": "scope",
+                    "question": "무엇을 구현하나요?",
+                    "answer": "invalidateQueries 호출 흐름",
+                }
+            ],
+        }
+    )
+
+    trace_input = summarize_goal_request(request)
+
+    assert trace_input["traceInputMode"] == "raw_goal_text"
+    assert trace_input["originalText"] == request.original_text
+    assert trace_input["selectedGoalText"] == request.selected_goal_text
+    assert trace_input["clarificationAnswers"][0]["answer"] == "invalidateQueries 호출 흐름"
+
+
+def test_langsmith_goal_trace_includes_the_router_status():
+    trace_output = trace_goal_assessment_outputs(
+        GoalAssessment(0.9, 0.1, 0.1, 2.0, 0.9)
+    )
+
+    assert trace_output["routerStatus"] == ClarityStatus.CLEAR
 
 
 def test_direct_provider_keys_configure_official_clients():
@@ -49,6 +109,13 @@ def test_direct_provider_keys_configure_official_clients():
     assert generator._llm.reasoning_effort == "minimal"
     assert generator._llm.verbosity == "low"
     assert generator._llm.max_tokens == 600
+
+
+def test_rule_based_question_window_is_at_least_ten_seconds(monkeypatch):
+    monkeypatch.delenv("OPENAI_QUESTION_DEADLINE_SECONDS", raising=False)
+    assert Settings(_env_file=None).openai_question_deadline_seconds == 10
+    with pytest.raises(ValueError):
+        Settings(_env_file=None, openai_question_deadline_seconds=9.9)
 
 
 @pytest.mark.asyncio
@@ -205,3 +272,198 @@ async def test_openai_schema_failure_is_repaired_at_most_once():
 
     assert result.title == "캐싱 학습"
     assert structured.calls == 2
+
+
+def question(text: str) -> ClarificationQuestion:
+    return ClarificationQuestion(
+        id="scope",
+        text=text,
+        options=[
+            GoalQuestionOption(id="concept", label="개념 학습"),
+            GoalQuestionOption(id="practice", label="직접 구현"),
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_parallel_question_generation_returns_first_valid_result():
+    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
+    client._llm = object()
+    client._question_parallelism = 2
+    client._question_deadline_seconds = 10.0
+    calls = 0
+    cancelled = []
+
+    async def generate(_schema, _prompt):
+        nonlocal calls
+        calls += 1
+        call_number = calls
+        try:
+            await asyncio.sleep(0.01 if call_number == 1 else 1)
+            return question(f"질문 {call_number}")
+        except asyncio.CancelledError:
+            cancelled.append(call_number)
+            raise
+
+    client._generate = generate
+
+    result = await client.generate_question(
+        GoalClarifyRequest(request_id="req", original_text="React Query 학습"),
+        ClarityStatus.NEEDS_QUESTION,
+    )
+
+    assert calls == 2
+    assert result.text == "질문 1"
+    assert cancelled == [2]
+
+
+@pytest.mark.asyncio
+async def test_parallel_question_generation_skips_previously_answered_question():
+    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
+    client._llm = object()
+    client._question_parallelism = 2
+    client._question_deadline_seconds = 10.0
+    calls = 0
+
+    async def generate(_schema, _prompt):
+        nonlocal calls
+        calls += 1
+        call_number = calls
+        await asyncio.sleep(0.01 * call_number)
+        return question(
+            "무엇을 만들까요?" if call_number == 1 else "어떤 범위를 다룰까요?"
+        )
+
+    client._generate = generate
+    request = GoalClarifyRequest.model_validate(
+        {
+            "requestId": "req",
+            "originalText": "React Query 학습",
+            "clarificationAnswers": [
+                {
+                    "questionId": "previous",
+                    "question": "무엇을 만들까요?",
+                    "answer": "캐시 무효화",
+                }
+            ],
+        }
+    )
+
+    result = await client.generate_question(request, ClarityStatus.NEEDS_QUESTION)
+
+    assert result.text == "어떤 범위를 다룰까요?"
+
+
+@pytest.mark.asyncio
+async def test_parallel_question_generation_falls_back_if_both_repeat_prior_question():
+    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
+    client._llm = object()
+    client._question_parallelism = 2
+    client._question_deadline_seconds = 0.03
+
+    async def generate(_schema, _prompt):
+        return question("무엇을 만들까요?")
+
+    client._generate = generate
+    request = GoalClarifyRequest.model_validate(
+        {
+            "requestId": "req",
+            "originalText": "React Query 학습",
+            "clarificationAnswers": [
+                {
+                    "questionId": "previous",
+                    "question": "무엇을 만들까요?",
+                    "answer": "캐시 무효화",
+                }
+            ],
+        }
+    )
+
+    started = asyncio.get_running_loop().time()
+    result = await client.generate_question(request, ClarityStatus.NEEDS_QUESTION)
+
+    assert result.id == "fallback-2"
+    assert result.text != "무엇을 만들까요?"
+    assert asyncio.get_running_loop().time() - started >= 0.03
+
+
+@pytest.mark.asyncio
+async def test_streamed_question_emits_text_before_validated_result():
+    class Stream:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_args):
+            return None
+
+        async def __aiter__(self):
+            yield SimpleNamespace(
+                type="response.output_text.delta",
+                delta='{"id":"scope","text":"어떤',
+            )
+            yield SimpleNamespace(
+                type="response.output_text.delta",
+                delta=' 범위를 다룰까요?","options":[]}',
+            )
+
+        async def get_final_response(self):
+            return SimpleNamespace(output_parsed=question("어떤 범위를 다룰까요?"))
+
+    class Responses:
+        def stream(self, **_kwargs):
+            return Stream()
+
+    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
+    client._response_client = SimpleNamespace(responses=Responses())
+    client._openai_model = "gpt-5-mini"
+    client._openai_reasoning_effort = "minimal"
+    client._openai_max_completion_tokens = 600
+    previews = []
+
+    result = await client._stream_question("safe prompt", previews.append)
+
+    assert previews == ["어떤", "어떤 범위를 다룰까요?"]
+    assert result.text == "어떤 범위를 다룰까요?"
+
+
+@pytest.mark.asyncio
+async def test_question_returns_local_fallback_after_deadline():
+    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
+    client._llm = object()
+    client._question_parallelism = 2
+    client._question_deadline_seconds = 0.02
+
+    async def slow_generate(_schema, _prompt):
+        await asyncio.sleep(1)
+        return question("늦은 질문")
+
+    client._generate = slow_generate
+    result = await client.generate_question(
+        GoalClarifyRequest(request_id="req", original_text="React Query 학습"),
+        ClarityStatus.NEEDS_QUESTION,
+    )
+
+    assert result.id == "fallback-1"
+    assert result.allow_custom_answer is True
+    assert len(result.options) == 2
+
+
+@pytest.mark.asyncio
+async def test_question_returns_local_fallback_when_provider_is_unavailable():
+    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
+    client._llm = object()
+    client._question_parallelism = 2
+    client._question_deadline_seconds = 0.03
+
+    async def unavailable_generate(_schema, _prompt):
+        raise ModelUnavailableError("테스트 연결 실패")
+
+    client._generate = unavailable_generate
+    started = asyncio.get_running_loop().time()
+    result = await client.generate_question(
+        GoalClarifyRequest(request_id="req", original_text="React Query 학습"),
+        ClarityStatus.NEEDS_QUESTION,
+    )
+
+    assert result.id == "fallback-1"
+    assert asyncio.get_running_loop().time() - started >= 0.03

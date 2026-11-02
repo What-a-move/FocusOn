@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Any, Literal, TypedDict
+
+import asyncio
+from typing import Any, Callable, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
@@ -39,10 +41,12 @@ class GoalAssistanceWorkflow:
         settings: Settings,
         judgments: GoalJudgmentClient,
         generator: GoalGenerationClient,
+        question_progress: Callable[[str], None] | None = None,
     ) -> None:
         self._settings = settings
         self._judgments = judgments
         self._generator = generator
+        self._question_progress = question_progress
         self._graph = self._build_graph()
 
     def _build_graph(self):
@@ -128,12 +132,14 @@ class GoalAssistanceWorkflow:
                 "repair_count": 0,
             }
         )
-        return state["response"]
+        return state["response"].model_copy(
+            update={"clarification_session_id": request.clarification_session_id}
+        )
 
     def _validate_request(self, request: GoalClarifyRequest) -> None:
         details: list[dict[str, object]] = []
         if len(request.original_text) > self._settings.goal_text_max_length:
-            details.append({"field": "originalText", "reason": "length_exceeded"})
+            details.append({"field": "goalText", "reason": "length_exceeded"})
         if (
             request.selected_goal_text is not None
             and len(request.selected_goal_text) > self._settings.goal_text_max_length
@@ -144,13 +150,13 @@ class GoalAssistanceWorkflow:
             > self._settings.clarification_answers_max_count
         ):
             details.append(
-                {"field": "clarificationAnswers", "reason": "count_exceeded"}
+                {"field": "previousAnswers", "reason": "count_exceeded"}
             )
         for index, answer in enumerate(request.clarification_answers):
             if len(answer.answer) > self._settings.clarification_answer_max_length:
                 details.append(
                     {
-                        "field": f"clarificationAnswers.{index}.answer",
+                        "field": f"previousAnswers.{index}.answer",
                         "reason": "length_exceeded",
                     }
                 )
@@ -196,9 +202,11 @@ class GoalAssistanceWorkflow:
         }
 
     async def _generate_question(self, state: GoalAssistanceState) -> dict[str, Any]:
+        if state["request"].conversation_turn >= 2:
+            return {}
         return {
             "question": await self._generator.generate_question(
-                state["request"], state["clarity_status"]
+                state["request"], state["clarity_status"], self._question_progress
             )
         }
 
@@ -216,14 +224,16 @@ class GoalAssistanceWorkflow:
             return {"failed_checks": failed, "candidate_failures": {}}
 
         candidates = state["candidates"].goals
-        verifications = []
-        for candidate in candidates:
-            verification = await self._judgments.verify_generated_result(
-                request,
-                candidate.model_dump(mode="json", by_alias=True),
-                "recommended_goal",
+        verifications = await asyncio.gather(
+            *(
+                self._judgments.verify_generated_result(
+                    request,
+                    candidate.model_dump(mode="json", by_alias=True),
+                    "recommended_goal",
+                )
+                for candidate in candidates
             )
-            verifications.append(verification)
+        )
         candidate_failures = {
             index: failed
             for index, verification in enumerate(verifications)
@@ -266,20 +276,28 @@ class GoalAssistanceWorkflow:
         else:
             candidates = list(state["candidates"].goals)
             failures = state["candidate_failures"]
-            for index, checks in failures.items():
-                candidates[index] = await self._generator.repair_candidate(
-                    request, candidates[index], checks
+            repaired = await asyncio.gather(
+                *(
+                    self._generator.repair_candidate(
+                        request, candidates[index], checks
+                    )
+                    for index, checks in failures.items()
                 )
+            )
+            for index, candidate in zip(failures, repaired):
+                candidates[index] = candidate
             result["candidates"] = RecommendedGoalBatch(goals=candidates)
         return result
 
     async def _generate_fallback_question(
         self, state: GoalAssistanceState
     ) -> dict[str, Any]:
+        if state["request"].conversation_turn >= 2:
+            return {"clarity_status": ClarityStatus.NEEDS_QUESTION}
         return {
             "clarity_status": ClarityStatus.NEEDS_QUESTION,
             "question": await self._generator.generate_question(
-                state["request"], ClarityStatus.NEEDS_QUESTION
+                state["request"], ClarityStatus.NEEDS_QUESTION, self._question_progress
             ),
         }
 
@@ -305,7 +323,7 @@ class GoalAssistanceWorkflow:
         return {
             "response": GoalClarifyData(
                 clarity_status=state["clarity_status"],
-                question=state["question"],
+                question=state.get("question"),
                 requires_user_confirmation=True,
                 fallback_allowed=True,
             )

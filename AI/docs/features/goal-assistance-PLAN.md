@@ -71,9 +71,13 @@ JEV 또는 OpenAI 실패를 `INVALID`로 바꾸지 않는다.
 
 ## 생성과 재검증
 
-- OpenAI: 질문 한 개와 선택지 2~3개, 추천 목표 2~3개와 이유, GoalProfile 초안을 구조화 Schema로 생성한다.
+- OpenAI: 한 요청에서 질문은 최대 1개, 선택지는 2~3개로 생성한다. 전체 대화에서 AI 질문은 최대 2회이며, 이후에는 사용자가 목표 문장을 직접 확인·수정하도록 안내한다. 여러 목표가 입력되면 최종 GoalProfile이 하나의 목표만 담도록 후보 중 하나를 선택하게 한다.
+- 목표 입력은 MVP에서 2~40자, 누적 질문 답변은 최대 2개로 제한한다.
+- 추천 목표 2~3개와 이유, GoalProfile 초안은 구조화 Schema로 생성한다.
 - JEV: 각 생성 결과에 대해 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough`를 Noul로 검증한다.
-- 후보는 개별 요청으로 검증하며 외부 요청 급증을 피하기 위해 순차 실행한다.
+- 생성된 후보 검증과 검증 실패 후보의 Repair는 서로 독립된 항목끼리 병렬 실행한다. 후보 응답 Schema 상한(최대 3개)을 동시 호출 상한으로 유지한다.
+- 확인 질문은 같은 구조화 생성 요청을 최대 2건 병렬 실행하고 먼저 도착한 유효한 질문 하나만 반환한다. 이미 답한 질문은 제외하고 다른 결과를 기다린다. 동시 호출 수는 `OPENAI_QUESTION_PARALLELISM`(기본 2, 허용 1~2)으로 제한하며, 실제 지연·호출 비용은 Live 평가에서 확인한다.
+- Streamlit은 OpenAI 응답의 질문 문구를 생성 중 초안으로 표시한다. 구조화 Schema 검증을 마친 결과만 답변 선택지로 확정한다. 5초는 성능 목표이며, 유효한 모델 질문은 먼저 완성되는 즉시 반환한다. 기본 10초가 지나도록 유효한 결과가 없거나 두 요청 모두 일시 실패·Schema 오류·기존 질문 반복이면 그때 상태별 로컬 기본 질문을 사용한다. 설정·인증 오류는 숨기지 않고 즉시 표시한다. 최초 JEV 판단과 화면 렌더링 시간은 이 10초 대기 기준 밖이다.
 - 검증 실패 시 실패 항목만 전달해 OpenAI Repair를 최대 1회 수행한다.
 - 두 번째 검증도 실패하면 `NEEDS_QUESTION` 또는 직접 수정 fallback으로 종료한다.
 - 사용자가 답변하거나 후보를 선택하면 새 요청으로 네 가지 최초 평가 전체를 다시 실행한다. 생성 Prompt는 최신 답변을 사용자 요구사항으로 취급해 GoalProfile의 `interpretedGoal`과 후보 문구에 반영한다.
@@ -121,6 +125,8 @@ Graph는 Checkpointer 없이 요청마다 `START`부터 실행한다. 같은 Nod
 
 Streamlit 테스트 화면의 최초 동작명은 `목표 저장`이지만 클릭 즉시 저장하지 않는다. 위 Workflow를 먼저 실행하고 질문·추천이 끝나 `CLEAR`와 검증된 GoalProfile을 얻은 뒤 사용자가 별도의 최종 저장 버튼을 눌러야 테스트 세션 메모리에 저장한다.
 
+Streamlit 테스트 화면에서 사용자가 질문에 답하면 답변 문구를 현재 목표 입력값 끝에 반영하고, 수정된 입력값으로 다시 판단한다. 이 문구는 사용자가 계속 편집할 수 있으며 `CLEAR` GoalProfile을 별도로 최종 확인하기 전에는 저장하지 않는다.
+
 ## 모델·외부 연동
 
 - 기본 로컬 테스트 설정: `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 사용한다.
@@ -135,9 +141,11 @@ Streamlit 테스트 화면의 최초 동작명은 `목표 저장`이지만 클�
 
 ## 내부 API와 오류
 
+- 2026-10-25 요청 필드를 `goalText`, `conversationTurn`, `clarificationSessionId?`, `previousAnswers[{question,answer}]`로 정합화했다. 내부 추적용 `requestId`·선택 목표 문맥은 유지한다. 정상 응답에 Backend가 전달한 대화 ID를 반환하며 ID 발급·소유권·최종 목표 연결은 Backend 책임이다. 회차·답변 최대 2회 뒤 추가 질문을 만들지 않는다. 상세 계약과 호환 범위는 `AI/docs/api_spec.md` 4절을 따른다.
+- Backend가 retryable 일시 오류에 1초·3초 후 최대 2회 재시도한다. Desktop은 자동 재전송하지 않으며 AI HTTP 경로의 SDK 재시도는 0이다. 로컬 Streamlit 직접 호출 설정·병렬 후보 생성·의미 검수 Repair와 구분한다.
 - Endpoint: `POST /internal/v1/goals/clarify`
 - 입력 검증: HTTP 422, `VALIDATION_ERROR`, fallback 불가
-- JEV·OpenAI 일시 장애: HTTP 503, `AI_UNAVAILABLE`, fallback 허용
+- JEV 및 질문 외 OpenAI 생성·검증의 일시 장애: HTTP 503, `AI_UNAVAILABLE`, fallback 허용. 확인 질문 생성만 두 호출이 모두 일시 실패하면 정상 응답에 로컬 기본 질문을 넣는다.
 - Repair 후 Schema 오류: HTTP 502, `INVALID_MODEL_RESPONSE`, fallback 허용
 - 확정된 서비스 인증 계약이 없으므로 로컬·테스트 Endpoint로만 구현하고 배포를 차단한다.
 
