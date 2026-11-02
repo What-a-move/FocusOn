@@ -2,6 +2,8 @@
 
 ## 현재 작업 (2026-10-28)
 
+- 2026-11-03 Issue #132: Swagger와 격리 PostgreSQL 동시 출발·기존 세션 데이터의 V10 적용 전후 보존 및 Backend 빌드·Checkstyle을 확인했다. Heartbeat 연계는 후속 작업이다. 상세는 `features/session-pause-resume-REPORT.md`를 따른다.
+
 - 2026-11-02 Issue #97: 목표 수정·삭제 구현, 사용자 Swagger 테스트 및 PostgreSQL 동시 출발·실제 잠금 대기 테스트를 수행했다. Notion 정본의 PATCH 응답·재삭제 정책 대조가 남았다. 상세는 `features/goal-update-delete-REPORT.md`를 따른다.
 - Issue #97 리뷰 대응의 사용자 Swagger 확인 및 PostgreSQL 잠금 회피 테스트를 완료했다. PR 리뷰에서 변경사항을 확인한다.
 - 2026-11-01 Issue #100: 사용자 Swagger 확인과 Backend 빌드·Checkstyle, PostgreSQL 닉네임 동시성 테스트 및 V9 적용·소유권 제약 검증을 수행했다. 실제 Desktop·Extension 통합과 카메라 OS 권한 경계는 별도 확인한다. 세션 종료·Heartbeat는 후속 범위다. 상세는 `features/session-start-active-REPORT.md`를 따른다.
