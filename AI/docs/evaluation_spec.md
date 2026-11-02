@@ -269,3 +269,30 @@ ColPali는 MVP 구현에 포함하지 않는다. 후속 PoC에서는 Chrome Exte
 - 관련 Issue·PR·결정 기록 링크
 
 입력 원문, 실제 사용자 화면, 비밀 값, 모델의 민감한 원본 출력은 결과 리포트에 포함하지 않는다.
+
+## 학습 목표 설정 보조 실행 방법
+
+Issue #12는 외부 호출이 없는 고정 Fixture 평가와 명시적 JEV 실제 평가를 분리한다.
+
+```bash
+cd AI
+pyenv activate what-a-move
+python -m pytest -q
+python -m evaluation.evaluate
+FOCUSON_LIVE_GOAL_EVAL=1 python -m evaluation.evaluate --live
+streamlit run streamlit_app.py
+```
+
+- 전체 Workflow를 수동 테스트하려면 `AI/.env`에 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 입력한다. JEV와 생성 모델은 기본값으로 각각 `jev-latest`, `gpt-5-mini`를 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
+- 프로젝트 상위 경로의 `.python-version`이 `what-a-move`를 선택하므로 pyenv shell 연동이 활성화된 터미널에서는 `pyenv activate`를 생략할 수 있다.
+- 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
+- Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
+- 고정 사례는 6개 상태, 복수 목표, 약어, 의미 없는 문자열, Prompt Injection을 포함한다.
+- 구현 검증은 상태 우선순위, 후보별 독립 검수, 1회 Repair, 두 번째 실패 fallback, 후보 선택·답변 후 전체 재평가, 오류 envelope와 로그 개인정보 제외를 포함한다.
+- 실제 평가에서는 상태별 Precision·Recall, confusion matrix, fallback 비율, 후보 검수 실패율, 호출 횟수와 P50·P95 지연시간을 추가 기록한다.
+- Streamlit은 `AI/.env`의 실제 JEV·OpenAI Key를 사용하는 로컬 수동 테스트 전용이다. 목표 저장이나 학습 세션 시작은 수행하지 않는다.
+
+### #12 현재 회귀 기준
+
+- 고정 Fixture는 내부 6종 clarityStatus와 JEV 최초 4개 판단 및 Score Router 2.00/1.00을 검사한다. 폐기한 goalDetailLevel Choice나 isStartableAsIs를 현재 라우팅 기준으로 사용하지 않는다.
+- 공개 decision 4종 변환·Backend·실제 모델 품질·비용은 별도 통합/Live 평가가 필요하다. 기본 테스트 중에는 LANGSMITH_TRACING, LANGCHAIN_TRACING_V2, LANGSMITH_TRACE_RAW_GOAL_TEXT를 false로 설정한다.

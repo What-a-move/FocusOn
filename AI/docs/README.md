@@ -34,6 +34,12 @@ AI 작업은 다음 문서를 순서대로 확인한다.
 
 현재 MVP 계약은 Notion `FocusOn`의 기능·공통 정책과 `FocusOn API 명세서`를 따른다. 과거 `FocusPath AI 최종 기획서`는 참고용 설계 입력이며, 그 API 경로·임계값·TTL·모델은 현재 계약으로 사용하지 않는다.
 
+## 목표 보조 구현 문서 (#12)
+
+- [목표 보조 PLAN](features/goal-assistance-PLAN.md)은 공개 4종 decision 계획과 내부 6종 clarityStatus 구현 이력을 구분한다.
+- 실제 실행·제약은 CONTEXT.md와 NEXT_TASK.md, 내부 요청·응답은 api_spec.md의 PR #137 구현 경계를 확인한다.
+- 구현 REPORT는 제품 전체 통합 완료를 뜻하지 않는다.
+
 ## 문서 구조
 
 ```text

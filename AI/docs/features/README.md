@@ -20,3 +20,9 @@ relevance-analysis-REPORT.md
 4. `external-content-analysis`: YouTube 자막·PDF 추출 텍스트 등 외부 콘텐츠 연결
 
 각 기능은 별도 문서와 분석 모듈로 관리한다. 관련성 분석 PLAN에 체류 시간이나 MediaPipe 상태 판단을 함께 구현하지 않는다.
+
+## 목표 보조 #12 구현 기록
+
+- `goal-assistance-PLAN.md`: 공개 계약과 내부 JEV·OpenAI 구현의 차이
+- `goal-assistance-ERROR.md`: 구현 중 오류와 해결 이력
+- `goal-assistance-REPORT.md`: 내부 검증 결과; Backend·제품 통합 완료와 구분

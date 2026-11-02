@@ -2,6 +2,17 @@
 
 FocusOn AI는 사용자의 학습 목표와 현재 화면·페이지 정보를 비교해 활동 관련성을 판단하고, 이후 학습 흐름과 사용자 상태를 보조 분석하는 Python 서비스다.
 
+## 이 브랜치의 목표 보조 실행 (#12)
+
+JEV·OpenAI·LangGraph 목표 보조와 Streamlit 실행 코드가 포함돼 있다. 아래 공통 scaffold 설명은 이 기능 이외 영역의 상태와 구분한다. 공개 decision 4종과 내부 clarityStatus 6종의 변환, 실제 Backend 연결은 아직 미검증이다.
+
+```bash
+LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q
+PYENV_VERSION=what-a-move pyenv exec python -m streamlit run AI/streamlit_app.py
+```
+
+실행에 필요한 TYPESAFE_API_KEY와 OPENAI_API_KEY는 로컬 AI/.env에만 설정한다. Laya는 비교 전용이며 실제 상태·저장을 결정하지 않는다. 세부 구현은 [현재 상태](docs/CONTEXT.md)와 [공개/내부 계약](docs/api_spec.md)을 따른다. 질문 생성은 최대 2건 병렬 실행하고, 모델 초안을 스트리밍 표시하며 유효한 응답이 없을 때 기본 10초 이후 로컬 질문을 사용한다. 공유·배포 환경에서 원문 trace opt-in을 사용하지 않는다.
+
 ## 담당 기능
 
 ### MVP

@@ -13,6 +13,44 @@
 - AI API 입력·출력 계약 관리
 - 평가 데이터와 모델·프롬프트 품질 확인
 
+## 기능별 PR 상태와 충돌 해소 기준
+
+이 문서는 목표 보조 PR [#137](https://github.com/What-a-move/FocusOn/pull/137)과 학습 정리 PR [#138](https://github.com/What-a-move/FocusOn/pull/138)의 구현 상태를 함께 기록한다. 각 기능의 코드는 해당 PR 브랜치에 있으며 한쪽 브랜치가 다른 쪽 실행 코드까지 포함한다는 뜻은 아니다. 두 PR은 최신 dev를 각각 반영했고, 이 공통 문서는 동일하게 유지해 병합 순서에 따른 충돌을 피한다.
+
+- 공개 목표 decision 4종·화면 개입 v1·Client별 OCR·개인정보 계약은 최신 dev 기준을 보존한다. 2026-11-03 Notion 조회는 404였으므로 새 제품 계약을 확정하지 않았다.
+- #12 내부 clarityStatus 6종과 공개 decision 4종의 변환, 목표 길이 200자 내부 설정과 제품 2~40자의 정합성, 서비스 인증·Backend 연결은 후속 검증이다.
+- #29는 합성 DOM 기반 생성 코어와 Streamlit·Desktop 개발 데모 단계다. 실제 수집·최종 관련성·Server Worker/저장·제품 조회 통합 완료가 아니다.
+- 원문 trace opt-in은 #12의 로컬 비민감 수동 테스트에 한정한다. 제품 로그 정책이나 실제 사용자 데이터 전송 허가로 사용하지 않는다.
+
+### 목표 보조 #12 브랜치 구현 이력
+
+- 이번 필드 정합성 변경은 `LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q`로 73개 통과를 확인했다. 모델은 Fake/Mock으로 검증했고 Backend·실제 모델 통합은 미검증이다. 최초 실행에서 로컬 `.env`의 tracing 설정으로 LangSmith 연결 실패 로그가 발생해 이후 검증에서는 tracing을 껐다. `.env` 값은 변경하지 않았다.
+- 2026-10-25 #12 연동 필드: AI 내부 요청이 `goalText`, `conversationTurn`, `clarificationSessionId?`, `previousAnswers[{question,answer}]`를 수신·직렬화하고 정상 응답에 대화 ID를 그대로 반환한다. 추적용 내부 `requestId`와 이행용 이전 입력 별칭은 유지한다. 회차 0~2와 답변 수 일치·최대 2개를 검사하며 두 답변 뒤 직접 질문·Repair fallback 질문 모두 추가 생성하지 않는다. AI HTTP 경로의 SDK 재시도는 0이다. Backend의 공개 경로·ID 발급/소유권·목표 생성 연결·1초→3초 재시도는 미구현이며 해당 담당자의 후속 작업이다. 이번 기준은 사용자가 전달한 팀 메시지이며 Notion 연결 도구는 404로 최신 본문을 재확인하지 못했다.
+- Issue #12에서 JEV 판단, OpenAI 구조화 생성, LangGraph 분기·1회 Repair를 결합한 학습 목표 설정 보조를 구현했다.
+- `POST /internal/v1/goals/clarify`와 camelCase Pydantic 계약, 공통 422·502·503 오류 응답을 구현했다.
+- 6개 `clarityStatus`, 후보별 JEV 검수, 전체 재평가, fallback, 로그 개인정보 제외를 Fake 기반 테스트로 검증했다.
+- Offline 평가 Fixture와 명시적으로만 실행되는 JEV Live 평가 경로를 추가했다.
+- 실제 JEV·OpenAI Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 최초 `목표 저장`은 분석만 시작하고 `CLEAR` 결과의 최종 확인 후에만 현재 테스트 세션 메모리에 저장하며, 제품 저장소나 학습 세션은 변경하지 않는다.
+- 로컬 목표 보조는 TypeSafe 공식 API의 `TYPESAFE_API_KEY`로 JEV 판단을 호출하고, OpenAI 공식 API의 `OPENAI_API_KEY`로 구조화 생성을 호출한다. Vercel AI Gateway 설정과 우회 경로는 제거했다.
+- Streamlit은 1차 JEV 판단을 먼저 표시하고, 사용자가 다음 단계 생성 버튼을 누를 때만 OpenAI 질문·추천·GoalProfile 생성과 후속 JEV 검수를 실행한다. 후보별 JEV 검수와 실패 후보 Repair는 최대 3개를 병렬 실행한다. 확인 질문은 OpenAI 생성 요청을 기본 2건 병렬 실행해 먼저 도착한 유효한 질문 하나만 사용하고, 이미 답한 질문은 제외한다.
+- 질문 생성은 Streamlit에 실제 OpenAI 문구 초안을 스트리밍 표시한다. 5초는 성능 목표이며, 유효한 모델 질문은 즉시 사용하고 로컬 기본 질문은 질문 생성 시작 후 10초 이상 지났을 때만 사용한다. 두 호출이 일찍 실패하거나 기존 질문만 반복해도 기본 질문을 조기 표시하지 않는다. 설정·인증 오류는 바로 표시한다. 합성 목표 1회 OpenAI Live 확인에서 첫 초안 1.933초, 최종 질문 2.748초였으나 최초 JEV 판단·화면 렌더링을 포함한 P95 지연과 실제 비용은 검증되지 않았다.
+- Streamlit에서 질문에 답하면 답변 문구가 목표 입력값에 반영되고, 해당 문장으로 다시 판단한다. 목표 입력은 계속 편집할 수 있으며 검증된 `CLEAR` 결과를 사용자가 최종 확인하기 전에는 저장하지 않는다.
+- Streamlit의 JEV 판단 결과는 확률·구체성 수치만 있는 JSON 대신 판단 항목, 값, 한국어 설명이 나란히 표시되는 표로 요약하며 원본 JSON은 펼침 영역에 유지한다. `CLEAR`의 최종 확인 정보가 생성된 뒤에도 같은 판단 표를 계속 표시한다.
+- 목표 명확성 Router는 최초 구현의 4개 JEV 질문과 Score Threshold를 사용한다. 강한 `INVALID`·복수 목표·불명확 용어 판정 후 `is_usable_goal` 0.60, 구체성 신뢰도 0.45, 구체성 점수 2.00/1.00 기준으로 `CLEAR`·추천·질문으로 분기한다.
+- 최초 JEV 판단의 영어 instructions와 criteria, snake_case state(`goal_text`, `selected_goal_text`, `clarification_answers`)를 복원했다. 질문 답변에 주제·활동·범위가 있으면 최종 GoalProfile과 추천 후보에 반영한다.
+- OpenAI 구조화 생성에는 `reasoning_effort=minimal`, `verbosity=low`, 최대 600 출력 토큰을 기본 적용해 질문 생성 대기를 줄인다.
+- Streamlit 목표 입력 시 로컬 `convaiinnovations/laya-multilingual`도 JEV와 동일한 state·네 typed question으로 비교 판단한다. Laya는 비교 표에만 쓰고 실제 상태, Workflow, GoalProfile, 저장에는 연결하지 않는다. 최초 비교는 패키지 설치와 공개 체크포인트 다운로드가 필요하다.
+- LangSmith 로컬 수동 테스트는 `LANGSMITH_TRACE_RAW_GOAL_TEXT=true`일 때 목표 원문·선택 목표·후속 답변을 표시한다. `goal_assessment_comparison` 부모 trace 아래에 JEV와 Laya 판단을 함께 남기며, 각 모델 output에는 현재 Router 상태가 포함된다. 이 설정은 로컬 테스트 외 환경에서는 꺼야 한다.
+- 2026-09-28 로컬 Live 확인에서 Laya 호출·응답 매핑은 정상이나, 단일 목표 `React Query 캐시 무효화 구현하기`와 `Spring Security JWT 인증 구현하기`도 복수 목표 Noul이 각각 86.57%, 97.12%로 나왔다. 현재 기본 모델의 목표 분류 zero-shot 결과는 원시 실험값으로만 표시하며 JEV 확률과 비교하거나 정책에 사용하지 않는다.
+
+### 학습 정리 #29 브랜치 구현 이력
+
+- 2026-10-27 공개 DOM 단건 평가: 사용자 지정 Databricks MemCurrent 글을 브라우저 DOM에서 직접 추출했다. 본문 14,816자에서 캡션 등을 제거한 11,790자에 현재 전처리 규칙을 적용한 결과 120자 초과 문장 39개가 탈락하고, 후보 80개 중 앞 20개(1,136자)가 선택됐다. 핵심 episodic/derived memory 정의와 검색·조회 도구 설명이 누락됐다. 공개 글임을 표시한 별도 OpenAI 1회 응답은 8.29초 completed였으나 영문 근거에 대한 한국어 개념명이 문자열 기반 검증을 통과하지 못해 최종 FAILED였다. 제품 코드·전송 설정은 변경하지 않았다. 원문/거절된 출력은 보관하지 않고 `AI/evaluation/learning_summary_public_dom_2026-10-27.json`에 메타데이터만 기록했다.
+- 2026-10-27 추가 평가: 서로 다른 합성 DOM 8건(각 허용 근거 3개)을 `learning-summary-mvp-v3`·gpt-5-mini low로 각 1회 호출했다. 8/8 READY, 개별 4.87~12.49초·평균 7.75초, 동시 2건 묶음 총 31.20초, 재시도 0. 공개 세 필드·최대 5개·1,200자 한도는 통과했지만 Python의 근거 밖 메모리 효율 보충, Git의 가능성 표현 단정·상세 지식 보충, 통계 개요의 행동 권유가 보였다. 의미 정확도 100%로 해석하지 않는다. 입력·전체 출력·검토는 `AI/evaluation/learning_summary_eight_results_2026-10-27.md`와 JSON에 기록했으며 생성 코드는 변경하지 않았다.
+- 2026-10-27 #29 MVP 형식을 재확인했다. 공개 결과는 `overview`, `keyConcepts[{name,briefExplanation,sessionEvidence}]` 최대 5개, `nextStartPrompt` 한 문장으로 고정하고 전체 1,200자 한도를 유지한다. 퀴즈 `reviewQuestions`와 별도 추천 `recommendedConcepts`는 추가 필드로 거절한다. 생성 모델은 개요·개념의 내부 근거 연결만 반환하고 다음 시작 지점은 검증된 세션 개념을 재확인하는 한 문장으로 코드에서 만든다. 원문 복사 강제 대신 짧은 확인 내용을 사용한다.
+- 이전 임시 worktree의 소스·Git 연결이 사라져 `586965a`에서 #29 브랜치를 `.handoff/learning-summary`에 복구했다. 이전 미커밋 작업을 모두 복원했다고 간주하지 않는다. 환경변수 또는 현재/기본 작업 폴더 AI/.env에서 키만 읽는 연결도 복구했다. #12 변경은 건드리지 않았다. 8503은 다른 프로젝트이므로 종료하지 않고 8504로 실행했다.
+- 검증: `PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m unittest discover -s AI/tests -p 'test_learning_summary*.py' -v` 23개 통과. 합성 기본 입력으로 `gpt-5-mini` low 추론을 1회 호출해 5.77초 READY, 최종 세 필드와 근거 안의 다음 시작 문장을 확인했다. 로컬 Streamlit 8504 health=ok. 의미적 사실성 전체·실제 DOM 추출·Backend 연결 검증은 아니다.
+
 ## 현재 상태
 
 ### 완료된 작업
@@ -42,10 +80,10 @@
 - ColPali 실행 위치와 개인정보·자원 예산 검토
 - 카메라 MVP 로컬 분석과 AI 서버 입력 경계 확인
 
-### 아직 진행하지 않은 작업
+### 공통 통합에서 남은 작업 (#12·#29 내부 구현과 구분)
 
-- 실행 가능한 AI 서버 진입점 구현
-- Pydantic 요청·응답 Schema 구현
+- #12 이외 AI 기능의 서버 진입점 및 제품 배포 연결
+- 공개 계약과 내부 Schema 변환·서비스 인증·통합 검증
 - OCR·페이지 텍스트 정제와 품질 판단 구현
 - 규칙 기반 관련성 판단 구현
 - 임베딩 기반 유사도 판단 구현
@@ -55,7 +93,7 @@
 - 목표·세션·회차·이벤트·집계 Schema 구현
 - FocusSessionAgent 상태 그래프와 제한 도구 구현
 - 화면 판정 피드백 저장·캐시·알림·집계 무효화 구현 (후속 기능, MVP 제외)
-- 비동기 학습 노트 작업과 근거 검증 구현
+- #29 생성 코어의 Server 비동기 작업·저장·삭제 전파 연결
 - 페이지 이동·체류 시간 기반 학습 흐름 분석
 - MediaPipe 상태값 보조 분석
 - YouTube 자막·PDF 추출 텍스트 연동
@@ -65,17 +103,17 @@
 - `packages/shared-types`는 Notion 기준 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 정의한다. 내부 AI 세부 상태는 API 경계에서 변환한다.
 - Extension Manifest에는 아직 `activeTab`, `nativeMessaging` 권한이 없고 Content Script·Service Worker는 골격 상태다.
 - Server에는 공통 응답·Access JWT·인증 5개 테이블의 Entity·Repository와 Google 교환·`auth/me`·요청 인증·초기 토큰 발급(Issue #49, PR #51, dev 병합 전)이 있다. 목표·세션·이벤트·AI 연동 코드는 없으며 refresh·logout·pairing API는 후속이다.
-- AI의 `src/`, `tests/`, `evaluation/` 파일은 디렉터리 골격이며 문서의 계약이 구현됐다고 볼 수 없다.
-- 목표 보조 코드는 Issue #12의 별도 미병합 Branch에 있다. 이 `dev` 기반 문서 Branch는 그 코드 변경을 포함하지 않는다. 목표 2~40자·질문 최대 2회 등 문서 계약은 #12 통합 전 코드·테스트와 맞춰야 한다.
+- #12 브랜치에는 목표 보조 API·모델·Workflow·테스트가, #29 브랜치에는 합성 DOM 학습 정리 코어·테스트가 있다. 다른 AI 모듈과 제품 통합의 구현 여부는 현재 브랜치의 실제 코드에서 확인한다.
+- 목표 보조 #12와 학습 정리 #29는 별도 PR이다. 각 브랜치의 검증 결과를 제품 전체 또는 다른 브랜치의 완료 상태로 해석하지 않는다.
 - 팀원 보고 Hybrid 99/120, Macro F1 0.732의 원자료·결합식·독립 holdout은 확인되지 않았다. 현재 `dev`에는 Hybrid 관련성 구현이 없다.
 - 루트 아키텍처는 Desktop 화면 분석을 기본으로 설명하고, 최신 AI 기획은 Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR을 Client별로 분리해 제안한다. 팀 합의 후 공통 문서를 갱신해야 한다.
 
 ## 현재 기술
 
 - 언어: Python
-- API 서버: FastAPI 검토
-- Schema 검증: Pydantic 검토
-- 테스트: pytest 검토
+- API 서버: #12 내부 FastAPI 구현, #29 제품 API 어댑터 미연결
+- Schema 검증: #12·#29 Pydantic 사용, 공개 계약 변환 별도
+- 테스트: #12 pytest, #29 unittest·Streamlit AppTest
 - 모델: 임베딩 모델과 LLM 공급자 검토 필요
 - 분석 대상: 화면·페이지에서 추출한 텍스트와 메타데이터
 - OCR: Chrome Extension 내부 로컬 OCR과 macOS Desktop Apple Vision OCR의 독립 경로 제안; AI는 허용된 정제 텍스트만 평가

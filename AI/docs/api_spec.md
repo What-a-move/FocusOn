@@ -395,3 +395,14 @@ Server가 실제 집계와 허용된 근거 Snapshot을 구성한다. Client가 
 - MVP에서 화면 판정 수정·저장 Endpoint를 노출하지 않는다.
 - 요청·응답·로그에 원본 화면, 전체 URL, 비밀 값이 남지 않는다.
 - 모델 출력이 허용 Schema를 벗어나면 사용하지 않는다.
+
+## PR #137 충돌 해소와 현재 구현 경계
+
+- 기준: `dev`의 공개 목표 `decision` 4종과 최신 화면 개입 `v1`, Client별 OCR·개인정보 계약을 유지한다. 2026-11-03 Notion 조회는 404였으므로 새 계약을 확정하지 않았다.
+- 이 브랜치의 목표 보조 코드는 내부 `clarityStatus` 6종을 반환하는 JEV·OpenAI·LangGraph 구현이다. 공개 4종으로의 Backend 어댑터는 아직 검증되지 않았고 내부 결과를 공개 응답에 그대로 사용할 수 없다.
+- 내부 요청은 `requestId`, `goalText`, `conversationTurn`(0~2), 선택적 `clarificationSessionId`, `previousAnswers[{question,answer}]`다. 회차와 답변 수가 같아야 하며 답변 2개 이후 추가 질문은 생성하지 않는다.
+- 대화 ID의 발급·소유권·이력 검증, 사용자 최종 확인·목표 저장은 Backend 책임이다. AI는 전달받은 ID만 반환한다. AI HTTP 경로의 제공자 SDK 재시도는 0이며 Backend 재시도와 구분한다.
+- 질문 스트리밍·최대 2건 병렬 생성·10초 이후 기본 질문 전환과 최대 3개 후보 검수/Repair는 유지한다. Laya는 비교 전용이다.
+- 로컬 테스트용 원문 trace opt-in은 공유·배포 환경에 적용하지 않는다. 목표 최대 200자 내부 설정과 제품 2~40자, 내부 6종/공개 4종 변환은 통합 후속 검증 대상이다.
+
+내부 실행 코드는 `src/api/schemas.py`, `src/api/routes.py`를 기준으로 확인한다. 이전 `originalText`·`clarificationAnswers` 입력은 이행용 별칭이며 직렬화는 `goalText`·`previousAnswers`를 사용한다. `questionId`는 외부 요청의 필수 필드가 아니다. 실제 공개 API 인증·응답 변환은 이번 충돌 해소에서 새로 구현하지 않았다.
