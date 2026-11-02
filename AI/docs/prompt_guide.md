@@ -2,14 +2,14 @@
 
 ## 문서 상태
 
-- 상태: 목표 설정 보조 Prompt 구현, 관련성 Prompt는 팀 검토용 초안
+- 상태: 팀 검토용 초안, 미구현
 - 버전: `relevance-prompt-v1-draft`
-- 기준일: 2026-09-12
+- 기준일: 2026-09-22
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [Agent 실행 계약](focus_session_agent_spec.md), [상태 모델](state_model.md), [분석 규칙](analysis_rules.md), [노트 명세](session_note_spec.md), [평가 명세](evaluation_spec.md)
 
 이 문서는 규칙과 임베딩만으로 판단하기 어려운 경우 사용하는 LLM 및 FocusSessionAgent의 입력·출력·도구 제한을 정의한다. 모델은 관련성 후보와 근거를 제안하지만 최종 알림, 차단, 시간 집계와 저장을 실행하지 않는다.
 
-MVP에서는 화면 판정 수정·저장·개인화가 제외되므로 사용자 피드백을 Prompt나 도구 입력으로 넣지 않는다. 관련 도구 계약은 후속 기능 제안이다.
+MVP에서는 화면 판정 수정·저장·개인화가 제외되므로 관련 사용자 피드백을 Prompt나 도구 입력으로 넣지 않는다. 목표 명확화 질문은 전체 대화에서 최대 2회이고 복수 목표는 하나만 최종 확정한다.
 
 ## 0. 학습 목표 설정 보조의 모델 역할
 
@@ -42,6 +42,8 @@ Issue #12의 목표 설정 보조에서는 JEV와 OpenAI 역할을 다음처럼 
 
 Streamlit 비교용 Laya는 JEV와 동일한 네 typed question을 받지만 확률·Score 보정 체계가 JEV와 다르다. 따라서 결과를 비교 표로만 보여 주고 JEV Router의 Threshold나 실제 사용자 흐름에 사용하지 않는다.
 
+> 위 6종 clarityStatus와 임계값은 #12 내부 실행 기준이며 공개 decision 4종 계약을 대체하지 않는다.
+
 ## 1. 역할 분리
 
 ```text
@@ -56,6 +58,7 @@ Streamlit 비교용 Laya는 JEV와 동일한 네 typed question을 받지만 확
 모델이 제안할 수 있는 값:
 
 - `relevanceLabelCandidate`
+- `clarityStatusCandidate` (목표 보조 요청일 때)
 - 설명용 `confidence`
 - `contextStatus`
 - 요청에 포함된 `evidenceIds`
@@ -90,8 +93,11 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 
 - 제외·민감 화면·권한 실패
 - 추출 실패 또는 판단 가능한 텍스트 없음
+- 화면 판정 사용자 수정 적용 (후속 기능, MVP 제외)
 - 규칙과 임베딩의 강한 근거가 충돌 없이 같은 결론을 지지함
 - 캐시가 현재 모든 버전과 일치함
+
+목표 보조 요청에서는 콘텐츠 분석 Prompt를 사용하지 않고, `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM` 중 하나의 `decisionCandidate`를 반환한다. 추천 목표는 2~3개, 질문은 한 응답에 1개·대화 전체에 2회를 넘기지 않는다. 빈 입력은 모델 호출 전 `GOAL_TEXT_INVALID`로 처리한다.
 
 다음 경우에만 호출을 검토한다.
 
@@ -170,14 +176,30 @@ Prompt만으로 방어가 완성됐다고 가정하지 않는다. 입력 분리,
 }
 ```
 
+목표 보조 응답은 다음 형태를 사용한다.
+
+```json
+{
+  "decisionCandidate": "AMBIGUOUS",
+  "confidence": 0.61,
+  "normalizedGoalText": null,
+  "suggestions": [],
+  "goalCandidates": [],
+  "question": "어떤 방식으로 영어를 공부하려고 하나요?"
+}
+```
+
 | 필드 | 허용 값·조건 |
 | --- | --- |
 | `relevanceLabelCandidate` | `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK` |
+| `decisionCandidate` | 목표 보조 요청에서 `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM` |
 | `confidence` | `0.0~1.0`; 의미와 보정 방식은 평가 후 확정 |
 | `contextStatus` | `SUFFICIENT`, `INSUFFICIENT`, `AMBIGUOUS` |
 | `evidenceIds` | 입력에 실제로 존재하는 passage ID만 허용 |
 
 모델이 `UNAVAILABLE`, `driftState`, `recommendedAction`, `legacyState`를 생성하지 않게 한다. 이 값들은 시스템 상태와 정책 코드가 결정한다.
+
+제품 표시 라벨은 모델이 직접 생성하지 않는다. 애플리케이션이 `RELATED/SUPPORTING/OFF_TASK/UNCERTAIN/UNAVAILABLE`을 각각 제품의 `RELATED/RELATED/UNRELATED/UNCERTAIN/UNCERTAIN`으로 투영하고, `EXCLUDED`와 `PRIVACY_BLOCKED`는 모델 호출 전에 처리한다.
 
 허용하지 않는 출력:
 
@@ -212,7 +234,7 @@ Agent는 명확한 전처리·캐시·임베딩 계산을 대신하지 않는다
 | `profile_learning_goal` | 목표 구조화 | 현재 사용자·목표 범위 |
 | `calculate_relevance` | 관련성 후보 계산 | 검증된 문단만 사용 |
 | `load_recent_learning_flow` | 최근 3~5개 활동 요약 조회 | 전체 방문 기록 금지 |
-| `load_user_feedback` | 동일 범위 피드백 조회 | MVP 제외; 후속 개인화 승인 후에만 허용 |
+| `load_user_feedback` | 동일 범위 피드백 조회 | 임의 사용자 조회 금지 |
 | `classify_ambiguous_content` | 모호한 콘텐츠 분류 | 구조화 출력 강제 |
 | `calculate_drift_risk` | 결정적 흐름 규칙 계산 | 모델이 시간 임계값 변경 금지 |
 | `recommend_intervention` | 정책에 맞는 제안 후보 | 실제 실행 권한 없음 |
@@ -231,7 +253,7 @@ Agent 상태에는 최소 식별자와 허용된 요약·참조만 둔다. 페�
 
 - `goalId`, `goalVersion`, `sessionId`, `runId`, `eventId`, `navigationId`
 - 정제 콘텐츠 참조와 근거 ID
-- 최근 활동 요약과 현재 정책 버전
+- 최근 활동 요약과 정책 버전 (화면 판정 피드백 버전은 후속 기능)
 - 호출 횟수, 재시도, 전체 시간 예산
 - 모델·Prompt·추출기·정책 버전
 

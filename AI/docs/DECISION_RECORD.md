@@ -189,6 +189,8 @@ AI의 개인정보, 실패 처리, 상태 분리, LLM 권한, 캐시, stale 결�
 
 브라우저 MVP는 DOM 추출을 우선하고 정보가 부족할 때 허용된 로컬 Apple Vision OCR을 사용한다. ColPali는 PDF·Canvas·이미지·슬라이드처럼 시각 구조가 중요한 콘텐츠의 검색·근거 보강 후보로 기준선 비교 후 편입한다.
 
+이 결정의 OCR 책임 표현은 결정 016에서 Client별 경로로 구체화한다. Chrome은 Extension 내부 OCR, macOS Desktop은 Apple Vision OCR을 사용하며 Chrome이 Desktop Native Messaging으로 자동 우회하지 않는다.
+
 ### 결정 이유
 
 DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지를 로컬에서 텍스트로 바꿀 수 있다. ColPali는 시각 구조 이해에 장점이 있을 수 있지만 실행 위치, 모델 자원과 이미지 전송 정책 검증이 필요하다.
@@ -299,7 +301,149 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 - Server 집계·Queue·노트 저장
 - 노트 Prompt·Schema·평가
 
-## 결정 015 - 목표 보조의 JEV 판단과 OpenAI 생성 분리
+## 결정 015 - 제품 표시 상태와 AI 내부 상태 매핑
+
+- 결정일: 2026-10-13
+- 담당 영역: AI·Server·Client
+- 상태: 확정
+
+### 결정 내용
+
+AI 내부는 `RELATED`, `SUPPORTING`, `UNCERTAIN`, `OFF_TASK`, `UNAVAILABLE`을 유지한다. 제품 공개 `relation`에서는 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. AI 관련성 판정은 앞의 세 값만 반환하며 `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 차단 결과다. `SUPPORTING`은 `RELATED`의 보조 유형이고 별도 공개 상태로 노출하지 않는다. `OFF_TASK`는 `UNRELATED`, `UNAVAILABLE`은 `UNCERTAIN`과 처리 실패 상세 상태로 투영한다.
+
+### 결정 이유
+
+AI 분석의 의미를 잃지 않으면서 기존 제품·공유 타입의 표시값과 실패·민감정보 상태를 구분하기 위해서다.
+
+### 영향받는 파일
+
+- `AI/docs/state_model.md`
+- `AI/docs/api_spec.md`
+- `AI/docs/prompt_guide.md`
+- `AI/docs/evaluation_spec.md`
+
+## 결정 016 - Client별 로컬 OCR 경로
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Extension·macOS 네이티브 모듈
+- 상태: 제안
+
+### 결정 내용
+
+Chrome은 DOM 우선 후 Extension 내부 로컬 OCR을 사용하고, macOS Desktop은 허용된 활성 앱 화면에 Apple Vision 로컬 OCR을 사용한다. Chrome OCR 실패를 Desktop Native Messaging이나 외부 OCR로 자동 우회하지 않는다.
+
+### 결정 이유
+
+현재 Notion 기획의 Client 책임을 분리하고, 권한·설치·지연·개인정보 경계를 서로 다른 경로에서 검증하기 위해서다.
+
+### 영향받는 파일
+
+- `AI/docs/content_acquisition_spec.md`
+- `AI/docs/CONTEXT.md`
+- `AI/docs/DEVELOPMENT_RULES.md`
+
+## 결정 017 - 목표 보조 명확성 상태
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Server·Client
+- 상태: 변경됨 — 결정 020 참조
+
+### 결정 내용
+
+목표 보조는 `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `INVALID`, `UNRECOGNIZED_TERM`을 사용한다. 사용자 확인 전에는 목표를 확정하지 않으며 AI 오류·무응답이어도 직접 입력 목표를 사용자가 확인하면 세션을 시작할 수 있다.
+
+### 영향받는 파일
+
+- `AI/docs/goal_session_spec.md`
+- `AI/docs/api_spec.md`
+- `AI/docs/prompt_guide.md`
+- `AI/docs/evaluation_spec.md`
+
+## 결정 018 - 분석 제외 모드와 Server 상태 투영
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Server·Client
+- 상태: 변경됨 — 결정 020 참조
+
+### 결정 내용
+
+Server는 `sessionStatus=ACTIVE/PAUSED/ENDED`, `exclusionMode=NONE/ANALYSIS_ONLY/ANALYSIS_AND_TIME`, `pauseReason`, `resumeRequired`를 관리한다. `ANALYSIS_ONLY`는 타이머를 유지하고 `ANALYSIS_AND_TIME`은 타이머·학습 기록을 중지한다. 두 모드 모두 콘텐츠 payload를 AI에 보내지 않는다.
+
+### 영향받는 파일
+
+- `AI/docs/goal_session_spec.md`
+- `AI/docs/content_acquisition_spec.md`
+- `AI/docs/api_spec.md`
+- `AI/docs/evaluation_spec.md`
+
+## 결정 019 - 카메라 출시 여부 보류
+
+- 결정일: 2026-09-22
+- 담당 영역: AI·Desktop·Server·Client
+- 상태: 변경됨 — 결정 020 참조
+
+### 결정 내용
+
+Notion 기획서에 카메라 MVP 포함과 출시 미정 내용이 함께 있어 제품 출시 여부는 팀 결정 전까지 보류한다. AI는 원본 영상·프레임·랜드마크를 받지 않으며, 출시되더라도 클라이언트의 최소 상태·집계값만 선택적으로 사용한다. 개인화 휴식은 카메라 없이 시간·휴식 선택 데이터만으로도 동작해야 한다.
+
+### 영향받는 파일
+
+- `AI/README.md`
+- `AI/docs/CONTEXT.md`
+- `AI/docs/DEVELOPMENT_RULES.md`
+- `AI/docs/features/personalized-break-recommendation-PLAN.md`
+
+## 결정 020 - Notion MVP·API·분석 계약 동기화
+
+- 결정일: 2026-10-12
+- 담당 영역: AI·Server·Client
+- 상태: 제안 (Notion AI 분석 계약 `REVIEW`, 팀 승인 전)
+
+화면 개입 임계값·UNCERTAIN 처리의 최신 기준은 결정 021로 대체한다. 아래 120초 등 수치는 당시 검토 이력이다.
+
+### 결정 내용
+
+Notion 공개 목표 명확화 경로는 `POST /api/v1/goals/clarify`이고 판정값은 `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM`이다. 질문은 대화당 최대 2회이며 AI 실패 시 사용자가 목표를 수동 확정할 수 있다. MVP에는 화면 관련성 판정 수정·저장 공개 API가 없다.
+
+관련성 결과 `UNRELATED`는 콘텐츠 관계를 나타내며 시간 기반 `driftState`와 분리한다. 유효 이탈은 15초 미만 화면 전환을 제외하고 `GENTLE` 120초 연속, `NORMAL` 최근 10분 내 30초 이상 2회, `ACTIVE` 30초 연속으로 판정한다. `RELATED`는 현재 구간을 초기화하고 `UNCERTAIN`은 누적하지 않는다. 카메라는 60초에 후보만 만들고 90초에 최신 화면·권한을 다시 확인한다. 최신 화면이 `RELATED`면 억제한다.
+
+화면 `EXCLUDED`에서는 화면 콘텐츠 분석을 중지하고 타이머와 별도 동의된 로컬 카메라 분석을 유지한다. `PRIVACY_BLOCKED`에서는 화면·카메라 분석을 중지하고 타이머는 유지한다. 카메라 원본·프레임·랜드마크는 서버·AI로 보내지 않는다. 최근 7일 개인화 휴식 추천은 P1 후보이며 MVP 기본 휴식 제안과 구분한다. 최신 제외 상태를 확인할 수 없는 동안에는 화면·카메라 분석을 모두 중지한다. 확인된 `EXCLUDED`에서만 별도 카메라 동의·권한에 따라 로컬 분석을 허용하며, 카메라 집계·전송은 별도 승인 전 금지한다.
+
+팀원 보고의 120건 비교에서 Hybrid는 99건 정답·Macro F1 0.732로 가장 높았지만 원자료와 결합식은 미확인이다. 우선 평가 후보일 뿐 구현·배포 결정이 아니다. AI 전처리는 허용된 `text`·`ocr` 입력에서 최종 `qualityScore`·`contentHash`를 생성하며, 이탈 정책은 관련성 최종 라벨·confidence를 덮어쓰지 않는다. Backend 저장 컬럼 9개는 협의 전이다.
+
+### 결정 이유
+
+PR #15의 최신 문서 계약을 유지하면서 Notion 제품·API 정합성과 팀원 평가 보고, 현행 MVP 분석 정책을 구분하기 위해서다. 상세 AI 분석 계약은 Notion 문서 검토와 팀 승인을 기다린다.
+
+### 영향받는 파일
+
+- `AI/docs/analysis_rules.md`, `AI/docs/state_model.md`, `AI/docs/api_spec.md`
+- `AI/docs/content_acquisition_spec.md`, `AI/docs/evaluation_spec.md`
+- `AI/docs/feedback_personalization_spec.md`, `AI/docs/goal_session_spec.md`
+- `docs/API_CONTRACT.md`, `docs/DATA_PRIVACY.md`
+
+### 관련 Issue·PR
+
+- Issue: [#16](https://github.com/What-a-move/FocusOn/issues/16)
+- Issue: [#23](https://github.com/What-a-move/FocusOn/issues/23)
+
+## 결정 021 - 화면 개입 v1과 MVP 학습 정리 객체
+
+- 결정일: 2026-10-24
+- 상태: 확정 (사용자 공유·최종 정정 및 최신 화면 분석 5.2·5.3, 리포트 5.3 대조)
+- 결정 내용: Server가 관리하는 `v1`의 연속/반복 OR 조건은 `analysis_rules.md` 9.1을 따른다. `UNCERTAIN`은 비누적·연속 구간 종료이고 이전 30초 보류는 적용하지 않는다. 실제 전송부터의 서버 5분 cooldown과 Client의 확인 후 재집중 UI를 구분한다. 세션에 고정한 버전과 분석·개입 기록의 버전은 같아야 한다.
+- 학습 정리: `keyConcepts`는 `name`, `briefExplanation`, `sessionEvidence` 객체 최대 5개다. 서로 다른 근거 2개 미만이면 `INSUFFICIENT_DATA`이며 전체 결과는 1,200자 이하, 원문·URL·코드·개인정보는 제외한다.
+- 이유: 최신 사용자 확정과 제품 문서에 맞추고, 이전 Notion AI 분석 계약의 임계값·버전 예시가 새 세션 정책을 덮지 않게 한다.
+- 제한: AI 코드·Policy Engine 구현 완료를 뜻하지 않는다. 현재 Notion 내 차이와 rolling window 경계의 미정 부분은 `docs/NOTION_SYNC_AUDIT.md`에 기록한다.
+- 영향받는 파일: `analysis_rules.md`, `state_model.md`, `evaluation_spec.md`, `NEXT_TASK.md`, `CONTEXT.md`, `api_spec.md`, `session_note_spec.md`.
+
+다음 결정은 `결정 022`부터 추가한다.
+
+## 목표 보조 #12 브랜치 결정 이력
+
+공통 결정 015~021과 다른 브랜치에서 같은 번호를 사용했으므로 기존 #12 이력을 GA-015~GA-037로 구분해 보존한다. GA-030·GA-036의 과거 화면 정책은 공통 최신 결정 020·021과 analysis_rules.md를 대체하지 않는다. 내부 목표 보조의 실제 실행 기준은 GA-027·GA-028·GA-035·GA-037이며 공개 응답 변환은 후속 작업이다.
+
+## 결정 GA-015 - 목표 보조의 JEV 판단과 OpenAI 생성 분리
 
 - 결정일: 2026-09-27
 - 담당 영역: AI
@@ -330,7 +474,7 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 016 - 로컬 목표 보조의 Vercel AI Gateway 단일 Key 경로
+## 결정 GA-016 - 로컬 목표 보조의 Vercel AI Gateway 단일 Key 경로
 
 - 결정일: 2026-09-27
 - 담당 영역: AI
@@ -342,7 +486,7 @@ DOM은 비용과 개인정보 위험이 낮고, Apple Vision은 원본 이미지
 
 ### 결정 이유
 
-TypeSafe 또는 별도 Jev 서비스의 Key·잔액과 호출 주소가 맞지 않아 발생하는 인증 오류를 제거하고, 판단과 생성 모델의 로컬 테스트 인증을 한 Key로 단순화하기 위해서다. 모델 역할 분리는 결정 015를 그대로 유지하며 Gateway는 호출·과금 경로만 통합한다.
+TypeSafe 또는 별도 Jev 서비스의 Key·잔액과 호출 주소가 맞지 않아 발생하는 인증 오류를 제거하고, 판단과 생성 모델의 로컬 테스트 인증을 한 Key로 단순화하기 위해서다. 모델 역할 분리는 결정 GA-015를 그대로 유지하며 Gateway는 호출·과금 경로만 통합한다.
 
 ### 영향 범위
 
@@ -356,7 +500,7 @@ TypeSafe 또는 별도 Jev 서비스의 Key·잔액과 호출 주소가 맞지 �
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 017 - Vercel JEV 추론 권한은 실제 요청 결과로 안내
+## 결정 GA-017 - Vercel JEV 추론 권한은 실제 요청 결과로 안내
 
 - 결정일: 2026-09-27
 - 담당 영역: AI
@@ -380,7 +524,7 @@ TypeSafe 또는 별도 Jev 서비스의 Key·잔액과 호출 주소가 맞지 �
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 018 - 목표 보조는 TypeSafe·OpenAI 공식 API를 직접 사용
+## 결정 GA-018 - 목표 보조는 TypeSafe·OpenAI 공식 API를 직접 사용
 
 - 결정일: 2026-09-27
 - 담당 영역: AI
@@ -406,7 +550,7 @@ Vercel 무료 등급에서 JEV 실제 추론이 403으로 제한돼 한 Key로 �
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 019 - 시작 가능한 학습 목표의 명확성 기준 완화
+## 결정 GA-019 - 시작 가능한 학습 목표의 명확성 기준 완화
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -434,7 +578,7 @@ Vercel 무료 등급에서 JEV 실제 추론이 403으로 제한돼 한 Key로 �
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 020 - 바로 시작 가능성 Noul을 명확성 라우팅에 사용
+## 결정 GA-020 - 바로 시작 가능성 Noul을 명확성 라우팅에 사용
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -460,7 +604,7 @@ Score의 "구체성"과 Score confidence가 각각 다른 의미를 가져 사�
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 021 - 한국어 목표 구분용 JEV 판단 기준
+## 결정 GA-021 - 한국어 목표 구분용 JEV 판단 기준
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -485,7 +629,7 @@ Score의 "구체성"과 Score confidence가 각각 다른 의미를 가져 사�
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 022 - CLEAR는 바로 시작 가능성과 다른 판단을 함께 만족해야 함
+## 결정 GA-022 - CLEAR는 바로 시작 가능성과 다른 판단을 함께 만족해야 함
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -510,12 +654,12 @@ Score의 "구체성"과 Score confidence가 각각 다른 의미를 가져 사�
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 023 - 목표 정보 수준 Choice로 넓은 목표와 정보 부족 목표를 분리
+## 결정 GA-023 - 목표 정보 수준 Choice로 넓은 목표와 정보 부족 목표를 분리
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
 - 상태: 확정
-- 대체: 결정 020·022의 `CLEAR` 라우팅 규칙과 결정 021의 최초 질문 개수
+- 대체: 결정 GA-020·022의 `CLEAR` 라우팅 규칙과 결정 GA-021의 최초 질문 개수
 
 ### 결정 내용
 
@@ -541,7 +685,7 @@ Noul 확률과 Score는 넓은 목표와 핵심 정보가 빠진 목표에서 �
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 024 - 학습 목표 성립 판단과 짧은 생성의 지연을 분리
+## 결정 GA-024 - 학습 목표 성립 판단과 짧은 생성의 지연을 분리
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -570,7 +714,7 @@ OpenAI의 질문·추천·GoalProfile 구조화 생성은 기본 `reasoning_effo
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 025 - Laya는 목표 설정의 로컬 비교 판단으로만 사용
+## 결정 GA-025 - Laya는 목표 설정의 로컬 비교 판단으로만 사용
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -598,7 +742,7 @@ JEV의 `clarityStatus`와 Router만 실제 질문·추천·GoalProfile·저장 �
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 결정 026 - Laya 기본 체크포인트의 목표 분류 수치를 보정 전 원시값으로 표시
+## 결정 GA-026 - Laya 기본 체크포인트의 목표 분류 수치를 보정 전 원시값으로 표시
 
 - 결정일: 2026-09-28
 - 담당 영역: AI
@@ -622,9 +766,7 @@ Streamlit의 Laya 열 이름을 `Laya 원시값 (실험용)`으로 표시하고,
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 새 결정 기록
-
-## 결정 027 - JEV 최초 목표 판단 계약으로 복원
+## 결정 GA-027 - JEV 최초 목표 판단 계약으로 복원
 
 - 결정일: 2026-09-29
 - 담당 영역: AI
@@ -653,9 +795,7 @@ Laya는 비교 전용이라는 결정은 유지하되, JEV와 동일한 네 질�
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 새 결정 기록
-
-## 결정 028 - 목표 명확성·추천 Score 기준 하향
+## 결정 GA-028 - 목표 명확성·추천 Score 기준 하향
 
 - 결정일: 2026-09-30
 - 담당 영역: AI
@@ -679,9 +819,7 @@ JEV `specificity_level`의 `CLEAR` 기준을 2.50에서 2.00으로, 추천(`NEED
 
 - Issue: [#12](https://github.com/What-a-move/FocusOn/issues/12)
 
-## 새 결정 기록
-
-## 결정 029 - 로컬 목표 보조 테스트의 LangSmith 원문 Trace opt-in
+## 결정 GA-029 - 로컬 목표 보조 테스트의 LangSmith 원문 Trace opt-in
 
 - 결정일: 2026-09-30
 - 담당 영역: AI
@@ -704,7 +842,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 - `AI/streamlit_app.py`, `AI/.env.example`, `AI/README.md`
 - `docs/DATA_PRIVACY.md`, `AI/docs/CONTEXT.md`, `AI/docs/NEXT_TASK.md`
 
-## 결정 030 - MVP 화면·카메라 분석 정책 문서 동기화
+## 결정 GA-030 - MVP 화면·카메라 분석 정책 문서 동기화
 
 - 결정일: 2026-10-01
 - 담당 영역: AI·Server·Desktop·Extension·공통 개인정보 정책
@@ -729,9 +867,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 - `AI/docs/feedback_personalization_spec.md`, `evaluation_spec.md`, `data_lifecycle.md`
 - `AI/docs/goal_session_spec.md`, `DEVELOPMENT_RULES.md`, `docs/DATA_PRIVACY.md`
 
-## 새 결정 기록
-
-## 결정 031 - 목표 후보 검증·Repair 제한 병렬 실행
+## 결정 GA-031 - 목표 후보 검증·Repair 제한 병렬 실행
 
 - 결정일: 2026-10-02
 - 담당 영역: AI
@@ -753,7 +889,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 - `AI/tests/test_goal_workflow.py`
 - `AI/docs/features/goal-assistance-PLAN.md`, `CONTEXT.md`, `NEXT_TASK.md`
 
-## 결정 032 - Streamlit 질문 답변의 목표 입력 반영
+## 결정 GA-032 - Streamlit 질문 답변의 목표 입력 반영
 
 - 결정일: 2026-10-02
 - 담당 영역: AI (로컬 Streamlit 테스트 화면)
@@ -773,7 +909,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 - `AI/tests/test_streamlit_app.py`
 - `AI/docs/features/goal-assistance-PLAN.md`, `CONTEXT.md`, `NEXT_TASK.md`
 
-## 결정 033 - 확인 질문 생성 2건 제한 병렬 경주
+## 결정 GA-033 - 확인 질문 생성 2건 제한 병렬 경주
 
 - 결정일: 2026-10-02
 - 담당 영역: AI
@@ -785,7 +921,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 
 ### 결정 이유
 
-이전 결정 031은 후보 검증과 Repair만 병렬화했으며 질문 생성 지연에는 직접 영향을 주지 않았다. 사용자가 요청한 질문 생성 속도 개선을 실제 경로에 적용한다. 외부 제공자가 취소된 요청을 이미 처리했을 수 있어 호출량과 비용은 최대 두 배까지 늘 수 있다. 속도 향상도 Live 측정 전에는 확정할 수 없다.
+이전 결정 GA-031은 후보 검증과 Repair만 병렬화했으며 질문 생성 지연에는 직접 영향을 주지 않았다. 사용자가 요청한 질문 생성 속도 개선을 실제 경로에 적용한다. 외부 제공자가 취소된 요청을 이미 처리했을 수 있어 호출량과 비용은 최대 두 배까지 늘 수 있다. 속도 향상도 Live 측정 전에는 확정할 수 없다.
 
 ### 영향 범위
 
@@ -793,7 +929,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 - `AI/tests/test_model_clients.py`, `AI/.env.example`
 - 목표 보조 기획·결과·컨텍스트·다음 작업 문서
 
-## 결정 034 - 확인 질문 스트리밍과 4.5초 제한 시간
+## 결정 GA-034 - 확인 질문 스트리밍과 4.5초 제한 시간
 
 - 결정일: 2026-10-02
 - 담당 영역: AI
@@ -801,7 +937,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 
 ### 결정 내용
 
-Streamlit에서 OpenAI Responses 스트림의 질문 문구를 초안으로 순차 표시한다. 최종 응답은 기존 `ClarificationQuestion` Schema 검증을 통과해야 선택지로 표시한다. 질문 생성은 기본 4.5초 안에 유효한 결과가 없으면 상태에 맞는 로컬 기본 질문을 반환한다. 두 요청이 모두 일시 실패·Schema 오류·기존 질문 반복인 경우도 로컬 기본 질문을 사용하며, 설정·인증 오류는 표시한다. 이로써 결정 033의 반복 질문 검증 오류 처리를 대체한다. 이 제한 시간에는 최초 JEV 판단과 Streamlit 렌더링은 포함하지 않는다. 병렬 생성 두 요청 중 한 건은 스트리밍하고 다른 건은 기존 구조화 호출로 유지한다.
+Streamlit에서 OpenAI Responses 스트림의 질문 문구를 초안으로 순차 표시한다. 최종 응답은 기존 `ClarificationQuestion` Schema 검증을 통과해야 선택지로 표시한다. 질문 생성은 기본 4.5초 안에 유효한 결과가 없으면 상태에 맞는 로컬 기본 질문을 반환한다. 두 요청이 모두 일시 실패·Schema 오류·기존 질문 반복인 경우도 로컬 기본 질문을 사용하며, 설정·인증 오류는 표시한다. 이로써 결정 GA-033의 반복 질문 검증 오류 처리를 대체한다. 이 제한 시간에는 최초 JEV 판단과 Streamlit 렌더링은 포함하지 않는다. 병렬 생성 두 요청 중 한 건은 스트리밍하고 다른 건은 기존 구조화 호출로 유지한다.
 
 ### 결정 이유
 
@@ -813,7 +949,7 @@ Streamlit에서 OpenAI Responses 스트림의 질문 문구를 초안으로 순�
 - `AI/streamlit_app.py`, `AI/src/config.py`, `AI/.env.example`
 - 목표 보조 기획·결과·컨텍스트·다음 작업 문서
 
-## 결정 035 - 5초 성능 목표와 10초 이후 기본 질문 전환 분리
+## 결정 GA-035 - 5초 성능 목표와 10초 이후 기본 질문 전환 분리
 
 - 결정일: 2026-10-02
 - 담당 영역: AI
@@ -821,7 +957,7 @@ Streamlit에서 OpenAI Responses 스트림의 질문 문구를 초안으로 순�
 
 ### 결정 내용
 
-결정 034의 4.5초 강제 전환을 대체한다. 질문 생성 5초는 최적화 목표이지 유효한 모델 응답을 취소할 시점이 아니다. 병렬 생성과 Streamlit 질문 초안 스트리밍은 유지하고, 유효한 모델 질문은 먼저 완성되는 즉시 반환한다. 규칙 기반 기본 질문은 생성 시작 후 기본 10초 이상 유효한 모델 질문이 없을 때만 반환한다. 두 모델 호출이 일찍 실패하거나 기존 질문만 반복해도 10초 전에는 기본 질문을 표시하지 않는다. 설정·인증 오류는 기다리지 않고 표시한다. 이 기준은 질문 생성 단계에만 적용한다.
+결정 GA-034의 4.5초 강제 전환을 대체한다. 질문 생성 5초는 최적화 목표이지 유효한 모델 응답을 취소할 시점이 아니다. 병렬 생성과 Streamlit 질문 초안 스트리밍은 유지하고, 유효한 모델 질문은 먼저 완성되는 즉시 반환한다. 규칙 기반 기본 질문은 생성 시작 후 기본 10초 이상 유효한 모델 질문이 없을 때만 반환한다. 두 모델 호출이 일찍 실패하거나 기존 질문만 반복해도 10초 전에는 기본 질문을 표시하지 않는다. 설정·인증 오류는 기다리지 않고 표시한다. 이 기준은 질문 생성 단계에만 적용한다.
 
 ### 결정 이유
 
@@ -832,7 +968,7 @@ Streamlit에서 OpenAI Responses 스트림의 질문 문구를 초안으로 순�
 - `AI/src/models/llm_client.py`, `AI/src/config.py`, `AI/.env.example`
 - 질문 생성 테스트, Streamlit 실행 안내, 목표 보조 기획·결과·컨텍스트·다음 작업 문서
 
-## 결정 036 - 관련성 Hybrid 우선 평가와 OCR·이탈 입출력 책임 정리
+## 결정 GA-036 - 관련성 Hybrid 우선 평가와 OCR·이탈 입출력 책임 정리
 
 - 결정일: 2026-10-11
 - 담당 영역: AI·Server·Desktop·Extension 협의 필요
@@ -853,7 +989,7 @@ OCR 전달은 개인정보 검사를 통과한 `text`와 `ocr` 메타데이터�
 - `AI/docs/evaluation_spec.md`, `analysis_rules.md`, `content_acquisition_spec.md`, `api_spec.md`
 - `AI/docs/CONTEXT.md`, `NEXT_TASK.md`
 
-## 결정 037 - 목표 확인 요청 필드와 대화 ID·재시도 책임 일치
+## 결정 GA-037 - 목표 확인 요청 필드와 대화 ID·재시도 책임 일치
 
 - 결정일: 2026-10-25
 - 상태: 전달받은 팀 메시지에 따른 AI 내부 구현 기준; Backend·Desktop 통합 미검증
@@ -863,5 +999,3 @@ OCR 전달은 개인정보 검사를 통과한 `text`와 `ocr` 메타데이터�
 - 회차는 0~2이며 완료된 답변 수와 일치한다. 두 번 답한 뒤 명확하지 않으면 세 번째 AI 질문을 생성하지 않고 직접 수정·확인을 요청한다. 기존 응답 상태값과 나머지 필드는 유지한다.
 - 자동 요청 재시도는 Backend가 retryable 오류에 1초→3초, 최대 2회 수행한다. 같은 대화 ID·회차·답변을 유지하며 Desktop은 자동 재전송하지 않는다. AI HTTP 경로의 제공자 SDK 재시도는 0, 기존 병렬 후보 생성·의미 검수 Repair는 별도다.
 - Notion 연결 도구의 404 때문에 이번에는 최신 3.2 본문을 확인하지 못했다. 사용자가 직접 전달한 계약을 변경 근거로 기록한다.
-
-다음 결정은 `결정 038`부터 추가한다.

@@ -13,6 +13,15 @@ Desktop과 Extension은 실행 환경이 다르지만 React, Next.js, TypeScript
 - Chrome Extension 전용 구현과 기록: `apps/extension/`
 - 여러 앱이 공유하는 타입: `packages/shared-types/`
 
+## 화면 디자인 원본
+
+- 저장소 폴더와 같은 부모 폴더에 있는 `FocusOn-design/`을 화면 디자인의 기준으로 사용한다.
+- 화면 구현 전 해당 화면의 HTML과 `fo-base.css`, `fo-theme.js`, `assets/`를 확인한다.
+- 배치, 색, 글자, 크기, 간격, 캐릭터, 상태별 표현과 반응형 동작을 시안에 맞춰 구현한다.
+- `미리보기`, `시안용 목업` 등 제품 화면이 아닌 보조 시각 요소는 실제 화면에 넣지 않는다.
+- 시안의 흐름과 현재 합의된 제품 흐름이 다르면 제품 흐름은 합의된 기준을 지키고, 시각 디자인은 시안에 맞춘다.
+- 시안 파일에 없는 화면은 임의의 기본 UI를 완성 디자인처럼 취급하지 않는다. 공통 디자인 원본을 적용하고 미제공 상태를 기록한다.
+
 ## 작업 시작 순서
 
 1. 루트 `docs/README.md`와 `docs/WORKFLOW.md`를 읽는다.

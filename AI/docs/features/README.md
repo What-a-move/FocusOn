@@ -10,11 +10,7 @@ relevance-analysis-REPORT.md
 
 기획서 작성과 입력·출력 계약 확인이 끝난 뒤 개발을 시작하고, 오류 보고서와 결과 리포트는 작업 중·작업 완료 시 갱신한다.
 
-## 구현된 기능 문서
-
-- `goal-assistance-PLAN.md`: JEV 판단·OpenAI 생성 기반 목표 설정 보조 기획
-- `goal-assistance-ERROR.md`: 구현 중 오류와 해결 기록
-- `goal-assistance-REPORT.md`: 구현·테스트·평가 결과
+문서 검토·기획 단계에서는 기능별 `PLAN.md`만 둘 수 있다. 실제 구현 중 재현 가능한 오류가 발생했을 때만 `ERROR.md`를 만들고, 기능 구현이 완료된 경우에만 테스트 결과를 포함한 `REPORT.md`를 작성한다.
 
 ## 기능 개발 순서
 
@@ -24,3 +20,9 @@ relevance-analysis-REPORT.md
 4. `external-content-analysis`: YouTube 자막·PDF 추출 텍스트 등 외부 콘텐츠 연결
 
 각 기능은 별도 문서와 분석 모듈로 관리한다. 관련성 분석 PLAN에 체류 시간이나 MediaPipe 상태 판단을 함께 구현하지 않는다.
+
+## 목표 보조 #12 구현 기록
+
+- `goal-assistance-PLAN.md`: 공개 계약과 내부 JEV·OpenAI 구현의 차이
+- `goal-assistance-ERROR.md`: 구현 중 오류와 해결 이력
+- `goal-assistance-REPORT.md`: 내부 검증 결과; Backend·제품 통합 완료와 구분

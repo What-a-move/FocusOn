@@ -40,12 +40,16 @@ services:
         restart: true
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      GOOGLE_DESKTOP_CLIENT_ID: ${GOOGLE_DESKTOP_CLIENT_ID:-}
+      GOOGLE_DESKTOP_CLIENT_SECRET: ${GOOGLE_DESKTOP_CLIENT_SECRET:-}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-focuson}
       POSTGRES_USER: ${POSTGRES_USER:-focuson}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
       DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-10}
+      PAIRING_SECRET_BASE64: ${PAIRING_SECRET_BASE64:?PAIRING_SECRET_BASE64 must be set in .env}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:?JWT_SECRET_BASE64 must be set in .env}
     ports:
       - "127.0.0.1:${BACKEND_HOST_PORT:-8080}:8080"
     read_only: true

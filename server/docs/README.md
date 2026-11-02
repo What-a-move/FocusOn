@@ -20,6 +20,7 @@ server/docs/
 ├── NEXT_TASK.md
 ├── DECISION_RECORD.md
 ├── DEVELOPMENT_RULES.md
+├── PR_REVIEW_GUIDE.md
 ├── rules/
 │   ├── api-design.md
 │   ├── branch-workflow.md
@@ -37,6 +38,11 @@ server/docs/
 └── features/
     └── 기능명-PLAN.md / 기능명-ERROR.md / 기능명-REPORT.md
 ```
+
+## 개발용 API 수동 테스트
+
+- [Swagger 실행·Google PKCE 로그인 테스트](SWAGGER_TESTING.md)
+- local은 `.env`를 자동으로 읽고 Swagger를 켠다. DB가 켜져 있으면 `bootRun`만 실행한다. docker/test는 Swagger 비활성이다.
 
 ## Backend 전용 확인 항목
 
@@ -58,6 +64,7 @@ server/docs/
 - [테스트 코드 규칙](rules/test-convention.md)
 - [Flyway 마이그레이션 규칙](rules/migration-convention.md)
 - [코드 리뷰 컨텍스트 격리](rules/code-review-isolation.md)
+- [백엔드 PR 리뷰 가이드](PR_REVIEW_GUIDE.md)
 - [코드 리뷰 결과 문서 템플릿](rules/code-review-template.md)
 - [Notion API 명세서 작성 규칙](rules/notion-api-spec.md)
 

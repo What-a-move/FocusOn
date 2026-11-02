@@ -2,9 +2,9 @@
 
 ## 문서 상태
 
-- 상태: 목표 설정 보조 내부 API 구현, 나머지 계약은 팀 검토용 초안
+- 상태: 팀 검토용 초안, 미구현
 - 버전: `0.3.0-draft`
-- 기준일: 2026-09-27
+- 기준일: 2026-09-22
 - 검토 필요: Server 담당자, Frontend(`apps`) 담당자, Shared 타입 담당자
 - 관련 문서: [개발 규칙](DEVELOPMENT_RULES.md), [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [상태 모델](state_model.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md), [데이터 수명](data_lifecycle.md)
 - 확정 조건: 호출 경로, 인증, Timeout, 요청 필드, 상태값, 캐시 정책을 관련 담당자가 확인한 뒤 AI `DECISION_RECORD.md`에 확정 결정을 남긴다.
@@ -16,7 +16,8 @@
 ```text
 Extension / macOS 네이티브 모듈
   → 제외·권한 검사
-  → DOM 또는 허용된 로컬 Apple Vision OCR
+  ├─ Chrome: DOM 또는 Extension 내부 로컬 OCR
+  └─ macOS Desktop: 허용된 활성 앱 화면의 Apple Vision OCR
   → 로컬 개인정보·품질 검사
   → Spring Server
       → 인증·사용자·목표·세션·회차 소유권 검증
@@ -38,7 +39,7 @@ Extension / macOS 네이티브 모듈
 | --- | --- |
 | 형식 | `application/json`, lower camel case |
 | 시각 | ISO 8601 UTC |
-| 식별자 | UUID 문자열을 기본으로 하며 실제 형식은 Server 계약에서 확정 |
+| 식별자 | MVP의 userId·deviceId·goalId·sessionId 등 DB 리소스는 BIGINT의 10진 문자열이다. clientRunId 등 관측·중복 방지 UUID와 구분한다. 후속 초안의 식별자 형식을 공개 API에 강제하지 않는다. |
 | 호출자 | Spring Server |
 | 인증 | 서비스 간 인증 방식 검토 필요; 비밀 값은 환경변수·비밀 관리 시스템 사용 |
 | Timeout | 기능별 예산 검토 필요; Timeout 시 현재 판정 적용 금지 |
@@ -60,90 +61,53 @@ Extension / macOS 네이티브 모듈
 
 ## 3. 제안 Endpoint
 
-| 기능 | Method·경로 | 상태 |
+| 기능 | 공개 Server 경로 | 내부 AI 경로 | 상태 |
 | --- | --- | --- |
-| 목표 구조화 | `POST /internal/v1/goals/clarify` | 내부 제안 |
-| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | Notion 기준 |
-| 학습 노트 생성 | `POST /internal/v1/learning-summaries` | 내부 후속 제안 |
+| 목표 명확화 | `POST /api/v1/goals/clarify` | `POST /internal/v1/goals/clarify` | 공개 경로는 Notion 확정, 내부 경로 제안 |
+| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
+| 사용자 관련성 판정 수정·무효화 | MVP 공개 경로 없음 | Server 소유권 검증 후 후속 검토 | P1 이후 제안; Notion API 계약 변경 전 구현 금지 |
+| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안; MVP 응답은 `overview`, `keyConcepts`(name·briefExplanation·sessionEvidence 객체 최대 5개), `nextStartPrompt`만 사용 |
 
-관련성 분석은 Notion 기준 경로 하나만 사용한다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
+기존 `/api/v1/analyze/relevance`는 레거시 경로 후보로만 기록하며 최신 `/api/v1/sessions/{sessionId}/analysis-runs`와 동시에 최종 경로로 구현하지 않는다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 
-## 4. 목표 구조화·명확화
-
-Issue #12에서 AI 내부 경로 `POST /internal/v1/goals/clarify`를 구현했다. 이 경로는 Server 공개 API가 아니며 인증 계약 확정 전 로컬·테스트에서만 사용한다.
-
-### 4.0 구현 계약
-
-- 외부 JSON은 lower camel case, 내부 Python은 snake case를 사용한다.
-- 2026-10-25 전달받은 Desktop 연동 메시지를 기준으로 공개 요청은 `{goalText, conversationTurn, clarificationSessionId?, previousAnswers: [{question, answer}]}`를 사용한다. 공개 경로는 Backend의 `POST /api/v1/goals/clarify`, AI 내부 경로는 기존 `POST /internal/v1/goals/clarify`다.
-- Backend→AI는 위 필드에 내부 추적용 필수 `requestId`를 더한다. 내부 선택 문맥 `selectedGoalText`도 유지한다. Python의 기존 `original_text`·`clarification_answers` 이름은 유지하고 JSON 직렬화만 `goalText`·`previousAnswers`로 통일했다. 기존 `originalText`·`clarificationAnswers`·선택적 `questionId`는 이행용 입력으로만 허용한다.
-- `conversationTurn`은 첫 요청 0, 답변 후 1·2이며 `previousAnswers` 길이와 같아야 한다. 명시적 필드는 정수 0~2만 허용한다. 이전 내부 요청에만 생략 시 답변 수에서 유도하는 호환 처리를 제공한다. 질문 답변은 전체 이력을 보낸다. 두 번 답한 뒤에는 추가 질문 대신 `question=null`, 사용자 직접 수정·확인 경로로 끝낸다.
-- `clarificationSessionId`는 Backend가 발급·소유권 확인·유효성·회차를 관리한다. AI는 전달된 문자열 ID를 정상 응답 `data.clarificationSessionId`에 그대로 반환한다. AI 내부 요청에서 생략하면 null이며, 공개 응답의 ID 발급까지 구현한 것은 아니다. Desktop은 같은 ID를 다음 확인 요청과 `POST /api/v1/goals`에 전달한다. 이 ID는 학습 세션 ID·인증 증명이 아니다.
-- Desktop은 자동 재전송하지 않는다. Backend만 retryable 일시 실패에 1초 → 3초 간격, 최대 2회(최초 포함 최대 3회) 재시도하며 같은 대화 ID·회차·답변을 유지한다. 입력/설정 오류는 재시도하지 않는다. AI HTTP Dependency는 두 제공자 SDK의 통신 재시도를 0으로 고정한다. 병렬 질문 후보 생성·1회 의미 검수 Repair는 요청 재시도와 별개다. Streamlit 직접 호출의 로컬 설정과 제품 Backend 정책을 혼동하지 않는다.
-- MVP 입력 목표 문장은 2~40자다. 선택된 최종 목표는 하나만 확정한다.
-- AI의 명확화 질문은 대화 전체에서 최대 2회다. 요청별 질문은 최대 1개다. 두 번 질문한 뒤에도 불명확하면 AI 질문을 더 만들지 않고 사용자의 직접 수정·확인을 요청한다.
-- 각 답변은 설정 기준 최대 500자, `previousAnswers`는 Schema에서 최대 2개다. 목표 길이의 현재 구현 차이는 `CONTEXT.md`를 확인한다.
-- `clarityStatus`: `CLEAR`, `NEEDS_SELECTION`, `NEEDS_SUGGESTION`, `NEEDS_QUESTION`, `UNRECOGNIZED_TERM`, `INVALID`.
-- 모든 정상 응답은 `requiresUserConfirmation=true`이며 AI가 목표를 저장하거나 확정하지 않는다.
-- 선택 후보 또는 답변이 추가되면 새 요청으로 최초 JEV 평가 네 가지를 다시 실행한다.
+## 4. 목표 구조화
 
 ### 4.1 요청 예시
 
 ```json
 {
-  "requestId": "req_01",
-  "goalText": "캐시 원리 학습",
-  "conversationTurn": 1,
-  "clarificationSessionId": "example-dialog-01",
-  "selectedGoalText": null,
-  "previousAnswers": [
-    {
-      "question": "어떤 범위의 캐시인가요?",
-      "answer": "React Query 캐시예요."
-    }
-  ]
+  "requestId": "550e8400-e29b-41d4-a716-446655440002",
+  "goalText": "Spring Security JWT 인증 구현",
+  "conversationTurn": 0,
+  "previousAnswers": []
 }
 ```
 
-### 4.2 성공 응답 예시
+목표 명확화 요청은 `goalText`와 `conversationTurn`을 사용한다. `goalText`는 2~40자이며, `conversationTurn`은 0~2다. 사용자 확인 전 후보와 확인 후 확정 목표를 같은 객체로 덮어쓰지 않는다.
+
+2026-10-25 재확인한 공개 API는 첫 요청에서 `clarificationSessionId`를 생략하고 `previousAnswers: []`를 보낸다. 성공 응답은 서버가 발급한 `clarificationSessionId`를 포함하고, 다음 요청에서 같은 ID와 `previousAnswers: [{question, answer}]`를 사용한다. 최종 `POST /goals`에도 이 ID를 전달한다. 위 `requestId`는 내부 호출 추적값이며 공개 Desktop 입력에 새 필수 필드로 추가하지 않는다.
+
+Desktop의 clarify POST 자동 재전송은 하지 않는다. Backend가 AI 일시 실패·timeout에 1초 → 3초 간격 최대 2회 재시도하고, 대화 턴·질문 수의 확정은 논리 요청당 한 번만 한다. 최종 실패 시 수동 확정 경로를 유지한다.
+
+### 4.2 확정 전 보조 응답
 
 ```json
 {
   "data": {
-    "clarificationSessionId": "example-dialog-01",
-    "clarityStatus": "NEEDS_QUESTION",
-    "interpretedGoal": null,
-    "recommendedGoals": [],
-    "question": {
-      "id": "study_approach",
-      "text": "캐시를 어떤 방식으로 공부할까요?",
-      "options": [
-        {"id": "concept", "label": "개념 정리"},
-        {"id": "practice", "label": "예제 실습"}
-      ],
-      "allowCustomAnswer": true
-    },
-    "goalProfileDraft": null,
-    "invalidReason": null,
-    "requiresUserConfirmation": true,
-    "fallbackAllowed": true
+    "decision": "CLEAR",
+    "normalizedGoalText": "Spring Security JWT 인증 구현",
+    "question": null,
+    "suggestions": [],
+    "goalCandidates": [],
+    "conversationTurn": 0,
+    "clarificationSessionId": "701"
   }
 }
 ```
 
-`recommendedGoals`는 2~3개이며 각 항목은 `id`, `title`, `reason`을 가진다. `question`은 한 번에 하나이며 `id`, `label`로 된 선택지는 2~3개다. `goalProfileDraft`는 `originalText`, `interpretedGoal`, `mainTopic`, `purpose`, `coreTopics`, `supportingTopics`, `expectedActivities`, `profileSource`를 사용하며 배열은 필드별 최대 5개·중복 불가다. 사용자 확인·수정 후 Server가 확정과 저장을 관리한다.
+허용 `decision`은 `CLEAR`, `AMBIGUOUS`, `MULTI_GOAL`, `UNKNOWN_TERM`이다. `AMBIGUOUS`의 `suggestions`는 2~3개, `MULTI_GOAL`은 `goalCandidates`와 질문 1개를 반환한다. 질문은 대화 전체에서 최대 2회다. 빈 입력은 AI 판정이 아니라 `GOAL_TEXT_INVALID`다. AI 실패·Timeout 뒤에는 사용자가 현재 목표 문장을 수동 확정할 수 있다. AI가 방문한 콘텐츠만으로 사용자 목표를 자동 확장하지 않는다.
 
-### 4.3 목표 명확화 오류
-
-| HTTP | code | retryable | fallbackAllowed | 의미 |
-| --- | --- | --- | --- | --- |
-| 422 | `VALIDATION_ERROR` | false | false | 공백·길이·개수·Schema 오류 |
-| 502 | `INVALID_MODEL_RESPONSE` | true | true | 구조화 모델 응답을 검증하지 못함 |
-| 503 | `AI_UNAVAILABLE` | true | true | JEV 또는 OpenAI를 일시적으로 사용할 수 없음 |
-
-오류 응답은 최상위 `code`, `message`, `retryable`, `retryAfterSeconds`, `requestId`, `details`를 사용한다. `details.fallbackAllowed`로 원문 시작 fallback 가능 여부를 전달한다. 목표 원문, 답변, 모델 원본 출력은 오류나 로그에 포함하지 않는다.
-
-API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해결되지 않는 설정 오류도 `AI_UNAVAILABLE`로 숨기되 `retryable=false`로 반환한다. Rate Limit, Overload, Timeout과 연결 장애만 제한된 Retry 대상이다.
+MVP의 목표 문장은 2~40자, 명확화 질문은 전체 대화에서 최대 2회다. 여러 목표가 입력되면 최종적으로 하나만 선택하도록 돕는다. 목표 문장 확인·수정은 화면 관련성 결과 정정·삭제나 개인화 피드백과 별개다. Issue #12의 구현 Branch와 이 계약의 차이는 통합 전 확인한다.
 
 ## 5. 페이지 관련성 분석
 
@@ -158,7 +122,17 @@ API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해
   "goalId": "550e8400-e29b-41d4-a716-446655440000",
   "goalVersion": 1,
   "navigationId": "navigation-003",
-  "source": "EXTENSION",
+  "source": "extension",
+  "sessionStatus": "RUNNING",
+  "analysisStatus": "READY",
+  "pauseReason": null,
+  "settings": {
+    "durationMode": "PRESET",
+    "interventionLevel": "NORMAL",
+    "recordOnly": false,
+    "personalizedBreakEnabled": false,
+    "settingsVersion": 1
+  },
   "goalProfile": {
     "mainTopic": "Spring Security JWT 인증 구현",
     "purpose": "IMPLEMENTATION",
@@ -175,7 +149,7 @@ API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해
     "extractionStatus": "SUCCESS",
     "extractorVersion": "proposal-1"
   },
-  "policySignals": {
+  "signals": {
     "activeDurationSeconds": 35,
     "browserFocused": true
   },
@@ -186,13 +160,14 @@ API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해
 ### 5.2 요청 규칙
 
 - `goalVersion`은 Server가 저장한 최신 버전과 일치해야 한다.
-- `content.text`와 `content.ocr`는 [콘텐츠 수집 계약](content_acquisition_spec.md)의 제안형 AI 전달 경계다. OCR 경로에서는 `ocr`에 인식 상태·품질 메타데이터만 넣고 원본 이미지나 차단된 OCR 원문은 보내지 않는다. DOM 경로는 `ocr: null`이다. Notion 공개 `contentPayload.text`와 이 내부 제안형을 혼동하지 않는다.
-- 최종 `qualityScore`와 `contentHash`는 AI 전처리에서 계산한다. Client의 OCR 신뢰도·1차 품질값을 최종값으로 받아들이지 않는다. `qualityScore`의 수치 범위와 두 필드의 Server 전달·저장 위치, Backend가 검토 중인 9개 컬럼은 아직 미확정이다.
-- AI 내부에서 정규화한 `passages[].id`만 응답 `evidenceIds`와 연결한다. Client가 임의로 보낸 문단 ID를 근거로 신뢰하지 않는다.
+- `content.text`와 `content.ocr`는 [콘텐츠 수집 계약](content_acquisition_spec.md)의 제안형 AI 전달 형식이다. OCR 경로의 `ocr`는 인식 상태·품질 메타데이터이며 원본 이미지나 차단된 OCR 원문을 넣지 않는다. 공개 `contentPayload`와 내부 제안형을 혼동하지 않는다.
+- 최종 `qualityScore`와 정제 `contentHash`는 AI 전처리에서 계산한다. Client의 OCR 신뢰도·1차 품질값을 최종값으로 복사하지 않는다. 두 값의 Server 전달·저장 위치와 Backend 검토 예정 9개 컬럼은 미확정이다.
+- 근거 문단 ID가 필요한 분석 응답은 AI 전처리에서 허용된 `text`를 분할해 부여한다. 입력 `passages` 유지 여부는 Server와 합의한다.
 - 전체 URL, URL 쿼리, 사용자 ID, 이메일, Authorization Header를 포함하지 않는다.
 - `EXCLUDED`이면 AI 요청을 만들지 않는다.
 - `FAILED` 또는 `UNSUPPORTED`는 콘텐츠 판정 대신 처리 상태 기록을 우선한다.
-- `policySignals.activeDurationSeconds`는 이탈·알림 정책 입력이며 관련성 모델의 라벨이나 `confidence` 계산 입력이 아니다. AI가 학습 시간으로 확정하지 않는다. 내부 분석 요청과 정책 요청을 분리할지는 Server와 협의한다.
+- `activeDurationSeconds`는 흐름 정책 입력이며 AI가 학습 시간으로 확정하지 않는다.
+- 체류·카메라 신호는 관련성 분석의 최종 라벨이나 `confidence`를 덮어쓰지 않는다. 이탈 정책 입력과 관련성 모델 입력의 분리 방식은 Server와 합의한다.
 
 ### 5.3 성공 응답 예시
 
@@ -209,12 +184,14 @@ API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해
     "extractionStatus": "SUCCESS",
     "analysisStatus": "COMPLETED",
     "relevanceLabel": "RELATED",
+    "productRelevanceLabel": "RELATED",
+    "relationKind": "DIRECT",
     "driftState": "LEARNING",
     "recommendedAction": "NO_ACTION",
     "confidence": 0.84,
     "confidenceType": "HEURISTIC",
     "reasonCode": "GOAL_RELATED",
-    "reason": "현재 자료는 목표를 진행하는 데 필요한 보조 학습 자료입니다.",
+    "reason": "현재 자료는 목표의 인증 필터 설정과 직접 관련됩니다.",
     "evidenceIds": ["passage-001"],
     "decisionStage": "FINAL",
     "versions": {
@@ -229,9 +206,9 @@ API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해
 }
 ```
 
-`confidence`는 설명용 판단 지표다. 임베딩 유사도, OCR 인식 점수 또는 LLM 자기평가를 그대로 정답 확률로 반환하지 않는다. MVP에서는 관련성 후보의 confidence가 `0.75` 미만이면 `UNCERTAIN`으로 반환한다. `0.75` 이상 여부는 이탈 시간 임계값을 대체하지 않는다.
+`confidence`는 설명용 판단 지표다. 임베딩 유사도, OCR 인식 점수 또는 LLM 자기평가를 그대로 정답 확률로 반환하지 않는다. 의미와 보정 방법은 평가 후 `confidenceType`과 함께 확정한다.
 
-목표 이탈·복귀 판단은 이 관련성 응답의 `relevanceLabel`과 `confidence`를 그대로 입력으로 받는다. OCR `qualityScore`나 임베딩 유사도를 이용해 최종 라벨·`confidence`를 다시 계산하거나 덮어쓰지 않는다. 실패·제외·미지원은 비분석 상태로 분리한다. `RELATED` 복귀 시 이탈 구간과 화면·카메라 알림 후보를 초기화하며, `UNCERTAIN`은 이탈 시간에 누적하지 않는다. 상세 시간 임계값은 [AI 분석 규칙](analysis_rules.md)을 따른다.
+MVP에서 `RELATED`·`UNRELATED` 후보의 confidence가 `0.75` 미만이면 `UNCERTAIN`으로 반환한다. 목표 이탈·복귀 정책은 최종 `relevanceLabel`·`confidence`를 그대로 소비하며 OCR `qualityScore`, 중복 여부, 임베딩 유사도로 다시 계산하지 않는다. `RELATED` 복귀는 이탈 구간과 대기 알림 후보를 초기화하고 `UNCERTAIN`은 시간을 누적하지 않는다.
 
 ### 5.4 상태 필드
 
@@ -243,11 +220,42 @@ API Key 누락·인증·권한·잘못된 Provider 요청처럼 재시도로 해
 - `driftState`: 최근 흐름·체류를 고려한 이탈 위험
 - `recommendedAction`: 사용자에게 제안 가능한 행동
 
-### 5.5 공개 상태 경계
+### 5.5 제품 표시 라벨 매핑
 
-공개 API의 `relation`은 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`을 사용한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 오류가 아닌 `analysisStatus`로 전달한다.
+공개 API의 `relation`은 Notion 기준 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`를 사용한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 오류가 아닌 비분석 상태로 전달한다.
 
 AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세부 상태는 분석 근거와 정책 판단을 위한 내부 값이다. Server는 공개 응답을 만들 때 관련성과 처리 상태를 각각 변환하며 내부 상태를 Client에 그대로 노출하지 않는다.
+
+| AI 내부 값 | 제품 표시 값 | 설명 |
+| --- | --- | --- |
+| `RELATED` | `RELATED` | 직접 학습 |
+| `SUPPORTING` | `RELATED` | 보조 학습이며 `relationKind=SUPPORTING`으로 구분 |
+| `OFF_TASK` | `UNRELATED` | 충분한 근거가 있는 목표 무관 활동 |
+| `UNCERTAIN` | `UNCERTAIN` | 의미적 판단 보류 |
+| `UNAVAILABLE` | `UNCERTAIN` | 처리 실패이며 상세 원인은 별도 상태로 전달 |
+| `extractionStatus=EXCLUDED` | `EXCLUDED` | AI 호출 없음 |
+| 개인정보 2차 차단 | `PRIVACY_BLOCKED` | 캡처·전송·AI 호출 없음 |
+
+### 5.6 세션·제외 입력 계약
+
+AI는 세션 상태를 변경하지 않지만 Server가 검증한 현재 상태를 입력으로 받아 분석 가능 여부를 결정한다.
+
+| 필드 | 허용 값·의미 |
+| --- | --- |
+| `sessionStatus` | Notion의 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`, `ENDING`, `ENDED`, `ABANDONED` |
+| `relation` | 공개 상태 `EXCLUDED` 또는 `PRIVACY_BLOCKED`; 내부 `analysisStatus`와 분리 |
+| `pauseReason` | `USER`, `REQUIRED_PERMISSION`, `EXTENSION_UNLINKED`, `APP_RESTART`, `SYSTEM` 등 Server enum |
+| `recordOnly` | 기록만 허용하고 알림·콘텐츠 노트를 만들지 않는지 여부 |
+| `personalizedBreakEnabled` | 개인화 휴식 제안 동의·사용 여부 |
+| `settingsVersion` | 세션 설정 변경 감지를 위한 버전 |
+
+확인된 `EXCLUDED`에서는 화면 콘텐츠 수집·OCR·AI를 중지하고 타이머를 유지한다. 별도 카메라 동의와 권한이 유효하면 로컬 카메라 분석만 허용하며 카메라 집계·전송은 별도 승인 전 금지한다. 최신 제외 상태를 확인할 수 없거나 `PRIVACY_BLOCKED`이면 화면·카메라 분석을 중지한다. 타이머를 멈추는 것은 `PAUSED`·`AUTO_PAUSED` 같은 세션 전이로만 처리한다. 비분석 상태에서 콘텐츠 payload를 AI에 보내지 않는다.
+
+### 5.7 피드백 Endpoint
+
+`POST /api/v1/feedback`은 MVP 공개 API에 없다. 사용자 관련성 판정 수정·저장·AI 개인화 활용은 보류된 후속 구상이다. 구현 전에 Notion 제품 정책과 API 계약을 별도로 변경해야 한다.
+
+후속 기능을 설계할 때도 한 페이지의 수정이 Domain 전체 허용으로 확대되지 않게 해야 한다. 현재 MVP에는 이 수정 기능과 공개 경로가 없다.
 
 ## 6. 처리된 비분석 결과
 
@@ -284,7 +292,7 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 | `OCR_FAILED` | 허용된 로컬 OCR 실행 실패 | `FAILED`, `SKIPPED` |
 | `UNSUPPORTED_CONTENT_TYPE` | 안전한 추출 경로가 없음 | `UNSUPPORTED`, `SKIPPED` |
 | `ANALYSIS_NOT_REQUIRED` | 현재 캐시·정책으로 모델 호출 불필요 | 검증된 기존 결과 또는 `SKIPPED` |
-| `SESSION_NOT_RUNNING` | 회차가 실행 중이 아님 | 콘텐츠 분석 없음 |
+| `SESSION_NOT_ACTIVE` | `sessionStatus`가 `RUNNING`이 아님 | 콘텐츠 분석 없음 |
 | `PRIVACY_EXCLUDED` | 제외·민감 대상 | AI 요청을 만들지 않는 것이 기본 |
 
 ## 7. 실패 응답
@@ -316,7 +324,7 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 | `NOTE_OUTPUT_INVALID` | 노트 Schema·근거 검증 실패 | 노트 미저장, 시간 기록 유지 |
 | `INTERNAL_ERROR` | 예상하지 못한 내부 오류 | 안전한 오류 코드와 요청 ID만 기록 |
 
-위 코드는 AI 내부 진단용 후보이며 외부 Client에 그대로 노출하지 않는다. Server는 Notion `공통 Error Code`의 `ANALYSIS_SERVICE_UNAVAILABLE`, `REQUEST_TIMEOUT`, `VALIDATION_ERROR` 등으로 변환한다. 개인정보 차단은 오류 대신 정상 `analysisStatus = PRIVACY_BLOCKED`로 처리한다.
+위 코드는 AI 내부 진단용 후보이며 외부 Client에 그대로 노출하지 않는다. Server는 Notion `공통 Error Code`의 `ANALYSIS_SERVICE_UNAVAILABLE`, `REQUEST_TIMEOUT`, `VALIDATION_ERROR` 등으로 변환한다. 개인정보 차단은 오류 대신 공개 `relation = PRIVACY_BLOCKED`, 내부 `analysisStatus = SKIPPED`로 처리한다.
 
 오류 메시지에 입력 원문, 모델 원본 출력, 비밀 값과 내부 Stack Trace를 포함하지 않는다.
 
@@ -326,7 +334,7 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 - `requestId` 재사용 시 요청 Fingerprint가 다르면 충돌 오류로 처리한다.
 - Fingerprint와 캐시 키에 입력 원문이나 인증 정보를 넣지 않는다.
 - 콘텐츠 관련성 캐시와 시간 기반 `driftState`를 분리한다.
-- 목표·모델·Prompt·추출기·정책 버전이 바뀌면 관련 캐시를 무효화한다. 사용자 화면 판정 피드백 무효화는 후속 기능이며 MVP에서 수집·저장하지 않는다.
+- 목표·모델·Prompt·추출기·정책 버전이 바뀌면 관련 캐시를 무효화한다. 화면 판정 피드백 버전은 후속 기능에서만 적용한다.
 - 고정 `24시간` TTL은 미확정이다. 데이터별 보존 목적과 삭제 전파를 검토한 뒤 결정한다.
 
 상세 기준은 `data_lifecycle.md`를 따른다.
@@ -342,8 +350,7 @@ AI 내부에서 사용하는 `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE` 같은 세�
 - 확정된 목표와 목표 버전
 - Server가 계산한 직접·보조·무관·미확인·중지 시간
 - 저장이 허용된 활동 요약과 `sourceRef`
-
-MVP는 화면 판정 수정·메모·미해결 표시를 저장하지 않는다. 해당 입력은 후속 개인화 기능 승인 전까지 노트 생성에 포함하지 않는다.
+- 사용자 메모·미해결 표시 (화면 판정 수정은 후속 기능, MVP 제외)
 
 출력에는 각 학습 주장과 연결된 근거 참조를 포함한다. 자료를 열었다는 사실만으로 이해하거나 해결했다고 쓰지 않는다.
 
@@ -380,10 +387,22 @@ Server가 실제 집계와 허용된 근거 Snapshot을 구성한다. Client가 
 ## 11. 검증 시나리오
 
 - 정상 `RELATED`와 `SUPPORTING` 결과가 서로 구분된다.
-- 짧은 `OFF_TASK`가 즉시 `UNRELATED`나 차단으로 변환되지 않는다.
+- 짧은 `OFF_TASK`도 관련성 근거와 confidence가 충분하면 제품 `UNRELATED`로 표시되지만, 15초 미만 전환은 이탈 시간·알림 조건에 포함하지 않고 차단하지 않는다.
 - `FAILED`, `UNSUPPORTED`, 모델 오류에서 `NO_ACTION`을 반환하거나 실패 envelope를 사용한다.
 - 목표 수정·탭 전환·회차 종료 후 오래된 결과가 폐기된다.
 - 같은 이벤트 재전송으로 결과와 시간이 중복되지 않는다.
-- (후속) 화면 관련성 판정 수정 직후 오래된 캐시와 대기 알림이 무효화된다.
+- 목표 문장 수정 직후 오래된 `goalVersion` 결과와 대기 알림이 무효화된다.
+- MVP에서 화면 판정 수정·저장 Endpoint를 노출하지 않는다.
 - 요청·응답·로그에 원본 화면, 전체 URL, 비밀 값이 남지 않는다.
 - 모델 출력이 허용 Schema를 벗어나면 사용하지 않는다.
+
+## PR #137 충돌 해소와 현재 구현 경계
+
+- 기준: `dev`의 공개 목표 `decision` 4종과 최신 화면 개입 `v1`, Client별 OCR·개인정보 계약을 유지한다. 2026-11-03 Notion 조회는 404였으므로 새 계약을 확정하지 않았다.
+- 이 브랜치의 목표 보조 코드는 내부 `clarityStatus` 6종을 반환하는 JEV·OpenAI·LangGraph 구현이다. 공개 4종으로의 Backend 어댑터는 아직 검증되지 않았고 내부 결과를 공개 응답에 그대로 사용할 수 없다.
+- 내부 요청은 `requestId`, `goalText`, `conversationTurn`(0~2), 선택적 `clarificationSessionId`, `previousAnswers[{question,answer}]`다. 회차와 답변 수가 같아야 하며 답변 2개 이후 추가 질문은 생성하지 않는다.
+- 대화 ID의 발급·소유권·이력 검증, 사용자 최종 확인·목표 저장은 Backend 책임이다. AI는 전달받은 ID만 반환한다. AI HTTP 경로의 제공자 SDK 재시도는 0이며 Backend 재시도와 구분한다.
+- 질문 스트리밍·최대 2건 병렬 생성·10초 이후 기본 질문 전환과 최대 3개 후보 검수/Repair는 유지한다. Laya는 비교 전용이다.
+- 로컬 테스트용 원문 trace opt-in은 공유·배포 환경에 적용하지 않는다. 목표 최대 200자 내부 설정과 제품 2~40자, 내부 6종/공개 4종 변환은 통합 후속 검증 대상이다.
+
+내부 실행 코드는 `src/api/schemas.py`, `src/api/routes.py`를 기준으로 확인한다. 이전 `originalText`·`clarificationAnswers` 입력은 이행용 별칭이며 직렬화는 `goalText`·`previousAnswers`를 사용한다. `questionId`는 외부 요청의 필수 필드가 아니다. 실제 공개 API 인증·응답 변환은 이번 충돌 해소에서 새로 구현하지 않았다.

@@ -1,6 +1,6 @@
 # Desktop Window 생명주기
 
-> 결정 상태: Window 종류와 생명주기 기준은 확정했다. Main Window와 Floating Feedback Window는 아직 구현하지 않았다.
+> 결정 상태: Window 종류와 생명주기 기준은 확정했다. Main Window의 생성·숨김·재표시·단일 실행을 구현했다. Floating Feedback Window와 Menu Bar Item은 후속 작업이다.
 
 ## Window 종류
 
@@ -10,6 +10,8 @@
 | Floating Feedback | 두더지·팻말·집중 복귀 안내 | 학습 세션 시작 시 |
 
 macOS Menu Bar Item은 Window가 아니라 앱 상태 확인과 Window 열기를 위한 진입점으로 다룬다.
+
+현재는 macOS 앱 메뉴의 `FocusOn 열기`와 `FocusOn 종료`를 제공한다. 상태를 표시하는 Menu Bar Item은 아직 만들지 않았다.
 
 Settings는 MVP에서 별도 Window를 만들지 않고 Main Window의 `/settings` Route로 제공한다.
 

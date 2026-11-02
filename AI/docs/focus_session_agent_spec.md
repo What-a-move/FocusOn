@@ -8,9 +8,9 @@
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-AGENT-001`, `AI-LLM-001`, `AI-FAIL-001`, `AI-STALE-001`, `AI-CACHE-001`
 
-> **MVP 범위 주의:** Agent와 이 문서의 피드백 조회·적용 도구는 미구현 후속 설계다. 화면 관련성 결과 수정·저장과 개인화가 승인되기 전에는 `load_user_feedback`, `search_similar_feedback` 및 아래 피드백 적용 절을 MVP 흐름에서 사용하지 않는다. 목표 문장 확인·수정은 별도 GoalProfile 흐름이다.
-
 이 문서는 규칙과 임베딩만으로 판단하기 어려운 요청을 제한적으로 처리하는 단일 상태 기반 Agent의 계약을 정의한다. Agent, LangGraph, 모델과 도구는 아직 구현되지 않았으며 라이브러리·저장소·수치 예산은 평가 후 확정한다.
+
+**MVP 범위 주의:** 아래의 화면 관련성 판정 피드백 조회·적용 도구는 후속 기능 제안이며 MVP에서 사용하지 않는다. 목표 문장 확인·수정은 별도 GoalProfile 흐름이다.
 
 ## 1. Agent를 사용하는 이유
 
@@ -92,7 +92,7 @@ START
 | `profile_learning_goal` | 목표 원문 또는 수정 요청 | GoalProfile 후보 | 없음 | 목표 생성·수정 시 |
 | `calculate_relevance` | 검증된 GoalProfile·문단 참조 | 라벨 후보·신호·근거 ID | 캐시 조회 가능 | 이벤트당 기본 1회 |
 | `load_recent_learning_flow` | 인증된 `sessionId`, `runId` | 최근 3~5개 최소 요약 | 읽기만 | 모호한 흐름에만 |
-| `load_user_feedback` | 사용자 범위·목표·콘텐츠 해시 | 정확 일치 피드백 | 읽기만 | MVP 제외; 후속 검토 |
+| `load_user_feedback` | 사용자 범위·목표·콘텐츠 해시 | 정확 일치 피드백 | 읽기만 | 먼저 정확 일치 |
 | `search_similar_feedback` | 범위가 제한된 임베딩 후보 | 소수의 검증된 사례 | 읽기만 | 후속 기능, Top-K 제한 |
 | `classify_ambiguous_content` | 구조화 목표·근거·요약 | 구조화 LLM 후보 | 외부 모델 호출 가능 | 필요한 경우 1회 후보 |
 | `calculate_drift_risk` | 관련성·체류·최근 흐름 | 결정적 흐름 상태 | 없음 | 시간 이벤트 갱신 시 |
@@ -161,11 +161,11 @@ Checkpoint는 장시간 작업을 계속 점유하지 않고 다음 이벤트에
 - 임의 사용자 데이터
 - Token·Cookie·Header
 
-사용자 응답을 기다릴 때 실행 Thread를 유지하지 않는다. 질문 상태를 Server에 저장하고 피드백 이벤트로 새 실행을 시작한다. 재개 전 소유권, 최신 버전, 만료와 삭제 상태를 다시 확인한다.
+사용자 응답을 기다릴 때 실행 Thread를 유지하지 않는다. 후속 화면 판정 피드백 기능이 승인되면 질문 상태를 Server에 저장하고 피드백 이벤트로 새 실행을 시작한다. MVP 목표 명확화 질문은 별도 GoalProfile 흐름을 따른다. 재개 전 소유권, 최신 버전, 만료와 삭제 상태를 다시 확인한다.
 
 ## 9. 피드백 적용
 
-**후속 기능 제안 — MVP 적용 금지:** 정확히 일치하는 유효한 사용자 피드백은 모델 결과보다 우선한다. Agent는 다음을 임의로 확대하지 않는다.
+**후속 기능 제안 — MVP 적용 금지:** 정확히 일치하는 유효한 사용자 화면 판정 피드백은 모델 결과보다 우선한다. Agent는 다음을 임의로 확대하지 않는다.
 
 - 한 문단의 수정 → 페이지 전체
 - 한 페이지의 수정 → 전체 Domain

@@ -3,8 +3,8 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안, 미구현
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-PRIV-001`, `AI-PRIV-002`, `AI-PIPE-001`, `AI-FAIL-001`, `AI-STALE-001`, `AI-VISION-001`, `AI-VISION-002`, `AI-VISION-003`
 
@@ -15,17 +15,19 @@
 - `apps/extension/public/content-script.js`와 `service-worker.js`는 설명 주석만 있는 진입 파일이다.
 - 현재 Manifest는 `tabs`, `storage`, `webNavigation`과 HTTP(S) Host Permission을 선언한다.
 - `activeTab`, `nativeMessaging`과 네이티브 호스트 Manifest는 아직 추가되지 않았다.
-- 따라서 캡처 권한 방식, Native Messaging 설치와 실제 메시지 크기는 구현 완료가 아니라 PoC 대상이다.
+- Chrome Extension 내부 OCR과 macOS Desktop Apple Vision OCR은 별도 경로로 검증해야 한다.
+- 따라서 캡처 권한 방식, Extension 내부 OCR 호환성, Desktop Native Messaging 설치와 실제 메시지 크기는 구현 완료가 아니라 PoC 대상이다.
 
 ## 1. 책임 경계
 
 | 구성요소 | 담당 | 담당하지 않는 것 |
 | --- | --- | --- |
 | Content Script | 허용된 DOM 영역 탐색, 구조 보존 추출, 변경 신호 생성 | 세션 인증, 최종 관련성 판단 |
-| Extension Service Worker | 탭·탐색 식별, 제외·권한 검사, 이벤트 중복 제거, Native Messaging 중계 | OCR 실행, AI 직접 호출 |
-| macOS 네이티브 모듈 | Apple Vision OCR, 이미지 메모리 처리, OCR 품질 메타데이터 | 외부 이미지 업로드, 학습 관련성 판단 |
+| Extension Service Worker | 탭·탐색 식별, 제외·권한 검사, 이벤트 중복 제거, Extension 내부 OCR 중계 | AI 직접 호출, Desktop Native Messaging 실행 |
+| Chrome Extension 로컬 OCR | 허용된 가시 영역의 브라우저 호환 OCR과 품질 메타데이터 | 원본 이미지 업로드, 학습 관련성 판단 |
+| macOS 네이티브 모듈 | Desktop 허용 화면의 Apple Vision OCR, 이미지 메모리 처리, OCR 품질 메타데이터 | 외부 이미지 업로드, 학습 관련성 판단 |
 | Server | 인증·소유권·최신 버전·크기 제한 검증, AI 중계 | 브라우저 DOM 직접 수집 |
-| AI | 허용된 텍스트 전처리, 최종 `qualityScore`·`contentHash` 생성, 관련성 분석 | 원본 화면·전체 DOM·OCR 원문 수신, 브라우저 제어 |
+| AI | 허용 텍스트 전처리, 최종 `qualityScore`·`contentHash` 생성, 관련성 분석 | 원본 화면·전체 DOM 수신, 브라우저 제어 |
 
 ## 2. 전체 흐름
 
@@ -35,16 +37,21 @@
   → 안정화와 이벤트 중복 제거
   → 콘텐츠 유형 식별
   → DOM 전용 추출기 또는 일반 추출기
-  → 로컬 개인정보·1차 품질 검사
-  ├─ 충분함: 허용된 텍스트 생성
-  ├─ 부족함: 캡처 권한과 OCR 조건 재검사
+  → 로컬 개인정보·품질 검사
+  ├─ 충분함: 정제 문단 생성
+  ├─ Chrome 부족함: 캡처 권한과 Extension OCR 조건 재검사
   │           → 현재 탭 가시 영역 캡처
-  │           → 로컬 Apple Vision OCR
+  │           → Extension 내부 로컬 OCR
+  │           → 이미지 즉시 폐기
+  │           → 개인정보·품질 재검사
+  ├─ Desktop 부족함: 활성 앱 화면 권한과 Apple Vision 조건 재검사
+  │           → 허용된 활성 앱 화면 캡처
+  │           → macOS Apple Vision OCR
   │           → 이미지 즉시 폐기
   │           → 개인정보·품질 재검사
   └─ 금지·실패·미지원: AI 미호출 또는 비분석 상태
   → Server 인증·소유권·버전 검사
-  → AI 전처리(최종 품질·정제 콘텐츠 해시)와 관련성 분석
+  → AI 분석
   → navigationId 재검사 후 결과 적용
 ```
 
@@ -60,7 +67,7 @@
 - H1·본문·코드·표 등 주요 영역 변경
 - 사용자가 의미 있는 새 구간으로 이동한 경우
 - 같은 페이지의 체류 정책 재평가 시점
-- 목표·제외 설정 변경
+- 목표·제외 설정 변경 (화면 판정 피드백은 MVP 제외)
 
 광고 애니메이션, 댓글 수, 시계, 작은 배지와 반복 렌더링은 기본 재분석 트리거에서 제외한다.
 
@@ -68,7 +75,7 @@
 
 - 탐색마다 증가하는 `navigationId`를 발급한다.
 - DOM 변경은 짧은 안정화 구간으로 묶되 대기 시간은 설정으로 관리한다.
-- Client는 동일 탐색·추출기 버전의 반복 이벤트를 로컬 지문으로 묶을 수 있다. 이 지문은 AI 전처리가 만드는 최종 `contentHash`가 아니며, Server의 `eventId` 멱등 처리도 대신하지 않는다.
+- Client는 동일 탐색·추출기 버전의 반복 이벤트를 로컬 지문으로 묶을 수 있다. 이 지문은 AI의 최종 `contentHash`와 Server의 `eventId` 멱등 처리를 대신하지 않는다.
 - 체류 시간 변화는 콘텐츠 임베딩 재생성 없이 흐름 정책만 재계산한다.
 - 새 이벤트가 생기면 이전 탐색의 대기 작업을 취소하거나 결과를 무시한다.
 
@@ -78,7 +85,7 @@
 
 모든 조건을 통과해야 수집을 시작한다.
 
-1. 활성 `runId`가 있고 세션이 `RUNNING`이다.
+1. Notion의 `sessionStatus=RUNNING`이고 현재 세션·탐색 식별자가 유효하다.
 2. 브라우저 창과 대상 탭이 실제 활성 상태다.
 3. 사용자 제외 도메인·앱에 해당하지 않는다.
 4. 로그인·결제·인증·메신저 등 민감 화면이 아니다.
@@ -104,45 +111,38 @@
 
 ## 6. 정제 콘텐츠 계약
 
-팀원의 OCR 입출력 수정 요청에 따른 **제안**: Client/Server에서 AI로 넘기는 OCR 분석 입력은 `text`와 `ocr`를 분리한다. `text`는 로컬 개인정보 검사를 통과한 허용 텍스트이며, `ocr`는 인식 상태·품질 메타데이터다. 원본 캡처·전체 DOM·차단된 OCR 원문은 넘기지 않는다. 아래는 필드 책임을 설명하는 예시이며 정확한 하위 필드·크기·9개 저장 컬럼은 Backend 협의 전까지 확정하지 않는다.
+AI로 전달하는 최소 단위는 전체 HTML이나 원본 OCR이 아니라 로컬 개인정보 검사를 통과한 허용 텍스트와 추출 메타데이터다. 다음 `text`·`ocr` 형태는 팀원이 요청한 **제안형 내부 계약**이며 공개 API Schema와 9개 Backend 저장 컬럼은 협의 전이다.
 
 ```json
 {
-  "text": "인증 필터 순서를 확인하는 공개 예제",
-  "ocr": {
-    "status": "SUCCESS",
-    "blockCount": 1,
-    "meanConfidence": 0.91
-  }
-}
-```
-
-AI 전처리는 허용된 `text`와 `ocr` 메타데이터를 검사해 최종 `qualityScore`와 정제 콘텐츠의 `contentHash`를 만든다. Client의 OCR 인식 신뢰도나 1차 품질값을 최종 `qualityScore`로 복사하지 않는다. `contentHash`는 민감정보 제거와 정규화 후의 텍스트를 기준으로 만들며, Server의 `eventId` 멱등 처리와 별개다. 빈 텍스트·OCR 실패·중복 이벤트를 `UNRELATED`로 바꾸지 않는다. 콘텐츠 중복은 최종 해시와 추출기·목표 버전을 구분해 판단하고, 이벤트 중복·순서·최신성은 Server/Client가 처리한다.
-
-아래의 구조화 문단은 AI **내부 정규화 결과** 예시다. 외부 OCR 전달 JSON이나 확정된 Server 요청 스키마가 아니다.
-
-```json
-{
-  "contentHash": "sanitized-content-hash",
   "pageType": "QA",
   "title": "JWT 인증 필터 오류 해결",
-  "passages": [
-    {
-      "id": "passage-001",
-      "kind": "CODE",
-      "text": "인증 필터 순서를 확인하는 공개 예제",
-      "order": 1
-    }
-  ],
+  "text": "인증 필터 순서를 확인하는 공개 예제",
+  "ocr": null,
   "extractionMethod": "DOM",
   "extractionStatus": "SUCCESS",
   "extractorVersion": "proposal-1"
 }
 ```
 
-### 6.1 문단 규칙
+OCR 경로에서는 `ocr`에 로컬 엔진의 상태·인식 품질 메타데이터만 넣는다. 원본 이미지, 전체 DOM, 차단된 OCR 원문은 전달하지 않는다. AI 전처리는 `text`를 정제·분할하고 최종 `qualityScore`와 정제 콘텐츠 `contentHash`를 생성한다. Client의 OCR 인식 신뢰도나 1차 품질값을 최종 `qualityScore`로 복사하지 않는다. 수치 범위·출력 필드 위치·Backend 검토 예정 9개 컬럼은 합의 전까지 미확정이다.
 
-- `id`는 현재 요청 안에서 고유하고 응답 근거 검증에 사용한다.
+```json
+{
+  "text": "인증 필터 순서를 확인하는 공개 예제",
+  "ocr": {
+    "status": "SUCCESS",
+    "recognitionConfidence": 0.91,
+    "engine": "APPLE_VISION"
+  }
+}
+```
+
+위 `ocr` 하위 필드는 예시이지 확정 Schema가 아니다. Chrome과 macOS의 OCR 실행 경로는 각각 8.1, 8.2절을 따른다.
+
+### 6.1 AI 전처리 문단 규칙
+
+- AI가 분할한 문단 `id`는 현재 요청 안에서 고유하고 응답 근거 검증에 사용한다.
 - `kind`는 제목·본문·코드·표·자막·OCR 등 제한 enum으로 관리한다.
 - 문장·코드·표의 순서와 부정 표현을 임의로 고치지 않는다.
 - 목표 키워드가 있는 부분만 남기지 않고 대표 문단을 일부 포함한다.
@@ -164,27 +164,39 @@ AI 전처리는 허용된 `text`와 `ocr` 메타데이터를 검사해 최종 `q
 
 이메일·전화번호·주소·JWT·Bearer Token·알려진 API Key Prefix·결제 카드 후보를 제거하거나 전송을 중지한다. 마스킹만으로 안전하다고 단정하지 않는다. 안전하게 분리할 수 없으면 `PRIVACY_BLOCKED`로 종료하고 발견한 문자열은 로그에 남기지 않는다.
 
-## 8. Apple Vision OCR 계약
+## 8. Client별 OCR 계약
 
-### 8.1 호출 구조
+### 8.1 Chrome Extension 내부 OCR
 
 ```text
 Content Script
   → Service Worker
   → captureVisibleTab
-  → Native Messaging
-  → macOS OCR 프로그램
+  → Extension 내부 OCR 엔진
   → OCR 결과
   → Service Worker의 개인정보·품질 검사
 ```
 
-Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네이티브 호스트는 허용된 Extension ID, 메시지 타입, 이미지 크기와 요청 버전을 검사하고 파일 경로나 시스템 명령을 입력받지 않는다.
+Chrome은 DOM 추출이 부족할 때만 Extension 내부 OCR을 사용한다. Chrome OCR 실패를 Desktop Native Messaging이나 외부 OCR로 자동 우회하지 않는다.
 
-### 8.2 요청·응답 제안
+### 8.2 macOS Desktop Apple Vision OCR
+
+```text
+Desktop App
+  → 활성 앱·권한·제외 상태 검사
+  → 허용된 활성 앱 화면 캡처
+  → Native Messaging 또는 macOS 네이티브 모듈
+  → Apple Vision OCR
+  → 이미지 즉시 폐기
+```
+
+Desktop Native Messaging을 사용할 경우 네이티브 호스트는 허용된 Client 식별자, 메시지 타입, 이미지 크기와 요청 버전을 검사하고 파일 경로나 시스템 명령을 입력받지 않는다. Chrome Extension은 이 Desktop 경로를 사용하지 않는다.
+
+### 8.3 Desktop 요청·응답 제안
 
 ```json
 {
-  "type": "RECOGNIZE_VISIBLE_TAB",
+  "type": "RECOGNIZE_ACTIVE_APP",
   "requestId": "550e8400-e29b-41d4-a716-446655440002",
   "navigationId": "navigation-003",
   "imageFormat": "PNG",
@@ -209,11 +221,11 @@ Content Script는 네이티브 호스트를 직접 호출하지 않는다. 네�
 }
 ```
 
-예시의 필드명과 인코딩은 제안이다. Chrome Native Messaging에서 사용할 JSON 호환 인코딩, 최대 크기와 Timeout은 PoC로 결정한다. `recognitionConfidence`는 OCR 품질이며 목표 관련성 Confidence가 아니다.
+예시의 필드명과 인코딩은 제안이다. Desktop Native Messaging에서 사용할 JSON 호환 인코딩, 최대 크기와 Timeout은 PoC로 결정한다. `recognitionConfidence`는 OCR 품질이며 목표 관련성 Confidence가 아니다.
 
-Chrome Native Messaging은 UTF-8 JSON 메시지를 길이 Prefix와 함께 전달한다. Chrome 공식 제한은 Extension에서 Native Host로 보내는 한 메시지가 최대 64 MiB, Native Host에서 Chrome으로 보내는 한 메시지가 최대 1 MiB다. FocusOn은 이 상한을 허용 크기로 사용하지 않고, 캡처 해상도·메모리·지연 평가를 거쳐 더 작은 제품 상한을 정한다.
+Desktop Native Messaging은 UTF-8 JSON 메시지를 길이 Prefix와 함께 전달할 수 있다. 공식 상한을 제품 허용 크기로 사용하지 않고, 캡처 해상도·메모리·지연 평가를 거쳐 더 작은 Desktop 제품 상한을 정한다.
 
-### 8.3 이미지 수명
+### 8.4 이미지 수명
 
 - 캡처 직전과 OCR 응답 직후 `tabId`, `windowId`, `navigationId`를 비교한다.
 - 캡처 이미지는 사용자 기기 메모리에서만 처리한다.
@@ -229,7 +241,7 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 ```text
 허용된 시각 콘텐츠
   → 개인정보 Gate
-  → DOM + Apple Vision OCR 기준선
+  → Chrome Extension 내부 OCR + macOS Desktop Apple Vision OCR 기준선
   → ColPali 후보 검색
   → 근거 영역 검증
   → 동일 평가 세트 비교
@@ -255,7 +267,7 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 | `EXCLUDED` | 정책상 수집 금지 | 캡처·전송·AI 미호출 |
 | `UNSUPPORTED` | 안전한 추출 경로가 없음 | 미지원 표시, 외부 우회 금지 |
 
-문자 수 하나로 품질을 정하지 않는다. 유형별 필수 영역, 메뉴 비율, 중복률, 언어, OCR 품질, 코드·표 순서 보존과 대표 문단 존재를 함께 평가한다. 최종 `qualityScore` 계산은 AI 전처리 책임이며 수치 범위·실패 상태별 값·전송 필드는 Backend와 확정한다. OCR 엔진 실패·Timeout·권한 거부와 콘텐츠 중복은 서로 다른 사유로 남기고, 실패나 중복을 관련성 `UNRELATED`의 근거로 사용하지 않는다.
+문자 수 하나로 품질을 정하지 않는다. 유형별 필수 영역, 메뉴 비율, 중복률, 언어, OCR 품질, 코드·표 순서 보존과 대표 문단 존재를 함께 평가한다. 최종 `qualityScore`는 AI 전처리 책임이다. OCR 실패·Timeout·권한 거부와 콘텐츠 중복은 서로 다른 사유로 남기며 `UNRELATED`로 바꾸지 않는다.
 
 ## 11. 취소와 오래된 결과
 
@@ -265,7 +277,7 @@ ColPali는 PDF·표·수식·슬라이드처럼 시각적 배치가 의미를 �
 - 목표 버전 변경
 - 세션 일시정지·종료
 - 제외 설정 변경
-- 사용자 화면 판정 피드백 적용 (후속 개인화; MVP 제외)
+- 화면 판정 피드백 적용 (후속 기능, MVP 제외)
 - 개인정보 Gate 실패
 
 취소가 실제 연산을 즉시 멈추지 못하더라도 결과 적용 전 버전을 다시 확인한다. 늦은 결과는 캐시에 넣기 전에도 유효 범위를 검사한다.

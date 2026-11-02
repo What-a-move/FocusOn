@@ -1,0 +1,24 @@
+/* 화면 위 포키 (FocusOn-design/floating-poki.html). 창 자체는 투명하고 포키·말풍선만 보인다.
+   집중 중 구석에서도 알아차리도록 시안보다 1.3배 크게 그리고, 올라온 뒤 한 번만 살짝 흔든다(2026-10-26 사용자 확인). */
+html:has(.floating-root), html:has(.floating-root) body { min-width: 0; background: transparent; overflow: hidden; }
+.floating-root { position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: flex-end; padding-right: 8px; }
+.floating-root .pop { display: flex; align-items: flex-end; gap: 6px; }
+.floating-root .poki { height: 144px; margin-bottom: -8px; transform-origin: 50% 100%; animation: floating-emerge .5s cubic-bezier(.2, .9, .3, 1.15) both, floating-nudge 1.1s 2s ease-in-out both; }
+@keyframes floating-nudge { 0%, 100% { rotate: 0deg; } 20% { rotate: -4deg; } 45% { rotate: 3deg; } 70% { rotate: -1.5deg; } }
+@keyframes floating-emerge { from { transform: translateY(100%); } to { transform: none; } }
+.floating-root .bubble { position: relative; max-width: 340px; margin-right: 40px; margin-bottom: 52px; padding: 18px 52px 18px 24px; border: 2px solid var(--fo-line); border-radius: 22px; background: var(--fo-surface); color: var(--fo-ink); font-size: 20px; font-weight: 700; line-height: 1.45; box-shadow: 0 6px 18px rgba(20, 20, 30, .08); animation: floating-pop .55s .12s cubic-bezier(.22, 1, .36, 1) both; transform-origin: right bottom; }
+.floating-root .tail { position: absolute; left: calc(100% - 2px); bottom: 16px; width: 47px; height: 39px; overflow: visible; }
+.floating-root .tail-fill { fill: var(--fo-surface); }
+.floating-root .tail-line { fill: none; stroke: var(--fo-line); stroke-width: 1.6px; stroke-linejoin: round; }
+@keyframes floating-pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+.floating-root .bubble small { display: block; margin-top: 6px; color: var(--fo-muted); font-size: 16px; font-weight: 600; line-height: 1.5; white-space: pre-line; }
+.floating-root .say-actions { display: flex; gap: 8px; margin-top: 16px; }
+.floating-root .say-actions button { height: 46px; padding: 0 18px; border: 2px solid var(--fo-line); border-radius: 13px; background: var(--fo-surface); box-shadow: 0 4px 0 var(--fo-ghost-edge); color: var(--fo-ink); font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .12s ease-out, box-shadow .12s ease-out; }
+.floating-root .say-actions button.primary { border-color: transparent; background: var(--fo-brand); color: var(--fo-on-brand); box-shadow: 0 4px 0 var(--fo-brand-edge); }
+.floating-root .say-actions button:active { transform: translateY(4px); box-shadow: none; transition-duration: .06s; }
+.floating-root button:focus-visible { outline: 3px solid var(--fo-gold); outline-offset: 2px; }
+.floating-root .close { position: absolute; top: 13px; right: 13px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--fo-faint); cursor: pointer; }
+.floating-root .close:hover { background: var(--fo-field); color: var(--fo-ink); }
+.floating-root .close svg { width: 15px; height: 15px; }
+@media (prefers-reduced-motion: reduce) { .floating-root .poki, .floating-root .bubble { animation: none; } }
+.floating-root .fail { margin: 10px 0 0; color: var(--fo-danger); font-size: 14px; font-weight: 600; line-height: 1.5; }

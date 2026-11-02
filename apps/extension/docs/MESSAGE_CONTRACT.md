@@ -1,6 +1,7 @@
 # Chrome Extension Message 계약
 
 > 결정 상태: Message 이름, 방향, 기본 Payload와 오류 형식은 확정했다. Message Listener와 실제 Type은 아직 구현하지 않았다.
+> 2026-10-26 결정 014: 15초 체류와 페이지 읽기는 Message 없이 Service Worker 타이머와 `chrome.scripting.executeScript`로 처리한다. `DWELL_*`·`TAB_CONTEXT_*`는 쓰지 않는다. Popup Message는 필요해질 때 다시 정한다.
 
 ## 목적
 

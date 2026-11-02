@@ -13,7 +13,7 @@
        │             ├─ 학습 세션 시작·일시정지·재개·종료
        │             ├─ macOS 활성 앱 확인
        │             ├─ 화면 캡처 및 학습 분석 연결
-       │             ├─ MediaPipe 카메라 분석 결과 수신
+       │             ├─ AVFoundation + Apple Vision 카메라 로컬 분석
        │             └─ 화면 부유형 두더지·알림·리포트 표시
        │
        └──────── Chrome Extension (Next.js + React)
@@ -45,7 +45,7 @@
 - macOS 활성 앱 확인
 - 분석 제외 앱 처리
 - 화면 캡처 권한과 캡처 생명주기 관리
-- 카메라 권한 요청 및 MediaPipe 결과 표시
+- 카메라 권한 요청 및 AVFoundation + Apple Vision 결과 표시
 - 서버 세션 상태 변경 시 부유형 창과 화면 상태 갱신
 
 ### Chrome Extension
@@ -53,7 +53,7 @@
 - 활성 학습 세션 중 현재 활성 탭, URL, 페이지 제목 자동 추적
 - `tabs`와 `webNavigation`을 이용한 페이지 이동 이벤트 수집
 - 일정 시간 머문 페이지의 재분석 요청
-- 분석 제외 도메인에서는 Page·Screen·OCR·AI·Camera 분석 중지
+- 확인된 분석 제외 도메인에서는 Page·Screen·OCR·AI 콘텐츠 분석을 중지하고 타이머를 유지한다. `EXCLUDED`에서 별도 동의·권한이 유효하면 로컬 카메라 분석만 계속할 수 있다. 최신 제외 상태 확인 불가·`PRIVACY_BLOCKED`·동의 철회에서는 카메라 분석도 중지한다.
 - Desktop 세션 조회와 타이머 표시
 - 일시정지·재개·종료 명령을 Server에 요청
 - Desktop 연결·인증 상태 안내
@@ -66,6 +66,8 @@
 - Desktop·Extension 기기 연결과 세션 동기화
 - 이벤트 저장과 리포트 조회
 - 개인정보 및 보존 기간 정책의 서버 측 적용
+- 세션 시작 시 개입 정책 버전 고정 및 분석·개입 이력 일관성 관리
+- 종료 세션의 일간 리포트·집중 달력 집계와 비동기 학습 정리 작업 관리
 
 ### AI Service
 
@@ -73,12 +75,24 @@
 - 사용자의 학습 목표와 현재 활동의 관련성 판단
 - 판단 결과와 신뢰도 반환
 - 원본 화면이나 카메라 영상을 기본 저장하지 않음
+- 알림·타이머·세션 상태를 직접 바꾸지 않고 Backend Policy Engine이 판단할 입력만 반환
 
 ### `packages/shared-types`
 
 - Desktop·Extension·Server 사이에서 공유하는 TypeScript 데이터 계약을 관리한다.
 - 페이지 정보, 분석 결과, 학습 세션 상태처럼 여러 영역이 함께 사용하는 구조만 둔다.
 - API 호출이나 런타임 검증을 대신하지 않으므로 Server DTO 검증은 별도로 구현한다.
+
+## 로그·추적 원칙
+
+모듈 연동 문제를 "어느 구간에서 끊겼는지"로 찾기 위해 모든 영역이 같은 형식으로 로그를 남긴다. 정본은 Notion [모듈 연동 로깅 규칙](https://app.notion.com/p/4070b6e5e64c8156abc9d1bff00aef88)이다.
+
+- 로그는 JSON 한 줄이고 `ts`, `level`(ERROR·WARN·INFO·DEBUG), `module`(extension·desktop·backend·ai), `component`, `event`, `traceId`, `durMs`를 포함한다.
+- 각 영역은 공용 로거 함수 하나만 쓴다. `console.log` 등을 직접 쓰지 않고, 잡은 예외는 WARN 이상으로 남긴다.
+- 클라이언트가 요청마다 `traceId`를 만들어 `X-Trace-Id`로 보내고, Server·AI는 같은 값을 끝까지 들고 간다. 모든 경계에서 보내는 쪽 OUT, 받는 쪽 IN을 같은 `traceId`로 남긴다.
+- `event` 이름은 정본 목록 안에서만 쓴다. 판정값은 계약 이름(`RELATED`·`UNRELATED`·`UNCERTAIN`, 차단은 `EXCLUDED`·`PRIVACY_BLOCKED`)을 그대로 쓴다.
+- 시각 `ts`는 벽시계, 소요 시간 `durMs`는 monotonic clock으로 잰다. macOS 절전 중 monotonic clock이 멈출 수 있으므로 오래 유지되는 상태 기록에는 두 값을 함께 남긴다.
+- 로그에 남기지 않는 항목은 [개인정보 기준](DATA_PRIVACY.md#로그-기준)을 따른다.
 
 ## 활동 관련성
 
@@ -87,10 +101,12 @@
 | `RELATED` | 목표와 관련된 활동이 확인됨 |
 | `UNRELATED` | 목표와 관련성이 낮은 활동이 확인됨 |
 | `UNCERTAIN` | 판단할 정보가 부족함 |
+| `EXCLUDED` | 정책상 콘텐츠 분석을 수행하지 않음 |
+| `PRIVACY_BLOCKED` | 개인정보·권한 정책으로 분석을 차단함 |
 
-관련성은 공개 API의 `relation` 필드로 표현한다. `PRIVACY_BLOCKED`, `EXCLUDED`, `UNCERTAIN`은 정상적인 `analysisStatus`이며 오류 코드가 아니다. 개인정보 차단·제외처럼 관련성 판정을 하지 않은 상태와 `RELATED`·`UNRELATED` 관계값을 한 enum으로 합치지 않는다.
+공개 API는 위 값을 `relation` 필드로 표현한다. `analysisStatus`는 AI 실행 결과를 별도로 나타내며 `COMPLETED`, `NEEDS_CONFIRMATION`, `SKIPPED`, `ERROR`를 사용한다. 정책 제외·개인정보 차단은 오류 코드가 아니며 관련성 판단과 처리 상태를 혼합하지 않는다.
 
-`EXCLUDED`는 화면·페이지 분석이 제외된 상태다. 사용자의 카메라 동의가 유효하면 카메라 신호 분석은 별도로 계속될 수 있다. `PRIVACY_BLOCKED`에서는 화면 분석과 카메라 분석을 모두 중단한다. 화면 관련성 상태와 카메라 신호 상태는 서로 덮어쓰지 않는다.
+AI 관련성 판정은 `RELATED`, `UNRELATED`, `UNCERTAIN`만 반환한다. `EXCLUDED`와 `PRIVACY_BLOCKED`는 AI 호출 전 정책 결과다. AI 내부 `SUPPORTING`은 목표에 필요한 보조 학습 활동이며 공개 `relation`에는 별도 값으로 추가하지 않고 `RELATED`로 매핑한다.
 
 ## 분석 작동 상태 (`AnalysisActivityState`)
 
@@ -105,10 +121,17 @@
 ## 학습 세션 동기화 원칙
 
 - Server가 학습 세션 상태와 기준 시간을 관리한다.
+- 시작·종료·일시정지 시각은 서버 UTC로 확정한다. Desktop은 monotonic clock으로 활성 시간을 계산하고 서버는 자신의 시계·상태와 대조해 확정한다.
+- 세션 시작 요청의 기기 IANA `timeZone`을 snapshot으로 고정한다. 누락·잘못된 값은 `Asia/Seoul`이며 IP·VPN으로 추정하지 않는다. `studyDate`는 시작일로 고정하고 자정 이후에도 재배분하지 않는다.
 - Desktop에서 시작한 세션을 Extension이 조회해 타이머를 표시한다.
 - Extension의 일시정지·재개·종료 요청은 Server가 검증한 뒤 상태를 변경한다.
 - Desktop과 Extension은 상태 변경 응답 또는 동기화 이벤트를 받아 화면을 갱신한다.
 - 매초 서버에 시간을 요청하지 않고 `targetDurationMs`와 Server가 확정한 `accumulatedActiveMs`를 이용해 클라이언트에서 남은 시간을 계산한다.
+- MVP 세션 생성은 5~300분의 분 단위 `targetDurationMs`를 필수로 받으며 null을 거절한다. 현재 API가 무기한 세션을 지원한다고 구현하지 않는다.
+- Desktop은 `RUNNING`에서 10초마다 heartbeat를 보내며, 60초 무신호 후보와 3분 자동 종료는 Server가 원자적으로 처리한다.
+- 앱 재실행으로 monotonic 기준점이 사라지면 서버 확정값으로 `AUTO_PAUSED` 복구하고 사용자 재개 뒤 새 기준점을 만든다.
+
+개입 임계값은 Server Policy Engine만 관리한다. 현재 버전 `v1`은 세션 생성 시 고정하고 분석·개입 기록에 그대로 남긴다. 강도별 연속·반복 조건과 `UNCERTAIN` 구간 종료 기준은 `docs/API_CONTRACT.md`를 따른다. 실제 알림 전송부터의 서버 cooldown과 `확인했어` 이후 Desktop의 5분 재집중 UI를 별개로 처리한다.
 
 ## 화면 부유형 두더지 피드백 원칙
 

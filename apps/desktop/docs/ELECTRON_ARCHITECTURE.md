@@ -1,6 +1,6 @@
 # Desktop Electron 아키텍처
 
-> 결정 상태: 구조와 Build·Loading·배포 방향은 확정했다. Electron Package와 electron-builder는 설치되어 있지만 Main·Preload 진입점과 Packaging 연결은 아직 구현하지 않았다.
+> 결정 상태: 구조와 Build·Loading·배포 방향은 확정했다. Main·Preload 진입점과 개발·정적 화면 Loading을 구현했다. electron-builder Packaging 연결은 후속 작업이다.
 
 ## 목적
 
@@ -18,10 +18,12 @@ Preload / contextBridge
 Next.js Renderer
 ```
 
+Main은 화면 관측용 Swift 도우미(`native/observer` → `build/native/focuson-observer`)를 자식 프로세스로 띄우고 표준 입출력 JSON 줄로 통신한다. 도우미는 맨 앞 앱·창 제목과 설치된 앱 목록을 읽는다(2단계부터 대상 창 캡처·Apple Vision OCR). 캡처 이미지는 도우미 밖으로 나오지 않는다(결정 024).
+
 | 영역 | 담당 | 금지 |
 | --- | --- | --- |
-| Main | 앱 생명주기, Window, Menu, 권한, 활성 앱, 화면 캡처 | React UI 상태 직접 관리 |
-| Preload | 허용된 IPC 함수를 좁은 API로 노출 | `ipcRenderer` 전체 노출 |
+| Main | 앱 생명주기, Window, Menu, 권한, 활성 앱, 화면 캡처, OAuth·Token·인증 API 요청 | React UI 상태 직접 관리 |
+| Preload | 허용된 IPC 함수와 인증 상태 구독 API를 좁게 노출 | `ipcRenderer` 전체 노출 |
 | Renderer | React 화면, 사용자 입력, TanStack Query, UI 상태 | Node.js·File System·Electron API 직접 접근 |
 
 ## 권장 파일 구조
@@ -37,7 +39,7 @@ apps/desktop/
 └── docs/
 ```
 
-Main·Preload는 현재 설치된 TypeScript Compiler와 전용 `tsconfig.electron.json`으로 `dist-electron/`에 Build한다. Renderer는 Next.js의 `output: 'export'` 결과인 `out/`을 사용한다. 구현 전에는 빈 폴더를 만들지 않는다.
+Main은 TypeScript Compiler와 전용 `tsconfig.electron.json`으로 `dist-electron/`에 Build한다. 샌드박스 Preload는 상대 경로 모듈을 직접 불러올 수 없으므로 esbuild로 의존 코드를 단일 `.cjs` 파일에 묶는다. Renderer는 Next.js의 `output: 'export'` 결과인 `out/`을 사용한다.
 
 ## 실행 흐름
 
@@ -54,6 +56,7 @@ app.whenReady()
 - Production의 `app://` Scheme은 `standard`와 `secure`만 활성화하고 `bypassCSP`를 사용하지 않는다.
 - `app://` Scheme 권한은 `app.whenReady()` 전에 등록하고 실제 Handler는 앱 준비 후 연결한다.
 - `app://` Handler는 Package의 `out/` 아래 파일만 반환하고 경로 이탈을 차단한다.
+- 개발 서버는 `127.0.0.1`에만 바인딩한다. 개발 실행은 Renderer 서버와 Electron을 별도 터미널에서 시작한다.
 - Production에서 외부 Remote Code를 앱 코드처럼 실행하지 않는다.
 - `app.requestSingleInstanceLock()`으로 하나의 Instance만 유지하며 두 번째 실행은 기존 Main Window를 앞으로 가져온다.
 - macOS에서 모든 Window가 닫힌 것과 앱 종료를 같은 동작으로 단정하지 않는다.
@@ -67,6 +70,8 @@ app.whenReady()
 - 외부 Navigation과 새 Window 제한
 - 신뢰되지 않은 URL을 `shell.openExternal`로 바로 열지 않음
 - IPC Sender와 Payload 검증
+- 현재 Preload는 `window.focusOn.auth`의 이름이 정해진 함수만 노출한다. Main은 인증 IPC Sender와 입력값을 검증하고 Google 브라우저·loopback callback, Backend code 교환·Token·Keychain 보관을 처리한다. 실제 Google 계정과 Backend API를 통한 왕복 검증은 서버 구현 병합 후 진행한다.
+- 현재 구현된 권한 Request·Check는 모두 거부한다. Camera·Screen Recording·Notification은 각 기능의 안내·동의 흐름과 함께 허용 범위를 추가한다.
 
 ## 데이터 경계
 
@@ -74,10 +79,14 @@ app.whenReady()
 - Main은 필요한 최소 결과만 Preload를 통해 전달한다.
 - Renderer가 요청하지 않은 Event를 무제한 전송하지 않는다.
 - Listener는 Window와 Component 종료 시 해제할 수 있어야 한다.
+- OAuth callback, PKCE 임시값, Access Token과 Refresh Token은 Main 안에서만 처리한다. Renderer에는 `auth:session:get`과 `auth:session:changed`를 통해 화면용 인증 상태·사용자 요약만 전달한다.
+- 인증이 필요한 Server 요청도 Main이 보유한 Token으로 수행하며 Renderer에는 임의 URL·Header를 전달받는 범용 API를 제공하지 않는다.
 
 ## 확정한 Build와 배포 기준
 
-- Main·Preload: TypeScript Compiler와 전용 설정을 사용해 `dist-electron/`에 Build
+- Main: TypeScript Compiler와 전용 설정을 사용해 `dist-electron/`에 Build
+- Preload: 같은 설정으로 타입 검사한 뒤 esbuild로 단일 `.cjs` 파일에 묶어 `dist-electron/`에 Build
+- 화면 관측 도우미: `pnpm build:electron`이 `xcrun swiftc`로 `build/native/focuson-observer`를 만든다(macOS 14 이상 대상). 배포본은 `extraResources`로 넣고 같은 인증서로 서명한다(패키징 작업 때 설정)
 - Renderer: Next.js Static Export 결과인 `out/` 사용
 - Packaging: 현재 설치된 electron-builder 사용
 - 개발 Loading: `http://127.0.0.1:3000`
@@ -90,6 +99,19 @@ app.whenReady()
 - Main Process Log: Logger 도구를 정할 때 Electron Log 경로·보존 기간을 함께 확정
 
 Apple Developer 계정, Bundle ID, 인증서와 CI 비밀값은 실제 배포 작업의 선행 조건이다. 인증 정보는 저장소와 문서에 기록하지 않는다.
+
+## 현재 실행 명령
+
+```bash
+# 터미널 1: 개발 Renderer
+pnpm dev:desktop
+
+# 터미널 2: 개발 Electron
+pnpm --filter @focuson/desktop dev:electron
+
+# 정적 Build를 Electron에서 미리보기
+pnpm --filter @focuson/desktop preview:electron
+```
 
 ## 공식 참고
 

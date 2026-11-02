@@ -3,11 +3,10 @@
 ## 문서 상태
 
 - 상태: 팀 검토용 계약 초안
-- 버전: `0.1.0`
-- 기준일: 2026-09-12
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
 - 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
 - 관련 규칙: `AI-STATE-001`, `AI-FAIL-001`, `AI-DRIFT-001`, `AI-ACTION-001`
-- MVP 정책 기준: [AI 분석 계약](https://app.notion.com/p/AI-3de0b6e5e64c80fbb0bccb985e38002c) (`REVIEW`; 코드 구현 미완료)
 - 관련 문서: [목표·세션 모델](goal_session_spec.md), [피드백 명세](feedback_personalization_spec.md), [AI API 계약](api_spec.md)
 
 이 문서는 콘텐츠 확보 상태, AI 분석 실행 결과, 목표 관련성, 시간 기반 이탈 흐름과 사용자에게 제안할 행동을 분리한다. 공개 API의 관련성 값은 Notion 기준 5개 상태(`RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`)를 사용한다. `SUPPORTING`, `OFF_TASK`, `UNAVAILABLE`은 내부 분석·정책용 세부 상태이며 API 경계에서 공개 상태로 변환한다.
@@ -88,20 +87,7 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 제외·휴식·일시정지 → 흐름 판단 중지
 ```
 
-### 5.1 MVP 이탈 누적 규칙
-
-화면 관련성 후보는 confidence `0.75` 이상일 때만 `RELATED` 또는 `UNRELATED`로 확정한다. 그보다 낮으면 `UNCERTAIN`이다. 화면 전환 후 15초 미만의 체류는 이탈 구간 및 반복 횟수에 포함하지 않는다.
-
-| 민감도 | 개입 검토 기준 |
-| --- | --- |
-| `GENTLE` | 연속 유효 이탈 120초 |
-| `NORMAL` | 최근 10분 안에 유효 이탈 30초 이상인 구간 2회 |
-| `ACTIVE` | 연속 유효 이탈 30초 |
-
-- `RELATED`는 현재 이탈 구간을 초기화한다.
-- `UNCERTAIN`은 이탈 시간에 합산하지 않는다. 연속 30초 이하는 진행 구간을 보류하고, 30초 초과면 현재 구간을 끝낸다.
-- 모델·추출·권한 실패와 관찰 공백은 이탈 누적에서 제외한다.
-- 상태 임계값과 알림 수명주기는 [AI 분석 규칙](analysis_rules.md)을 단일 상세 기준으로 삼는다.
+MVP 화면 이탈은 `analysis_rules.md` 9.1의 정책 `v1`을 따른다. 연속·반복 중 하나를 충족하면 후보이며, `GENTLE`은 연속 180초 초과 또는 10분 내 60초 초과 구간 3회, `NORMAL`은 연속 60초 초과 또는 30초 초과 구간 2회, `ACTIVE`는 연속 30초 초과 또는 20초 초과 구간 2회다. `RELATED`는 현재 구간을 초기화하고 `UNCERTAIN`은 비누적·현재 연속 구간 종료로 처리한다. 15초 미만 전환은 제외한다. 이전 임계값과 30초 UNCERTAIN 보류 규칙을 새 세션에 적용하지 않는다. 실제 임계값·cooldown 판정은 Server가 담당한다.
 
 ## 6. 권장 행동
 
@@ -112,38 +98,56 @@ OBSERVING / POSSIBLE_DRIFT / DRIFT_RISK
 | `SUGGEST_RETURN` | 목표 자료로 돌아갈 것을 제안한다. | `DRIFT_RISK`와 알림 정책 충족 |
 | `SUGGEST_BREAK` | 휴식을 제안한다. | 사용자 설정과 장시간 활동 근거 |
 | `SUGGEST_PAUSE` | 타이머 일시정지를 제안한다. | 자리 비움 등 선택 기능의 지속 근거 |
-| `SUGGEST_TEMPORARY_BLOCK` | 제한 시간의 임시 차단을 제안한다. | 반복 이탈, 쿨다운, 사용자 선택 가능 UI |
+| `SUGGEST_TEMPORARY_BLOCK` | 후속 기능에서 제한 시간의 임시 차단을 제안한다. | 현재 MVP 상태 계약에는 포함하지 않음 |
 
 권장 행동은 실행 명령이 아니다. 실제 일시정지나 차단은 Client가 대상과 시간을 보여주고 사용자가 선택한 경우에만 수행한다. 사전 설정된 자동 정지는 별도 합의와 검증이 필요하다.
 
-## 7. 조합 불변 조건
+## 7. 세션·분석 제외 상태 투영
+
+세션의 최종 상태는 Server가 소유한다. AI에는 현재 상태의 투영값만 전달한다.
+
+| 필드 | 값 | 의미 |
+| --- | --- | --- |
+| `sessionStatus` | `RUNNING` | 타이머가 진행 중이며 분석 조건 확인 |
+| `sessionStatus` | `PAUSED`·`AUTO_PAUSED` | 타이머·분석 중지 |
+| `sessionStatus` | `AWAITING_END_CONFIRMATION`·`ENDING` | 종료 확인·처리 중; 타이머·분석 중지 |
+| `sessionStatus` | `ENDED`·`ABANDONED` | 최종 상태; 결과를 현재 상태에 적용하지 않음 |
+| 공개 `relation` | `EXCLUDED` | 화면 콘텐츠 분석 중지, 타이머 유지. 확인된 제외 상태에서 별도 카메라 동의·권한이 유효하면 로컬 카메라 분석만 허용 |
+| 공개 `relation` | `PRIVACY_BLOCKED` | 화면·카메라 분석 중지, 타이머 유지 |
+
+`EXCLUDED`와 `PRIVACY_BLOCKED`는 공개 `relation` 값이며 `analysisStatus` 값이 아니다. 둘 다 세션 상태를 바꾸지 않고 콘텐츠 payload와 원문을 AI에 보내지 않는다. 제외 상태가 최신인지 확인할 수 없으면 확인될 때까지 화면·카메라 분석을 중지한다. 필수 권한 유실로 `AUTO_PAUSED`가 되면 사용자가 복구 후 명시적으로 재개한다.
+
+## 8. 조합 불변 조건
 
 | 조건 | 강제 결과 |
 | --- | --- |
-| `extractionStatus = EXCLUDED` | 화면 AI 미호출, `analysisStatus = SKIPPED`; 카메라 동의 상태는 별도 평가 |
+| `extractionStatus = EXCLUDED` | AI 미호출, `analysisStatus = SKIPPED` |
 | `extractionStatus = FAILED/UNSUPPORTED` | `relevanceLabel = UNAVAILABLE`, `driftState = UNKNOWN`, `recommendedAction = NO_ACTION` |
 | `analysisStatus = ERROR` | 현재 판정 적용 금지, `recommendedAction = NO_ACTION` |
-| `relevanceLabel = RELATED/SUPPORTING` | 기본 `driftState = LEARNING`; 현재 이탈 구간과 화면·카메라 알림 후보 초기화 |
+| `relevanceLabel = RELATED/SUPPORTING` | 기본 `driftState = LEARNING`; 현재 이탈 구간·대기 중 카메라 후보 초기화 |
 | `relevanceLabel = UNCERTAIN` | `ASK_USER` 가능, 이탈 확정 금지 |
 | `relevanceLabel = OFF_TASK` 단독 | 최대 `OBSERVING`; 즉시 차단·이탈 알림 금지 |
-| 사용자 화면 관련성 수정 | MVP 미지원. 목표 문장 수정과 혼동하거나 피드백으로 저장하지 않음 |
+| 화면 관련성 판정 수정·삭제 | MVP 미지원; 목표 문장 확인·수정과 별도 기능 |
 | 목표·탭·회차 버전 불일치 | 결과 폐기, 현재 상태 변경 금지 |
+| 민감정보 2차 검사 실패 | `PRIVACY_BLOCKED`, AI 미호출, 원문 미저장 |
 
-## 8. 공개 상태 매핑
+## 9. 공개 상태 매핑
 
-`packages/shared-types`의 `FocusState`와 Server 공개 응답은 Notion 기준 5개 상태만 사용한다. 내부 AI 상태를 그대로 Client에 전달하지 않는다. 공개 관련성 라벨은 콘텐츠와 목표의 관계만 나타내며, 시간 기반 `driftState`나 알림 가능 여부를 포함하지 않는다.
+`packages/shared-types`의 `FocusState`와 Server 공개 응답은 Notion 기준 5개 상태만 사용한다. 내부 AI 상태를 그대로 Client에 전달하지 않는다.
 
-| 내부 관련성·처리 상태 | 공개 `FocusState` 매핑 |
+| 내부 상태 | 공개 `FocusState` 매핑 |
 | --- | --- |
-| `RELATED` 또는 `SUPPORTING` | `RELATED` |
-| 최종 `OFF_TASK` (`confidence ≥ 0.75`) | `UNRELATED` |
-| `UNCERTAIN` 또는 관련성 후보 `confidence < 0.75` | `UNCERTAIN` |
+| `RELATED` 또는 `SUPPORTING` + `LEARNING/RECOVERED` | `RELATED` |
+| `OFF_TASK` + 충분한 관련성 근거·confidence `≥ 0.75` | `UNRELATED` (`driftState`와 무관) |
+| `UNCERTAIN`, confidence 미달, 의미 판단 보류 | `UNCERTAIN` |
 | 정책 제외 | `EXCLUDED` |
 | 개인정보·권한 차단 또는 분석 입력 차단 | `PRIVACY_BLOCKED` |
 
-짧은 `UNRELATED` 방문도 관련성 결과 자체는 `UNRELATED`다. 다만 15초 미만 전환은 유효 이탈 구간으로 세지 않고, 이탈·알림 여부는 별도 정책으로 결정한다. OCR 품질점수·임베딩 유사도·`driftState`가 최종 관련성 라벨이나 `confidence`를 덮어쓰지 않는다. 내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
+내부 세부 상태와 공개 상태를 함께 기록할 수 있지만, Client는 공개 상태와 별도 `analysisStatus`를 사용해 의미적 불확실성과 시스템 실패를 구분해야 한다.
 
-## 9. 응답 적용 전 확인
+`UNRELATED`는 현재 콘텐츠와 목표의 관계다. 15초 미만 전환에서도 충분한 관련성 근거가 있으면 유지하며, 개입 임계값 충족 전에는 `driftState`와 알림만 보류한다. OCR 품질·임베딩 유사도는 최종 `relevanceLabel`·`confidence`를 다시 쓰지 않는다.
+
+## 10. 응답 적용 전 확인
 
 결과를 현재 화면에 적용하기 전에 다음 값이 요청 당시와 같은지 확인한다.
 
