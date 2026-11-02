@@ -4,6 +4,7 @@ import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.goal.dto.GoalDtos.CreateGoalRequest;
 import com.capstone.backend.goal.dto.GoalDtos.GoalResponse;
+import com.capstone.backend.goal.dto.GoalDtos.UpdateGoalRequest;
 import com.capstone.backend.goal.service.GoalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,7 +17,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,5 +71,44 @@ public class GoalController {
   public com.capstone.backend.common.api.ApiResponse<GoalResponse> get(
       @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String goalId) {
     return com.capstone.backend.common.api.ApiResponse.of(goals.get(principal, goalId));
+  }
+
+  /** 본인 목표의 문구를 수정한다. */
+  @PatchMapping("/{goalId}")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "학습 목표 수정")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "목표 수정 성공"),
+      @ApiResponse(responseCode = "400", description = "목표 문구 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "401", description = "인증 필요",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "목표를 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "409", description = "활성 세션이 목표를 참조함",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public com.capstone.backend.common.api.ApiResponse<GoalResponse> update(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String goalId,
+      @Valid @RequestBody UpdateGoalRequest request) {
+    return com.capstone.backend.common.api.ApiResponse.of(goals.update(principal, goalId, request));
+  }
+
+  /** 본인 목표를 논리 삭제한다. */
+  @DeleteMapping("/{goalId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "학습 목표 삭제")
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "목표 삭제 성공"),
+      @ApiResponse(responseCode = "401", description = "인증 필요",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "목표를 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "409", description = "활성 세션이 목표를 참조함",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public void delete(@AuthenticationPrincipal FocusOnPrincipal principal,
+      @PathVariable String goalId) {
+    goals.delete(principal, goalId);
   }
 }

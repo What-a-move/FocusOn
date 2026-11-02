@@ -2,6 +2,7 @@
 
 ## 현재 작업 (2026-10-28)
 
+- 2026-11-02 Issue #97: 목표 수정·삭제 구현, 사용자 Swagger 테스트 및 PostgreSQL 동시 출발·실제 잠금 대기 테스트를 수행했다. Notion 정본의 PATCH 응답·재삭제 정책 대조가 남았다. 상세는 `features/goal-update-delete-REPORT.md`를 따른다.
 - 2026-11-01 Issue #100: 사용자 Swagger 확인과 Backend 빌드·Checkstyle, PostgreSQL 닉네임 동시성 테스트 및 V9 적용·소유권 제약 검증을 수행했다. 실제 Desktop·Extension 통합과 카메라 OS 권한 경계는 별도 확인한다. 세션 종료·Heartbeat는 후속 범위다. 상세는 `features/session-start-active-REPORT.md`를 따른다.
 - 2026-10-28 Issue #87: 목표 생성·상세 조회를 구현 중이다. 사용자가 Swagger 테스트, Notion 경로·메서드 일치 및 `goals` 테이블 생성을 확인했다. AI 명확화 세션 검증은 해당 기능이 준비된 뒤 연동해야 한다. 기존 닉네임 동시성 테스트 실패와 수동 테스트의 세부 결과를 확인한다. 상세는 `features/goal-create-read-REPORT.md`를 따른다.
 

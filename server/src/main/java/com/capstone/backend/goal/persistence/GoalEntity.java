@@ -74,4 +74,18 @@ public class GoalEntity {
       ConfirmationSource confirmationSource, Instant now) {
     return new GoalEntity(user, goalText, confirmationSource, now);
   }
+
+  /** 수정된 목표 문구와 변경 시각을 반영한다. */
+  public void updateText(String text, Instant now) {
+    this.goalText = text;
+    this.normalizedGoalText = null;
+    this.updatedAt = now;
+  }
+
+  /** 이력을 보존하기 위해 목표를 논리 삭제한다. */
+  public void delete(Instant now) {
+    this.status = Status.DELETED;
+    this.deletedAt = now;
+    this.updatedAt = now;
+  }
 }

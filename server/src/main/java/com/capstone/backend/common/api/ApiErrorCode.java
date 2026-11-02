@@ -25,6 +25,7 @@ public enum ApiErrorCode {
   NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 경로를 찾을 수 없습니다.", false),
   GOAL_TEXT_INVALID(HttpStatus.BAD_REQUEST, "목표는 2자 이상 40자 이하여야 합니다.", false),
   GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "목표를 찾을 수 없습니다.", false),
+  GOAL_UPDATE_BLOCKED(HttpStatus.CONFLICT, "진행 중인 세션의 목표는 수정하거나 삭제할 수 없습니다.", false),
   SESSION_ACTIVE_EXISTS(HttpStatus.CONFLICT, "진행 중인 세션이 있습니다.", false),
   SESSION_START_REQUIREMENT_MISSING(HttpStatus.CONFLICT, "세션 시작 조건을 확인해 주세요.", false),
   SESSION_IDEMPOTENCY_REQUIRED(HttpStatus.BAD_REQUEST, "멱등 키를 확인해 주세요.", false),

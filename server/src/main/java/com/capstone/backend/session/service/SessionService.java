@@ -28,7 +28,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.HexFormat;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -47,9 +46,6 @@ public class SessionService {
   private static final String START_SCOPE = "CREATE_SESSION";
   private static final String POLICY_VERSION = "v1";
   private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Seoul");
-  private static final List<SessionStatus> ACTIVE_STATUSES = List.of(SessionStatus.RUNNING,
-      SessionStatus.PAUSED, SessionStatus.AUTO_PAUSED, SessionStatus.AWAITING_END_CONFIRMATION,
-      SessionStatus.ENDING);
 
   private final UserRepository users;
   private final UserDeviceRepository devices;
@@ -94,7 +90,8 @@ public class SessionService {
     }
     validateRequest(request);
     // 동일 요청 재시도는 위에서 처리했고, 새 요청은 활성 세션이 없어야 한다.
-    if (sessions.findByUserIdAndStatusIn(user.getId(), ACTIVE_STATUSES).isPresent()) {
+    if (sessions.findByUserIdAndStatusIn(user.getId(), SessionStatus.activeStatuses())
+        .isPresent()) {
       throw new ApiException(ApiErrorCode.SESSION_ACTIVE_EXISTS);
     }
     var steps = onboarding.get(principal, null).steps();
@@ -133,7 +130,7 @@ public class SessionService {
   /** 인증한 사용자에게 속한 활성 세션만 반환한다. */
   @Transactional(readOnly = true)
   public Optional<ActiveResponse> active(FocusOnPrincipal principal) {
-    return sessions.findByUserIdAndStatusIn(principal.userId(), ACTIVE_STATUSES)
+    return sessions.findByUserIdAndStatusIn(principal.userId(), SessionStatus.activeStatuses())
         .map(s -> new ActiveResponse(s.getId().toString(), s.getStatus(), s.getVersion(),
             s.getGoalTextSnapshot(), s.getTargetDurationMs(), s.getAccumulatedActiveMs()));
   }

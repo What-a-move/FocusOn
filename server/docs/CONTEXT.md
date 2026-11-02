@@ -13,6 +13,7 @@
 
 ## 현재 작업 (2026-10-28)
 
+- 2026-11-02 Issue #97: `feat/97-goal-update-delete`에서 목표 수정·soft delete와 활성 세션 참조 차단을 구현했다. 사용자 Swagger 테스트 확인 후 PostgreSQL 동시 출발과 실제 잠금 대기 테스트가 각각 2개씩 통과했다. Backend 빌드·Checkstyle도 통과했으며 Notion 세부 계약 대조는 남았다. 상세는 `features/goal-update-delete-REPORT.md`를 따른다.
 - 2026-11-01 Issue #100: `feat/100-session-start-active`에 세션 시작·활성 조회, V8 세션·멱등성 저장과 V9 소유권 제약을 구현했다. 사용자 Swagger 확인, H2 빌드·Checkstyle, 별도 PostgreSQL 닉네임 동시성 테스트와 Flyway V1~V9 적용을 확인했다. 실제 Desktop·Extension 통합은 별도다. 상세는 `features/session-start-active-REPORT.md`를 따른다.
 - 2026-10-28 Issue #87: `feat/87-goal-create-read`에서 수동 목표 저장·본인 상세 조회를 구현 중이다. AI 명확화 이력 검증은 선행 기능이 없어 미완료이며, 상세 검증 현황은 `features/goal-create-read-REPORT.md`를 따른다.
 
