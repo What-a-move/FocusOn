@@ -116,6 +116,10 @@ const focusOnApi: FocusOnApi = {
     saveExcludedDomains: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsSave, { domains: [...input.domains] }),
     getTheme: () => ipcRenderer.invoke(SETTINGS_CHANNELS.themeGet),
     setTheme: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.themeSet, { theme: input.theme }),
+    getConsents: () => ipcRenderer.invoke(SETTINGS_CHANNELS.consentsGet),
+    setScreenConsent: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.screenConsentSet, { granted: input.granted }),
+    getDevices: () => ipcRenderer.invoke(SETTINGS_CHANNELS.devicesGet),
+    unlinkExtension: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.extensionUnlink, { deviceId: input.deviceId }),
   },
   interventions: {
     onShow(callback) {

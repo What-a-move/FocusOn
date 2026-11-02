@@ -1,9 +1,9 @@
-import type { SettingsApi, ThemeSource } from '../../electron/shared/settings-contract.cjs'
+import type { ConsentList, DeviceStatus, SettingsApi, ThemeSource } from '../../electron/shared/settings-contract.cjs'
 import type { FocusSettings } from '../../electron/shared/session-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { FocusSettings, ThemeSource }
+export type { ConsentList, DeviceStatus, FocusSettings, ThemeSource }
 
 const UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
 
@@ -24,4 +24,8 @@ export const settingsApi = {
   saveExcludedDomains: (domains: string[]) => viaSettings((api) => api.saveExcludedDomains({ domains })),
   getTheme: () => viaSettings((api) => api.getTheme()),
   setTheme: (theme: ThemeSource) => viaSettings((api) => api.setTheme({ theme })),
+  getConsents: () => viaSettings((api) => api.getConsents()),
+  setScreenConsent: (granted: boolean) => viaSettings((api) => api.setScreenConsent({ granted })),
+  getDevices: () => viaSettings((api) => api.getDevices()),
+  unlinkExtension: (deviceId: string) => viaSettings((api) => api.unlinkExtension({ deviceId })),
 }
