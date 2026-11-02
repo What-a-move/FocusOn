@@ -41,7 +41,9 @@ export type SessionSummary = {
 }
 /** GET /api/v1/sessions/{id}/learning-summary. 생성 중·근거 부족·실패도 200으로 오고 상태로 구분한다. */
 export type LearningSummaryStatus = 'QUEUED' | 'GENERATING' | 'READY' | 'INSUFFICIENT_DATA' | 'FAILED'
-export type LearningSummary = { status: LearningSummaryStatus; overview: string | null }
+/** 핵심 개념 하나(Notion 리포트 설계서 5.3). sessionEvidence는 세션에서 확인한 내용이며 원문·URL을 담지 않는다. */
+export type KeyConcept = { name: string; briefExplanation: string; sessionEvidence: string | null }
+export type LearningSummary = { status: LearningSummaryStatus; overview: string | null; keyConcepts: KeyConcept[]; nextStartPrompt: string | null }
 
 export type ReportsApi = {
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
@@ -122,5 +124,10 @@ export function parseSessionSummary(value: unknown): SessionSummary | null {
 
 export function parseLearningSummary(value: unknown): LearningSummary | null {
   if (!isRecord(value) || !LEARNING_STATUSES.includes(value.learningSummaryStatus as LearningSummaryStatus)) return null
-  return { status: value.learningSummaryStatus as LearningSummaryStatus, overview: typeof value.overview === 'string' && value.overview ? value.overview : null }
+  const text = (field: unknown) => (typeof field === 'string' && field ? field : null)
+  // 핵심 개념은 최대 5개. 형식이 맞지 않는 항목은 버린다(이름·설명이 없는 개념은 노트에 쓸 수 없다).
+  const concepts = Array.isArray(value.keyConcepts) ? value.keyConcepts : []
+  const keyConcepts = concepts.flatMap((item): KeyConcept[] => isRecord(item) && text(item.name) && text(item.briefExplanation)
+    ? [{ name: item.name as string, briefExplanation: item.briefExplanation as string, sessionEvidence: text(item.sessionEvidence) }] : []).slice(0, 5)
+  return { status: value.learningSummaryStatus as LearningSummaryStatus, overview: text(value.overview), keyConcepts, nextStartPrompt: text(value.nextStartPrompt) }
 }

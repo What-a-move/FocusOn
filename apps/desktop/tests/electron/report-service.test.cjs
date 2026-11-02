@@ -54,9 +54,19 @@ test('세션 요약은 필수 값만 요구하고 나머지는 없으면 null로
 })
 
 test('학습 정리는 정해진 상태만 받고 빈 요약은 null로 둔다', () => {
-  assert.deepEqual(parseLearningSummary({ learningSummaryStatus: 'READY', overview: '극한 정의를 정리함' }), { status: 'READY', overview: '극한 정의를 정리함' })
-  assert.deepEqual(parseLearningSummary({ learningSummaryStatus: 'GENERATING', overview: '' }), { status: 'GENERATING', overview: null })
+  assert.deepEqual(parseLearningSummary({ learningSummaryStatus: 'READY', overview: '극한 정의를 정리함' }), { status: 'READY', overview: '극한 정의를 정리함', keyConcepts: [], nextStartPrompt: null })
+  assert.deepEqual(parseLearningSummary({ learningSummaryStatus: 'GENERATING', overview: '' }), { status: 'GENERATING', overview: null, keyConcepts: [], nextStartPrompt: null })
   assert.equal(parseLearningSummary({ learningSummaryStatus: 'DONE' }), null)
+})
+
+test('핵심 개념은 이름·설명이 있는 것만 최대 5개 받고 다음 시작 지점을 읽는다', () => {
+  const concept = (name) => ({ name, briefExplanation: `${name} 설명`, sessionEvidence: '예제로 확인함' })
+  const parsed = parseLearningSummary({
+    learningSummaryStatus: 'READY', overview: '요약', nextStartPrompt: '예제 5번 풀기',
+    keyConcepts: [concept('극한'), { name: '설명 없음' }, concept('좌극한'), concept('우극한'), concept('약분'), concept('연속'), concept('여섯째')],
+  })
+  assert.deepEqual(parsed.keyConcepts.map((item) => item.name), ['극한', '좌극한', '우극한', '약분', '연속'])
+  assert.equal(parsed.nextStartPrompt, '예제 5번 풀기')
 })
 
 test('세션 ID는 경로에 넣어도 안전한 값만 받는다', () => {

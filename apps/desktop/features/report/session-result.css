@@ -1,8 +1,8 @@
 /* 디자인 원본: FocusOn-design/session-result.html. 색 토큰·버튼·창 상단은 onboarding.css(.onboarding-window)를 쓰고,
    리포트에만 필요한 토큰과 배치를 .result-window로 덧붙인다. 시안의 `예시` 태그·미리보기 링크는 넣지 않는다. */
-.onboarding-window.result-window { --gold-soft: #fff4e3; --flow-other: #8a8f98; --flow-hold: #c9cdd3; --stripe-1: #e6e6e6; --stripe-2: #f3f3f3; --danger-strong: #d92d20; --ease-pop: cubic-bezier(.34, 1.56, .64, 1); }
+.onboarding-window.result-window { --gold-soft: #fff4e3; --flow-other: #8a8f98; --flow-hold: #c9cdd3; --stripe-1: #e6e6e6; --stripe-2: #f3f3f3; --ease-pop: cubic-bezier(.34, 1.56, .64, 1); }
 @media (prefers-color-scheme: dark) {
-  .onboarding-window.result-window { --gold-soft: #2b2418; --flow-hold: #4a4a50; --stripe-1: #26262b; --stripe-2: #1d1d21; --danger-strong: #e5484d; }
+  .onboarding-window.result-window { --gold-soft: #2b2418; --flow-hold: #4a4a50; --stripe-1: #26262b; --stripe-2: #1d1d21; }
 }
 
 .result-window .scroll { flex: 1; min-height: 0; overflow-y: auto; }
@@ -66,11 +66,10 @@
 .result-window .review-row { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
 .result-window .review-row .state-icon { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; border-radius: 50%; background: var(--field); font-size: 18px; font-weight: 700; }
 .result-window .review-row.is-ready .state-icon { background: var(--gold-soft); }
-.result-window .review-row.is-error .state-icon { background: var(--danger-strong); color: #fff; }
-.result-window .review-row.is-error .review-text strong { color: var(--danger); }
 .result-window .review-row .poki-turn { height: 30px; animation: result-turn 2s cubic-bezier(.45, 0, .2, 1) infinite; }
 @keyframes result-turn { 0%, 30% { transform: perspective(600px) rotateY(0); } 80%, 100% { transform: perspective(600px) rotateY(360deg); } }
 .result-window .review-text { flex: 1; min-width: 0; }
+.result-window .review-open { flex: 0 0 auto; display: inline-grid; place-items: center; width: auto; height: 40px; padding: 0 16px; font-size: 14px; text-decoration: none; }
 .result-window .review-text strong { display: block; font-size: 17px; font-weight: 700; }
 .result-window .review-text span { display: block; margin-top: 2px; color: var(--muted); font-size: 14px; line-height: 1.55; word-break: keep-all; }
 
