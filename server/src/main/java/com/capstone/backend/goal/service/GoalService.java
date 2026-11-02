@@ -48,10 +48,17 @@ public class GoalService {
   /** 본인 목표를 활성 세션과 충돌하지 않도록 수정한다. */
   @Transactional
   public GoalResponse update(FocusOnPrincipal principal, String goalId, UpdateGoalRequest request) {
+    String text = normalizeText(request.goalText());
+    if (!isValidText(text)) {
+      // 오류 응답의 기존 우선순위는 유지하되 변경이 없는 요청은 행 잠금을 피한다.
+      GoalEntity goal = findGoal(principal.userId(), goalId);
+      requireNotInActiveSession(principal.userId(), goal.getId());
+      throw new ApiException(ApiErrorCode.GOAL_TEXT_INVALID);
+    }
     lockUser(principal.userId());
     GoalEntity goal = findGoal(principal.userId(), goalId);
     requireNotInActiveSession(principal.userId(), goal.getId());
-    goal.updateText(validatedText(request.goalText()), Instant.now());
+    goal.updateText(text, Instant.now());
     return response(goal);
   }
 
@@ -92,12 +99,20 @@ public class GoalService {
   }
 
   private String validatedText(String value) {
-    String text = value == null ? "" : value.strip();
-    int length = text.codePointCount(0, text.length());
-    if (length < 2 || length > 40) {
+    String text = normalizeText(value);
+    if (!isValidText(text)) {
       throw new ApiException(ApiErrorCode.GOAL_TEXT_INVALID);
     }
     return text;
+  }
+
+  private String normalizeText(String value) {
+    return value == null ? "" : value.strip();
+  }
+
+  private boolean isValidText(String text) {
+    int length = text.codePointCount(0, text.length());
+    return length >= 2 && length <= 40;
   }
 
   private GoalResponse response(GoalEntity goal) {

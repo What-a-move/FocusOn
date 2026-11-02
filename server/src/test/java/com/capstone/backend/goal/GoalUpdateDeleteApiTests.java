@@ -93,6 +93,33 @@ class GoalUpdateDeleteApiTests {
     assertRequestsWaitForUserLock(true);
   }
 
+  @Test
+  void postgresInvalidUpdateDoesNotWaitForUserLock() throws Exception {
+    try (Connection blocker = jdbc.getDataSource().getConnection()) {
+      assumeTrue("PostgreSQL".equals(blocker.getMetaData().getDatabaseProductName()));
+      LoginResponse owner = desktop("invalid-lock-" + UUID.randomUUID());
+      String id = createGoal(owner);
+      blocker.setAutoCommit(false);
+      try (var statement = blocker.prepareStatement(
+          "SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+        statement.setLong(1, Long.parseLong(owner.user().userId()));
+        try (var result = statement.executeQuery()) {
+          assertTrue(result.next());
+        }
+      }
+      try (var pool = Executors.newSingleThreadExecutor()) {
+        var response = pool.submit(() -> mvc.perform(patch("/api/v1/goals/" + id)
+            .header("Authorization", token(owner)).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"a\"}")).andReturn().getResponse().getStatus());
+        try {
+          assertEquals(400, response.get(3, TimeUnit.SECONDS));
+        } finally {
+          blocker.rollback();
+        }
+      }
+    }
+  }
+
   private void assertRequestsWaitForUserLock(boolean update) throws Exception {
     try (Connection blocker = jdbc.getDataSource().getConnection()) {
       assumeTrue("PostgreSQL".equals(blocker.getMetaData().getDatabaseProductName()));
@@ -230,6 +257,12 @@ class GoalUpdateDeleteApiTests {
     mvc.perform(patch(path).header("Authorization", token(other))
             .contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isNotFound());
+    mvc.perform(patch(path).header("Authorization", token(other))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"a\"}"))
+        .andExpect(status().isNotFound());
+    mvc.perform(patch("/api/v1/goals/not-an-id").header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"a\"}"))
+        .andExpect(status().isNotFound());
     mvc.perform(delete(path).header("Authorization", token(other)))
         .andExpect(status().isNotFound());
     mvc.perform(patch(path).header("Authorization", token(owner))
@@ -259,12 +292,16 @@ class GoalUpdateDeleteApiTests {
     var device = devices.findById(Long.valueOf(owner.device().deviceId())).orElseThrow();
     var goal = goals.findById(Long.valueOf(id)).orElseThrow();
     Instant now = Instant.now();
-    var session = sessions.saveAndFlush(LearningSessionEntity.create(user, goal, device, 1800000,
-        "Asia/Seoul", now.atZone(ZoneId.of("Asia/Seoul")).toLocalDate(), "{}", "v1", now));
+    final var session = sessions.saveAndFlush(LearningSessionEntity.create(user, goal, device,
+        1800000, "Asia/Seoul", now.atZone(ZoneId.of("Asia/Seoul")).toLocalDate(), "{}", "v1", now));
     String path = "/api/v1/goals/" + id;
     String body = "{\"goalText\":\"새 목표\"}";
     mvc.perform(patch(path).header("Authorization", token(owner))
             .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("GOAL_UPDATE_BLOCKED"));
+    mvc.perform(patch(path).header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"a\"}"))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.code").value("GOAL_UPDATE_BLOCKED"));
     mvc.perform(delete(path).header("Authorization", token(owner)))
