@@ -10,7 +10,7 @@ const NAVIGATION = [
   { key: 'home', label: '홈', asset: 'nav-home.png', href: '/' },
   { key: 'start', label: '집중 시작', asset: 'nav-start.svg', href: '/goal/' },
   { key: 'records', label: '집중 기록', asset: 'nav-records.png', href: '/records/' },
-  { key: 'notes', label: '학습 노트', asset: 'nav-notes.svg', href: null },
+  { key: 'notes', label: '학습 노트', asset: 'nav-notes.svg', href: '/notes/' },
   { key: 'settings', label: '설정', asset: 'nav-settings.png', href: '/settings/' },
 ] as const
 
@@ -21,10 +21,11 @@ export function AppSidebar({ active, name, onLogout, busy }: { active: SidebarPa
   // 진행 중인 집중이 있으면 `집중 시작`은 새 목표 대신 그 집중으로 돌아간다(서버는 사용자당 진행 중 세션 1개).
   const ongoing = useOngoingSession()
   return <aside className="fo-sidebar" aria-label="주 메뉴">
-    <span className="fo-logo fo-sidebar-logo">
-      <Image className="fo-logo-light" src="/design/focuson-logo.png" alt="FocusOn" width={2172} height={724} priority />
-      <Image className="fo-logo-dark" src="/design/focuson-logo-dark.png" alt="FocusOn" width={2172} height={724} priority />
-    </span>
+    {/* 로고를 누르면 홈으로 간다. */}
+    <Link className="fo-logo fo-sidebar-logo" href="/" aria-label="FocusOn 홈">
+      <Image className="fo-logo-light" src="/design/focuson-logo.png" alt="" width={2172} height={724} priority />
+      <Image className="fo-logo-dark" src="/design/focuson-logo-dark.png" alt="" width={2172} height={724} priority />
+    </Link>
     <nav className="fo-nav">{NAVIGATION.map(({ key, label, asset, href: base }) => {
       const href = key === 'start' && ongoing ? '/session/' : base
       const current = key === active
