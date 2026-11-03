@@ -5,7 +5,7 @@
 ## 가장 먼저 진행할 작업
 
 - 작업명: 팝업 세션 화면 실제 연동 QA (Issue #52, 2026-11-03)
-- 상태: 실제 서버로 연결·E02·E03(진행 중·멈춤)·토큰 갱신(rotation) 확인. 팝업 시간이 뒤로 튀는 오류와 E06 거짓 멈춤 안내를 고쳤고, 개발용 Extension ID를 고정했다(결정 017). 남은 일: 연결 해제 확인, Backend CORS 반영 뒤 권한 해제 → E06·`local-events` 재확인, REPORT.
+- 상태: 실제 서버로 연결·E02·E03(진행 중·멈춤)·토큰 갱신(rotation) 확인. 팝업 시간이 뒤로 튀는 오류와 E06 거짓 멈춤 안내를 고쳤고, 개발용 Extension ID를 고정했다(결정 017). 연결 해제 확인과 REPORT 완료(`session-popup-REPORT.md`). 남은 일: Backend CORS 반영 뒤 권한 해제 → E06·`local-events` 재확인.
 
 - 작업명: 모듈 연동 로거와 로그 복사 (Issue #105, `feat/105-extension-logger`)
 - 상태: 로거·요청 traceId·`sw.restart`·팝업 로그 복사 구현(2026-10-29). 남은 일: 실제 Chrome에서 Worker 종료 뒤 기록 유지와 로그 복사 확인, 서버가 `X-Trace-Id`를 찍으면 같은 traceId로 추적표 확인, 그 뒤 REPORT.
