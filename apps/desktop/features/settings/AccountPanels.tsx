@@ -204,7 +204,7 @@ export function DevicesPanel({ showToast }: { showToast: ShowToast }) {
     showToast({ text: 'Chrome 확장 연결을 해제했어요' })
   }
 
-  if (view.status === 'error') return <LoadError code={view.code} what="기기 연결을" onRetry={() => { setView({ status: 'loading' }); void load() }} />
+  if (view.status === 'error') return <LoadError poki={false} code={view.code} what="기기 연결을" onRetry={() => { setView({ status: 'loading' }); void load() }} />
   const extension = view.status === 'ready' ? view.data.extension : null
   const left = code ? Math.max(0, Math.ceil((code.expiresAt - now) / 1000)) : 0
 
