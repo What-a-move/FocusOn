@@ -1,3 +1,16 @@
+## 병행 진행: 학습 정리 Issue #29
+
+- 공개 영문 DOM 평가에서 확인한 우선 개선: 120자 초과 문장을 통째로 버리는 처리, 문서 앞부분 20개만 선택하는 처리, 표 제목·헤딩 조각의 근거 인정, 영문→한국어 개념명의 문자열 포함 검증을 재설계한다. 핵심 정의 보존·문맥 연결·다국어 근거 검증을 함께 평가하고 기존 민감값/근거 밖 생성 방어를 유지한다. 공개 글 단건 실험은 실제 사용자 화면 외부 전송 승인이나 Extension 연동 완료를 의미하지 않는다.
+- 8건 평가 후속: `AI/evaluation/learning_summary_eight_results_2026-10-27.md`에서 Python의 근거 밖 설명 보충, Git의 가능성→단정 변화, 통계 개요의 권유 문장, 정형적인 다음 시작 문장을 검토한다. 이번에는 각 1회·총 8회 호출과 기록만 했으며 Prompt/생성 코드 수정은 하지 않았다. READY 8/8을 의미적 사실성 통과율로 오해하지 않는다.
+- 2026-10-27 최종 형식은 `{overview,keyConcepts[],nextStartPrompt}`로 고정했다. 복습 퀴즈·별도 추천 개념을 MVP에 추가하지 않는다. 다음 시작 지점도 검증된 세션 개념 안에서만 안내한다. 코드 변경 시 추가 필드 거절·최대 5개·전체 1,200자·근거 밖 개념 배제를 회귀 검사한다.
+- 복구한 실행 폴더: `/Users/kshi3430/what-a-move/FocusOn/.handoff/learning-summary`. 실행은 `PYENV_VERSION=what-a-move pyenv exec streamlit run AI/demos/learning_summary_streamlit.py --server.port 8504 --server.address 127.0.0.1 --server.headless true`. 키는 환경변수 → 현재 AI/.env → Git 기본 작업 폴더 AI/.env 순서다. 8503의 다른 프로젝트와 혼동하지 않는다.
+- 이번 검증은 자동 23개·합성 OpenAI 1회 READY(5.77초)다. 실제 DOM·#11 관련성·Server·개인정보 승인·Desktop '이어서 집중하기' 제품 연결과 통합 검증은 후속 작업이다. 시연의 합성 입력 버튼은 제품의 수동 재생성 기능이 아니다.
+- Branch: `feat/29-ai-learning-summary` (최신 `origin/dev`에서 분리; #12의 미커밋 변경과 격리)
+- 현재 상태: Streamlit에서 DOM 계약형 합성 입력(pageType, title, text, ocr, 추출 상태·방식·버전)을 편집하고, RELATED 페이지의 서로 다른 문단을 허용 근거로 만드는 로컬 전처리를 구현했다. 사용자가 선택한 경우 해당 합성 근거를 OpenAI에 보낸다. 이전 형식 탐색 3회 뒤 출력 한도를 올려 재호출했고 기본 합성 DOM 입력에서 READY 결과를 확인했다.
+- 다음 단계: 성공 응답과 근거 검증을 다양한 합성 DOM 입력으로 평가하고, 실제 Extension 추출 구현 시 제안 JSON 형식을 담당자와 대조한다. 이후 Server·AI 내부 요청 Schema와 서비스 인증을 담당자와 확정한 뒤 FastAPI 어댑터를 연결한다. Server 세션 ENDED/소유권/동의·30초 입력 마감·단일 Worker·20초 Timeout·1분/5분 재시도·보존/삭제를 구현하고 Desktop 조회 UI를 연결한다.
+- 선행: #11 최종 관련성 결과, Server 세션/인증, Extension/Desktop 제외·추출 경로. Notion 기획은 `REVIEW`이며 미합의 API/ERD를 확정으로 취급하지 않는다.
+- 후속 모델 선택: DOM 추출·실제 화면 데이터 연동 시 외부 제공자·지역·보존·학습 이용·사용자 고지를 논의하고 승인하기 전에는 제품 데이터를 외부 모델에 보내지 않는다. 현재 Streamlit 시험은 합성 입력만 대상으로 한다.
+
 # AI 다음 작업
 
 - 2026-11-03 실험 분석 API `POST /internal/v1/analysis-runs/analyze` 연결. candidateDecision은 미보정 후보, decision은 보정 confidence가 없어 UNCERTAIN이다. 실제 Qwen DNS/연결, Backend 내부 응답 계약, confidence 독립 보정과 왕복 검증이 남았다. [결과](features/fastapi-relevance-analysis-REPORT.md).

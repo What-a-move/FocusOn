@@ -1,5 +1,15 @@
 # AI 평가와 회귀 검증 명세
 
+# AI 평가와 회귀 검증 명세
+
+## #29 MVP 형식 회귀: 2026-10-27
+
+- 추가 8건 평가: [합성 입력](../evaluation/learning_summary_eight_cases.json), [입력과 전체 노트·검토](../evaluation/learning_summary_eight_results_2026-10-27.md), [구조화 결과](../evaluation/learning_summary_eight_results_2026-10-27.json). 서로 다른 8건에 각 1회·재시도 0, 최대 동시 2건. 8/8 READY, 평균 7.75초(4.87~12.49초), 묶음 31.20초. 형식은 통과했으나 근거 밖 보충·확실성 변화·개요의 행동 권유가 관찰돼 의미 정확도 수치로 사용하지 않는다. 이번 추가 평가에서 생성 코드와 Prompt는 바꾸지 않았다.
+- 버전 `learning-summary-mvp-v3`, 기본 `gpt-5-mini` low 추론. 사용자가 전달한 확정 최종 Schema만 허용한다.
+- `PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m unittest discover -s AI/tests -p 'test_learning_summary*.py' -v`: 23개 통과. 퀴즈·추천·모델 생성 nextStartPrompt 추가 키 거절, 최종 공개 필드 세 개, 내부 근거 ID 제거, 근거 부족·제외·중복·동의 철회·민감값·원문 복사·1,200자·5개 한도와 Streamlit 구역/키 로딩을 확인했다.
+- 기본 합성 React Query DOM 문단으로 실제 호출 1회: 5.77초 READY. 결과 필드는 overview/keyConcepts/nextStartPrompt이며 다음 문장은 코드에서 검증된 useQuery 개념을 재확인하도록 구성했다. 재호출·자동 재시도는 없었다.
+- 실제 사용자 DOM·관련성 판정·Backend·Desktop 제품 연동 테스트가 아니다. 소수 합성 입력의 성공을 일반 정확도·지연 보장으로 해석하지 않는다. 내부 ID·단어 대조는 설명의 의미적 사실성을 완전히 보장하지 않는다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안

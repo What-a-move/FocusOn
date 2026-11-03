@@ -1,5 +1,15 @@
 # AI Prompt와 Agent 신뢰 경계
 
+# AI Prompt와 Agent 신뢰 경계
+
+## #29 MVP 학습 정리: 2026-11-03 실행 기준
+
+- 사용자 전달 확정안의 공개 Schema는 `overview`, `keyConcepts[{name,briefExplanation,sessionEvidence}]` 최대 5개, `nextStartPrompt` 한 문장뿐이다. 전체 1,200자를 유지하며 `reviewQuestions`·`recommendedConcepts`는 생성·표시하지 않는다.
+- `learning-summary-mvp-v4`는 공급자에 `SummaryDraft`(근거 ID를 가진 핵심 개념)만 요청하고 추가 키를 거절한다. ID와 개념명·설명 단어가 인용 근거에 있는지 검사한 뒤 ID를 공개 결과에서 제거한다. 개요와 다음 시작 문장은 코드에서 결정한다. 원문 문장 복사와 질문 문구를 거절하며 성취를 단정하지 않는다.
+- `nextStartPrompt`는 검증된 첫 개념을 이어서 살펴보는 고정 한 문장으로 구성한다. 모델에 다음 공부할 개념이나 퀴즈를 생성시키지 않는다. 단어 대조는 의미적 함의·조건 보존을 완전히 검증하지 못하므로, 이 결과를 사실성 보장으로 간주하지 않는다.
+- 기본 `gpt-5-mini`에 low 추론, 20초 Timeout, SDK 재시도 0, store=false를 사용한다. 입력은 합성 DOM 문단이며 실제 화면 데이터 전송은 미연결이다.
+- 구조화 출력의 추가 속성 거절은 [OpenAI 공식 문서](https://developers.openai.com/api/docs/guides/structured-outputs#additionalproperties-false-must-always-be-set-in-objects)를 참고했다. 형식 제약은 사실성 보장이 아니다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안, 미구현
