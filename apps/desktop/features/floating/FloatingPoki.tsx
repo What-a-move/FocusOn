@@ -5,11 +5,11 @@ import type { FloatingShow, InterventionAction } from '../../electron/shared/int
 import './floating.css'
 
 // [주의] Renderer는 electron/shared에서 타입만 가져온다(goal-setting-shared-runtime-import-ERROR.md).
-const POKI = { GENTLE: 'master-v3', NORMAL: 'curious-v8', ACTIVE: 'angry-v2', BREAK: 'curious-v8', RECENTER: 'master-v3' } as const
+const POKI = { GENTLE: 'master-v3', NORMAL: 'curious-v8', ACTIVE: 'angry-v2', BREAK: 'curious-v8', RECENTER: 'master-v3', DISCONNECTED: 'curious-v8' } as const
 
 type View = { show: FloatingShow; step: 'say' | 'recenter'; failed?: boolean }
 
-/** 화면 위 포키 F04·F05 (FocusOn-design/floating-poki.html). 문구는 Main이 정해 보낸다. 판정·타이머는 바꾸지 않는다. */
+/** 화면 위 포키 F04·F05·F07 (FocusOn-design/floating-poki.html). 문구는 Main이 정해 보낸다. 판정·타이머는 바꾸지 않는다. */
 export function FloatingPoki() {
   const [view, setView] = useState<View | null>(null)
 
@@ -25,14 +25,17 @@ export function FloatingPoki() {
     if (action !== 'RECENTER') setView(null)
   }
   const recenter = step === 'recenter'
-  const poki = recenter ? POKI.RECENTER : show.kind === 'BREAK' ? POKI.BREAK : POKI[show.level]
+  // F07은 세션이 실제로 멈춘 오류라 시스템 안내(존댓말)·빨간 글자로 보여 준다(결정 031).
+  const disconnected = show.kind === 'DISCONNECTED'
+  const poki = recenter ? POKI.RECENTER : show.kind === 'OFF_TASK' ? POKI[show.level] : POKI[show.kind]
   const actions: Array<[string, InterventionAction, boolean]> = recenter
     ? [['확인했어', 'ACK', true]]
-    : show.kind === 'BREAK' ? [['잠시 쉬기', 'REST', true], ['계속할게', 'CLOSE', false]] : [['조금 더 보기', 'RECENTER', true], ['잠시 쉬기', 'REST', false]]
+    : disconnected ? [['앱 열기', 'OPEN_APP', true]]
+      : show.kind === 'BREAK' ? [['잠시 쉬기', 'REST', true], ['계속할게', 'CLOSE', false]] : [['조금 더 보기', 'RECENTER', true], ['잠시 쉬기', 'REST', false]]
 
   return <main className="floating-root">
     <div className="pop" key={step}>
-      <div className="bubble" role="status" aria-live="polite">
+      <div className={`bubble${disconnected ? ' is-error' : ''}`} role={disconnected ? 'alert' : 'status'} aria-live={disconnected ? 'assertive' : 'polite'}>
         <span>{recenter ? '지금 목표는 이거야.' : show.say}</span>
         <small>{recenter ? show.goalText : show.sub}</small>
         {view.failed && <p className="fail" role="alert">지금은 멈추지 못했어요. FocusOn 앱에서 다시 시도해 주세요.</p>}

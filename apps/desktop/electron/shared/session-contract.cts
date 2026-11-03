@@ -26,7 +26,10 @@ export type StartedSession = { sessionId: string; status: string; version: numbe
 // 서버 계약 타입은 Desktop·Extension이 shared-types에서 함께 쓴다(타입만, 결정 025).
 export type { SessionStatus }
 /** GET /sessions/active · GET /sessions/{id} 응답 중 화면에 필요한 값 (2026-10-25 확정, 결정 023). */
-export type RemoteSession = { sessionId: string; status: SessionStatus; version: number; goalText: string; targetDurationMs: number; accumulatedActiveMs: number }
+export type RemoteSession = { sessionId: string; status: SessionStatus; version: number; goalText: string; targetDurationMs: number; accumulatedActiveMs: number; pauseReason: string | null }
+
+// 멈춘 이유. 서버가 아직 보내지 않으면 null이고, 화면은 이유를 추측하지 않고 "자동으로 멈췄어요"라고만 한다.
+const pauseReasonOf = (value: unknown) => typeof value === 'string' && /^[A-Z_]{1,40}$/u.test(value) ? value : null
 
 /**
  * Main이 Renderer에 보내는 현재 세션. 누적 시간은 Main의 monotonic clock으로 계산한 값이며,
@@ -41,6 +44,8 @@ export type SessionSnapshot = {
   /** 마지막 명령이 실패한 이유. 화면 안내용이며 상태는 바꾸지 않는다. */
   error: string | null
   busy: boolean
+  /** 멈춘 이유(USER·APP_RESTART·REQUIRED_PERMISSION·EXTENSION_UNLINKED 등). 모르면 null. */
+  pauseReason: string | null
 }
 
 export type SessionsApi = {
@@ -114,7 +119,7 @@ export function parseStartedSession(value: unknown): StartedSession | null {
 export function parseRemoteSession(value: unknown): RemoteSession | null {
   if (!isRecord(value) || !isId(value.sessionId) || !isSessionStatus(value.status) || !isCount(value.version)) return null
   if (typeof value.goalTextSnapshot !== 'string' || !isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
-  return { sessionId: value.sessionId, status: value.status, version: value.version, goalText: value.goalTextSnapshot, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs }
+  return { sessionId: value.sessionId, status: value.status, version: value.version, goalText: value.goalTextSnapshot, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs, pauseReason: pauseReasonOf(value.pauseReason) }
 }
 
 /** 상태 명령(pause·resume·extend·end) 응답의 공통 부분. 없는 값은 이전 값을 유지한다. */
@@ -127,15 +132,16 @@ export function parseCommandResult(value: unknown): CommandResult | null {
   return { status: value.status as SessionStatus | undefined, version: value.version, accumulatedActiveMs: value.accumulatedActiveMs as number | undefined, targetDurationMs: value.targetDurationMs as number | undefined }
 }
 
-export function parseHeartbeat(value: unknown): { status: SessionStatus; accumulatedActiveMs: number } | null {
+export function parseHeartbeat(value: unknown): { status: SessionStatus; accumulatedActiveMs: number; pauseReason: string | null } | null {
   if (!isRecord(value) || !isSessionStatus(value.status) || !isCount(value.accumulatedActiveMs)) return null
-  return { status: value.status, accumulatedActiveMs: value.accumulatedActiveMs }
+  return { status: value.status, accumulatedActiveMs: value.accumulatedActiveMs, pauseReason: pauseReasonOf(value.pauseReason) }
 }
 
 /** Main이 보낸 Event가 화면용 세션 형식인지 확인한다. */
 export function isSessionSnapshot(value: unknown): value is SessionSnapshot {
   return isRecord(value) && isId(value.sessionId) && typeof value.goalText === 'string' && isSessionStatus(value.status)
     && isCount(value.targetDurationMs) && isCount(value.accumulatedActiveMs) && (value.error === null || typeof value.error === 'string') && typeof value.busy === 'boolean'
+    && (value.pauseReason === null || typeof value.pauseReason === 'string')
 }
 
 /** 연장은 5~300분 (로그인 설계서 7.1과 같은 범위). */
