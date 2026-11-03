@@ -60,6 +60,34 @@ PYTHONPATH=AI:. python3 -m pytest AI/tests -q
 PYTHONPATH=AI:. python3 -m AI.evaluation.calibrate_graphless --help
 ```
 
+### #29 로컬 시연
+
+합성 데이터로 종료 후 정리 흐름과 근거 부족·중복·제외·실패를 직접 확인한다. 입력 형식은 `pageType`, `title`, `text`, `ocr`, `extractionMethod`, `extractionStatus`, `extractorVersion`이다. 별도 최종 관련성 판정은 추출 객체와 분리해 선택한다. 같은 페이지의 서로 다른 문단도 각각 근거로 인정한다. OpenAI 버튼은 편집한 합성 DOM 입력 중 필터를 통과한 문단만 전송한다. 실제 화면 데이터는 입력하지 않는다.
+
+```bash
+python3 -m venv /tmp/focuson-summary-demo-venv
+/tmp/focuson-summary-demo-venv/bin/python -m pip install -r AI/demos/requirements.txt
+/tmp/focuson-summary-demo-venv/bin/python -m streamlit run AI/demos/learning_summary_streamlit.py
+```
+
+선택적 OpenAI 시험은 환경변수 → 현재 작업 폴더 AI/.env → Git 기본 작업 폴더 AI/.env 순서로 `OPENAI_API_KEY`만 확인한다. 실제 호출은 `현재 합성 DOM 근거로 OpenAI 생성` 버튼을 눌렀을 때만 일어난다. 기본 모델은 `gpt-5-mini` low 추론이며 `FOCUSON_SUMMARY_MODEL`로 바꿀 수 있다. `store=false`, 20초 제한·자동 재시도 0회다. 실제 화면 데이터는 미연결이며 제공자·보존·고지 승인은 제품 연동 시점에 진행한다.
+
+현재 pyenv 실행(이 #29 worktree 루트에서):
+
+```bash
+PYENV_VERSION=what-a-move pyenv exec streamlit run AI/demos/learning_summary_streamlit.py --server.port 8504 --server.address 127.0.0.1 --server.headless true
+```
+
+최종 결과는 `overview`, 최대 5개의 `keyConcepts`(`name`, `briefExplanation`, `sessionEvidence`), `nextStartPrompt`뿐이며 전체 1,200자 이하다. 퀴즈와 추천 개념은 생성하지 않는다. 다음 시작 지점은 검증된 세션 개념을 이어 보는 한 문장이다.
+
+단위 테스트:
+
+```bash
+PYTHONPATH=AI python3 -m unittest discover -s AI/tests -p 'test_learning_summary*.py' -v
+```
+
+
+
 ## 문서
 
 - [AI 문서 안내](docs/README.md)
