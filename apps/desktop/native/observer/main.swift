@@ -15,9 +15,16 @@ func reply(_ object: [String: Any]) {
 func frontmost(_ id: Int) {
   guard let app = NSWorkspace.shared.frontmostApplication else { reply(["id": id, "ok": true, "app": NSNull()]); return }
   let pid = app.processIdentifier
-  // 창 목록은 앞에서 뒤 순서다. 그 앱의 첫 일반 창(layer 0)이 맨 앞 창이다.
+  // 창 목록은 앞에서 뒤 순서다. 그 앱의 첫 일반 창(layer 0) 중 보이는 창이 맨 앞 창이다.
+  // [주의] Electron 앱(VS Code 등)은 맨 앞에 투명(alpha 0)·납작한 보조 창을 둔다. 그 창을 고르면 제목·OCR 글자가 비어 나온다.
   let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
-  let window = windows.first { ($0[kCGWindowOwnerPID as String] as? Int32) == pid && ($0[kCGWindowLayer as String] as? Int) == 0 }
+  let window = windows.first { info in
+    let bounds = info[kCGWindowBounds as String] as? [String: Any]
+    let width = bounds?["Width"] as? Double ?? 0
+    let height = bounds?["Height"] as? Double ?? 0
+    return (info[kCGWindowOwnerPID as String] as? Int32) == pid && (info[kCGWindowLayer as String] as? Int) == 0
+      && (info[kCGWindowAlpha as String] as? Double ?? 1) > 0 && width >= 100 && height >= 100
+  }
   let title = (window?[kCGWindowName as String] as? String).flatMap { $0.isEmpty ? nil : $0 }
   let windowId = window?[kCGWindowNumber as String] as? Int
   reply(["id": id, "ok": true, "app": [
@@ -79,6 +86,10 @@ func ocr(_ id: Int, windowId: Int) {
     }
   }
 }
+
+// [주의] 창 캡처(ScreenCaptureKit)는 화면 서버 연결이 초기화된 프로세스에서만 동작한다. 없으면 CGS_REQUIRE_INIT로 죽는다.
+// NSApplication으로 연결만 만들고 Dock·메뉴에는 나타나지 않게 한다.
+NSApplication.shared.setActivationPolicy(.prohibited)
 
 // [주의] frontmostApplication은 메인 run loop가 돌아야 최신 값으로 바뀐다. 입력은 백그라운드에서 읽고 처리는 메인에서 한다.
 var pending = Data()
