@@ -1,5 +1,9 @@
 # AI API 계약 초안
 
+> 2026-10-29 내부 수신 API: `POST /internal/v1/analysis-runs`를 구현했다. 기존 Adapter 인자 request/goal/context/extractionStatus/선택 ocr를 받아 수신·검증 확인만 반환한다. 분석 실행·공개 판정 응답은 미연결이다. 이 Backend 전용 envelope는 Client 공개 요청 변경이 아니며 Backend 합의가 필요하다. [실행·입력·출력](features/fastapi-reception-REPORT.md).
+
+> 2026-10-26 사용자 제공 최신 화면 분석 계약 적용: 공개 화면 입력은 `metadata`/`contentPayload.text`/`goalSnapshot` 구조이며 text는 최대 2,000자다. AI 내부 실행 문맥은 Server가 제공한다. 코드 경계는 `src/api/relevance_contract.py`, 적용 범위와 미완료 연동은 [정합성 보고서](features/screen-analysis-contract-v1-REPORT.md)를 따른다. 아래 과거 제안 API를 새 공개 계약으로 자동 적용하지 않는다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안, 미구현

@@ -1,0 +1,697 @@
+{
+  "synthetic": true,
+  "split": "validation",
+  "annotationStatus": "Provisional author expectations frozen before v2 model execution; no independent human review",
+  "goals": {
+    "decoder": {
+      "goalId": "goal-transformer-decoder-1h",
+      "goalVersion": 1,
+      "text": "트랜스포머 디코더 공부",
+      "confirmed": true
+    },
+    "sql": {
+      "goalId": "goal-graph-validation-sql",
+      "goalVersion": 1,
+      "text": "SQL JOIN과 GROUP BY 이해하기",
+      "confirmed": true
+    }
+  },
+  "cases": [
+    {
+      "caseId": "decoder-val-shift",
+      "goalKey": "decoder",
+      "expectedLabel": "RELATED",
+      "purpose": "학습 입력과 출력의 정렬",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-shift",
+          "sequence": 1,
+          "navigationId": "decoder-val-shift",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_DOM",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "학습 입력과 출력의 정렬",
+          "pageTitle": "학습 입력과 출력의 정렬",
+          "urlHost": "validation.example.org",
+          "text": "Teacher forcing에서는 디코더 입력을 한 위치 이동시킵니다. 이전 정답 토큰을 입력으로 사용하고 현재 위치의 다음 토큰 분포를 예측합니다. causal mask를 적용하여 미래 위치의 정답을 참조하지 않게 합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-normalization",
+      "goalKey": "decoder",
+      "expectedLabel": "RELATED",
+      "purpose": "잔차 연결과 정규화",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-normalization",
+          "sequence": 2,
+          "navigationId": "decoder-val-normalization",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "잔차 연결과 정규화",
+          "pageTitle": "잔차 연결과 정규화",
+          "urlHost": "validation.example.org",
+          "text": "Decoder block의 각 attention과 feed-forward sublayer 주위에 residual connection을 둡니다. Layer normalization은 은닉 표현을 정규화하며 pre-norm과 post-norm에서 적용 순서가 달라집니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-attention-math",
+      "goalKey": "decoder",
+      "expectedLabel": "RELATED",
+      "purpose": "어텐션 가중치 계산",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-attention-math",
+          "sequence": 3,
+          "navigationId": "decoder-val-attention-math",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "DESKTOP_APP_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Preview",
+          "windowTitle": "어텐션 가중치 계산",
+          "pageTitle": "어텐션 가중치 계산",
+          "urlHost": "",
+          "text": "Query와 Key를 내적한 점수를 차원의 제곱근으로 나눕니다. softmax로 만든 attention weight를 Value에 곱해 가중합합니다. Multi-head attention은 이 계산을 여러 부분 공간에서 수행합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-generation",
+      "goalKey": "decoder",
+      "expectedLabel": "RELATED",
+      "purpose": "토큰을 이어 붙이는 추론",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-generation",
+          "sequence": 4,
+          "navigationId": "decoder-val-generation",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_DOM",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "토큰을 이어 붙이는 추론",
+          "pageTitle": "토큰을 이어 붙이는 추론",
+          "urlHost": "validation.example.org",
+          "text": "자기회귀 디코딩에서는 앞서 생성한 토큰 시퀀스로 다음 토큰을 예측합니다. beam search는 여러 후보 시퀀스를 유지하는 탐색 방식이며 KV cache는 이전 attention의 key와 value를 재사용합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-video-codec",
+      "goalKey": "decoder",
+      "expectedLabel": "UNRELATED",
+      "purpose": "영상 압축 디코더 구현",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-video-codec",
+          "sequence": 5,
+          "navigationId": "decoder-val-video-codec",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "영상 압축 디코더 구현",
+          "pageTitle": "영상 압축 디코더 구현",
+          "urlHost": "validation.example.org",
+          "text": "H.264 decoder의 역양자화와 모션 보상을 구현합니다. 영상 압축 비트스트림에서 매크로블록을 복원하고 색상 공간을 변환합니다. 신경망 언어 모델을 공부하는 활동은 아닙니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-game",
+      "goalKey": "decoder",
+      "expectedLabel": "UNRELATED",
+      "purpose": "모바일 게임 시즌 보상",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-game",
+          "sequence": 6,
+          "navigationId": "decoder-val-game",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "DESKTOP_APP_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Preview",
+          "windowTitle": "모바일 게임 시즌 보상",
+          "pageTitle": "모바일 게임 시즌 보상",
+          "urlHost": "",
+          "text": "오늘 모바일 게임 랭크전을 세 판 플레이했습니다. 게임 캐릭터를 강화하고 전투 보상을 수령합니다. 다음 매치에서 사용할 스킬과 장비 조합을 선택하고 실시간 게임 방송도 시청합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-shopping",
+      "goalKey": "decoder",
+      "expectedLabel": "UNRELATED",
+      "purpose": "온라인 상품 구매",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-shopping",
+          "sequence": 7,
+          "navigationId": "decoder-val-shopping",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_DOM",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "온라인 상품 구매",
+          "pageTitle": "온라인 상품 구매",
+          "urlHost": "validation.example.org",
+          "text": "쇼핑몰에서 신발 상품을 비교하고 있습니다. 장바구니에 할인 상품을 담고 쿠폰 적용 금액과 배송비를 확인합니다. 구매 후기와 사이즈를 확인한 뒤 주문할 물건을 고릅니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-unknown",
+      "goalKey": "decoder",
+      "expectedLabel": "UNCERTAIN",
+      "purpose": "새 자료",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-unknown",
+          "sequence": 8,
+          "navigationId": "decoder-val-unknown",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "새 자료",
+          "pageTitle": "새 자료",
+          "urlHost": "validation.example.org",
+          "text": "새 자료에 대한 설명이 표시되어 있습니다. 항목의 이름과 자세한 맥락은 아직 나타나지 않았습니다. 다음 단계에 대한 일반 안내만 있어 어떤 주제인지 확정하기 어렵습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-mixed",
+      "goalKey": "decoder",
+      "expectedLabel": "UNCERTAIN",
+      "purpose": "두 자료가 함께 표시됨",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-mixed",
+          "sequence": 9,
+          "navigationId": "decoder-val-mixed",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "DESKTOP_APP_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Preview",
+          "windowTitle": "두 자료가 함께 표시됨",
+          "pageTitle": "두 자료가 함께 표시됨",
+          "urlHost": "",
+          "text": "Masked self-attention은 causal mask로 미래 토큰을 가립니다. Transformer decoder는 다음 토큰을 순서대로 예측합니다.\n\n쇼핑몰 장바구니에서 신발 할인 상품을 비교합니다. 쿠폰과 배송비를 계산하고 구매할 상품과 사이즈를 고릅니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-val-low-ocr",
+      "goalKey": "decoder",
+      "expectedLabel": "UNCERTAIN",
+      "purpose": "판독 불가능한 캡처",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-decoder",
+          "runId": "run-graph-validation-decoder",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-val-low-ocr",
+          "sequence": 10,
+          "navigationId": "decoder-val-low-ocr",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "판독 불가능한 캡처",
+          "pageTitle": "판독 불가능한 캡처",
+          "urlHost": "validation.example.org",
+          "text": "masked self-attention causal mask 학습 자료로 보이지만 캡처 인식 품질이 매우 낮아 실제 본문이라고 신뢰할 수 없는 데이터입니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.2,
+            "captureStatus": "LOW_CONFIDENCE"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-inner-join",
+      "goalKey": "sql",
+      "expectedLabel": "RELATED",
+      "purpose": "일치하는 행 연결",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-inner-join",
+          "sequence": 11,
+          "navigationId": "sql-val-inner-join",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "일치하는 행 연결",
+          "pageTitle": "일치하는 행 연결",
+          "urlHost": "validation.example.org",
+          "text": "INNER JOIN은 두 테이블의 조인 조건에 맞는 행을 연결합니다. ON 절에 customer_id가 같은 조건을 쓰고 고객별 주문 목록을 조회합니다. 일대다 관계에서 결과 행이 여러 개 생기는 이유를 확인합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-group-having",
+      "goalKey": "sql",
+      "expectedLabel": "RELATED",
+      "purpose": "그룹의 집계 조건",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-group-having",
+          "sequence": 12,
+          "navigationId": "sql-val-group-having",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "DESKTOP_APP_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Preview",
+          "windowTitle": "그룹의 집계 조건",
+          "pageTitle": "그룹의 집계 조건",
+          "urlHost": "",
+          "text": "GROUP BY로 부서별 행을 묶고 HAVING COUNT(*) > 3 조건으로 그룹을 걸러냅니다. WHERE는 집계 전의 개별 행에 적용되고 HAVING은 집계 결과에 적용됩니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-aggregate",
+      "goalKey": "sql",
+      "expectedLabel": "RELATED",
+      "purpose": "주문 금액 집계",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-aggregate",
+          "sequence": 13,
+          "navigationId": "sql-val-aggregate",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_DOM",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "주문 금액 집계",
+          "pageTitle": "주문 금액 집계",
+          "urlHost": "validation.example.org",
+          "text": "SELECT customer_id, SUM(amount), COUNT(*) FROM orders GROUP BY customer_id; 고객 식별자별로 주문 금액의 합과 주문 건수를 계산합니다. AVG와 COUNT의 NULL 처리 차이도 확인합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-left-join-null",
+      "goalKey": "sql",
+      "expectedLabel": "RELATED",
+      "purpose": "매칭되지 않은 행",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-left-join-null",
+          "sequence": 14,
+          "navigationId": "sql-val-left-join-null",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "매칭되지 않은 행",
+          "pageTitle": "매칭되지 않은 행",
+          "urlHost": "validation.example.org",
+          "text": "LEFT JOIN은 왼쪽 테이블의 행을 보존합니다. 오른쪽에 매칭되는 행이 없으면 그 열은 NULL입니다. 조인 후 WHERE에서 오른쪽 열을 제한하면 일부 행이 사라지는 문제를 확인합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-keys",
+      "goalKey": "sql",
+      "expectedLabel": "RELATED",
+      "purpose": "조인 키의 관계",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-keys",
+          "sequence": 15,
+          "navigationId": "sql-val-keys",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "DESKTOP_APP_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Preview",
+          "windowTitle": "조인 키의 관계",
+          "pageTitle": "조인 키의 관계",
+          "urlHost": "",
+          "text": "Primary key와 foreign key 관계를 확인합니다. 기본키가 유일하지 않거나 외래키 관계를 잘못 연결하면 JOIN 결과의 중복 행이 증가합니다. 테이블 관계를 이해한 뒤 조인 조건을 점검합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-sport",
+      "goalKey": "sql",
+      "expectedLabel": "UNRELATED",
+      "purpose": "프로야구 경기 소식",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-sport",
+          "sequence": 16,
+          "navigationId": "sql-val-sport",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_DOM",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "프로야구 경기 소식",
+          "pageTitle": "프로야구 경기 소식",
+          "urlHost": "validation.example.org",
+          "text": "프로야구 경기의 득점 장면과 선수 타율을 확인합니다. 응원하는 팀의 순위와 다음 경기 일정을 찾아보고 스포츠 하이라이트 영상을 감상합니다. 데이터베이스 질의 예제는 없습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-cooking",
+      "goalKey": "sql",
+      "expectedLabel": "UNRELATED",
+      "purpose": "저녁 요리 준비",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-cooking",
+          "sequence": 17,
+          "navigationId": "sql-val-cooking",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "저녁 요리 준비",
+          "pageTitle": "저녁 요리 준비",
+          "urlHost": "validation.example.org",
+          "text": "요리 레시피를 보면서 파스타 재료를 준비합니다. 물을 끓이고 면을 삶는 조리 시간을 확인한 뒤 소스를 넣습니다. 음식의 간을 맞추고 완성한 요리를 접시에 담습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-loading",
+      "goalKey": "sql",
+      "expectedLabel": "UNCERTAIN",
+      "purpose": "불러오는 중",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-loading",
+          "sequence": 18,
+          "navigationId": "sql-val-loading",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "DESKTOP_APP_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Preview",
+          "windowTitle": "불러오는 중",
+          "pageTitle": "불러오는 중",
+          "urlHost": "",
+          "text": "잠시만 기다려 주세요.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-mixed",
+      "goalKey": "sql",
+      "expectedLabel": "UNCERTAIN",
+      "purpose": "실습과 다른 창",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-mixed",
+          "sequence": 19,
+          "navigationId": "sql-val-mixed",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_DOM",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "실습과 다른 창",
+          "pageTitle": "실습과 다른 창",
+          "urlHost": "validation.example.org",
+          "text": "GROUP BY와 HAVING을 사용하여 주문 행을 그룹별로 집계합니다. INNER JOIN으로 고객 테이블과 주문 테이블을 연결합니다.\n\n요리 레시피를 보며 파스타를 조리합니다. 음식 재료와 소스 비율을 확인하고 끓는 물에 면을 삶습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "sql-val-social",
+      "goalKey": "sql",
+      "expectedLabel": "UNRELATED",
+      "purpose": "실시간 소셜 피드",
+      "observations": [
+        {
+          "sessionId": "synthetic-graph-validation-sql",
+          "runId": "run-graph-validation-sql",
+          "goalId": "goal-graph-validation-sql",
+          "goalVersion": 1,
+          "clientRunId": "sql-val-social",
+          "sequence": 20,
+          "navigationId": "sql-val-social",
+          "observedAt": "2026-10-21T06:00:00Z",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "실시간 소셜 피드",
+          "pageTitle": "실시간 소셜 피드",
+          "urlHost": "validation.example.org",
+          "text": "소셜 미디어 피드에서 친구들의 일상 게시물을 둘러봅니다. 짧은 밈 영상을 반복 재생하고 댓글과 좋아요를 남깁니다. 새로운 SNS 알림을 열어 사진과 여행 이야기를 확인합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.94,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    }
+  ]
+}

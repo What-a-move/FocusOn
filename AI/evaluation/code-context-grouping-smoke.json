@@ -1,0 +1,1051 @@
+{
+  "createdAt": "2026-10-21T07:59:22.759928+00:00",
+  "synthetic": true,
+  "caseId": "decoder-06-causal-mask-code",
+  "goal": {
+    "goalId": "goal-transformer-decoder-1h",
+    "goalVersion": 1,
+    "text": "트랜스포머 디코더 공부",
+    "confirmed": true
+  },
+  "graphFingerprint": "556a166eb6e80c5553d5000143a0b81e8e67e848dcb9d47abba4a1f1ee5c2ab4",
+  "result": {
+    "session_id": "synthetic-transformer-decoder-1h",
+    "run_id": "run-transformer-decoder-1h",
+    "goal_id": "goal-transformer-decoder-1h",
+    "goal_version": 1,
+    "client_run_id": "decoder-06-causal-mask-code",
+    "sequence": 3,
+    "content_source": "CHROME_DOM",
+    "navigation_id": "decoder-nav-06",
+    "observed_at": "2026-10-21T05:24:00+00:00",
+    "extraction_status": "SUCCESS",
+    "analysis_status": "SUCCEEDED",
+    "relevance_label": "RELATED",
+    "reason_code": "GOAL_CONNECTED",
+    "evidence_ids": [
+      "passage-003",
+      "passage-004"
+    ],
+    "content_roles": [
+      "DIRECT"
+    ],
+    "quality_score": 1.0,
+    "content_hash": "42878ef7569ef8ec4502ed3d1382b05b61cafc23efb8c1dc85d03323f83e1694",
+    "cache_hit": false,
+    "analyzer_version": "school-hybrid-v6",
+    "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+    "policy_version": "school-experimental-v2",
+    "next_content_source": null
+  },
+  "embeddingRequests": [
+    {
+      "method": "POST",
+      "path": "/api/embed",
+      "inputCount": 13
+    },
+    {
+      "method": "POST",
+      "path": "/api/embed",
+      "inputCount": 5
+    }
+  ],
+  "httpStatuses": [
+    200,
+    200
+  ],
+  "elapsedSeconds": 7.583,
+  "diagnostics": {
+    "withoutGroup": {
+      "label": "UNCERTAIN",
+      "reason_code": "INSUFFICIENT_EVIDENCE",
+      "evidence_ids": [],
+      "roles": [],
+      "matches": [
+        {
+          "passage_id": "passage-001",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.3577768522924473,
+          "hybrid_score": 0.23255495399009077
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.5,
+          "cosine": 0.5490261389137726,
+          "hybrid_score": 0.5318669902939521
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.366271351450258,
+          "hybrid_score": 0.2380763784426677
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.45617558655023843,
+          "hybrid_score": 0.29651413125765497
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.4432187420273434,
+          "hybrid_score": 0.2880921823177732
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.42151962789523695,
+          "hybrid_score": 0.273987758131904
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.36816462056155946,
+          "hybrid_score": 0.23930700336501365
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.4104386633186007,
+          "hybrid_score": 0.26678513115709046
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.49652410737609004,
+          "hybrid_score": 0.32274066979445853
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.14657176745135447,
+          "hybrid_score": 0.09527164884338041
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.17930201301549556,
+          "hybrid_score": 0.11654630846007212
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.2644037749445067,
+          "hybrid_score": 0.17186245371392936
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.1312087791663493,
+          "hybrid_score": 0.08528570645812704
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.37055738626258505,
+          "hybrid_score": 0.2408623010706803
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5074330753010476,
+          "hybrid_score": 0.329831498945681
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.41233397834956964,
+          "hybrid_score": 0.2680170859272203
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.48476295318037504,
+          "hybrid_score": 0.3150959195672438
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5235322711208062,
+          "hybrid_score": 0.3402959762285241
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5339524684203963,
+          "hybrid_score": 0.3470691044732576
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.3838897729022699,
+          "hybrid_score": 0.24952835238647544
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.4512182579344127,
+          "hybrid_score": 0.29329186765736825
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.4739914506801206,
+          "hybrid_score": 0.3080944429420784
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.1976875129008394,
+          "hybrid_score": 0.12849688338554563
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.1910696815768396,
+          "hybrid_score": 0.12419529302494574
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.27155730773546977,
+          "hybrid_score": 0.17651225002805535
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.16586117829388547,
+          "hybrid_score": 0.10780976589102556
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5304766685849494,
+          "hybrid_score": 0.3448098345802171
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 1.0,
+          "cosine": 0.7693159376978083,
+          "hybrid_score": 0.8500553595035754
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5423161117515032,
+          "hybrid_score": 0.3525054726384771
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.589844442863744,
+          "hybrid_score": 0.38339888786143367
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.6059047691216652,
+          "hybrid_score": 0.3938380999290824
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5965577901969976,
+          "hybrid_score": 0.38776256362804845
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.4783387047518418,
+          "hybrid_score": 0.31092015808869716
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5252840818535004,
+          "hybrid_score": 0.3414346532047753
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.6391288913176013,
+          "hybrid_score": 0.4154337793564409
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.17692839947118522,
+          "hybrid_score": 0.11500345965627039
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.15419584772740028,
+          "hybrid_score": 0.10022730102281019
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.17012715762133526,
+          "hybrid_score": 0.11058265245386792
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.08004034859948687,
+          "hybrid_score": 0.05202622658966647
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.3621479003897807,
+          "hybrid_score": 0.23539613525335745
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.49181826182152893,
+          "hybrid_score": 0.3196818701839938
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.373988627388134,
+          "hybrid_score": 0.2430926078022871
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.4031522310766528,
+          "hybrid_score": 0.2620489501998243
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.4293455383639647,
+          "hybrid_score": 0.2790745999365771
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.45484726815350585,
+          "hybrid_score": 0.2956507242997788
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.35870432884183456,
+          "hybrid_score": 0.23315781374719247
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.39246960831694316,
+          "hybrid_score": 0.2551052454060131
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.44997248374880494,
+          "hybrid_score": 0.29248211443672323
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.0995800805428334,
+          "hybrid_score": 0.06472705235284172
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.06731875240956783,
+          "hybrid_score": 0.043757189066219095
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.13747104051029468,
+          "hybrid_score": 0.08935617633169154
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.09618495840922722,
+          "hybrid_score": 0.0625202229659977
+        }
+      ]
+    },
+    "withGroup": {
+      "label": "RELATED",
+      "reason_code": "GOAL_CONNECTED",
+      "evidence_ids": [
+        "passage-003",
+        "passage-004"
+      ],
+      "roles": [
+        "DIRECT"
+      ],
+      "matches": [
+        {
+          "passage_id": "passage-001",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.3577768522924473,
+          "hybrid_score": 0.23255495399009077
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.5,
+          "cosine": 0.5490261389137726,
+          "hybrid_score": 0.5318669902939521
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.366271351450258,
+          "hybrid_score": 0.2380763784426677
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.45617558655023843,
+          "hybrid_score": 0.29651413125765497
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.4432187420273434,
+          "hybrid_score": 0.2880921823177732
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.42151962789523695,
+          "hybrid_score": 0.273987758131904
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.36816462056155946,
+          "hybrid_score": 0.23930700336501365
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.4104386633186007,
+          "hybrid_score": 0.26678513115709046
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.49652410737609004,
+          "hybrid_score": 0.32274066979445853
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.14657176745135447,
+          "hybrid_score": 0.09527164884338041
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.17930201301549556,
+          "hybrid_score": 0.11654630846007212
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.2644037749445067,
+          "hybrid_score": 0.17186245371392936
+        },
+        {
+          "passage_id": "passage-001",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.1312087791663493,
+          "hybrid_score": 0.08528570645812704
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.37055738626258505,
+          "hybrid_score": 0.2408623010706803
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5074330753010476,
+          "hybrid_score": 0.329831498945681
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.41233397834956964,
+          "hybrid_score": 0.2680170859272203
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.48476295318037504,
+          "hybrid_score": 0.3150959195672438
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5235322711208062,
+          "hybrid_score": 0.3402959762285241
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5339524684203963,
+          "hybrid_score": 0.3470691044732576
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.3838897729022699,
+          "hybrid_score": 0.24952835238647544
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.4512182579344127,
+          "hybrid_score": 0.29329186765736825
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.4739914506801206,
+          "hybrid_score": 0.3080944429420784
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.1976875129008394,
+          "hybrid_score": 0.12849688338554563
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.1910696815768396,
+          "hybrid_score": 0.12419529302494574
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.27155730773546977,
+          "hybrid_score": 0.17651225002805535
+        },
+        {
+          "passage_id": "passage-002",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.16586117829388547,
+          "hybrid_score": 0.10780976589102556
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5304766685849494,
+          "hybrid_score": 0.3448098345802171
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 1.0,
+          "cosine": 0.7693159376978083,
+          "hybrid_score": 0.8500553595035754
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5423161117515032,
+          "hybrid_score": 0.3525054726384771
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.589844442863744,
+          "hybrid_score": 0.38339888786143367
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.6059047691216652,
+          "hybrid_score": 0.3938380999290824
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5965577901969976,
+          "hybrid_score": 0.38776256362804845
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.4783387047518418,
+          "hybrid_score": 0.31092015808869716
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5252840818535004,
+          "hybrid_score": 0.3414346532047753
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.6391288913176013,
+          "hybrid_score": 0.4154337793564409
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.17692839947118522,
+          "hybrid_score": 0.11500345965627039
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.15419584772740028,
+          "hybrid_score": 0.10022730102281019
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.17012715762133526,
+          "hybrid_score": 0.11058265245386792
+        },
+        {
+          "passage_id": "passage-003",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.08004034859948687,
+          "hybrid_score": 0.05202622658966647
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.3621479003897807,
+          "hybrid_score": 0.23539613525335745
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.49181826182152893,
+          "hybrid_score": 0.3196818701839938
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.373988627388134,
+          "hybrid_score": 0.2430926078022871
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.4031522310766528,
+          "hybrid_score": 0.2620489501998243
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.4293455383639647,
+          "hybrid_score": 0.2790745999365771
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.45484726815350585,
+          "hybrid_score": 0.2956507242997788
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.35870432884183456,
+          "hybrid_score": 0.23315781374719247
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.39246960831694316,
+          "hybrid_score": 0.2551052454060131
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.44997248374880494,
+          "hybrid_score": 0.29248211443672323
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.0995800805428334,
+          "hybrid_score": 0.06472705235284172
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.06731875240956783,
+          "hybrid_score": 0.043757189066219095
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.13747104051029468,
+          "hybrid_score": 0.08935617633169154
+        },
+        {
+          "passage_id": "passage-004",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.09618495840922722,
+          "hybrid_score": 0.0625202229659977
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "transformer_decoder",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.49918014872531036,
+          "hybrid_score": 0.32446709667145174
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "masked_self_attention",
+          "role": "DIRECT",
+          "keyword_score": 1.0,
+          "cosine": 0.7420543369561177,
+          "hybrid_score": 0.8323353190214764
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "decoder_block",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5070384236554771,
+          "hybrid_score": 0.3295749753760602
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "autoregressive_generation",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5659324483362265,
+          "hybrid_score": 0.3678560914185472
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "encoder_decoder_attention",
+          "role": "DIRECT",
+          "keyword_score": 0.0,
+          "cosine": 0.5849221828193486,
+          "hybrid_score": 0.38019941883257663
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "attention_mechanism",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5937636593524331,
+          "hybrid_score": 0.38594637857908154
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "tokenization_embeddings",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.45923026572073056,
+          "hybrid_score": 0.2984996727184749
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "positional_encoding",
+          "role": "PREREQUISITE",
+          "keyword_score": 0.0,
+          "cosine": 0.5138239306195099,
+          "hybrid_score": 0.33398555490268145
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "transformer_decoder_inspection",
+          "role": "SUPPORTING",
+          "keyword_score": 0.0,
+          "cosine": 0.6295128385763031,
+          "hybrid_score": 0.409183345074597
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "casual_gaming",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.15241364171469332,
+          "hybrid_score": 0.09906886711455067
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "movie_entertainment",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.11394640936537516,
+          "hybrid_score": 0.07406516608749386
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "shopping",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.15266562259722313,
+          "hybrid_score": 0.09923265468819505
+        },
+        {
+          "passage_id": "code-context:passage-003:passage-004",
+          "concept_id": "cooking",
+          "role": null,
+          "keyword_score": 0.0,
+          "cosine": 0.07152522782666575,
+          "hybrid_score": 0.046491398087332735
+        }
+      ]
+    },
+    "groups": [
+      {
+        "id": "code-context:passage-003:passage-004",
+        "sourceIds": [
+          "passage-003",
+          "passage-004"
+        ],
+        "chars": 276,
+        "utf8Bytes": 342
+      }
+    ],
+    "originalPassages": [
+      {
+        "id": "passage-001",
+        "kind": "TITLE",
+        "chars": 27
+      },
+      {
+        "id": "passage-002",
+        "kind": "HEADING",
+        "chars": 25
+      },
+      {
+        "id": "passage-003",
+        "kind": "BODY",
+        "chars": 100
+      },
+      {
+        "id": "passage-004",
+        "kind": "CODE",
+        "chars": 174
+      }
+    ]
+  },
+  "note": "One synthetic real-API smoke case; same vectors/config/graph for grouped and ungrouped decision. No graph generation or independent accuracy claim."
+}

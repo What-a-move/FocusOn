@@ -1,0 +1,913 @@
+{
+  "executedAt": "2026-10-22T10:27:22.721451+00:00",
+  "synthetic": true,
+  "inputFile": "AI/evaluation/querydsl-1h-cases.json",
+  "inputSha256": "8167399806c631a95d85757474e418d6aa67527e8e6c3ce87e87b769707f3791",
+  "goal": "QueryDSL로 검색 조건에 따라 JPA 동적 조회 쿼리 구현하기",
+  "config": {
+    "keyword_weight": 0.2,
+    "vector_weight": 0.8,
+    "related_passage_threshold": 0.6,
+    "unrelated_passage_threshold": 0.2,
+    "min_related_cosine": 0.55,
+    "related_coverage_threshold": 0.6,
+    "unrelated_coverage_threshold": 0.7,
+    "unrelated_min_body_chars": 80
+  },
+  "modelConfigured": "qwen3-embedding:4b-fp16",
+  "revisionConfigured": "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc",
+  "dimensionsConfigured": 2560,
+  "embeddingCalls": 12,
+  "totalSeconds": 4.951,
+  "matched": 7,
+  "cases": [
+    {
+      "caseId": "querydsl-00m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchedKeywords": [
+        "jpa",
+        "querydsl",
+        "쿼리"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 206,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [
+            "querydsl"
+          ],
+          "keywordScore": 0.125,
+          "cosine": 0.6251,
+          "hybridScore": 0.5251,
+          "charCount": 18,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "jpa",
+            "쿼리"
+          ],
+          "keywordScore": 0.375,
+          "cosine": 0.6434,
+          "hybridScore": 0.5897,
+          "charCount": 206,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.5897,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 1215.58,
+      "localMs": 2.35,
+      "embeddingCalls": 1,
+      "elapsedMs": 1217.93,
+      "matchesExpected": false
+    },
+    {
+      "caseId": "querydsl-05m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "RELATED",
+      "reasonCode": "RELATED_COVERAGE_MET",
+      "matchedKeywords": [
+        "querydsl",
+        "조회"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 1.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 210,
+      "relatedBodyChars": 210,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [
+            "querydsl",
+            "조회"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.6922,
+          "hybridScore": 0.6038,
+          "charCount": 19,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "조회"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.7258,
+          "hybridScore": 0.6307,
+          "charCount": 210,
+          "relatedEvidence": true,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.6307,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": null,
+      "cacheHit": false,
+      "embeddingMs": 278.39,
+      "localMs": 4.71,
+      "embeddingCalls": 1,
+      "elapsedMs": 283.11,
+      "matchesExpected": true
+    },
+    {
+      "caseId": "querydsl-10m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchedKeywords": [
+        "검색",
+        "따라"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 197,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.366,
+          "hybridScore": 0.2928,
+          "charCount": 18,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "검색",
+            "따라"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.4764,
+          "hybridScore": 0.4311,
+          "charCount": 197,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.4311,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 283.83,
+      "localMs": 6.64,
+      "embeddingCalls": 1,
+      "elapsedMs": 290.47,
+      "matchesExpected": false
+    },
+    {
+      "caseId": "querydsl-15m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "UNRELATED",
+      "relevanceLabel": "UNRELATED",
+      "reasonCode": "UNRELATED_COVERAGE_MET",
+      "matchedKeywords": [],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 1.0,
+      "totalBodyChars": 183,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 183,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1575,
+          "hybridScore": 0.126,
+          "charCount": 16,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.151,
+          "hybridScore": 0.1208,
+          "charCount": 183,
+          "relatedEvidence": false,
+          "unrelatedEvidence": true
+        }
+      ],
+      "score": 0.126,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": null,
+      "cacheHit": false,
+      "embeddingMs": 300.85,
+      "localMs": 5.81,
+      "embeddingCalls": 1,
+      "elapsedMs": 306.67,
+      "matchesExpected": true
+    },
+    {
+      "caseId": "querydsl-20m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "RELATED",
+      "reasonCode": "RELATED_COVERAGE_MET",
+      "matchedKeywords": [
+        "querydsl",
+        "검색",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 1.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 213,
+      "relatedBodyChars": 213,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [
+            "querydsl",
+            "검색",
+            "동적"
+          ],
+          "keywordScore": 0.375,
+          "cosine": 0.7123,
+          "hybridScore": 0.6448,
+          "charCount": 30,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "검색",
+            "조회",
+            "쿼리"
+          ],
+          "keywordScore": 0.5,
+          "cosine": 0.7034,
+          "hybridScore": 0.6627,
+          "charCount": 213,
+          "relatedEvidence": true,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.6627,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": null,
+      "cacheHit": false,
+      "embeddingMs": 351.95,
+      "localMs": 5.17,
+      "embeddingCalls": 1,
+      "elapsedMs": 357.12,
+      "matchesExpected": true
+    },
+    {
+      "caseId": "querydsl-25m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "UNCERTAIN",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "CONFLICTING_EVIDENCE",
+      "matchedKeywords": [
+        "querydsl",
+        "검색"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.5154,
+      "unrelatedCoverage": 0.4846,
+      "totalBodyChars": 293,
+      "relatedBodyChars": 151,
+      "unrelatedBodyChars": 142,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1318,
+          "hybridScore": 0.1055,
+          "charCount": 15,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "검색"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.7455,
+          "hybridScore": 0.6464,
+          "charCount": 151,
+          "relatedEvidence": true,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-003",
+          "sourceIds": [
+            "passage-003"
+          ],
+          "kind": "BODY",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1399,
+          "hybridScore": 0.112,
+          "charCount": 142,
+          "relatedEvidence": false,
+          "unrelatedEvidence": true
+        }
+      ],
+      "score": 0.6464,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 336.78,
+      "localMs": 4.78,
+      "embeddingCalls": 1,
+      "elapsedMs": 341.56,
+      "matchesExpected": true
+    },
+    {
+      "caseId": "querydsl-30m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchedKeywords": [
+        "querydsl",
+        "검색",
+        "조회"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 194,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [
+            "querydsl"
+          ],
+          "keywordScore": 0.125,
+          "cosine": 0.5768,
+          "hybridScore": 0.4864,
+          "charCount": 18,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "검색",
+            "조회"
+          ],
+          "keywordScore": 0.375,
+          "cosine": 0.5676,
+          "hybridScore": 0.5291,
+          "charCount": 194,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.5291,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 287.13,
+      "localMs": 5.08,
+      "embeddingCalls": 1,
+      "elapsedMs": 292.22,
+      "matchesExpected": false
+    },
+    {
+      "caseId": "querydsl-35m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "UNRELATED",
+      "relevanceLabel": "UNRELATED",
+      "reasonCode": "UNRELATED_COVERAGE_MET",
+      "matchedKeywords": [],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 1.0,
+      "totalBodyChars": 175,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 175,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1511,
+          "hybridScore": 0.1208,
+          "charCount": 15,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1809,
+          "hybridScore": 0.1448,
+          "charCount": 175,
+          "relatedEvidence": false,
+          "unrelatedEvidence": true
+        }
+      ],
+      "score": 0.1448,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": null,
+      "cacheHit": false,
+      "embeddingMs": 290.82,
+      "localMs": 2.2,
+      "embeddingCalls": 1,
+      "elapsedMs": 293.02,
+      "matchesExpected": true
+    },
+    {
+      "caseId": "querydsl-40m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchedKeywords": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "조회"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 196,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [
+            "querydsl",
+            "조회"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.5925,
+          "hybridScore": 0.524,
+          "charCount": 19,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "검색",
+            "조건에",
+            "조회"
+          ],
+          "keywordScore": 0.5,
+          "cosine": 0.5685,
+          "hybridScore": 0.5548,
+          "charCount": 196,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.5548,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 274.59,
+      "localMs": 2.06,
+      "embeddingCalls": 1,
+      "elapsedMs": 276.66,
+      "matchesExpected": false
+    },
+    {
+      "caseId": "querydsl-45m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "RELATED",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchedKeywords": [
+        "querydsl",
+        "검색"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 185,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [
+            "querydsl",
+            "검색"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.685,
+          "hybridScore": 0.598,
+          "charCount": 21,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "검색"
+          ],
+          "keywordScore": 0.25,
+          "cosine": 0.6513,
+          "hybridScore": 0.5711,
+          "charCount": 185,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.598,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 281.09,
+      "localMs": 3.95,
+      "embeddingCalls": 1,
+      "elapsedMs": 285.04,
+      "matchesExpected": false
+    },
+    {
+      "caseId": "querydsl-50m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "UNRELATED",
+      "relevanceLabel": "UNRELATED",
+      "reasonCode": "UNRELATED_COVERAGE_MET",
+      "matchedKeywords": [],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.0,
+      "unrelatedCoverage": 1.0,
+      "totalBodyChars": 181,
+      "relatedBodyChars": 0,
+      "unrelatedBodyChars": 181,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1422,
+          "hybridScore": 0.1138,
+          "charCount": 14,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1393,
+          "hybridScore": 0.1115,
+          "charCount": 181,
+          "relatedEvidence": false,
+          "unrelatedEvidence": true
+        }
+      ],
+      "score": 0.1138,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": null,
+      "cacheHit": false,
+      "embeddingMs": 303.46,
+      "localMs": 5.21,
+      "embeddingCalls": 1,
+      "elapsedMs": 308.67,
+      "matchesExpected": true
+    },
+    {
+      "caseId": "querydsl-55m",
+      "method": "graphless",
+      "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
+      "status": "COMPLETED",
+      "expectedLabel": "UNCERTAIN",
+      "relevanceLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchedKeywords": [
+        "querydsl",
+        "검색",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "keywordTerms": [
+        "querydsl",
+        "검색",
+        "조건에",
+        "따라",
+        "jpa",
+        "동적",
+        "조회",
+        "쿼리"
+      ],
+      "relatedCoverage": 0.5106,
+      "unrelatedCoverage": 0.0,
+      "totalBodyChars": 284,
+      "relatedBodyChars": 145,
+      "unrelatedBodyChars": 0,
+      "matches": [
+        {
+          "passageId": "passage-001",
+          "sourceIds": [
+            "passage-001"
+          ],
+          "kind": "TITLE",
+          "keywordHits": [],
+          "keywordScore": 0.0,
+          "cosine": 0.1196,
+          "hybridScore": 0.0957,
+          "charCount": 19,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-002",
+          "sourceIds": [
+            "passage-002"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "querydsl",
+            "검색",
+            "동적",
+            "조회",
+            "쿼리"
+          ],
+          "keywordScore": 0.625,
+          "cosine": 0.8064,
+          "hybridScore": 0.7701,
+          "charCount": 145,
+          "relatedEvidence": true,
+          "unrelatedEvidence": false
+        },
+        {
+          "passageId": "passage-003",
+          "sourceIds": [
+            "passage-003"
+          ],
+          "kind": "BODY",
+          "keywordHits": [
+            "검색"
+          ],
+          "keywordScore": 0.125,
+          "cosine": 0.1427,
+          "hybridScore": 0.1392,
+          "charCount": 139,
+          "relatedEvidence": false,
+          "unrelatedEvidence": false
+        }
+      ],
+      "score": 0.7701,
+      "scoreType": "문단별 키워드·코사인 결합 점수",
+      "nextContentSource": "CHROME_VIEWPORT_OCR",
+      "cacheHit": false,
+      "embeddingMs": 664.74,
+      "localMs": 7.88,
+      "embeddingCalls": 1,
+      "elapsedMs": 672.61,
+      "matchesExpected": true
+    }
+  ]
+}

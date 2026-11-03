@@ -1,0 +1,46 @@
+{
+  "request": {
+    "sessionId": "session-demo",
+    "clientRunId": "cc3a11f9-3d96-42de-bc10-b8fcaaea4e37",
+    "observedAt": "2026-10-29T01:00:00Z",
+    "sequence": 1,
+    "contentSource": "CHROME_DOM",
+    "goalSnapshot": "JWT 인증 구현",
+    "guardStatus": null,
+    "metadata": {
+      "appName": "Google Chrome",
+      "windowTitle": null,
+      "pageTitle": "JWT 서명 검증",
+      "urlHost": "example.com"
+    },
+    "contentPayload": {
+      "text": "JWT 서명을 검증하고 토큰의 만료 시간을 확인합니다."
+    }
+  },
+  "goal": {
+    "goalId": "goal-demo",
+    "goalVersion": 1,
+    "text": "JWT 인증 구현",
+    "confirmed": true
+  },
+  "context": {
+    "userId": "user-demo",
+    "sessionId": "session-demo",
+    "runId": "run-demo",
+    "goalId": "goal-demo",
+    "goalVersion": 1,
+    "clientRunId": "cc3a11f9-3d96-42de-bc10-b8fcaaea4e37",
+    "sequence": 1,
+    "navigationId": "nav-demo",
+    "observedAt": "2026-10-29T01:00:00Z",
+    "contentSource": "CHROME_DOM",
+    "isActiveTarget": true,
+    "sessionStatus": "RUNNING",
+    "exclusionMode": "NONE",
+    "resumeRequired": false,
+    "policyVersion": "v1",
+    "extractorVersion": "client-v1",
+    "stateVersion": 1
+  },
+  "extractionStatus": "SUCCESS"
+}

@@ -1,0 +1,512 @@
+{
+  "version": "transformer-decoder-1h-v1",
+  "synthetic": true,
+  "annotationStatus": "Provisional expected labels authored before model execution; independent user review pending",
+  "simulation": {
+    "durationMinutes": 60,
+    "observationCount": 14,
+    "note": "One authored observation per virtual interval; no one-hour sleep, real screen capture, or notification policy evaluation"
+  },
+  "goal": {
+    "goalId": "goal-transformer-decoder-1h",
+    "goalVersion": 1,
+    "text": "트랜스포머 디코더 공부",
+    "confirmed": true
+  },
+  "cases": [
+    {
+      "caseId": "decoder-01-decoder-structure",
+      "startMinute": 0,
+      "endMinute": 5,
+      "activity": "Transformer Decoder 구조 정리",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더의 직접 구성 요소를 공부하는 화면이다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-01-decoder-structure",
+          "sequence": 1,
+          "navigationId": "decoder-nav-01",
+          "observedAt": "2026-10-21T05:00:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "Transformer Decoder 구조 정리",
+          "pageTitle": "Transformer Decoder 구조 정리",
+          "urlHost": "study.example.org",
+          "text": "## 디코더 블록의 구성\n\nTransformer decoder는 이전 토큰을 참고해 다음 토큰의 분포를 계산합니다. 원래의 encoder-decoder 구조에는 masked self-attention, encoder-decoder cross-attention, position-wise feed-forward network가 있습니다.\n\n각 부분에는 residual connection과 layer normalization이 사용됩니다. 디코더 전용 언어 모델에서는 encoder 출력을 받는 cross-attention을 생략하는 구성이 일반적입니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-02-masked-self-attention",
+      "startMinute": 5,
+      "endMinute": 10,
+      "activity": "미래 토큰을 가리는 causal mask",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더의 인과적 자기주의와 미래 토큰 차단을 설명한다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-02-masked-self-attention",
+          "sequence": 1,
+          "navigationId": "decoder-nav-02",
+          "observedAt": "2026-10-21T05:05:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "미래 토큰을 가리는 causal mask",
+          "pageTitle": "미래 토큰을 가리는 causal mask",
+          "urlHost": "study.example.org",
+          "text": "디코더의 masked self-attention\n현재 위치의 토큰은 현재와 이전 위치만 볼 수 있습니다.\n미래 위치의 attention score를 마스킹한 뒤 softmax를 계산합니다.\n이 causal mask는 정답 토큰의 뒷부분을 미리 보는 것을 막습니다.\n추론할 때는 이미 생성한 토큰을 바탕으로 다음 토큰을 생성합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-03-attention-prerequisite",
+      "startMinute": 10,
+      "endMinute": 14,
+      "activity": "Scaled dot-product attention의 Q K V",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 자기주의를 이해하는 데 필요한 선수 개념이다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-03-attention-prerequisite",
+          "sequence": 2,
+          "navigationId": "decoder-nav-03",
+          "observedAt": "2026-10-21T05:10:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "Scaled dot-product attention의 Q K V",
+          "pageTitle": "Scaled dot-product attention의 Q K V",
+          "urlHost": "study.example.org",
+          "text": "## Query, Key, Value\n\nScaled dot-product attention은 query와 key의 내적으로 유사한 위치를 찾고, 점수를 key 차원의 제곱근으로 나눈 뒤 softmax를 적용합니다.\n\n그 가중치로 value를 가중합합니다. Multi-head attention은 여러 head에서 이 연산을 수행하고 결과를 결합합니다. 각 head는 서로 다른 위치 관계를 표현할 수 있습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-04-gaming-video",
+      "startMinute": 14,
+      "endMinute": 18,
+      "activity": "게임 랭크전 하이라이트",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "게임 플레이 영상과 공략을 보고 있으며 디코더 학습 내용이 없다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-04-gaming-video",
+          "sequence": 2,
+          "navigationId": "decoder-nav-04",
+          "observedAt": "2026-10-21T05:14:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "게임 랭크전 하이라이트",
+          "pageTitle": "게임 랭크전 하이라이트",
+          "urlHost": "activity.example.org",
+          "text": "리그 오브 레전드 랭크전 하이라이트\n이번 영상은 정글 동선과 한타 장면을 모았습니다.\n초반 갱킹으로 골드를 확보하고 아이템을 완성하는 과정을 보여 줍니다.\n다음 판에 사용할 챔피언 조합과 추천 룬도 확인합니다.\n좋아하는 게임 선수의 플레이를 반복해서 감상하고 있습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-05-cross-attention",
+      "startMinute": 18,
+      "endMinute": 24,
+      "activity": "인코더 출력을 읽는 디코더",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "원래 Transformer 디코더의 cross-attention을 공부한다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-05-cross-attention",
+          "sequence": 1,
+          "navigationId": "decoder-nav-05",
+          "observedAt": "2026-10-21T05:18:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "인코더 출력을 읽는 디코더",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "Encoder-decoder cross-attention\n디코더의 hidden state에서 Query를 만들고\n인코더 출력에서 Key와 Value를 가져옵니다.\n이를 통해 다음 단어를 예측할 때 입력 문장의 정보를 참고합니다.\n자기주의는 디코더 토큰 사이의 관계를 보고,\ncross-attention은 인코더가 만든 표현을 조회한다는 차이가 있습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-06-causal-mask-code",
+      "startMinute": 24,
+      "endMinute": 28,
+      "activity": "PyTorch에서 causal mask 연산 확인",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 attention의 미래 위치 마스킹을 구현·점검하는 코드이다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-06-causal-mask-code",
+          "sequence": 3,
+          "navigationId": "decoder-nav-06",
+          "observedAt": "2026-10-21T05:24:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "PyTorch에서 causal mask 연산 확인",
+          "pageTitle": "PyTorch에서 causal mask 연산 확인",
+          "urlHost": "study.example.org",
+          "text": "## Causal attention 구현 메모\n\n디코더의 causal mask는 미래 위치의 score를 차단합니다. Query, Key, Value로 masked self-attention을 계산하는 흐름을 코드로 점검합니다.\n\n```python\nscores = Q @ K.transpose(-2, -1) / sqrt(d_k)\nscores = scores.masked_fill(future_positions, float('-inf'))\nweights = softmax(scores, dim=-1)\noutput = weights @ V\n```",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-07-transformers-movie",
+      "startMinute": 28,
+      "endMinute": 31,
+      "activity": "트랜스포머 영화 예고편 감상",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "같은 단어가 등장하지만 영화 감상이며 신경망 디코더 학습이 아니다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-07-transformers-movie",
+          "sequence": 2,
+          "navigationId": "decoder-nav-07",
+          "observedAt": "2026-10-21T05:28:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "QuickTime Player",
+          "windowTitle": "트랜스포머 영화 예고편 감상",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "트랜스포머 영화 예고편\n옵티머스 프라임과 범블비가 등장하는 액션 장면을 감상합니다.\n새로운 자동차 로봇 디자인과 전투 장면이 소개됩니다.\n이번 주 상영 시간과 영화 관람 후기를 찾아보고 있습니다.\n등장인물의 대사와 배경 음악을 즐기는 영화 콘텐츠입니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-08-kv-cache",
+      "startMinute": 31,
+      "endMinute": 36,
+      "activity": "자기회귀 생성에서 KV cache 재사용",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 추론 과정과 attention 재계산을 이해하기 위한 보조 학습이다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-08-kv-cache",
+          "sequence": 4,
+          "navigationId": "decoder-nav-08",
+          "observedAt": "2026-10-21T05:31:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "자기회귀 생성에서 KV cache 재사용",
+          "pageTitle": "자기회귀 생성에서 KV cache 재사용",
+          "urlHost": "study.example.org",
+          "text": "## 디코더 추론과 KV cache\n\nAutoregressive decoding은 이미 생성한 토큰 뒤에 다음 토큰을 하나씩 덧붙입니다. 매번 과거 토큰의 Key와 Value를 다시 계산하는 비용을 줄이기 위해 KV cache를 사용합니다.\n\n새 토큰의 Query는 저장된 과거 Key와 Value를 참고합니다. 캐시에는 계산된 표현을 보관하며, 다음 토큰을 생성할 때 이를 재사용합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-09-shopping",
+      "startMinute": 36,
+      "endMinute": 40,
+      "activity": "겨울 옷 할인 상품 비교",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "의류 쇼핑 화면이며 학습 목표와 관련된 내용이 없다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-09-shopping",
+          "sequence": 3,
+          "navigationId": "decoder-nav-09",
+          "observedAt": "2026-10-21T05:36:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "겨울 옷 할인 상품 비교",
+          "pageTitle": "겨울 옷 할인 상품 비교",
+          "urlHost": "activity.example.org",
+          "text": "겨울 패딩 할인 행사\n다운 재킷과 후드티의 가격 및 배송비를 비교합니다.\n색상은 검정과 회색 중에서 고르고 사이즈표를 확인합니다.\n구매 후기에는 착용감과 보온성에 대한 평가가 있습니다.\n할인 쿠폰을 적용한 최종 결제 금액과 반품 조건을 살펴보고 있습니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-10-next-token-training",
+      "startMinute": 40,
+      "endMinute": 45,
+      "activity": "다음 토큰 예측과 teacher forcing",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 학습 입력과 출력 분포·손실 계산을 설명한다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-10-next-token-training",
+          "sequence": 5,
+          "navigationId": "decoder-nav-10",
+          "observedAt": "2026-10-21T05:40:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "다음 토큰 예측과 teacher forcing",
+          "pageTitle": "다음 토큰 예측과 teacher forcing",
+          "urlHost": "study.example.org",
+          "text": "## 다음 토큰 분포 학습\n\n디코더의 마지막 hidden state를 vocabulary 크기의 logits로 변환합니다. Softmax를 통해 다음 토큰에 대한 분포를 얻고 정답 토큰과 cross-entropy loss를 계산합니다.\n\nTeacher forcing에서는 정답 시퀀스의 앞부분을 입력으로 주고 한 위치 뒤의 토큰을 예측하도록 학습합니다. 미래 위치의 정보를 보지 않도록 causal mask를 함께 적용합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-11-mixed-screen",
+      "startMinute": 45,
+      "endMinute": 49,
+      "activity": "학습 자료와 게임 추천이 섞인 화면",
+      "expectedLabel": "UNCERTAIN",
+      "expectedRationale": "학습 내용과 게임 내용이 함께 있어 현재 활동의 주제를 단정하기 어렵다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-11-mixed-screen",
+          "sequence": 4,
+          "navigationId": "decoder-nav-11",
+          "observedAt": "2026-10-21T05:45:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "학습 자료와 게임 추천이 섞인 화면",
+          "pageTitle": "학습 자료와 게임 추천이 섞인 화면",
+          "urlHost": "activity.example.org",
+          "text": "디코더 학습 메모\nMasked self-attention은 미래 토큰을 가립니다.\nCross-attention은 인코더의 출력 표현을 조회합니다.\n디코더는 이전 토큰을 보고 다음 토큰 분포를 계산합니다.\n\n오늘의 게임 추천 영상\n리그 오브 레전드 랭크전과 챔피언 공략을 확인합니다.\n프로게이머의 한타 하이라이트와 추천 아이템을 감상합니다.\n새로운 게임 업데이트와 다음 경기 일정을 찾아봅니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-12-loading-screen",
+      "startMinute": 49,
+      "endMinute": 52,
+      "activity": "자료를 여는 중",
+      "expectedLabel": "UNCERTAIN",
+      "expectedRationale": "읽힌 글자가 로딩 안내뿐이라 관련·무관을 판단할 근거가 부족하다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-12-loading-screen",
+          "sequence": 3,
+          "navigationId": "decoder-nav-12",
+          "observedAt": "2026-10-21T05:49:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "자료를 여는 중",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "자료를 불러오는 중\n잠시만 기다려 주세요",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-13-cooking",
+      "startMinute": 52,
+      "endMinute": 56,
+      "activity": "김치볶음밥 레시피 찾아보기",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "음식 조리법을 찾아보는 화면이며 디코더 학습과 무관하다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-13-cooking",
+          "sequence": 6,
+          "navigationId": "decoder-nav-13",
+          "observedAt": "2026-10-21T05:52:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "김치볶음밥 레시피 찾아보기",
+          "pageTitle": "김치볶음밥 레시피 찾아보기",
+          "urlHost": "activity.example.org",
+          "text": "## 김치볶음밥 만들기\n\n김치볶음밥 요리에 필요한 재료는 밥, 김치, 달걀, 대파입니다. 레시피에 따라 대파를 먼저 볶은 뒤 김치를 넣고 조리합니다.\n\n밥을 넣어 골고루 섞고 간장으로 간을 맞춥니다. 마지막으로 달걀 프라이를 올리며, 기호에 따라 참기름과 김가루를 추가합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ]
+    },
+    {
+      "caseId": "decoder-14-decoder-review",
+      "startMinute": 56,
+      "endMinute": 60,
+      "activity": "디코더 구성과 생성 과정 복습",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "처음의 학습 목표로 복귀해 디코더 핵심 개념을 정리한다.",
+      "observations": [
+        {
+          "sessionId": "synthetic-transformer-decoder-1h",
+          "runId": "run-transformer-decoder-1h",
+          "goalId": "goal-transformer-decoder-1h",
+          "goalVersion": 1,
+          "clientRunId": "decoder-14-decoder-review",
+          "sequence": 4,
+          "navigationId": "decoder-nav-14",
+          "observedAt": "2026-10-21T05:56:00Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "디코더 구성과 생성 과정 복습",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "트랜스포머 디코더 복습\nMasked self-attention은 미래 위치를 가린 상태로 토큰 사이의 관계를 계산합니다.\n원래의 encoder-decoder 모델에서는 cross-attention으로 인코더 출력을 참고합니다.\nFeed-forward network는 각 위치의 표현을 변환하고 residual connection과 layer normalization을 사용합니다.\n마지막 출력으로 다음 토큰을 예측하며 자기회귀적으로 생성을 반복합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    }
+  ]
+}
