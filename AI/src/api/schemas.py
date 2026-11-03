@@ -55,7 +55,7 @@ class Observation(InternalSchema):
     goal_id: Identifier = Field(alias="goalId")
     goal_version: Annotated[int, Field(ge=1)] = Field(alias="goalVersion")
     client_run_id: Identifier = Field(alias="clientRunId")
-    sequence: Annotated[int, Field(ge=0)] = Field(alias="sequence")
+    sequence: Annotated[int, Field(ge=1)] = Field(alias="sequence")
     navigation_id: Identifier = Field(alias="navigationId")
     observed_at: datetime = Field(alias="observedAt")
     content_source: ContentSource = Field(alias="contentSource")

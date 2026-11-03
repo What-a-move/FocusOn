@@ -1,87 +1,39 @@
 # AI 다음 작업
 
-> AI 담당자는 작업 시작 전에 이 문서를 확인하고, 작업 종료 후 다음 작업을 갱신한다.
+- 2026-11-03 실험 분석 API `POST /internal/v1/analysis-runs/analyze` 연결. candidateDecision은 미보정 후보, decision은 보정 confidence가 없어 UNCERTAIN이다. 실제 Qwen DNS/연결, Backend 내부 응답 계약, confidence 독립 보정과 왕복 검증이 남았다. [결과](features/fastapi-relevance-analysis-REPORT.md).
+
+Streamlit UI는 2026-11-03 제거했다. Hybrid runner는 `evaluation/analysis_runner.py`에 유지한다.
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: MVP 분석 계약 리뷰 및 Issue #12 코드와 후속 관련성 구현의 정합성 확인
-- 담당 영역: AI
-- 우선순위: 높음
-- 상태: Issue #16 문서 계약 반영, 팀 승인·구현 검증 전
+- 작업명: 화면 분석 입력 계약을 실제 Server 경로에 연결하고 OCR 품질 필드 전달을 합의한다.
+- 담당 영역: AI + Server + Desktop/Extension 계약 담당자
+- 상태: AI Adapter와 내부 FastAPI 수신·검증 구현(2026-10-29). 분석 실행·실제 Backend 왕복은 미연결. `features/fastapi-reception-REPORT.md` 참고.
 
-## 작업 목적
+## 현재 계약 기준
 
-Server와 AI 사이 호출 경로·Schema·상태 투영을 확정하고 Issue #12의 목표 보조 Branch와 문서 계약을 비교한다. 관련성·카메라 분석은 아직 구현되지 않았으므로 문서의 MVP 정책을 코드 완료로 표현하지 않는다.
+Client → Server 요청은 `packages/shared-types/src/index.ts`의 `AnalysisRunRequest`를 따른다. 본문은 `clientRunId`, `contentSource`, `observedAt`, `sequence`(세션·출처별 1부터 증가), `guardStatus`(필수 nullable), 선택 `metadata`, 선택 `contentPayload.text`다. `sessionId`는 URL path에 있다.
 
-## 선행 조건
+Server → AI에서는 인증된 세션·목표·실행 문맥을 조회해 `VerifiedContext`와 확정 목표를 함께 제공해야 한다. Client가 보내지 않는 `runId`, `goalId`, `goalVersion`, `navigationId`, `isActiveTarget`, `sessionStatus`, `exclusionMode`를 Client JSON에 임의로 추가하지 않는다.
 
-- 루트 `docs/API_CONTRACT.md` 확인
-- `DEVELOPMENT_RULES.md`, `state_model.md`, `data_lifecycle.md`, `evaluation_spec.md` 확인
-- `goal_session_spec.md`의 식별자·회차·멱등·시간 집계 경계 확인
-- `content_acquisition_spec.md`의 AI 입력과 비분석 상태 계약 확인
-- `focus_session_agent_spec.md`, `feedback_personalization_spec.md`, `session_note_spec.md`는 후속 구현 경계로 사용
-- Desktop·Extension에서 전달할 최소 데이터 확인
-- Server의 AI 요청·결과 저장 범위 확인
-- 원본 화면·카메라 영상 미저장 원칙 확인
-- Chrome DOM·Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로, AI 서버의 원본 이미지 비수신 경계 확인
-- Chrome Extension 내부 OCR과 macOS Desktop Apple Vision OCR 경로를 분리 확인
-- 목표 보조 4개 `decision`, 최대 2회 질문·수동 확정 경로 확인
-- `EXCLUDED`와 `PRIVACY_BLOCKED`, `sessionStatus` 계약 확인
-- AI 내부 라벨과 제품 표시 라벨 매핑 확인
-- 개인화 휴식의 최근 7일 규칙과 카메라 비필수 경로 확인
-- ColPali는 기본 서버 구조에 바로 포함하지 않고 별도 PoC·평가로 분리
-- 목표 입력 2~40자·대화당 질문 최대 2회·복수 목표 단일 선택을 #12 구현과 비교
-- `text`·`ocr` 전달, AI 전처리 `qualityScore`·`contentHash`, Backend 검토 9개 컬럼 합의
+## 남은 작업
 
-## 예상 작업 순서
+1. Server가 공개 요청을 검증하고 현재 `VerifiedContext`·확정 목표를 조립해 AI Adapter에 연결한다.
+   - `POST /internal/v1/analysis-runs`의 내부 envelope와 서비스 Bearer 키를 합의한다. 이후 실제 분석 실행·공개 판정 응답을 연결한다. 현재 수신 확인 `RECEIVED`는 관련성 라벨이 아니다.
+2. `extractionStatus`와 Desktop OCR의 `ocr.confidence`·`captureStatus`를 Server → AI에서 어디에 전달할지 합의한다. 공개 Client 요청 타입에는 현재 이 필드가 없다.
+3. Server가 제공하는 `navigationId`가 실제 탭/창 이동을 구분하는지, AI에 계속 제공할지 확인한다.
+4. Server/AI 결과 연결에서 `RELATED`·`UNRELATED`·`UNCERTAIN`, `reasonCode`, stale 관측, 중복 요청, 순서 역전 및 모델 실패를 통합 검증한다.
+5. 독립 검수 자료로 판정 confidence를 보정한다. 보정 전 cosine/Hybrid 점수나 OCR 품질을 판정 confidence로 사용하지 않는다.
 
-1. 현재 공개 관련성 경로 `/api/v1/sessions/{sessionId}/analysis-runs`와 내부 AI 경계를 Server·Client 담당자와 확정한다. Notion `POST /api/v1/goals/clarify`의 네 판정값·최대 2회 질문·장애 시 수동 확정도 확인한다. `/api/v1/feedback`은 공개 MVP 경로가 없는 후속 제안으로 유지한다.
-2. AI 내부 라벨과 제품 표시 라벨, 기존 `FocusState` 호환 전략을 공유 타입 담당자와 확정한다.
-3. `goalId`, `sessionId`, `eventId`, `navigationId`와 `sessionStatus`, `analysisStatus`의 필수 범위를 확인한다.
-4. 목표 보조 4개 판정값과 AI 장애 시 직접 목표 확정 경로를 확인한다.
-5. FastAPI, Pydantic, pytest와 서비스 인증·설정 주입 방식을 확정한다.
-6. Health Check, 공통 성공·실패 envelope, Schema 검증 테스트를 구현한다.
-7. 로그에 원문·비밀 값이 남지 않는지 검사한다.
-8. 관련성 분석, Agent, 화면 판정 피드백, 노트, ColPali PoC를 별도 Issue로 진행한다. 화면 판정 피드백과 ColPali는 MVP에 포함하지 않는다.
+## 현재 검증 결과와 제한
 
-## 이후 작업 후보
+- `PYTHONPATH=AI:. python3 -m pytest AI/tests/test_screen_analysis_contract.py -q`: 47 passed.
+- `AI/tests/test_graphless_hybrid.py`, `AI/tests/test_graphless_metadata.py`를 제외한 AI 회귀: 158 passed, 1 skipped, 16 subtests passed.
+- 전체 회귀 실행 시 현재 Python 환경에 `kiwipiepy==0.23.1`이 없어 Kiwi 의존 평가 테스트 75건이 실행되지 못했다. 네트워크 제한으로 임시 설치도 완료하지 못했다.
+- 실제 Qwen 임베딩 요청, 공개 Server endpoint, Client 캡처/OCR 왕복은 검증하지 않았다.
 
-- 팀원 보고 120건 Hybrid 평가의 사례·정답·예측·클래스별 지표·결합식·재현 코드를 받아 독립 holdout과 지연·비용을 검증한다. 현재 결과를 배포 성능으로 표현하지 않는다.
-- 화면 `UNRELATED`와 시간 기반 `driftState`를 분리하고, `RELATED` 초기화·`UNCERTAIN` 비누적 및 연속 구간 종료·15초 미만 제외와 `analysis_rules.md` 9.1의 정책 `v1` 연속/반복 OR 조건을 계약 테스트한다. 임계값 숫자와 실제 개입 판정은 Server가 관리한다.
-- 카메라 60초 후보·90초 최종 게이트, 최신 화면 `RELATED` 억제, `EXCLUDED`/`PRIVACY_BLOCKED` 분기를 통합 테스트한다.
+## 선행 문서
 
-- Server 관련성 분석 요청·결과 저장 연동
-- Chrome 내부 OCR·Desktop Apple Vision OCR 왕복 PoC와 실패 경로 검증
-- ColPali 시각 콘텐츠 기준선 비교 PoC
-- 페이지 이동·체류 시간 기반 학습 흐름·목표 이탈 분석
-- MediaPipe 얼굴·시선·자세 상태값 보조 분석
-- YouTube 자막·PDF 추출 텍스트 연동
-- 평가 자동화와 모델·Prompt Version 관리
-
-## 완료 조건
-
-- [ ] 기능 기획서를 작성했다.
-- [ ] 입력·출력 계약을 공유했다.
-- [ ] Health Check와 공통 응답 Schema가 동작한다.
-- [ ] 다중 상태 또는 호환 상태 계약이 문서와 Schema에서 일치한다.
-- [ ] 상세 분석기·모델 없이도 테스트가 실행된다.
-- [ ] 개인정보·민감 데이터 제외 기준을 확인했다.
-- [ ] 실행 명령과 의존성을 문서화했다.
-- [ ] 결과 리포트를 작성했다.
-
-## 작업 시작 전 확인
-
-- [ ] `CONTEXT.md`를 읽었다.
-- [ ] `DEVELOPMENT_RULES.md`와 적용 Rule ID를 확인했다.
-- [ ] `DECISION_RECORD.md`를 읽었다.
-- [ ] 관련 기능의 `*-PLAN.md`를 확인했다.
-- [ ] Desktop·Extension·Server 담당자와 계약을 공유했다.
-
-## Issue #11 AI 후속 작업
-
-- 공개 입력 Adapter를 실제 Server 요청 경로에 연결하고, Server가 제공하는 현재 세션·목표·관측 문맥과 대조한다.
-- 독립 검수 자료로 판정 confidence를 보정한다. 보정 전에는 cosine/Hybrid/OCR confidence로 RELATED·UNRELATED confidence를 만들지 않는다.
-- 실제 Client → Server → AI → 결과 검증/정책 적용 왕복에서 메타데이터 재확인, stale/순서 역전, 제외·민감 화면, 모델 장애를 검증한다.
-- Desktop OCR 품질 메타데이터의 계약 위치와 전달 책임을 합의한다.
-
-- 현재 Kiwi + Qwen Hybrid를 공개 Server 실행 경로에 연결할 때 사용자·목표·출처별 캐시 격리, 현재 문맥 재확인, 이벤트 멱등·역순 폐기를 명시적으로 구현한다. 삭제한 Graph 분석기의 이전 테스트를 현재 경로의 보장으로 전용하지 않는다.
+- `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, `docs/DATA_PRIVACY.md`
+- `AI/docs/api_spec.md`, `AI/docs/content_acquisition_spec.md`, `AI/docs/analysis_rules.md`
+- `AI/docs/features/screen-analysis-contract-v1-REPORT.md`

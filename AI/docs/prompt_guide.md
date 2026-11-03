@@ -278,6 +278,6 @@ Prompt Injection 실행, Schema 위반 결과 사용, 민감정보 재출력과 
 
 ## 13. 현재 화면 관련성 경로 (2026-10-28)
 
-현재 실행 가능한 평가 경로는 `evaluation/streamlit_runner.py`의 `compare_graphless`다. 목표·제목·본문 키워드는 로컬 Kiwi로 처리하며 OpenAI 키워드 생성 Prompt, 목표 Graph 생성, ChromaDB 저장 경로는 제거했다. 임베딩 질의에는 `src/models/embedding_client.py`의 기존 평가 지침을 그대로 사용한다. 목표·본문·기대 라벨로 별칭이나 하위 개념을 생성하지 않는다.
+현재 실행 가능한 평가 경로는 `evaluation/analysis_runner.py`의 `compare_graphless`다. 목표·제목·본문 키워드는 로컬 Kiwi로 처리하며 OpenAI 키워드 생성 Prompt, 목표 Graph 생성, ChromaDB 저장 경로는 제거했다. 임베딩 질의에는 `src/models/embedding_client.py`의 기존 평가 지침을 그대로 사용한다. 목표·본문·기대 라벨로 별칭이나 하위 개념을 생성하지 않는다.
 
 본 문서의 LLM·목표 보조·학습 정리 지침은 해당 기능의 설계이며 현재 화면 Hybrid가 매 요청마다 LLM을 호출한다는 뜻이 아니다. 공개 API 계약·신뢰도 보정·Server 연결은 별도 후속 작업이다. 과거 Graph 생성 지침의 변경 이력은 `DECISION_RECORD.md`에 남긴다.

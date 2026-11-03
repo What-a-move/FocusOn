@@ -15,7 +15,8 @@ def wire(**changes):
             "observedAt": "2026-10-26T01:00:00Z", "sequence": 1,
             "contentSource": "CHROME_DOM", "goalSnapshot": "JWT 인증 구현",
             "metadata": {"appName": "Google Chrome", "pageTitle": "JWT 서명 검증", "urlHost": "example.com"},
-            "contentPayload": {"text": "JWT 서명과 만료 시간을 검증합니다."}, **changes}
+            "contentPayload": {"text": "JWT 서명과 만료 시간을 검증합니다."},
+            "guardStatus": None, **changes}
 
 
 def inputs(payload=None):
@@ -37,6 +38,21 @@ def test_public_input_preserves_server_context_and_text_without_inventing_ocr_qu
     assert content.run_id == "server-run" and content.goal_version == 2
     assert content.text == request.content_payload.text and content.page_title == request.metadata.page_title
     assert content.ocr is None
+    assert content.content_type == "UNKNOWN"
+
+
+def test_client_shared_contract_accepts_nullable_window_title_and_maps_dom_type():
+    request, goal, context = inputs(wire(metadata={"appName": "Google Chrome", "windowTitle": None,
+                                             "pageTitle": "JWT", "urlHost": "example.com"}))
+    content = adapt_screen_request(request, goal, context, extraction_status=ExtractionStatus.SUCCESS)
+    assert content.window_title == ""
+    assert content.content_type == "WEB_PAGE"
+
+
+def test_successful_body_observation_requires_text_payload():
+    request, goal, context = inputs(wire(contentPayload=None))
+    with pytest.raises(ValueError, match="CONTENT_PAYLOAD_REQUIRED"):
+        adapt_screen_request(request, goal, context, extraction_status=ExtractionStatus.SUCCESS)
 
 
 @pytest.mark.parametrize("length", [0, 2000, 2001])
@@ -52,7 +68,8 @@ def test_public_text_length_is_checked_before_scoring(length):
 @pytest.mark.parametrize("changes", [
     {"clientRunId": "event-1"}, {"observedAt": "2026-10-26T01:00:00"},
     {"metadata": {"urlHost": "https://example.com/private?secret=x"}},
-    {"contentSource": "TAB_META"}, {"runId": "untrusted-client-run"},
+    {"contentSource": "TAB_META"}, {"runId": "untrusted-client-run"}, {"sequence": 0},
+    {"guardStatus": "MISSING"},
 ])
 def test_public_contract_rejects_unagreed_or_unsafe_shapes(changes):
     with pytest.raises(SafeInputError):
@@ -69,6 +86,13 @@ def test_guard_event_cannot_contain_content_or_enter_ai_adapter():
     _, goal, context = inputs()
     with pytest.raises(ValueError, match="GUARD_BLOCKED"):
         adapt_screen_request(request, goal, context, extraction_status=ExtractionStatus.SUCCESS)
+
+
+def test_guard_status_is_required_even_when_null():
+    payload = wire()
+    payload.pop("guardStatus")
+    with pytest.raises(SafeInputError):
+        ScreenAnalysisRequest.parse_safe(payload)
 
 
 def test_delayed_public_observation_cannot_be_attached_to_new_server_context():
@@ -149,7 +173,7 @@ def test_valid_provider_low_confidence_is_normalized_instead_of_rejected():
 
 
 def test_streamlit_accepts_public_dom_shape_and_preserves_limits():
-    from AI.evaluation.streamlit_runner import parse_inputs
+    from AI.evaluation.analysis_runner import parse_inputs
     goal, cases = parse_inputs("JWT 인증 구현", json.dumps(wire()), "CHROME_DOM")
     content = cases[0][1]
     assert content.text == wire()["contentPayload"]["text"] and content.client_run_id == wire()["clientRunId"]
@@ -159,7 +183,7 @@ def test_streamlit_accepts_public_dom_shape_and_preserves_limits():
 
 
 def test_chrome_ocr_is_skipped_without_embedding_and_metadata_failure_does_not_capture():
-    from AI.evaluation.streamlit_runner import compare_graphless, parse_inputs
+    from AI.evaluation.analysis_runner import compare_graphless, parse_inputs
 
     class Forbidden:
         fingerprint = "no-model-call"
@@ -179,7 +203,7 @@ def test_chrome_ocr_is_skipped_without_embedding_and_metadata_failure_does_not_c
                                       ("Safari", "CLIENT_GUARD_REQUIRED"),
                                       ("FocusOn", "CLIENT_GUARD_REQUIRED")])
 def test_desktop_cannot_substitute_for_chrome_or_an_excluded_target(source, app, reason):
-    from AI.evaluation.streamlit_runner import compare_graphless, parse_inputs
+    from AI.evaluation.analysis_runner import compare_graphless, parse_inputs
 
     class Forbidden:
         fingerprint = "no-capture-bypass"

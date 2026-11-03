@@ -681,4 +681,20 @@ PR #15의 최신 문서 계약을 유지하면서 Notion 제품·API 정합성�
 
 - 검증: 전체 AI 회귀 262 passed·16 subtests passed. 기존 고정 48건은 동일한 합성 벡터에서 삭제 전후 판정/점수/근거/커버리지/임베딩 입력이 일치했다. 실제 API 정확도 재평가는 수행하지 않았다.
 
-다음 AI 결정은 결정 052부터 추가한다.
+## 결정 052 - Backend 전용 FastAPI 입력 수신
+
+- 2026-10-29 사용자 요청으로 기존 #11에 내부 수신 경로를 구현한다. `POST /internal/v1/analysis-runs`에서 기존 request/goal/context/extractionStatus/선택 OCR Adapter 인자를 받는다. Client 공개 컬럼은 유지하며 내부 envelope·OCR 위치는 Backend 합의 대상이다.
+- 사용자 인증·최신 문맥 조회는 Backend, 서비스 Bearer 인증은 AI FastAPI가 담당한다. 키 없으면 시작 실패, 요청 크기·Schema·목표/관측·민감/제외/활성·P1 출처를 검사한다.
+- 모델 호출·confidence·Queue·저장 없이 200 RECEIVED와 analysisExecuted=false를 반환한다. 실제 판정·Backend 왕복·중복/역순 처리는 후속 작업이다. 원문·키를 로그/오류에 노출하지 않으며 로컬은 loopback/8001/access-log 비활성으로 실행한다.
+- 검증과 실행법: `features/fastapi-reception-REPORT.md`. 다음 결정은 053부터 추가한다.
+
+## 결정 053 - Streamlit UI 제거와 분석 코드 보존
+
+- 2026-11-03 사용자 요청으로 Streamlit 화면·UI 전용 테스트와 설치 목록을 제거한다. 기존 분석 runner를 `analysis_runner.py`로 변경하고 평가·테스트 참조를 옮긴다. Hybrid 판정 조건과 결과는 유지하며, FastAPI의 수신 확인은 실제 분석 실행을 의미하지 않는다.
+- Kiwi 0.23.1을 공통 의존성에 명시한다. 실제 Backend 연동과 API에서의 분석 호출은 후속 작업이다.
+
+## 결정 054 - FastAPI 실험 분석 연결
+
+- 2026-11-03 사용자 요청으로 별도 내부 분석 경로를 추가한다. 기존 수신·검증을 재사용하고 기존 Kiwi + Qwen Hybrid 계산을 실행한다.
+- 후보 라벨은 candidateDecision으로 분리하고 candidateCalibrated=false로 명시한다. 공개 decision은 보정된 confidence가 없으면 기존 기준대로 UNCERTAIN이다. 점수를 confidence로 변환하거나 임의 상수를 사용하지 않는다.
+- 후보 필드와 서비스 연동은 Backend 합의, 실제 Qwen 연결 및 독립 confidence 보정은 후속. 테스트와 한계는 `features/fastapi-relevance-analysis-REPORT.md`를 따른다.

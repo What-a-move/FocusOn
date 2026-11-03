@@ -4,7 +4,7 @@ import json
 import pytest
 
 from AI.evaluation.graphless_hybrid import GraphlessConfig, extract_goal_keywords, score_passages
-from AI.evaluation.streamlit_runner import GraphlessSession, compare_graphless, parse_inputs
+from AI.evaluation.analysis_runner import GraphlessSession, compare_graphless, parse_inputs
 from src.analysis.passage_grouping import CodeContextGroup
 from src.preprocessing.models import CleanedPassage, PassageKind
 

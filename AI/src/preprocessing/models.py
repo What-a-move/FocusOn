@@ -115,9 +115,9 @@ class PreprocessingRequest:
         if (
             not isinstance(self.sequence, int)
             or isinstance(self.sequence, bool)
-            or self.sequence < 0
+            or self.sequence < 1
         ):
-            raise ValueError("sequence must be a non-negative integer")
+            raise ValueError("sequence must be a positive integer")
         if not isinstance(self.content_source, ContentSource):
             raise TypeError("content source must be a ContentSource")
         if not isinstance(self.extraction_status, ExtractionStatus):
@@ -172,9 +172,9 @@ class CurrentAnalysisContext:
         if (
             not isinstance(self.latest_sequence, int)
             or isinstance(self.latest_sequence, bool)
-            or self.latest_sequence < 0
+            or self.latest_sequence < 1
         ):
-            raise ValueError("latest sequence must be a non-negative integer")
+            raise ValueError("latest sequence must be a positive integer")
 
 
 @dataclass(frozen=True, slots=True)

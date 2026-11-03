@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from AI.evaluation.streamlit_runner import RecordingClient, parse_inputs
+from AI.evaluation.analysis_runner import RecordingClient, parse_inputs
 
 
 class Client:

@@ -1,4 +1,4 @@
-"""10/26 wire contract helpers. Transport/authentication stay in the Backend.
+"""10/26 wire contract helpers. User/session authentication stays in the Backend.
 
 Internal harness IDs, quality signals and state are supplied by the Server,
 never synthesized from the public request. Similarity is not confidence.
@@ -22,7 +22,7 @@ ReasonCode = Literal["SEMANTIC_GOAL_MATCH", "SEMANTIC_GOAL_MISMATCH",
 
 class Metadata(InternalSchema):
     app_name: Annotated[str, Field(max_length=256)] = Field(default="", alias="appName", repr=False)
-    window_title: Annotated[str, Field(max_length=800)] = Field(default="", alias="windowTitle", repr=False)
+    window_title: Annotated[str | None, Field(max_length=800)] = Field(default=None, alias="windowTitle", repr=False)
     page_title: Annotated[str, Field(max_length=800)] = Field(default="", alias="pageTitle", repr=False)
     url_host: Annotated[str, Field(max_length=253)] = Field(default="", alias="urlHost", repr=False)
 
@@ -40,12 +40,12 @@ class ScreenAnalysisRequest(InternalSchema):
     session_id: Identifier = Field(alias="sessionId")
     client_run_id: Identifier = Field(alias="clientRunId")
     observed_at: datetime = Field(alias="observedAt")
-    sequence: Annotated[int, Field(ge=0)]
+    sequence: Annotated[int, Field(ge=1)]
     content_source: ContentSource = Field(alias="contentSource")
     goal_snapshot: Annotated[str, Field(min_length=2, max_length=40)] | None = Field(default=None, alias="goalSnapshot", repr=False)
     metadata: Metadata | None = Field(default=None, repr=False)
     content_payload: ContentPayload | None = Field(default=None, alias="contentPayload", repr=False)
-    guard_status: Literal["EXCLUDED", "PRIVACY_BLOCKED"] | None = Field(default=None, alias="guardStatus")
+    guard_status: Literal["EXCLUDED", "PRIVACY_BLOCKED"] | None = Field(alias="guardStatus")
 
     @field_validator("observed_at")
     @classmethod
@@ -89,10 +89,16 @@ def adapt_screen_request(request: ScreenAnalysisRequest, goal: ConfirmedGoal,
             raise ValueError("OBSERVATION_CONTEXT_MISMATCH")
     metadata = request.metadata or Metadata()
     payload = request.content_payload
+    if (request.content_source in {ContentSource.CHROME_DOM, ContentSource.DESKTOP_APP_OCR}
+            and extraction_status is ExtractionStatus.SUCCESS
+            and (payload is None or not payload.text.strip())):
+        raise ValueError("CONTENT_PAYLOAD_REQUIRED")
     snapshot = context.model_dump(mode="json", by_alias=True)
     data = {field.alias: snapshot[field.alias] for field in Observation.model_fields.values()}
     data.update(metadata.model_dump(mode="json", by_alias=True))
-    data.update(contentType="DOCUMENT", text=payload.text if payload else "",
+    content_type = "WEB_PAGE" if request.content_source is ContentSource.CHROME_DOM else "UNKNOWN"
+    data.update(windowTitle=metadata.window_title or "", contentType=content_type,
+                text=payload.text if payload else "",
                 extractionStatus=extraction_status.value, isSensitive=False, isExcluded=False,
                 ocr=ocr.model_dump(mode="json", by_alias=True) if ocr else None)
     return ContentInput.parse_safe(data)

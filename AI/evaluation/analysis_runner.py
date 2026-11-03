@@ -122,12 +122,16 @@ def parse_inputs(goal_raw: str, content_raw: str, source: str, *, page_title: st
                         "isExcluded": public.guard_status == "EXCLUDED"}
             if public.metadata is not None:
                 supplied.update(public.metadata.model_dump(by_alias=True))
+                # Shared metadata permits null windowTitle; the internal model uses
+                # a normalized string after crossing this adapter boundary.
+                supplied["windowTitle"] = public.metadata.window_title or ""
             # The public contract does not yet carry OCR recognition quality.
             # Missing quality is deliberately not replaced with the manual UI default.
         content_data = {
             "sessionId": "lab-session", "runId": "lab-run", "goalId": goal.goal_id,
             "goalVersion": goal.goal_version, "clientRunId": f"lab-{batch_id}-{index}",
-            "sequence": index, "navigationId": f"lab-nav-{index}",
+            # The shared Client -> Server contract numbers observations from 1.
+            "sequence": index + 1, "navigationId": f"lab-nav-{index}",
             "observedAt": datetime.now(timezone.utc).isoformat(), "isActiveTarget": True,
             "sessionStatus": "ACTIVE", "exclusionMode": "NONE", "contentSource": source,
             "contentType": "DOCUMENT", "pageTitle": page_title, "text": "",

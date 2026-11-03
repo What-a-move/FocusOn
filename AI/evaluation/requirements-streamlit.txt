@@ -1,3 +1,0 @@
--r ../requirements.txt
-streamlit>=1.40,<2
-kiwipiepy==0.23.1

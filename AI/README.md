@@ -4,14 +4,7 @@
 
 ## 실행
 
-저장소 루트에서 실행한다.
-
-```bash
-python3 -m pip install -r AI/evaluation/requirements-streamlit.txt
-python3 -m streamlit run AI/evaluation/similarity_streamlit.py --server.address 127.0.0.1 --server.port 8501
-```
-
-브라우저에서 `http://127.0.0.1:8501`을 연다. 확정 목표와 추출 JSON을 넣고 **비교하기**를 누른다. Qwen API는 화면의 주소 또는 `FOCUSON_EMBEDDING_URL`로 지정한다. 실제 학교 연결은 [학교 임베딩 연결 지침](docs/features/school-ollama-embedding-SETUP.md)을 따른다.
+Backend 전용 FastAPI는 `POST /internal/v1/analysis-runs`에서 수신을 확인하고, `POST /internal/v1/analysis-runs/analyze`에서 Kiwi + Qwen Hybrid 후보를 계산한다. 판정 confidence가 아직 보정되지 않아 공개 `decision`은 UNCERTAIN이며, `candidateDecision`은 미보정 실험값이다. [분석 경로와 한계](docs/features/fastapi-relevance-analysis-REPORT.md) 및 [실행·인증·입력 예제](docs/features/fastapi-reception-REPORT.md)를 따른다.
 
 ## 현재 처리 과정
 
@@ -42,13 +35,13 @@ python3 -m streamlit run AI/evaluation/similarity_streamlit.py --server.address 
 
 ## 구현 상태와 검증
 
-입력 전처리, Qwen Client, Kiwi Hybrid, Streamlit, 공개 요청 변환·응답 검증 도구가 있다. 공개 FastAPI 라우트와 실제 Backend 연결, 보정된 confidence, 운영 중복/역순 결과 적용, 이탈 집계·알림은 후속 작업이다. 이전 Graph 분석기의 캐시·단계별 callback은 제거됐으며 Streamlit의 다음 출처 표시는 실제 수집 실행이 아니다.
+입력 전처리, Qwen Client, Kiwi Hybrid, 공개 요청 변환·응답 검증 및 내부 FastAPI 수신 경로가 있다. FastAPI에서 실제 분석 실행·Backend 연결, 보정된 confidence, 운영 중복/역순 결과 적용, 이탈 집계·알림은 후속 작업이다. 이전 Graph 분석기의 캐시·단계별 callback은 제거됐으며 실험 코드의 다음 출처 표시는 실제 수집 실행이 아니다.
 
 ```bash
 PYTHONPATH=AI:. python3 -m pytest AI/tests -q
 ```
 
-회귀 테스트는 합성 벡터·HTTP Mock·Streamlit UI를 검증한다. 실제 Qwen 정확도·운영 성능 평가는 별도로 수행한다. 개발 자료 보정 CLI는 유지한다.
+회귀 테스트는 합성 벡터·HTTP Mock를 검증한다. 실제 Qwen 정확도·운영 성능 평가는 별도로 수행한다. 개발 자료 보정 CLI는 유지한다.
 
 ```bash
 PYTHONPATH=AI:. python3 -m AI.evaluation.calibrate_graphless --help

@@ -215,7 +215,7 @@ def _markdown(report: dict) -> str:
 
 
 def parse_fixture_group(group: dict):
-    from AI.evaluation.streamlit_runner import parse_inputs
+    from AI.evaluation.analysis_runner import parse_inputs
     payload = json.dumps({"goal": group["goal"], "cases": group["cases"]}, ensure_ascii=False)
     # Passing just goal.text would replace the declared identity with lab-goal.
     return parse_inputs(json.dumps(group["goal"], ensure_ascii=False), payload, "CHROME_DOM")
@@ -230,7 +230,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--revision")
     parser.add_argument("--timeout", type=float, default=120.0)
     args = parser.parse_args(argv)
-    from AI.evaluation.streamlit_runner import (
+    from AI.evaluation.analysis_runner import (
         DEFAULT_REVISION, DEFAULT_URL, GraphlessSession, compare_graphless, parse_inputs,
     )
     from AI.evaluation.graphless_hybrid import SCORING_VERSION, KEYWORD_EXTRACTOR_VERSION

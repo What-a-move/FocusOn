@@ -50,7 +50,7 @@ class ContentParserTest(unittest.TestCase):
 
     def test_repeated_extracted_heading_resets_graphless_body_context(self) -> None:
         import json
-        from AI.evaluation.streamlit_runner import parse_inputs
+        from AI.evaluation.analysis_runner import parse_inputs
         from AI.evaluation.graphless_hybrid import build_screen_contexts
         from src.preprocessing.adapter import adapt_content
 

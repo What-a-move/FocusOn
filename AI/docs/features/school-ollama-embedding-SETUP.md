@@ -50,20 +50,7 @@ curl --noproxy '*' --connect-timeout 5 --max-time 60 --fail-with-body -sS \
 
 ## 현재 코드 실행
 
-```bash
-cd /Users/lyg123d/Documents/what_a_move
-python3 -m pip install -r AI/evaluation/requirements-streamlit.txt
-python3 -m streamlit run AI/evaluation/similarity_streamlit.py --server.address 127.0.0.1 --server.port 8501
-```
-
-Streamlit에서 목표와 추출 JSON을 넣고 비교한다. 학교 API 기본 주소는 위 HTTPS 주소이며 별도 배포에서는 화면 입력 또는 `FOCUSON_EMBEDDING_URL`로 바꾼다. 모델/차원을 줄이거나 실제 revision이 바뀌면 현재 보정 설정을 그대로 정확도 검증값으로 사용하지 않는다.
-
-- 메타데이터: APP_META·TAB_META. RELATED만 확정하며 그 외 정상 결과는 Chrome DOM/Desktop OCR 재확인을 표시한다.
-- 본문: CHROME_DOM 또는 DESKTOP_APP_OCR. text 최대 2,000자. Desktop OCR 품질 정보가 없거나 실패하면 UNCERTAIN이다.
-- Chrome viewport OCR: enum은 남기지만 MVP 분석·추가 요청에서 제외한다.
-- Kiwi는 로컬에서 목표·제목·본문의 키워드를 비교한다. OpenAI 호출·목표 Graph 생성·ChromaDB 저장은 없다.
-- 형식/문맥/민감정보·품질 검사 후 Qwen 벡터를 받아 기존 Hybrid 계산으로 라벨·사유·근거·커버리지·시간을 표시한다. 모델/네트워크 실패는 무관으로 처리하지 않는다.
-- 공개 Backend 분석 API, 실제 캡처·재수집, 판정 confidence 보정·알림은 후속 작업이다.
+Streamlit 화면은 삭제했다. FastAPI 수신 실행법은 [수신 지침](fastapi-reception-REPORT.md)을 따른다. 현재 FastAPI는 수신만 확인하며 관련성 판정을 실행하지 않는다.
 
 ## 코드 위치와 회귀 검사
 
@@ -72,11 +59,11 @@ Streamlit에서 목표와 추출 JSON을 넣고 비교한다. 학교 API 기본 
 - `src/preprocessing/`: 입력 전처리·품질·민감정보 검사
 - `src/analysis/acquisition_policy.py`: 메타데이터 재확인·Desktop 대상 방어
 - `evaluation/graphless_hybrid.py`: Kiwi 키워드·Hybrid 점수·근거/커버리지
-- `evaluation/streamlit_runner.py`: 현재 입력 변환·평가·벡터 캐시
+- `evaluation/analysis_runner.py`: 현재 입력 변환·평가·벡터 캐시
 - `src/api/relevance_contract.py`: 공개 입력 변환과 응답 검증 도구
 
 ```bash
 PYTHONPATH=AI:. python3 -m pytest AI/tests -q
 ```
 
-회귀는 합성 벡터·HTTP Mock·UI 검사이며 실제 학교 모델 정확도/속도와 구분한다. 모델 실측은 테스트 환경·cacheHit·API 요청 수·모델 로드/처리 시간·전체 시간을 함께 보고한다. 원문·비밀키·벡터를 저장소에 커밋하지 않는다.
+회귀는 합성 벡터·HTTP Mock 검사이며 실제 학교 모델 정확도/속도와 구분한다. 모델 실측은 테스트 환경·cacheHit·API 요청 수·모델 로드/처리 시간·전체 시간을 함께 보고한다. 원문·비밀키·벡터를 저장소에 커밋하지 않는다.

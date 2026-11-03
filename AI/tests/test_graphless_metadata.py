@@ -5,7 +5,7 @@ import math
 import pytest
 
 from AI.evaluation.graphless_hybrid import score_metadata, metadata_titles, metadata_is_informative
-from AI.evaluation.streamlit_runner import compare_graphless, parse_inputs
+from AI.evaluation.analysis_runner import compare_graphless, parse_inputs
 
 
 class Client:

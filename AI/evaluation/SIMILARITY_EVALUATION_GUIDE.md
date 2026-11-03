@@ -1,6 +1,6 @@
 # FocusOn Hybrid 관련성 평가 안내
 
-2026-10-28 미사용 Graph 생성·비교 실행 코드를 제거했다. 현재 평가 경로는 `streamlit_runner.compare_graphless`와 `graphless_hybrid`다. 이전 1~7번 방식과 Graph 기반 평가 CLI는 지원하지 않는다. 과거 실험의 결과 파일·보고서는 이력으로 남기며 현재 실행법이나 운영 정확도로 해석하지 않는다.
+2026-10-28 미사용 Graph 생성·비교 실행 코드를 제거했다. 현재 평가 경로는 `analysis_runner.compare_graphless`와 `graphless_hybrid`다. 이전 1~7번 방식과 Graph 기반 평가 CLI는 지원하지 않는다. 과거 실험의 결과 파일·보고서는 이력으로 남기며 현재 실행법이나 운영 정확도로 해석하지 않는다.
 
 ## 테스트 순서
 

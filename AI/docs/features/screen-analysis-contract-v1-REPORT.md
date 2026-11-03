@@ -60,3 +60,31 @@
 - 전체 AI 회귀는 262 passed, 16 subtests passed. 삭제된 Graph 전용 테스트 수를 포함한 과거 총계와 직접 비교하지 않는다. 공통 벡터·Schema·캐시·문단 묶음 검사는 유지했다.
 - 기존 고정 48건에서 동일한 합성 벡터를 사용해 삭제 전후 라벨·점수·근거·커버리지·임베딩 입력 해시가 일치했다. Qwen/OpenAI 실측·독립 정확도 테스트는 수행하지 않았다.
 - 공개 Backend 라우트·confidence 보정·운영 이벤트 멱등/역순 적용·실제 수집은 계속 후속 작업이다.
+
+## 2026-10-28 공유 컬럼 정합성 후속 점검
+
+`packages/shared-types/src/index.ts`의 Client → Server 요청 필드를 기준으로 AI 경계를 재점검했다.
+
+| 공유 요청 값 | AI에서의 처리 | 상태 |
+| --- | --- | --- |
+| path `sessionId` | Server가 AI 요청에도 전달하고 VerifiedContext와 대조 | 연결 코드 구현, 실제 Server 미연동 |
+| `clientRunId` | 관측 식별자로 검증하고 VerifiedContext와 대조; 내부 `eventId` 호환 이름으로 사용 가능 | 구현; UUID v4 형식은 Client 코드와 일치 |
+| `contentSource` | 출처별 분석 경로 선택 및 Server 문맥 대조 | 구현 |
+| `observedAt` | UTC 형식 검증 후 Server 문맥 대조 | 구현 |
+| `sequence` | 1부터 시작하는 양수만 허용하고 Server 문맥과 대조 | 구현; 평가 입력 생성도 1부터 시작하도록 수정 |
+| `guardStatus` | nullable 필수 필드; 값이 있으면 AI Adapter 진입 거부 | 구현 |
+| `metadata` | `windowTitle: null`을 허용; 내부 모델에는 빈 문자열로 정규화 | 구현 |
+| `contentPayload.text` | 2,000자 제한; 성공한 DOM/OCR 분석에는 비어 있지 않은 text 요구 | 구현 |
+
+공유 요청에 없는 실행 문맥(`runId`, `goalId`, `goalVersion`, `navigationId`, `isActiveTarget`, `sessionStatus`, `exclusionMode`, 사용자·정책 버전)은 Client가 보내는 컬럼으로 추가하지 않는다. Server가 인증·저장 상태를 조회해 `VerifiedContext`로 AI에 제공해야 한다. `goalSnapshot`도 Client 공유 요청에 추가된 값이 아니라 Server → AI 경계에서 확정 목표를 전달하는 값이다.
+
+`contentType`은 공유 요청에 없으므로 AI Adapter에서 출처에 따라 `CHROME_DOM → WEB_PAGE`, Desktop OCR·메타데이터 → `UNKNOWN`으로 둔다. `extractionStatus`와 OCR 인식 정보(`ocr.confidence`, `captureStatus`)도 현재 공유 요청에 없다. Adapter 호출자가 별도로 제공해야 하며, 특히 Desktop OCR 품질을 실제 실행 경로에서 전달하는 Backend 합의가 남아 있다. AI가 산출하는 `qualityScore`와 `contentHash`는 입력 컬럼이 아니다.
+
+이전 9컬럼 표와 평탄화 JSON 예시는 구형 학교 실험 입력이다. 현재 공개 요청 예시로 사용하지 않는다. 실제 HTTP route 및 Server ↔ AI 실행 경로는 이번 변경에서 만들지 않았다.
+
+### 후속 회귀 검증
+
+- 화면 계약 테스트: 47 passed.
+- Kiwi가 필요한 두 평가 모듈을 제외한 AI 회귀: 158 passed, 1 skipped, 16 subtests passed.
+- 전체 `AI/tests` 실행은 현재 Python 환경에 `kiwipiepy==0.23.1`이 없어 Kiwi 의존 테스트 75건이 실패했다. 임시 경로 설치를 시도했지만 네트워크/DNS 차단으로 패키지를 받지 못했다. 저장소·전역 Python에는 설치하지 않았다.
+- 실제 Qwen 임베딩, 외부 API, Server 왕복은 이번 디버깅에서 호출하지 않았다.
