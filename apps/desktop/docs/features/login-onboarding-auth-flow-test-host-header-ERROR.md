@@ -46,6 +46,7 @@ AssertionError: 200 !== 400
 
 ## 원인 및 해결
 
+- 추정 원인: 작성 당시 양식에 칸이 없어 기록하지 않았다(2026-11-03 점검).
 - 실제 원인: 테스트 도구가 수동 Host 헤더를 그대로 보내지 않았다. 앱의 Host 검증 오류는 아니다.
 - 해결 방법: `node:http.get`으로 Host 헤더를 직접 지정해 요청했다.
 - 변경 파일: `apps/desktop/tests/electron/google-oauth.test.cjs`

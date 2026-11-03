@@ -48,6 +48,7 @@ AssertionError: Expected values to be strictly equal: true !== false
 
 ## 원인 및 해결
 
+- 추정 원인: 작성 당시 양식에 칸이 없어 기록하지 않았다(2026-11-03 점검).
 - 실제 원인: Custom Scheme의 `URL.origin`이 두 주소 모두 `null`이 될 수 있어 문자열 비교가 호스트 차이를 구분하지 못했다.
 - 해결 방법: 프로토콜·호스트·포트를 각각 비교하고 사용자 정보가 있는 URL을 거부한다.
 - 변경 파일: `electron/main/renderer-path.cts`, `tests/electron/renderer-path.test.cjs`
