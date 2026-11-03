@@ -4,14 +4,26 @@ FocusOn AI는 사용자의 학습 목표와 현재 화면·페이지 정보를 �
 
 ## 이 브랜치의 목표 보조 실행 (#12)
 
-JEV·OpenAI·LangGraph 목표 보조와 Streamlit 실행 코드가 포함돼 있다. 아래 공통 scaffold 설명은 이 기능 이외 영역의 상태와 구분한다. 공개 decision 4종과 내부 clarityStatus 6종의 변환, 실제 Backend 연결은 아직 미검증이다.
+JEV·Claude·LangGraph 목표 보조와 Streamlit 실행 코드가 포함돼 있다. 아래 공통 scaffold 설명은 이 기능 이외 영역의 상태와 구분한다. 공개 decision 4종과 내부 clarityStatus 6종의 변환, 실제 Backend 연결은 아직 미검증이다.
 
 ```bash
+PYENV_VERSION=what-a-move pyenv exec python -m pip install -r AI/requirements.txt
 LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q
 PYENV_VERSION=what-a-move pyenv exec python -m streamlit run AI/streamlit_app.py
 ```
 
-실행에 필요한 TYPESAFE_API_KEY와 OPENAI_API_KEY는 로컬 AI/.env에만 설정한다. Laya는 비교 전용이며 실제 상태·저장을 결정하지 않는다. 세부 구현은 [현재 상태](docs/CONTEXT.md)와 [공개/내부 계약](docs/api_spec.md)을 따른다. 질문 생성은 최대 2건 병렬 실행하고, 모델 초안을 스트리밍 표시하며 유효한 응답이 없을 때 기본 10초 이후 로컬 질문을 사용한다. 공유·배포 환경에서 원문 trace opt-in을 사용하지 않는다.
+실행에 필요한 TYPESAFE_API_KEY와 ANTHROPIC_API_KEY는 로컬 AI/.env에만 설정한다. Laya는 비교 전용이며 실제 상태·저장을 결정하지 않는다. 세부 구현은 [현재 상태](docs/CONTEXT.md)와 [공개/내부 계약](docs/api_spec.md)을 따른다. 질문 생성은 최대 2건 병렬 실행하고, 모델 초안을 스트리밍 표시하며 유효한 응답이 없을 때 기본 10초 이후 로컬 질문을 사용한다. 공유·배포 환경에서 원문 trace opt-in을 사용하지 않는다.
+
+`AI/.env` 설정 예시(실제 키는 커밋하지 않는다):
+
+```dotenv
+TYPESAFE_API_KEY=발급받은_TypeSafe_키
+ANTHROPIC_API_KEY=발급받은_Claude_키
+# 선택 설정이며 생략해도 된다.
+CLAUDE_MODEL=claude-haiku-4-5-20251001
+```
+
+이미 `CLAUDE_API_KEY`를 사용하고 있다면 그대로 인식한다. 두 이름이 모두 있으면 `ANTHROPIC_API_KEY`가 우선이므로 하나만 설정한다. 폐기한 `OPENAI_API_KEY`와 `OPENAI_*` 설정은 사용하지 않는다. Streamlit Cloud에서는 같은 값을 앱 Secrets에 설정하고 Reboot한다. 로컬에서도 키·모델 변경 후 Streamlit 서버를 재시작한다.
 
 ## 담당 기능
 

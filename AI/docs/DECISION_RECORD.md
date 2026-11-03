@@ -3,6 +3,21 @@
 > AI 분석 기준·모델·프롬프트·데이터 처리 결정을 기록한다.
 > 기존 결정을 삭제하지 않고 새로운 번호로 추가한다.
 
+## 결정 GA-038 - 목표 보조 생성 제공자를 Claude로 교체
+
+- 결정일: 2026-11-03
+- 상태: 사용자 요청에 따른 #12 생성 어댑터 변경; 제품 외부 전송 정책 승인과 모델 품질 전체 평가는 별도
+- 이유: OpenAI 키 폐기로 질문·추천·GoalProfile 생성이 중단되어 Claude 키로 실행하도록 교체한다.
+- JEV 판단·검수, Router·임계값, Prompt와 Pydantic Schema, 사용자 최종 확인 조건은 유지한다. Laya는 계속 비교 전용이다.
+- 공식 `anthropic` SDK의 `AsyncAnthropic.messages.parse(output_format=...)`와 `messages.stream(output_format=...)`을 사용한다. 기본 모델은 속도를 고려한 `claude-haiku-4-5-20251001`, 기본 최대 출력은 1,200 토큰이다. 모델은 `CLAUDE_MODEL`로 변경할 수 있다.
+- 표준 키는 `ANTHROPIC_API_KEY`이며 기존 로컬 `CLAUDE_API_KEY`도 허용한다. 둘 다 있으면 표준 이름이 우선이다. `OPENAI_*` 환경변수, ChatOpenAI·Responses 호출과 langchain-openai 의존성은 제거한다.
+- 2건 병렬 질문·첫 유효 결과 사용·중복 질문 제외·10초 이후 로컬 fallback·취소 및 연결 정리를 유지한다. AI HTTP 경로의 SDK 재시도 0도 유지한다.
+- 잘린 출력·refusal·Schema 위반을 정상 초안으로 사용하지 않는다. Schema Repair는 최대 1회다. 400/401/402/403/404는 설정 오류, 429/5xx·연결 실패는 일시 장애로 구분하고 제공자 원문은 사용자 오류에 넣지 않는다.
+- JEV·Laya LangSmith trace는 유지한다. 생성은 공식 SDK를 직접 사용하므로 기존 ChatOpenAI의 자동 LangChain trace는 생성하지 않는다. 원문 자동 추적 wrapper는 추가하지 않는다.
+- 공식 자료: [구조화 출력](https://platform.claude.com/docs/en/build-with-claude/structured-outputs), [Python SDK](https://github.com/anthropics/anthropic-sdk-python). 로컬 SDK 0.125.0의 parse·stream 시그니처와 실제 호출을 확인했다.
+- 합성 목표로 Claude 스트리밍 질문 5.58초(초안 갱신 13회), GoalProfile 6.12초, 추천 묶음 5.79초를 각 1회 확인했다. 세 Schema 모두 검증 통과했으며 원문과 응답 전문은 기록하지 않았다. JEV 포함 전체 Workflow·P95·의미 정확도 비교 결과가 아니다.
+- Notion AI 분석 계약은 이번 조회도 404였으며 외부 API·DB·상태 계약을 새로 확정하지 않았다. 다른 기능 브랜치의 OpenAI 생성은 변경하지 않는다.
+
 ## 결정 001 - AI 분석 범위
 
 - 결정일: 2026-09-04
