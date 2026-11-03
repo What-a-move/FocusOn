@@ -171,6 +171,77 @@ class SessionApiTests {
   }
 
   @Test
+  void concurrentPauseAndResumeMaintainVersionAndIdempotency() throws Exception {
+    LoginResponse owner = desktop("session-command-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String goalBody = mvc.perform(post("/api/v1/goals").header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"동시성 목표\",\"confirmationSource\":\"MANUAL_CONFIRMED\"}"))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    String goalId = json.readTree(goalBody).path("data").path("goalId").asText();
+    String started = mvc.perform(post("/api/v1/sessions").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+            .content(request(goalId, 1800000)))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    String sessionId = json.readTree(started).path("data").path("sessionId").asText();
+    long version = json.readTree(started).path("data").path("version").asLong();
+    String pauseBody = "{\"pauseReason\":\"USER\",\"accumulatedActiveMs\":1000}";
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var futures = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("일시정지 동시 요청 대기 시간 초과");
+        }
+        return mvc.perform(post("/api/v1/sessions/" + sessionId + "/pause")
+                .header("Authorization", token).header("Idempotency-Key", UUID.randomUUID())
+                .header("If-Match-Version", version).contentType(MediaType.APPLICATION_JSON)
+                .content(pauseBody)).andReturn().getResponse().getStatus();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      var statuses = new java.util.ArrayList<Integer>();
+      for (var future : futures) {
+        statuses.add(future.get(20, TimeUnit.SECONDS));
+      }
+      java.util.Collections.sort(statuses);
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), statuses);
+    }
+    var paused = sessions.findById(Long.valueOf(sessionId)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(1000, paused.getAccumulatedActiveMs());
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1, paused.getVersion());
+    String resumeKey = UUID.randomUUID().toString();
+    String resumeBody = "{\"readiness\":{\"screenAnalysisReady\":true}}";
+    String path = "/api/v1/sessions/" + sessionId + "/resume";
+    CountDownLatch resumeReady = new CountDownLatch(2);
+    CountDownLatch resumeStart = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var futures = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        resumeReady.countDown();
+        if (!resumeStart.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("재개 동시 요청 대기 시간 초과");
+        }
+        return mvc.perform(post(path).header("Authorization", token)
+                .header("Idempotency-Key", resumeKey).header("If-Match-Version", version + 1)
+                .contentType(MediaType.APPLICATION_JSON).content(resumeBody))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(resumeReady.await(10, TimeUnit.SECONDS));
+      resumeStart.countDown();
+      var first = json.readTree(futures.get(0).get(20, TimeUnit.SECONDS));
+      var second = json.readTree(futures.get(1).get(20, TimeUnit.SECONDS));
+      org.junit.jupiter.api.Assertions.assertEquals(first, second);
+      org.junit.jupiter.api.Assertions.assertEquals("RUNNING", first.path("data").path("status")
+          .asText());
+    }
+    var after = sessions.findById(Long.valueOf(sessionId)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(version + 2, after.getVersion());
+    org.junit.jupiter.api.Assertions.assertEquals(1000, after.getAccumulatedAtResumeMs());
+  }
+
+  @Test
   void simultaneousStartsCreateOnlyOneActiveSession() throws Exception {
     LoginResponse owner = desktop("session-concurrent");
     String token = "Bearer " + owner.accessToken();

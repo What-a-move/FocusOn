@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getActiveSession, unlinkThisBrowser } from './session-api'
 import { LogCopy } from './LogCopy'
-import { displayActiveMs, formatClock, type ActiveSession } from './session-model'
+import { displayActiveMs, formatClock, keepForward, type ActiveSession } from './session-model'
 import '../pairing/pairing.css'
 import './session-popup.css'
 
@@ -42,7 +42,7 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
     setNow(at)
     if (result.success) {
       setLast(result.data ? { session: result.data, at: new Date(at) } : null)
-      setView((current) => current.kind === 'unlink-confirm' ? current : result.data ? { kind: 'session', session: result.data, fetchedAt: at } : { kind: 'none' })
+      setView((current) => current.kind === 'unlink-confirm' ? current : result.data ? { kind: 'session', session: keepForward(current.kind === 'session' ? current : null, result.data, at), fetchedAt: at } : { kind: 'none' })
       return
     }
     if (result.error.code === 'RELINK_REQUIRED') { onRelink(); return }

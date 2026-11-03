@@ -1,0 +1,5012 @@
+{
+  "scoringVersion": "title-hybrid-v1",
+  "metadataConfig": {
+    "keyword_boost": 0.2,
+    "related_passage_threshold": 0.6,
+    "unrelated_cosine_threshold": 0.25,
+    "min_related_cosine": 0.55
+  },
+  "model": "qwen3-embedding:4b-fp16",
+  "dimensions": 2560,
+  "configuredRevision": "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc",
+  "metrics": {
+    "cases": 240,
+    "labelledCases": 240,
+    "semanticEligibleCases": 240,
+    "excludedFromSemanticMetrics": 0,
+    "statusCounts": {
+      "COMPLETED": 240
+    },
+    "pipelineFailures": 0,
+    "confusion": {
+      "RELATED": {
+        "RELATED": 111,
+        "UNRELATED": 0,
+        "UNCERTAIN": 49
+      },
+      "UNRELATED": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 0
+      },
+      "UNCERTAIN": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 80
+      }
+    },
+    "perClass": {
+      "RELATED": {
+        "precision": 1.0,
+        "recall": 0.69375,
+        "f1": 0.8191881918819187,
+        "support": 160
+      },
+      "UNRELATED": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      },
+      "UNCERTAIN": {
+        "precision": 0.6201550387596899,
+        "recall": 1.0,
+        "f1": 0.7655502392344498,
+        "support": 80
+      }
+    },
+    "macroF1": 0.5282461437054562,
+    "relatedRecall": 0.69375,
+    "unrelatedToRelated": 0,
+    "uncertainRate": 0.5375,
+    "semanticAccuracy": 0.7958333333333333,
+    "endToEndAccuracy": 0.7958333333333333,
+    "correct": 191
+  },
+  "totalSeconds": 50.19256620800297,
+  "groups": [
+    {
+      "file": "01_프로그래밍_React_객체상태_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 16,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          }
+        },
+        "macroF1": 0.6666666666666666,
+        "relatedRecall": 1.0,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.3333333333333333,
+        "semanticAccuracy": 1.0,
+        "endToEndAccuracy": 1.0,
+        "correct": 24
+      },
+      "totalMs": 9557.73,
+      "embeddingMs": 8391.76,
+      "embeddingCalls": 13,
+      "rows": [
+        {
+          "caseId": "react-state-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7772503039617904,
+          "elapsedMs": 6233.82,
+          "embeddingMs": 5143.32,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7447659732895515,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7772503039617904
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.26,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8164258196671108,
+          "elapsedMs": 259.61,
+          "embeddingMs": 256.06,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7896545850352311,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.8164258196671108
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8180215527019357,
+          "elapsedMs": 274.06,
+          "embeddingMs": 268.87,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7914830291376346,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.8180215527019357
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.59,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8071416799043157,
+          "elapsedMs": 264.17,
+          "embeddingMs": 259.96,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7790165082236951,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.8071416799043157
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7964627219132854,
+          "elapsedMs": 267.12,
+          "embeddingMs": 262.09,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7667802021923061,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7964627219132854
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.04,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.785723600516011,
+          "elapsedMs": 282.99,
+          "embeddingMs": 277.63,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7544749589245959,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.785723600516011
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8071416799043157,
+          "elapsedMs": 4.88,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7790165082236951,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.8071416799043157
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.75,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7226994871902875,
+          "elapsedMs": 267.55,
+          "embeddingMs": 262.42,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6822598290722045,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7226994871902875
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7422919960901714,
+          "elapsedMs": 285.11,
+          "embeddingMs": 279.53,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7047095788533214,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7422919960901714
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.01,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7802518493676708,
+          "elapsedMs": 239.47,
+          "embeddingMs": 235.07,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7482052440671227,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7802518493676708
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7843213118811628,
+          "elapsedMs": 288.6,
+          "embeddingMs": 283.0,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7528681698638324,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7843213118811628
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.71,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8071416799043157,
+          "elapsedMs": 2.59,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7790165082236951,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.8071416799043157
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7503241726937198,
+          "elapsedMs": 279.53,
+          "embeddingMs": 275.27,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7139131145448873,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7503241726937198
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.42,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7764995918997141,
+          "elapsedMs": 292.81,
+          "embeddingMs": 289.12,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.743905782385089,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7764995918997141
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8071416799043157,
+          "elapsedMs": 2.52,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7790165082236951,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.8071416799043157
+            }
+          ]
+        },
+        {
+          "caseId": "react-state-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.51,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "react-state-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7898093660658573,
+          "elapsedMs": 305.88,
+          "embeddingMs": 299.41,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7591565652837948,
+              "keywordScore": 0.6363636363636364,
+              "hybridScore": 0.7898093660658573
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "02_네트워크_TCP_UDP_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 12,
+            "UNRELATED": 0,
+            "UNCERTAIN": 4
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 0.75,
+            "f1": 0.8571428571428571,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 0.6666666666666666,
+            "recall": 1.0,
+            "f1": 0.8,
+            "support": 8
+          }
+        },
+        "macroF1": 0.5523809523809523,
+        "relatedRecall": 0.75,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.5,
+        "semanticAccuracy": 0.8333333333333334,
+        "endToEndAccuracy": 0.8333333333333334,
+        "correct": 20
+      },
+      "totalMs": 3556.68,
+      "embeddingMs": 3467.34,
+      "embeddingCalls": 13,
+      "rows": [
+        {
+          "caseId": "tcp-udp-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6275187096386233,
+          "elapsedMs": 355.75,
+          "embeddingMs": 345.35,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5861318995984703,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6275187096386233
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.34,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6268688830342168,
+          "elapsedMs": 273.45,
+          "embeddingMs": 267.89,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5854098700380187,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6268688830342168
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6212930641603078,
+          "elapsedMs": 246.65,
+          "embeddingMs": 241.07,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5792145157336753,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6212930641603078
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.82,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6093274135639245,
+          "elapsedMs": 257.82,
+          "embeddingMs": 253.52,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5659193484043605,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6093274135639245
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6137585133342389,
+          "elapsedMs": 256.69,
+          "embeddingMs": 250.52,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5708427925935988,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6137585133342389
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.2,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6051302888032882,
+          "elapsedMs": 253.16,
+          "embeddingMs": 247.65,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.561255876448098,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6051302888032882
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6093274135639245,
+          "elapsedMs": 3.63,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5659193484043605,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6093274135639245
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.23,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5905495144622624,
+          "elapsedMs": 315.77,
+          "embeddingMs": 310.87,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5450550160691805,
+              "keywordScore": 0.5,
+              "hybridScore": 0.5905495144622624
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5905246832171411,
+          "elapsedMs": 260.55,
+          "embeddingMs": 255.44,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5450274257968235,
+              "keywordScore": 0.5,
+              "hybridScore": 0.5905246832171411
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.15,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6082890871703317,
+          "elapsedMs": 260.11,
+          "embeddingMs": 254.99,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5647656524114797,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6082890871703317
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6084855528472524,
+          "elapsedMs": 273.38,
+          "embeddingMs": 268.43,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5649839476080581,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6084855528472524
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.07,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6093274135639245,
+          "elapsedMs": 3.64,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5659193484043605,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6093274135639245
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5924151116606868,
+          "elapsedMs": 257.89,
+          "embeddingMs": 252.84,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5471279018452077,
+              "keywordScore": 0.5,
+              "hybridScore": 0.5924151116606868
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.09,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7669603271378358,
+          "elapsedMs": 255.09,
+          "embeddingMs": 251.25,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7258356789856891,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7669603271378358
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6093274135639245,
+          "elapsedMs": 2.01,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5659193484043605,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6093274135639245
+            }
+          ]
+        },
+        {
+          "caseId": "tcp-udp-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.38,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "tcp-udp-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5827041541080457,
+          "elapsedMs": 272.94,
+          "embeddingMs": 267.53,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5363379490089396,
+              "keywordScore": 0.5,
+              "hybridScore": 0.5827041541080457
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "03_인프라_로드밸런싱_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 2,
+            "UNRELATED": 0,
+            "UNCERTAIN": 14
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 0.125,
+            "f1": 0.2222222222222222,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 0.36363636363636365,
+            "recall": 1.0,
+            "f1": 0.5333333333333333,
+            "support": 8
+          }
+        },
+        "macroF1": 0.2518518518518518,
+        "relatedRecall": 0.125,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.9166666666666666,
+        "semanticAccuracy": 0.4166666666666667,
+        "endToEndAccuracy": 0.4166666666666667,
+        "correct": 10
+      },
+      "totalMs": 4042.93,
+      "embeddingMs": 3952.62,
+      "embeddingCalls": 13,
+      "rows": [
+        {
+          "caseId": "load-balancing-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6102096247288885,
+          "elapsedMs": 568.06,
+          "embeddingMs": 558.61,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5853293880094559,
+              "keywordScore": 0.3,
+              "hybridScore": 0.6102096247288885
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 3.22,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5057478008148105,
+          "elapsedMs": 276.59,
+          "embeddingMs": 270.56,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.49566102123960254,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5057478008148105
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5312656128816747,
+          "elapsedMs": 262.17,
+          "embeddingMs": 257.35,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5216996049813007,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5312656128816747
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.12,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5038440470474033,
+          "elapsedMs": 251.26,
+          "embeddingMs": 247.1,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4937184153544932,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5038440470474033
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5673005614531487,
+          "elapsedMs": 274.56,
+          "embeddingMs": 269.35,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5492714181803632,
+              "keywordScore": 0.2,
+              "hybridScore": 0.5673005614531487
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.77,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5364215631769786,
+          "elapsedMs": 278.37,
+          "embeddingMs": 273.68,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5171057949760194,
+              "keywordScore": 0.2,
+              "hybridScore": 0.5364215631769786
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5038440470474033,
+          "elapsedMs": 3.48,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4937184153544932,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5038440470474033
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.84,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5166210486164584,
+          "elapsedMs": 281.69,
+          "embeddingMs": 276.4,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5067561720576106,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5166210486164584
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7075131280088497,
+          "elapsedMs": 281.59,
+          "embeddingMs": 276.95,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.688843753200904,
+              "keywordScore": 0.3,
+              "hybridScore": 0.7075131280088497
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.81,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.514266003220804,
+          "elapsedMs": 294.48,
+          "embeddingMs": 289.53,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5043530645110245,
+              "keywordScore": 0.1,
+              "hybridScore": 0.514266003220804
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.535501341042993,
+          "elapsedMs": 284.28,
+          "embeddingMs": 278.01,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5260217765744826,
+              "keywordScore": 0.1,
+              "hybridScore": 0.535501341042993
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.0,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5038440470474033,
+          "elapsedMs": 3.54,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4937184153544932,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5038440470474033
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.4477924835478793,
+          "elapsedMs": 336.61,
+          "embeddingMs": 330.88,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4365229423957952,
+              "keywordScore": 0.1,
+              "hybridScore": 0.4477924835478793
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.89,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5644565477134086,
+          "elapsedMs": 336.77,
+          "embeddingMs": 331.27,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5555679058300088,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5644565477134086
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5038440470474033,
+          "elapsedMs": 3.71,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4937184153544932,
+              "keywordScore": 0.1,
+              "hybridScore": 0.5038440470474033
+            }
+          ]
+        },
+        {
+          "caseId": "load-balancing-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.63,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "load-balancing-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5725140550570101,
+          "elapsedMs": 295.73,
+          "embeddingMs": 292.93,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5547021406843856,
+              "keywordScore": 0.2,
+              "hybridScore": 0.5725140550570101
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "04_백엔드_QueryDSL_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 16,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          }
+        },
+        "macroF1": 0.6666666666666666,
+        "relatedRecall": 1.0,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.3333333333333333,
+        "semanticAccuracy": 1.0,
+        "endToEndAccuracy": 1.0,
+        "correct": 24
+      },
+      "totalMs": 4335.58,
+      "embeddingMs": 4262.21,
+      "embeddingCalls": 13,
+      "rows": [
+        {
+          "caseId": "querydsl-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7262385532130192,
+          "elapsedMs": 577.54,
+          "embeddingMs": 573.54,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7005734175767397,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.7262385532130192
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.2,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7232464003884131,
+          "elapsedMs": 290.36,
+          "embeddingMs": 286.67,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6973007504248269,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.7232464003884131
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7254957893955385,
+          "elapsedMs": 281.4,
+          "embeddingMs": 277.0,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6997610196513702,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.7254957893955385
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.51,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8004690337169248,
+          "elapsedMs": 284.99,
+          "embeddingMs": 281.9,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7817630056278865,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.8004690337169248
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7471331676111852,
+          "elapsedMs": 275.15,
+          "embeddingMs": 271.15,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7145051892384349,
+              "keywordScore": 0.5714285714285714,
+              "hybridScore": 0.7471331676111852
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.49,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7404460019304383,
+          "elapsedMs": 302.3,
+          "embeddingMs": 297.88,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7069551634698497,
+              "keywordScore": 0.5714285714285714,
+              "hybridScore": 0.7404460019304383
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8004690337169248,
+          "elapsedMs": 5.12,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7817630056278865,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.8004690337169248
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.73,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.731696571057385,
+          "elapsedMs": 541.75,
+          "embeddingMs": 537.66,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7065431245940148,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.731696571057385
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7550706493204794,
+          "elapsedMs": 302.08,
+          "embeddingMs": 297.12,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7234668621360252,
+              "keywordScore": 0.5714285714285714,
+              "hybridScore": 0.7550706493204794
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.79,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.694768706760056,
+          "elapsedMs": 288.84,
+          "embeddingMs": 285.8,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6661532730188112,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.694768706760056
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6966472979139733,
+          "elapsedMs": 285.31,
+          "embeddingMs": 280.82,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6682079820934083,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.6966472979139733
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.62,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8004690337169248,
+          "elapsedMs": 4.41,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7817630056278865,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.8004690337169248
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7089739416203983,
+          "elapsedMs": 294.37,
+          "embeddingMs": 288.99,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6714221921520626,
+              "keywordScore": 0.5714285714285714,
+              "hybridScore": 0.7089739416203983
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.64,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7009664301493979,
+          "elapsedMs": 294.31,
+          "embeddingMs": 289.28,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6729320329759039,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.7009664301493979
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8004690337169248,
+          "elapsedMs": 3.33,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7817630056278865,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.8004690337169248
+            }
+          ]
+        },
+        {
+          "caseId": "querydsl-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.79,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "querydsl-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.731004176688385,
+          "elapsedMs": 298.88,
+          "embeddingMs": 294.38,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6962950381965638,
+              "keywordScore": 0.5714285714285714,
+              "hybridScore": 0.731004176688385
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "05_AI_트랜스포머디코더_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 7,
+            "UNRELATED": 0,
+            "UNCERTAIN": 9
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 0.4375,
+            "f1": 0.6086956521739131,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 0.47058823529411764,
+            "recall": 1.0,
+            "f1": 0.6399999999999999,
+            "support": 8
+          }
+        },
+        "macroF1": 0.416231884057971,
+        "relatedRecall": 0.4375,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.7083333333333334,
+        "semanticAccuracy": 0.625,
+        "endToEndAccuracy": 0.625,
+        "correct": 15
+      },
+      "totalMs": 4289.24,
+      "embeddingMs": 4216.65,
+      "embeddingCalls": 13,
+      "rows": [
+        {
+          "caseId": "transformer-decoder-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6225314182102989,
+          "elapsedMs": 555.69,
+          "embeddingMs": 547.92,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5919258575246474,
+              "keywordScore": 0.375,
+              "hybridScore": 0.6225314182102989
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.75,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.4816468227553138,
+          "elapsedMs": 262.14,
+          "embeddingMs": 259.73,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.45436507658454084,
+              "keywordScore": 0.25,
+              "hybridScore": 0.4816468227553138
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.551665933923114,
+          "elapsedMs": 288.97,
+          "embeddingMs": 284.13,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5280694041295937,
+              "keywordScore": 0.25,
+              "hybridScore": 0.551665933923114
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.0,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.4935726580123719,
+          "elapsedMs": 263.17,
+          "embeddingMs": 258.52,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4669185873814441,
+              "keywordScore": 0.25,
+              "hybridScore": 0.4935726580123719
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.60724087410151,
+          "elapsedMs": 275.25,
+          "embeddingMs": 269.14,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5865693411594841,
+              "keywordScore": 0.25,
+              "hybridScore": 0.60724087410151
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.63,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6280705519990195,
+          "elapsedMs": 255.94,
+          "embeddingMs": 250.1,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6084953178937047,
+              "keywordScore": 0.25,
+              "hybridScore": 0.6280705519990195
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.4935726580123719,
+          "elapsedMs": 3.95,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4669185873814441,
+              "keywordScore": 0.25,
+              "hybridScore": 0.4935726580123719
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.92,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6095513339353426,
+          "elapsedMs": 540.26,
+          "embeddingMs": 535.11,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5890014041424658,
+              "keywordScore": 0.25,
+              "hybridScore": 0.6095513339353426
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5697269157980157,
+          "elapsedMs": 349.56,
+          "embeddingMs": 344.41,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5470809639979113,
+              "keywordScore": 0.25,
+              "hybridScore": 0.5697269157980157
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.62,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5760872320285191,
+          "elapsedMs": 295.54,
+          "embeddingMs": 293.16,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5537760337142306,
+              "keywordScore": 0.25,
+              "hybridScore": 0.5760872320285191
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6094499942627355,
+          "elapsedMs": 297.32,
+          "embeddingMs": 295.7,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5888947308028795,
+              "keywordScore": 0.25,
+              "hybridScore": 0.6094499942627355
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.22,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.4935726580123719,
+          "elapsedMs": 1.11,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4669185873814441,
+              "keywordScore": 0.25,
+              "hybridScore": 0.4935726580123719
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6298995252219811,
+          "elapsedMs": 297.62,
+          "embeddingMs": 295.48,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6104205528652433,
+              "keywordScore": 0.25,
+              "hybridScore": 0.6298995252219811
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.29,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.58647957819975,
+          "elapsedMs": 296.69,
+          "embeddingMs": 291.38,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5647153454734211,
+              "keywordScore": 0.25,
+              "hybridScore": 0.58647957819975
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.4935726580123719,
+          "elapsedMs": 3.61,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4669185873814441,
+              "keywordScore": 0.25,
+              "hybridScore": 0.4935726580123719
+            }
+          ]
+        },
+        {
+          "caseId": "transformer-decoder-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.77,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "transformer-decoder-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6190755372445558,
+          "elapsedMs": 296.51,
+          "embeddingMs": 291.86,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5990268813100587,
+              "keywordScore": 0.25,
+              "hybridScore": 0.6190755372445558
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "06_데이터베이스_PostgreSQL_인덱스_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 16,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          }
+        },
+        "macroF1": 0.6666666666666666,
+        "relatedRecall": 1.0,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.3333333333333333,
+        "semanticAccuracy": 1.0,
+        "endToEndAccuracy": 1.0,
+        "correct": 24
+      },
+      "totalMs": 4774.22,
+      "embeddingMs": 4702.8,
+      "embeddingCalls": 16,
+      "rows": [
+        {
+          "caseId": "postgres-index-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6425761909690465,
+          "elapsedMs": 572.46,
+          "embeddingMs": 567.94,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6170459188954069,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6425761909690465
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.45,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6634380392239437,
+          "elapsedMs": 255.11,
+          "embeddingMs": 249.2,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6393978991685112,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6634380392239437
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7117429087036157,
+          "elapsedMs": 266.71,
+          "embeddingMs": 261.36,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6911531164681597,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.7117429087036157
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.44,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.8027828293732352,
+          "elapsedMs": 263.98,
+          "embeddingMs": 259.55,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7808698104147058,
+              "keywordScore": 0.5,
+              "hybridScore": 0.8027828293732352
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7859097984182324,
+          "elapsedMs": 268.87,
+          "embeddingMs": 264.2,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7621219982424804,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7859097984182324
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.47,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6268433021763312,
+          "elapsedMs": 258.87,
+          "embeddingMs": 254.65,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6001892523317834,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6268433021763312
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6651130518479594,
+          "elapsedMs": 267.78,
+          "embeddingMs": 263.27,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6411925555513851,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6651130518479594
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.51,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7307036647736974,
+          "elapsedMs": 278.92,
+          "embeddingMs": 274.84,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.711468212257533,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.7307036647736974
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6564826043882199,
+          "elapsedMs": 292.45,
+          "embeddingMs": 287.46,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6319456475588071,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6564826043882199
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.64,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6053159235629207,
+          "elapsedMs": 276.99,
+          "embeddingMs": 273.05,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.577124203817415,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6053159235629207
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6625885387504097,
+          "elapsedMs": 289.11,
+          "embeddingMs": 284.73,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6384877200897247,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6625885387504097
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.5,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6935174646257897,
+          "elapsedMs": 300.93,
+          "embeddingMs": 299.32,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6716258549562032,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6935174646257897
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6859301972639996,
+          "elapsedMs": 299.11,
+          "embeddingMs": 295.5,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6634966399257138,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6859301972639996
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.38,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.630672453151719,
+          "elapsedMs": 291.55,
+          "embeddingMs": 287.02,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6042919140911276,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.630672453151719
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6796488503509197,
+          "elapsedMs": 289.62,
+          "embeddingMs": 287.22,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6567666253759854,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6796488503509197
+            }
+          ]
+        },
+        {
+          "caseId": "postgres-index-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.22,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "postgres-index-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7611980766119416,
+          "elapsedMs": 297.49,
+          "embeddingMs": 293.47,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.734664529568824,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7611980766119416
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "07_보안_JWT인증_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 8,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6666666666666666,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 8
+          }
+        },
+        "macroF1": 0.4444444444444444,
+        "relatedRecall": 0.5,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.6666666666666666,
+        "semanticAccuracy": 0.6666666666666666,
+        "endToEndAccuracy": 0.6666666666666666,
+        "correct": 16
+      },
+      "totalMs": 5159.11,
+      "embeddingMs": 5088.66,
+      "embeddingCalls": 16,
+      "rows": [
+        {
+          "caseId": "jwt-auth-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5345453183339346,
+          "elapsedMs": 571.62,
+          "embeddingMs": 566.5,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5184951568971737,
+              "keywordScore": 0.16666666666666666,
+              "hybridScore": 0.5345453183339346
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.67,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5984167608939349,
+          "elapsedMs": 280.5,
+          "embeddingMs": 277.06,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5697322438149303,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.5984167608939349
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6239972114307419,
+          "elapsedMs": 279.59,
+          "embeddingMs": 275.79,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5971398693900807,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6239972114307419
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.28,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5717617249630413,
+          "elapsedMs": 266.63,
+          "embeddingMs": 262.53,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5569948878928014,
+              "keywordScore": 0.16666666666666666,
+              "hybridScore": 0.5717617249630413
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6467878079683257,
+          "elapsedMs": 258.79,
+          "embeddingMs": 256.94,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.621558365680349,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6467878079683257
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.22,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6233635968781615,
+          "elapsedMs": 265.28,
+          "embeddingMs": 262.53,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5815151076424017,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6233635968781615
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6467003205609436,
+          "elapsedMs": 272.02,
+          "embeddingMs": 269.42,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6074448006232707,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6467003205609436
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.95,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5648989429504024,
+          "elapsedMs": 291.16,
+          "embeddingMs": 287.38,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5498954582245542,
+              "keywordScore": 0.16666666666666666,
+              "hybridScore": 0.5648989429504024
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5445098973902729,
+          "elapsedMs": 340.28,
+          "embeddingMs": 335.77,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5288033421278685,
+              "keywordScore": 0.16666666666666666,
+              "hybridScore": 0.5445098973902729
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.7,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6007516477171231,
+          "elapsedMs": 294.03,
+          "embeddingMs": 289.36,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5563907196856923,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6007516477171231
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6497069878558036,
+          "elapsedMs": 293.76,
+          "embeddingMs": 289.22,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.610785542062004,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6497069878558036
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.8,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7115874773603389,
+          "elapsedMs": 296.0,
+          "embeddingMs": 291.0,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6795416415114877,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7115874773603389
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6398545290537017,
+          "elapsedMs": 287.54,
+          "embeddingMs": 282.88,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6141298525575375,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.6398545290537017
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.59,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5770043028576146,
+          "elapsedMs": 557.61,
+          "embeddingMs": 553.22,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5467903244903014,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.5770043028576146
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5968380728167814,
+          "elapsedMs": 296.76,
+          "embeddingMs": 291.57,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5680407923036943,
+              "keywordScore": 0.3333333333333333,
+              "hybridScore": 0.5968380728167814
+            }
+          ]
+        },
+        {
+          "caseId": "jwt-auth-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.65,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "jwt-auth-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5661496263887101,
+          "elapsedMs": 301.97,
+          "embeddingMs": 297.5,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.551189268677976,
+              "keywordScore": 0.16666666666666666,
+              "hybridScore": 0.5661496263887101
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "08_운영체제_프로세스스레드_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 16,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          }
+        },
+        "macroF1": 0.6666666666666666,
+        "relatedRecall": 1.0,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.3333333333333333,
+        "semanticAccuracy": 1.0,
+        "endToEndAccuracy": 1.0,
+        "correct": 24
+      },
+      "totalMs": 4791.14,
+      "embeddingMs": 4706.79,
+      "embeddingCalls": 16,
+      "rows": [
+        {
+          "caseId": "os-process-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7832779226432269,
+          "elapsedMs": 423.5,
+          "embeddingMs": 417.97,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7591976918258077,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7832779226432269
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.64,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7813216703529422,
+          "elapsedMs": 306.02,
+          "embeddingMs": 300.98,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7427313768858144,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7813216703529422
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.783373316360332,
+          "elapsedMs": 293.77,
+          "embeddingMs": 289.53,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7451450780709789,
+              "keywordScore": 0.75,
+              "hybridScore": 0.783373316360332
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.62,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7444472991795384,
+          "elapsedMs": 278.59,
+          "embeddingMs": 272.95,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6993497637406335,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7444472991795384
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.74530192849551,
+          "elapsedMs": 281.54,
+          "embeddingMs": 276.35,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.717002142772789,
+              "keywordScore": 0.5,
+              "hybridScore": 0.74530192849551
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.69,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7636235327503016,
+          "elapsedMs": 289.39,
+          "embeddingMs": 284.58,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7219100385297665,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7636235327503016
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7530516811822413,
+          "elapsedMs": 289.63,
+          "embeddingMs": 284.78,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7094725660967545,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7530516811822413
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.62,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7446405520758522,
+          "elapsedMs": 302.8,
+          "embeddingMs": 297.41,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6995771200892379,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7446405520758522
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7625377779241835,
+          "elapsedMs": 293.09,
+          "embeddingMs": 288.84,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7206326799108042,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7625377779241835
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.53,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7630916062947304,
+          "elapsedMs": 295.08,
+          "embeddingMs": 289.8,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7212842426996828,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7630916062947304
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7182224005211613,
+          "elapsedMs": 283.51,
+          "embeddingMs": 278.78,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6684969417896015,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7182224005211613
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.55,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6638457416008091,
+          "elapsedMs": 284.71,
+          "embeddingMs": 280.64,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6045244018833048,
+              "keywordScore": 0.75,
+              "hybridScore": 0.6638457416008091
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7341893282698584,
+          "elapsedMs": 295.59,
+          "embeddingMs": 291.31,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6872815626704216,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7341893282698584
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.64,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7468152117404642,
+          "elapsedMs": 280.79,
+          "embeddingMs": 274.09,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7021355432240755,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7468152117404642
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7389755300622404,
+          "elapsedMs": 292.39,
+          "embeddingMs": 288.3,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6929123883085181,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7389755300622404
+            }
+          ]
+        },
+        {
+          "caseId": "os-process-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.47,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "os-process-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7833505273549928,
+          "elapsedMs": 295.18,
+          "embeddingMs": 290.49,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7451182674764621,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7833505273549928
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "09_인프라_Docker_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 2,
+            "UNRELATED": 0,
+            "UNCERTAIN": 14
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 0.125,
+            "f1": 0.2222222222222222,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 0.36363636363636365,
+            "recall": 1.0,
+            "f1": 0.5333333333333333,
+            "support": 8
+          }
+        },
+        "macroF1": 0.2518518518518518,
+        "relatedRecall": 0.125,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.9166666666666666,
+        "semanticAccuracy": 0.4166666666666667,
+        "endToEndAccuracy": 0.4166666666666667,
+        "correct": 10
+      },
+      "totalMs": 5286.66,
+      "embeddingMs": 5197.61,
+      "embeddingCalls": 16,
+      "rows": [
+        {
+          "caseId": "docker-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5475062734842692,
+          "elapsedMs": 568.82,
+          "embeddingMs": 561.62,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5050849866234194,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.5475062734842692
+            }
+          ]
+        },
+        {
+          "caseId": "docker-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.1,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5288531167984727,
+          "elapsedMs": 274.68,
+          "embeddingMs": 269.94,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5002987602408043,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5288531167984727
+            }
+          ]
+        },
+        {
+          "caseId": "docker-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5620027086677658,
+          "elapsedMs": 285.21,
+          "embeddingMs": 281.47,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5354574182839941,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5620027086677658
+            }
+          ]
+        },
+        {
+          "caseId": "docker-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.54,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6040833957224591,
+          "elapsedMs": 287.65,
+          "embeddingMs": 283.02,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5800884500086687,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.6040833957224591
+            }
+          ]
+        },
+        {
+          "caseId": "docker-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5893666920370139,
+          "elapsedMs": 295.09,
+          "embeddingMs": 289.69,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.564479824887742,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5893666920370139
+            }
+          ]
+        },
+        {
+          "caseId": "docker-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.78,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.4870236853648467,
+          "elapsedMs": 295.16,
+          "embeddingMs": 290.6,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.45593421175059495,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.4870236853648467
+            }
+          ]
+        },
+        {
+          "caseId": "docker-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5211494408777282,
+          "elapsedMs": 286.08,
+          "embeddingMs": 280.22,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.4921281948703177,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5211494408777282
+            }
+          ]
+        },
+        {
+          "caseId": "docker-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 1.14,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5220847778753851,
+          "elapsedMs": 290.81,
+          "embeddingMs": 285.85,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.49312021895874175,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5220847778753851
+            }
+          ]
+        },
+        {
+          "caseId": "docker-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6107133340274115,
+          "elapsedMs": 308.2,
+          "embeddingMs": 303.21,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5742177090924813,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.6107133340274115
+            }
+          ]
+        },
+        {
+          "caseId": "docker-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.7,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.49408262461772806,
+          "elapsedMs": 308.38,
+          "embeddingMs": 303.98,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.463420965503651,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.49408262461772806
+            }
+          ]
+        },
+        {
+          "caseId": "docker-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.533409194885017,
+          "elapsedMs": 298.75,
+          "embeddingMs": 294.02,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5051309642719878,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.533409194885017
+            }
+          ]
+        },
+        {
+          "caseId": "docker-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.79,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5977783145836373,
+          "elapsedMs": 295.08,
+          "embeddingMs": 290.34,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.5600700315758533,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.5977783145836373
+            }
+          ]
+        },
+        {
+          "caseId": "docker-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.520303319844995,
+          "elapsedMs": 299.87,
+          "embeddingMs": 294.99,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.47533175608046324,
+              "keywordScore": 0.42857142857142855,
+              "hybridScore": 0.520303319844995
+            }
+          ]
+        },
+        {
+          "caseId": "docker-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.74,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.45855843579473216,
+          "elapsedMs": 301.85,
+          "embeddingMs": 297.48,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.42574379553986746,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.45855843579473216
+            }
+          ]
+        },
+        {
+          "caseId": "docker-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": 0.5081750726159506,
+          "elapsedMs": 298.82,
+          "embeddingMs": 292.61,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.47836750125934163,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5081750726159506
+            }
+          ]
+        },
+        {
+          "caseId": "docker-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.9,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "docker-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "DESKTOP_APP_OCR",
+          "score": 0.5158026481325382,
+          "elapsedMs": 584.67,
+          "embeddingMs": 578.56,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.48645735407996477,
+              "keywordScore": 0.2857142857142857,
+              "hybridScore": 0.5158026481325382
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "10_알고리즘_BFS_DFS_2시간_메타데이터만.json",
+      "metrics": {
+        "cases": 24,
+        "labelledCases": 24,
+        "semanticEligibleCases": 24,
+        "excludedFromSemanticMetrics": 0,
+        "statusCounts": {
+          "COMPLETED": 24
+        },
+        "pipelineFailures": 0,
+        "confusion": {
+          "RELATED": {
+            "RELATED": 16,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNRELATED": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 0
+          },
+          "UNCERTAIN": {
+            "RELATED": 0,
+            "UNRELATED": 0,
+            "UNCERTAIN": 8
+          }
+        },
+        "perClass": {
+          "RELATED": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 16
+          },
+          "UNRELATED": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          },
+          "UNCERTAIN": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 8
+          }
+        },
+        "macroF1": 0.6666666666666666,
+        "relatedRecall": 1.0,
+        "unrelatedToRelated": 0,
+        "uncertainRate": 0.3333333333333333,
+        "semanticAccuracy": 1.0,
+        "endToEndAccuracy": 1.0,
+        "correct": 24
+      },
+      "totalMs": 4332.13,
+      "embeddingMs": 4279.8,
+      "embeddingCalls": 16,
+      "rows": [
+        {
+          "caseId": "graph-traversal-000m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6851077206401809,
+          "elapsedMs": 603.52,
+          "embeddingMs": 597.63,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.650119689600201,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6851077206401809
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-005m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.92,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-010m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6885657588845775,
+          "elapsedMs": 292.61,
+          "embeddingMs": 287.26,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6539619543161972,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6885657588845775
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-015m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7054124079750869,
+          "elapsedMs": 234.18,
+          "embeddingMs": 228.3,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6726804533056521,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7054124079750869
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-020m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.78,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-025m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7081623345300223,
+          "elapsedMs": 233.1,
+          "embeddingMs": 228.17,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6757359272555804,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7081623345300223
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-030m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6723512047069702,
+          "elapsedMs": 243.23,
+          "embeddingMs": 238.57,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6359457830077446,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6723512047069702
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-035m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.73,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-040m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6815719329776027,
+          "elapsedMs": 225.26,
+          "embeddingMs": 223.05,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6461910366417808,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6815719329776027
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-045m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6908614700874619,
+          "elapsedMs": 232.33,
+          "embeddingMs": 230.51,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6565127445416243,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6908614700874619
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-050m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.28,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-055m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6874528698215348,
+          "elapsedMs": 243.64,
+          "embeddingMs": 241.84,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6527254109128164,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6874528698215348
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-060m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6737376279696736,
+          "elapsedMs": 249.69,
+          "embeddingMs": 248.03,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6374862532996374,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6737376279696736
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-065m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.23,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-070m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.721018766655207,
+          "elapsedMs": 240.73,
+          "embeddingMs": 239.21,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6900208518391189,
+              "keywordScore": 0.5,
+              "hybridScore": 0.721018766655207
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-075m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7242087607983438,
+          "elapsedMs": 256.03,
+          "embeddingMs": 253.3,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6935652897759376,
+              "keywordScore": 0.5,
+              "hybridScore": 0.7242087607983438
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-080m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.31,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-085m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.7937741624594642,
+          "elapsedMs": 255.27,
+          "embeddingMs": 253.28,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.7573813675993697,
+              "keywordScore": 0.75,
+              "hybridScore": 0.7937741624594642
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-090m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6860878847625518,
+          "elapsedMs": 254.2,
+          "embeddingMs": 252.42,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6512087608472797,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6860878847625518
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-095m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.37,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-100m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6827052719922468,
+          "elapsedMs": 253.93,
+          "embeddingMs": 251.91,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6474503022136077,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6827052719922468
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-105m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.6933757196619575,
+          "elapsedMs": 253.44,
+          "embeddingMs": 251.58,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6593063551799528,
+              "keywordScore": 0.5,
+              "hybridScore": 0.6933757196619575
+            }
+          ]
+        },
+        {
+          "caseId": "graph-traversal-110m-meta",
+          "expectedLabel": "UNCERTAIN",
+          "relevanceLabel": "UNCERTAIN",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_INSUFFICIENT",
+          "nextContentSource": "CHROME_DOM",
+          "score": null,
+          "elapsedMs": 0.24,
+          "embeddingMs": 0.0,
+          "embeddingCalls": 0,
+          "analysisPath": "METADATA",
+          "matches": []
+        },
+        {
+          "caseId": "graph-traversal-115m-meta",
+          "expectedLabel": "RELATED",
+          "relevanceLabel": "RELATED",
+          "status": "COMPLETED",
+          "reasonCode": "METADATA_HYBRID_RELATED",
+          "nextContentSource": null,
+          "score": 0.736355133900934,
+          "elapsedMs": 256.66,
+          "embeddingMs": 254.74,
+          "embeddingCalls": 1,
+          "analysisPath": "METADATA",
+          "matches": [
+            {
+              "cosine": 0.6986915816010674,
+              "keywordScore": 0.625,
+              "hybridScore": 0.736355133900934
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "limitation": "Synthetic repeated title templates, RELATED/UNCERTAIN only; no independent accuracy or UNRELATED evaluation. No threshold tuning after results.",
+  "bodyLengthGateApplied": false,
+  "bodyCoverageGateApplied": false
+}

@@ -1,0 +1,23 @@
+{
+  "sessionId": "synthetic-input-demo",
+  "runId": "run-input-demo",
+  "goalId": "goal-react-input-demo",
+  "goalVersion": 1,
+  "sequence": 1,
+  "observedAt": "2026-10-21T04:00:00Z",
+  "isActiveTarget": true,
+  "sessionStatus": "ACTIVE",
+  "exclusionMode": "NONE",
+  "appName": "Google Chrome",
+  "windowTitle": "React 객체 상태 업데이트 — Google Chrome",
+  "pageTitle": "React useState 객체 상태 업데이트",
+  "urlHost": "react.dev",
+  "contentType": "WEB_PAGE",
+  "extractionStatus": "SUCCESS",
+  "isSensitive": false,
+  "isExcluded": false,
+  "clientRunId": "demo-dom-001",
+  "navigationId": "nav-demo-chrome",
+  "contentSource": "CHROME_DOM",
+  "text": "## useState 객체 상태 업데이트\n\nuseState로 객체 상태를 업데이트할 때 기존 객체를 직접 수정하지 않습니다. 상태 변경 함수에 새로운 객체를 전달하면 React가 상태 업데이트를 반영합니다.\n\n객체 복사에는 JavaScript 전개 구문을 사용할 수 있습니다. 이전 속성을 유지하면서 바꿀 속성만 새로운 값으로 덮어씁니다.\n\n```javascript\nsetState(prev => ({ ...prev, count: prev.count + 1 }));\n```"
+}

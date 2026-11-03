@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-27",
+  "issue": 29,
+  "source": {
+    "url": "https://www.databricks.com/blog/memcurrent-designing-persistent-memory-production-agents",
+    "origin": "PUBLIC_ARTICLE_DOM_TEST",
+    "synthetic": false,
+    "userRequestedOneOffTest": true
+  },
+  "goalSnapshot": "MemCurrent의 에이전트 메모리 구조 공부",
+  "extraction": {
+    "method": "browser rendered DOM",
+    "selector": ".article--content",
+    "nodes": "p,h2,h3,table; nested table descendants excluded",
+    "removed": "figure/table captions, author/acknowledgment and footnote labels",
+    "domChars": 14816,
+    "cleanChars": 11790,
+    "blocks": 57,
+    "cleanBlocks": 42
+  },
+  "preprocessing": {
+    "implementation": "existing learning_summary_demo paragraph/sentence/120-char/dedup/20-item rules; mirrored in browser and accepted items checked in Python",
+    "totalChunks": 122,
+    "over120Discarded": 39,
+    "eligibleDistinctBeforeCap": 80,
+    "acceptedCount": 20,
+    "evidenceChars": 1136,
+    "payloadChars": 2110,
+    "payloadLimit": 2400,
+    "missingFromAccepted": [
+      "episodic memory",
+      "derived memory",
+      "memory.md",
+      "search_memory",
+      "fetch_memory"
+    ]
+  },
+  "model": {
+    "name": "gpt-5-mini",
+    "reasoningEffort": "low",
+    "promptVersion": "learning-summary-mvp-v3",
+    "testOnlyPromptChange": "synthetic evidence -> public article evidence",
+    "store": false,
+    "timeoutSeconds": 20,
+    "sdkRetries": 0,
+    "dataOrigin": "PUBLIC_ARTICLE_DOM_TEST"
+  },
+  "result": {
+    "initialNetworkAttempt": "APIConnectionError before provider response; retried with sandbox network permission",
+    "providerResponses": 1,
+    "providerStatus": "completed",
+    "seconds": 8.29,
+    "status": "FAILED",
+    "reason": "OUTPUT_VALIDATION_REJECTED",
+    "summary": null,
+    "validatedNoteGenerated": false
+  },
+  "diagnosis": [
+    "English evidence yielded Korean concept names; current literal token containment rejects names absent from cited English source.",
+    "120-character sentence rejection drops core design descriptions.",
+    "First-20 selection includes introduction, headings and fragmented table labels before core concepts."
+  ],
+  "boundaries": {
+    "relevance": "RELATED assumed for this test; relevance classifier not called",
+    "capture": "manual public-page DOM extraction, not shipped Extension capture",
+    "storage": "No raw DOM, article excerpts, URL payload or unvalidated provider draft saved as fixture/note; public source link and aggregate metadata recorded.",
+    "production": "No production external-send setting, model prompt or generator code changed."
+  }
+}

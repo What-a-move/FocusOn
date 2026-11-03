@@ -4,12 +4,15 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 팝업 세션 화면 실제 연동 QA (Issue #52, 2026-11-03)
+- 상태: 실제 서버로 연결·E02·E03(진행 중·멈춤)·토큰 갱신(rotation) 확인. 팝업 시간이 뒤로 튀는 오류와 E06 거짓 멈춤 안내를 고쳤고, 개발용 Extension ID를 고정했다(결정 017). 연결 해제 확인과 REPORT 완료(`session-popup-REPORT.md`). 남은 일: Backend CORS 반영 뒤 권한 해제 → E06·`local-events` 재확인.
+
 - 작업명: 모듈 연동 로거와 로그 복사 (Issue #105, `feat/105-extension-logger`)
 - 상태: 로거·요청 traceId·`sw.restart`·팝업 로그 복사 구현(2026-10-29). 남은 일: 실제 Chrome에서 Worker 종료 뒤 기록 유지와 로그 복사 확인, 서버가 `X-Trace-Id`를 찍으면 같은 traceId로 추적표 확인, 그 뒤 REPORT.
 - 다음 Issue 후보: 세션 상태 전이표를 shared-types로 모으는 리팩토링.
 
 - 작업명: Chrome 탭·페이지 분석 (Issue #61, `feat/61-extension-tab-analysis`)
-- 상태: Service Worker 분석·사이트 권한 E01b·E06·권한 철회 `local-events` 구현(2026-10-26). 남은 일: 실제 Chrome에서 권한 창·Worker 종료 복구 QA, 백엔드 `analysis-runs` 병합 뒤 실제 왕복 QA와 REPORT. 같은 페이지 안 내용 변경(스크롤) 30초 재전송은 하지 않았다.
+- 상태: Service Worker 분석·사이트 권한 E01b·E06·권한 철회 `local-events` 구현(2026-10-26). 실제 Chrome QA와 REPORT 완료(2026-11-03, `tab-analysis-REPORT.md`). 남은 일: 백엔드 `analysis-runs` 병합 뒤 연동 QA, CORS(#151) 뒤 권한 해제 확인. 같은 페이지 안 내용 변경(스크롤) 30초 재전송은 하지 않았다.
 - 다음 Issue 후보: 화면 분석 4단계 — Desktop 개입 표시(Floating Poki, `GET /sessions/{id}/interventions` 10초 조회).
 
 

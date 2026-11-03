@@ -11,7 +11,7 @@ from src.models.errors import ModelConfigurationError, ModelUnavailableError
 from src.models.fakes import FakeGoalGenerationClient, FakeJevClient
 from src.workflow.goal_assistance import GoalAssistanceWorkflow
 from src.api.schemas import GoalClarifyRequest
-import src.api.routes as routes
+import src.api.goal_routes as routes
 
 
 PASS = GeneratedResultVerification(0.95, 0.95, 0.95)

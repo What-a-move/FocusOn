@@ -1,5 +1,15 @@
 # AI Prompt와 Agent 신뢰 경계
 
+# AI Prompt와 Agent 신뢰 경계
+
+## #29 MVP 학습 정리: 2026-11-03 실행 기준
+
+- 사용자 전달 확정안의 공개 Schema는 `overview`, `keyConcepts[{name,briefExplanation,sessionEvidence}]` 최대 5개, `nextStartPrompt` 한 문장뿐이다. 전체 1,200자를 유지하며 `reviewQuestions`·`recommendedConcepts`는 생성·표시하지 않는다.
+- `learning-summary-mvp-v4`는 공급자에 `SummaryDraft`(근거 ID를 가진 핵심 개념)만 요청하고 추가 키를 거절한다. ID와 개념명·설명 단어가 인용 근거에 있는지 검사한 뒤 ID를 공개 결과에서 제거한다. 개요와 다음 시작 문장은 코드에서 결정한다. 원문 문장 복사와 질문 문구를 거절하며 성취를 단정하지 않는다.
+- `nextStartPrompt`는 검증된 첫 개념을 이어서 살펴보는 고정 한 문장으로 구성한다. 모델에 다음 공부할 개념이나 퀴즈를 생성시키지 않는다. 단어 대조는 의미적 함의·조건 보존을 완전히 검증하지 못하므로, 이 결과를 사실성 보장으로 간주하지 않는다.
+- 기본 `gpt-5-mini`에 low 추론, 20초 Timeout, SDK 재시도 0, store=false를 사용한다. 입력은 합성 DOM 문단이며 실제 화면 데이터 전송은 미연결이다.
+- 구조화 출력의 추가 속성 거절은 [OpenAI 공식 문서](https://developers.openai.com/api/docs/guides/structured-outputs#additionalproperties-false-must-always-be-set-in-objects)를 참고했다. 형식 제약은 사실성 보장이 아니다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안, 미구현
@@ -308,3 +318,9 @@ Client는 문구가 아니라 상태 필드와 `reasonCode`로 분기한다.
 - 모델 Timeout·형식 오류 후 이전 판정이 현재 결과처럼 남지 않음
 
 Prompt Injection 실행, Schema 위반 결과 사용, 민감정보 재출력과 임의 도구 호출은 모두 `0건`이어야 한다.
+
+## 13. 현재 화면 관련성 경로 (2026-10-28)
+
+현재 실행 가능한 평가 경로는 `evaluation/analysis_runner.py`의 `compare_graphless`다. 목표·제목·본문 키워드는 로컬 Kiwi로 처리하며 OpenAI 키워드 생성 Prompt, 목표 Graph 생성, ChromaDB 저장 경로는 제거했다. 임베딩 질의에는 `src/models/embedding_client.py`의 기존 평가 지침을 그대로 사용한다. 목표·본문·기대 라벨로 별칭이나 하위 개념을 생성하지 않는다.
+
+본 문서의 LLM·목표 보조·학습 정리 지침은 해당 기능의 설계이며 현재 화면 Hybrid가 매 요청마다 LLM을 호출한다는 뜻이 아니다. 공개 API 계약·신뢰도 보정·Server 연결은 별도 후속 작업이다. 과거 Graph 생성 지침의 변경 이력은 `DECISION_RECORD.md`에 남긴다.

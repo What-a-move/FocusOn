@@ -1,5 +1,15 @@
 # AI 평가와 회귀 검증 명세
 
+# AI 평가와 회귀 검증 명세
+
+## #29 MVP 형식 회귀: 2026-10-27
+
+- 추가 8건 평가: [합성 입력](../evaluation/learning_summary_eight_cases.json), [입력과 전체 노트·검토](../evaluation/learning_summary_eight_results_2026-10-27.md), [구조화 결과](../evaluation/learning_summary_eight_results_2026-10-27.json). 서로 다른 8건에 각 1회·재시도 0, 최대 동시 2건. 8/8 READY, 평균 7.75초(4.87~12.49초), 묶음 31.20초. 형식은 통과했으나 근거 밖 보충·확실성 변화·개요의 행동 권유가 관찰돼 의미 정확도 수치로 사용하지 않는다. 이번 추가 평가에서 생성 코드와 Prompt는 바꾸지 않았다.
+- 버전 `learning-summary-mvp-v3`, 기본 `gpt-5-mini` low 추론. 사용자가 전달한 확정 최종 Schema만 허용한다.
+- `PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m unittest discover -s AI/tests -p 'test_learning_summary*.py' -v`: 23개 통과. 퀴즈·추천·모델 생성 nextStartPrompt 추가 키 거절, 최종 공개 필드 세 개, 내부 근거 ID 제거, 근거 부족·제외·중복·동의 철회·민감값·원문 복사·1,200자·5개 한도와 Streamlit 구역/키 로딩을 확인했다.
+- 기본 합성 React Query DOM 문단으로 실제 호출 1회: 5.77초 READY. 결과 필드는 overview/keyConcepts/nextStartPrompt이며 다음 문장은 코드에서 검증된 useQuery 개념을 재확인하도록 구성했다. 재호출·자동 재시도는 없었다.
+- 실제 사용자 DOM·관련성 판정·Backend·Desktop 제품 연동 테스트가 아니다. 소수 합성 입력의 성공을 일반 정확도·지연 보장으로 해석하지 않는다. 내부 ID·단어 대조는 설명의 의미적 사실성을 완전히 보장하지 않는다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안
@@ -297,6 +307,7 @@ streamlit run streamlit_app.py
 - 2026-11-03 GA-038: 공식 Anthropic SDK의 HTTP Mock으로 `/v1/messages`의 구조화 Schema 전달·파싱, 잘린 응답·refusal 거절, 4xx 설정 오류·429/5xx/연결 장애 분류를 검증한다. Streamlit의 Claude 표시, 기존 질문 병렬·스트리밍·fallback 및 저장 전 확인 회귀를 함께 실행한다.
 - Claude 합성 목표 Live smoke는 스트리밍 질문·프로필·추천 각각 1회 성공(5.58/6.12/5.79초)이다. 고정 Router Fixture는 이전과 같은 15건이다. Live smoke는 생성 품질 전체 평가나 JEV 통합·P95 검증을 대체하지 않는다.
 - 로컬 what-a-move 회귀는 87개 통과(6.35초), Offline Router 15건 오류 0건이다. 기본 tracing을 껐으며 import 시 외부 호출하는 사용자 미추적 `tests/openai_test.py`는 `--ignore=AI/tests/openai_test.py`로 제외했다. 파일은 수정·커밋하지 않는다.
+- PR #160의 dev 동기화 후 전체 AI는 405개·하위 테스트 27개 통과(14.70초), 동일 Offline Router 15건 오류 0건이다. 확장 실행에 필요한 기존 Kiwi 0.23.1을 what-a-move에 설치했다. 외부 모델 호출은 기존 Claude 합성 smoke 3건 외에 추가하지 않았다.
 
 - 고정 Fixture는 내부 6종 clarityStatus와 JEV 최초 4개 판단 및 Score Router 2.00/1.00을 검사한다. 폐기한 goalDetailLevel Choice나 isStartableAsIs를 현재 라우팅 기준으로 사용하지 않는다.
 - 공개 decision 4종 변환·Backend·실제 모델 품질·비용은 별도 통합/Live 평가가 필요하다. 기본 테스트 중에는 LANGSMITH_TRACING, LANGCHAIN_TRACING_V2, LANGSMITH_TRACE_RAW_GOAL_TEXT를 false로 설정한다.

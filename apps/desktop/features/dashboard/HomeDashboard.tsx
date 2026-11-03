@@ -153,6 +153,12 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
     }
     // 상단 요약과 지난 목표는 이번 달 기준이다. 다른 달로 넘겨도 이번 달 응답은 끝까지 반영한다.
     if (!isCurrentMonth || summaryRequest !== latestSummary.current) return
+    // 오프라인인데 이번 달을 전에 확인했으면 달력처럼 요약·지난 목표도 그때 값을 둔다. 한쪽만 오류로 바꾸지 않는다.
+    if (!result.success && result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' && cache.current.has(key)) {
+      setCurrent(cache.current.get(key)?.data ?? 'error')
+      setRecent((previous) => previous.status === 'ready' ? previous : { status: 'error', code: result.error.code })
+      return
+    }
     if (!result.success) { setCurrent('error'); setRecent({ status: 'error', code: result.error.code }); return }
     setCurrent(result.data)
     setRecent({ status: 'loading' })

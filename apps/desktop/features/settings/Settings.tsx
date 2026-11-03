@@ -104,7 +104,7 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
 
   if (view.status === 'loading') return <p className="fo-settings-status" role="status">집중 설정을 불러오고 있어요.</p>
   // [주의] 읽지 못했을 때 기본값을 보여 주거나 저장하지 않는다. 서버 값을 덮어쓸 수 있다.
-  if (view.status === 'error') return <LoadError code={view.code} what="집중 설정을" onRetry={() => { void load() }} />
+  if (view.status === 'error') return <LoadError poki={false} code={view.code} what="집중 설정을" onRetry={() => { void load() }} />
 
   const settings = view.data
   async function save(next: FocusSettings) {

@@ -1,0 +1,4907 @@
+{
+  "createdAt": "2026-10-21T05:14:57.161490+00:00",
+  "synthetic": true,
+  "goal": {
+    "goalId": "goal-transformer-decoder-1h",
+    "goalVersion": 1,
+    "text": "트랜스포머 디코더 공부",
+    "confirmed": true
+  },
+  "datasetSha256BeforeRun": "ab7b41195c3d7e20d371951e9db2db87c861a15cda76e93fb8031473c7a99289",
+  "datasetSha256AfterRun": "ab7b41195c3d7e20d371951e9db2db87c861a15cda76e93fb8031473c7a99289",
+  "graphSource": "AI/evaluation/transformer-decoder-graph-diagnostic.json",
+  "graphSourceSha256": "01979aeae464612edc29c2073634d2511980b5753904c8ac987b3d086bde4a67",
+  "graphFingerprint": "d0f849019dfb9cbedf84763ef04add6378e8629aac429f9c3742f68a70835e9b",
+  "graph": {
+    "template_id": "generated:goal-transformer-decoder-1h:v1",
+    "version": "llm-goal-graph-v1:llm:aeb21f9379386476",
+    "goal_text": "트랜스포머 디코더 공부",
+    "concepts": [
+      {
+        "id": "transformer_decoder",
+        "description": "트랜스포머 디코더의 구조와 작동 방식을 학습한다.",
+        "aliases": [
+          "트랜스포머 디코더",
+          "Transformer decoder"
+        ],
+        "role": "DIRECT",
+        "connection": "확인된 학습 목표 자체이다."
+      },
+      {
+        "id": "decoder_self_attention",
+        "description": "디코더 내부의 셀프 어텐션과 미래 토큰을 가리는 마스크를 이해한다.",
+        "aliases": [
+          "디코더 셀프 어텐션",
+          "causal self-attention",
+          "masked self-attention"
+        ],
+        "role": "PREREQUISITE",
+        "connection": "디코더의 토큰 간 정보 처리 방식을 이해하는 데 필요하다."
+      },
+      {
+        "id": "decoder_cross_attention",
+        "description": "인코더 출력을 참조하는 디코더의 크로스 어텐션을 이해한다.",
+        "aliases": [
+          "디코더 크로스 어텐션",
+          "encoder-decoder attention"
+        ],
+        "role": "PREREQUISITE",
+        "connection": "인코더-디코더 트랜스포머에서 디코더가 입력 표현을 활용하는 방식을 설명한다."
+      },
+      {
+        "id": "autoregressive_generation",
+        "description": "이전 토큰을 바탕으로 다음 토큰을 순차적으로 생성하는 디코딩 과정을 이해한다.",
+        "aliases": [
+          "자기회귀 생성",
+          "autoregressive decoding",
+          "다음 토큰 예측"
+        ],
+        "role": "SUPPORTING",
+        "connection": "디코더의 마스크와 토큰 생성 동작을 연결해 이해하는 데 도움을 준다."
+      }
+    ],
+    "unrelated_topics": [
+      {
+        "id": "bread_baking",
+        "description": "빵 반죽을 발효하고 굽는 제빵 활동.",
+        "aliases": [
+          "빵 굽기",
+          "제빵",
+          "sourdough baking"
+        ],
+        "role": null,
+        "connection": "트랜스포머 디코더 학습과 무관한 별개의 활동이다."
+      },
+      {
+        "id": "gardening",
+        "description": "식물을 심고 돌보는 원예 활동.",
+        "aliases": [
+          "원예",
+          "텃밭 가꾸기",
+          "gardening"
+        ],
+        "role": null,
+        "connection": "트랜스포머 디코더 학습과 무관한 별개의 활동이다."
+      }
+    ]
+  },
+  "graphGenerationCalls": 0,
+  "hybrid": {
+    "keyword_weight": 0.35,
+    "vector_weight": 0.65,
+    "direct_threshold": 0.72,
+    "prerequisite_threshold": 0.76,
+    "supporting_threshold": 0.76,
+    "min_cosine": 0.55,
+    "related_coverage": 0.6,
+    "unrelated_coverage": 0.7,
+    "unrelated_threshold": 0.8
+  },
+  "instruction": "Retrieve passages useful for the given learning goal and concept.",
+  "embedding": {
+    "model": "qwen3-embedding:4b-fp16",
+    "configuredRevision": "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc",
+    "configuredPrecision": "F16",
+    "dimensions": 2560,
+    "calls": 14,
+    "embeddedTexts": 42,
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 6
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 4
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 2
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 4
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 2
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 1
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 4
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 1
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 4
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 2
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 4
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 3
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 4
+      },
+      {
+        "method": "POST",
+        "path": "/api/embed",
+        "inputCount": 1
+      }
+    ],
+    "httpStatuses": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "metadataRequests": 0
+  },
+  "cases": [
+    {
+      "caseId": "decoder-01-decoder-structure",
+      "startMinute": 0,
+      "endMinute": 5,
+      "activity": "Transformer Decoder 구조 정리",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더의 직접 구성 요소를 공부하는 화면이다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 13.8773,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-01-decoder-structure",
+        "sequence": 1,
+        "content_source": "CHROME_DOM",
+        "navigation_id": "decoder-nav-01",
+        "observed_at": "2026-10-21T05:00:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 1.0,
+        "content_hash": "e9cbf1c031e882d4fc303435e85f33cfb5ce63fc0552e648b232d7c96c012493",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": "CHROME_VIEWPORT_OCR"
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 292,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 25
+          },
+          {
+            "id": "passage-002",
+            "kind": "HEADING",
+            "chars": 13
+          },
+          {
+            "id": "passage-003",
+            "kind": "BODY",
+            "chars": 172
+          },
+          {
+            "id": "passage-004",
+            "kind": "BODY",
+            "chars": 120
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.6884933481461608,
+            "hybrid_score": 0.6225206762950045,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [
+              "Transformer decoder"
+            ],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5940988022458967,
+            "hybrid_score": 0.38616422145983287,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6401259495390439,
+            "hybrid_score": 0.41608186720037854,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6211633978664468,
+            "hybrid_score": 0.40375620861319045,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16425975699295847,
+            "hybrid_score": 0.10676884204542302,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12226745854116182,
+            "hybrid_score": 0.07947384805175518,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5896719048715864,
+            "hybrid_score": 0.38328673816653114,
+            "passageKind": "HEADING",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4976215192420489,
+            "hybrid_score": 0.3234539875073318,
+            "passageKind": "HEADING",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5385409747328687,
+            "hybrid_score": 0.35005163357636465,
+            "passageKind": "HEADING",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5417690900745089,
+            "hybrid_score": 0.3521499085484308,
+            "passageKind": "HEADING",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.17730196393262898,
+            "hybrid_score": 0.11524627655620884,
+            "passageKind": "HEADING",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.13860592921053363,
+            "hybrid_score": 0.09009385398684687,
+            "passageKind": "HEADING",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.7227638924820576,
+            "hybrid_score": 0.6447965301133375,
+            "passageKind": "BODY",
+            "chars": 172,
+            "matchedAliases": [
+              "Transformer decoder"
+            ],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.5,
+            "cosine": 0.7201066454403022,
+            "hybrid_score": 0.6430693195361965,
+            "passageKind": "BODY",
+            "chars": 172,
+            "matchedAliases": [
+              "masked self-attention"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.7226377372461151,
+            "hybrid_score": 0.46971452920997486,
+            "passageKind": "BODY",
+            "chars": 172,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.729843283965154,
+            "hybrid_score": 0.4743981345773501,
+            "passageKind": "BODY",
+            "chars": 172,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14560163921329294,
+            "hybrid_score": 0.09464106548864042,
+            "passageKind": "BODY",
+            "chars": 172,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1009436927338937,
+            "hybrid_score": 0.0656134002770309,
+            "passageKind": "BODY",
+            "chars": 172,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5030628920788185,
+            "hybrid_score": 0.32699087985123204,
+            "passageKind": "BODY",
+            "chars": 120,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.47533963567322496,
+            "hybrid_score": 0.30897076318759625,
+            "passageKind": "BODY",
+            "chars": 120,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5877929733794417,
+            "hybrid_score": 0.3820654326966371,
+            "passageKind": "BODY",
+            "chars": 120,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.4580418985065867,
+            "hybrid_score": 0.29772723402928136,
+            "passageKind": "BODY",
+            "chars": 120,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.07746431360337075,
+            "hybrid_score": 0.05035180384219099,
+            "passageKind": "BODY",
+            "chars": 120,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.09884781989223267,
+            "hybrid_score": 0.06425108292995124,
+            "passageKind": "BODY",
+            "chars": 120,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-02-masked-self-attention",
+      "startMinute": 5,
+      "endMinute": 10,
+      "activity": "미래 토큰을 가리는 causal mask",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더의 인과적 자기주의와 미래 토큰 차단을 설명한다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 0.7528,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-02-masked-self-attention",
+        "sequence": 1,
+        "content_source": "CHROME_VIEWPORT_OCR",
+        "navigation_id": "decoder-nav-02",
+        "observed_at": "2026-10-21T05:05:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "fe2f27dcc8c48478954fd24ab2de5ea036fb388fdd9b4c8c5582fefe4ece9e36",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 184,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 22
+          },
+          {
+            "id": "passage-002",
+            "kind": "OCR",
+            "chars": 184
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.3616937413158478,
+            "hybrid_score": 0.2351009318553011,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6021037759683484,
+            "hybrid_score": 0.3913674543794265,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4256917071448771,
+            "hybrid_score": 0.2766996096441701,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.47394530457863504,
+            "hybrid_score": 0.30806444797611277,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1896268548756114,
+            "hybrid_score": 0.12325745566914742,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11958233847486209,
+            "hybrid_score": 0.07772852000866036,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.513516303692135,
+            "hybrid_score": 0.3337855973998877,
+            "passageKind": "OCR",
+            "chars": 184,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.5,
+            "cosine": 0.7622205562207058,
+            "hybrid_score": 0.6704433615434588,
+            "passageKind": "OCR",
+            "chars": 184,
+            "matchedAliases": [
+              "masked self-attention"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5640064727961291,
+            "hybrid_score": 0.36660420731748394,
+            "passageKind": "OCR",
+            "chars": 184,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6184007637235445,
+            "hybrid_score": 0.4019604964203039,
+            "passageKind": "OCR",
+            "chars": 184,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.15649469713096875,
+            "hybrid_score": 0.10172155313512969,
+            "passageKind": "OCR",
+            "chars": 184,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.0933919455086515,
+            "hybrid_score": 0.060704764580623474,
+            "passageKind": "OCR",
+            "chars": 184,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-03-attention-prerequisite",
+      "startMinute": 10,
+      "endMinute": 14,
+      "activity": "Scaled dot-product attention의 Q K V",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 자기주의를 이해하는 데 필요한 선수 개념이다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 2.7301,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-03-attention-prerequisite",
+        "sequence": 2,
+        "content_source": "CHROME_DOM",
+        "navigation_id": "decoder-nav-03",
+        "observed_at": "2026-10-21T05:10:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 1.0,
+        "content_hash": "ccd5bc285334093556d5c31df6878ac7c69fb479563594fbb25cc00665bd1e4f",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": "CHROME_VIEWPORT_OCR"
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 205,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 35
+          },
+          {
+            "id": "passage-002",
+            "kind": "HEADING",
+            "chars": 20
+          },
+          {
+            "id": "passage-003",
+            "kind": "BODY",
+            "chars": 97
+          },
+          {
+            "id": "passage-004",
+            "kind": "BODY",
+            "chars": 108
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4185596497860408,
+            "hybrid_score": 0.27206377236092655,
+            "passageKind": "TITLE",
+            "chars": 35,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.43906750769856995,
+            "hybrid_score": 0.28539388000407045,
+            "passageKind": "TITLE",
+            "chars": 35,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5185057293140005,
+            "hybrid_score": 0.33702872405410034,
+            "passageKind": "TITLE",
+            "chars": 35,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.4297667960183894,
+            "hybrid_score": 0.2793484174119531,
+            "passageKind": "TITLE",
+            "chars": 35,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2049360687771535,
+            "hybrid_score": 0.13320844470514978,
+            "passageKind": "TITLE",
+            "chars": 35,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.13777309905749238,
+            "hybrid_score": 0.08955251438737005,
+            "passageKind": "TITLE",
+            "chars": 35,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.2946060894181978,
+            "hybrid_score": 0.1914939581218286,
+            "passageKind": "HEADING",
+            "chars": 20,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.2856133780075572,
+            "hybrid_score": 0.1856486957049122,
+            "passageKind": "HEADING",
+            "chars": 20,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.3574953557134965,
+            "hybrid_score": 0.23237198121377273,
+            "passageKind": "HEADING",
+            "chars": 20,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.32176275299646634,
+            "hybrid_score": 0.20914578944770312,
+            "passageKind": "HEADING",
+            "chars": 20,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.18819620261636158,
+            "hybrid_score": 0.12232753170063503,
+            "passageKind": "HEADING",
+            "chars": 20,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16554994919300905,
+            "hybrid_score": 0.1076074669754559,
+            "passageKind": "HEADING",
+            "chars": 20,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4092978287299774,
+            "hybrid_score": 0.2660435886744853,
+            "passageKind": "BODY",
+            "chars": 97,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4456910577246546,
+            "hybrid_score": 0.2896991875210255,
+            "passageKind": "BODY",
+            "chars": 97,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4906296261305947,
+            "hybrid_score": 0.31890925698488654,
+            "passageKind": "BODY",
+            "chars": 97,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.38048412315099295,
+            "hybrid_score": 0.2473146800481454,
+            "passageKind": "BODY",
+            "chars": 97,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.15931552796872142,
+            "hybrid_score": 0.10355509317966893,
+            "passageKind": "BODY",
+            "chars": 97,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.13665266737767828,
+            "hybrid_score": 0.08882423379549088,
+            "passageKind": "BODY",
+            "chars": 97,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.34989928325467556,
+            "hybrid_score": 0.22743453411553913,
+            "passageKind": "BODY",
+            "chars": 108,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.34016556889839505,
+            "hybrid_score": 0.2211076197839568,
+            "passageKind": "BODY",
+            "chars": 108,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4092720601439255,
+            "hybrid_score": 0.26602683909355157,
+            "passageKind": "BODY",
+            "chars": 108,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.3301592425871827,
+            "hybrid_score": 0.21460350768166878,
+            "passageKind": "BODY",
+            "chars": 108,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.17123482361407355,
+            "hybrid_score": 0.1113026353491478,
+            "passageKind": "BODY",
+            "chars": 108,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11978450524035329,
+            "hybrid_score": 0.07785992840622964,
+            "passageKind": "BODY",
+            "chars": 108,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-04-gaming-video",
+      "startMinute": 14,
+      "endMinute": 18,
+      "activity": "게임 랭크전 하이라이트",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "게임 플레이 영상과 공략을 보고 있으며 디코더 학습 내용이 없다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 0.6902,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-04-gaming-video",
+        "sequence": 2,
+        "content_source": "CHROME_VIEWPORT_OCR",
+        "navigation_id": "decoder-nav-04",
+        "observed_at": "2026-10-21T05:14:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "770ec1bb83638a80aa32a4e2210e347ef80ef6da7cc75a08452544a4b8305bd0",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 150,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 12
+          },
+          {
+            "id": "passage-002",
+            "kind": "OCR",
+            "chars": 150
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.1515863568439698,
+            "hybrid_score": 0.09853113194858036,
+            "passageKind": "TITLE",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.18768891385726894,
+            "hybrid_score": 0.12199779400722481,
+            "passageKind": "TITLE",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.22401855443253732,
+            "hybrid_score": 0.14561206038114927,
+            "passageKind": "TITLE",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.2115679019580293,
+            "hybrid_score": 0.13751913627271906,
+            "passageKind": "TITLE",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.21867469835765502,
+            "hybrid_score": 0.14213855393247576,
+            "passageKind": "TITLE",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.17618023789247864,
+            "hybrid_score": 0.11451715463011111,
+            "passageKind": "TITLE",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.15516598566528964,
+            "hybrid_score": 0.10085789068243826,
+            "passageKind": "OCR",
+            "chars": 150,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.17376674333489753,
+            "hybrid_score": 0.1129483831676834,
+            "passageKind": "OCR",
+            "chars": 150,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.21001086902595792,
+            "hybrid_score": 0.13650706486687264,
+            "passageKind": "OCR",
+            "chars": 150,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.24121182703025768,
+            "hybrid_score": 0.1567876875696675,
+            "passageKind": "OCR",
+            "chars": 150,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22144432095320848,
+            "hybrid_score": 0.14393880861958552,
+            "passageKind": "OCR",
+            "chars": 150,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.20541274756827066,
+            "hybrid_score": 0.13351828591937592,
+            "passageKind": "OCR",
+            "chars": 150,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-05-cross-attention",
+      "startMinute": 18,
+      "endMinute": 24,
+      "activity": "인코더 출력을 읽는 디코더",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "원래 Transformer 디코더의 cross-attention을 공부한다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 0.4801,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-05-cross-attention",
+        "sequence": 1,
+        "content_source": "DESKTOP_APP_OCR",
+        "navigation_id": "decoder-nav-05",
+        "observed_at": "2026-10-21T05:18:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "0b52cccd454a8950275ebce010ef7b3aae3305860472a0a1227caa90e83ed3ee",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 197,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "OCR",
+            "chars": 197
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5405039362150329,
+            "hybrid_score": 0.3513275585397714,
+            "passageKind": "OCR",
+            "chars": 197,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.6085733361692895,
+            "hybrid_score": 0.3955726685100382,
+            "passageKind": "OCR",
+            "chars": 197,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.7476337950290871,
+            "hybrid_score": 0.48596196676890663,
+            "passageKind": "OCR",
+            "chars": 197,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5881862193726617,
+            "hybrid_score": 0.3823210425922301,
+            "passageKind": "OCR",
+            "chars": 197,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1730749634575994,
+            "hybrid_score": 0.11249872624743962,
+            "passageKind": "OCR",
+            "chars": 197,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1435692214262867,
+            "hybrid_score": 0.09331999392708636,
+            "passageKind": "OCR",
+            "chars": 197,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-06-causal-mask-code",
+      "startMinute": 24,
+      "endMinute": 28,
+      "activity": "PyTorch에서 causal mask 연산 확인",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 attention의 미래 위치 마스킹을 구현·점검하는 코드이다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 1.1607,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-06-causal-mask-code",
+        "sequence": 3,
+        "content_source": "CHROME_DOM",
+        "navigation_id": "decoder-nav-06",
+        "observed_at": "2026-10-21T05:24:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 1.0,
+        "content_hash": "42878ef7569ef8ec4502ed3d1382b05b61cafc23efb8c1dc85d03323f83e1694",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": "CHROME_VIEWPORT_OCR"
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 274,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 27
+          },
+          {
+            "id": "passage-002",
+            "kind": "HEADING",
+            "chars": 25
+          },
+          {
+            "id": "passage-003",
+            "kind": "BODY",
+            "chars": 100
+          },
+          {
+            "id": "passage-004",
+            "kind": "CODE",
+            "chars": 174
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.35266103519507713,
+            "hybrid_score": 0.22922967287680016,
+            "passageKind": "TITLE",
+            "chars": 27,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.47619632494699093,
+            "hybrid_score": 0.3095276112155441,
+            "passageKind": "TITLE",
+            "chars": 27,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4235303549020368,
+            "hybrid_score": 0.27529473068632393,
+            "passageKind": "TITLE",
+            "chars": 27,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.38815918108186326,
+            "hybrid_score": 0.2523034677032111,
+            "passageKind": "TITLE",
+            "chars": 27,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1821050885743329,
+            "hybrid_score": 0.1183683075733164,
+            "passageKind": "TITLE",
+            "chars": 27,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11385862503662696,
+            "hybrid_score": 0.07400810627380752,
+            "passageKind": "TITLE",
+            "chars": 27,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.37224941174756676,
+            "hybrid_score": 0.2419621176359184,
+            "passageKind": "HEADING",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.45622346412137643,
+            "hybrid_score": 0.2965452516788947,
+            "passageKind": "HEADING",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5016189450851268,
+            "hybrid_score": 0.32605231430533244,
+            "passageKind": "HEADING",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.39647739927521025,
+            "hybrid_score": 0.2577103095288867,
+            "passageKind": "HEADING",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22142811526209796,
+            "hybrid_score": 0.14392827492036367,
+            "passageKind": "HEADING",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.13983047491029876,
+            "hybrid_score": 0.0908898086916942,
+            "passageKind": "HEADING",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5437660755387277,
+            "hybrid_score": 0.353447949100173,
+            "passageKind": "BODY",
+            "chars": 100,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.5,
+            "cosine": 0.7594081234586895,
+            "hybrid_score": 0.6686152802481482,
+            "passageKind": "BODY",
+            "chars": 100,
+            "matchedAliases": [
+              "masked self-attention"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5745854747116359,
+            "hybrid_score": 0.37348055856256335,
+            "passageKind": "BODY",
+            "chars": 100,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5333663522327008,
+            "hybrid_score": 0.3466881289512555,
+            "passageKind": "BODY",
+            "chars": 100,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12425498524926305,
+            "hybrid_score": 0.08076574041202099,
+            "passageKind": "BODY",
+            "chars": 100,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.08085745092531495,
+            "hybrid_score": 0.05255734310145472,
+            "passageKind": "BODY",
+            "chars": 100,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.37059335851727077,
+            "hybrid_score": 0.240885683036226,
+            "passageKind": "CODE",
+            "chars": 174,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4971217620330358,
+            "hybrid_score": 0.3231291453214733,
+            "passageKind": "CODE",
+            "chars": 174,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4314935607407068,
+            "hybrid_score": 0.28047081448145944,
+            "passageKind": "CODE",
+            "chars": 174,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.37835539057634193,
+            "hybrid_score": 0.24593100387462227,
+            "passageKind": "CODE",
+            "chars": 174,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12285140576154654,
+            "hybrid_score": 0.07985341374500525,
+            "passageKind": "CODE",
+            "chars": 174,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.05591585039907277,
+            "hybrid_score": 0.036345302759397305,
+            "passageKind": "CODE",
+            "chars": 174,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-07-transformers-movie",
+      "startMinute": 28,
+      "endMinute": 31,
+      "activity": "트랜스포머 영화 예고편 감상",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "같은 단어가 등장하지만 영화 감상이며 신경망 디코더 학습이 아니다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 0.8521,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-07-transformers-movie",
+        "sequence": 2,
+        "content_source": "DESKTOP_APP_OCR",
+        "navigation_id": "decoder-nav-07",
+        "observed_at": "2026-10-21T05:28:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "9386cc0f3eb601706d37e1a7790ea54f130547b01c125d100eb421f694df4d81",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 141,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "OCR",
+            "chars": 141
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.22724006958133305,
+            "hybrid_score": 0.14770604522786648,
+            "passageKind": "OCR",
+            "chars": 141,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.2874662337520386,
+            "hybrid_score": 0.1868530519388251,
+            "passageKind": "OCR",
+            "chars": 141,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.26071185230298194,
+            "hybrid_score": 0.16946270399693827,
+            "passageKind": "OCR",
+            "chars": 141,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.2542863775531504,
+            "hybrid_score": 0.16528614540954778,
+            "passageKind": "OCR",
+            "chars": 141,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11908398500125213,
+            "hybrid_score": 0.07740459025081388,
+            "passageKind": "OCR",
+            "chars": 141,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16362186759811653,
+            "hybrid_score": 0.10635421393877575,
+            "passageKind": "OCR",
+            "chars": 141,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-08-kv-cache",
+      "startMinute": 31,
+      "endMinute": 36,
+      "activity": "자기회귀 생성에서 KV cache 재사용",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 추론 과정과 attention 재계산을 이해하기 위한 보조 학습이다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 2.133,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-08-kv-cache",
+        "sequence": 4,
+        "content_source": "CHROME_DOM",
+        "navigation_id": "decoder-nav-08",
+        "observed_at": "2026-10-21T05:31:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 1.0,
+        "content_hash": "b20b3766fa076a9cd47210d2955193d33dbb18df066924daf2153bda1914c62b",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": "CHROME_VIEWPORT_OCR"
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 194,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 22
+          },
+          {
+            "id": "passage-002",
+            "kind": "HEADING",
+            "chars": 19
+          },
+          {
+            "id": "passage-003",
+            "kind": "BODY",
+            "chars": 113
+          },
+          {
+            "id": "passage-004",
+            "kind": "BODY",
+            "chars": 81
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.35138594847662435,
+            "hybrid_score": 0.22840086650980584,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4035573253760463,
+            "hybrid_score": 0.2623122614944301,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4139045230545174,
+            "hybrid_score": 0.26903793998543635,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.5,
+            "cosine": 0.4357507152157561,
+            "hybrid_score": 0.45823796489024143,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [
+              "자기회귀 생성"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1872093624374012,
+            "hybrid_score": 0.12168608558431078,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.15161486592358733,
+            "hybrid_score": 0.09854966285033177,
+            "passageKind": "TITLE",
+            "chars": 22,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5239872320663168,
+            "hybrid_score": 0.3405917008431059,
+            "passageKind": "HEADING",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4999597911395502,
+            "hybrid_score": 0.3249738642407076,
+            "passageKind": "HEADING",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5392574408532386,
+            "hybrid_score": 0.3505173365546051,
+            "passageKind": "HEADING",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5502024006045829,
+            "hybrid_score": 0.3576315603929789,
+            "passageKind": "HEADING",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.19689844282049976,
+            "hybrid_score": 0.12798398783332485,
+            "passageKind": "HEADING",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14310176278120723,
+            "hybrid_score": 0.09301614580778471,
+            "passageKind": "HEADING",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5007050418927188,
+            "hybrid_score": 0.3254582772302672,
+            "passageKind": "BODY",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5166887394832331,
+            "hybrid_score": 0.33584768066410153,
+            "passageKind": "BODY",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4840867554989623,
+            "hybrid_score": 0.3146563910743255,
+            "passageKind": "BODY",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.5,
+            "cosine": 0.628398741475257,
+            "hybrid_score": 0.583459181958917,
+            "passageKind": "BODY",
+            "chars": 113,
+            "matchedAliases": [
+              "autoregressive decoding"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14539174018224996,
+            "hybrid_score": 0.09450463111846248,
+            "passageKind": "BODY",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12739522289265665,
+            "hybrid_score": 0.08280689488022683,
+            "passageKind": "BODY",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.35110088435774367,
+            "hybrid_score": 0.22821557483253338,
+            "passageKind": "BODY",
+            "chars": 81,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4116807147447643,
+            "hybrid_score": 0.2675924645840968,
+            "passageKind": "BODY",
+            "chars": 81,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.382701965482208,
+            "hybrid_score": 0.24875627756343519,
+            "passageKind": "BODY",
+            "chars": 81,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5102429102914671,
+            "hybrid_score": 0.3316578916894536,
+            "passageKind": "BODY",
+            "chars": 81,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14294959896176815,
+            "hybrid_score": 0.0929172393251493,
+            "passageKind": "BODY",
+            "chars": 81,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.11457401558382796,
+            "hybrid_score": 0.07447311012948818,
+            "passageKind": "BODY",
+            "chars": 81,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-09-shopping",
+      "startMinute": 36,
+      "endMinute": 40,
+      "activity": "겨울 옷 할인 상품 비교",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "의류 쇼핑 화면이며 학습 목표와 관련된 내용이 없다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 3.4385,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-09-shopping",
+        "sequence": 3,
+        "content_source": "CHROME_VIEWPORT_OCR",
+        "navigation_id": "decoder-nav-09",
+        "observed_at": "2026-10-21T05:36:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "dc113191e38b1fff132965f94769709a386ec6fd1b5a48f4f96d180069aefd2d",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 142,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 13
+          },
+          {
+            "id": "passage-002",
+            "kind": "OCR",
+            "chars": 142
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.10644385759156869,
+            "hybrid_score": 0.06918850743451965,
+            "passageKind": "TITLE",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1022805063845693,
+            "hybrid_score": 0.06648232914997004,
+            "passageKind": "TITLE",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.18198332272041376,
+            "hybrid_score": 0.11828915976826895,
+            "passageKind": "TITLE",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.14278916300597871,
+            "hybrid_score": 0.09281295595388617,
+            "passageKind": "TITLE",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14930462107725576,
+            "hybrid_score": 0.09704800370021624,
+            "passageKind": "TITLE",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.17409951518491135,
+            "hybrid_score": 0.11316468487019238,
+            "passageKind": "TITLE",
+            "chars": 13,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.11685129591771981,
+            "hybrid_score": 0.07595334234651788,
+            "passageKind": "OCR",
+            "chars": 142,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1516725322058732,
+            "hybrid_score": 0.0985871459338176,
+            "passageKind": "OCR",
+            "chars": 142,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1795694406687543,
+            "hybrid_score": 0.1167201364346903,
+            "passageKind": "OCR",
+            "chars": 142,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.14440799732866527,
+            "hybrid_score": 0.09386519826363243,
+            "passageKind": "OCR",
+            "chars": 142,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16445159135218573,
+            "hybrid_score": 0.10689353437892073,
+            "passageKind": "OCR",
+            "chars": 142,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.20976186683275758,
+            "hybrid_score": 0.13634521344129244,
+            "passageKind": "OCR",
+            "chars": 142,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-10-next-token-training",
+      "startMinute": 40,
+      "endMinute": 45,
+      "activity": "다음 토큰 예측과 teacher forcing",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "디코더 학습 입력과 출력 분포·손실 계산을 설명한다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 1.0111,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-10-next-token-training",
+        "sequence": 5,
+        "content_source": "CHROME_DOM",
+        "navigation_id": "decoder-nav-10",
+        "observed_at": "2026-10-21T05:40:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 1.0,
+        "content_hash": "79cc729a60d7f28827220398cea9197dd70d493d21ad326a1a92843fbcb63872",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": "CHROME_VIEWPORT_OCR"
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 220,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 25
+          },
+          {
+            "id": "passage-002",
+            "kind": "HEADING",
+            "chars": 14
+          },
+          {
+            "id": "passage-003",
+            "kind": "BODY",
+            "chars": 115
+          },
+          {
+            "id": "passage-004",
+            "kind": "BODY",
+            "chars": 105
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.42091528500608105,
+            "hybrid_score": 0.2735949352539527,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.46393559692906206,
+            "hybrid_score": 0.30155813800389036,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.45029317773544936,
+            "hybrid_score": 0.29269056552804207,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.5,
+            "cosine": 0.5644522447177379,
+            "hybrid_score": 0.5418939590665297,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [
+              "다음 토큰 예측"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22153898867389185,
+            "hybrid_score": 0.14400034263802972,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16388279102813022,
+            "hybrid_score": 0.10652381416828464,
+            "passageKind": "TITLE",
+            "chars": 25,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.32674123439428104,
+            "hybrid_score": 0.21238180235628268,
+            "passageKind": "HEADING",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.359674499672308,
+            "hybrid_score": 0.2337884247870002,
+            "passageKind": "HEADING",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.34276215986019,
+            "hybrid_score": 0.2227954039091235,
+            "passageKind": "HEADING",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.4949463659381271,
+            "hybrid_score": 0.3217151378597826,
+            "passageKind": "HEADING",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.21199789061439953,
+            "hybrid_score": 0.1377986288993597,
+            "passageKind": "HEADING",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1598684360634614,
+            "hybrid_score": 0.10391448344124991,
+            "passageKind": "HEADING",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5711080366377289,
+            "hybrid_score": 0.3712202238145238,
+            "passageKind": "BODY",
+            "chars": 115,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.52166639417321,
+            "hybrid_score": 0.33908315621258656,
+            "passageKind": "BODY",
+            "chars": 115,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5569256079910033,
+            "hybrid_score": 0.3620016451941522,
+            "passageKind": "BODY",
+            "chars": 115,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6279485936158253,
+            "hybrid_score": 0.4081665858502865,
+            "passageKind": "BODY",
+            "chars": 115,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1768198234330233,
+            "hybrid_score": 0.11493288523146515,
+            "passageKind": "BODY",
+            "chars": 115,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1240959709218004,
+            "hybrid_score": 0.08066238109917026,
+            "passageKind": "BODY",
+            "chars": 115,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.4080252509087252,
+            "hybrid_score": 0.2652164130906714,
+            "passageKind": "BODY",
+            "chars": 105,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.5678954398120426,
+            "hybrid_score": 0.3691320358778277,
+            "passageKind": "BODY",
+            "chars": 105,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.4585675415983771,
+            "hybrid_score": 0.2980689020389451,
+            "passageKind": "BODY",
+            "chars": 105,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.5042962259159798,
+            "hybrid_score": 0.3277925468453869,
+            "passageKind": "BODY",
+            "chars": 105,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.18312365545886714,
+            "hybrid_score": 0.11903037604826364,
+            "passageKind": "BODY",
+            "chars": 105,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.12663928113556688,
+            "hybrid_score": 0.08231553273811848,
+            "passageKind": "BODY",
+            "chars": 105,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-11-mixed-screen",
+      "startMinute": 45,
+      "endMinute": 49,
+      "activity": "학습 자료와 게임 추천이 섞인 화면",
+      "expectedLabel": "UNCERTAIN",
+      "expectedRationale": "학습 내용과 게임 내용이 함께 있어 현재 활동의 주제를 단정하기 어렵다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": true,
+      "elapsedSeconds": 1.16,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-11-mixed-screen",
+        "sequence": 4,
+        "content_source": "CHROME_VIEWPORT_OCR",
+        "navigation_id": "decoder-nav-11",
+        "observed_at": "2026-10-21T05:45:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "ac44389eac880d4a26aa9123f0a32eb954086fde308f9d5c426ec312d69122f5",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 217,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 19
+          },
+          {
+            "id": "passage-002",
+            "kind": "OCR",
+            "chars": 113
+          },
+          {
+            "id": "passage-003",
+            "kind": "OCR",
+            "chars": 104
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.08378957802446996,
+            "hybrid_score": 0.05446322571590547,
+            "passageKind": "TITLE",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1394944691744595,
+            "hybrid_score": 0.09067140496339869,
+            "passageKind": "TITLE",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.15377045214005902,
+            "hybrid_score": 0.09995079389103836,
+            "passageKind": "TITLE",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.10411284402988508,
+            "hybrid_score": 0.0676733486194253,
+            "passageKind": "TITLE",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.16843605410913717,
+            "hybrid_score": 0.10948343517093917,
+            "passageKind": "TITLE",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.15362334386544546,
+            "hybrid_score": 0.09985517351253956,
+            "passageKind": "TITLE",
+            "chars": 19,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.5809798308720974,
+            "hybrid_score": 0.3776368900668633,
+            "passageKind": "OCR",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.5,
+            "cosine": 0.7933863733453063,
+            "hybrid_score": 0.6907011426744492,
+            "passageKind": "OCR",
+            "chars": 113,
+            "matchedAliases": [
+              "masked self-attention"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.731369890908642,
+            "hybrid_score": 0.47539042909061735,
+            "passageKind": "OCR",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6552432551856621,
+            "hybrid_score": 0.42590811587068034,
+            "passageKind": "OCR",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.15074154150045932,
+            "hybrid_score": 0.09798200197529856,
+            "passageKind": "OCR",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1235305502073421,
+            "hybrid_score": 0.08029485763477237,
+            "passageKind": "OCR",
+            "chars": 113,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.14117099342478298,
+            "hybrid_score": 0.09176114572610894,
+            "passageKind": "OCR",
+            "chars": 104,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.17144061233997648,
+            "hybrid_score": 0.11143639802098472,
+            "passageKind": "OCR",
+            "chars": 104,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.182657930207554,
+            "hybrid_score": 0.1187276546349101,
+            "passageKind": "OCR",
+            "chars": 104,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.18152637116269102,
+            "hybrid_score": 0.11799214125574917,
+            "passageKind": "OCR",
+            "chars": 104,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14771605864035672,
+            "hybrid_score": 0.09601543811623188,
+            "passageKind": "OCR",
+            "chars": 104,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.10994597400556332,
+            "hybrid_score": 0.07146488310361616,
+            "passageKind": "OCR",
+            "chars": 104,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-12-loading-screen",
+      "startMinute": 49,
+      "endMinute": 52,
+      "activity": "자료를 여는 중",
+      "expectedLabel": "UNCERTAIN",
+      "expectedRationale": "읽힌 글자가 로딩 안내뿐이라 관련·무관을 판단할 근거가 부족하다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "TOO_SHORT",
+      "matchesExpected": true,
+      "elapsedSeconds": 0.0004,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-12-loading-screen",
+        "sequence": 3,
+        "content_source": "DESKTOP_APP_OCR",
+        "navigation_id": "decoder-nav-12",
+        "observed_at": "2026-10-21T05:49:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SKIPPED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "TOO_SHORT",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": null,
+        "content_hash": null,
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": null
+    },
+    {
+      "caseId": "decoder-13-cooking",
+      "startMinute": 52,
+      "endMinute": 56,
+      "activity": "김치볶음밥 레시피 찾아보기",
+      "expectedLabel": "UNRELATED",
+      "expectedRationale": "음식 조리법을 찾아보는 화면이며 디코더 학습과 무관하다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 2.0273,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-13-cooking",
+        "sequence": 6,
+        "content_source": "CHROME_DOM",
+        "navigation_id": "decoder-nav-13",
+        "observed_at": "2026-10-21T05:52:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 1.0,
+        "content_hash": "5ffcc8300a93e72217c194c229a60300638c7ad9c28ae7e2b0567030dbac3210",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": "CHROME_VIEWPORT_OCR"
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 138,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "TITLE",
+            "chars": 14
+          },
+          {
+            "id": "passage-002",
+            "kind": "HEADING",
+            "chars": 12
+          },
+          {
+            "id": "passage-003",
+            "kind": "BODY",
+            "chars": 69
+          },
+          {
+            "id": "passage-004",
+            "kind": "BODY",
+            "chars": 69
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.13997218219511526,
+            "hybrid_score": 0.09098191842682492,
+            "passageKind": "TITLE",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1373345564718941,
+            "hybrid_score": 0.08926746170673117,
+            "passageKind": "TITLE",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.18932442362798996,
+            "hybrid_score": 0.12306087535819348,
+            "passageKind": "TITLE",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.18347694899536413,
+            "hybrid_score": 0.11926001684698669,
+            "passageKind": "TITLE",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22853802572055024,
+            "hybrid_score": 0.14854971671835765,
+            "passageKind": "TITLE",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.18279989959191387,
+            "hybrid_score": 0.11881993473474402,
+            "passageKind": "TITLE",
+            "chars": 14,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.15971717865954704,
+            "hybrid_score": 0.10381616612870558,
+            "passageKind": "HEADING",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1529004244497257,
+            "hybrid_score": 0.09938527589232171,
+            "passageKind": "HEADING",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.1981991850651296,
+            "hybrid_score": 0.12882947029233424,
+            "passageKind": "HEADING",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.22210790954487938,
+            "hybrid_score": 0.1443701412041716,
+            "passageKind": "HEADING",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.31895277219794343,
+            "hybrid_score": 0.20731930192866324,
+            "passageKind": "HEADING",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-002",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2357425118231992,
+            "hybrid_score": 0.15323263268507947,
+            "passageKind": "HEADING",
+            "chars": 12,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.049895446781380665,
+            "hybrid_score": 0.03243204040789743,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.0539327546041907,
+            "hybrid_score": 0.035056290492723956,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.09458388134604616,
+            "hybrid_score": 0.061479522874930005,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.09566126625811237,
+            "hybrid_score": 0.062179823067773046,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.19629831410837043,
+            "hybrid_score": 0.12759390417044078,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-003",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.14736879454531315,
+            "hybrid_score": 0.09578971645445356,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.0,
+            "cosine": 0.17031877199419965,
+            "hybrid_score": 0.11070720179622977,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.12586972853765244,
+            "hybrid_score": 0.08181532354947409,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.17336864497214186,
+            "hybrid_score": 0.1126896192318922,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.19444733310787263,
+            "hybrid_score": 0.12639076652011721,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.2670999586327639,
+            "hybrid_score": 0.17361497311129656,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-004",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.22225633901862074,
+            "hybrid_score": 0.14446662036210348,
+            "passageKind": "BODY",
+            "chars": 69,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "decoder-14-decoder-review",
+      "startMinute": 56,
+      "endMinute": 60,
+      "activity": "디코더 구성과 생성 과정 복습",
+      "expectedLabel": "RELATED",
+      "expectedRationale": "처음의 학습 목표로 복귀해 디코더 핵심 개념을 정리한다.",
+      "actualLabel": "UNCERTAIN",
+      "reasonCode": "INSUFFICIENT_EVIDENCE",
+      "matchesExpected": false,
+      "elapsedSeconds": 0.3808,
+      "result": {
+        "session_id": "synthetic-transformer-decoder-1h",
+        "run_id": "run-transformer-decoder-1h",
+        "goal_id": "goal-transformer-decoder-1h",
+        "goal_version": 1,
+        "client_run_id": "decoder-14-decoder-review",
+        "sequence": 4,
+        "content_source": "DESKTOP_APP_OCR",
+        "navigation_id": "decoder-nav-14",
+        "observed_at": "2026-10-21T05:56:00+00:00",
+        "extraction_status": "SUCCESS",
+        "analysis_status": "SUCCEEDED",
+        "relevance_label": "UNCERTAIN",
+        "reason_code": "INSUFFICIENT_EVIDENCE",
+        "evidence_ids": [],
+        "content_roles": [],
+        "quality_score": 0.93,
+        "content_hash": "2c388a3356a2b720d6392c07ba9c2638d6f178c5c17078c22692aa716d209129",
+        "cache_hit": false,
+        "analyzer_version": "school-hybrid-v4",
+        "model_version": "555431e9e95b8adcfa716f0ddb370def0fb0f4623a75f4377bcee5c12deb5bb9",
+        "policy_version": "school-v1",
+        "next_content_source": null
+      },
+      "diagnostics": {
+        "decisionLabel": "UNCERTAIN",
+        "bodyChars": 252,
+        "relatedCoverage": 0.0,
+        "unrelatedCoverage": 0.0,
+        "passages": [
+          {
+            "id": "passage-001",
+            "kind": "OCR",
+            "chars": 252
+          }
+        ],
+        "matches": [
+          {
+            "passage_id": "passage-001",
+            "concept_id": "transformer_decoder",
+            "role": "DIRECT",
+            "keyword_score": 0.5,
+            "cosine": 0.6154682767741096,
+            "hybrid_score": 0.5750543799031713,
+            "passageKind": "OCR",
+            "chars": 252,
+            "matchedAliases": [
+              "트랜스포머 디코더"
+            ],
+            "threshold": 0.72,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_self_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.5,
+            "cosine": 0.7742974904086408,
+            "hybrid_score": 0.6782933687656165,
+            "passageKind": "OCR",
+            "chars": 252,
+            "matchedAliases": [
+              "masked self-attention"
+            ],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "decoder_cross_attention",
+            "role": "PREREQUISITE",
+            "keyword_score": 0.0,
+            "cosine": 0.7291069584277899,
+            "hybrid_score": 0.4739195229780635,
+            "passageKind": "OCR",
+            "chars": 252,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "autoregressive_generation",
+            "role": "SUPPORTING",
+            "keyword_score": 0.0,
+            "cosine": 0.6615862042351461,
+            "hybrid_score": 0.430031032752845,
+            "passageKind": "OCR",
+            "chars": 252,
+            "matchedAliases": [],
+            "threshold": 0.76,
+            "accepted": false,
+            "failedGates": [
+              "NO_RELATED_ALIAS",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "bread_baking",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.1697930025038154,
+            "hybrid_score": 0.11036545162748002,
+            "passageKind": "OCR",
+            "chars": 252,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          },
+          {
+            "passage_id": "passage-001",
+            "concept_id": "gardening",
+            "role": null,
+            "keyword_score": 0.0,
+            "cosine": 0.13054011353597503,
+            "hybrid_score": 0.08485107379838377,
+            "passageKind": "OCR",
+            "chars": 252,
+            "matchedAliases": [],
+            "threshold": 0.8,
+            "accepted": false,
+            "failedGates": [
+              "TWO_UNRELATED_ALIASES_REQUIRED",
+              "COSINE_BELOW_MINIMUM",
+              "HYBRID_BELOW_ROLE_THRESHOLD"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "matches": 2,
+    "total": 14,
+    "mismatches": 12,
+    "actualLabelCounts": {
+      "UNCERTAIN": 14
+    },
+    "confusionMatrix": {
+      "RELATED": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 8
+      },
+      "UNRELATED": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 4
+      },
+      "UNCERTAIN": {
+        "RELATED": 0,
+        "UNRELATED": 0,
+        "UNCERTAIN": 2
+      }
+    },
+    "wallSeconds": 30.697
+  },
+  "scope": "Saved generated graph; existing analyzer with real Qwen embeddings. No live capture, backend, notification, new graph generation, calibration or threshold tuning."
+}

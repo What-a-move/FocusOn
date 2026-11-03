@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createApiClient } from '../features/session/api-client.ts'
-import { displayActiveMs, formatClock, parseActiveSession } from '../features/session/session-model.ts'
+import { displayActiveMs, formatClock, keepForward, parseActiveSession } from '../features/session/session-model.ts'
 
 const NOW = Date.parse('2026-10-25T01:00:00Z')
 const json = (status: number, body: unknown) => new Response(status === 204 ? null : JSON.stringify(body), { status })
@@ -105,4 +105,16 @@ test('화면용 누적 시간은 실행 중일 때만 받은 뒤 흐른 시간�
   assert.equal(displayActiveMs(parsed, 0, 9_999_999), 1_500_000)
   assert.equal(formatClock(1_200_000), '20:00')
   assert.equal(parseActiveSession({ ...session, status: 'DONE' }), null)
+})
+
+test('실행 중인 같은 세션은 다시 조회해도 화면 시간이 뒤로 가지 않고, 멈추거나 바뀌면 서버 값을 쓴다', () => {
+  const running = { sessionId: '4', status: 'RUNNING' as const, goalText: '목표', targetDurationMs: 1_800_000, accumulatedActiveMs: 0 }
+  // 0초에 받고 23초 뒤 다시 받았는데 서버 누적은 여전히 0 (heartbeat 전)
+  assert.equal(keepForward({ session: running, fetchedAt: 0 }, running, 23_000).accumulatedActiveMs, 23_000)
+  // heartbeat로 서버 값이 더 앞서면 서버 값
+  assert.equal(keepForward({ session: running, fetchedAt: 0 }, { ...running, accumulatedActiveMs: 30_000 }, 23_000).accumulatedActiveMs, 30_000)
+  const paused = { ...running, status: 'PAUSED' as const, accumulatedActiveMs: 20_000 }
+  assert.equal(keepForward({ session: running, fetchedAt: 0 }, paused, 23_000).accumulatedActiveMs, 20_000)
+  assert.equal(keepForward({ session: running, fetchedAt: 0 }, { ...running, sessionId: '5' }, 23_000).accumulatedActiveMs, 0)
+  assert.equal(keepForward(null, running, 23_000).accumulatedActiveMs, 0)
 })

@@ -18,6 +18,8 @@ export function ExcludedAppsField({ apps, onChange }: { apps: ExcludedApp[]; onC
     setInstalled('loading')
     const result = await analysisApi.listInstalledApps()
     setInstalled(result.success ? result.data : 'error')
+    // 열 때는 목록이 없어 `닫기`에 포커스가 간다. 목록이 오면 첫 고를 수 있는 앱으로 옮긴다.
+    if (result.success) requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLButtonElement>('.app-option:not(:disabled)')?.focus())
   }
 
   function open() {

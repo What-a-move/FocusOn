@@ -19,13 +19,15 @@
 
 - 공개 목표 decision 4종·화면 개입 v1·Client별 OCR·개인정보 계약은 최신 dev 기준을 보존한다. 2026-11-03 Notion 조회는 404였으므로 새 제품 계약을 확정하지 않았다.
 - #12 내부 clarityStatus 6종과 공개 decision 4종의 변환, 목표 길이 200자 내부 설정과 제품 2~40자의 정합성, 서비스 인증·Backend 연결은 후속 검증이다.
-- #29는 합성 DOM 기반 생성 코어와 Streamlit·Desktop 개발 데모 단계다. 실제 수집·최종 관련성·Server Worker/저장·제품 조회 통합 완료가 아니다.
+- #29는 합성 DOM 기반 생성 코어와 Streamlit 개발 시연 단계다. Desktop 개발 데모는 이 PR에서 제거했다. 실제 수집·최종 관련성·Server Worker/저장·제품 조회 통합 완료가 아니다.
 - 원문 trace opt-in은 #12의 로컬 비민감 수동 테스트에 한정한다. 제품 로그 정책이나 실제 사용자 데이터 전송 허가로 사용하지 않는다.
 
 ### 목표 보조 #12 브랜치 구현 이력
 
 - 2026-11-03 목표 보조 생성 제공자를 Claude로 변경했다(GA-038). 로컬 `CLAUDE_API_KEY`를 그대로 인식하고 Streamlit·FastAPI가 같은 어댑터를 사용한다. 합성 목표의 질문 스트리밍·프로필·추천 실제 호출은 모두 Schema 검증을 통과했다. JEV 판단값·Router·제품 API 계약은 변경하지 않았다. 기존 ChatOpenAI의 자동 생성 trace는 제거됐고 JEV·Laya 비교 trace는 유지한다.
 - Claude 전환 검증: what-a-move에서 `pytest AI/tests -q --ignore=AI/tests/openai_test.py` 87개 통과(6.35초), 기존 Offline Router 15건 오류 0건. tracing을 끄고 실행했다. 미추적 `openai_test.py`는 import 시 외부 호출을 하므로 사용자 파일을 유지한 채 제외했으며 커밋하지 않는다.
+- PR #160 충돌 해소: 최신 dev의 관련성 라우트와 버전 고정 의존성을 유지하고 생성 어댑터 교체 위치를 `src/api/goal_routes.py`로 옮겼다. 학습 정리의 별도 OpenAI 실험과 `demos/requirements.txt`는 변경하지 않았다.
+- dev 동기화 후 최종 회귀: 같은 명령으로 **405 passed, 27 subtests passed(14.70초)**, Offline Router 15건 오류 0건. 처음 확장 실행은 로컬 Kiwi 의존성 미설치로 실패했으며 dev에 명시된 `kiwipiepy==0.23.1` 설치 뒤 전체 통과했다. PR은 [#160](https://github.com/What-a-move/FocusOn/pull/160)이며 dev 대비 수정은 AI 19개 파일로 제한했다.
 
 - 이번 필드 정합성 변경은 `LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q`로 73개 통과를 확인했다. 모델은 Fake/Mock으로 검증했고 Backend·실제 모델 통합은 미검증이다. 최초 실행에서 로컬 `.env`의 tracing 설정으로 LangSmith 연결 실패 로그가 발생해 이후 검증에서는 tracing을 껐다. `.env` 값은 변경하지 않았다.
 - 2026-10-25 #12 연동 필드: AI 내부 요청이 `goalText`, `conversationTurn`, `clarificationSessionId?`, `previousAnswers[{question,answer}]`를 수신·직렬화하고 정상 응답에 대화 ID를 그대로 반환한다. 추적용 내부 `requestId`와 이행용 이전 입력 별칭은 유지한다. 회차 0~2와 답변 수 일치·최대 2개를 검사하며 두 답변 뒤 직접 질문·Repair fallback 질문 모두 추가 생성하지 않는다. AI HTTP 경로의 SDK 재시도는 0이다. Backend의 공개 경로·ID 발급/소유권·목표 생성 연결·1초→3초 재시도는 미구현이며 해당 담당자의 후속 작업이다. 이번 기준은 사용자가 전달한 팀 메시지이며 Notion 연결 도구는 404로 최신 본문을 재확인하지 못했다.
@@ -172,3 +174,49 @@ Client별 사전 제외·권한 검사
 - 모델·프롬프트·임계값 결정
 - 발생한 오류와 평가 결과
 - 다음 작업과 선행 조건
+
+## Issue #11 AI 구현 상태 (PR #43)
+
+### 2026-11-03 dev 통합
+
+- 목표 보조 PR #137의 실행 흐름과 화면 관련성 실험 경로를 보존한다. 목표 생성은 GA-038에서 Claude로 교체했다. FastAPI에 두 라우터를 연결하고 공통 스키마와 의존성을 통합했다. 목표 보조 내부 API의 서비스 인증과 공개 응답 변환, Backend 연동은 여전히 후속 검토 대상이다.
+- 화면 관련성 UI만 제거했으며 목표 보조 Streamlit 테스트 화면은 유지한다. 실제 모델·Backend 왕복은 이번 통합 검증에 포함하지 않는다.
+- 별도 임시 Python 환경에서 두 기능의 전체 회귀 363 passed, 16 subtests passed. 합성 입력·Mock 기반이며 실제 외부 모델 호출은 하지 않았다.
+
+### 2026-11-03 FastAPI 실험 분석
+
+- `POST /internal/v1/analysis-runs/analyze`에서 기존 입력 검증 뒤 Kiwi + Qwen Hybrid를 실행한다. 응답 candidateDecision은 미보정 내부 후보이고 기존 공개 기준의 decision은 confidence 미보정으로 UNCERTAIN이다. 기존 수신 경로는 유지한다. [상세](features/fastapi-relevance-analysis-REPORT.md).
+- 합성 벡터 기반 전체 회귀 289 passed, 16 subtests passed. 실제 학교 Qwen은 Tailscale 호스트 DNS 실패로 호출하지 못했다. Backend 연동·confidence 보정은 남았다.
+
+### 2026-11-03 Streamlit 화면 제거
+
+- 사용자 요청으로 Streamlit 화면 및 UI 전용 테스트/의존성을 제거했다. 기존 Hybrid 분석 runner는 `evaluation/analysis_runner.py`로 보존했고 관련 테스트와 보정 CLI 참조를 갱신했다. FastAPI는 기존 수신·검증 경로이며 Backend 연결 및 분석 실행은 후속 작업이다.
+- Kiwi 0.23.1을 시스템 Python과 프로젝트 Python에 설치하고 AI requirements에 명시했다. 프로젝트 Python의 AI 회귀는 284 passed, 16 subtests passed다. 실제 Qwen/Backend 왕복은 이번 회귀에 포함되지 않는다.
+
+
+### 2026-10-29 FastAPI 수신
+
+- `POST /internal/v1/analysis-runs`의 서비스 인증·수신·기존 Schema/Adapter 연결·목표/관측 대조·활성/제외/민감정보 검사를 구현했다. 응답은 `200 RECEIVED`, `analysisExecuted: false`. 저장·Queue·모델 호출은 없다. Client 공개 컬럼은 유지한다.
+- 내부 request/goal/context/extractionStatus/선택 ocr envelope는 Backend 합의가 필요하다. `FOCUSON_AI_API_KEY` 필수. 실행법과 합성 예제는 `features/fastapi-reception-REPORT.md`를 따른다.
+- 새 수신+화면 계약69건 통과. 실제 임시 Uvicorn HTTP에서 health/수신/OpenAPI200·미인증401 확인 후 종료했다. 전체 회귀는209 passed,75 failed(기본 환경 Kiwi 미설치),1 skipped,16 subtests passed다.
+- 아래 10/28 이전의 "HTTP route 없음"은 이 작업 전 이력이다. 실제 Backend·분석기 연결과 공개 판정 응답은 계속 미완료다.
+
+- 이 PR에는 AI 내부 입력 검증·전처리·관련성 분석, Streamlit 평가 경로, 공개 계약 변환/응답 검증 코드가 포함되어 있다. 실제 Server HTTP route와 Client 수집부터 결과 적용까지의 운영 왕복은 연결되지 않았다.
+- 현재 실행 경로는 `graphless_hybrid`와 `streamlit_runner.compare_graphless`의 Kiwi + Qwen Hybrid다. 2026-10-28 미사용 Graph 분석기·생성 Prompt·OpenAI Client·ChromaDB 저장소·이전 7방식 비교/평가 CLI를 제거했다. 공용 벡터 수학은 `src/analysis/vector_math.py`로 분리했다. 고정 retrieval 지침·점수·임계값·입력/기대 라벨은 변경하지 않았다.
+- 최신 전달 계약 기준 메타데이터는 RELATED만 확정한다. 그 외의 정상 관측은 Chrome DOM 또는 Desktop OCR로 확인하고, Chrome viewport OCR은 P1로 보류한다. DOM/OCR text 한도는 2,000자다. Client 캡처·민감정보 제거와 Server의 실행 문맥 제공은 각 담당 영역이다.
+- 공개 응답 confidence 보정/독립 검증, 실제 Backend·Client 연결 및 비동기 결과 순서 검증은 남아 있다. 상세 범위와 기존 점검 기록은 `features/screen-analysis-contract-v1-REPORT.md` 및 `NEXT_TASK.md`를 따른다.
+
+- Graph 분석기에만 있던 운영 후보의 이벤트 캐시/단계별 수집 callback은 현재 실행 경로로 이식하지 않았다. 현재 평가의 해시 기반 벡터 재사용과 제품 이벤트 멱등·역순 결과 적용은 별개다. Backend 통합 시 후자를 구현·검증해야 한다. 과거 Graph 평가 결과는 이력으로 남긴다.
+
+### 2026-10-28 Graph 미사용 코드 정리 검증
+
+- 임시 Python 3.11 환경의 전체 AI 회귀: 262 passed, 16 subtests passed. 실제 Qwen/OpenAI 요청 없이 HTTP Mock·합성 벡터·Kiwi·Streamlit UI를 검사했다.
+- 기존 고정 48건을 삭제 전 HEAD와 정리 후 코드에 동일한 합성 벡터로 실행했다. 시간/삭제한 Graph 진단 필드를 제외한 라벨·점수·근거·커버리지·임베딩 입력 해시가 모두 동일했다. 실제 모델 정확도 재평가를 뜻하지 않는다.
+- 기존 임시 Streamlit 의존성 경로의 소스가 없어 첫 UI 수집에 실패했고, 저장소 requirements로 별도 임시 venv를 구성해 전체 검사를 통과했다. 기존 .env·DB·LangSmith 파일은 변경하지 않았다.
+
+### 2026-10-28 공유 입력 컬럼 정합성 점검
+
+- Client → Server 기준은 `packages/shared-types/src/index.ts`의 `AnalysisRunRequest`다. AI는 `guardStatus` 필수(nullable), `sequence >= 1`, nullable `windowTitle`을 반영하며 내부 정규화 시 제목 null은 빈 문자열로 바꾼다. DOM/OCR 성공 요청은 본문 텍스트를 요구한다.
+- `contentType`은 공개 요청에 없어서 Adapter가 출처 기반으로 `CHROME_DOM → WEB_PAGE`, 그 외 `UNKNOWN`으로 설정한다. `qualityScore`/`contentHash`는 전처리 산출값이지 Client 입력 컬럼이 아니다.
+- Server 전용 `runId`·목표 버전·탐색/세션 문맥은 `VerifiedContext`로 들어오도록 설계되어 있으나 실제 Server route는 연결되지 않았다. Desktop OCR의 `ocr.confidence`·`captureStatus` 및 `extractionStatus` 전달 위치도 담당자 합의/연동이 남았다.
+- 2026-10-28 회귀: 화면 계약 47 passed; Kiwi 평가 모듈 2개를 제외하면 158 passed, 1 skipped, 16 subtests passed. 전체 실행은 환경에 `kiwipiepy==0.23.1`이 없어 해당 75건이 실패했고, 임시 설치도 네트워크 제한으로 불가했다. 실제 모델/API 왕복은 하지 않았다. 상세는 `features/screen-analysis-contract-v1-REPORT.md`를 따른다.

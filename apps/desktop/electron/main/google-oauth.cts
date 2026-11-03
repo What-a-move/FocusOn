@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
+import { oauthPage, type OAuthPageKind } from './oauth-page.cjs'
 
 const CALLBACK_PATH = '/'
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
@@ -52,14 +53,16 @@ export function createGoogleAuthorizationUrl(clientId: string, redirectUri: stri
   return url.toString()
 }
 
-function reply(response: ServerResponse, status: number, message: string): void {
+/** 브라우저에 결과 페이지를 보낸다. 스크립트·외부 파일은 막고 인라인 스타일과 페이지 안 이미지만 허용한다. */
+function reply(response: ServerResponse, status: number, kind: OAuthPageKind, detail?: string): void {
   response.writeHead(status, {
-    'Content-Type': 'text/plain; charset=utf-8',
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     'Cache-Control': 'no-store',
     'Referrer-Policy': 'no-referrer',
     'X-Content-Type-Options': 'nosniff',
   })
-  response.end(message)
+  response.end(oauthPage(kind, detail))
 }
 
 export class GoogleOAuthFlow {
@@ -125,44 +128,44 @@ export class GoogleOAuthFlow {
 
   private handleCallback(request: IncomingMessage, response: ServerResponse): void {
     const attempt = this.active
-    if (!attempt) return reply(response, 410, '로그인 요청이 끝났어요. 앱에서 다시 시도해 주세요.')
+    if (!attempt) return reply(response, 410, 'failed', '로그인 요청이 끝났어요. 앱에서 다시 시도해 주세요.')
 
     // [주의] 다른 로컬 프로그램의 요청이거나 잘못된 경로라면 code/state를 읽지 않는다.
     const expectedHost = new URL(attempt.redirectUri).host
     if (request.method !== 'GET' || request.headers.host !== expectedHost) {
-      return reply(response, 400, '잘못된 로그인 요청이에요.')
+      return reply(response, 400, 'failed', '잘못된 로그인 요청이에요. 앱에서 다시 시도해 주세요.')
     }
 
     let callbackUrl: URL
     try {
       callbackUrl = new URL(request.url ?? '/', attempt.redirectUri)
     } catch {
-      return reply(response, 400, '잘못된 로그인 요청이에요.')
+      return reply(response, 400, 'failed', '잘못된 로그인 요청이에요. 앱에서 다시 시도해 주세요.')
     }
     if (callbackUrl.origin !== new URL(attempt.redirectUri).origin || callbackUrl.pathname !== CALLBACK_PATH) {
-      return reply(response, 404, '로그인 주소를 찾을 수 없어요.')
+      return reply(response, 404, 'failed', '로그인 주소를 찾을 수 없어요. 앱에서 다시 시도해 주세요.')
     }
 
     const returnedStates = callbackUrl.searchParams.getAll('state')
     if (returnedStates.length !== 1 || !equalsSecret(returnedStates[0], attempt.state)) {
-      return reply(response, 400, '로그인 확인값이 일치하지 않아요.')
+      return reply(response, 400, 'failed', '로그인 확인값이 일치하지 않아요. 앱에서 다시 시도해 주세요.')
     }
 
     if (callbackUrl.searchParams.has('error')) {
       if (callbackUrl.searchParams.getAll('error').length !== 1 || callbackUrl.searchParams.has('code')) {
-        return reply(response, 400, '잘못된 로그인 결과예요.')
+        return reply(response, 400, 'failed', '잘못된 로그인 결과예요. 앱에서 다시 시도해 주세요.')
       }
       const cancelled = callbackUrl.searchParams.get('error') === 'access_denied'
-      reply(response, 200, cancelled ? '로그인이 취소됐어요. 앱으로 돌아가 주세요.' : '로그인을 완료하지 못했어요. 앱으로 돌아가 주세요.')
+      reply(response, 200, cancelled ? 'cancelled' : 'failed')
       this.finish({ type: cancelled ? 'cancelled' : 'failed' })
       return
     }
 
     const authorizationCodes = callbackUrl.searchParams.getAll('code')
-    if (authorizationCodes.length !== 1 || !authorizationCodes[0]) return reply(response, 400, '로그인 코드가 없어요.')
+    if (authorizationCodes.length !== 1 || !authorizationCodes[0]) return reply(response, 400, 'failed', '로그인 코드가 없어요. 앱에서 다시 시도해 주세요.')
 
     // [주의] code는 응답·로그에 쓰지 않고 Main 내부 콜백에 한 번만 전달한다.
-    reply(response, 200, '인증 결과를 앱으로 보냈어요. 앱으로 돌아가 주세요.')
+    reply(response, 200, 'ok')
     this.finish({
       type: 'code',
       data: { authorizationCode: authorizationCodes[0], codeVerifier: attempt.codeVerifier, state: attempt.state, redirectUri: attempt.redirectUri },

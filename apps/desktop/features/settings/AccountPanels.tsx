@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { errorText } from '../../app/lib/error-text'
 import { requiredConsents } from '../onboarding/consent-docs'
+import { ConsentDocument } from '../onboarding/ConsentDocument'
 import { onboardingApi } from '../onboarding/onboarding-api'
 import { LoadError, failText } from './SettingsShell'
 import { settingsApi, type ConsentList, type DeviceStatus } from './settings-api'
@@ -135,11 +136,7 @@ export function AccountPanel({ showToast }: { showToast: ShowToast }) {
     </div>
 
     <dialog ref={docsRef} className="fo-dialog fo-docs-dialog" aria-labelledby="docs-title">
-      <h2 id="docs-title">동의 문서</h2>
-      {requiredConsents.map(({ id, detail }) => <section key={id}>
-        <h3>{detail.title}</h3>
-        <dl>{detail.rows.map(([term, value]) => [<dt key={`${term}-t`}>{term}</dt>, <dd key={`${term}-d`}>{value}</dd>])}</dl>
-      </section>)}
+      <ConsentDocument docs={requiredConsents.map(({ detail }) => detail)} titleId="docs-title" />
       <div className="fo-dialog-actions single"><button className="fo-button fo-button-ghost" type="button" onClick={() => docsRef.current?.close()}>닫기</button></div>
     </dialog>
     {confirmDialog}
@@ -207,7 +204,7 @@ export function DevicesPanel({ showToast }: { showToast: ShowToast }) {
     showToast({ text: 'Chrome 확장 연결을 해제했어요' })
   }
 
-  if (view.status === 'error') return <LoadError code={view.code} what="기기 연결을" onRetry={() => { setView({ status: 'loading' }); void load() }} />
+  if (view.status === 'error') return <LoadError poki={false} code={view.code} what="기기 연결을" onRetry={() => { setView({ status: 'loading' }); void load() }} />
   const extension = view.status === 'ready' ? view.data.extension : null
   const left = code ? Math.max(0, Math.ceil((code.expiresAt - now) / 1000)) : 0
 

@@ -47,6 +47,7 @@ SyntaxError: Invalid or unexpected token
 
 ## 원인 및 해결
 
+- 추정 원인: 작성 당시 양식에 칸이 없어 기록하지 않았다(2026-11-03 점검).
 - 실제 원인: 설치된 pnpm 실행 래퍼와 esbuild 실행 파일의 호출 방식이 맞지 않았다.
 - 해결 방법: Node.js 스크립트에서 esbuild의 `buildSync` API를 호출한다.
 - 변경 파일: `scripts/build-electron-preload.cjs`, `package.json`

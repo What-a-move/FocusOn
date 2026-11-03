@@ -316,3 +316,11 @@ Worker 유휴 종료는 30초 뒤라 15초 타이머는 대부분 그대로 실�
 - 팝업과 service worker가 동시에 쓰면 한쪽 줄이 빠질 수 있다. 같은 실행 환경 안에서만 순서대로 쓴다. 문제가 되면 service worker 한 곳에서만 저장한다.
 - 영향받는 파일: `features/session/logger.ts`, `LogCopy.tsx`, `api-client.ts`, `session-api.ts`, `features/pairing/pairing-api.ts`, `PairingStep.tsx`, `SessionPopup.tsx`, `extension/background/index.ts`
 
+
+## 결정 017 - 서버 요청은 CORS 허용에 기대고, 개발용 Extension ID를 고정한다
+
+- 결정일: 2026-11-03 / 상태: 확정 (Backend 반영 대기) / Issue #52·#61 QA.
+- 사용자가 사이트 접근(`https://*/*`·`http://*/*`)을 끄면 Chrome은 그 범위에 들어가는 서버 주소 필수 권한도 함께 끈다. 이때도 서버와 통신해야 권한 해제를 알리고(`local-events`) 팝업이 상태를 보여 줄 수 있어, 서버가 Extension origin의 CORS를 허용한다(Notion `Chrome · macOS 권한 정책` 2.5).
+- 개발용 Extension ID는 폴더 경로마다 달라 서버 허용 목록에 적을 수 없다. 매니페스트 `key`(공개키)로 `fbhlmioghblalhmcokcpoapjpnjccbde`에 고정한다. 비밀키는 저장소에 두지 않는다(압축 해제 로드에는 필요 없음). 웹스토어 배포본은 `key`를 빼고 스토어 ID를 서버 허용 목록에 추가한다.
+- 계정당 활성 Chrome Extension은 1개다. 다른 설치에서 새로 연결하면 서버가 이전 연결을 해제한다(Notion `인증 · 토큰 · 디바이스 정책` 6.2). 이전 Extension은 `LINK_TOKEN_REVOKED`로 재연결 화면을 보인다(기존 처리).
+- 영향받는 파일: `public/manifest.json`, `features/session/SiteAccessStep.tsx`, `extension/background/index.ts`(권한 해제 알림)

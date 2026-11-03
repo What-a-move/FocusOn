@@ -92,7 +92,11 @@ export function FocusSession() {
   const finished = status === 'ENDED' || status === 'ABANDONED'
   // 세션 중 화면 기록 권한이 꺼져 자동으로 멈춘 상태(session-states.html `권한 꺼짐`)
   const permissionLost = status === 'AUTO_PAUSED' && snapshot.error === 'LOCAL_SCREEN_PERMISSION_REVOKED'
-  const caption = permissionLost ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : status === 'AUTO_PAUSED' ? '앱을 다시 열어 멈춰 있어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
+  // 자동으로 멈춘 이유는 아는 것만 말한다. 이유를 모르면 추측하지 않는다.
+  const autoCaption = snapshot.pauseReason === 'APP_RESTART' ? '앱을 다시 열어 멈춰 있어요'
+    : snapshot.pauseReason === 'EXTENSION_UNLINKED' ? 'Chrome 연결이 끊겨 멈췄어요'
+      : snapshot.pauseReason === 'REQUIRED_PERMISSION' ? 'Chrome 사이트 접근이 꺼져 멈췄어요' : '자동으로 멈췄어요'
+  const caption = permissionLost ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : status === 'AUTO_PAUSED' ? autoCaption : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
 
   const togglePause = () => { void (running ? sessionApi.pause() : sessionApi.resume()) }
   const end = async () => { const result = await sessionApi.end(); if (result.success) setDialog(null) }

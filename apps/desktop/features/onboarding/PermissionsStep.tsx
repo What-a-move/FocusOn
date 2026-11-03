@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
 import { describeError, onboardingApi, type Notice } from './onboarding-api'
 import { cameraDetail, requiredConsents, type Detail } from './consent-docs'
+import { ConsentDocument } from './ConsentDocument'
 
 type PermName = 'screen' | 'camera' | 'notify'
 type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied' | 'requested'; error: string | null }
@@ -291,8 +292,7 @@ export function PermissionsStep() {
       <dialog className="consent-dialog" ref={dialogRef} aria-labelledby="consent-dialog-title" onClose={() => setDetail(null)}>
         {detail ? (
           <>
-            <h2 id="consent-dialog-title">{detail.title}</h2>
-            <dl>{detail.rows.map(([term, value]) => [<dt key={`${term}-t`}>{term}</dt>, <dd key={`${term}-d`}>{value}</dd>])}</dl>
+            <ConsentDocument docs={[detail]} titleId="consent-dialog-title" />
             <form method="dialog"><button className="btn btn-primary" type="submit">확인</button></form>
           </>
         ) : null}

@@ -198,10 +198,6 @@
 .onboarding-window .consent-dialog { width: min(520px, calc(100% - 48px)); padding: 28px; border: 0; border-radius: 20px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px var(--shadow); }
 .onboarding-window .consent-dialog[open] { animation: onboarding-pop-in .55s var(--ease); }
 .onboarding-window .consent-dialog::backdrop { background: var(--scrim); }
-.onboarding-window .consent-dialog h2 { font-size: 21px; font-weight: 700; }
-.onboarding-window .consent-dialog dl { display: grid; grid-template-columns: 100px 1fr; gap: 8px 14px; margin: 18px 0 0; font-size: 15px; line-height: 1.6; }
-.onboarding-window .consent-dialog dt { color: var(--muted); font-weight: 600; }
-.onboarding-window .consent-dialog dd { margin: 0; }
 .onboarding-window .consent-dialog .btn { width: 100%; margin-top: 24px; }
 
 /* 권한 확인: 상태 + 설명 + 행동 하나 */
@@ -314,6 +310,7 @@
 .onboarding-window .app-add p { margin: 0; color: var(--muted); font-size: 15px; }
 .onboarding-window .app-field .hint:empty { min-height: 0; margin: 0; }
 .onboarding-window .app-dialog { width: min(420px, calc(100% - 48px)); }
+.onboarding-window .app-dialog h2 { font-size: 21px; font-weight: 700; }
 .onboarding-window .app-dialog > p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; word-break: keep-all; }
 .onboarding-window .app-dialog .btn { margin-top: 22px; }
 .onboarding-window .app-list { display: grid; gap: 6px; max-height: min(360px, 50vh); margin-top: 16px; overflow-y: auto; }

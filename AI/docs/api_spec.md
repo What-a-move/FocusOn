@@ -1,5 +1,9 @@
 # AI API 계약 초안
 
+> 2026-10-29 내부 수신 API: `POST /internal/v1/analysis-runs`를 구현했다. 기존 Adapter 인자 request/goal/context/extractionStatus/선택 ocr를 받아 수신·검증 확인만 반환한다. 분석 실행·공개 판정 응답은 미연결이다. 이 Backend 전용 envelope는 Client 공개 요청 변경이 아니며 Backend 합의가 필요하다. [실행·입력·출력](features/fastapi-reception-REPORT.md).
+
+> 2026-10-26 사용자 제공 최신 화면 분석 계약 적용: 공개 화면 입력은 `metadata`/`contentPayload.text`/`goalSnapshot` 구조이며 text는 최대 2,000자다. AI 내부 실행 문맥은 Server가 제공한다. 코드 경계는 `src/api/relevance_contract.py`, 적용 범위와 미완료 연동은 [정합성 보고서](features/screen-analysis-contract-v1-REPORT.md)를 따른다. 아래 과거 제안 API를 새 공개 계약으로 자동 적용하지 않는다.
+
 ## 문서 상태
 
 - 상태: 팀 검토용 초안, 미구현
@@ -66,7 +70,7 @@ Extension / macOS 네이티브 모듈
 | 목표 명확화 | `POST /api/v1/goals/clarify` | `POST /internal/v1/goals/clarify` | 공개 경로는 Notion 확정, 내부 경로 제안 |
 | 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
 | 사용자 관련성 판정 수정·무효화 | MVP 공개 경로 없음 | Server 소유권 검증 후 후속 검토 | P1 이후 제안; Notion API 계약 변경 전 구현 금지 |
-| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안; MVP 응답은 `overview`, `keyConcepts`(name·briefExplanation·sessionEvidence 객체 최대 5개), `nextStartPrompt`만 사용 |
+| 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안·미구현; #29는 합성 입력 생성 코어·시연 단계다. MVP 응답은 `overview`, `keyConcepts`(name·briefExplanation·sessionEvidence 객체 최대 5개), `nextStartPrompt`만 사용 |
 
 기존 `/api/v1/analyze/relevance`는 레거시 경로 후보로만 기록하며 최신 `/api/v1/sessions/{sessionId}/analysis-runs`와 동시에 최종 경로로 구현하지 않는다. AI 서비스는 Server가 호출하며 Client가 직접 호출하지 않는다.
 

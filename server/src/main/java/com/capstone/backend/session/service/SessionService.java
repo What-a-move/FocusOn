@@ -147,7 +147,7 @@ public class SessionService {
   }
 
   /** 멱등 키가 표준 UUID 문자열인지 확인하고 UUID 값으로 변환한다. */
-  private UUID parseKey(String value) {
+  static UUID parseKey(String value) {
     try {
       UUID key = UUID.fromString(value);
       // UUID 파서는 일부 축약 형식도 허용하므로 원래 문자열의 표준 형식을 재확인한다.
@@ -182,7 +182,7 @@ public class SessionService {
   }
 
   /** 기기와 요청 본문의 SHA-256 해시를 만들어 같은 멱등 요청인지 비교한다. */
-  private String requestHash(String value) {
+  static String requestHash(String value) {
     try {
       return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
           .digest(value.getBytes(StandardCharsets.UTF_8)));

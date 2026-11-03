@@ -62,6 +62,9 @@ public class LearningSessionEntity {
   @Column(name = "accumulated_active_ms", nullable = false)
   private long accumulatedActiveMs;
 
+  @Column(name = "accumulated_at_resume_ms", nullable = false)
+  private long accumulatedAtResumeMs;
+
   @Column(name = "last_resumed_at")
   private Instant lastResumedAt;
 
@@ -122,5 +125,21 @@ public class LearningSessionEntity {
     return new LearningSessionEntity(user, goal, runnerDevice, targetDurationMs,
         userTimeZoneSnapshot, studyDate, sessionOptionsSnapshotJson, interventionPolicyVersion,
         startedAt);
+  }
+
+  /** 서비스에서 검증한 일시정지 결과를 세션에 반영한다. */
+  public void pause(SessionStatus pausedStatus, String reason, long activeMs) {
+    this.status = pausedStatus;
+    this.pauseReason = reason;
+    this.accumulatedActiveMs = activeMs;
+    this.lastResumedAt = null;
+  }
+
+  /** 서버가 확인한 시각부터 새 실행 구간을 시작한다. */
+  public void resume(Instant resumedAt) {
+    this.status = SessionStatus.RUNNING;
+    this.pauseReason = null;
+    this.accumulatedAtResumeMs = this.accumulatedActiveMs;
+    this.lastResumedAt = resumedAt;
   }
 }

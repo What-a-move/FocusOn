@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | `src/models/llm_client.py` | `ClaudeGoalGenerationClient`로 교체. 공식 SDK의 구조화 생성·질문 스트리밍을 사용하고 잘린 응답·거절을 차단한다. 질문 경쟁·기본 질문·1회 Repair와 연결 정리는 유지한다. | 공식 SDK HTTP Mock, 질문 병렬·취소·스트리밍·오류 회귀, Claude Live 3종 |
 | `src/config.py` | `OPENAI_*` 대신 Claude 키·모델·토큰·병렬·제한 시간을 읽는다. `ANTHROPIC_API_KEY`가 우선이고 `CLAUDE_API_KEY`도 인식한다. | 설정 기본값·별칭·우선순위·키 누락 회귀 |
-| `src/api/routes.py` | FastAPI 의존성을 Claude 생성 어댑터로 변경한다. Backend 재시도 중복을 막는 SDK 재시도 0과 요청 종료 시 자원 정리를 유지한다. | API 의존성·오류 envelope·기존 Workflow 회귀 |
+| `src/api/goal_routes.py` | 최신 dev에서 분리한 목표 FastAPI 라우트에 Claude 생성 어댑터를 연결한다. Backend 재시도 중복을 막는 SDK 재시도 0과 요청 종료 시 자원 정리를 유지한다. 관련성 `routes.py`는 dev 그대로 보존한다. | API 의존성·오류 envelope·기존 Workflow 회귀 |
 | `streamlit_app.py` | 일반 생성·직접 확인 생성에 Claude를 주입하고 사이드바 키 감지·모델명·외부 전송 안내를 바꾼다. | Streamlit AppTest·JEV 표·답변 반영·최종 확인 회귀 |
 | `.env.example` | 표준 Claude 키, Haiku 4.5, 최대 1,200 토큰 및 질문 설정을 안내하고 OpenAI 전용 옵션을 제거한다. | Settings 기본값·실제 로컬 별칭 키 호출 |
 | `requirements.txt` | `langchain-openai`를 제거하고 실제 검증한 공식 `anthropic>=0.125,<1`을 추가한다. | what-a-move에 SDK 0.125.0 설치·import·실제 호출 |
@@ -23,7 +23,9 @@
 - Claude Live: 합성 목표 한 건의 질문 스트리밍 5.58초(초안 갱신 13회), GoalProfile 6.12초, 추천 묶음 5.79초. 각각 1회 Schema 검증 성공이며 원문·출력 전문은 보관하지 않았다.
 - JEV 후속 의미 검수까지 포함한 Live Workflow·P50/P95·생성 품질 전체 평가는 수행하지 않았다. 공식 SDK 직접 호출로 바뀌어 기존 ChatOpenAI 자동 생성 trace는 남지 않으며 JEV·Laya trace는 유지한다.
 - 최초 전체 테스트 수집은 사용자 미추적 `tests/openai_test.py`가 import 시 OpenAI를 호출해 네트워크 오류가 났다. 사용자 파일은 보존하고 이후 테스트·커밋 대상에서 제외했다.
-- 최종 검증: 아래 pytest **87개 통과(6.35초)**, 동일 고정 Offline Router **15건·오류 0건**, `git diff --check` 통과. 중간 AppTest의 새 표시 검사가 실제 `write` 위젯을 `metric`으로 잘못 조회해 한 번 실패했으며 올바른 요소로 수정 후 전체 통과했다.
+- dev 동기화 전 검증: 아래 pytest **87개 통과(6.35초)**, 동일 고정 Offline Router **15건·오류 0건**, `git diff --check` 통과. 중간 AppTest의 새 표시 검사가 실제 `write` 위젯을 `metric`으로 잘못 조회해 한 번 실패했으며 올바른 요소로 수정 후 전체 통과했다.
+- [PR #160](https://github.com/What-a-move/FocusOn/pull/160) 생성 후 dev와 두 파일 충돌을 해결했다. 관련성 `routes.py`는 dev 그대로 두고 목표 의존성 변경을 `goal_routes.py`로 옮겼다. 의존성의 기존 버전 고정·Kiwi를 보존하고 목표 생성 의존성만 교체했다. 별도 학습 정리 데모의 OpenAI 실험은 변경하지 않았다.
+- 최종 dev 동기화 검증: **405 passed, 27 subtests passed(14.70초)**, Offline Router **15건·오류 0건**. 최초 확장 실행은 기존 관련성 테스트의 Kiwi 미설치로 실패했으며 what-a-move에 dev에 명시된 `kiwipiepy==0.23.1` 설치 후 전체 통과했다. dev 대비 변경 파일은 AI 19개뿐이다.
 
 ```bash
 LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q --ignore=AI/tests/openai_test.py

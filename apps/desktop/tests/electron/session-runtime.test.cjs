@@ -249,3 +249,35 @@ test('세션 중 화면 기록 권한이 꺼지면 바로 멈추고 local-events
   assert.equal((await runtime.resume()).success, false, '권한이 없으면 재개 요청을 보내지 않음')
   assert.equal(calls.some((call) => call.path.endsWith('/resume')), false)
 })
+
+test('heartbeat 응답이 자동 멈춤이면 서버 시간으로 같이 멈추고 이유를 남긴다. 이유가 없으면 null이다', async () => {
+  const replies = [
+    { success: true, data: { status: 'AUTO_PAUSED', accumulatedActiveMs: 25000, pauseReason: 'EXTENSION_UNLINKED' } },
+    { success: true, data: { status: 'AUTO_PAUSED', accumulatedActiveMs: 5000 } },
+  ]
+  const { runtime, advance } = setup({ 'POST /api/v1/sessions/901/heartbeats': () => replies.shift() })
+  runtime.begin(started, '미적분 풀기')
+  advance(30000)
+  await runtime.heartbeat()
+  assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 25000)
+  assert.equal(runtime.snapshot().pauseReason, 'EXTENSION_UNLINKED')
+  advance(30000)
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 25000, '멈춘 뒤에는 시간이 흐르지 않는다')
+
+  const other = setup({ 'POST /api/v1/sessions/901/heartbeats': () => replies.shift() })
+  other.runtime.begin(started, '미적분 풀기')
+  await other.runtime.heartbeat()
+  assert.equal(other.runtime.snapshot().pauseReason, null)
+})
+
+test('heartbeat가 실행 중이라고 답하거나 로컬에서 이미 멈췄으면 상태를 바꾸지 않는다', async () => {
+  const { runtime, advance } = setup({
+    'POST /api/v1/sessions/901/heartbeats': { success: true, data: { status: 'RUNNING', accumulatedActiveMs: 1000 } },
+  })
+  runtime.begin(started, '미적분 풀기')
+  advance(30000)
+  await runtime.heartbeat()
+  assert.equal(runtime.snapshot().status, 'RUNNING')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 30000, '실행 중이면 Desktop 시간을 그대로 쓴다')
+})
