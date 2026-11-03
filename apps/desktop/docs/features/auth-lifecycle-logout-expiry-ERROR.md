@@ -45,6 +45,7 @@ refresh 후 새 JWT로 logout을 한 번 재요청해 서버 폐기와 로컬 �
 
 ## 원인 및 해결
 
+- 추정 원인: 작성 당시 양식에 칸이 없어 기록하지 않았다(2026-11-03 점검).
 - 실제 원인: logout의 401 일괄 성공 처리와 전송 중 만료에 대한 재시도 누락.
 - 해결: 204만 API 성공으로 반환하고 code를 서비스에 전달한다. single-flight refresh 후 logout을 한 번 재시도하며 실패 때 token을 유지한다. 명시적 재로그인 오류만 로컬 정리를 허용한다.
 - 변경 파일: electron/main/auth-api.cts, auth-service.cts, tests/electron/auth-service.test.cjs.

@@ -47,6 +47,7 @@ TypeError: Cannot convert undefined or null to object
 
 ## 원인 및 해결
 
+- 추정 원인: 작성 당시 양식에 칸이 없어 기록하지 않았다(2026-11-03 점검).
 - 실제 원인: `sandbox: true` Preload에서 상대 경로로 분리된 로컬 모듈을 직접 불러올 수 없었다.
 - 해결 방법: TypeScript 타입 검사 후 esbuild로 Preload와 공유 런타임 코드를 단일 `.cjs` 파일로 묶었다.
 - 변경 파일: `scripts/build-electron-preload.cjs`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`
