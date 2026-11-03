@@ -64,6 +64,7 @@
 
 - Issue #71(2026-10-26): 화면 분석 5단계. Swift 도우미 `ocr`이 맨 앞 창 하나만 `SCScreenshotManager`로 캡처해 Vision(`ko-KR`·`en-US`)으로 글자만 돌려준다(이미지는 도우미 안에서 버림). Main `analyzeObservation`이 `APP_META` 결과가 관련 없음·판단 보류이고 아직 같은 화면이면 정리한 글자를 `DESKTOP_APP_OCR`로 다시 보낸다(늦은 응답 버림, 민감 글자는 `PRIVACY_BLOCKED`). Vision 한국어 인식은 저장된 화면 캡처로 확인했고, 창 캡처는 화면 기록 권한이 있는 실제 앱에서 확인이 남아 있다.
 
+- 실제 앱 QA(2026-11-03): 화면 분석 1·2·4·5단계를 실제 Electron + 로컬 서버(없는 분석·알림 API만 QA 중계 서버)로 끝까지 확인했다(`features/screen-analysis-REPORT.md`). 같은 날 목표 직접 확정 → 세션 설정 → 시작(중복 클릭에도 세션 1개) → 멈추기·재개를 실제 서버로 확인했다(`features/session-setup-REPORT.md`). 온보딩 제외 앱 대화상자 아이콘·폭·제목 오류 2건을 고쳤다(ERROR 문서).
 
 - Issue #73(2026-10-27): 세션 결과 화면(`/session-result/`, `session-result.html` D16·D18). 세션이 끝나거나 자동 종료되면 집중 화면이 결과 화면으로 넘긴다. Main이 `GET /sessions/{id}/summary`·`/learning-summary`를 조회하고, 화면은 시간·집중 흐름(분석 안 됨 = 실제 시간 − 분석 구간, 목표 활동 비율은 관련+무관 1분 이상일 때만)·기록·학습 정리 상태를 보여 준다. 정리가 대기·생성 중이면 5초마다 다시 조회한다. summary 응답 형식은 Notion에 시간 필드 이름만 있어 제안 형식(결정 027)으로 만들었고 백엔드 확인을 기다린다. 실제 API가 없어 가짜 bridge로 6가지 상태를 확인했다.
 
