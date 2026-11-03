@@ -28,6 +28,15 @@ export function displayActiveMs(session: ActiveSession, fetchedAt: number, now: 
   return Math.min(session.targetDurationMs, session.accumulatedActiveMs + running)
 }
 
+/**
+ * 새로 받은 세션을 화면에 쓸 값으로 맞춘다. 서버 누적 시간은 Desktop이 heartbeat·멈춤을 보낼 때만 바뀌어,
+ * 조회할 때마다 화면 시간이 뒤로 튈 수 있다. 같은 세션이 계속 실행 중이면 이미 그린 시간보다 줄이지 않는다.
+ */
+export function keepForward(prev: { session: ActiveSession; fetchedAt: number } | null, next: ActiveSession, at: number): ActiveSession {
+  if (!prev || prev.session.sessionId !== next.sessionId || prev.session.status !== 'RUNNING' || next.status !== 'RUNNING') return next
+  return { ...next, accumulatedActiveMs: Math.max(next.accumulatedActiveMs, displayActiveMs(prev.session, prev.fetchedAt, at)) }
+}
+
 export function formatClock(ms: number): string {
   const seconds = Math.max(0, Math.ceil(ms / 1000))
   const hours = Math.floor(seconds / 3600)
