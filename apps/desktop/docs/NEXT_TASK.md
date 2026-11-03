@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 화면 분석·세션 설정 실제 앱 QA 정리 (2026-11-03)
+- 상태: 화면 분석 1·2·4·5단계(#54·#56·#63·#71)와 세션 설정(#46) QA·REPORT 완료. 남은 일: 서버 베타 Issue(집중 진행·화면 분석→알림·리포트)가 병합되면 중계 서버 없이 연동 QA. 목표 AI 확인(#44)은 서버 #99, 집중 화면 종료·heartbeat(#48)는 서버 `end`·`heartbeats` 이후.
+
 - 작업명: 학습 노트 — 회차 노트 화면 (Issue #129, `feat/129-desktop-study-note`)
 - 상태: `/notes/?session=ID` 노트(한눈에 보기·핵심 개념·다음 시작 지점·복사)와 정리 상태별 화면, 집중 리포트 `정리 보기` 연결, 학습 정리 계약에 `keyConcepts`·`nextStartPrompt` 추가(2026-11-02). 남은 일: 학습 정리 API 병합 뒤 실제 QA. 노트 목록은 서버 `GET /learning-summaries`(Notion 리포트 설계서 2.4·8.1에 추가) 이후 별도 작업.
 
@@ -37,7 +40,7 @@
 
 
 - 작업명: Desktop 화면 OCR (Issue #71, `feat/71-desktop-ocr`)
-- 상태: 도우미 창 캡처·Vision OCR, 다시 보내기·글자 정리·contentSource별 순서 번호 구현(2026-10-26). 남은 일: 화면 기록 권한이 있는 실제 Electron에서 창 캡처 확인, 백엔드 `analysis-runs` 병합 뒤 실제 QA와 REPORT.
+- 상태: 도우미 창 캡처·Vision OCR, 다시 보내기·글자 정리·contentSource별 순서 번호 구현(2026-10-26). 실제 Electron 창 캡처·OCR 확인과 REPORT 완료(2026-11-03, `screen-analysis-REPORT.md`). 남은 일: 백엔드 `analysis-runs` 병합 뒤 연동 QA.
 - 다음 Issue 후보: 화면 위 포키 F06·F07, 세션 결과 화면, 설정 화면(제외 앱·사이트·알림 방식).
 
 

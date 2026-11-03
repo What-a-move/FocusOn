@@ -310,6 +310,7 @@
 .onboarding-window .app-add p { margin: 0; color: var(--muted); font-size: 15px; }
 .onboarding-window .app-field .hint:empty { min-height: 0; margin: 0; }
 .onboarding-window .app-dialog { width: min(420px, calc(100% - 48px)); }
+.onboarding-window .app-dialog h2 { font-size: 21px; font-weight: 700; }
 .onboarding-window .app-dialog > p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; word-break: keep-all; }
 .onboarding-window .app-dialog .btn { margin-top: 22px; }
 .onboarding-window .app-list { display: grid; gap: 6px; max-height: min(360px, 50vh); margin-top: 16px; overflow-y: auto; }
