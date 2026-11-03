@@ -24,7 +24,7 @@ import { GoalService, registerGoalIpc } from './goal-ipc.cjs'
 import { SessionService, registerSessionIpc } from './session-ipc.cjs'
 import { NotificationReadiness } from './notification-readiness.cjs'
 import { SessionRuntime } from './session-runtime.cjs'
-import { SESSION_CHANNELS } from '../shared/session-contract.cjs'
+import { SESSION_CHANNELS, type SessionSnapshot } from '../shared/session-contract.cjs'
 import { ExcludedApps } from './excluded-apps.cjs'
 import { ObserverHelper } from './observer-helper.cjs'
 import { ScreenObserver, parseFrontmost } from './screen-observer.cjs'
@@ -33,7 +33,7 @@ import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
 import { SettingsService, ThemePreference, registerSettingsIpc } from './settings-ipc.cjs'
 import { InterventionWatcher } from './intervention-watcher.cjs'
-import { INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
+import { DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -237,8 +237,13 @@ if (!hasSingleInstanceLock) {
     registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)
     registerGoalIpc(() => mainWindow, rendererUrl, authService ? new GoalService(authService) : null)
     const sessionReady = { screen: () => mediaStatus('screen') === 'granted', notification: () => notificationReadiness.isConfirmed() }
+    let lastSession: SessionSnapshot | null = null
     sessionRuntime = authService ? new SessionRuntime(authService, (snapshot) => {
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(SESSION_CHANNELS.changed, snapshot)
+      const disconnected = disconnectedNotice(lastSession, snapshot)
+      if (disconnected) showFloating(disconnected)
+      else if (snapshot?.status === 'RUNNING' && pendingShow?.interventionId === DISCONNECTED_ID) hideFloating()
+      lastSession = snapshot
     }, sessionReady) : null
     const runtime = sessionRuntime
     registerSessionIpc(() => mainWindow, rendererUrl, authService && runtime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, runtime) : null, runtime)
@@ -283,6 +288,17 @@ if (!hasSingleInstanceLock) {
       floatingWindow.webContents.send(INTERVENTION_CHANNELS.show, payload)
       floatingWindow.showInactive()
     }
+    /**
+     * F07: 실행 중이던 세션을 서버가 Chrome 쪽 이유로 멈췄을 때만 포키로 알린다(floating-poki.html disconnected).
+     * 화면 기록 권한은 Desktop이 직접 멈추고 집중 화면이 안내하므로 띄우지 않는다. 이유를 모르면 추측하지 않고 띄우지 않는다.
+     */
+    function disconnectedNotice(prev: SessionSnapshot | null, next: SessionSnapshot | null): FloatingShow | null {
+      if (prev?.status !== 'RUNNING' || next?.status !== 'AUTO_PAUSED' || next.sessionId !== prev.sessionId) return null
+      const base = { interventionId: DISCONNECTED_ID, kind: 'DISCONNECTED' as const, level: 'NORMAL' as const, goalText: next.goalText }
+      if (next.pauseReason === 'EXTENSION_UNLINKED') return { ...base, say: 'Chrome 연결이 끊겼어요.', sub: '집중을 잠시 멈췄어요.\n앱에서 다시 연결해 주세요.' }
+      if (next.pauseReason === 'REQUIRED_PERMISSION' && next.error === null) return { ...base, say: '사이트 접근이 꺼졌어요.', sub: '집중을 잠시 멈췄어요.\nChrome에서 다시 허용해 주세요.' }
+      return null
+    }
     function hideFloating(): void {
       pendingShow = null
       if (floatingWindow && !floatingWindow.isDestroyed()) floatingWindow.hide()
@@ -297,6 +313,13 @@ if (!hasSingleInstanceLock) {
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
       const { interventionId, action } = args[0]
+      // F07은 서버 알림이 아니라 기록하지 않는다. 앱 열기는 FocusOn 창을 앞으로 가져온다.
+      if (interventionId === DISCONNECTED_ID) {
+        hideFloating()
+        // [주의] macOS에서 창 focus()만으로는 비활성 앱이 앞으로 오지 않는다. 사용자가 누른 버튼이라 앱을 직접 활성화한다.
+        if (action === 'OPEN_APP') { app.focus({ steal: true }); showMainWindow() }
+        return { success: true, data: { done: true } }
+      }
       const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
       // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 조금 더 보기는 같은 창에서 목표 안내로 이어진다.
       if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }

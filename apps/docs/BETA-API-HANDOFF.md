@@ -104,6 +104,11 @@
 ```
 
 - `409 SESSION_ABANDONED`면 Desktop이 세션을 `ABANDONED`로 끝내고 되살리지 않는다.
+- (2026-11-03) 서버가 확장 연결 끊김·Chrome 사이트 접근 꺼짐으로 세션을 멈췄으면 `status: "AUTO_PAUSED"`, 서버 확정 `accumulatedActiveMs`와 함께 **`pauseReason`**(`USER`·`REQUIRED_PERMISSION`·`EXTENSION_UNLINKED`·`APP_RESTART`·`SYSTEM`)을 준다. 실행 중이면 생략한다. Desktop은 이 값으로 같이 멈추고 이유대로 안내한다(확장 쪽 이유면 화면 위 포키 F07). 없으면 "자동으로 멈췄어요"로만 안내한다.
+
+```json
+{ "status": "AUTO_PAUSED", "accumulatedActiveMs": 744000, "pauseReason": "EXTENSION_UNLINKED" }
+```
 
 ### `GET /sessions/{id}`
 

@@ -45,7 +45,7 @@
 - 서버 API 병합 뒤 실제 Google 계정 왕복, Keychain 저장·복구, 신규·기존 사용자 화면 진입의 수동 QA가 필요하다.
 - 로그인 후 온보딩은 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정 순서로 진행하며, 완료 뒤 대시보드에 진입한다. 목표·시간·개입 설정은 대시보드 `오늘 학습`의 별도 흐름이다.
 - 온보딩 재개는 `GET /api/v1/users/me/onboarding-readiness`의 `currentStep`으로 결정한다. 앱 시작·복귀 때 Desktop Main이 OS 권한을 다시 확인하고 준비 상태를 갱신한다. API 구현은 Backend 담당 범위다.
-- 화면 위 포키는 F04 이탈·F05 휴식 제안까지 구현했다(Issue #63). F06 분석 제외·민감 화면, F07 연결 끊김 말풍선, 위치 옮기기, 휴식 포키 에셋이 남아 있다.
+- 화면 위 포키는 F04 이탈·F05 휴식 제안(Issue #63)과 F07 연결 끊김(2026-11-03)을 구현했다. F07은 실행 중이던 세션을 서버가 확장 연결 끊김(`EXTENSION_UNLINKED`)·Chrome 사이트 접근 꺼짐(`REQUIRED_PERMISSION`)으로 멈췄을 때만 띄우고 `앱 열기`로 FocusOn을 연다. F06(분석 제외·민감)은 시안대로 아무것도 띄우지 않고, 위치 옮기기는 시안에 없어 만들지 않는다. heartbeat가 멈춤을 주면 Desktop도 서버 시간으로 멈춘다(`focus-session-heartbeat-status-ignored-ERROR.md`). 휴식 포키 에셋이 남아 있다.
 - Desktop 연결 코드 발급·readiness polling과 Extension의 최초 pairing 클라이언트는 구현돼 있다. 세션 상태 명령·Heartbeat 동기화는 Issue #48에서 구현했다. 실제 Backend 왕복 QA가 남아 있다.
 
 - Issue #41(2026-10-24): 홈 대시보드를 `FocusOn-design/main.html`대로 `features/dashboard/`에 구현했다. 집중 달력·오늘 집중 분·이번 달 일수·지난 목표는 Main `ReportService`(리포트 IPC)로만 받고, 로딩·오류·오프라인(마지막 확인 시각)·빈 상태를 보여 준다. 리포트 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 라이트·다크·오프라인 화면을 확인했다.

@@ -18,6 +18,7 @@ type State = {
   resumedAt: number | null
   error: string | null
   busy: boolean
+  pauseReason: string | null
 }
 
 // ponytail: 앱을 다시 켜 이어받은 세션은 조회 응답에 옵션이 없어 기본값(포키·보통)으로 알림을 보여 준다.
@@ -58,7 +59,7 @@ export class SessionRuntime {
   snapshot(): SessionSnapshot | null {
     const s = this.state
     if (!s) return null
-    return { sessionId: s.sessionId, goalText: s.goalText, status: s.status, targetDurationMs: s.targetDurationMs, accumulatedActiveMs: this.activeMs(), error: s.error, busy: s.busy }
+    return { sessionId: s.sessionId, goalText: s.goalText, status: s.status, targetDurationMs: s.targetDurationMs, accumulatedActiveMs: this.activeMs(), error: s.error, busy: s.busy, pauseReason: s.pauseReason }
   }
 
   /** 세션 설정에서 시작에 성공하면 그 응답으로 타이머를 시작한다. */
@@ -67,7 +68,7 @@ export class SessionRuntime {
     this.options = options
     this.state = {
       sessionId: started.sessionId, goalText, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
-      baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false,
+      baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false, pauseReason: null,
     }
     this.publish('start')
   }
@@ -105,6 +106,7 @@ export class SessionRuntime {
       sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status === 'RUNNING' ? 'AUTO_PAUSED' : remote.status, version: remote.version,
       // [주의] 꺼져 있던 동안의 시간은 서버가 마지막으로 확정한 값만 쓴다. 로컬에서 추정해 더하지 않는다(resumedAt 없음).
       targetDurationMs: remote.targetDurationMs, baseActiveMs: remote.accumulatedActiveMs, resumedAt: null, error: null, busy: false,
+      pauseReason: remote.status === 'RUNNING' ? 'APP_RESTART' : remote.pauseReason,
     }
     this.state = restored
     if (remote.status === 'RUNNING') {
@@ -145,6 +147,14 @@ export class SessionRuntime {
       body: { clientObservedAt: this.wallClock().toISOString(), accumulatedActiveMs: this.activeMs() },
     })
     if (this.state !== s) return
+    // 서버가 Desktop 밖의 이유(확장 연결 끊김·Chrome 사이트 접근 꺼짐)로 멈췄으면 서버 시간으로 같이 멈춘다(Notion 권한 정책 2.4).
+    // [주의] 명령 처리 중이거나 로컬에서 이미 멈췄으면 건드리지 않는다. 화면 기록 권한은 Desktop이 먼저 멈춘다.
+    if (result.success && s.status === 'RUNNING' && !s.busy && (result.data.status === 'AUTO_PAUSED' || result.data.status === 'PAUSED')) {
+      this.settle(result.data.status, result.data.accumulatedActiveMs)
+      s.pauseReason = result.data.pauseReason
+      this.publish('server-paused')
+      return
+    }
     if (!result.success && result.error.code === 'SESSION_ABANDONED') {
       // 서버가 응답 없음으로 이미 끝낸 세션은 되살리지 않는다. 서버가 확정한 시간만 남는다.
       this.settle('ABANDONED')
@@ -156,6 +166,7 @@ export class SessionRuntime {
     // APP_RESTART는 복구 때 이미 로컬에서 멈춘 세션(AUTO_PAUSED)을 서버에 알린다.
     return this.command('pause', reason, reason === 'APP_RESTART' ? ['AUTO_PAUSED'] : ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
       this.settle(data.status ?? (reason === 'USER' ? 'PAUSED' : 'AUTO_PAUSED'), data.accumulatedActiveMs)
+      s.pauseReason = reason
     })
   }
 
@@ -168,6 +179,7 @@ export class SessionRuntime {
     if (!s || s.status !== 'RUNNING') return
     this.settle('AUTO_PAUSED')
     s.error = SCREEN_PERMISSION_REVOKED
+    s.pauseReason = 'REQUIRED_PERMISSION'
     this.localEvents.push({ sessionId: s.sessionId, localEventCode: SCREEN_PERMISSION_REVOKED, occurredAt: this.wallClock().toISOString() })
     this.publish('screen-permission-lost')
     void this.flushLocalEvents()
@@ -180,6 +192,7 @@ export class SessionRuntime {
     return this.command('resume', 'resume', ['PAUSED', 'AUTO_PAUSED'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/resume`, body: { readiness: { screenAnalysisReady: this.ready.screen() } } }), (s) => {
       s.status = 'RUNNING'
       s.resumedAt = this.now()
+      s.pauseReason = null
     })
   }
 
