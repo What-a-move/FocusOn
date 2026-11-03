@@ -9,7 +9,8 @@ import './session-popup.css'
 
 /**
  * E01b 사이트 접근 허용(안내·거부)과 E06 사이트 접근 꺼짐 (FocusOn-design/extension-popup.html).
- * 집중 중인데 권한이 없으면 꺼짐 화면으로 보여 준다. 세션은 서버가 이미 자동으로 멈췄다.
+ * 집중 중인데 권한이 없으면 꺼짐 화면으로 보여 준다. 멈췄다는 말은 서버 상태가 실제로 멈춤일 때만 한다
+ * (권한 해제 알림이 서버에 닿지 못했거나 처음부터 허용하지 않았으면 세션은 계속 실행 중이다).
  */
 export function SiteAccessStep({ onGranted }: { onGranted: () => void }) {
   const [denied, setDenied] = useState(false)
@@ -26,6 +27,7 @@ export function SiteAccessStep({ onGranted }: { onGranted: () => void }) {
   }
 
   const revoked = session !== null && !['ENDED', 'ABANDONED'].includes(session.status)
+  const paused = session !== null && ['PAUSED', 'AUTO_PAUSED'].includes(session.status)
   return <main className="pairing-stage">
     <section className="pairing-popup" aria-label="FocusOn">
       <header className="p-head">
@@ -35,9 +37,11 @@ export function SiteAccessStep({ onGranted }: { onGranted: () => void }) {
       </header>
       <div className="p-body session-body">
         {revoked ? <>
-          <div className="notice is-error" role="alert"><strong>사이트 접근 권한이 꺼졌어요</strong><span>그래서 세션이 자동으로 멈췄어요.</span><span>다시 허용한 뒤 직접 재개해 주세요.</span></div>
+          <div className="notice is-error" role="alert"><strong>사이트 접근 권한이 꺼져 있어요</strong>{paused
+            ? <><span>세션은 멈춰 있어요.</span><span>다시 허용한 뒤 직접 재개해 주세요.</span></>
+            : <span>지금은 Chrome 탭을 확인하지 못해요. 다시 허용해 주세요.</span>}</div>
           <div>
-            <span className="label">마지막 확정 남은 시간</span>
+            <span className="label">{paused ? '멈춘 시점 남은 시간' : '마지막 확정 남은 시간'}</span>
             <div className="timer-row">
               <span className="timer is-dim">{formatClock(session.targetDurationMs - session.accumulatedActiveMs)}</span>
               {/* eslint-disable-next-line @next/next/no-img-element */}
