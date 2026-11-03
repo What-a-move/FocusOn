@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import type { ApiResult } from './auth-api.cjs'
 import type { AuthService } from './auth-service.cjs'
+import { log } from './logger.cjs'
 import { parseCommandResult, parseHeartbeat, parseRemoteSession } from '../shared/session-contract.cjs'
-import type { CommandResult, FocusSettings, RemoteSession, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
+import type { CommandResult, RemoteSession, SessionOptions, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
 
 type Command = 'pause' | 'resume' | 'extend' | 'end'
 type State = {
@@ -20,9 +21,11 @@ type State = {
 }
 
 // ponytail: 앱을 다시 켜 이어받은 세션은 조회 응답에 옵션이 없어 기본값(포키·보통)으로 알림을 보여 준다.
-const DEFAULT_OPTIONS: FocusSettings = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
+const DEFAULT_OPTIONS: SessionOptions = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false }
 const NONE = Symbol('no-active-session')
 const SCREEN_PERMISSION_REVOKED = 'LOCAL_SCREEN_PERMISSION_REVOKED'
+// 재실행 뒤 APP_RESTART 일시정지를 서버에 알리지 못했다. 로컬에서는 멈춰 있고 사용자가 직접 이어 간다.
+const RESTART_PAUSE_UNSYNCED = 'LOCAL_RESTART_PAUSE_UNSYNCED'
 const ACTIVE: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING']
 const isActive = (status: SessionStatus) => ACTIVE.includes(status)
 
@@ -38,8 +41,11 @@ export class SessionRuntime {
   private pending = new Map<Command, { intent: string; key: string; body?: object }>()
   // 서버에 아직 알리지 못한 로컬 이벤트. 다음 heartbeat 주기에 순서대로 다시 보낸다.
   private localEvents: { sessionId: string; localEventCode: string; occurredAt: string }[] = []
+  private restoring: Promise<ApiResult<SessionSnapshot | null>> | null = null
   private flushing = false
-  private options: FocusSettings = DEFAULT_OPTIONS
+  private options: SessionOptions = DEFAULT_OPTIONS
+  // 상태 전이 로그용: 직전에 알린 상태와 그 상태가 된 시각(monotonic·벽시계).
+  private last: { sessionId: string; status: SessionStatus; mono: number; wall: number } | null = null
 
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
@@ -56,24 +62,32 @@ export class SessionRuntime {
   }
 
   /** 세션 설정에서 시작에 성공하면 그 응답으로 타이머를 시작한다. */
-  begin(started: StartedSession, goalText: string, options: FocusSettings = DEFAULT_OPTIONS): void {
+  begin(started: StartedSession, goalText: string, options: SessionOptions = DEFAULT_OPTIONS): void {
     this.pending.clear()
     this.options = options
     this.state = {
       sessionId: started.sessionId, goalText, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
       baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false,
     }
-    this.publish()
+    this.publish('start')
   }
 
   /** 세션 시작 때 고른 개입 강도·알림 채널. */
-  sessionOptions(): FocusSettings {
+  sessionOptions(): SessionOptions {
     return this.options
   }
 
   /** 앱을 다시 켰을 때 서버의 활성 세션을 이어받는다. 실행 중이었다면 사용자 확인 없이 다시 세지 않도록 APP_RESTART로 멈춘다. */
-  async restore(): Promise<ApiResult<SessionSnapshot | null>> {
-    if (this.state && isActive(this.state.status)) return { success: true, data: this.snapshot() }
+  restore(): Promise<ApiResult<SessionSnapshot | null>> {
+    // [유지보수] 홈과 집중 화면이 동시에 물어도 서버 조회·APP_RESTART 일시정지는 한 번만 보내고, 끝날 때까지 같은 결과를 기다린다.
+    if (this.restoring) return this.restoring
+    if (this.state && isActive(this.state.status)) return Promise.resolve({ success: true, data: this.snapshot() })
+    const restoring = this.loadActive().finally(() => { if (this.restoring === restoring) this.restoring = null })
+    this.restoring = restoring
+    return restoring
+  }
+
+  private async loadActive(): Promise<ApiResult<SessionSnapshot | null>> {
     const before = this.state
     // 활성 세션이 없으면 서버는 204를 준다(parse(null) → NONE).
     const result = await this.auth.authorizedRequest<RemoteSession | typeof NONE>({
@@ -82,26 +96,33 @@ export class SessionRuntime {
     // [주의] 조회하는 사이에 새 세션이 시작됐으면 늦게 온 복구 결과로 덮어쓰지 않는다.
     if (this.state !== before) return { success: true, data: this.snapshot() }
     if (!result.success) return result
-    if (result.data === NONE || !isActive(result.data.status)) { this.state = null; this.publish(); return { success: true, data: null } }
+    if (result.data === NONE || !isActive(result.data.status)) { this.state = null; this.publish('restore'); return { success: true, data: null } }
     const remote = result.data
     this.pending.clear()
     this.options = DEFAULT_OPTIONS
-    this.state = {
-      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status, version: remote.version,
+    // [주의] 실행 중이었어도 꺼져 있던 동안을 세지 않도록 처음부터 멈춤으로 둔다. 서버에는 APP_RESTART로 알린다.
+    const restored: State = {
+      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status === 'RUNNING' ? 'AUTO_PAUSED' : remote.status, version: remote.version,
       // [주의] 꺼져 있던 동안의 시간은 서버가 마지막으로 확정한 값만 쓴다. 로컬에서 추정해 더하지 않는다(resumedAt 없음).
       targetDurationMs: remote.targetDurationMs, baseActiveMs: remote.accumulatedActiveMs, resumedAt: null, error: null, busy: false,
     }
-    if (remote.status === 'RUNNING') await this.pause('APP_RESTART')
-    this.publish()
+    this.state = restored
+    if (remote.status === 'RUNNING') {
+      const paused = await this.pause('APP_RESTART')
+      // 그사이 로그아웃·새 시작으로 상태가 바뀌었으면 이 복구의 실패를 새 상태에 붙이지 않는다.
+      if (!paused.success && this.state === restored) { restored.error = RESTART_PAUSE_UNSYNCED; this.publish() }
+    }
+    this.publish('restore')
     return { success: true, data: this.snapshot() }
   }
 
   /** 로그아웃하면 다음 사용자가 이전 세션을 보지 않도록 비운다. */
   reset(): void {
     this.state = null
+    this.restoring = null
     this.pending.clear()
     this.localEvents = []
-    this.publish()
+    this.publish('logout')
   }
 
   /** 1초마다 불린다. 목표 시간에 닿으면 누적을 멈추고 확인을 기다린다. */
@@ -111,7 +132,7 @@ export class SessionRuntime {
     s.baseActiveMs = s.targetDurationMs
     s.resumedAt = null
     s.status = 'AWAITING_END_CONFIRMATION'
-    this.publish()
+    this.publish('target-reached')
   }
 
   /** 10초마다 불린다. 서버가 세션을 살아 있다고 보도록 Desktop이 확정한 누적 시간을 보낸다. */
@@ -127,12 +148,13 @@ export class SessionRuntime {
     if (!result.success && result.error.code === 'SESSION_ABANDONED') {
       // 서버가 응답 없음으로 이미 끝낸 세션은 되살리지 않는다. 서버가 확정한 시간만 남는다.
       this.settle('ABANDONED')
-      this.publish()
+      this.publish('server-abandoned')
     }
   }
 
   pause(reason: 'USER' | 'APP_RESTART' = 'USER'): Promise<ApiResult<SessionSnapshot>> {
-    return this.command('pause', reason, ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
+    // APP_RESTART는 복구 때 이미 로컬에서 멈춘 세션(AUTO_PAUSED)을 서버에 알린다.
+    return this.command('pause', reason, reason === 'APP_RESTART' ? ['AUTO_PAUSED'] : ['RUNNING'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/pause`, body: { pauseReason: reason, accumulatedActiveMs: this.activeMs() } }), (s, data) => {
       this.settle(data.status ?? (reason === 'USER' ? 'PAUSED' : 'AUTO_PAUSED'), data.accumulatedActiveMs)
     })
   }
@@ -147,7 +169,7 @@ export class SessionRuntime {
     this.settle('AUTO_PAUSED')
     s.error = SCREEN_PERMISSION_REVOKED
     this.localEvents.push({ sessionId: s.sessionId, localEventCode: SCREEN_PERMISSION_REVOKED, occurredAt: this.wallClock().toISOString() })
-    this.publish()
+    this.publish('screen-permission-lost')
     void this.flushLocalEvents()
   }
 
@@ -225,13 +247,13 @@ export class SessionRuntime {
     if (this.state !== s) return { success: false, error: { code: 'SESSION_NOT_FOUND', retryable: false } }
     s.busy = false
     if (!result.success) {
-      if (result.error.code === 'SESSION_VERSION_CONFLICT') await this.refresh(s)
+      if (result.error.code === 'SESSION_VERSION_CONFLICT') { await this.refresh(s); this.publish('version-conflict') }
       return this.fail(result.error.code)
     }
     this.pending.delete(name)
     s.version = result.data.version
     apply(s, result.data)
-    this.publish()
+    this.publish(name === 'pause' ? `pause:${intent}` : name)
     return { success: true, data: this.snapshot() as SessionSnapshot }
   }
 
@@ -263,7 +285,24 @@ export class SessionRuntime {
     }
   }
 
-  private publish(): void {
-    this.emit(this.snapshot())
+  /** 화면에 현재 상태를 알린다. 상태가 바뀌었으면 state.transition을 남긴다(trigger: 바꾼 원인). */
+  private publish(trigger = 'sync'): void {
+    const snapshot = this.snapshot()
+    const mono = this.now()
+    const wall = this.wallClock().getTime()
+    const prev = this.last
+    if (snapshot && (!prev || prev.sessionId !== snapshot.sessionId || prev.status !== snapshot.status)) {
+      const same = prev?.sessionId === snapshot.sessionId
+      const heldMono = same ? Math.round(mono - prev.mono) : 0
+      const heldWall = same ? wall - prev.wall : 0
+      // macOS 절전 중에는 monotonic clock이 멈출 수 있어 두 값이 5초 넘게 벌어지면 절전이 있었다고 표시한다.
+      log('INFO', 'state.transition', { component: 'session', sessionId: snapshot.sessionId, from: same ? prev.status : null, to: snapshot.status, trigger, heldMono, heldWall, sleepSuspected: heldWall - heldMono > 5_000 })
+      this.last = { sessionId: snapshot.sessionId, status: snapshot.status, mono, wall }
+    }
+    if (!snapshot && prev) {
+      log('INFO', 'state.transition', { component: 'session', sessionId: prev.sessionId, from: prev.status, to: null, trigger, heldMono: Math.round(mono - prev.mono), heldWall: wall - prev.wall, sleepSuspected: (wall - prev.wall) - (mono - prev.mono) > 5_000 })
+      this.last = null
+    }
+    this.emit(snapshot)
   }
 }

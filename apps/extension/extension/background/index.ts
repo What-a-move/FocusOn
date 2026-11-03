@@ -3,6 +3,7 @@
 import { resolveApiBase } from '../../features/pairing/pairing-api'
 import { chromeTokenStore, getDeviceId } from '../../features/pairing/extension-auth'
 import { createApiClient } from '../../features/session/api-client'
+import { chromeLogStore, createLogger } from '../../features/session/logger'
 import { getActiveSession } from '../../features/session/session-api'
 import { inspectPage } from '../content/inspect-page'
 import { SITE_ORIGINS } from '../shared/site-access'
@@ -11,7 +12,10 @@ import { TabAnalyzer, type Tracking } from './tab-analyzer'
 const KEYS = { tracking: 'focuson.analysis.tracking', sequences: 'focuson.analysis.sequences', excluded: 'focuson.analysis.excludedDomains' } as const
 const EXCLUDED_TTL_MS = 5 * 60_000
 const DWELL_ALARM = 'focuson-dwell'
-const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore })
+const log = createLogger('service-worker', chromeLogStore, { echo: process.env.NODE_ENV !== 'production' })
+// 이 줄은 Worker가 새로 켜질 때마다 한 번 실행된다. 쉬다가 꺼진 뒤 다시 깨어난 시점을 남긴다.
+log('INFO', 'sw.restart')
+const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore, log })
 
 async function deviceHeaders(): Promise<Record<string, string>> {
   const deviceId = await getDeviceId()
@@ -60,7 +64,12 @@ const analyzer = new TabAnalyzer({
     const result = await client.authorized(`/api/v1/sessions/${sessionId}/analysis-runs`, 'POST', 200, (data) => {
       const relation = (data as { relation?: unknown } | null)?.relation
       return typeof relation === 'string' ? { relation } : null
-    }, { body, headers: await deviceHeaders() })
+    }, {
+      body, headers: await deviceHeaders(),
+      // 로그를 서버 판정 기록과 잇도록 traceId는 clientRunId를 그대로 쓴다. 제목·본문은 로거가 글자 수로만 남긴다.
+      traceId: body.clientRunId,
+      logFields: { sessionId, contentSource: body.contentSource, guardStatus: body.guardStatus, domain: body.metadata?.urlHost, title: body.metadata?.pageTitle, text: body.contentPayload?.text },
+    })
     return result.success ? { ok: true, relation: result.data.relation } : { ok: false, code: result.error.code }
   },
   async loadTracking() {

@@ -26,3 +26,9 @@ relevance-analysis-REPORT.md
 - [입력 검증·전처리와 Hybrid 6번 관련성 구현·테스트 지침](learning-goal-content-relevance-evaluation-PLAN.md): 통합 #11의 이재빈 노션 두 문서 기준. 모델 없는 테스트와 실제 Qwen3 4B 평가를 구분한다.
 - [학교 Windows Ollama 임베딩 설치·테스트 지침](school-ollama-embedding-SETUP.md): 현재 Qwen 벡터 API·Tailscale 연결 확인과 Mac Kiwi Hybrid 실행. Graph/OpenAI 생성 설정은 제거했다.
 - [통합 #11 실제 구현·검증 결과](learning-goal-content-relevance-evaluation-REPORT.md): 이전 Graph 실험의 구현·학교 실측 이력. 현재 코드 실행은 AI README와 화면 계약 보고서를 따른다.
+
+## 목표 보조 #12 구현 기록
+
+- `goal-assistance-PLAN.md`: 공개 계약과 내부 JEV·OpenAI 구현의 차이
+- `goal-assistance-ERROR.md`: 구현 중 오류와 해결 이력
+- `goal-assistance-REPORT.md`: 내부 검증 결과; Backend·제품 통합 완료와 구분

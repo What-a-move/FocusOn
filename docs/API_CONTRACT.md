@@ -65,8 +65,11 @@
 | `X-Device-Id: {deviceId}` | 해당 Notion endpoint의 필수 헤더에 기재된 요청 |
 | `Idempotency-Key: {key}` | 세션 생성·일시정지·재개·연장·종료 |
 | `If-Match-Version: {version}` | 기존 세션의 일시정지·재개·연장·종료 |
+| `X-Trace-Id: {uuid}` | 모든 API 요청. 클라이언트가 요청마다 UUID v4로 만들고, `analysis-runs`는 `clientRunId`와 같은 값을 쓴다 |
 
-Heartbeat에는 `Authorization`과 `X-Device-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
+`X-Trace-Id`는 모듈 간 로그를 잇는 용도로만 쓴다. Server는 형식이 맞으면(UUID 형태, 64자 이하) 그대로, 없거나 틀리면 새로 만들어 로그의 `traceId`로 남기고 응답 헤더 `X-Trace-Id`로 돌려준다. Server가 만드는 `requestId`는 그대로 유지하며, `traceId`를 인증·권한·중복 판단·DB 키에 쓰지 않는다. 세부 규칙은 Notion [모듈 연동 로깅 규칙](https://app.notion.com/p/4070b6e5e64c8156abc9d1bff00aef88)을 따른다.
+
+Heartbeat에는 `Authorization`, `X-Device-Id`, `X-Trace-Id`만 사용한다. `Idempotency-Key`와 `If-Match-Version`을 보내지 않는다.
 
 `POST /api/v1/auth/refresh`는 `Authorization` 헤더 대신 JSON body의 `refreshToken`으로 인증한다. 각 endpoint의 실제 필수 헤더는 Notion API DB 항목을 따른다. 성공 응답의 `data`에는 새 `accessToken`, 새 `refreshToken`, UTC ISO 8601 `accessTokenExpiresAt`을 담는다. 클라이언트는 single-flight로 1회 호출한 뒤 원 요청을 1회만 재시도한다.
 
@@ -267,6 +270,8 @@ POST /api/v1/interventions/{interventionId}/acknowledgements
 POST /api/v1/sessions/{sessionId}/local-events
 ```
 
+`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+
 ### 리포트
 
 ```text
@@ -276,6 +281,8 @@ GET /api/v1/reports/weekly                     # P1
 GET /api/v1/sessions/{sessionId}/summary
 GET /api/v1/sessions/{sessionId}/learning-summary
 ```
+
+`GET /api/v1/sessions/{sessionId}/summary` 응답 필드는 다음과 같다(2026-11-02 확정). 제목 필드만 `goalSnapshot`이다. 필수: `sessionId`, `goalSnapshot`, `targetDurationMs`, `accumulatedActiveMs`. 선택(없으면 화면에 `기록 없음`): `status`(`ENDED`·`ABANDONED`), `startedAt`, `endedAt`, `totalPausedMs`, `pauseCount`, `autoPauseCount`, `autoPauseReasons[]`, `relatedDurationMs`, `unrelatedDurationMs`, `uncertainDurationMs`, `extensionCount`, `extendedDurationMs`, `interventionCount`.
 
 `GET /api/v1/sessions`와 `GET /api/v1/reports/weekly`만 P1이며 나머지는 MVP 범위다. 제외 도메인 API는 현재 사용자 목록을 조회하고 전체 교체한다. 빈 배열은 전체 삭제이며, host는 소문자·IDNA ASCII·후행 점 제거 기준으로 정규화한다. 사용자당 최대 50개를 저장하고 scheme·port·path·query·fragment·페이지 내용은 저장하지 않는다.
 
@@ -309,6 +316,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
 - `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
+- AI 장애·시간 초과는 HTTP 오류가 아니라 `relation: UNCERTAIN`, `confidence: null`, `reasonCode: ANALYSIS_UNAVAILABLE`로 응답한다. 베타까지 AI가 준비되지 않으면 서버가 임시 규칙 판정으로 대신할 수 있으며, 응답 형식·`reasonCode` 허용 목록·세션 고정 `policyVersion`은 같게 유지한다(2026-11-02 확정).
 - 정책 `v1`에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
 - `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
 - 개입 조건은 아래 `v1` 표를 사용한다. 각 강도에서 연속 조건과 반복 조건 중 하나만 충족해도 후보가 된다. `초과`는 엄격한 `>`이며 경계값과 같은 시간에는 충족하지 않는다. 15초 미만 전환 제외와 신뢰도·세션·권한 검사를 먼저 적용한다.

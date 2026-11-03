@@ -138,3 +138,6 @@ async def analyze_relevance(request: Request):
     envelope, content = await validated_input(request)
     return await run_in_threadpool(run_analysis, envelope, content,
                                    getattr(request.app.state, "embedding_client_factory", None))
+
+
+from src.api.goal_routes import get_goal_workflow

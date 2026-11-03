@@ -90,7 +90,9 @@ test('제외 사이트는 X-Device-Id와 함께 전체 교체로 저장한 뒤�
   await auth.restore()
   const result = await new OnboardingService(auth, () => false).saveExcludedDomains([])
   assert.equal(result.success, true)
-  assert.deepEqual(calls[0].headers, { 'X-Device-Id': 'desktop-1' })
+  const { 'X-Trace-Id': traceId, ...headers } = calls[0].headers
+  assert.deepEqual(headers, { 'X-Device-Id': 'desktop-1' })
+  assert.match(traceId, /^[0-9a-f-]{36}$/)
   assert.deepEqual(calls[0].body, { domains: [] })
   assert.deepEqual(calls[1].body, { analysisExcludedDomainsStepCompleted: true })
 })
@@ -181,5 +183,7 @@ test('요청별 헤더는 X-Device-Id와 합쳐지고 Access Token(Authorization
   await auth.authorizedRequest({ path: '/api/v1/sessions', method: 'POST', expectedStatus: 201, parse: (value) => value, body: {}, withDeviceId: true, headers: { 'Idempotency-Key': 'key-1' } })
   const call = calls.find(({ path }) => path === '/api/v1/sessions')
   assert.ok(call.token, 'Authorization Bearer 토큰')
-  assert.deepEqual(call.headers, { 'Idempotency-Key': 'key-1', 'X-Device-Id': 'desktop-1' })
+  const { 'X-Trace-Id': traceId, ...headers } = call.headers
+  assert.deepEqual(headers, { 'Idempotency-Key': 'key-1', 'X-Device-Id': 'desktop-1' })
+  assert.match(traceId, /^[0-9a-f-]{36}$/)
 })

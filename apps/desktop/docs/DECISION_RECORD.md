@@ -641,3 +641,71 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 자동 갱신 중 Keychain 읽기·쓰기가 실패하면 메모리 토큰을 버리고 `OFFLINE`으로 바꾼다. 이 상태의 인증 요청은 다시 복구하기 전까지 `AUTH_RELOGIN_REQUIRED`로 실패한다.
 - 이유: "요청을 시작할 때의 로그인 = 지금 로그인인가?"를 Google 교환에서만 확인해 5가지 경쟁이 생겼다. 서버 API·IPC 형식은 바꾸지 않는다.
 - 영향받는 파일: `electron/main/auth-service.cts`, `electron/main/auth-ipc.cts`, `tests/electron/auth-races.test.cjs`
+
+## 결정 029 - 설정 화면은 집중·분석·권한·화면 탭만 먼저 만들고 계약에 없는 값은 넣지 않는다
+
+- 결정일: 2026-10-27 / 상태: 확정 (사용자 결정) / Issue #80.
+- 범위: `settings.html`의 5개 탭 중 집중·분석·권한·화면만 만든다. 계정(D25)·기기 연결(D24)은 다음 Issue에서 만들고, 그전에는 탭 자체를 보여 주지 않는다.
+- 시안의 `기본 집중 시간`은 focus-settings에 필드가 없어 넣지 않는다. 시안 선택지(25·50·90분)도 세션 시간 계약(30분·1시간·2시간·직접)과 다르다. 필요하면 백엔드에 필드 추가를 먼저 묻는다.
+- 권한 목록은 Desktop이 직접 확인할 수 있는 화면 기록·알림만 보여 준다. `Chrome 페이지 분석`은 Extension 사이트 권한이고 `활성 앱 확인`은 macOS 권한이 필요 없다. 카메라 분석 스위치는 카메라 분석이 구현될 때 넣는다.
+- 집중 설정은 바꿀 때마다 `PUT focus-settings`로 전체 객체를 저장하고 실패하면 되돌린다. 읽지 못하면 기본값을 보여 주거나 저장하지 않는다.
+- `FocusSettings` 타입에 `breakSuggestionEnabled`를 넣고, 세션 시작용 `SessionOptions`(3개 필드)와 나눴다. GET 응답에 휴식 제안이 없으면 형식 오류다(Notion GET 응답 필드).
+- 화면 모드는 Main이 `nativeTheme.themeSource`로 앱 전체에 적용하고 이 기기에만 저장한다. 기존 CSS의 `prefers-color-scheme`이 그대로 따라간다.
+- 영향받는 파일: `electron/shared/settings-contract.cts`, `electron/main/settings-ipc.cts`, `electron/shared/session-contract.cts`, `features/settings/*`, `features/dashboard/AppSidebar.tsx`
+
+## 결정 030 - Main 공용 로거는 허용 필드만 남기고, 서버 요청 한 곳에서 traceId를 붙인다
+
+- 결정일: 2026-10-29 / 상태: 확정 (PM 확정 Notion 모듈 연동 로깅 규칙) / Issue #101.
+- 로거는 `electron/main/logger.cts` 하나다. JSON 한 줄을 `userData/logs/focuson.log`에 쌓고 1MB를 넘으면 `focuson.1.log`로 넘긴다. 개발 중에는 터미널에도 찍는다.
+- 마스킹은 허용 목록 방식이다. 목록 밖 필드는 버리고 `title`·`windowTitle`·`pageTitle`·`text`는 글자 수로만 바꾼다. 차단 목록 방식은 새 필드가 생길 때마다 빠뜨릴 수 있어 쓰지 않는다.
+- 모든 서버 요청이 지나가는 `AuthApiClient.call`·`logout`에서 `X-Trace-Id`를 붙이고 `api.*`(분석은 `decision.*`) OUT·IN·fail을 남긴다. `authorizedRequest`는 재시도·토큰 갱신 뒤 재전송에 같은 traceId를 쓰고, `analysis-runs`는 `clientRunId`를 traceId로 쓴다.
+- 상태 전이는 `SessionRuntime.publish()`에서 직전 상태와 비교해 남긴다. 상태를 바꾸는 곳이 여러 곳이라 각각에 넣지 않는다.
+- 절전 시간을 집중 시간에 넣을지는 정하지 않았다. `power.resume`과 `state.transition`에 monotonic·벽시계 차이(`heldMono`·`heldWall`·`sleepSuspected`)만 남긴다.
+- 쓰기는 동기 `appendFileSync`다. 요청·상태 전이 단위라 양이 적다. 초당 수백 줄이 되면 비동기 버퍼로 바꾼다.
+- 영향받는 파일: `electron/main/logger.cts`, `auth-api.cts`, `auth-service.cts`, `analysis-sender.cts`, `session-runtime.cts`, `intervention-watcher.cts`, `index.cts`
+
+
+## 결정 031 - 빨간색은 실제 오류에만 쓰고, 안내·상태는 기본색으로 보여 준다
+
+- 결정일: 2026-10-31 / 상태: 확정 (PM 결정) / Issue #110.
+- 빨간 글씨·테두리·`!` 아이콘은 요청 실패, 입력 형식 오류, 집중 중 권한이 꺼져 세션이 멈춘 경우에만 쓴다.
+- `필수` 태그, 다음으로 못 넘어가는 이유, 로그인 진행 중, 연결 코드 만료·남은 시간, 권한 꺼짐 배지, 글자 수 한도처럼 사용자가 할 일을 알려 주는 안내는 기본색(`--ink`·`--muted`)으로 둔다. 화면 안내 상자는 `fo-notice is-info`, 온보딩·목표 안내는 `Notice.info`/`.feedback.is-info`를 쓴다.
+- 같은 오류를 두 곳에 띄우지 않는다. 제목이 상황을 말하면 본문에는 할 일 한 줄만 둔다. 불러오기 실패는 제목·할 일·`다시 시도` 버튼을 한 상자(`LoadError`)에 넣는다.
+- 안내 문구에는 화면에 실제로 있는 버튼 이름만 쓴다.
+- 이유: 정상 흐름인데 빨간 안내가 떠서 오류로 착각한다는 PM 피드백.
+- 영향받는 파일: `features/onboarding/*`, `features/goal/*`, `features/session/SessionSetup.tsx`, `features/settings/*`, `features/report/SessionResult.tsx`, `features/dashboard/HomeDashboard.tsx`, `app/page.tsx`, `app/globals.css`
+
+## 결정 032 - 오류 제목은 무엇을 못 했는지, 본문은 원인과 할 일을 공용 함수 하나로 쓴다
+
+- 결정일: 2026-11-01 / 상태: 확정 (PM 요청) / Issue #114.
+- 제목은 화면이 정한다(예: `로그인하지 못했어요.`, `목표를 저장하지 못했어요.`). `요청을 마치지 못했어요.`처럼 무엇을 못 했는지 없는 제목은 쓰지 않는다.
+- 본문은 `app/lib/error-text.ts`의 `errorText(error)`에서만 만든다. 코드별로 원인 + 할 일 한 문장이다. 기다려도 풀리지 않는 오류(설정 누락·입력 오류·만료)에는 `잠시 후 다시`를 쓰지 않는다.
+- 같은 `SERVICE_UNAVAILABLE`로 묶였던 로그인 실패를 Desktop 내부 code로 나눈다: `LOCAL_APP_CONFIG_MISSING`, `LOCAL_BROWSER_OPEN_FAILED`, `LOCAL_GOOGLE_LOGIN_FAILED`, `LOCAL_KEYCHAIN_UNAVAILABLE`. 서버 오류 코드·API는 바꾸지 않는다. 화면 전용 code(`LOCAL_SCREEN_PERMISSION_REVOKED` 등)는 해당 화면이 먼저 처리하고 나머지만 공용 함수로 넘긴다.
+- 이유: 앱 설정 누락인데 "잠시 후 다시 시도해 주세요"가 떠서 사용자가 원인을 알 수 없었다(PM 피드백, 2026-10-30).
+- 영향받는 파일: `app/lib/error-text.ts`, `app/page.tsx`, `features/*` 오류 표시부, `electron/main/auth-ipc.cts`, `auth-service.cts`, `index.cts`
+
+## 결정 033 - 시스템 문구는 해요체, 집중 기록의 주간 막대는 MVP에 둔다
+
+- 결정일: 2026-11-01 / 상태: 확정 (PM 결정, Notion 정합성 점검) / Issue #121.
+- 시스템 문구(로그인·권한·네트워크·오류·안내)는 해요체(`-요`)로 쓴다. `-습니다`는 쓰지 않는다. 포키 말풍선만 반말이다. Notion `UX 문구 · 알림 문구 정책`·`공통 Error Code 정책`의 예시 문구를 해요체로 맞췄다.
+- 집중 기록 화면의 주간 막대는 달력 API(`reports/calendar`)로 하루별 합계를 보여 주고 날짜를 고르는 용도라 MVP에 둔다. 주별 비교·추이 분석과 기간 히스토리는 P1로 남는다. Notion 리포트 설계서 1.1·1.2·2.4에 이 구분을 적었다.
+- 하루 총합은 서버의 종료 확정 `totalActiveMs`만 쓴다. 진행 중 회차는 목록에 `진행 중`으로만 보인다(리포트 설계서 2.2).
+
+## 결정 034 - 설정 계정·기기 연결 탭: 계정 삭제는 비활성, 철회·해제는 확인 창과 기본 버튼
+
+- 결정일: 2026-11-02 / 상태: 확정 (PM 결정) / Issue #127. 결정 029에서 미룬 계정(D25)·기기 연결(D24) 탭을 만든다.
+- 계정 삭제는 서버 API가 없어 줄은 두고 버튼을 비활성으로 둔다(`아직 준비 중이에요`). API가 생기면 확인 창과 함께 연결한다.
+- 화면 분석 동의 철회는 넣는다. 철회하면 서버 readiness가 미완료가 되어 홈 대신 동의 화면이 열리고 새 집중을 시작할 수 없다. 같은 자리의 `다시 동의`나 온보딩 동의 단계로 돌아온다. 저장 뒤 readiness를 다시 읽어 화면 상태에 반영한다.
+- Extension 연결 해제는 이 Desktop에 연결된 기기만 한다. 다시 연결은 설정에서 받은 코드로 하고, 연결을 감지하면 readiness를 다시 읽는다. 해제 뒤 홈으로 가면 온보딩 Extension 단계가 새 코드를 받아 설정의 코드는 취소된다.
+- 철회·해제·삭제는 오류가 아니므로 빨간 버튼을 쓰지 않고 기본 버튼 + 확인 창으로 묻는다(결정 031).
+- 동의 문서 요약은 온보딩과 설정이 `features/onboarding/consent-docs.ts`를 함께 쓴다. 문서 표시 버전(`v1.0`)과 서버 동의 버전(`2026-09-17`)이 달라 설정 요약에는 버전을 표시하지 않는다. 둘을 맞추는 일은 별도 작업이다.
+- 영향받는 파일: `electron/main/settings-ipc.cts`, `auth-api.cts`(DELETE·204), `auth-service.cts`(`currentDeviceId`), `electron/shared/settings-contract.cts`, `features/settings/AccountPanels.tsx`, `Settings.tsx`
+
+## 결정 035 - 베타 API 형식: 알림 type 두 가지, 리포트 요약 필드, AI 실패는 UNCERTAIN
+
+- 결정일: 2026-11-02 / 상태: 확정 (PM 결정, Notion API 명세 반영) / Issue #135.
+- 베타 흐름(목표 → 집중 → 이탈 알림 → 종료 → 집중 리포트)에 필요한 API를 Desktop·Extension 실제 호출 형식 그대로 `apps/docs/BETA-API-HANDOFF.md`에 정리했다. Notion API 명세와 대조해 클라이언트는 명세와 같음을 확인했고, 서버가 이 형식에 맞춘다.
+- 상태 명령(pause·resume·extend·end)에는 Notion대로 `X-Device-Id`를 보내지 않는다. resume 본문은 `readiness`, summary 제목은 `goalSnapshot`으로 명세 그대로 둔다.
+- 알림 목록 항목에 `interventionId`를 넣고 `type`은 `OFF_TASK`·`BREAK_SUGGESTION` 두 가지로 정한다. Desktop은 그 밖의 type을 표시하지 않는다(예전에는 이름에 `BREAK`가 없으면 모두 이탈 알림으로 보였다).
+- AI 장애·시간 초과는 `UNCERTAIN`·`ANALYSIS_UNAVAILABLE`로 응답하고, 베타까지 AI가 없으면 서버 임시 규칙 판정을 같은 응답 형식으로 쓸 수 있다.
+- 영향받는 파일: `electron/main/intervention-watcher.cts`, `tests/electron/intervention-watcher.test.cjs`, `apps/docs/BETA-API-HANDOFF.md`, 루트 `docs/API_CONTRACT.md`

@@ -2,26 +2,23 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { AppSidebar } from './AppSidebar'
+import { useOngoingSession } from '../session/useOngoingSession'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from './dashboard-api'
+import { LoadError } from '../../app/lib/LoadError'
 import './dashboard.css'
 
-const NAVIGATION = [
-  { label: '홈', asset: 'nav-home.png' },
-  { label: '집중 시작', asset: 'nav-start.svg' },
-  { label: '집중 기록', asset: 'nav-records.png' },
-  { label: '학습 노트', asset: 'nav-notes.svg' },
-  { label: '설정', asset: 'nav-settings.png' },
-] as const
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
 
 type CalendarView =
   | { status: 'loading' }
   | { status: 'ready'; data: CalendarMonth }
-  | { status: 'error' }
+  | { status: 'error'; code: string }
   // 오프라인이면 이전에 확인한 값만 그 시각과 함께 보여 준다. 현재 값처럼 단정하지 않는다.
   | { status: 'offline'; cached: { data: CalendarMonth; loadedAt: Date } | null }
-type RecentView = { status: 'loading' } | { status: 'ready'; items: DailySession[] } | { status: 'error' }
+type RecentView = { status: 'loading' } | { status: 'ready'; items: DailySession[] } | { status: 'error'; code: string }
 
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 
@@ -62,7 +59,7 @@ function Calendar({ today, month, view, onMove, onRetry }: {
       </div>
     </div>
     {view.status === 'loading' && <div className="fo-skeleton" aria-hidden="true">{Array.from({ length: 35 }, (_, index) => <i key={index} />)}</div>}
-    {view.status !== 'loading' && view.status !== 'error' && <div className="fo-calendar-grid" key={monthKey(month)} aria-label={`${month.getFullYear()}년 ${month.getMonth() + 1}월 집중 달력`}>
+    {(view.status === 'ready' || (view.status === 'offline' && view.cached)) && <div className="fo-calendar-grid" key={monthKey(month)} aria-label={`${month.getFullYear()}년 ${month.getMonth() + 1}월 집중 달력`}>
       {WEEKDAYS.map((day) => <span className="fo-weekday" key={day}>{day}</span>)}
       {Array.from({ length: offset }, (_, index) => <span key={`blank-${index}`} />)}
       {Array.from({ length: days }, (_, index) => {
@@ -73,21 +70,19 @@ function Calendar({ today, month, view, onMove, onRetry }: {
         const studied = !future && active.has(key)
         const classes = ['fo-calendar-day', key === dayKey(today) ? 'today' : '', future ? 'future' : '', studied ? 'completed' : ''].filter(Boolean).join(' ')
         const style = studied ? { animationDelay: `${0.3 + order++ * 0.07}s` } : undefined
-        return <span className={classes} style={style} key={key} aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일${studied ? ', 집중 기록 있음' : ', 기록 없음'}`}>
-          {studied ? <span className="fo-poki-face" aria-hidden="true" /> : date.getDate()}
-        </span>
+        const label = `${date.getMonth() + 1}월 ${date.getDate()}일${studied ? ', 집중 기록 있음' : ', 기록 없음'}`
+        const content = studied ? <span className="fo-poki-face" aria-hidden="true" /> : date.getDate()
+        // 오늘까지의 날짜는 그날 집중 기록으로 간다.
+        return future
+          ? <span className={classes} key={key} aria-label={label}>{content}</span>
+          : <Link className={classes} style={style} key={key} href={`/records/?date=${key}`} aria-label={label}>{content}</Link>
       })}
     </div>}
     {view.status === 'loading' && <div className="fo-calendar-state" role="status"><strong>집중 달력을 불러오고 있어요.</strong><span>잠시만 기다려 주세요.</span></div>}
-    {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>집중 달력을 불러오지 못했어요.</strong><span>확인되지 않은 날짜에는 포키를 표시하지 않아요.</span><span>잠시 후 다시 시도해 주세요.</span>
-      <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
-    </div>}
-    {view.status === 'offline' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>인터넷에 연결되어 있지 않아요.</strong>
-      <span>{view.cached ? `${timeFormat.format(view.cached.loadedAt)}에 마지막으로 확인한 기록만 보여 드려요.` : '확인된 기록이 없어 포키를 표시하지 않아요.'}</span>
-      <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
-    </div>}
+    {view.status === 'error' && <LoadError compact code={view.code} what="집중 달력을" onRetry={onRetry} />}
+    {view.status === 'offline' && (view.cached
+      ? <p className="fo-calendar-note" role="status">인터넷 연결이 끊겨 {timeFormat.format(view.cached.loadedAt)}에 확인한 기록을 보여 드려요.<button type="button" onClick={onRetry}>다시 시도</button></p>
+      : <LoadError compact code="LOCAL_NETWORK_UNAVAILABLE" what="집중 달력을" onRetry={onRetry} />)}
   </>
 }
 
@@ -95,19 +90,16 @@ function RecentGoals({ view, onRetry }: { view: RecentView; onRetry: () => void 
   return <>
     <div className="fo-panel-head"><h2 id="recent-title">지난 목표</h2></div>
     {view.status === 'loading' && <p className="fo-recent-loading" role="status">기록을 불러오고 있어요.</p>}
-    {view.status === 'error' && <div className="fo-calendar-state is-error" role="alert">
-      <strong>지난 목표를 불러오지 못했어요.</strong><span>잠시 후 다시 시도해 주세요.</span>
-      <button className="fo-button fo-button-ghost fo-retry" type="button" onClick={onRetry}>다시 시도</button>
-    </div>}
+    {view.status === 'error' && <LoadError compact code={view.code} what="지난 목표를" onRetry={onRetry} />}
     {view.status === 'ready' && <ul className="fo-recent-list">
       {view.items.length === 0 && <li className="fo-records-empty"><strong>아직 기록이 없어요</strong><span>첫 집중을 마치면 여기에 나타나요.</span></li>}
       {view.items.map((item) => {
         const ended = new Date(item.endedAt ?? item.startedAt)
-        return <li key={item.sessionId}><div className="fo-recent-item">
+        return <li key={item.sessionId}><Link className="fo-recent-item" href={item.endedAt ? `/session-result/?session=${encodeURIComponent(item.sessionId)}` : '/session/'}>
           <span className="fo-recent-day" aria-hidden="true"><b>{ended.getDate()}</b><small>{ended.getMonth() + 1}월</small></span>
           <div><span className="fo-recent-goal">{item.goal}</span><small className="fo-recent-date">{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(ended)}</small></div>
           <span className="fo-recent-time">{Math.round(item.activeMs / 60000)}분</span>
-        </div></li>
+        </Link></li>
       })}
     </ul>}
   </>
@@ -125,6 +117,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const latestCalendar = useRef(0)
   const latestSummary = useRef(0)
   const shownDay = useRef('')
+  const ongoing = useOngoingSession()
 
   useEffect(() => {
     // [유지보수] 정적 빌드 시각과 실행 시각이 달라도 날짜가 어긋나지 않게 실행 후 계산한다.
@@ -156,16 +149,16 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
     if (result.success) cache.current.set(key, { data: result.data, loadedAt: new Date() })
     if (calendarRequest === latestCalendar.current) {
       setCalendar(result.success ? { status: 'ready', data: result.data }
-        : result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? { status: 'offline', cached: cache.current.get(key) ?? null } : { status: 'error' })
+        : result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' ? { status: 'offline', cached: cache.current.get(key) ?? null } : { status: 'error', code: result.error.code })
     }
     // 상단 요약과 지난 목표는 이번 달 기준이다. 다른 달로 넘겨도 이번 달 응답은 끝까지 반영한다.
     if (!isCurrentMonth || summaryRequest !== latestSummary.current) return
-    if (!result.success) { setCurrent('error'); setRecent({ status: 'error' }); return }
+    if (!result.success) { setCurrent('error'); setRecent({ status: 'error', code: result.error.code }); return }
     setCurrent(result.data)
     setRecent({ status: 'loading' })
     const sessions = await loadRecentSessions(result.data, dayKey(now))
     if (summaryRequest !== latestSummary.current) return
-    setRecent(sessions.success ? { status: 'ready', items: sessions.data } : { status: 'error' })
+    setRecent(sessions.success ? { status: 'ready', items: sessions.data } : { status: 'error', code: sessions.error.code })
   }, [])
 
   useEffect(() => {
@@ -178,16 +171,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const monthDays = current && current !== 'error' ? current.studyDayCount : null
 
   return <main className="fo-home-window">
-    <aside className="fo-sidebar" aria-label="주 메뉴">
-      <span className="fo-logo fo-sidebar-logo">
-        <Image className="fo-logo-light" src="/design/focuson-logo.png" alt="FocusOn" width={2172} height={724} priority />
-        <Image className="fo-logo-dark" src="/design/focuson-logo-dark.png" alt="FocusOn" width={2172} height={724} priority />
-      </span>
-      <nav className="fo-nav">{NAVIGATION.map(({ label, asset }, index) => <span className={`fo-nav-item${index === 0 ? ' active' : ''}`} aria-current={index === 0 ? 'page' : undefined} key={label}><Image src={`/design/${asset}`} alt="" width={28} height={28} /><span>{label}</span></span>)}</nav>
-      <div className="fo-sidebar-spacer" />
-      <div className="fo-profile"><span className="fo-profile-avatar" aria-hidden="true" /><div><strong>{name}</strong><small>Google 계정</small></div></div>
-      <button className="fo-sidebar-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? '로그아웃 중…' : '로그아웃'}</button>
-    </aside>
+    <AppSidebar active="home" name={name} onLogout={onLogout} busy={busy} />
     <div className="fo-home-content">
       <header className="fo-topbar">
         <div className="fo-rise"><span>{today ? new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(today) : '오늘'}</span><p><strong>{name}</strong>님, 안녕하세요</p></div>
@@ -197,12 +181,19 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
         </ul>
       </header>
       <div className="fo-dashboard">
-        {message && <div className="fo-notice" role="alert"><strong>요청을 마치지 못했어요.</strong><span>{message}</span></div>}
+        {message && <div className="fo-notice" role="alert"><strong>로그아웃하지 못했어요.</strong><span>{message}</span></div>}
         <section className="fo-hero" aria-labelledby="focus-title">
           <div className="fo-poki-stage"><Image src="/design/poki-main-planning.png" alt="체크리스트를 든 포키" width={220} height={220} priority /></div>
           <div>
-            <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">오늘은 뭐에 <span className="fo-hl">집중</span>할까요?</h1>
-            <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/goal/')}>목표 설정하기 <span aria-hidden="true">→</span></button>
+            {/* 진행 중인 집중이 있으면 새 목표 대신 그 집중으로 돌아가게 한다(서버는 사용자당 진행 중 세션 1개). */}
+            {ongoing ? <>
+              <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">진행 중인 <span className="fo-hl">집중</span>이 있어요</h1>
+              <p className="fo-hero-goal fo-rise" style={{ animationDelay: '.25s' }}>{ongoing.goalText}</p>
+              <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/session/')}>집중 화면으로 <span aria-hidden="true">→</span></button>
+            </> : <>
+              <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">오늘은 뭐에 <span className="fo-hl">집중</span>할까요?</h1>
+              <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/goal/')}>목표 설정하기 <span aria-hidden="true">→</span></button>
+            </>}
           </div>
         </section>
         <div className="fo-dashboard-grid">

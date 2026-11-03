@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "focusOnBearer")
 public class UserConfigurationController {
   private final UserConfigurationService configuration;
+  private final com.capstone.backend.user.service.OnboardingReadinessService readiness;
 
   /** 토큰이 가리키는 현재 사용자만 반환한다. */
   @GetMapping
@@ -61,7 +62,9 @@ public class UserConfigurationController {
   })
   public com.capstone.backend.common.api.ApiResponse<MeResponse> me(
       @AuthenticationPrincipal FocusOnPrincipal principal) {
-    return com.capstone.backend.common.api.ApiResponse.of(configuration.me(principal));
+    var user = configuration.me(principal);
+    return com.capstone.backend.common.api.ApiResponse.of(new MeResponse(user.userId(),
+        user.nickname(), readiness.forPrincipal(principal).onboardingStatus()));
   }
 
   /** 현재 사용자의 닉네임을 저장한다. */
@@ -87,8 +90,9 @@ public class UserConfigurationController {
   public com.capstone.backend.common.api.ApiResponse<MeResponse> updateProfile(
       @AuthenticationPrincipal FocusOnPrincipal principal,
       @Valid @org.springframework.web.bind.annotation.RequestBody UpdateProfileRequest request) {
-    return com.capstone.backend.common.api.ApiResponse.of(
-        configuration.updateProfile(principal, request));
+    var user = configuration.updateProfile(principal, request);
+    return com.capstone.backend.common.api.ApiResponse.of(new MeResponse(user.userId(),
+        user.nickname(), readiness.forPrincipal(principal).onboardingStatus()));
   }
 
   /** 현재 사용자 동의 상태를 조회한다. */

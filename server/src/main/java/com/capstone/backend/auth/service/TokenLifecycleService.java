@@ -2,6 +2,7 @@ package com.capstone.backend.auth.service;
 
 import com.capstone.backend.auth.AccessJwtService;
 import com.capstone.backend.auth.dto.TokenLifecycleDtos.TokenPair;
+import com.capstone.backend.auth.persistence.PairingCodeRepository;
 import com.capstone.backend.auth.persistence.RefreshTokenRecordEntity;
 import com.capstone.backend.auth.persistence.RefreshTokenRecordRepository;
 import com.capstone.backend.auth.persistence.TokenFamilyEntity;
@@ -30,13 +31,15 @@ public class TokenLifecycleService {
   private final RefreshTokenRecordRepository tokens;
   private final TokenFamilyGuard guard;
   private final AuthRateLimiter limits;
+  private final PairingCodeRepository pairingCodes;
   private final TransactionTemplate transaction;
 
   /** 기존 인증 저장소와 잠금·회전 transaction을 연결한다. */
   public TokenLifecycleService(AccessJwtService jwt, UserRepository users,
       UserDeviceRepository devices, TokenFamilyRepository families,
       RefreshTokenRecordRepository tokens, TokenFamilyGuard guard, AuthRateLimiter limits,
-      PlatformTransactionManager transactions) {
+      PairingCodeRepository pairingCodes, PlatformTransactionManager transactions) {
+    this.pairingCodes = pairingCodes;
     this.jwt = jwt;
     this.users = users;
     this.devices = devices;
@@ -127,6 +130,7 @@ public class TokenLifecycleService {
           || !guard.isActive(family, now)) {
         throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
       }
+      pairingCodes.cancelActive(principal.deviceId(), now);
       revokeFamily(family, TokenFamilyEntity.RevokedReason.LOGOUT, now);
       family.getDevice().setStatus(UserDeviceEntity.Status.LOGGED_OUT);
       family.getDevice().setRevokedAt(now);

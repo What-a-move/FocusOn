@@ -8,15 +8,16 @@ import {
   formatMinutes, isValidMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi,
   type InterventionLevel, type NotificationChannel,
 } from './session-api'
+import { errorText } from '../../app/lib/error-text'
 import '../onboarding/onboarding.css'
 import './session-setup.css'
 
 // 시간 선택지는 Notion 계약(30분·1시간·2시간·직접)을 따른다. MVP에 종료 없는 세션은 없다.
 const DURATIONS = [{ key: '30', label: '30분' }, { key: '60', label: '1시간' }, { key: '120', label: '2시간' }, { key: 'custom', label: '직접' }] as const
-const LEVELS: { key: InterventionLevel; label: string }[] = [{ key: 'GENTLE', label: '약하게' }, { key: 'NORMAL', label: '보통' }, { key: 'ACTIVE', label: '적극적으로' }]
-const CHANNELS: { key: NotificationChannel; label: string }[] = [{ key: 'MOLE_UI', label: '화면 위 포키' }, { key: 'MACOS_NOTIFICATION', label: 'macOS 알림' }, { key: 'SOUND', label: '소리' }]
+export const LEVELS: { key: InterventionLevel; label: string }[] = [{ key: 'GENTLE', label: '약하게' }, { key: 'NORMAL', label: '보통' }, { key: 'ACTIVE', label: '적극적으로' }]
+export const CHANNELS: { key: NotificationChannel; label: string }[] = [{ key: 'MOLE_UI', label: '화면 위 포키' }, { key: 'MACOS_NOTIFICATION', label: 'macOS 알림' }, { key: 'SOUND', label: '소리' }]
 // 미리보기 기준은 개입 정책 v1(화면 분석 5.2)과 같다.
-const PREVIEW: Record<InterventionLevel, { say: string; poki: string; alt: string; meta: [string, string, string] }> = {
+export const PREVIEW: Record<InterventionLevel, { say: string; poki: string; alt: string; meta: [string, string, string] }> = {
   GENTLE: { say: '목표에서 조금 멀어진 것 같아요.', poki: '/design/poki-floating-master-v3.png', alt: '포키', meta: ['다른 화면이 ', '3분 넘게 이어지거나, 10분 안에 1분 넘게 3번', ' 이어지면 조용히 알려요'] },
   NORMAL: { say: '지금 화면이 목표와 달라 보여요.\n다시 돌아가 볼까요?', poki: '/design/poki-floating-curious-v8.png', alt: '궁금해하는 포키', meta: ['다른 화면이 ', '1분 넘게 이어지거나, 10분 안에 30초 넘게 2번', ' 이어지면 알려요'] },
   ACTIVE: { say: '어? 또 딴 데 가 있네!\n다시 목표로 가요!', poki: '/design/poki-floating-angry-v2.png', alt: '눈을 부릅뜬 포키', meta: ['다른 화면이 ', '30초 넘게 이어지거나, 10분 안에 20초 넘게 2번', ' 이어지면 바로 알려요'] },
@@ -26,13 +27,13 @@ const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '
 
 type Feedback = { title: string; body: string; info?: boolean } | null
 
-function startError(code: string): Feedback {
-  switch (code) {
+function startError(error: { code: string; retryable: boolean }): Feedback {
+  switch (error.code) {
     case 'SESSION_START_REQUIREMENT_MISSING': return { title: '시작에 필요한 준비가 빠졌어요.', body: '화면 기록·알림 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.' }
     case 'SESSION_ACTIVE_EXISTS': return { title: '진행 중인 집중이 있어요.', body: '진행 중인 집중을 끝낸 뒤 새로 시작할 수 있어요.' }
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return { title: '알림이 보이는지 확인이 필요해요.', body: '시험 알림을 보내 볼게요. 알림이 보이면 ‘보였어요’를 눌러 주세요.' }
     case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '인터넷 연결을 확인해 주세요.', body: '연결된 뒤 다시 누르면 같은 요청으로 이어서 시작해요.' }
-    default: return { title: '집중을 시작하지 못했어요.', body: '잠시 후 다시 눌러 주세요.' }
+    default: return { title: '집중을 시작하지 못했어요.', body: errorText(error) }
   }
 }
 
@@ -132,7 +133,7 @@ export function SessionSetup() {
     setBusy(false)
     if (!result.success) {
       setNotifyCheck(result.error.code === 'LOCAL_NOTIFICATION_NOT_CONFIRMED' ? 'ask' : null)
-      setFeedback(startError(result.error.code))
+      setFeedback(startError(result.error))
       return
     }
     attempt.current = null
@@ -143,21 +144,21 @@ export function SessionSetup() {
 
   const sendTest = async () => {
     const sent = await sessionApi.sendTestNotification()
-    if (!sent.success || !sent.data.shown) { setFeedback({ title: '알림을 보내지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 다시 보내 주세요.' }); setNotifyCheck('denied'); return }
+    if (!sent.success) { setFeedback({ title: '알림을 보내지 못했어요.', body: errorText(sent.error) }); return }
+    if (!sent.data.shown) { setFeedback({ title: '알림을 보내지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 다시 보내 주세요.' }); setNotifyCheck('denied'); return }
     setNotifyCheck('sent')
-    setFeedback({ title: '방금 보낸 알림이 보였나요?', body: '화면 오른쪽 위에 FocusOn 알림이 떴는지 확인해 주세요.' })
+    setFeedback({ title: '방금 보낸 알림이 보였나요?', body: '화면 오른쪽 위에 FocusOn 알림이 떴는지 확인해 주세요.', info: true })
   }
   const answerTest = async (seen: boolean) => {
     const saved = await sessionApi.confirmNotification(seen)
-    if (!saved.success) { setFeedback({ title: '알림 확인을 저장하지 못했어요.', body: '다시 눌러 주세요.' }); return }
+    if (!saved.success) { setFeedback({ title: '알림 확인을 저장하지 못했어요.', body: errorText(saved.error) }); return }
     if (seen) { setNotifyCheck(null); setFeedback({ title: '알림을 확인했어요.', body: '‘집중 시작하기’를 다시 눌러 주세요.', info: true }); return }
     setNotifyCheck('denied')
-    setFeedback({ title: '알림이 꺼져 있는 것 같아요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.' })
+    setFeedback({ title: '알림이 꺼져 있는 것 같아요.', body: '시스템 설정 › 알림에서 FocusOn을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.', info: true })
     void sessionApi.openNotificationSettings()
   }
 
   return <main className="app-window onboarding-window setup-window">
-    <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     <div className="layout">
       <section className="sheet" aria-labelledby="setup-title"><div className="sheet-inner">
         <Link className="back-link" href="/"><span aria-hidden="true">←</span>홈으로</Link>

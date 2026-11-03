@@ -4,6 +4,29 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 학습 노트 — 회차 노트 화면 (Issue #129, `feat/129-desktop-study-note`)
+- 상태: `/notes/?session=ID` 노트(한눈에 보기·핵심 개념·다음 시작 지점·복사)와 정리 상태별 화면, 집중 리포트 `정리 보기` 연결, 학습 정리 계약에 `keyConcepts`·`nextStartPrompt` 추가(2026-11-02). 남은 일: 학습 정리 API 병합 뒤 실제 QA. 노트 목록은 서버 `GET /learning-summaries`(Notion 리포트 설계서 2.4·8.1에 추가) 이후 별도 작업.
+
+- 작업명: 설정 계정·기기 연결 탭 (Issue #127, `feat/127-desktop-settings-account`)
+- 상태: 계정(닉네임·동의 내역·화면 분석 동의 철회/다시 동의·로그아웃·계정 삭제 비활성)·기기 연결(상태·연결 코드·해제) 구현, 실제 계정 QA 완료(2026-11-02). 남은 일: 계정 삭제 API가 생기면 연결. 동의 문서 버전 표시(`v1.0`)와 서버 버전(`2026-09-17`) 맞추기.
+- 다음 Issue 후보: 학습 노트(`notes.html`·`study-review.html`).
+
+- 작업명: 목표 → 집중 시작 실제 연동 QA 후속 (Issue #125, `fix/125-desktop-session-qa`)
+- 상태: 백엔드 #124(세션 시작·활성 조회)로 실제 QA(2026-11-01). 목표 저장·세션 시작·재실행 복구 확인, 목표 확인 실패 중복 안내·진행 중 집중 복귀 길·복구 실패 문구 수정. 남은 일: 서버 `heartbeats`·`pause`·`resume`·`end`·`interventions`·`goals/clarify` 병합 뒤 집중 화면 전체 QA와 목표·세션 설정 REPORT.
+
+- 작업명: 집중 기록 화면 (Issue #121, `feat/121-desktop-records`)
+- 상태: 주간 막대·하루 기록·빈 날·오류 상태, 홈 달력 날짜·지난 목표·사이드바 연결 구현(2026-11-01). 남은 일: 리포트 API(`reports/calendar`·`reports/daily`) 병합 뒤 실제 계정 QA와 REPORT.
+- 다음 Issue 후보: 학습 노트(`notes.html`·`study-review.html`), 설정 계정·기기 연결 탭(D24·D25).
+
+- 작업명: 모듈 연동 로거 (Issue #101, `feat/101-desktop-logger`)
+- 상태: Main 로거·요청 traceId·상태 전이·알림·절전 기록 구현(2026-10-29). 남은 일: 서버가 `X-Trace-Id`를 로그에 찍으면 같은 traceId로 추적표 1·7·8번 확인, 그 뒤 REPORT.
+- 다음 Issue 후보: Extension 로거·로그 복사 버튼, 세션 상태 전이표를 shared-types로 모으는 리팩토링.
+
+- 작업명: 설정 화면 집중·분석·권한·화면 (Issue #80, `feat/80-desktop-settings`)
+- 상태: 실제 계정·로컬 서버 QA와 REPORT 완료(2026-10-31, `settings-REPORT.md`). 저장 실패 시 이전 값 되돌림까지 확인. 남은 일 없음.
+- 후속 완료(2026-11-01): 오류 색 정리 #111, 오류 문구 #115, 시험 알림 실패·개발 실행 안내 #118, NOT_FOUND 문구·사이드바 `집중 시작` 연결 #119.
+- 다음 Issue 후보: 설정 계정·기기 연결 탭(D24·D25, 계정 삭제 API는 아직 없음), 집중 기록 화면.
+
 - 작업명: 로그인·인증 경계 5건 수정 (Issue #77, `fix/77-desktop-auth-races`)
 - 상태: 수정·회귀 테스트 완료(2026-10-27). 남은 일: 실제 Google 계정으로 로그인·계정 전환·로그아웃·집중 중 갱신을 팀원과 함께 확인.
 

@@ -8,6 +8,9 @@ import org.springframework.data.repository.query.Param;
 
 /** 사용자 소유 기기와 활성 Desktop 수를 조회한다. */
 public interface UserDeviceRepository extends JpaRepository<UserDeviceEntity, Long> {
+  /** 로그인한 사용자의 활성 기기만 표시한다. */
+  List<UserDeviceEntity> findByUserIdAndStatus(Long userId, UserDeviceEntity.Status status);
+
   /** 사용자와 설치 해시로 기존 기기를 찾는다. */
   @Query("select d from UserDeviceEntity d where d.user.id = :userId "
       + "and d.deviceType = :deviceType and d.installationIdHash = :hash")
@@ -23,6 +26,11 @@ public interface UserDeviceRepository extends JpaRepository<UserDeviceEntity, Lo
   /** 로그아웃 대상 Desktop에 직접 연결된 같은 사용자 Extension만 찾는다. */
   List<UserDeviceEntity> findByUserIdAndLinkedDesktopDeviceIdAndDeviceType(
       Long userId, Long desktopId, UserDeviceEntity.DeviceType deviceType);
+
+  /** 다른 계정의 활성 Extension 설치를 소유자 정보 노출 없이 검출한다. */
+  @Query("select d.user.id from UserDeviceEntity d where d.installationIdHash = :hash "
+      + "and d.deviceType = 'CHROME_EXTENSION' and d.status = 'ACTIVE'")
+  Optional<Long> findActiveExtensionOwner(@Param("hash") String hash);
 
   /** 사용자별 특정 종류와 상태의 기기 수를 센다. */
   @Query("select count(d) from UserDeviceEntity d where d.user.id = :userId "

@@ -49,7 +49,7 @@ Uncaught (in promise) Error: Minified React error #412
 ## 원인 및 해결
 
 - 추정 원인: ① Chrome이 `_`로 시작하는 파일·폴더(`_next`)를 예약어로 보고 로딩을 거부한다. ② Manifest V3 CSP가 인라인 스크립트를 막는다.
-- 실제 원인: ②만 해당한다. Next.js 정적 Export는 RSC 데이터를 `<script>self.__next_f.push(...)</script>` 인라인 스크립트로 넣는데, Manifest V3 Extension 페이지의 기본 CSP(`script-src 'self'`)가 이를 실행하지 않는다. ①은 Chrome 153에서 재현되지 않았다(`_next`가 있어도 오류 없이 로딩됨).
+- 실제 원인: ②만 해당한다. Next.js 정적 Export는 RSC 데이터를 `<script>self.__next_f.push(...)</script>` 인라인 스크립트로 넣는데, Manifest V3 Extension 페이지의 기본 CSP(`script-src 'self'`)가 이를 실행하지 않는다. ①은 Chrome for Testing 153에서 재현되지 않았지만 정식 Chrome에서는 실제로 거부된다(`extension-build-reserved-filename-ERROR.md`).
 - 해결 방법: 빌드 뒤 `scripts/prepare-extension-build.mjs`가 각 HTML의 인라인 스크립트를 `out/_next/inline/<hash>.js` 외부 파일로 옮기고 같은 위치에 `<script src>`로 바꾼다. 순서를 유지하므로 Next.js 부트스트랩이 그대로 동작한다. 인라인 스크립트가 남으면 빌드를 실패시킨다.
 - 변경 파일: `apps/extension/scripts/prepare-extension-build.mjs`, `apps/extension/package.json`(`build`에 정리 단계 추가)
 

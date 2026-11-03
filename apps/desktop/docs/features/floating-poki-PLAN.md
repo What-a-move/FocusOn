@@ -42,7 +42,7 @@
 
 - Event `floating:show` (Main → 포키 창) `{ interventionId, kind: 'OFF_TASK' | 'BREAK', level, goalText }`
 - `intervention:act` (포키 창 → Main) `{ interventionId, action: 'RECENTER' | 'ACK' | 'REST' | 'CLOSE' }`
-- 알림 목록 응답 형식은 Notion에 필드만 있어(`type, createdAt, channels, status, policyVersion`) `{ interventionId, type, status, channels }` 배열(또는 `{ interventions: [] }`)로 읽는다. 백엔드 확인 필요.
+- 알림 목록 응답은 `{ interventionId, type, status, channels }` 배열(또는 `{ interventions: [] }`)로 읽는다. `type`은 `OFF_TASK`·`BREAK_SUGGESTION`만 표시한다(결정 035, 2026-11-02 Notion 반영).
 
 ## 예외 처리
 

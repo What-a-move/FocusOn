@@ -1,28 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
 import { selectAuthView } from './lib/auth-view'
+import { errorText } from './lib/error-text'
 import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
 import { HomeDashboard } from '../features/dashboard/HomeDashboard'
 
 const signedOut: AuthSessionSnapshot = {
   revision: 0, status: 'SIGNED_OUT', user: null, onboardingStatus: null, error: null,
-}
-
-function errorMessage(error: IpcError | null): string | null {
-  if (!error) return null
-  switch (error.code) {
-    case 'LOCAL_NETWORK_UNAVAILABLE': return '인터넷 연결을 확인하고 다시 시도해 주세요.'
-    case 'AUTH_RELOGIN_REQUIRED':
-    case 'AUTH_TOKEN_REUSE_DETECTED':
-    case 'AUTH_OAUTH_REAUTH_REQUIRED': return '로그인 정보가 만료됐어요. Google로 다시 로그인해 주세요.'
-    case 'AUTH_DEVICE_LIMIT_EXCEEDED': return '로그인 가능한 Desktop 3대를 모두 사용 중이에요. 기존 기기를 해제한 뒤 다시 시도해 주세요.'
-    case 'SERVICE_UNAVAILABLE': return '로그인 서비스를 사용할 수 없어요. 잠시 후 다시 시도해 주세요.'
-    default: return error.retryable ? '요청을 마치지 못했어요. 잠시 후 다시 시도해 주세요.' : '로그인을 마치지 못했어요. 다시 시도해 주세요.'
-  }
 }
 
 function Logo({ className = '' }: { className?: string }) {
@@ -32,9 +20,18 @@ function Logo({ className = '' }: { className?: string }) {
   </span>
 }
 
-function Alert({ message }: { message: string | null }) {
+type AuthAction = 'login' | 'retry' | 'logout'
+// 오류 제목은 그 오류가 생길 때 진행 중이던 동작 기준이다. 로그아웃 정리가 실패해도 로그인 화면으로 오기 때문이다.
+// 동작과 상관없이(만료 등) 생긴 오류는 로그인 기준으로 본다.
+const FAILED_TITLE: Record<AuthAction, string> = {
+  login: '로그인하지 못했어요.',
+  retry: '로그인 상태를 확인하지 못했어요.',
+  logout: '로그아웃을 마치지 못했어요.',
+}
+
+function Alert({ message, action }: { message: string | null; action: AuthAction }) {
   if (!message) return null
-  return <div className="fo-notice" role="alert"><strong>요청을 마치지 못했어요.</strong><span>{message}</span></div>
+  return <div className="fo-notice" role="alert"><strong>{FAILED_TITLE[action]}</strong><span>{message}</span></div>
 }
 
 function LoadingScreen() {
@@ -44,8 +41,8 @@ function LoadingScreen() {
   </main>
 }
 
-function LoginScreen({ onLogin, onRetry, busy, authenticating, message, available, offline }: {
-  onLogin: () => void; onRetry: () => void; busy: boolean; authenticating: boolean; message: string | null; available: boolean; offline: boolean
+function LoginScreen({ onLogin, onRetry, busy, authenticating, message, action, available, offline }: {
+  onLogin: () => void; onRetry: () => void; busy: boolean; authenticating: boolean; message: string | null; action: AuthAction; available: boolean; offline: boolean
 }) {
   return <main className="fo-auth-window">
     <div className="fo-auth-brand"><Logo /></div>
@@ -58,8 +55,8 @@ function LoginScreen({ onLogin, onRetry, busy, authenticating, message, availabl
           <span>{busy ? '연결하는 중…' : offline ? '연결 다시 확인하기' : authenticating ? 'Google 로그인 다시 열기' : 'Google로 계속하기'}</span>
         </button>
         <div className="fo-login-state" aria-live="polite">
-          {offline ? <div className="fo-notice" role="alert"><strong>인터넷에 연결되어 있지 않아요.</strong><span>{message ?? '연결을 확인한 뒤 다시 시도해 주세요.'}</span></div> : <Alert message={message} />}
-          {(busy || authenticating) && <div className="fo-notice" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
+          {offline ? <div className="fo-notice" role="alert"><strong>로그인 상태를 확인하지 못했어요.</strong><span>{message ?? errorText({ code: 'LOCAL_NETWORK_UNAVAILABLE' })}</span></div> : <Alert message={message} action={action} />}
+          {(busy || authenticating) && <div className="fo-notice is-info" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
           {!available && <p className="fo-app-only">Google 로그인은 FocusOn 데스크톱 앱에서 사용할 수 있어요.</p>}
         </div>
         <p className="fo-legal"><span>이용약관 · 개인정보 처리방침</span><span>화면 원본과 카메라 영상은 저장하지 않아요.</span></p>
@@ -85,6 +82,9 @@ export default function Page() {
   const [snapshot, setSnapshot] = useState<AuthSessionSnapshot | null>(null)
   const [requestError, setRequestError] = useState<IpcError | null>(null)
   const [busy, setBusy] = useState(false)
+  // 진행 중인 동작. 그동안 도착한 Snapshot 오류와 요청 오류에 이 동작을 붙인다.
+  const running = useRef<AuthAction | null>(null)
+  const [action, setAction] = useState<AuthAction>('login')
   const [available, setAvailable] = useState(true)
 
   useEffect(() => {
@@ -99,6 +99,7 @@ export default function Page() {
       if (!active) return
       setSnapshot((current) => !current || next.revision > current.revision ? next : current)
       setRequestError(null)
+      setAction(running.current ?? 'login')
     }
     const unsubscribe = auth.onSessionChanged(applySnapshot)
     void auth.getSession().then((result) => {
@@ -112,35 +113,36 @@ export default function Page() {
   const login = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null)
+    setBusy(true); setRequestError(null); setAction('login'); running.current = 'login'
     try { const result = await auth.startGoogleLogin(); if (!result.success) setRequestError(result.error) }
     catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
-    finally { setBusy(false) }
+    finally { setBusy(false); running.current = null }
   }
   const retry = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null)
+    setBusy(true); setRequestError(null); setAction('retry'); running.current = 'retry'
     try {
       const result = await auth.retrySession()
       if (result.success) setSnapshot((current) => !current || result.data.revision > current.revision ? result.data : current)
       else setRequestError(result.error)
     } catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
-    finally { setBusy(false) }
+    finally { setBusy(false); running.current = null }
   }
   const logout = async () => {
     const auth = window.focusOn?.auth
     if (!auth || busy) return
-    setBusy(true); setRequestError(null)
+    setBusy(true); setRequestError(null); setAction('logout'); running.current = 'logout'
     try { const result = await auth.logout(); if (!result.success) setRequestError(result.error) }
     catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
-    finally { setBusy(false) }
+    finally { setBusy(false); running.current = null }
   }
 
   const view = selectAuthView(snapshot)
-  const message = errorMessage(requestError ?? snapshot?.error ?? null)
+  const shownError = requestError ?? snapshot?.error ?? null
+  const message = shownError ? errorText(shownError) : null
   if (view === 'loading') return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
   if (view === 'home' && snapshot?.user) return <HomeDashboard name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
-  return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} available={available} offline={view === 'offline'} />
+  return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} action={action} available={available} offline={view === 'offline'} />
 }

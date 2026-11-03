@@ -5,6 +5,7 @@ import type { GoalsApi } from './goal-contract.cjs'
 import type { SessionsApi } from './session-contract.cjs'
 import type { AnalysisApi } from './analysis-contract.cjs'
 import type { InterventionsApi } from './intervention-contract.cjs'
+import type { SettingsApi } from './settings-contract.cjs'
 
 export const AUTH_CHANNELS = {
   getSession: 'auth:session:get',
@@ -50,6 +51,7 @@ export type FocusOnApi = {
   goals: GoalsApi
   sessions: SessionsApi
   analysis: AnalysisApi
+  settings: SettingsApi
   interventions: InterventionsApi
 }
 

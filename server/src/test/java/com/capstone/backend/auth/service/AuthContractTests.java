@@ -15,6 +15,7 @@ import com.capstone.backend.auth.dto.AuthDtos.GoogleExchangeRequest;
 import com.capstone.backend.common.api.ApiException;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -52,6 +53,60 @@ class AuthContractTests {
     assertThrows(ApiException.class,
         () -> limits.check("google:overflow", 5, Duration.ofMinutes(10)));
     assertDoesNotThrow(() -> limits.check("api:1:1", 60, Duration.ofMinutes(1)));
+  }
+
+  @Test
+  void pairingInstallationCapacityIsBoundedPerIp() {
+    AuthRateLimiter limits = new AuthRateLimiter();
+    for (int i = 0; i < 32; i++) {
+      limits.checkPairingInstallation("192.0.2.1", "installation-" + i);
+    }
+    var blocked = assertThrows(ApiException.class,
+        () -> limits.checkPairingInstallation("192.0.2.1", "another"));
+    assertTrue(blocked.retryAfterSeconds() > 0);
+    assertDoesNotThrow(() -> limits.checkPairingInstallation("192.0.2.1", "installation-0"));
+    assertDoesNotThrow(() -> limits.checkPairingInstallation("192.0.2.2", "new-user"));
+    assertDoesNotThrow(() -> limits.checkPairingIp("192.0.2.3"));
+    assertDoesNotThrow(() -> limits.check("api:1:1", 60, Duration.ofMinutes(1)));
+  }
+
+  @Test
+  void pairingRetainsTenRequestsPerIpAndInstallation() {
+    AuthRateLimiter limits = new AuthRateLimiter();
+    for (int i = 0; i < 10; i++) {
+      limits.checkPairingInstallation("192.0.2.1", "same-installation");
+    }
+    assertThrows(ApiException.class,
+        () -> limits.checkPairingInstallation("192.0.2.1", "same-installation"));
+    assertDoesNotThrow(() -> limits.checkPairingInstallation("192.0.2.1", "another"));
+    assertDoesNotThrow(() -> limits.checkPairingInstallation("192.0.2.2", "same-installation"));
+  }
+
+  @Test
+  void pairingInstallationCapacityRecoversAtWindowExpiry() {
+    var time = new AtomicLong(1_000);
+    AuthRateLimiter limits = new AuthRateLimiter(time::get);
+    for (int i = 0; i < 32; i++) {
+      limits.checkPairingInstallation("192.0.2.1", "installation-" + i);
+    }
+    time.addAndGet(Duration.ofMinutes(10).toMillis() - 1);
+    assertEquals(1L, assertThrows(ApiException.class,
+        () -> limits.checkPairingInstallation("192.0.2.1", "new")).retryAfterSeconds());
+    time.incrementAndGet();
+    assertDoesNotThrow(() -> limits.checkPairingInstallation("192.0.2.1", "new"));
+  }
+
+  @Test
+  void pairingIpGroupCapacityIsBoundedAndCleansExpiredGroups() {
+    var time = new AtomicLong(1_000);
+    AuthRateLimiter limits = new AuthRateLimiter(time::get);
+    for (int i = 0; i < 10000; i++) {
+      limits.checkPairingInstallation("synthetic-ip-" + i, "installation");
+    }
+    assertThrows(ApiException.class,
+        () -> limits.checkPairingInstallation("new-ip", "installation"));
+    time.addAndGet(Duration.ofMinutes(10).toMillis());
+    assertDoesNotThrow(() -> limits.checkPairingInstallation("new-ip", "installation"));
   }
 
   @Test

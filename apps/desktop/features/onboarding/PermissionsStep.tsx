@@ -4,59 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
 import { describeError, onboardingApi, type Notice } from './onboarding-api'
-
-type Detail = { title: string; rows: [string, string][] }
-type Consent = { id: string; title: string; summary?: string; detail: Detail }
-
-const requiredConsents: Consent[] = [
-  {
-    id: 'terms',
-    title: '서비스 이용약관',
-    detail: { title: '서비스 이용약관', rows: [
-      ['목적', '서비스 이용 조건과 책임 범위 안내'],
-      ['처리 항목', '동의 여부와 동의 시각'],
-      ['보유 기간', '철회하거나 계정을 삭제한 뒤 3년 (동의 이력만)'],
-      ['거부 권리', '동의하지 않을 수 있어요.'],
-      ['거부 시 영향', 'FocusOn을 이용할 수 없어요.'],
-      ['버전', 'v1.0'],
-    ] },
-  },
-  {
-    id: 'privacy',
-    title: '개인정보 처리방침',
-    summary: 'Google 계정 식별자, 닉네임, 목표, 집중 기록',
-    detail: { title: '개인정보 처리방침', rows: [
-      ['목적', '계정 관리, 집중 기록과 리포트 제공'],
-      ['처리 항목', 'Google 계정 식별자, 닉네임, 목표, 세션 시간·기록, 연결한 기기 정보'],
-      ['보유 기간', '집중 기록·리포트는 세션 종료 후 1년. 계정을 삭제하면 30일 안에 삭제해요.'],
-      ['거부 권리', '동의하지 않을 수 있어요.'],
-      ['거부 시 영향', '계정을 만들 수 없어요.'],
-      ['버전', 'v1.0'],
-    ] },
-  },
-  {
-    id: 'screen-analysis',
-    title: '화면 분석',
-    summary: '지금 보는 화면이 목표와 관련 있는지만 확인해요',
-    detail: { title: '화면 분석', rows: [
-      ['목적', '집중 중에 보는 앱·페이지가 목표와 관련 있는지 확인'],
-      ['처리 항목', '앱 이름, 탭 제목·도메인, 필요할 때만 보이는 화면의 글자. 판단 결과만 저장하고 화면 원문·캡처는 저장하지 않아요.'],
-      ['보유 기간', '분석 결과는 세션 종료 후 90일 (그 뒤엔 합계만 남겨요)'],
-      ['거부 권리', '동의하지 않을 수 있어요.'],
-      ['거부 시 영향', '집중 세션을 시작할 수 없어요.'],
-      ['버전', 'v1.0'],
-    ] },
-  },
-]
-
-const cameraDetail: Detail = { title: '카메라 분석', rows: [
-  ['목적', '화면만으로 알기 어려운, 오래 자리를 비운 순간을 보조로 알아차리기'],
-  ['처리 항목', '얼굴이 보이는지, 시선이 화면 쪽인지 같은 상태 신호. 영상·사진은 저장하거나 보내지 않아요.'],
-  ['보유 기간', '상태 기록은 세션 종료 후 1년'],
-  ['거부 권리', '선택 항목이라 켜지 않아도 돼요.'],
-  ['거부 시 영향', '화면 분석만으로 정상 이용할 수 있어요. 설정에서 언제든 켜고 끌 수 있어요.'],
-  ['버전', 'v1.0'],
-] }
+import { cameraDetail, requiredConsents, type Detail } from './consent-docs'
 
 type PermName = 'screen' | 'camera' | 'notify'
 type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied' | 'requested'; error: string | null }
@@ -68,6 +16,18 @@ const permCopy: Record<PermName, { title: string; required: boolean; idle: strin
 }
 
 const idle: PermState = { state: 'idle', error: null }
+// 설정 창을 열지 못한 경우다. 직접 여는 길을 알리고, 켠 뒤 ‘다시 확인’·‘다시 보내기’를 누를 수 있게 opened로 둔다.
+const SETTINGS_NOT_OPENED: Record<'screen' | 'notify', Notice> = {
+  screen: { title: '시스템 설정을 열지 못했어요.', body: '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 직접 켜 주세요.' },
+  notify: { title: '시스템 설정을 열지 못했어요.', body: '시스템 설정 › 알림에서 FocusOn을 직접 켜 주세요.' },
+}
+const NOTIFY_BLOCKED: Record<PermState['state'], string> = {
+  idle: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.',
+  requested: '시험 알림이 보였다면 ‘보였어요’를 눌러 주세요.',
+  denied: '‘설정 열기’로 알림을 켠 뒤 ‘다시 보내기’를 눌러 주세요.',
+  opened: '알림을 허용한 뒤 ‘다시 보내기’를 눌러 주세요.',
+  granted: '',
+}
 
 // [유지보수] 화면 기록은 macOS가 앱 안에서 허용 창을 띄우지 않는다. 시스템 설정을 연 뒤 돌아와서 다시 확인한다.
 function permText(name: PermName, perm: PermState): string {
@@ -122,7 +82,7 @@ export function PermissionsStep() {
     const setScreen = (next: PermState) => setPerms((current) => ({ ...current, screen: next }))
     if (!result.success) {
       if (!silent) {
-        const notice = describeError(result.error)
+        const notice = describeError(result.error, '화면 기록 권한을 확인하지 못했어요.')
         setScreen({ state: 'opened', error: `${notice.title} ${notice.body}` })
         setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
       }
@@ -133,9 +93,17 @@ export function PermissionsStep() {
       setPrompt({ text: '좋아요, 준비됐어요!', error: false })
     } else if (!silent) {
       setScreen({ state: 'denied', error: null })
-      setPrompt({ text: '아직 꺼져 있는 것 같아요.', error: true })
+      setPrompt({ text: '아직 꺼져 있는 것 같아요.', error: false })
     }
   }, [])
+
+  // [유지보수] 이 기기에서 이미 시험 알림을 확인했다면 다시 묻지 않는다(설정·집중 준비에서 확인한 경우 포함).
+  useEffect(() => {
+    if (view !== 'permission') return
+    void onboardingApi.getNotificationStatus().then((result) => {
+      if (result.success && result.data.confirmed) setPerms((current) => current.notify.state === 'idle' ? { ...current, notify: { state: 'granted', error: null } } : current)
+    })
+  }, [view])
 
   useEffect(() => {
     if (view !== 'permission') return
@@ -150,7 +118,7 @@ export function PermissionsStep() {
     const current = perms[name]
     if (name === 'screen' && current.state === 'idle') {
       const result = await onboardingApi.openScreenRecordingSettings()
-      if (!result.success || !result.data.opened) return failPerm(name, 'idle', result.success ? describeError({ code: 'SERVICE_UNAVAILABLE', retryable: true }) : describeError(result.error))
+      if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.screen)
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return
@@ -158,20 +126,20 @@ export function PermissionsStep() {
     if (name === 'screen') return recheckScreen(false)
     if (name === 'camera') {
       const result = await onboardingApi.requestCamera()
-      if (!result.success) return failPerm(name, current.state, describeError(result.error))
+      if (!result.success) return failPerm(name, current.state, describeError(result.error, '카메라 권한을 요청하지 못했어요.'))
       setPerm(name, { state: result.data.granted ? 'granted' : 'denied', error: null })
       if (result.data.granted) setPrompt({ text: '카메라도 준비됐어요!', error: false })
       return
     }
     if (current.state === 'denied') {
       const result = await onboardingApi.openNotificationSettings()
-      if (!result.success || !result.data.opened) return failPerm(name, 'denied', result.success ? describeError({ code: 'SERVICE_UNAVAILABLE', retryable: true }) : describeError(result.error))
+      if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.notify)
       setPerm(name, { state: 'opened', error: null })
       setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
       return
     }
     const result = await onboardingApi.requestNotifications()
-    if (!result.success) return failPerm(name, current.state, describeError(result.error))
+    if (!result.success) return failPerm(name, current.state, describeError(result.error, '시험 알림을 보내지 못했어요.'))
     setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
     setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림을 보내지 못했어요.', error: true })
   }
@@ -190,7 +158,7 @@ export function PermissionsStep() {
   async function goNext() {
     if (view === 'consents') {
       if (!allAccepted) {
-        setFeedback({ title: '필수 항목에 동의해 주세요.', body: '필수 항목 3개에 모두 동의해야 시작할 수 있어요.' })
+        setFeedback({ title: '필수 항목에 동의해 주세요.', body: '필수 항목 3개에 모두 동의해야 시작할 수 있어요.', info: true })
         return
       }
       setView('permission')
@@ -199,18 +167,18 @@ export function PermissionsStep() {
       return
     }
     if (!screenReady) {
-      setFeedback({ title: '화면 기록 권한이 필요해요.', body: '시스템 설정에서 FocusOn을 켠 뒤 ‘다시 확인’을 눌러 주세요.' })
+      setFeedback({ title: '화면 기록 권한이 필요해요.', body: perms.screen.state === 'idle' ? '‘설정 열기’로 시스템 설정을 열어 화면 기록을 켜 주세요.' : '시스템 설정에서 화면 기록을 켠 뒤 ‘다시 확인’을 눌러 주세요.', info: true })
       return
     }
     if (!notifyReady) {
-      setFeedback({ title: '알림 권한이 필요해요.', body: '‘허용하기’로 시험 알림을 받은 뒤 ‘보였어요’를 눌러 주세요.' })
+      setFeedback({ title: '알림 권한이 필요해요.', body: NOTIFY_BLOCKED[perms.notify.state], info: true })
       return
     }
     setSaving(true)
     const result = await onboardingApi.savePermissionsStep({ consents: [...accepted], cameraConsent })
     setSaving(false)
     if (!result.success) {
-      setFeedback(describeError(result.error))
+      setFeedback(describeError(result.error, '동의와 권한을 저장하지 못했어요.'))
       return
     }
     router.push('/onboarding/sites/')
@@ -300,7 +268,7 @@ export function PermissionsStep() {
                   <span className="perm-state" aria-hidden="true">{perm.state === 'denied' ? '!' : '✓'}</span>
                   <span className="choice-text">
                     <strong>{copy.title} <span className={`tag${copy.required ? ' required' : ''}`}>{copy.required ? '필수' : '선택'}</span></strong>
-                    <small className={`perm-desc${perm.error || (perm.state === 'denied' && copy.required) ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
+                    <small className={`perm-desc${perm.error ? ' is-error' : ''}`} aria-live="polite">{permText(name, perm)}</small>
                   </span>
                   {perm.state === 'granted'
                     ? <span className="perm-done">허용됨</span>

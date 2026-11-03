@@ -1,12 +1,14 @@
 package com.capstone.backend.common.api;
 
 import java.util.Map;
+import org.springframework.http.HttpStatus;
 
 /** 명세에 있는 오류 코드와 안전한 details를 HTTP 계층에 전달한다. */
 public final class ApiException extends RuntimeException {
   private final ApiErrorCode code;
   private final Map<String, Object> details;
   private final Long retryAfterSeconds;
+  private final HttpStatus status;
 
   /** 확정된 오류 코드로 API 예외를 만든다. */
   public ApiException(ApiErrorCode code) {
@@ -15,6 +17,11 @@ public final class ApiException extends RuntimeException {
 
   private ApiException(
       ApiErrorCode code, Long retryAfterSeconds, Map<String, Object> details) {
+    this(code, retryAfterSeconds, details, code.status());
+  }
+
+  private ApiException(ApiErrorCode code, Long retryAfterSeconds, Map<String, Object> details,
+      HttpStatus status) {
     super(code.defaultMessage());
     if (code == ApiErrorCode.TOO_MANY_REQUESTS
         && (retryAfterSeconds == null || retryAfterSeconds < 1)) {
@@ -23,6 +30,18 @@ public final class ApiException extends RuntimeException {
     this.code = code;
     this.retryAfterSeconds = retryAfterSeconds;
     this.details = Map.copyOf(details);
+    this.status = status;
+  }
+
+  /** 재개 API는 시작 조건 부족을 동일 오류 코드와 403으로 반환한다. */
+  public static ApiException resumeRequirementMissing() {
+    return new ApiException(ApiErrorCode.SESSION_START_REQUIREMENT_MISSING, null, Map.of(),
+        HttpStatus.FORBIDDEN);
+  }
+
+  /** 이 요청에서 반환할 HTTP 상태다. */
+  public HttpStatus status() {
+    return status;
   }
 
   /** 기기 한도처럼 명세에 정의된 안전한 부가 정보만 담는다. */
@@ -36,6 +55,15 @@ public final class ApiException extends RuntimeException {
       throw new IllegalArgumentException("Retry-After must be positive");
     }
     return new ApiException(ApiErrorCode.TOO_MANY_REQUESTS, retryAfterSeconds, Map.of());
+  }
+
+  /** 입력 잠금의 410 응답에도 남은 대기 시간과 시도 횟수를 함께 제공한다. */
+  public static ApiException pairingLocked(long retryAfterSeconds) {
+    if (retryAfterSeconds < 1) {
+      throw new IllegalArgumentException("Retry-After must be positive");
+    }
+    return new ApiException(ApiErrorCode.LINK_004_ATTEMPTS_EXCEEDED, retryAfterSeconds,
+        Map.of("remainingAttempts", 0));
   }
 
   /** 클라이언트가 분기할 오류 코드를 반환한다. */

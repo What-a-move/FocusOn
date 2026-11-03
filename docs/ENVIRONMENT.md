@@ -65,7 +65,9 @@ docker compose up --build
 - API key, OAuth secret, token, DB password를 Issue·PR·로그에 남기지 않는다.
 - 팀 공유 값과 개인 비밀 값을 구분한다.
 - Desktop OAuth는 기본 브라우저·PKCE와 `http://127.0.0.1:<임시 포트>` loopback을 사용한다. Desktop이 실제 사용한 redirectUri를 서버가 동일하게 Google에 전달하며 임의의 고정 웹 callback을 추가하지 않는다.
-- Desktop 실행 셸은 `FOCUSON_GOOGLE_CLIENT_ID`, `FOCUSON_API_BASE_URL`을 설정한다. `apps/desktop/.env.local`을 준비했으면 저장소 루트에서 `source apps/desktop/.env.local`로 읽는다. Electron은 해당 파일을 자동으로 읽지 않는다.
+- 로컬 env 파일 이름은 위치별 `.env` 하나로 통일한다: `server/.env`, `apps/desktop/.env`, `apps/extension/.env`. 세 파일 모두 Git에서 제외되며, 각 위치의 `.env.example`을 복사해 만든다.
+- Desktop은 `apps/desktop/.env`에 `FOCUSON_GOOGLE_CLIENT_ID`, `FOCUSON_API_BASE_URL`을 둔다. Electron은 이 파일을 자동으로 읽지 않으므로 저장소 루트에서 `set -a && source apps/desktop/.env && set +a`로 읽은 뒤 `pnpm --filter @focuson/desktop dev:electron`을 실행한다.
+- Extension은 `apps/extension/.env`에 `NEXT_PUBLIC_FOCUSON_API_BASE_URL`을 둔다. Next.js Build가 자동으로 읽으므로 `pnpm build:extension`만 실행한다.
 - Backend는 같은 Desktop client ID를 `GOOGLE_DESKTOP_CLIENT_ID`로 설정한다. 발급 JSON에 secret이 있으면 `GOOGLE_DESKTOP_CLIENT_SECRET`을 서버 `.env`에만 설정하고 Desktop에 넣지 않는다.
 - Google 설정이 비어 있어도 서버 health는 동작하지만 교환은 503으로 실패한다. `.env.example`은 실제 자격 증명으로 사용하지 않는다.
 - `server.forward-headers-strategy=none`으로 직접 연결 IP만 신뢰한다. 운영 reverse proxy를 추가할 때 신뢰 proxy와 IP 한도를 별도 구성한다.

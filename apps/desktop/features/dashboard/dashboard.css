@@ -12,30 +12,40 @@
 }
 
 /* 사이드바: 하위 화면에서도 고정하고 내용만 바뀐다. */
-.fo-sidebar { display: flex; flex-direction: column; min-height: 0; padding: 16px 16px 20px; border-right: 1px solid var(--fo-line); }
+.fo-sidebar { display: flex; flex-direction: column; min-height: 0; padding: clamp(24px, 4vh, 40px) 16px 20px; border-right: 1px solid var(--fo-line); }
 .fo-sidebar-logo { align-self: center; width: 136px; margin: 4px 0 clamp(28px, 5vh, 48px); }
 .fo-nav { display: grid; gap: clamp(4px, 1.4vh, 12px); }
 .fo-nav-item { position: relative; display: flex; align-items: center; gap: 16px; min-height: 54px; padding: 0 14px 0 22px; border-radius: 14px; font-size: 16px; font-weight: 600; }
 .fo-nav-item.active { font-weight: 700; }
 .fo-nav-item.active::before { position: absolute; top: 50%; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--fo-gold); content: ''; transform: translateY(-50%); }
 .fo-nav-item img { flex: 0 0 28px; object-fit: contain; }
+a.fo-nav-item { color: inherit; text-decoration: none; transition: background .15s ease; }
+a.fo-nav-item:hover { background: var(--fo-hover); }
+a.fo-nav-item:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 .fo-sidebar-spacer { flex: 1; }
-.fo-profile { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; }
+.fo-profile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; color: inherit; text-decoration: none; transition: background .15s ease; }
+.fo-profile:hover { background: var(--fo-hover); }
+.fo-profile:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 .fo-profile-avatar { flex: 0 0 36px; width: 36px; height: 36px; border: 1.5px solid var(--fo-line); border-radius: 50%; background: var(--fo-gold-soft) url('/design/poki-floating-logo-base-v1.png') 50% 62% / 165% no-repeat; }
 .fo-profile strong { display: block; overflow: hidden; max-width: 138px; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .fo-profile small { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 12px; }
-.fo-sidebar-logout { align-self: flex-start; margin-left: 12px; border: 0; background: transparent; color: var(--fo-muted); font-size: 12px; cursor: pointer; }
+/* 로그아웃: 프로필 아래 같은 폭의 테두리 버튼. 되돌릴 수 있는 동작이라 빨간색을 쓰지 않는다(결정 031). */
+.fo-sidebar-logout { height: 40px; margin-top: 8px; border: 1.5px solid var(--fo-ghost-edge); border-radius: 12px; background: var(--fo-surface); box-shadow: 0 3px 0 var(--fo-ghost-edge); color: var(--fo-ink); font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s ease, transform .1s ease, box-shadow .1s ease; }
+.fo-sidebar-logout:hover:not(:disabled) { background: var(--fo-hover); }
+.fo-sidebar-logout:active:not(:disabled) { box-shadow: 0 0 0 var(--fo-ghost-edge); transform: translateY(3px); }
+.fo-sidebar-logout:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-sidebar-logout:disabled { color: var(--fo-muted); cursor: default; }
 
 /* 콘텐츠: 테두리 상자 없이 면·여백·구분선으로 나눈다. */
 .fo-home-content { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
-.fo-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; max-width: 1180px; margin: 0 auto; padding: 26px 48px 0; }
+.fo-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(32px, 5.5vh, 56px) 48px 0; }
 .fo-topbar > div > span { display: block; margin-bottom: 2px; color: var(--fo-muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .fo-topbar p { margin: 0; font-size: 16px; font-weight: 600; }
 .fo-topbar ul { display: flex; align-items: center; gap: 22px; margin: 0; padding: 0; list-style: none; }
 .fo-topbar li { display: flex; align-items: center; gap: 8px; color: var(--fo-muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
 .fo-topbar li b { color: var(--fo-ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.fo-dashboard { display: flex; flex-direction: column; gap: 36px; width: 100%; max-width: 1180px; margin: 0 auto; padding: 8px 48px 40px; }
+.fo-dashboard { display: flex; flex-direction: column; gap: 36px; width: 100%; max-width: 1180px; margin: auto; padding: 8px 48px 40px; }
 
 /* 오늘: 포키 + 큰 질문 + 버튼 */
 .fo-hero { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: center; gap: 40px; padding: 12px 0 4px; }
@@ -47,6 +57,8 @@
 /* 포인트: '집중'에 금색 밑줄이 그어진다. */
 .fo-hl { position: relative; isolation: isolate; white-space: nowrap; }
 .fo-hl::after { position: absolute; right: -2px; bottom: 3px; left: -2px; z-index: -1; height: 10px; border-radius: 99px; background: var(--fo-gold); content: ''; opacity: .6; transform: scaleX(0); transform-origin: left; animation: fo-draw .6s .45s cubic-bezier(.2, .8, .2, 1) forwards; }
+.fo-hero-goal { margin: 10px 0 0; overflow: hidden; color: var(--fo-muted); font-size: 18px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.fo-hero-goal + .fo-goal-button { margin-top: 20px; }
 .fo-goal-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 196px; height: 56px; margin-top: 26px; font-size: 17px; }
 .fo-goal-button span { transition: transform .2s ease; }
 .fo-goal-button:hover span { transform: translateX(4px); }
@@ -54,7 +66,7 @@
 
 /* 아래: 상자 없이 두 칸, 가운데 얇은 선 */
 .fo-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
-.fo-dashboard-block { min-width: 0; animation: fo-up .55s .25s var(--fo-ease) both; }
+.fo-dashboard-block { display: flex; flex-direction: column; min-width: 0; animation: fo-up .55s .25s var(--fo-ease) both; }
 .fo-dashboard-block + .fo-dashboard-block { margin-left: 48px; padding-left: 48px; border-left: 1px solid var(--fo-line); animation-delay: .32s; }
 .fo-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .fo-panel-head h2 { margin: 0; white-space: nowrap; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
@@ -70,14 +82,20 @@
 .fo-calendar-day { display: grid; place-items: center; justify-self: center; width: 40px; height: 40px; border-radius: 50%; color: var(--fo-ink); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .fo-calendar-day.today:not(.completed) { border: 1.5px solid var(--fo-ink); font-weight: 700; }
 .fo-calendar-day.future { color: var(--fo-faint); }
+a.fo-calendar-day { text-decoration: none; transition: background .15s ease; }
+a.fo-calendar-day:not(.completed):hover { background: var(--fo-field); }
+a.fo-calendar-day:focus-visible, a.fo-recent-item:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 .fo-calendar-day.completed { overflow: hidden; border: 1.5px solid var(--fo-gold); background: var(--fo-gold-soft); animation: fo-pop-in .55s var(--fo-ease) both; }
 .fo-calendar-day.completed.today { box-shadow: 0 0 0 2px var(--fo-surface), 0 0 0 4px var(--fo-ink); }
 .fo-poki-face { display: block; width: 100%; height: 100%; background: url('/design/poki-floating-master-v3.png') center 42% / 190% auto no-repeat; }
 .fo-calendar-state { display: grid; gap: 4px; margin-top: 20px; padding: 14px 16px; border: 1px solid var(--fo-line); border-radius: 12px; font-size: 14px; line-height: 1.6; }
 .fo-calendar-state strong { font-weight: 700; }
-.fo-calendar-state.is-error { border-color: var(--fo-danger-line); background: var(--fo-danger-soft); }
-.fo-calendar-state.is-error strong { color: var(--fo-danger); }
-.fo-retry { justify-self: start; min-width: 0; height: 40px; margin-top: 8px; padding: 0 16px; font-size: 14px; }
+/* 불러오지 못하면 칸의 남은 자리 가운데에 오류 화면(LoadError)을 둔다. */
+.fo-dashboard-block > .fo-error-state { flex: 1; justify-content: center; min-height: 280px; }
+/* 오프라인이지만 전에 확인한 달력이 있으면 달력 아래 한 줄로만 알린다. 요청 오류가 아니라 빨간색을 쓰지 않는다. */
+.fo-calendar-note { margin: 14px 0 0; color: var(--fo-muted); font-size: 13px; line-height: 1.6; word-break: keep-all; }
+.fo-calendar-note button { margin-left: 4px; padding: 0; border: 0; background: none; color: var(--fo-ink); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.fo-calendar-note button:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; border-radius: 4px; }
 .fo-skeleton { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
 .fo-skeleton i { height: 32px; border-radius: 50%; background: linear-gradient(90deg, var(--fo-track), var(--fo-hover), var(--fo-track)); background-size: 200% 100%; animation: fo-shimmer 1.2s linear infinite; }
 
@@ -87,6 +105,8 @@
 .fo-recent-list li:nth-child(1) { animation-delay: .35s; }
 .fo-recent-list li:nth-child(2) { animation-delay: .45s; }
 .fo-recent-list li:nth-child(3) { animation-delay: .55s; }
+a.fo-recent-item { color: inherit; text-decoration: none; transition: background .15s ease; }
+a.fo-recent-item:hover { background: var(--fo-field); }
 .fo-recent-item { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 16px; margin: 0 -12px; padding: 10px 12px; border-radius: 16px; }
 .fo-recent-day { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 52px; height: 56px; border-radius: 14px; background: var(--fo-field); line-height: 1.1; }
 .fo-recent-day b { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -121,7 +141,8 @@
   .fo-nav-item { width: 52px; justify-content: center; padding: 0; }
   .fo-nav-item span, .fo-profile > div { display: none; }
   .fo-nav-item.active::before { left: -6px; }
-  .fo-sidebar-logout { align-self: center; margin-left: 0; padding: 8px 0; }
+  .fo-profile { padding: 8px; }
+  .fo-sidebar-logout { width: 52px; font-size: 12px; }
 }
 @media (max-width: 760px) {
   .fo-dashboard-grid { grid-template-columns: 1fr; gap: 32px; }
@@ -136,7 +157,7 @@
 }
 /* 낮은 창: 세로 여백을 줄여 스크롤 없이 */
 @media (max-height: 760px) {
-  .fo-topbar { padding-top: 16px; }
+  .fo-topbar { padding-top: 24px; }
   .fo-dashboard { gap: 28px; padding-top: 14px; padding-bottom: 24px; }
   .fo-hero { padding: 0; }
   .fo-poki-stage { height: 180px; }

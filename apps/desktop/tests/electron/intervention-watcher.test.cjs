@@ -53,6 +53,7 @@ test('조금 더 보기·잠시 쉬기는 확인, 닫기는 해제로 기록하�
 test('응답 형식이 다르면 보여 주지 않고, 포키 창 입력은 허용한 값만 받는다', async () => {
   assert.equal(parsePending({ items: [] }), null)
   assert.deepEqual(parsePending([{ interventionId: 1, type: 'OFF_TASK', status: 'PENDING' }]), [])
+  assert.deepEqual(parsePending([{ interventionId: 'e-1', type: 'END_CONFIRMATION', status: 'PENDING' }]), [], '정하지 않은 type은 보이지 않음')
   assert.equal(isActInput({ interventionId: 'i-1', action: 'RECENTER' }), true)
   assert.equal(isActInput({ interventionId: 'i-1', action: 'DELETE' }), false)
   assert.equal(isActInput({ interventionId: '../x', action: 'ACK' }), false)

@@ -8,6 +8,9 @@ from fastapi.responses import JSONResponse
 
 from .api.reception import AnalysisReception
 from .api.routes import router
+from src.api.goal_routes import router as goal_router
+from src.api.schemas import ErrorResponse
+from src.utils.logger import configure_logging
 
 
 def create_app(*, api_key: str | None = None) -> FastAPI:
@@ -20,8 +23,10 @@ def create_app(*, api_key: str | None = None) -> FastAPI:
         yield
         application.state.backend_api_key = ""
 
+    configure_logging()
     application = FastAPI(title="FocusOn AI reception", version="0.1.0", lifespan=lifespan)
     application.include_router(router)
+    application.include_router(goal_router)
 
     @application.get("/health")
     async def health():
@@ -29,8 +34,39 @@ def create_app(*, api_key: str | None = None) -> FastAPI:
 
     @application.exception_handler(RequestValidationError)
     async def invalid_request(request: Request, exc: RequestValidationError):
-        # FastAPI's default validation response can include original text.
+        if request.url.path.startswith("/internal/v1/goals/"):
+            return await goal_validation_error(request, exc)
         return JSONResponse(status_code=422, content={"detail": "INVALID_INPUT"})
+
+    async def goal_validation_error(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        request_id: str | None = None
+        try:
+            body = await request.json()
+            if isinstance(body, dict) and isinstance(body.get("requestId"), str):
+                request_id = body["requestId"][:100]
+        except Exception:
+            request_id = None
+        violations = [
+            {
+                "field": ".".join(str(part) for part in error.get("loc", [])[1:]),
+                "reason": error.get("type", "validation_error"),
+            }
+            for error in exc.errors()
+        ]
+        response = ErrorResponse(
+            code="VALIDATION_ERROR",
+            message="요청 값이 올바르지 않습니다.",
+            retryable=False,
+            request_id=request_id,
+            details={"fallbackAllowed": False, "violations": violations},
+        )
+        return JSONResponse(
+            status_code=422,
+            content=response.model_dump(mode="json", by_alias=True, exclude_none=True),
+        )
+
 
     original_openapi = application.openapi
 

@@ -39,16 +39,17 @@ export function NicknameStep() {
       return
     }
 
-    const notice = describeError(result.error)
+    const notice = describeError(result.error, '닉네임을 확인하지 못했어요.')
     const duplicate = result.error.code === 'PROFILE_NICKNAME_DUPLICATE'
-    setHint({ kind: 'error', text: duplicate ? '이미 사용 중인 닉네임이에요. 다른 이름을 적어 주세요.' : notice.title, field: duplicate })
+    // [디자인] 같은 오류를 하단 바에 한 번 더 띄우지 않는다.
+    setHint({ kind: 'error', text: duplicate ? '이미 사용 중인 닉네임이에요. 다른 이름을 적어 주세요.' : `${notice.title} ${notice.body}`, field: duplicate })
     setPrompt(duplicate ? { text: '앗, 누가 벌써 쓰고 있어요!', error: true } : { text: '어떻게 불러드릴까요?', error: false })
-    setFeedback(notice)
+    setFeedback(null)
   }
 
   async function goNext() {
     if (!checked) {
-      setFeedback({ title: '닉네임 중복 확인이 필요해요.', body: '닉네임을 입력하고 ‘중복 확인’을 눌러 주세요.' })
+      setFeedback({ title: '닉네임 중복 확인이 필요해요.', body: '닉네임을 입력하고 ‘중복 확인’을 눌러 주세요.', info: true })
       return
     }
     router.push('/onboarding/extension/')

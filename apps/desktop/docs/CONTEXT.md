@@ -40,6 +40,7 @@
 
 ### 진행 중인 작업
 
+- Issue #101 모듈 연동 로거(2026-10-29): Main 공용 `log()`가 JSON 한 줄을 `userData/logs/focuson.log`에 쌓는다(1MB 회전, 허용 필드만, 제목·본문은 글자 수). 모든 서버 요청에 `X-Trace-Id`와 `api.*`/`decision.*` OUT·IN·fail, 세션 `state.transition`, `notify.fire`, `power.suspend/resume`을 남긴다. 서버 쪽 traceId 기록이 붙으면 추적표로 실제 확인한다(결정 030).
 - Issue #36에서 `FocusOn-design/onboarding.html` 시안(2026-10-21 합의 순서)에 맞춰 온보딩 4단계 UI를 구현했다: 닉네임(`/onboarding`) → Extension 연결(`/onboarding/extension`) → 권한·동의(`/onboarding/permissions`, 동의 → 권한 확인) → 분석 제외 사이트(`/onboarding/sites`). 서버 호출은 Main `OnboardingService`가 Desktop 토큰으로 처리한다(만료 시 refresh 1회·재시도 1회). Backend 온보딩 API가 아직 없어 실제 왕복은 미검증이다. macOS 권한(화면 기록·카메라·시험 알림)은 Main IPC로 실제 연결했다. 로그인 뒤 온보딩이 필요한 사용자는 `/onboarding/`으로 이동한다(2026-10-22).
 - 서버 API 병합 뒤 실제 Google 계정 왕복, Keychain 저장·복구, 신규·기존 사용자 화면 진입의 수동 QA가 필요하다.
 - 로그인 후 온보딩은 닉네임 → Extension 연결 → 필수 권한·동의 → 분석 제외 사이트 설정 순서로 진행하며, 완료 뒤 대시보드에 진입한다. 목표·시간·개입 설정은 대시보드 `오늘 학습`의 별도 흐름이다.
@@ -68,10 +69,14 @@
 
 - Issue #77(2026-10-27): 로그인·인증 경계 5건 수정(결정 028). 재로그인 오류 정리, Keychain·Google 교환 순서 보장, 복구·갱신 중복 소비 방지, 로그아웃 뒤 늦은 갱신 재저장 방지, 계정 전환 뒤 이전 요청 격리. 팀원 수정안(PR #75)의 Desktop 코드와 회귀 테스트 27개를 가져와 확인했다(수정 전 20개 실패 → 수정 후 통과). 실제 Google 계정 왕복은 미검증이다.
 
+- Issue #80(2026-10-27): 설정 화면(`/settings/`, `settings.html`) 집중·분석·권한·화면 탭과 분석 제외 목록(`/settings/exclusions/`, `exclusions.html`)을 구현했다(결정 029). 홈 사이드바를 `AppSidebar`로 꺼내 `홈`·`설정`을 링크로 연결했다. 집중 설정은 `PUT focus-settings`로 바꿀 때마다 저장하고 실패하면 되돌린다. 제외 사이트는 서버 전체 교체, 제외 앱은 이 기기에 저장한다. 화면 모드는 `nativeTheme`으로 앱 전체에 적용한다. focus-settings·제외 도메인 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 6가지 상태와 저장·되돌리기·권한 다시 확인을 확인했다. 계정·기기 연결 탭은 다음 Issue다.
+- Issue #80 QA(2026-10-31): 실제 Google 계정과 로컬 Docker 서버로 집중 설정·제외 사이트 저장, 제외 앱·화면 모드 재실행 유지, 서버 끊김 시 조회 재시도를 로그·DB로 확인했다(`settings-REPORT.md`). 서버에 없는 API가 `401 AUTH_RELOGIN_REQUIRED`로 응답해 홈에서 로그아웃되는 문제는 백엔드에 요청했다(`settings-missing-api-relogin-ERROR.md`). 권한 QA는 `open -a`로 실행해야 한다(README).
+- 오류 표시 정리(2026-11-01): 빨간색은 실제 오류에만 쓴다(결정 031, #111). 오류 제목은 무엇을 못 했는지, 본문은 `app/lib/error-text.ts`의 원인·할 일 문구다(결정 032, #115). 로그인 실패는 `LOCAL_APP_CONFIG_MISSING`·`LOCAL_BROWSER_OPEN_FAILED`·`LOCAL_GOOGLE_LOGIN_FAILED`·`LOCAL_KEYCHAIN_UNAVAILABLE`로 나뉜다. 시험 알림은 macOS가 거절하면 `shown: false`다(#118). 서버는 없는 API에 `404 NOT_FOUND`를 준다(백엔드 #112). Desktop은 "아직 준비 중"으로 안내하고 로그아웃하지 않는다(#119).
+
 ### 아직 진행하지 않은 작업
 
 - 같은 창에서 글자만 바뀌는 경우(스크롤 등) 30초 재전송 (OCR 텍스트 비교, 결정 024에서 미룸)
-- 설정 › 분석·권한의 제외 앱 관리 (설정 화면 작업 때)
+- 설정 › 계정(닉네임·동의 철회·로그아웃)·기기 연결(코드 받기·연결 해제) 탭
 - 카메라 분석 연동(AVFoundation + Apple Vision 로컬, 선택 동의)
 - 인증·온보딩·리포트 외 Server API 클라이언트와 실제 Backend 왕복 QA
 - 화면 위 포키 F06·F07 말풍선과 위치 옮기기

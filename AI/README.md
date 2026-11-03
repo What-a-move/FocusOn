@@ -1,8 +1,21 @@
 # FocusOn AI
 
-현재 실행 경로는 **Kiwi 키워드 + Qwen 벡터 Hybrid 관련성 평가**다. 사용하지 않는 목표 Graph 생성 Prompt, OpenAI 생성 Client, ChromaDB 저장소, Graph 분석기와 7가지 이전 비교 경로는 2026-10-28 제거했다.
+현재 AI 영역은 **Kiwi + Qwen Hybrid 화면 관련성 분석**과 별도의 **JEV + OpenAI 목표 보조**를 포함한다. 관련성 경로의 미사용 목표 Graph와 이전 비교 코드는 제거했으며 목표 보조의 OpenAI 코드는 유지한다.
 
 ## 실행
+
+## 이 브랜치의 목표 보조 실행 (#12)
+
+JEV·OpenAI·LangGraph 목표 보조와 Streamlit 실행 코드가 포함돼 있다. 아래 공통 scaffold 설명은 이 기능 이외 영역의 상태와 구분한다. 공개 decision 4종과 내부 clarityStatus 6종의 변환, 실제 Backend 연결은 아직 미검증이다.
+
+```bash
+LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q
+PYENV_VERSION=what-a-move pyenv exec python -m streamlit run AI/streamlit_app.py
+```
+
+실행에 필요한 TYPESAFE_API_KEY와 OPENAI_API_KEY는 로컬 AI/.env에만 설정한다. Laya는 비교 전용이며 실제 상태·저장을 결정하지 않는다. 세부 구현은 [현재 상태](docs/CONTEXT.md)와 [공개/내부 계약](docs/api_spec.md)을 따른다. 질문 생성은 최대 2건 병렬 실행하고, 모델 초안을 스트리밍 표시하며 유효한 응답이 없을 때 기본 10초 이후 로컬 질문을 사용한다. 공유·배포 환경에서 원문 trace opt-in을 사용하지 않는다.
+
+## 담당 기능
 
 Backend 전용 FastAPI는 `POST /internal/v1/analysis-runs`에서 수신을 확인하고, `POST /internal/v1/analysis-runs/analyze`에서 Kiwi + Qwen Hybrid 후보를 계산한다. 판정 confidence가 아직 보정되지 않아 공개 `decision`은 UNCERTAIN이며, `candidateDecision`은 미보정 실험값이다. [분석 경로와 한계](docs/features/fastapi-relevance-analysis-REPORT.md) 및 [실행·인증·입력 예제](docs/features/fastapi-reception-REPORT.md)를 따른다.
 
@@ -35,7 +48,7 @@ Backend 전용 FastAPI는 `POST /internal/v1/analysis-runs`에서 수신을 확�
 
 ## 구현 상태와 검증
 
-입력 전처리, Qwen Client, Kiwi Hybrid, 공개 요청 변환·응답 검증 및 내부 FastAPI 수신 경로가 있다. FastAPI에서 실제 분석 실행·Backend 연결, 보정된 confidence, 운영 중복/역순 결과 적용, 이탈 집계·알림은 후속 작업이다. 이전 Graph 분석기의 캐시·단계별 callback은 제거됐으며 실험 코드의 다음 출처 표시는 실제 수집 실행이 아니다.
+입력 전처리, Qwen Client, Kiwi Hybrid, 공개 요청 변환·응답 검증 및 내부 FastAPI 실험 분석 경로가 있다. 실제 Backend 연결, 보정된 confidence, 운영 중복/역순 결과 적용, 이탈 집계·알림은 후속 작업이다. 이전 Graph 분석기의 캐시·단계별 callback은 제거됐으며 실험 코드의 다음 출처 표시는 실제 수집 실행이 아니다.
 
 ```bash
 PYTHONPATH=AI:. python3 -m pytest AI/tests -q

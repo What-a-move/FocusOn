@@ -35,6 +35,7 @@
 
 ### 진행 중인 작업
 
+- Issue #105 모듈 연동 로거(2026-10-29): 공용 `log()`가 Desktop과 같은 JSON 형식으로 기록하고 INFO 이상은 `chrome.storage.local`의 `focuson.logs`에 최근 500건만 둔다. 모든 서버 요청·연결 코드 요청에 `X-Trace-Id`와 `api.*`/`decision.*` OUT·IN·fail, Worker 시작 때 `sw.restart`. 팝업 하단 `로그 복사`로 JSON을 클립보드에 넣는다(결정 016).
 - 세션·pairing API가 dev에 병합되면 실제 계정으로 pairing → 세션 표시 → 토큰 갱신을 확인하고 REPORT를 작성한다.
 - 탭 분석(Issue #61): 실제 Chrome에서 사이트 권한 창 허용·거부, Service Worker 종료 뒤 복구(구현됨) QA와 `analysis-runs` 실제 왕복이 남아 있다.
 - 페이지 본문 최소 수집 범위: 제목·h1~h3·문단·목록·figcaption 최대 2,000자, 코드 내용·입력값 제외(결정 013, 구현 완료).

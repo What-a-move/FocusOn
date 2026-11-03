@@ -24,7 +24,8 @@ test('시작 입력은 5~300분·분 단위·IANA 시간대·알림 1개 이상�
 })
 
 test('집중 설정·세션 응답은 계약 형식만 통과시킨다', () => {
-  assert.deepEqual(parseFocusSettings({ ...options, breakSuggestionEnabled: true }), options)
+  assert.deepEqual(parseFocusSettings({ ...options, breakSuggestionEnabled: true }), { ...options, breakSuggestionEnabled: true })
+  assert.equal(parseFocusSettings(options), null)
   assert.equal(parseFocusSettings({ ...options, interventionLevel: 'LOUD' }), null)
   assert.equal(parseStartedSession({ sessionId: '901', status: 'RUNNING', version: 1, targetDurationMs: 1800000, accumulatedActiveMs: 0, startedAt: '2026-10-24T01:00:00Z', interventionPolicyVersion: 'v1' }).sessionId, '901')
   assert.equal(parseStartedSession({ sessionId: '901', status: 'RUNNING', targetDurationMs: 1800000, startedAt: 'bad', interventionPolicyVersion: 'v1' }), null)

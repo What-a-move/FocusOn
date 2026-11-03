@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { AuthSessionSnapshot, IpcResult } from '../shared/auth-contract.cjs'
 import type { AuthApiError, AuthApiClient, TokenPair, DesktopDevice, ApiResult } from './auth-api.cjs'
 import type { RefreshTokenVault } from './auth-keychain.cjs'
@@ -5,6 +6,9 @@ import type { GoogleOAuthOutcome } from './google-oauth.cjs'
 import { AuthSessionStore } from './auth-ipc.cjs'
 
 const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryable: false }
+// [유지보수] 화면이 원인을 알려 줄 수 있게 서버 장애와 Mac 쪽 실패(Keychain·Google 로그인 창)를 나눈다.
+const KEYCHAIN_UNAVAILABLE: AuthApiError = { code: 'LOCAL_KEYCHAIN_UNAVAILABLE', retryable: true }
+const GOOGLE_LOGIN_FAILED: AuthApiError = { code: 'LOCAL_GOOGLE_LOGIN_FAILED', retryable: true }
 // 서버가 Access Token 만료를 알릴 때 쓰는 공통 code (API_CONTRACT 공통 오류 코드)
 const ACCESS_TOKEN_EXPIRED = 'AUTH_ACCESS_TOKEN_EXPIRED'
 // 만료 직전 토큰으로 요청하다 실패하지 않도록 30초 여유를 두고 미리 갱신한다.
@@ -17,7 +21,7 @@ const wait = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve
 
 export type AuthorizedRequest<T> = {
   path: string
-  method: 'GET' | 'POST' | 'PUT'
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
   expectedStatus: number
   parse: (value: unknown) => T | null
   body?: object
@@ -25,6 +29,10 @@ export type AuthorizedRequest<T> = {
   withDeviceId?: boolean
   /** 요청별 추가 헤더 (예: 세션 명령의 Idempotency-Key). 토큰 갱신 뒤 한 번 다시 보낼 때도 같은 값을 쓴다. */
   headers?: Record<string, string>
+  /** 로그를 서버와 잇는 X-Trace-Id. 없으면 요청마다 새로 만든다 (analysis-runs는 clientRunId). */
+  traceId?: string
+  /** 요청 로그에 함께 남길 값. 로거가 허용 필드만 남기고 제목·본문은 글자 수로 바꾼다. */
+  logFields?: Record<string, unknown>
 }
 const RELOGIN_REQUIRED: AuthApiError = { code: 'AUTH_RELOGIN_REQUIRED', retryable: false }
 
@@ -108,11 +116,14 @@ export class AuthService {
     if (!this.isCurrent(generation)) return this.staleRequest()
     if (request.withDeviceId && !this.deviceId) return { success: false, error: RELOGIN_REQUIRED }
 
+    // [주의] 재시도와 토큰 갱신 뒤 재전송은 같은 요청이라 traceId를 바꾸지 않는다.
+    const traceId = request.traceId ?? randomUUID()
     const send = async (): Promise<ApiResult<T>> => {
       if (!this.isCurrent(generation)) return this.staleRequest()
       const result = await this.api.call(
         request.path, request.method, request.expectedStatus, request.parse, request.body,
-        this.accessToken ?? undefined, { ...request.headers, ...(request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {}) },
+        this.accessToken ?? undefined, { ...request.headers, ...(request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {}), 'X-Trace-Id': traceId },
+        request.logFields,
       )
       return this.isCurrent(generation) ? result : this.staleRequest()
     }
@@ -160,6 +171,11 @@ export class AuthService {
     this.store.publish({ ...snapshot, onboardingStatus })
   }
 
+  /** 로그인 때 받은 이 Desktop의 deviceId. 연결된 Extension을 고를 때 쓴다. */
+  currentDeviceId(): string | null {
+    return this.deviceId
+  }
+
   currentNickname(): string | null {
     return this.store.getSnapshot().user?.nickname ?? null
   }
@@ -200,7 +216,7 @@ export class AuthService {
       this.publish('SIGNED_IN', null, identity.data)
     } catch {
       // [주의] Keychain이 잠겼다면 토큰이 없다고 단정하거나 파일 저장소로 우회하지 않는다.
-      if (this.isCurrent(generation)) this.publish('OFFLINE', SERVICE_UNAVAILABLE)
+      if (this.isCurrent(generation)) this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
     }
   }
 
@@ -227,8 +243,8 @@ export class AuthService {
       return forLogout || this.isCurrent(generation) ? result : this.staleRequest()
     } catch {
       this.forget()
-      if (this.isCurrent(generation)) this.publish('OFFLINE', SERVICE_UNAVAILABLE)
-      return { success: false, error: SERVICE_UNAVAILABLE }
+      if (this.isCurrent(generation)) this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
+      return { success: false, error: KEYCHAIN_UNAVAILABLE }
     }
   }
 
@@ -245,9 +261,9 @@ export class AuthService {
           // Keychain 조회 실패도 화면을 복구 가능한 상태로 바꾼다. 새 로그인에는 적용하지 않는다.
           if (this.isCurrent(generation)) {
             this.forget()
-            this.publish('OFFLINE', SERVICE_UNAVAILABLE)
+            this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
           }
-          return { success: false, error: SERVICE_UNAVAILABLE }
+          return { success: false, error: KEYCHAIN_UNAVAILABLE }
         }
       })
       this.refreshPromise = work
@@ -276,7 +292,7 @@ export class AuthService {
       return
     }
     if (outcome.type === 'failed') {
-      this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
+      this.publish('SIGNED_OUT', GOOGLE_LOGIN_FAILED)
       return
     }
 
@@ -298,7 +314,7 @@ export class AuthService {
       } catch {
         // [주의] 안전한 저장에 실패하면 서버가 토큰을 줬어도 로그인 완료로 표시하지 않는다.
         await this.api.logout(result.data.accessToken)
-        if (generation === this.generation) this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
+        if (generation === this.generation) this.publish('SIGNED_OUT', KEYCHAIN_UNAVAILABLE)
         return
       }
       if (generation !== this.generation) {
@@ -321,11 +337,12 @@ export class AuthService {
       let result: IpcResult<{ loggedOut: true }>
       try { result = await this.logoutSession(generation) }
       catch {
+        // API 실패는 결과로 돌아오므로 여기 오는 것은 갱신 중 Keychain 읽기 실패다.
         if (this.isCurrent(generation)) {
           this.forget()
-          this.publish('OFFLINE', SERVICE_UNAVAILABLE)
+          this.publish('OFFLINE', KEYCHAIN_UNAVAILABLE)
         }
-        result = { success: false, error: SERVICE_UNAVAILABLE }
+        result = { success: false, error: KEYCHAIN_UNAVAILABLE }
       }
       // 서버 장애로 logout이 실패하면 보존한 로그인은 새 요청에 계속 쓸 수 있어야 한다.
       // 이미 시작된 이전 요청은 generation이 달라 재전송되지 않는다.
@@ -369,8 +386,8 @@ export class AuthService {
       await this.vault.clear()
     } catch {
       this.forget()
-      if (this.isCurrent(generation)) this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
-      return { success: false, error: SERVICE_UNAVAILABLE }
+      if (this.isCurrent(generation)) this.publish('SIGNED_OUT', KEYCHAIN_UNAVAILABLE)
+      return { success: false, error: KEYCHAIN_UNAVAILABLE }
     }
     this.forget()
     if (this.isCurrent(generation)) this.publish('SIGNED_OUT')
@@ -383,7 +400,7 @@ export class AuthService {
     const clearedGeneration = ++this.generation
     this.forget()
     let failure = error
-    try { if (deleteStoredToken) await this.vault.clear() } catch { failure = SERVICE_UNAVAILABLE }
+    try { if (deleteStoredToken) await this.vault.clear() } catch { failure = KEYCHAIN_UNAVAILABLE }
     if (this.isCurrent(clearedGeneration)) this.publish('SIGNED_OUT', failure)
   }
 }

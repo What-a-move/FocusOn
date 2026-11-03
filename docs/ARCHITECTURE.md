@@ -83,6 +83,17 @@
 - 페이지 정보, 분석 결과, 학습 세션 상태처럼 여러 영역이 함께 사용하는 구조만 둔다.
 - API 호출이나 런타임 검증을 대신하지 않으므로 Server DTO 검증은 별도로 구현한다.
 
+## 로그·추적 원칙
+
+모듈 연동 문제를 "어느 구간에서 끊겼는지"로 찾기 위해 모든 영역이 같은 형식으로 로그를 남긴다. 정본은 Notion [모듈 연동 로깅 규칙](https://app.notion.com/p/4070b6e5e64c8156abc9d1bff00aef88)이다.
+
+- 로그는 JSON 한 줄이고 `ts`, `level`(ERROR·WARN·INFO·DEBUG), `module`(extension·desktop·backend·ai), `component`, `event`, `traceId`, `durMs`를 포함한다.
+- 각 영역은 공용 로거 함수 하나만 쓴다. `console.log` 등을 직접 쓰지 않고, 잡은 예외는 WARN 이상으로 남긴다.
+- 클라이언트가 요청마다 `traceId`를 만들어 `X-Trace-Id`로 보내고, Server·AI는 같은 값을 끝까지 들고 간다. 모든 경계에서 보내는 쪽 OUT, 받는 쪽 IN을 같은 `traceId`로 남긴다.
+- `event` 이름은 정본 목록 안에서만 쓴다. 판정값은 계약 이름(`RELATED`·`UNRELATED`·`UNCERTAIN`, 차단은 `EXCLUDED`·`PRIVACY_BLOCKED`)을 그대로 쓴다.
+- 시각 `ts`는 벽시계, 소요 시간 `durMs`는 monotonic clock으로 잰다. macOS 절전 중 monotonic clock이 멈출 수 있으므로 오래 유지되는 상태 기록에는 두 값을 함께 남긴다.
+- 로그에 남기지 않는 항목은 [개인정보 기준](DATA_PRIVACY.md#로그-기준)을 따른다.
+
 ## 활동 관련성
 
 | 상태 | 의미 |

@@ -53,6 +53,9 @@ export class AnalysisSender {
       : { ...base, guardStatus: null, metadata: observation.metadata, ...(observation.contentSource === 'DESKTOP_APP_OCR' ? { contentPayload: { text: observation.text } } : {}) }
     const result = await this.auth.authorizedRequest({
       path: `/api/v1/sessions/${sessionId}/analysis-runs`, method: 'POST', expectedStatus: 200, parse: parseAnalysisRun, body, withDeviceId: true,
+      // 로그를 서버 판정 기록과 잇도록 traceId는 clientRunId를 그대로 쓴다. 제목·본문은 로거가 글자 수로만 남긴다.
+      traceId: base.clientRunId,
+      logFields: { sessionId, contentSource, guardStatus: body.guardStatus, title: 'metadata' in observation ? observation.metadata.windowTitle : undefined, text: 'text' in observation ? observation.text : undefined },
     })
     if (result.success) return result.data
     if (result.error.code === 'TOO_MANY_REQUESTS') this.pausedUntil = this.now() + RATE_LIMIT_PAUSE_MS

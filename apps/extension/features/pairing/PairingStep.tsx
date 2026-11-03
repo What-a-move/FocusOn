@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { isLinked } from './extension-auth'
 import { describePairingError, submitPairing, type PairingNotice } from './pairing-api'
+import { LogCopy } from '../session/LogCopy'
 import './pairing.css'
 
 function formatPairingCode(value: string) {
@@ -106,6 +107,7 @@ export function PairingStep({ onLinked, initialNotice = null }: { onLinked?: () 
             <p className="small muted pairing-help">코드는 5분 동안 한 번만 쓸 수 있어요.</p>
           </div>
         )}
+        <LogCopy />
       </section>
     </main>
   )

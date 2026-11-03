@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { flowOf, sessionResultApi, type LearningSummary, type SessionSummary } from './session-result-api'
+import { errorText } from '../../app/lib/error-text'
 import '../onboarding/onboarding.css'
 import './session-result.css'
 
@@ -15,14 +16,15 @@ const REVIEW = {
   GENERATING: { kind: 'pending', icon: 'spinner', heading: '학습 내용을 정리하고 있어요', copy: '잠시만 기다려 주세요.' },
   READY: { kind: 'ready', icon: '✓', heading: '학습 정리가 준비됐어요', copy: '' },
   INSUFFICIENT_DATA: { kind: 'neutral', icon: '–', heading: '이번에는 학습 기록만 남겼어요', copy: '정리할 내용이 부족했어요.' },
-  FAILED: { kind: 'error', icon: '!', heading: '학습 정리를 만들지 못했어요.', copy: '집중 기록은 그대로 남아 있어요.' },
+  // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
+  FAILED: { kind: 'neutral', icon: '–', heading: '학습 정리를 만들지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
   UNKNOWN: { kind: 'neutral', icon: '–', heading: '학습 정리 상태를 확인하지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
 } as const
 
 type View =
   | { kind: 'loading' }
   | { kind: 'missing' }
-  | { kind: 'error' }
+  | { kind: 'error'; code: string }
   | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary | null; retryLearning: boolean }
 
 const minutes = (ms: number) => Math.round(ms / 60000)
@@ -52,7 +54,7 @@ export function SessionResult() {
 
   const load = useCallback(async (id: string) => {
     const [summary, learning] = await Promise.all([sessionResultApi.getSummary(id), sessionResultApi.getLearningSummary(id)])
-    if (!summary.success) { setView({ kind: summary.error.code === 'SESSION_NOT_FOUND' ? 'missing' : 'error' }); return }
+    if (!summary.success) { setView(summary.error.code === 'SESSION_NOT_FOUND' ? { kind: 'missing' } : { kind: 'error', code: summary.error.code }); return }
     setView({ kind: 'ready', summary: summary.data, learning: learning.success ? learning.data : null, retryLearning: !learning.success && learning.error.retryable })
   }, [])
 
@@ -85,9 +87,8 @@ export function SessionResult() {
 
   if (view.kind === 'loading') return <main className="app-window onboarding-window result-window" aria-busy="true" />
   return <main className="app-window onboarding-window result-window">
-    <header className="titlebar"><div className="window-controls" aria-hidden="true"><i /><i /><i /></div></header>
     <div className="scroll">
-      <div className="report">
+      <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
         {view.kind !== 'ready' ? <>
           <header className="hero is-missing">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -95,17 +96,14 @@ export function SessionResult() {
             <div>
               <p className="kicker">집중 리포트</p>
               <h1>{view.kind === 'missing' ? '기록을 찾을 수 없어요' : '기록을 불러오지 못했어요'}</h1>
+              {/* [디자인] 제목이 이미 상황을 말하므로 같은 뜻의 상자를 겹쳐 두지 않고 할 일만 한 줄로 둔다. */}
+              <p className="hero-sub" role={view.kind === 'error' ? 'alert' : undefined}>{view.kind === 'error' ? errorText(view) : '홈에서 집중 기록을 다시 열어 주세요.'}</p>
             </div>
           </header>
-          <div className="notice is-error" role="alert">
-            {view.kind === 'missing'
-              ? <><strong>요청한 집중 기록을 찾지 못했어요.</strong><span>홈에서 다시 확인해 주세요.</span></>
-              : <><strong>집중 기록을 불러오지 못했어요.</strong><span>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</span></>}
-          </div>
-          {view.kind === 'error' && sessionId && <button className="btn btn-ghost retry" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
         </> : <ResultBody summary={view.summary} learning={view.learning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
 
         <div className="actions">
+          {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
           <Link className="btn btn-primary" href="/">홈으로 <span aria-hidden="true">→</span></Link>
         </div>
       </div>
@@ -171,7 +169,7 @@ function ResultBody({ summary, learning, shownMinutes, shownSeconds }: { summary
 
         <section className="block review-block" aria-labelledby="review-title">
           <div className="block-head"><h2 id="review-title">학습 정리</h2></div>
-          <div className={`review-row is-${review.kind}`} role={review.kind === 'error' ? 'alert' : 'status'}>
+          <div className={`review-row is-${review.kind}`} role="status">
             <span className="state-icon" aria-hidden="true">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {review.icon === 'spinner' ? <img className="poki-turn" src="/design/poki-floating-logo-base-v1.png" alt="" /> : review.icon}
@@ -180,6 +178,8 @@ function ResultBody({ summary, learning, shownMinutes, shownSeconds }: { summary
               <strong>{review.heading}</strong>
               {(learning?.status === 'READY' ? learning.overview : review.copy) && <span>{learning?.status === 'READY' ? learning.overview : review.copy}</span>}
             </div>
+            {/* 정리가 끝났으면 핵심 개념·다음 시작 지점까지 담은 학습 노트로 간다(study-review). */}
+            {learning?.status === 'READY' && <Link className="btn btn-ghost review-open" href={`/notes/?session=${encodeURIComponent(summary.sessionId)}`}>정리 보기</Link>}
           </div>
         </section>
       </div>

@@ -1,6 +1,7 @@
 import type { AuthService } from './auth-service.cjs'
+import { log } from './logger.cjs'
 import type { FloatingShow, InterventionAction } from '../shared/intervention-contract.cjs'
-import type { FocusSettings } from '../shared/session-contract.cjs'
+import type { SessionOptions } from '../shared/session-contract.cjs'
 
 // 포키 코칭 문구는 친근한 반말이다(Notion UX 문구·알림 문구 정책 2.1, floating-poki.html). 구체 활동은 추측해 말하지 않는다.
 const COPY = {
@@ -10,11 +11,14 @@ const COPY = {
   BREAK: { say: '최근에 세 번 흐트러졌어.', sub: '잠깐 쉬었다 갈까?' },
 } as const
 
-export type PendingIntervention = { interventionId: string; type: string; channels: string[] }
+const CHANNELS: readonly string[] = ['MOLE_UI', 'MACOS_NOTIFICATION', 'SOUND']
+
+const TYPES = ['OFF_TASK', 'BREAK_SUGGESTION'] as const
+export type PendingIntervention = { interventionId: string; type: (typeof TYPES)[number]; channels: string[] }
 
 /**
- * 알림 목록 응답에서 아직 보이지 않은(PENDING) 알림만 꺼낸다.
- * Notion 명세에는 필드(type, createdAt, channels, status, policyVersion)만 있어 배열 또는 { interventions: [] } 둘 다 읽는다.
+ * 알림 목록 응답에서 아직 보이지 않은(PENDING) 알림만 꺼낸다. 배열 또는 { interventions: [] } 둘 다 읽는다.
+ * type은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)만 보여 준다. 그 밖의 type은 Desktop이 표시하지 않는다(결정 035).
  */
 export function parsePending(value: unknown): PendingIntervention[] | null {
   const list = Array.isArray(value) ? value : (value as { interventions?: unknown } | null)?.interventions
@@ -22,8 +26,8 @@ export function parsePending(value: unknown): PendingIntervention[] | null {
   return list.flatMap((item) => {
     if (typeof item !== 'object' || item === null) return []
     const { interventionId, type, status, channels } = item as Record<string, unknown>
-    if (status !== 'PENDING' || typeof interventionId !== 'string' || typeof type !== 'string') return []
-    return [{ interventionId, type, channels: Array.isArray(channels) ? channels.filter((channel): channel is string => typeof channel === 'string') : [] }]
+    if (status !== 'PENDING' || typeof interventionId !== 'string' || !TYPES.includes(type as PendingIntervention['type'])) return []
+    return [{ interventionId, type: type as PendingIntervention['type'], channels: Array.isArray(channels) ? channels.filter((channel): channel is string => typeof channel === 'string') : [] }]
   })
 }
 
@@ -50,7 +54,7 @@ export class InterventionWatcher {
 
   constructor(private readonly deps: Deps) {}
 
-  async poll(sessionId: string, goalText: string, options: FocusSettings): Promise<void> {
+  async poll(sessionId: string, goalText: string, options: SessionOptions): Promise<void> {
     if (this.polling) return
     this.polling = true
     try {
@@ -59,13 +63,15 @@ export class InterventionWatcher {
       const next = result.data.find((item) => !this.seen.has(item.interventionId))
       if (!next) return
       this.seen.add(next.interventionId)
-      const kind = next.type.includes('BREAK') ? 'BREAK' : 'OFF_TASK'
+      const kind = next.type === 'BREAK_SUGGESTION' ? 'BREAK' : 'OFF_TASK'
       const payload: FloatingShow = { interventionId: next.interventionId, kind, level: options.interventionLevel, goalText, ...COPY[kind === 'BREAK' ? 'BREAK' : options.interventionLevel] }
       // 알림에 채널이 없으면 세션 시작 때 고른 채널을 쓴다.
-      const channels = next.channels.length ? next.channels : options.notificationChannels
+      // 아는 채널만 쓴다. 서버가 모르는 값만 보내면 알림도 로그도 남기지 않는다.
+      const channels = (next.channels.length ? next.channels : options.notificationChannels).filter((channel) => CHANNELS.includes(channel))
       if (channels.includes('MOLE_UI')) this.deps.show(payload)
       // 소리만 골랐어도 소리 있는 알림으로 알린다. 알림과 소리를 함께 골랐으면 알림은 한 번만 띄운다.
       if (channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) this.deps.notify(payload, channels.includes('SOUND'))
+      if (channels.length) log('INFO', 'notify.fire', { component: 'intervention', sessionId, interventionType: next.type, channels })
     } finally {
       this.polling = false
     }

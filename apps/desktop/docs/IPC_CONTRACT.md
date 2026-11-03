@@ -113,7 +113,7 @@ type AuthSessionSnapshot = {
 
 실제 Channel을 추가하면 입력·출력 Type을 `electron/shared/`에 정의하고 이 표를 갱신한다.
 
-현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Preload는 `window.focusOn.permissions`로 노출한다. `permission:notification:get-status`(입력 `void`, 성공 `{ confirmed }`)와 `permission:notification:confirm`(입력 `{ seen: boolean }`, 성공 `{ confirmed }`)은 시험 알림을 본 사용자 확인을 이 기기에 기록·조회한다(2026-10-25, 결정 022). macOS 허용 상태가 아니라 사용자 확인 결과다. `permission:notification:open-settings`(입력 `void`, 성공 `{ opened: boolean }`)는 시스템 설정 › 알림을 연다(2026-10-23 추가).
+현재 인증 Channel의 Type은 `electron/shared/auth-contract.cts`, 권한·알림 Channel(`permission:screen:get-status`, `permission:screen:open-settings`, `permission:camera:get-status`, `permission:camera:request`, `notification:show`)의 Type은 `electron/shared/permission-contract.cts`에 있다(2026-10-22 구현). `notification:show`는 Main의 `NOTIFICATION_TEXT`에 있는 code만 받는다. Main은 `show`·`failed` 이벤트를 최대 3초 기다려 `failed`(macOS 거절 등)면 `shown: false`, `show`거나 허용 창 때문에 답이 늦으면 `shown: true`를 돌려준다. `shown: true`도 실제로 보였다는 뜻은 아니며 사용자의 `보였어요`로 확인한다(Issue #117). Preload는 `window.focusOn.permissions`로 노출한다. `permission:notification:get-status`(입력 `void`, 성공 `{ confirmed }`)와 `permission:notification:confirm`(입력 `{ seen: boolean }`, 성공 `{ confirmed }`)은 시험 알림을 본 사용자 확인을 이 기기에 기록·조회한다(2026-10-25, 결정 022). macOS 허용 상태가 아니라 사용자 확인 결과다. `permission:notification:open-settings`(입력 `void`, 성공 `{ opened: boolean }`)는 시스템 설정 › 알림을 연다(2026-10-23 추가).
 
 온보딩 Channel(2026-10-22 구현, Type은 `electron/shared/onboarding-contract.cts`, Preload는 `window.focusOn.onboarding`):
 
@@ -131,7 +131,7 @@ type AuthSessionSnapshot = {
 - 서버가 `COMPLETED`를 반환하면 Main은 `AuthSessionSnapshot.onboardingStatus`도 갱신해 홈·온보딩 사이를 오가지 않게 한다. 닉네임 저장 성공 시 `user.nickname`도 갱신한다.
 - `FOCUSON_API_BASE_URL`이 없으면 모든 온보딩 Channel은 `SERVICE_UNAVAILABLE`이다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
 
-Google 데스크톱 Client ID 또는 Backend origin이 없거나 브라우저·listener를 시작할 수 없으면 `auth:google-login:start`는 `SERVICE_UNAVAILABLE`, `retryable: false`를 반환한다. 둘 다 설정되면 기본 브라우저·임시 loopback listener 시작 뒤 `{ started: true }`를 반환한다. 이는 **로그인 성공**이 아니라 **인증 시도 시작**만 뜻한다. code callback 뒤 Main이 Backend에 교환을 요청하고 성공 응답의 Refresh Token을 Keychain에 저장한 경우에만 `SIGNED_IN` Event를 보낸다. 서버 API가 아직 없으면 성공 상태를 만들지 않는다. `auth:session:get`은 앱 시작 시 Keychain 복구가 끝난 Snapshot을 반환한다.
+Google 데스크톱 Client ID 또는 Backend origin이 없으면 `auth:google-login:start`는 `LOCAL_APP_CONFIG_MISSING`(`retryable: false`), 브라우저·listener를 시작할 수 없으면 `LOCAL_BROWSER_OPEN_FAILED`(`retryable: true`)를 반환한다. Google 로그인 창이 오류로 끝나면 `LOCAL_GOOGLE_LOGIN_FAILED`, 로그인·갱신·로그아웃 중 Keychain 읽기·쓰기·삭제가 실패하면 `LOCAL_KEYCHAIN_UNAVAILABLE`을 Snapshot `error`에 담는다(결정 032). 둘 다 설정되면 기본 브라우저·임시 loopback listener 시작 뒤 `{ started: true }`를 반환한다. 이는 **로그인 성공**이 아니라 **인증 시도 시작**만 뜻한다. code callback 뒤 Main이 Backend에 교환을 요청하고 성공 응답의 Refresh Token을 Keychain에 저장한 경우에만 `SIGNED_IN` Event를 보낸다. 서버 API가 아직 없으면 성공 상태를 만들지 않는다. `auth:session:get`은 앱 시작 시 Keychain 복구가 끝난 Snapshot을 반환한다.
 
 Google 로그인은 브라우저 왕복이 필요하므로 `auth:google-login:start`는 흐름을 시작한 직후 `{ started: true }`를 반환한다. 이미 `AUTHENTICATING`이면(브라우저 탭을 닫아 callback이 오지 않은 경우 포함) 이전 시도의 listener를 정리하고 새 `state`·verifier로 다시 시작해 `{ started: true }`를 반환한다. 진행 중이던 code 교환 결과는 버리고 서버 토큰을 폐기한다(2026-10-22). 완료·취소·실패 뒤 상태는 `auth:session:changed` Event로 알린다.
 
@@ -156,7 +156,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | --- | --- | --- | --- |
 | `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }` | `GET /api/v1/reports/calendar` |
 | `report:session-summary:get` | `{ sessionId }` | `SessionSummary` (결정 027, 없는 값은 null) | `GET /api/v1/sessions/{id}/summary` |
-| `report:learning-summary:get` | `{ sessionId }` | `{ status: QUEUED·GENERATING·READY·INSUFFICIENT_DATA·FAILED, overview }` | `GET /api/v1/sessions/{id}/learning-summary` |
+| `report:learning-summary:get` | `{ sessionId }` | `{ status: QUEUED·GENERATING·READY·INSUFFICIENT_DATA·FAILED, overview, keyConcepts: [{ name, briefExplanation, sessionEvidence }] (최대 5), nextStartPrompt }` | `GET /api/v1/sessions/{id}/learning-summary` (핵심 개념·다음 시작 지점은 Issue #129에서 추가) |
 | `report:daily:get` | `{ date: 'YYYY-MM-DD' }` | `{ date, totalActiveMs, sessions[{ sessionId, goal, startedAt, endedAt, activeMs }] }` | `GET /api/v1/reports/daily` |
 
 - Preload는 `window.focusOn.reports.getCalendar()`, `getDaily()`로 노출한다. Main은 실제로 있는 월·날짜만 받고, `AuthService.authorizedRequest`(X-Device-Id, GET 재시도)로 조회한다.
@@ -178,7 +178,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 
 | Channel | 입력 | 성공 data | Backend |
 | --- | --- | --- | --- |
-| `session:focus-settings:get` | `void` | `{ interventionLevel, notificationChannels, cameraAnalysisEnabled }` | `GET /api/v1/users/me/focus-settings` |
+| `session:focus-settings:get` | `void` | `{ interventionLevel, notificationChannels, cameraAnalysisEnabled, breakSuggestionEnabled }` (2026-10-27 휴식 제안 추가, 4개 모두 필수) | `GET /api/v1/users/me/focus-settings` |
 | `session:start` | `{ goalId, goalText(화면 표시용, 서버로 안 보냄), targetDurationMs(5~300분, 분 단위), timeZone(IANA), sessionOptions: { interventionLevel, notificationChannels(1개 이상·중복 없음), cameraAnalysisEnabled }, idempotencyKey(UUID v4) }` | `{ sessionId, status, version, targetDurationMs, accumulatedActiveMs, startedAt, interventionPolicyVersion }` | `POST /api/v1/sessions` |
 
 - Main은 `Authorization`(Bearer Access Token, 모든 인증 요청 공통)·`Idempotency-Key`·`X-Device-Id` 헤더를 붙이고, `startReadiness: { screenAnalysisReady }`는 Main이 macOS 권한을 직접 확인해 넣는다(Renderer 입력 아님). POST라 자동 재전송하지 않는다. Renderer는 같은 선택으로 다시 누르면 같은 키를 보낸다.
@@ -239,6 +239,24 @@ Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Ma
 - 포키 창은 `/floating/`을 띄운 macOS panel 창(투명·테두리 없음·다른 앱 위·포커스를 빼앗지 않음)이며, 이 창에서 온 `intervention:act`만 받는다. 문구는 Main이 정해 보낸다.
 - `RECENTER`·`REST`는 `ACKNOWLEDGED`, `CLOSE`는 `DISMISSED`로 기록하고 `REST`는 세션을 일시정지한다. `ACK`(확인했어)는 창만 닫는다(5분 재집중은 화면 상태). 기록 실패는 다시 보내지 않는다.
 - 알림 목록 응답 형식은 Notion에 필드만 있어 `{ interventionId, type, status, channels }` 배열 또는 `{ interventions: [] }`로 읽는다(백엔드 확인 필요).
+
+### 설정 Channel (2026-10-27, Issue #80, 결정 029)
+
+| Channel | 입력 | 성공 data | Backend |
+| --- | --- | --- | --- |
+| `settings:focus-settings:save` | `{ interventionLevel, notificationChannels(1개 이상·중복 없음), cameraAnalysisEnabled, breakSuggestionEnabled }` (4개 필드만) | 저장된 전체 값 | `PUT /api/v1/users/me/focus-settings` |
+| `settings:excluded-domains:get` | `void` | `{ domains }` | `GET /api/v1/users/me/analysis-excluded-domains` (`X-Device-Id`) |
+| `settings:excluded-domains:save` | `{ domains }` (최대 50개, 정규화한 host) | `{ domains }` | `PUT /api/v1/users/me/analysis-excluded-domains` (전체 교체, `X-Device-Id`) |
+| `app:theme:get` | `void` | `{ theme: light \| dark \| system }` | — |
+| `app:theme:set` | `{ theme: light \| dark \| system }` | `{ theme }` | — (`nativeTheme.themeSource` + `userData/preferences.json`) |
+| `settings:consents:get` | `void` | `{ currentVersion, items: [{ type, granted, version, grantedAt, withdrawnAt }] }` | `GET /api/v1/users/me/consents` |
+| `settings:screen-consent:set` | `{ granted: boolean }` | 동의 목록 | `PUT /api/v1/users/me/consents/SCREEN_ANALYSIS` (서버 `currentVersion`, `consentSource: DESKTOP_SETTINGS`) 뒤 readiness를 다시 읽어 `onboardingStatus` 반영 |
+| `settings:devices:get` | `void` | `{ extension: { deviceId, name, lastUsedAt } \| null }` | `GET /api/v1/devices` 중 `type=EXTENSION`·`linkedDesktopDeviceId`가 이 Desktop인 항목 |
+| `settings:extension:unlink` | `{ deviceId }` (숫자 문자열) | 기기 상태 | 이 Desktop에 연결된 Extension일 때만 `DELETE /api/v1/extension-pairings/{id}`(204) 뒤 readiness 반영 (Issue #127) |
+
+- 집중 설정 조회는 기존 `session:focus-settings:get`을 쓴다. 저장은 바꿀 때마다 전체 객체를 보내고, `cameraAnalysisEnabled`는 읽은 값을 그대로 돌려보낸다(카메라 분석 미구현).
+- 설정 화면의 제외 사이트 저장은 온보딩 `onboarding:excluded-domains:save`와 달리 `onboarding-readiness` 단계 완료를 기록하지 않는다.
+- 화면 모드는 앱 시작 때 창을 만들기 전에 저장값을 적용한다. 파일이 없거나 깨졌으면 `system`이다.
 
 ## 보안 규칙
 

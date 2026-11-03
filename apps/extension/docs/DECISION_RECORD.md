@@ -305,3 +305,14 @@ Worker 유휴 종료는 30초 뒤라 15초 타이머는 대부분 그대로 실�
 
 - `packages/shared-types/src/index.ts`
 - `extension/background/tab-analyzer.ts`, `features/session/session-model.ts`
+
+## 결정 016 - Extension 로그는 Desktop과 같은 형식으로 chrome.storage.local에 최근 500건만 둔다
+
+- 결정일: 2026-10-29 / 상태: 확정 (PM 확정 Notion 모듈 연동 로깅 규칙) / Issue #105.
+- 공용 로거는 `features/session/logger.ts` 하나다. 허용 필드만 남기고 `title`·`pageTitle`·`text`는 글자 수로 바꾼다(Desktop 결정 030과 같은 규칙). shared-types는 타입만 두기로 해서(결정 015) 함수는 복사해 둔다.
+- MV3 service worker는 쉬면 꺼져 콘솔 기록이 사라진다. INFO 이상은 `chrome.storage.local`의 `focuson.logs`에 최근 500건만 남긴다. 팝업 하단 `로그 복사`로 JSON을 클립보드에 넣어 공유한다.
+- 공통 요청(`api-client.ts`)과 연결 코드 요청(`pairing-api.ts`)에서 `X-Trace-Id`를 붙이고 `api.*`(분석은 `decision.*`) OUT·IN·fail을 남긴다. 재시도·토큰 갱신 뒤 재전송은 같은 traceId, `analysis-runs`는 `clientRunId`를 쓴다.
+- service worker가 새로 켜질 때마다 `sw.restart`를 남긴다. 세션 상태 전이는 Desktop이 기록하므로 Extension에는 두지 않는다.
+- 팝업과 service worker가 동시에 쓰면 한쪽 줄이 빠질 수 있다. 같은 실행 환경 안에서만 순서대로 쓴다. 문제가 되면 service worker 한 곳에서만 저장한다.
+- 영향받는 파일: `features/session/logger.ts`, `LogCopy.tsx`, `api-client.ts`, `session-api.ts`, `features/pairing/pairing-api.ts`, `PairingStep.tsx`, `SessionPopup.tsx`, `extension/background/index.ts`
+
