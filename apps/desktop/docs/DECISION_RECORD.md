@@ -709,3 +709,16 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 알림 목록 항목에 `interventionId`를 넣고 `type`은 `OFF_TASK`·`BREAK_SUGGESTION` 두 가지로 정한다. Desktop은 그 밖의 type을 표시하지 않는다(예전에는 이름에 `BREAK`가 없으면 모두 이탈 알림으로 보였다).
 - AI 장애·시간 초과는 `UNCERTAIN`·`ANALYSIS_UNAVAILABLE`로 응답하고, 베타까지 AI가 없으면 서버 임시 규칙 판정을 같은 응답 형식으로 쓸 수 있다.
 - 영향받는 파일: `electron/main/intervention-watcher.cts`, `tests/electron/intervention-watcher.test.cjs`, `apps/docs/BETA-API-HANDOFF.md`, 루트 `docs/API_CONTRACT.md`
+
+## 결정 036 - 로그인 완료 페이지와 동의 원문: 색 배경 없이 포키·글자, 넓은 문서형 창
+
+- 결정일: 2026-11-03 / 상태: 확정 (PM 디자인 확인) / Issue #145.
+- Google 로그인 후 브라우저에 뜨는 결과 페이지는 일반 텍스트(`text/plain`) 대신 HTML로 보낸다.
+  - 상자 없이 흰(다크: 검은) 배경 가운데에 포키와 글자만 둔다.
+  - 결과마다 다른 포키를 쓴다: 성공 손 흔들기, 취소 멈춤, 실패 갸웃. 아이콘은 쓰지 않는다.
+  - 브라우저는 앱 파일을 못 읽어 포키를 400px WebP로 줄여 페이지 안에 넣는다. 스크립트·외부 파일은 CSP로 막는다.
+- 동의 원문(온보딩 `자세히` · 설정 `전문 보기`)은 같은 문서 컴포넌트(`ConsentDocument`)로 보여 준다.
+  - 배경은 창 색(흰·검)만 쓴다. 구분은 선과 글자 굵기로 한다.
+  - 창 폭은 720px이고, 소제목은 왼쪽·내용은 오른쪽에 둔다. 버전은 표시하지 않는다(결정 034의 버전 불일치 문제는 표시를 없애 정리).
+  - 내용은 Notion `개인정보 · 동의 · 데이터 보관 정책`(REVIEW)에 맞춰 저장하지 않는 것, 보지 않는 화면, 기기 연결·백업 보관 기간을 채웠다. 출시 전 법률 검토로 바뀔 수 있다.
+- 영향받는 파일: `electron/main/google-oauth.cts`, `oauth-page.cts`, `oauth-page-poki.cts`, `features/onboarding/consent-docs.ts`, `ConsentDocument.tsx`, `consent-doc.css`, `PermissionsStep.tsx`, `features/settings/AccountPanels.tsx`

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { errorText } from '../../app/lib/error-text'
 import { requiredConsents } from '../onboarding/consent-docs'
+import { ConsentDocument } from '../onboarding/ConsentDocument'
 import { onboardingApi } from '../onboarding/onboarding-api'
 import { LoadError, failText } from './SettingsShell'
 import { settingsApi, type ConsentList, type DeviceStatus } from './settings-api'
@@ -135,11 +136,7 @@ export function AccountPanel({ showToast }: { showToast: ShowToast }) {
     </div>
 
     <dialog ref={docsRef} className="fo-dialog fo-docs-dialog" aria-labelledby="docs-title">
-      <h2 id="docs-title">동의 문서</h2>
-      {requiredConsents.map(({ id, detail }) => <section key={id}>
-        <h3>{detail.title}</h3>
-        <dl>{detail.rows.map(([term, value]) => [<dt key={`${term}-t`}>{term}</dt>, <dd key={`${term}-d`}>{value}</dd>])}</dl>
-      </section>)}
+      <ConsentDocument docs={requiredConsents.map(({ detail }) => detail)} titleId="docs-title" />
       <div className="fo-dialog-actions single"><button className="fo-button fo-button-ghost" type="button" onClick={() => docsRef.current?.close()}>닫기</button></div>
     </dialog>
     {confirmDialog}
