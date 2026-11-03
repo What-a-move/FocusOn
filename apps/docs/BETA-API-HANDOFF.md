@@ -252,6 +252,8 @@ Desktop: 10초마다 GET interventions → PENDING 하나를 포키로 표시 �
 - 클라이언트는 AI를 직접 부르지 않는다. 서버가 `analysis-runs`를 받아 AI에 묻고, 위 응답의 `relation`·`confidence`·`reasonCode`로 돌려주면 된다.
 - 판정은 `RELATED` / `UNRELATED` / `UNCERTAIN` 세 가지만 있으면 된다(AI 내부 `SUPPORTING`은 서버가 `RELATED`로 바꿈).
 - AI 입력으로 쓸 수 있는 값: 목표 문구(서버 저장값), `metadata`(앱 이름·창 제목 / 탭 제목·호스트), `contentPayload.text`(있을 때만, 일회성).
+- 서버 → AI는 `POST /internal/v1/analysis-runs` 하나만 부른다. 이 경로가 판정을 바로 돌려준다(아래 확정 사항 6).
+- Desktop OCR은 정리한 글자(`contentPayload.text`)만 보낸다. `ocr.confidence`·`captureStatus`는 베타에서 보내지 않는다.
 
 ## 확정 사항 (2026-11-02, PM 결정 · Notion 반영)
 
@@ -264,3 +266,8 @@ Desktop: 10초마다 GET interventions → PENDING 하나를 포키로 표시 �
    - `reasonCode`는 기존 목록 안에서 쓴다.
    - `policyVersion`은 세션 고정값(`v1`)을 쓴다.
    - AI가 준비되면 서버 안에서 판정기만 바꾼다. 클라이언트 변경은 없다.
+6. **베타 판정 모드 (2026-11-03, Notion `AI 분석 계약` 4.3·4.4·9):** 보정된 confidence가 없어 AI가 늘 `UNCERTAIN`을 내면 이탈 알림이 생기지 않는다. 베타 동안은 다음처럼 한다.
+   - AI는 `FOCUSON_ANALYSIS_DECISION_MODE=candidate`일 때 미보정 후보 판정을 `decision`으로 내고, `promptVersion`에 `-uncalibrated`를 붙이며 `confidence`는 `null`이다.
+   - 서버는 `-uncalibrated` 결과에만 0.75 정규화와 Policy Engine의 `confidence ≥ 0.75` 조건을 적용하지 않고 판정을 그대로 쓴다.
+   - 그대로인 규칙: 앱 이름·탭 제목만 근거인 `UNRELATED`는 이탈에 넣지 않는다. AI 실패·시간 초과(목표 3초)는 `UNCERTAIN` + `ANALYSIS_UNAVAILABLE`이다.
+   - 보정이 끝나면 모드를 끄고 예외를 지운다. 클라이언트 변경은 없다.
