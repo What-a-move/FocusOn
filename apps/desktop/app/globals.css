@@ -128,18 +128,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--fo-focus); 
 /* 불러오기 실패 화면(LoadError). 오류지만 화면을 채우는 상태라 빨간 상자 대신 원인 아이콘과 기본색 글씨로 보여 준다.
    모든 줄을 가운데에 쌓고 문장 폭을 고정해 줄바꿈과 버튼 위치가 흔들리지 않게 한다. */
 .fo-error-state { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 24px; text-align: center; animation: fo-error-in .45s cubic-bezier(.22, 1, .36, 1) both; }
-.fo-error-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--fo-field); color: var(--fo-muted); }
-.fo-error-icon svg { width: 26px; height: 26px; }
-.fo-error-state strong { margin-top: 16px; color: var(--fo-ink); font-size: 18px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
+.fo-error-poki { width: 160px; height: 160px; margin-bottom: 12px; object-fit: contain; }
+.fo-error-state strong { margin-top: 0; color: var(--fo-ink); font-size: 18px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
 .fo-error-copy { max-width: 340px; margin-top: 6px; color: var(--fo-muted); font-size: 14px; line-height: 1.6; word-break: keep-all; text-wrap: balance; }
 .fo-error-retry { height: 40px; margin-top: 18px; padding: 0 18px; border: 1.5px solid var(--fo-ghost-edge); border-radius: 10px; background: var(--fo-surface); box-shadow: 0 3px 0 var(--fo-ghost-edge); color: var(--fo-ink); font-size: 14px; font-weight: 700; cursor: pointer; transition: background .2s ease, transform .1s ease-out, box-shadow .1s ease-out; }
 .fo-error-retry:hover { background: var(--fo-field); }
 .fo-error-retry:active { transform: translateY(3px); box-shadow: 0 0 0 var(--fo-ghost-edge); }
 .fo-error-retry:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 .fo-error-state.is-compact { padding: 16px; }
-.fo-error-state.is-compact .fo-error-icon { width: 44px; height: 44px; }
-.fo-error-state.is-compact .fo-error-icon svg { width: 22px; height: 22px; }
-.fo-error-state.is-compact strong { margin-top: 12px; font-size: 16px; }
+.fo-error-state.is-compact strong { font-size: 16px; }
 .fo-error-state.is-compact .fo-error-copy { max-width: 280px; font-size: 13px; }
 .fo-error-state.is-compact .fo-error-retry { height: 36px; margin-top: 14px; padding: 0 14px; font-size: 13px; }
 @keyframes fo-error-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
