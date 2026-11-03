@@ -1,0 +1,378 @@
+{
+  "goal": {
+    "goalId": "goal-react-001",
+    "goalVersion": 1,
+    "text": "React useState로 객체 상태 변경하기",
+    "confirmed": true,
+    "templateId": "react-object-state"
+  },
+  "cases": [
+    {
+      "caseId": "metadata-related",
+      "observations": [
+        {
+          "sessionId": "synthetic-metadata-related",
+          "runId": "run-metadata-related",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-related-event-01",
+          "sequence": 1,
+          "navigationId": "nav-metadata-related",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "TAB_META",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "React useState 객체 상태 업데이트",
+          "pageTitle": "useState 상태 변경 함수",
+          "urlHost": "react.dev",
+          "text": "",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ],
+      "expectedNextSources": [],
+      "expectedLabel": "RELATED",
+      "purpose": "메타데이터만으로 관련 판정하고 DOM 수집을 건너뜀"
+    },
+    {
+      "caseId": "metadata-unrelated",
+      "observations": [
+        {
+          "sessionId": "synthetic-metadata-unrelated",
+          "runId": "run-metadata-unrelated",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-unrelated-event-01",
+          "sequence": 1,
+          "navigationId": "nav-metadata-unrelated",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "TAB_META",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "Illustrator 벡터 그래픽 포스터",
+          "pageTitle": "포스터와 벡터 그래픽 제작",
+          "urlHost": "adobe.com",
+          "text": "",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ],
+      "expectedNextSources": [],
+      "expectedLabel": "UNRELATED",
+      "purpose": "메타데이터만으로 명확한 무관 주제 판정"
+    },
+    {
+      "caseId": "metadata-to-dom-related",
+      "observations": [
+        {
+          "sessionId": "synthetic-metadata-to-dom-related",
+          "runId": "run-metadata-to-dom-related",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-to-dom-related-event-01",
+          "sequence": 1,
+          "navigationId": "nav-metadata-to-dom-related",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "TAB_META",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "useState 참고",
+          "urlHost": "react.dev",
+          "text": "",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "sessionId": "synthetic-metadata-to-dom-related",
+          "runId": "run-metadata-to-dom-related",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-to-dom-related-event-02",
+          "sequence": 1,
+          "navigationId": "nav-metadata-to-dom-related",
+          "observedAt": "2026-10-21T03:00:02Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "useState로 객체 상태를 업데이트할 때 기존 객체를 직접 수정하지 않고 새 객체를 상태 변경 함수에 전달합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        }
+      ],
+      "expectedNextSources": [
+        "CHROME_DOM"
+      ],
+      "expectedLabel": "RELATED",
+      "purpose": "메타데이터가 부족해 DOM을 요청하고 DOM에서 판정"
+    },
+    {
+      "caseId": "metadata-to-dom-to-ocr",
+      "observations": [
+        {
+          "sessionId": "synthetic-metadata-to-dom-to-ocr",
+          "runId": "run-metadata-to-dom-to-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-to-dom-to-ocr-event-01",
+          "sequence": 1,
+          "navigationId": "nav-metadata-to-dom-to-ocr",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "TAB_META",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "useState 참고",
+          "urlHost": "react.dev",
+          "text": "",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "sessionId": "synthetic-metadata-to-dom-to-ocr",
+          "runId": "run-metadata-to-dom-to-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-to-dom-to-ocr-event-02",
+          "sequence": 1,
+          "navigationId": "nav-metadata-to-dom-to-ocr",
+          "observedAt": "2026-10-21T03:00:02Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_DOM",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "닫기\n공유\n확인",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "sessionId": "synthetic-metadata-to-dom-to-ocr",
+          "runId": "run-metadata-to-dom-to-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "metadata-to-dom-to-ocr-event-03",
+          "sequence": 1,
+          "navigationId": "nav-metadata-to-dom-to-ocr",
+          "observedAt": "2026-10-21T03:00:03Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "useState 상태 업데이트에서는 기존 객체를 직접 수정하지 않고 새 객체를 setter에 전달합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ],
+      "expectedNextSources": [
+        "CHROME_DOM",
+        "CHROME_VIEWPORT_OCR"
+      ],
+      "expectedLabel": "RELATED",
+      "purpose": "DOM 내용이 부족해 화면 OCR까지 요청한 뒤 판정"
+    },
+    {
+      "caseId": "desktop-metadata-to-ocr",
+      "observations": [
+        {
+          "sessionId": "synthetic-desktop-metadata-to-ocr",
+          "runId": "run-desktop-metadata-to-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "desktop-metadata-to-ocr-event-01",
+          "sequence": 1,
+          "navigationId": "nav-desktop-metadata-to-ocr",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "APP_META",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "학습 자료",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "sessionId": "synthetic-desktop-metadata-to-ocr",
+          "runId": "run-desktop-metadata-to-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "desktop-metadata-to-ocr-event-02",
+          "sequence": 1,
+          "navigationId": "nav-desktop-metadata-to-ocr",
+          "observedAt": "2026-10-21T03:00:02Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "useState로 객체 상태를 변경할 때 전개 구문으로 복사한 객체를 setter에 전달합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.92,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ],
+      "expectedNextSources": [
+        "DESKTOP_APP_OCR"
+      ],
+      "expectedLabel": "RELATED",
+      "purpose": "Desktop은 DOM 단계를 거치지 않고 Apple Vision OCR 결과로 판정"
+    },
+    {
+      "caseId": "initial-chrome-ocr",
+      "observations": [
+        {
+          "sessionId": "synthetic-initial-chrome-ocr",
+          "runId": "run-initial-chrome-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "initial-chrome-ocr-event-01",
+          "sequence": 1,
+          "navigationId": "nav-initial-chrome-ocr",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "useState 상태 업데이트에서는 새 객체를 만들어 상태 변경 함수에 전달합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.93,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ],
+      "expectedNextSources": [],
+      "expectedLabel": "RELATED",
+      "purpose": "첫 입력부터 Chrome OCR 데이터가 들어오는 경우"
+    },
+    {
+      "caseId": "initial-desktop-ocr",
+      "observations": [
+        {
+          "sessionId": "synthetic-initial-desktop-ocr",
+          "runId": "run-initial-desktop-ocr",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "initial-desktop-ocr-event-01",
+          "sequence": 1,
+          "navigationId": "nav-initial-desktop-ocr",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "객체 상태를 직접 바꾸지 말고 복사본을 만들어 React setter로 전달합니다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.91,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ],
+      "expectedNextSources": [],
+      "expectedLabel": "RELATED",
+      "purpose": "첫 입력부터 Desktop OCR 데이터가 들어오는 경우"
+    },
+    {
+      "caseId": "ocr-capture-failed",
+      "observations": [
+        {
+          "sessionId": "synthetic-ocr-capture-failed",
+          "runId": "run-ocr-capture-failed",
+          "goalId": "goal-react-001",
+          "goalVersion": 1,
+          "clientRunId": "ocr-capture-failed-event-01",
+          "sequence": 1,
+          "navigationId": "nav-ocr-capture-failed",
+          "observedAt": "2026-10-21T03:00:01Z",
+          "isActiveTarget": true,
+          "sessionStatus": "ACTIVE",
+          "exclusionMode": "NONE",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "WEB_PAGE",
+          "appName": "Google Chrome",
+          "windowTitle": "",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "",
+          "extractionStatus": "FAILED",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.1,
+            "captureStatus": "BLACK_SCREEN"
+          }
+        }
+      ],
+      "expectedNextSources": [],
+      "expectedLabel": "UNCERTAIN",
+      "purpose": "OCR 실패를 무관으로 잘못 판정하지 않는지 확인"
+    }
+  ]
+}

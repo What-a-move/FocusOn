@@ -1,0 +1,30 @@
+/* 동의 문서(온보딩 `자세히` · 설정 `전문 보기`). 제목·요약과 아래 버튼은 고정하고 본문만 스크롤한다.
+   창(dialog)은 열렸을 때 세로 flex·최대 높이를 주고, 이 문서가 남은 높이를 채운다.
+   배경은 창 색(흰색·다크는 검은색)만 쓰고, 구분은 선과 글자 굵기로 한다. */
+dialog.consent-dialog:not(.app-dialog)[open], dialog.fo-docs-dialog[open] { display: flex; flex-direction: column; width: min(720px, calc(100% - 48px)); max-height: min(780px, calc(100dvh - 64px)); padding: 36px 40px 32px; overflow: hidden; }
+.fo-doc { display: flex; flex: 1; flex-direction: column; min-height: 0; text-align: left; }
+.fo-doc-tabs { display: flex; gap: 24px; margin: -4px 0 24px; border-bottom: 1px solid var(--fo-line); }
+.fo-doc-tabs button { position: relative; padding: 0 0 12px; border: 0; background: none; color: var(--fo-muted); font-size: 15px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color .15s ease; }
+.fo-doc-tabs button[aria-selected="true"] { color: var(--fo-ink); font-weight: 700; }
+.fo-doc-tabs button[aria-selected="true"]::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--fo-ink); content: ''; }
+.fo-doc-tabs button:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 4px; border-radius: 4px; }
+.fo-doc .fo-doc-meta { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--fo-muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fo-doc-meta span { padding: 1px 8px; border: 1px solid var(--fo-line); border-radius: 6px; color: var(--fo-muted); font-weight: 700; }
+.fo-doc-meta span.is-required { border-color: var(--fo-ink); color: var(--fo-ink); }
+.fo-doc-head { padding-bottom: 20px; border-bottom: 1px solid var(--fo-line); }
+.fo-doc .fo-doc-head h2 { margin: 12px 0 0; font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.fo-doc .fo-doc-summary { margin: 8px 0 0; color: var(--fo-ink); font-size: 16px; line-height: 1.6; word-break: keep-all; text-wrap: pretty; }
+.fo-doc-body { flex: 1; min-height: 0; margin-right: -8px; padding-right: 8px; overflow-y: auto; animation: fo-doc-in .3s ease both; }
+/* 넓은 창: 소제목은 왼쪽, 내용은 오른쪽에 둔다. */
+.fo-doc-body section { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 24px; padding: 20px 0; }
+.fo-doc-body section + section { border-top: 1px solid var(--fo-line); }
+.fo-doc-body h3 { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.75; }
+.fo-doc-body ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.fo-doc-body li { position: relative; padding-left: 14px; color: var(--fo-ink); font-size: 15px; line-height: 1.75; word-break: keep-all; }
+.fo-doc-body li::before { position: absolute; top: .8em; left: 1px; width: 4px; height: 4px; border-radius: 50%; background: var(--fo-muted); content: ''; }
+@media (max-width: 640px) {
+  dialog.consent-dialog:not(.app-dialog)[open], dialog.fo-docs-dialog[open] { padding: 28px 24px 24px; }
+  .fo-doc-body section { grid-template-columns: 1fr; gap: 8px; }
+}
+@keyframes fo-doc-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fo-doc-body { animation: none; } }

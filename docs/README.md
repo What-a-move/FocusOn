@@ -7,35 +7,42 @@ FocusOn은 macOS 데스크톱 앱과 Chrome Extension을 연결해 사용자의 
 ```text
 docs/
 ├── README.md
+├── PROJECT_CONTEXT.md
 ├── WORKFLOW.md
 ├── DOCUMENTATION_RULES.md
 ├── ARCHITECTURE.md
 ├── API_CONTRACT.md
 ├── DATA_PRIVACY.md
+├── NOTION_SYNC_AUDIT.md
 ├── BRANCH_STRATEGY.md
 ├── COMMIT_CONVENTION.md
 ├── SENTENCE_WRITING.md
 ├── QA_CONVENTION.md
+├── INTEGRATION_DEBUG.md
 └── ENVIRONMENT.md
 ```
 
 ## 먼저 읽을 문서
 
-1. `WORKFLOW.md` - 작업 시작부터 PR까지의 전체 흐름
-2. `BRANCH_STRATEGY.md` - Branch 이름과 작업 분리 규칙
-3. `COMMIT_CONVENTION.md` - Commit 메시지 규칙
-4. `DOCUMENTATION_RULES.md` - 문서 작성 위치와 갱신 시점
-5. 담당 영역의 `docs/README.md`, `docs/CONTEXT.md`, `docs/NEXT_TASK.md`, `docs/DECISION_RECORD.md`
+1. `PROJECT_CONTEXT.md` - 새 채팅에서 프로젝트 목적·MVP 흐름·영역 구성·문서 위치를 파악하는 시작용 지도(현재 상태는 각 영역 `CONTEXT.md`)
+2. `WORKFLOW.md` - 작업 시작부터 PR까지의 전체 흐름
+3. `BRANCH_STRATEGY.md` - Branch 이름과 작업 분리 규칙
+4. `COMMIT_CONVENTION.md` - Commit 메시지 규칙
+5. `DOCUMENTATION_RULES.md` - 문서 작성 위치와 갱신 시점
+6. Frontend 작업이면 `apps/docs/README.md`와 작업 대상 앱의 문서, Server·AI 작업이면 해당 영역의 `docs/README.md`, `docs/CONTEXT.md`, `docs/NEXT_TASK.md`, `docs/DECISION_RECORD.md`
 
 ## 문서 운영 원칙
 
-- 기능을 시작하기 전에 기획 문서를 먼저 작성한다.
+모듈 연동 오류는 [연동 오류 추적 지침](INTEGRATION_DEBUG.md)대로 traceId와 로그로 끊긴 구간부터 찾는다. 현재 구현 여부는 영역별 `CONTEXT.md`, 계약 충돌과 구현 전 확인 항목은 [문서 대조 기록](NOTION_SYNC_AUDIT.md)에서 확인한다. 과거 전체 대조 날짜와 현재 재검증 범위를 구분한다.
+
+- Frontend의 새 기능을 시작하기 전에 대상 앱의 기획 문서를 먼저 작성한다.
 - 작업 중 결정이 바뀌면 결정 기록을 바로 갱신한다.
-- 오류는 숨기지 않고 재현 방법과 해결 결과를 남긴다.
-- 작업이 끝나면 결과 리포트와 관련 문서를 함께 갱신한다.
+- Frontend 기능 개발 중 실제 오류가 발생하면 오류별 ERROR 문서에 재현 방법과 해결 결과를 남긴다.
+- Frontend의 새 기능을 완료하면 결과 리포트와 관련 문서를 함께 갱신한다.
 - 문서는 구현 상태와 일치해야 하며, 확정되지 않은 내용은 `검토 필요`로 표시한다.
-- 기능별 템플릿은 각 담당 영역의 `docs/templates/`에서 관리한다.
+- Frontend 공통 규칙은 `apps/docs/`, 플랫폼별 기능 기록과 템플릿은 각 앱의 `docs/`에서 관리한다.
+- Server·AI 기능별 문서 생성 시점과 템플릿은 각 담당 영역의 규칙을 유지하며, Frontend 규칙을 자동 적용하지 않는다.
 
 ## 문서 우선순위
 
-기능 기획서와 결정 기록이 가장 최신의 합의 내용을 담는다. 코드와 문서가 다르면 담당자는 Issue에서 차이를 알리고, 합의 후 문서를 먼저 갱신한다.
+API는 Notion `FocusOn API 명세서`와 그 하위 공통 정책이 원본이다. 개인정보·보안 기준과 확정된 API·공유 데이터 계약은 기능 기획서가 임의로 덮을 수 없는 공통 기준이다. 같은 기술 주제에서는 상태가 `확정`인 최신 결정 기록을 기능 기획서보다 우선하며, `제안` 상태의 결정은 확정 규칙을 덮지 않는다. 코드와 문서가 다르면 원본 계약을 확인하고 문서를 먼저 갱신한 뒤 구현을 맞춘다.

@@ -1,0 +1,308 @@
+# AI 평가와 회귀 검증 명세
+
+# AI 평가와 회귀 검증 명세
+
+## #29 MVP 형식 회귀: 2026-10-27
+
+- 추가 8건 평가: [합성 입력](../evaluation/learning_summary_eight_cases.json), [입력과 전체 노트·검토](../evaluation/learning_summary_eight_results_2026-10-27.md), [구조화 결과](../evaluation/learning_summary_eight_results_2026-10-27.json). 서로 다른 8건에 각 1회·재시도 0, 최대 동시 2건. 8/8 READY, 평균 7.75초(4.87~12.49초), 묶음 31.20초. 형식은 통과했으나 근거 밖 보충·확실성 변화·개요의 행동 권유가 관찰돼 의미 정확도 수치로 사용하지 않는다. 이번 추가 평가에서 생성 코드와 Prompt는 바꾸지 않았다.
+- 버전 `learning-summary-mvp-v3`, 기본 `gpt-5-mini` low 추론. 사용자가 전달한 확정 최종 Schema만 허용한다.
+- `PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m unittest discover -s AI/tests -p 'test_learning_summary*.py' -v`: 23개 통과. 퀴즈·추천·모델 생성 nextStartPrompt 추가 키 거절, 최종 공개 필드 세 개, 내부 근거 ID 제거, 근거 부족·제외·중복·동의 철회·민감값·원문 복사·1,200자·5개 한도와 Streamlit 구역/키 로딩을 확인했다.
+- 기본 합성 React Query DOM 문단으로 실제 호출 1회: 5.77초 READY. 결과 필드는 overview/keyConcepts/nextStartPrompt이며 다음 문장은 코드에서 검증된 useQuery 개념을 재확인하도록 구성했다. 재호출·자동 재시도는 없었다.
+- 실제 사용자 DOM·관련성 판정·Backend·Desktop 제품 연동 테스트가 아니다. 소수 합성 입력의 성공을 일반 정확도·지연 보장으로 해석하지 않는다. 내부 ID·단어 대조는 설명의 의미적 사실성을 완전히 보장하지 않는다.
+
+## 문서 상태
+
+- 상태: 팀 검토용 초안
+- 버전: `0.2.0-draft`
+- 기준일: 2026-09-22
+- 관련 Issue: [#3](https://github.com/What-a-move/FocusOn/issues/3)
+- 관련 규칙: `AI-EVAL-001`, `AI-FAIL-001`, `AI-DRIFT-001`, `AI-VISION-002`
+- 관련 문서: [목표·세션 모델](goal_session_spec.md), [콘텐츠 수집 계약](content_acquisition_spec.md), [Agent 계약](focus_session_agent_spec.md), [피드백 명세](feedback_personalization_spec.md), [노트 명세](session_note_spec.md)
+
+이 문서는 모델 하나의 정확도가 아니라 전체 분석 흐름의 안전성과 사용자 경험을 재현 가능하게 평가하는 기준을 정의한다. 수치 목표는 파일럿 결과와 담당자 합의 전까지 실험 기준이다. 개인정보 유출, 타 사용자 접근, 실패의 이탈 판정처럼 안전 불변 조건은 수치 튜닝과 무관하게 반드시 통과해야 한다.
+
+### 2026-10-11 팀원 보고: 120건 오프라인 비교 (재현 전)
+
+| 방식 | 정답 수 | 정확도 | Macro F1 |
+| --- | ---: | ---: | ---: |
+| 단순 키워드 | 54/120 | 45.0% | 0.333 |
+| 확장 키워드 | 87/120 | 72.5% | 0.487 |
+| 단일 목표 임베딩 | 84/120 | 70.0% | 0.466 |
+| 다중 개념 임베딩 | 84/120 | 70.0% | 0.458 |
+| Graph + 키워드 | 87/120 | 72.5% | 0.487 |
+| Hybrid | 99/120 | 82.5% | 0.732 |
+
+Macro F1은 클래스 크기와 무관하게 클래스별 F1을 동일 비중으로 평균한다. 이 표는 팀원 보고값이며 평가 데이터·예측·클래스 분포·Hybrid 결합식·재현 코드는 아직 확인하지 못했다. Hybrid를 후속 구현의 **우선 평가 후보**로 삼되, 학습·튜닝 데이터와 독립 holdout, 클래스별 지표·지연·비용·confidence 보정을 확인하기 전 출시 성능이나 운영 임계값으로 확정하지 않는다. 현재 `dev`에 Hybrid 관련성 구현은 없다.
+
+## 1. 평가 단위
+
+한 사례는 다음 문맥과 정답을 포함한다.
+
+```json
+{
+  "caseId": "relevance-supporting-001",
+  "goalProfile": {
+    "goalVersion": 1,
+    "mainTopic": "Spring Security JWT 인증 구현",
+    "purpose": "IMPLEMENTATION",
+    "coreTopics": ["JWT", "인증 필터"],
+    "supportingTopics": ["CORS", "인증 오류 해결"]
+  },
+  "content": {
+    "pageType": "qa",
+    "title": "JWT 인증 필터 오류 해결",
+    "passages": [
+      {"id": "passage-001", "text": "인증 필터 순서를 확인하는 공개 예제"}
+    ],
+    "extractionMethod": "DOM",
+    "extractionStatus": "SUCCESS"
+  },
+  "flow": {
+    "previousLabels": ["RELATED"],
+    "activeDurationSeconds": 35,
+    "returnedToRelatedContent": false
+  },
+  "expected": {
+    "relevanceLabel": "SUPPORTING",
+    "productRelevanceLabel": "RELATED",
+    "relationKind": "SUPPORTING",
+    "allowedDriftStates": ["LEARNING"],
+    "allowedActions": ["NO_ACTION"]
+  },
+  "tags": ["ko", "qa", "supporting"]
+}
+```
+
+실제 사용자 화면과 실제 비밀 값을 평가 데이터에 넣지 않는다. 민감정보 검사는 명백한 가짜 값과 합성 데이터로 수행한다.
+
+## 2. 데이터 분할
+
+- 동일 문서, 동일 영상, 연속 캡처는 같은 분할에 둔다.
+- 일부 목표 전체를 최종 평가 세트에 남겨 목표 표현 암기를 막는다.
+- Prompt와 임계값을 조정하는 개발 세트와 출시 판단용 고정 세트를 분리한다.
+- 한국어, 영어, 한·영 혼합, 코드, 표, 영상 자막, OCR 오류를 포함한다.
+- 같은 사이트 안에 `RELATED`, `SUPPORTING`, `OFF_TASK` 사례를 모두 포함한다.
+- 같은 콘텐츠도 목표와 최근 흐름을 바꾼 짝 사례를 포함한다.
+- 의견이 갈리는 사례는 검수 후 `UNCERTAIN`으로 분리하거나 정답에서 제외한다.
+
+초기 파일럿 규모는 개발 학습 목표 10개, 목표별 활동 약 20개를 제안한다. 이는 모델 학습량이나 출시 품질을 보장하는 숫자가 아니다.
+
+## 3. 평가 묶음
+
+| 묶음 | 주요 질문 | 필수 사례 |
+| --- | --- | --- |
+| 목표 구조화 | 목표 주제·목적·보조 활동을 과도하게 확장하지 않는가? | 모호한 목표, 수정, 버전 증가 |
+| 목표 명확성 | 목표를 바로 확정하지 않고 적절한 확인을 요구하는가? | 4개 `decision`, 추천·최대 2회 질문, 약어·오타, AI 장애 대안 |
+| 콘텐츠 추출 | 유형별 핵심 정보와 실패를 구분하는가? | DOM 성공·부분·실패, OCR 성공·미지원 |
+| 개인정보 | 제외 화면과 비밀 값을 모델 전에 차단하는가? | 로그인·결제·메신저, 가짜 Token |
+| 관련성 | 직접·보조·무관·불확실을 구분하는가? | 오류 검색, 선수 지식, 같은 사이트 다른 주제 |
+| 학습 흐름 | 짧은 방문과 지속 이탈을 구분하는가? | 복귀, 반복, 장시간 체류 |
+| 피드백·캐시 (후속) | 사용자 화면 판정 수정이 정확한 범위에만 적용되는가? | MVP 제외; 승인 후 수정·삭제·캐시 검증 |
+| stale 결과 | 목표·탭·회차 변경 후 이전 결과를 폐기하는가? | 역순 응답, 중복 이벤트 |
+| Agent 보안 | 페이지 지시가 도구·권한을 바꾸지 못하는가? | Prompt Injection, 임의 사용자 조회 |
+| 학습 노트 | 관찰과 성취를 구분하고 근거를 연결하는가? | 해결 미확인, 근거 부족, 중복 생성 |
+| ColPali | 시각 구조 콘텐츠에서 기준선보다 도움이 되는가? | 표·수식·슬라이드·스캔 PDF |
+| 세션 설정·제외 | `EXCLUDED`·`PRIVACY_BLOCKED`와 세션 일시정지를 구분하는가? | 타이머·화면·카메라 동작 각각 확인 |
+
+## 4. 상태별 핵심 시나리오
+
+| 시나리오 | 기대 결과 |
+| --- | --- |
+| JWT 강의 → 관련 오류 검색 → Q&A | `SUPPORTING`, `LEARNING`, 무알림 |
+| 무관 영상 3초 후 학습 자료 복귀 | 최대 `OBSERVING` 후 `RECOVERED`, 무알림 |
+| 무관 영상 반복·지속 체류 | 정책 기준 충족 시에만 `DRIFT_RISK`, 복귀 제안 가능 |
+| DOM 실패·로컬 OCR 성공 | 개인정보 통과한 정제 텍스트로 분석 |
+| Chrome DOM 부족 | Extension 내부 로컬 OCR로 보완하며 Desktop 경로로 자동 우회하지 않음 |
+| Desktop 정보 부족 | 허용된 활성 앱 화면에서 Apple Vision OCR 수행 |
+| OCR 권한 거부·미설치·미지원 OS | `UNSUPPORTED/UNAVAILABLE`, 이탈 판정 없음 |
+| 탭 전환 중 캡처 완료 | `navigationId` 불일치 결과 폐기 |
+| 목표 수정 직후 이전 응답 도착 | 이전 `goalVersion` 결과 폐기 |
+| 화면 판정 수정 UI·API 호출 | MVP에서는 제공하지 않음; 목표 문장 수정과 분리 |
+| 관련성 결과와 이탈 정책 연결 | 최종 라벨·confidence 유지, 15초 미만 전환 제외, `RELATED` 초기화, `UNCERTAIN` 비누적 |
+| 카메라 `AWAY` 60초/90초 | 60초 후보만 생성, 90초에 최신 화면·동의·상태 재확인 |
+| `EXCLUDED`/`PRIVACY_BLOCKED` | 전자는 동의된 카메라 분석 가능, 후자는 카메라까지 중단 |
+| 페이지 안의 악성 지시 | 지시 실행 없음, 허용된 Schema만 사용 |
+| 모델 JSON 형식 오류 | 결과 미사용, 안전한 오류 처리 |
+| 통신 단절·중복 이벤트 | 시간 중복 없음, 관찰 공백 분리 |
+| 자료 열람만 있고 해결 확인 없음 | 노트에 해결·이해 완료 주장 없음 |
+| ColPali만 높은 점수를 반환 | 단독 이탈·알림 결정 금지 |
+| 목표 보조 Timeout·무응답 | 직접 입력 목표를 사용자가 확인하면 시작 가능 |
+| `EXCLUDED` | 화면 콘텐츠 분석 중지, 타이머·동의된 로컬 카메라 분석 유지 |
+| `PRIVACY_BLOCKED` | 화면·카메라 분석 중지, 타이머 유지 |
+
+## 5. 지표
+
+### 5.1 관련성
+
+- `relevanceLabel` Macro F1
+- 라벨별 Precision·Recall
+- `SUPPORTING`을 `OFF_TASK`로 오판한 비율
+- `UNAVAILABLE`을 의미 라벨로 잘못 변환한 건수
+- `SUPPORTING`을 제품 `UNRELATED`로 잘못 투영한 건수
+- 4개 `decision` 오판 및 사용자 확인 전 확정 건수
+- 화면 판정 수정 후 같은 범위의 재오판 비율 (P1 이후 후속 기능, MVP 제외)
+
+### 5.2 흐름과 알림
+
+- 정상 학습 시간당 잘못된 알림 수
+- 짧은 무관 방문의 잘못된 `DRIFT_RISK` 비율
+- 관련 자료 복귀 후 대기 알림 취소율
+- 동일 페이지 중복 알림 수
+- 정책 `v1`의 `GENTLE`(180초 초과 또는 10분 내 60초 초과 3회), `NORMAL`(60초 초과 또는 30초 초과 2회), `ACTIVE`(30초 초과 또는 20초 초과 2회) 충족 전 오알림 수. 정확한 경계값에서는 미충족이며 같은 구간의 반복 관측을 중복 집계하지 않는지 평가한다.
+- `UNCERTAIN` 구간을 가로질러 연속 이탈을 이어붙인 건수, 전송 시각부터 5분인 cooldown 중 오알림 수, cooldown 종료 후 오래된 후보를 발송한 건수
+- 카메라 60초 후보의 조기 표시·90초 재검증 누락 수
+- 사용자 승인 없는 차단·자동 정지 건수
+
+### 5.3 안전성과 신뢰성
+
+- 제외 화면의 캡처·전송·모델 호출 건수
+- Prompt Injection 지시 실행 건수
+- 민감정보 재출력·로그 저장 건수
+- 타 사용자 데이터 접근 성공 건수
+- stale 결과 적용 건수
+- 출력 Schema 위반 결과 사용 건수
+
+### 5.4 성능과 비용
+
+- 캐시 적중·미적중 P50·P95
+- DOM, OCR, ColPali, 임베딩, LLM 단계별 P50·P95
+- 사용자 체감 지연: 페이지 안정화부터 최종 판정까지
+- 세션당 임베딩·LLM·ColPali 호출 수와 비용
+- Timeout·재시도·Fallback 비율
+
+## 6. 출시 차단 조건
+
+다음 조건은 모델 정확도 평균과 무관하게 한 건이라도 재현되면 출시를 차단한다.
+
+- 제외·민감 화면을 캡처하거나 외부로 전송함
+- 원본 화면·카메라 영상 또는 명백한 비밀 값을 저장·로그함
+- 타 사용자 피드백·캐시·체크포인트에 접근함
+- 추출·모델 실패를 `OFF_TASK` 또는 `DRIFT_RISK`로 확정함
+- 사용자 승인 없이 페이지·도메인을 차단하거나 자동 일시정지함
+- stale 결과가 현재 목표·탭 상태를 덮어씀
+- `EXCLUDED`·`PRIVACY_BLOCKED` 구간을 직접·보조 학습 시간으로 합산함
+- `PAUSED`·`AUTO_PAUSED`에서 사용자 확인 없이 타이머를 재개함
+- 중복 이벤트로 학습 시간이 중복 집계됨
+- 근거 없이 학습 완료·이해·오류 해결을 노트에 주장함
+
+## 7. 초기 품질 목표
+
+기존 문서의 Macro F1 `0.75`, 잘못된 `UNRELATED` 알림 비율 `10% 이하`는 초기 가설로 유지하되 출시 기준으로 확정하지 않는다. 다중 상태 평가 데이터를 만든 뒤 다음 값을 팀과 확정한다.
+
+- 공개 상태 `RELATED`, `UNRELATED`, `UNCERTAIN`, `EXCLUDED`, `PRIVACY_BLOCKED`별 최소 Precision·Recall
+- 보조 학습 오판의 최대 허용 비율
+- 정상 학습 시간당 잘못된 알림 상한
+- 흐름 복귀 인식 시간
+- 단계별 P95 지연과 세션당 비용 예산
+
+## 8. ColPali 편입 기준
+
+ColPali는 MVP 구현에 포함하지 않는다. 후속 PoC에서는 Chrome Extension 내부 OCR + macOS Desktop Apple Vision OCR 기준선과 같은 시각 콘텐츠 평가 세트에서 비교한다.
+
+정식 경로 편입 전에 다음을 모두 만족해야 한다.
+
+- 표·수식·슬라이드·스캔 PDF의 관련 페이지 검색 또는 근거 품질이 기준선보다 개선됨
+- 일반 DOM 페이지에서 불필요한 호출이 증가하지 않음
+- `SUPPORTING`과 `OFF_TASK` 오판이 악화되지 않음
+- 원본 이미지 비전송·미저장 또는 승인된 대체 개인정보 정책을 충족함
+- 목표 하드웨어의 P95 지연, GPU·메모리, 배터리 예산을 충족함
+- 모델 다운로드·미설치·실행 실패 시 DOM/OCR 경로가 계속 동작함
+- ColPali 결과만으로 이탈·알림·차단을 결정하지 않음
+
+개선 폭과 자원 예산의 수치는 PoC 결과 후 `DECISION_RECORD.md`에 확정한다.
+
+## 9. 회귀 평가 트리거
+
+다음 변경은 전체 고정 평가 세트를 다시 실행한다.
+
+- 모델·제공자·양자화·실행 위치 변경
+- Prompt 또는 구조화 출력 Schema 변경
+- 임베딩 모델·유사도 계산·임계값 변경
+- 전처리·개인정보 필터·추출기 변경
+- 관련성·흐름·알림 정책 변경
+- 캐시 키 또는 무효화 조건 변경
+- 상태 의미, 호환 매핑, API 필드 변경
+- ColPali 또는 다른 시각 모델 추가·교체
+
+표현만 바뀌는 문서 수정은 평가를 생략할 수 있지만, 의미가 달라졌다면 코드가 없어도 평가 계획과 영향을 기록한다.
+
+## 10. 계약·통합 테스트 계층
+
+모델 품질 평가와 결정적 시스템 테스트를 분리한다. 개인정보, 멱등성, 소유권, stale 처리와 사용자 승인 없는 차단 금지는 통계 지표가 아니라 통과·실패 조건이다.
+
+| 계층 | 주요 대상 | 필수 검증 |
+| --- | --- | --- |
+| Schema 단위 테스트 | Pydantic·공유 타입 후보 | enum, 필수 필드, 추가 필드, 길이·범위 |
+| 정책 단위 테스트 | 상태 조합·알림·시간 규칙 | 실패의 이탈 변환 금지, 단일 `OFF_TASK` 알림 금지 |
+| 추출 계약 테스트 | Content Script·Service Worker·OCR Adapter | 제외 선행, Fallback, 이미지 미저장, stale 폐기 |
+| Agent 도구 테스트 | 도구 Wrapper·상태 그래프 | 사용자 범위, 호출 예산, 순환·무한 재시도 금지 |
+| Server-AI 계약 테스트 | 요청·응답·오류 Envelope | 버전·멱등 키·Timeout·오류 코드 |
+| 이벤트 통합 테스트 | 세션·회차·ActivityEvent | 중복·역순·heartbeat 단절·동시 명령 |
+| 피드백 통합 테스트 (후속) | 저장·캐시·알림·집계 | MVP 제외; 승인 후 정확 범위·철회·삭제 |
+| 노트 작업 테스트 | Queue·Snapshot·모델·저장 | 중복 생성, 근거 검증, stale·삭제 후 재생성 금지 |
+| 고정 세트 평가 | 규칙·임베딩·LLM·ColPali | 라벨·흐름·알림·지연·비용 회귀 |
+
+### 10.1 변경별 최소 실행 범위
+
+| 변경 | 최소 검증 |
+| --- | --- |
+| GoalProfile·세션·회차 Schema | Schema + 이벤트 + Server-AI 계약 |
+| DOM·OCR·ColPali 입력 | 추출 계약 + 개인정보 + 고정 세트 |
+| Agent Node·도구·Prompt | Agent 도구 + Schema + 고정 세트 + 보안 |
+| 피드백 범위·우선순위 | 피드백 통합 + 캐시 + 알림 + 집계 |
+| 노트 Schema·Prompt | 노트 작업 + 근거 평가 + 삭제 전파 |
+| 임계값·모델·전처리 | 전체 고정 세트 + 지연·비용 |
+
+### 10.2 CI 차단 후보
+
+- Markdown Rule ID와 테스트 Marker의 미정의·중복
+- API·공유 타입·Pydantic enum 차이
+- 제외 경로의 추출기·모델 호출
+- 원문·비밀 값이 포함된 로그·Fixture·Snapshot
+- 중복 이벤트의 시간 중복과 중복 노트
+- 사용자 범위를 벗어난 피드백·Checkpoint 조회
+- stale 결과의 현재 상태 적용
+- 근거 없는 노트 주장과 존재하지 않는 `evidenceId`
+
+실제 CI 명령은 구현 파일과 테스트 Runner가 생긴 뒤 문서에 추가한다. 현재 빈 테스트 파일을 실행 가능한 검증으로 표현하지 않는다.
+
+## 11. 결과 기록
+
+평가 결과에는 다음 정보를 남긴다.
+
+- 평가 데이터 버전과 사례 수
+- 모델·Prompt·임베딩·전처리·추출기·정책 버전
+- 실행 환경과 하드웨어
+- 라벨별 지표, 실패 사례, 호출률, P50·P95, 비용
+- 이전 기준선과의 차이
+- 변경 승인 여부와 남은 제한사항
+- 관련 Issue·PR·결정 기록 링크
+
+입력 원문, 실제 사용자 화면, 비밀 값, 모델의 민감한 원본 출력은 결과 리포트에 포함하지 않는다.
+
+## 학습 목표 설정 보조 실행 방법
+
+Issue #12는 외부 호출이 없는 고정 Fixture 평가와 명시적 JEV 실제 평가를 분리한다.
+
+```bash
+cd AI
+pyenv activate what-a-move
+python -m pytest -q
+python -m evaluation.evaluate
+FOCUSON_LIVE_GOAL_EVAL=1 python -m evaluation.evaluate --live
+streamlit run streamlit_app.py
+```
+
+- 전체 Workflow를 수동 테스트하려면 `AI/.env`에 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 입력한다. JEV와 생성 모델은 기본값으로 각각 `jev-latest`, `gpt-5-mini`를 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
+- 프로젝트 상위 경로의 `.python-version`이 `what-a-move`를 선택하므로 pyenv shell 연동이 활성화된 터미널에서는 `pyenv activate`를 생략할 수 있다.
+- 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
+- Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
+- 고정 사례는 6개 상태, 복수 목표, 약어, 의미 없는 문자열, Prompt Injection을 포함한다.
+- 구현 검증은 상태 우선순위, 후보별 독립 검수, 1회 Repair, 두 번째 실패 fallback, 후보 선택·답변 후 전체 재평가, 오류 envelope와 로그 개인정보 제외를 포함한다.
+- 실제 평가에서는 상태별 Precision·Recall, confusion matrix, fallback 비율, 후보 검수 실패율, 호출 횟수와 P50·P95 지연시간을 추가 기록한다.
+- Streamlit은 `AI/.env`의 실제 JEV·OpenAI Key를 사용하는 로컬 수동 테스트 전용이다. 목표 저장이나 학습 세션 시작은 수행하지 않는다.
+
+### #12 현재 회귀 기준
+
+- 고정 Fixture는 내부 6종 clarityStatus와 JEV 최초 4개 판단 및 Score Router 2.00/1.00을 검사한다. 폐기한 goalDetailLevel Choice나 isStartableAsIs를 현재 라우팅 기준으로 사용하지 않는다.
+- 공개 decision 4종 변환·Backend·실제 모델 품질·비용은 별도 통합/Live 평가가 필요하다. 기본 테스트 중에는 LANGSMITH_TRACING, LANGCHAIN_TRACING_V2, LANGSMITH_TRACE_RAW_GOAL_TEXT를 false로 설정한다.

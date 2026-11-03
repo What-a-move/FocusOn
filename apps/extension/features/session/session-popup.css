@@ -1,0 +1,38 @@
+/* 디자인 원본: FocusOn-design/extension-popup.html (E02·E03·E06). 색 토큰·버튼·머리는 pairing.css(.pairing-stage)를 쓴다. */
+.pairing-stage { --track: #efefef; --dim: #cfcfcf; --danger-strong: #d92d20; --danger-edge: #a32218; }
+
+.pairing-stage .conn[data-tone='bad'] { color: var(--danger); }
+.pairing-stage .conn[data-tone='bad']::before { background: var(--danger); }
+
+.pairing-stage .session-body { display: grid; gap: 16px; align-content: start; }
+.pairing-stage .session-body .btn { margin-top: 0; }
+.pairing-stage .btn-ghost { border: 1.5px solid var(--ghost-edge); background: var(--surface); color: var(--ink); box-shadow: 0 4px 0 var(--ghost-edge); }
+.pairing-stage .btn-ghost:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+.pairing-stage .btn-danger { background: var(--danger-strong); color: #fff; box-shadow: 0 4px 0 var(--danger-edge); }
+.pairing-stage .btn-danger:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+.pairing-stage .actions { display: grid; gap: 10px; }
+.pairing-stage .actions.two { grid-template-columns: 1fr 1fr; }
+.pairing-stage .text-btn { display: inline-flex; min-height: 24px; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: var(--ink); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pairing-stage .text-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.pairing-stage .facts { margin: 0; padding: 0; list-style: none; }
+.pairing-stage .facts li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.5; }
+.pairing-stage .facts li:first-child { border-top: 0; padding-top: 0; }
+.pairing-stage .facts li > span:last-child { color: var(--muted); }
+.pairing-stage .facts b { display: block; margin-bottom: 1px; color: var(--ink); font-size: 14px; font-weight: 700; }
+.pairing-stage .facts .mark { font-weight: 700; line-height: 1.5; text-align: center; }
+.pairing-stage .facts .yes { color: var(--success); }
+.pairing-stage .facts .no { color: var(--muted); }
+.pairing-stage .checks { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 13px; font-weight: 600; }
+.pairing-stage .checks span::before { content: '✓ '; color: var(--success); font-weight: 700; }
+
+.pairing-stage .label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.pairing-stage .goal { font-size: 18px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
+.pairing-stage .timer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 76px; }
+.pairing-stage .timer { display: block; font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.pairing-stage .timer.is-dim { color: var(--faint); }
+.pairing-stage .timer-cap { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; font-weight: 600; }
+.pairing-stage .timer-row .poki { height: 76px; }
+.pairing-stage .progress { height: 8px; overflow: hidden; border-radius: 99px; background: var(--track); }
+.pairing-stage .progress i { display: block; height: 100%; border-radius: inherit; background: var(--gold); transition: width .6s ease; }
+.pairing-stage .progress.is-dim i { background: var(--dim); }

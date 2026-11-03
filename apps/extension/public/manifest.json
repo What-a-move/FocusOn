@@ -2,18 +2,14 @@
   "manifest_version": 3,
   "name": "FocusOn Extension",
   "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAitZQQ9CM+Vc6G3zT9fU5/ATO6C+4ZxEfLyd9OUhUeKKRoNQSUh6EJUwMiPQCyrNhhPrXoIpwRhfDZIpZDCiG9MJj33/A815Xfi2N/0W6qMPEcZlV/S0y4t47OsYuW23cRM3nVV3LGty2pv3XoaPoGNr9BaqMywhGzsM0mPWvjDfuwOaoTGgU3ORbsqzprkruTiZzDgDPs8N/CrbuDGrdHGIkWOEojHa1pmNOJDllT8G9Oa5O2CdqXW7nPmG8muU2sa3jgcG8tsPSBeT8uLzAwECX20MbMPrgxHD/Abdx85hu/Xw+uk4TyYLK/3Ts6l2deHSDAFxGU1OMnhHvp13u5wIDAQAB",
   "description": "Chrome 브라우저의 학습 흐름을 분석합니다.",
-  "permissions": ["tabs", "storage", "webNavigation"],
-  "host_permissions": ["https://*/*", "http://*/*"],
+  "minimum_chrome_version": "120",
+  "permissions": ["tabs", "storage", "webNavigation", "scripting", "alarms"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "background": {
     "service_worker": "service-worker.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://*/*", "http://*/*"],
-      "js": ["content-script.js"]
-    }
-  ],
   "action": {
     "default_title": "FocusOn",
     "default_popup": "index.html"

@@ -22,9 +22,10 @@
 
 ## 입력 데이터
 
-- 입력 출처: Desktop / Extension / Server
+- 입력 출처: Extension / macOS 네이티브 모듈 / Server / 기타
 - 필수 필드:
 - 선택 필드:
+- 텍스트 출처: OCR / 페이지 본문 / 자막 / 문서 추출 / 기타
 - 전처리 방법:
 - 제외할 민감 데이터:
 
@@ -35,20 +36,33 @@
 ## 분석 기준
 
 - 비교 대상 목표:
-- 판단 규칙 또는 모델:
+- OCR·텍스트 품질 기준:
+- 규칙 기반 판단:
+- 임베딩 모델과 진입·종료 조건:
+- LLM Fallback 조건:
+- 외부 API 사용 조건:
 - 점수 범위:
 - 신뢰도 기준:
-- `FOCUSED` 기준:
-- `DISTRACTED` 기준:
-- `UNCERTAIN` 기준:
+- 추출 상태 기준:
+- 분석 상태 기준:
+- `RELATED` 기준:
+- `SUPPORTING` 기준:
+- `OFF_TASK` 기준:
+- `UNCERTAIN`·`UNAVAILABLE` 기준:
+- 흐름 상태와 권장 행동 기준:
 
 ## 출력 데이터
 
 ```json
 {
-  "state": "UNCERTAIN",
-  "score": 0,
-  "confidence": 0
+  "extractionStatus": "SUCCESS",
+  "analysisStatus": "NEEDS_CONFIRMATION",
+  "relevanceLabel": "UNCERTAIN",
+  "driftState": "UNKNOWN",
+  "recommendedAction": "ASK_USER",
+  "relevanceScore": 0,
+  "confidence": 0,
+  "reasonCode": "INSUFFICIENT_CONTEXT"
 }
 ```
 
@@ -59,8 +73,23 @@
 3.
 
 ```text
-입력 검증 → 전처리 → 분석 → 기준 적용 → 결과 반환
+입력 검증 → 텍스트 정제 → 규칙 → 임베딩 → 필요한 경우 LLM → 기준 적용 → 결과 반환
 ```
+
+## 기능 책임 분리
+
+- 현재 활동 관련성:
+- 페이지 이동·체류 시간 기반 학습 흐름:
+- MediaPipe 상태값 기반 사용자 상태 보조 분석:
+- 이 기능에서 다루지 않는 영역:
+
+## 모델·외부 연동
+
+- 임베딩 모델:
+- LLM 공급자·모델:
+- YouTube 자막·PDF 등 외부 콘텐츠 API:
+- Timeout·재시도·Fallback:
+- 예상 호출 비용과 제한:
 
 ## 예외 처리
 
@@ -68,7 +97,8 @@
 | --- | --- | --- |
 | 입력 누락 |  |  |
 | 분석 실패 |  |  |
-| 신뢰도 부족 | `UNCERTAIN` |  |
+| 의미적 근거 부족 | `UNCERTAIN` |  |
+| 추출·모델 실패 | `UNAVAILABLE` | 이탈 판정 금지 |
 | 민감 데이터 포함 |  |  |
 
 ## 평가 계획
@@ -77,6 +107,9 @@
 - 정상 케이스:
 - 경계 케이스:
 - 오판 방지 케이스:
+- OCR 품질 저하 케이스:
+- Prompt Injection 케이스:
+- 외부 모델·API 실패 케이스:
 - 목표 성능 기준:
 
 ## 보안·개인정보
@@ -85,12 +118,15 @@
 - 원본 카메라 영상 저장 여부:
 - 로그에 남기지 않을 값:
 - 입력 데이터 보존 시간:
+- 외부 모델 공급자의 데이터 보존 설정:
 
 ## 완료 조건
 
 - [ ] 입력·출력 계약을 공유했다.
 - [ ] 정상·경계·실패 케이스를 정의했다.
-- [ ] `UNCERTAIN` 기준을 정의했다.
+- [ ] `UNCERTAIN`과 `UNAVAILABLE` 기준을 구분했다.
+- [ ] `OFF_TASK`와 `DRIFT_RISK`를 구분했다.
+- [ ] 적용되는 Rule ID를 기록했다.
 - [ ] 평가 데이터를 준비했다.
 - [ ] `*-ERROR.md`를 갱신했다.
 - [ ] `*-REPORT.md`를 작성했다.

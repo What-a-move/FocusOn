@@ -9,13 +9,47 @@ FocusOn의 macOS 데스크톱 앱 Renderer다. Next.js가 정적 화면을 생�
 - macOS 활성 앱 확인
 - 화면 분석과 분석 제외 앱 처리
 - 카메라 권한 및 MediaPipe 분석 연동
-- Chrome Extension과 상태 연결
+- Server를 기준으로 Chrome Extension과 세션 상태 연결
 
 ## 실행
 
 ```bash
-pnpm --filter @focuson/desktop dev
-pnpm --filter @focuson/desktop build
+pnpm dev:desktop                                  # 터미널 1: Next.js 화면
+pnpm --filter @focuson/desktop dev:electron       # 터미널 2: Electron 창
+FOCUSON_DEV_START_PATH=/onboarding/permissions/ pnpm --filter @focuson/desktop dev:electron  # 개발 실행에서만: 첫 화면을 원하는 경로로 열기
+pnpm build:desktop                                # Main·Preload·Renderer Build
+pnpm --filter @focuson/desktop preview:electron   # 정적 Build 앱 미리보기
+pnpm --filter @focuson/desktop test:electron
+pnpm --filter @focuson/desktop lint
 ```
 
-`next build` 결과는 `out/`에 생성된다. Electron Main·Preload 연결은 별도 작업으로 진행한다. 공통 개발 규칙은 루트의 [`docs/README.md`](../../docs/README.md)를 확인한다.
+화면 스타일은 Tailwind CSS v4와 `app/globals.css`를 사용한다. 로그인·온보딩 시작·홈의 배치와 색은 저장소 옆 `FocusOn-Design/login.html`, `onboarding.html`, `main.html`을 기준으로 맞췄다. 화면 에셋은 `public/design/`에 복사했다. `next build` 결과는 `out/`에 생성된다. Production은 `out/`을 보안 설정된 `app://` Protocol로 연다. Frontend 공통 규칙은 [`apps/docs/README.md`](../docs/README.md)를, Desktop 전용 규칙은 [`docs/README.md`](docs/README.md)와 [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md)를 확인한다.
+
+## Google OAuth 개발 설정
+
+Google Cloud에서 **데스크톱 앱** 유형의 OAuth Client ID를 만든 뒤 Electron을 실행하는 셸에 `FOCUSON_GOOGLE_CLIENT_ID`로 전달한다. Backend origin도 `FOCUSON_API_BASE_URL`로 설정한다. 값 형식은 [`.env.example`](.env.example)을 참고한다. `.env.example`은 자동으로 로드되지 않는다.
+
+```bash
+FOCUSON_GOOGLE_CLIENT_ID=발급받은-데스크톱-클라이언트-ID FOCUSON_API_BASE_URL=http://127.0.0.1:8080 pnpm --filter @focuson/desktop dev:electron
+```
+
+### 권한 QA 실행
+
+터미널에서 `dev:electron`으로 실행하면 macOS가 화면 기록 권한을 Electron이 아니라 **그 터미널 앱** 기준으로 판단한다. 화면 기록·알림처럼 권한을 확인할 때는 Electron을 독립 앱으로 실행하고 `.env` 값을 `--env`로 넘긴다. 시스템 설정 목록에는 `FocusOn`이 아니라 `Electron`으로 보이며, 권한을 바꾼 뒤에는 앱을 다시 실행해야 반영된다. 서명 없는 개발 앱은 macOS가 알림을 거절한다(`docs/features/settings-dev-notification-unsigned-ERROR.md`).
+
+```bash
+pnpm --filter @focuson/desktop build:electron
+cd apps/desktop && args=(); while IFS= read -r l; do [[ "$l" =~ ^[A-Z_]+= ]] && args+=(--env "$l"); done < .env; open -n -a "$(node -p "require('electron')" | sed 's#/Contents/MacOS/Electron##')" "${args[@]}" --args "$PWD"
+```
+
+개발 실행에서 자주 보이는 문구와 뜻은 다음과 같다.
+
+- `이 앱에 로그인 설정이 빠져 있어…`: `.env`를 불러오지 않고 실행했다. 위 명령처럼 `--env`로 넘기거나 `set -a && source .env && set +a` 뒤 `pnpm dev:electron`으로 실행한다.
+- `알림을 보내지 못했어요` / 온보딩 알림 줄의 `설정 열기`: 서명 없는 개발 앱이라 macOS가 시험 알림을 거절했다. 알림 목록에 `Electron`도 나오지 않으므로 설정으로는 풀 수 없다. 알림 QA는 서명한 빌드에서 한다. 개발 중에 알림 단계를 넘기려면 이 기기의 알림 확인을 직접 기록한 뒤 앱을 다시 열거나 권한 단계로 다시 들어간다(온보딩·집중 준비가 이 기록을 읽는다).
+- 권한 목록에서 찾을 이름은 `FocusOn`이 아니라 `Electron`이다.
+
+```bash
+echo '{"confirmed":true}' > ~/Library/Application\ Support/@focuson/desktop/notification-readiness.json
+```
+
+현재 Main은 기본 브라우저와 `127.0.0.1`의 임시 callback listener로 Google code를 받은 뒤 Backend `google/exchange`에 전달한다. 성공 응답의 Access Token은 Main 메모리, Refresh Token은 macOS Keychain에 저장한다. 앱 재시작 시 refresh·auth/me로 상태를 복구하고 로그아웃은 서버 폐기 후 Keychain을 비운다. Renderer는 로그인 버튼과 인증 상태별 화면을 제공한다. 서버가 `onboardingStatus: INCOMPLETE`를 주면 온보딩 첫 화면, `COMPLETED`를 주면 홈을 표시한다. 닉네임 중복 확인·저장과 온보딩 다음 단계, 홈의 목표 설정·기록 API는 후속 작업이다. Backend 인증 API가 준비되지 않았으면 실제 로그인 성공으로 처리하지 않는다. Client ID나 Backend origin 설정이 없으면 브라우저를 열지 않는다.

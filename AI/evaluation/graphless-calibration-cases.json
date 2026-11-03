@@ -1,0 +1,906 @@
+{
+  "version": "graphless-mixed-calibration-v1",
+  "provenance": {
+    "createdAt": "2026-10-22",
+    "kind": "manually_authored_synthetic",
+    "labelsLockedBeforeModelExecution": true,
+    "independentlyHumanReviewed": false,
+    "splitPolicy": "목표 단위로 development와 evaluation을 분리. 기존 React24 및 기존 TCP/UDP·QueryDSL 파일의 본문/라벨을 복사하거나 수정하지 않음.",
+    "usage": "development 그룹만 임계값 선택에 사용. evaluation 그룹은 선택 후 고정 기준의 확인용. 결과를 보고 evaluation 라벨이나 기준을 변경하면 후속 평가용으로 재사용하지 않음.",
+    "inputNotes": "study.example은 가상 출처. OCR confidence .95는 테스트 가정값. expectedLabel/purpose는 평가 전용이며 모델 입력으로 전달하지 않음."
+  },
+  "groups": [
+    {
+      "split": "development",
+      "goal": {
+        "goalId": "cal-react",
+        "goalVersion": 1,
+        "text": "React useState로 객체와 배열 상태를 불변하게 업데이트하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "cal-react-direct-object",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 객체 상태 업데이트 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "React 객체 상태 갱신 - 학습 자료",
+          "pageTitle": "React 객체 상태 갱신",
+          "urlHost": "study.example",
+          "text": "useState가 반환한 setter에는 이전 상태를 직접 변경하는 코드 대신 새 객체를 전달한다. setUser(prev => ({ ...prev, name: nextName }))처럼 기존 속성을 복사하면 바꾸지 않은 필드를 유지하면서 이름만 갱신할 수 있다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-react-direct-array",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 배열 항목 변경 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "목록 항목 수정 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "배열 상태에서 특정 항목을 바꿀 때 map으로 새 배열을 만든다. 수정 대상은 {...item, done: true}를 반환하고 나머지는 그대로 반환한다. 기존 배열과 대상 객체를 직접 수정하지 않아야 이전 렌더링의 상태가 유지된다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-direct-functional",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 함수형 setter와 코드 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "이전 상태를 기준으로 계산 - 학습 자료",
+          "pageTitle": "이전 상태를 기준으로 계산",
+          "urlHost": "study.example",
+          "text": "React setter에 updater 함수를 전달하면 대기열의 이전 상태를 기준으로 다음 값을 계산한다. 객체의 count를 증가시키는 updater는 새 객체를 반환한다.\n\n```javascript\nsetState(prev => ({ ...prev, count: prev.count + 1 }));\n```",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-support-spread",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 목표 구현에 필요한 얕은 복사 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "객체 전개 구문과 복사 - 학습 자료",
+          "pageTitle": "객체 전개 구문과 복사",
+          "urlHost": "study.example",
+          "text": "객체 전개 구문은 열거 가능한 자체 속성을 새 객체로 복사한다. 복사는 얕으므로 중첩된 주소 객체는 같은 참조를 가리킨다. 주소의 도시를 변경하려면 바깥 객체와 주소 객체를 각각 복사하고 수정하지 않는 부분의 참조는 유지한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-react-support-filter",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 배열을 변경하지 않는 삭제 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "filter로 새 배열 만들기 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "filter는 조건을 만족하는 원소를 모아 새 배열을 반환한다. id가 삭제 대상과 다른 항목만 남기면 원래 배열의 순서를 유지하면서 삭제 결과를 얻는다. splice처럼 원본 배열을 변경하는 메서드와 동작이 다르다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-support-debug",
+          "expectedLabel": "RELATED",
+          "purpose": "보조: 상태 변경 오류 해결 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "값을 바꿨는데 화면이 그대로인 경우 - 학습 자료",
+          "pageTitle": "값을 바꿨는데 화면이 그대로인 경우",
+          "urlHost": "study.example",
+          "text": "useState로 관리하던 user.name을 직접 대입한 뒤 같은 user를 setter에 넘기면 화면 갱신이 기대와 다를 수 있다. React DevTools에서 객체 참조를 확인하고 새 객체를 반환하도록 바꾸어 이전 상태와 다음 상태가 분리되는지 점검한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-unrelated-cooking",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 요리 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "버섯 리소토 조리 순서 - 학습 자료",
+          "pageTitle": "버섯 리소토 조리 순서",
+          "urlHost": "study.example",
+          "text": "팬에 올리브유를 두르고 다진 양파를 투명해질 때까지 볶는다. 쌀과 버섯을 넣은 뒤 따뜻한 육수를 조금씩 추가하며 저어 준다. 쌀알이 익으면 버터와 치즈를 넣고 농도를 조절한다. 완성한 리소토는 접시에 담아 파슬리와 후추를 올린다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-react-unrelated-title-trap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 관련 제목만 있고 본문은 여행 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "React useState 상태 업데이트 안내 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "주말 바닷가 여행을 위해 열차 시간표와 숙박 요금을 확인한다. 해변 산책로에서 일몰을 본 뒤 근처 식당에서 저녁을 먹을 예정이다. 다음 날에는 전망대와 전통 시장을 방문하고 기념품을 구입한다. 여행 예산에는 교통비와 입장료를 함께 계산한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-unrelated-overlap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "단어 중복 무관: 게임의 상태 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "캐릭터 장비와 상태 창 - 학습 자료",
+          "pageTitle": "캐릭터 장비와 상태 창",
+          "urlHost": "study.example",
+          "text": "게임 캐릭터의 상태 창에서 체력과 공격력을 확인한다. 새 방어구를 장착한 상태로 보스의 범위 공격을 피하고 회복 물약을 사용한다. 던전 보상으로 얻은 재료를 무기에 사용한 뒤 파티원과 다음 레이드의 진입 시간을 정한다. 공략 영상에서 이동 경로를 다시 살펴본다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-uncertain-generic",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "정보 부족: 활동 주제를 알 수 없는 메모 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "작업 기록 - 학습 자료",
+          "pageTitle": "작업 기록",
+          "urlHost": "study.example",
+          "text": "첫 번째 항목의 값을 변경하고 결과를 확인한다. 이전 값과 다르면 다음 항목으로 이동하고, 문제가 있으면 다시 실행한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-react-uncertain-mixed",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "실제 양방향: 상태 갱신 설명과 요리 내용이 함께 있음 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "공유 메모 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "React useState의 객체 상태는 새 객체를 setter에 전달해 업데이트한다. 기존 객체를 직접 수정하면 이전 상태를 보존하기 어렵다.\n\n오븐을 예열한 뒤 닭고기에 소금과 허브를 바른다. 감자와 당근을 함께 넣고 속까지 익을 때까지 굽는다. 완성하면 접시에 담아 소스를 곁들인다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-react-uncertain-fragment",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "부분 추출: 주어와 개념이 끊긴 짧은 조각 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "자료 일부 - 학습 자료",
+          "pageTitle": "자료 일부",
+          "urlHost": "study.example",
+          "text": "다음 값이 이 경우에는 같고, 앞의 것은 여기에서…",
+          "extractionStatus": "PARTIAL",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "split": "development",
+      "goal": {
+        "goalId": "cal-transport",
+        "goalVersion": 1,
+        "text": "TCP와 UDP의 전송 특성을 비교하고 상황에 맞는 프로토콜을 선택하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "cal-transport-direct-reliability",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: TCP의 신뢰성과 재전송 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "전송 계층의 신뢰성 - 학습 자료",
+          "pageTitle": "전송 계층의 신뢰성",
+          "urlHost": "study.example",
+          "text": "TCP는 바이트 스트림에 순서 번호와 확인 응답을 사용한다. 수신 확인이 오지 않으면 손실을 추정해 재전송하며 수신 측은 순서에 맞게 데이터를 전달한다. 이러한 신뢰성 기능은 파일 전송처럼 손실 없는 전달이 중요한 경우에 필요하다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-transport-direct-datagram",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: UDP 데이터그램 특성 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "연결 없는 데이터 전달 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "UDP는 연결을 설정하는 절차 없이 개별 데이터그램을 보낸다. 전송 순서나 도착을 자체적으로 보장하지 않으므로 필요한 재전송과 중복 처리는 응용 계층에서 설계해야 한다. 지연에 민감하고 일부 손실을 허용하는 실시간 통신에서는 이 특성을 고려한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-direct-selection",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 두 전송 방식 선택 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "서비스 요구사항에 따른 선택 - 학습 자료",
+          "pageTitle": "서비스 요구사항에 따른 선택",
+          "urlHost": "study.example",
+          "text": "파일 다운로드는 데이터가 빠짐없이 도착해야 하므로 TCP의 순서 보장과 재전송이 적합하다. 실시간 음성은 오래된 패킷을 늦게 받는 것보다 최신 데이터를 받는 것이 중요할 수 있다. UDP를 선택하면 애플리케이션이 손실 대응 정책을 따로 정해야 한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-support-latency",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 지연과 손실의 구분 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "지연 시간과 패킷 손실 - 학습 자료",
+          "pageTitle": "지연 시간과 패킷 손실",
+          "urlHost": "study.example",
+          "text": "왕복 지연 시간은 요청을 보낸 뒤 응답이 돌아오기까지의 시간이다. 손실률은 보낸 패킷 중 도착하지 못한 비율이다. 실시간 데이터에서는 손실을 복구하기 위한 대기가 지연을 늘릴 수 있으므로, 지연 허용 범위와 데이터 완전성 요구를 나누어 측정해야 한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-transport-support-ports",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 전송 계층 포트와 소켓 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "프로세스 식별과 소켓 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "전송 계층은 포트 번호로 같은 호스트 안의 통신 프로세스를 구분한다. 소켓은 IP 주소와 포트 등의 통신 정보를 사용한다. 동일한 서버에서 여러 애플리케이션이 동작해도 각 서비스의 포트와 전송 방식을 구별하면 패킷이 어느 소켓으로 전달되는지 추적할 수 있다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-support-capture",
+          "expectedLabel": "RELATED",
+          "purpose": "보조: 전송 특징을 패킷으로 확인 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "Wireshark 재전송 확인 - 학습 자료",
+          "pageTitle": "Wireshark 재전송 확인",
+          "urlHost": "study.example",
+          "text": "패킷 캡처에서 TCP의 SYN과 ACK를 확인하면 연결 설정 과정을 볼 수 있다. 동일한 순서 번호가 다시 나타나는지와 확인 응답 간격을 살펴 재전송을 진단한다. UDP 트래픽은 연결 설정 교환 없이 데이터그램이 보이는지 비교하고 손실 처리가 응용 코드에 있는지 확인한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-unrelated-travel",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 여행 일정 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "숲길 주말 여행 - 학습 자료",
+          "pageTitle": "숲길 주말 여행",
+          "urlHost": "study.example",
+          "text": "주말에는 산림 휴양림의 숙소를 예약하고 근처 숲길을 걸을 예정이다. 입장 시간과 주차 공간을 확인한 뒤 점심 식당을 고른다. 비가 오면 실내 전시관을 방문하고 맑으면 전망대에 올라 풍경을 촬영한다. 여행 가방에는 우비와 간식, 물을 준비한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-transport-unrelated-title-trap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 관련 제목과 다른 쇼핑 본문 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "TCP UDP 프로토콜 비교 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "온라인 매장에서 겨울 코트의 색상과 사이즈를 비교한다. 착용 후기에서 어깨 너비와 소매 길이를 확인하고 배송 예정일을 살펴본다. 장바구니에 넣은 상품의 할인 쿠폰을 적용한 뒤 교환 조건을 읽는다. 함께 신을 신발과 목도리도 가격을 비교해 고른다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-unrelated-overlap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "단어 중복 무관: 외교 의전 프로토콜 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "국빈 방문 의전 준비 - 학습 자료",
+          "pageTitle": "국빈 방문 의전 준비",
+          "urlHost": "study.example",
+          "text": "국빈 방문 행사의 프로토콜은 참석자의 입장 순서와 좌석 배치, 환영 인사 절차를 정한다. 의전 담당자는 국기 배치와 통역 위치를 확인하고 연설 시간을 조율한다. 만찬에서는 손님의 식이 제한과 문화적 예절을 고려하며 행사 종료 뒤 공식 기념 촬영을 진행한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-uncertain-generic",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "정보 부족: 선택 대상 불명 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "비교 메모 - 학습 자료",
+          "pageTitle": "비교 메모",
+          "urlHost": "study.example",
+          "text": "첫 번째 방식은 기다리는 시간이 길고 두 번째 방식은 일부 내용이 빠질 수 있다. 어느 쪽이 적합한지는 조건을 더 확인해야 한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "cal-transport-uncertain-mixed",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "실제 양방향: 네트워크 설명과 축구 중계 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "임시 메모 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "TCP는 확인 응답과 재전송으로 데이터를 순서대로 전달하고 UDP는 데이터그램을 연결 없이 보낸다.\n\n축구 경기에서 후반 교체 선수의 움직임을 분석한다. 측면 공격수가 수비 뒤 공간으로 침투한 장면과 골키퍼가 선방한 장면을 반복해서 시청한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "cal-transport-uncertain-fragment",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "부분 추출: 주제가 끊긴 조각 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "캡처 일부 - 학습 자료",
+          "pageTitle": "캡처 일부",
+          "urlHost": "study.example",
+          "text": "응답이 없으면 이것을 다시… 다음 경우에는 생략…",
+          "extractionStatus": "PARTIAL",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "split": "evaluation",
+      "goal": {
+        "goalId": "eval-querydsl",
+        "goalVersion": 1,
+        "text": "QueryDSL로 선택적 검색 조건을 조합하는 JPA 동적 조회 구현하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "eval-querydsl-direct-builder",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 동적 조건 조합 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "BooleanBuilder로 조건 누적 - 학습 자료",
+          "pageTitle": "BooleanBuilder로 조건 누적",
+          "urlHost": "study.example",
+          "text": "QueryDSL의 BooleanBuilder에는 값이 제공된 검색 조건만 and로 추가한다. 이름이 비어 있으면 이름 조건을 추가하지 않고 최소 가격이 있으면 가격 비교를 추가한다. 완성한 builder를 JPAQueryFactory의 where에 전달하면 사용자가 선택한 필터 조합에 맞는 쿼리를 만들 수 있다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-querydsl-direct-expression",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: BooleanExpression과 null 조건 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "재사용 가능한 where 조건 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "검색 조건을 BooleanExpression 반환 함수로 분리하면 동적 조회를 구성하기 쉽다. 입력이 없으면 null을 반환하고 조건이 있으면 Q타입의 필드 비교식을 반환한다. QueryDSL where는 null 조건을 무시하므로 이름과 상태 필터를 선택적으로 결합할 수 있다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-direct-query",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: JPAQueryFactory 코드 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "검색 조건과 조회 실행 - 학습 자료",
+          "pageTitle": "검색 조건과 조회 실행",
+          "urlHost": "study.example",
+          "text": "JPAQueryFactory에서 selectFrom으로 조회 대상을 정하고 선택 조건을 where에 넘긴다. 조건 조합과 정렬, 페이징을 분리해 작성한다.\n\n```java\nqueryFactory.selectFrom(item).where(nameEq(name), priceGoe(minPrice)).orderBy(item.id.desc()).fetch();\n```",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-support-qtype",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: Q타입 생성 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "컴파일 시 생성되는 쿼리 타입 - 학습 자료",
+          "pageTitle": "컴파일 시 생성되는 쿼리 타입",
+          "urlHost": "study.example",
+          "text": "Q타입은 엔티티의 필드를 타입 안전한 경로 표현식으로 제공한다. annotation processor가 컴파일 과정에서 생성하므로 IDE에서 타입을 찾지 못하면 생성 소스 경로와 처리기 설정을 확인한다. 문자열 필드 이름을 직접 쓰는 방식보다 컴파일 시점에 잘못된 필드 참조를 발견하기 쉽다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-querydsl-support-join",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 엔티티 조인과 결과 행 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "다대일 조인 결과 확인 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "주문과 회원 엔티티를 조인하면 회원 이름을 검색 조건으로 사용할 수 있다. 연관 관계가 없는 행을 남길지에 따라 inner join과 left join을 선택한다. 조건을 on에 둘지 where에 둘지에 따라 외부 조인의 결과가 달라질 수 있으므로 생성 SQL과 결과 행을 함께 확인한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-support-debug",
+          "expectedLabel": "RELATED",
+          "purpose": "보조: 생성 SQL과 바인딩 점검 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "조건을 넣었는데 결과가 없는 경우 - 학습 자료",
+          "pageTitle": "조건을 넣었는데 결과가 없는 경우",
+          "urlHost": "study.example",
+          "text": "QueryDSL로 만든 JPA 조회에서 검색 조건을 하나씩 추가하며 생성 SQL과 바인딩 값을 확인한다. 문자열의 대소문자와 시간 범위, null 비교가 의도와 일치하는지 점검한다. fetch 결과가 비어 있으면 조인으로 행이 제거됐는지도 확인해 동적 조건의 문제를 분리한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-unrelated-music",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 음악 감상 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "새 앨범 감상 목록 - 학습 자료",
+          "pageTitle": "새 앨범 감상 목록",
+          "urlHost": "study.example",
+          "text": "새로 발매된 앨범에서 타이틀곡과 수록곡을 차례로 듣는다. 보컬의 음색과 후렴의 멜로디를 비교하고 좋아하는 노래를 재생 목록에 추가한다. 뮤직비디오의 의상과 무대 연출을 살펴본 뒤 공연 일정과 티켓 예매 날짜를 확인한다. 음반 구성품도 함께 살펴본다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-querydsl-unrelated-title-trap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 관련 제목과 다른 레시피 본문 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "QueryDSL 동적 검색 조건 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "감자 수프를 만들기 위해 감자와 양파를 잘게 썬다. 냄비에서 버터를 녹이고 채소를 볶은 뒤 육수를 넣어 부드러워질 때까지 끓인다. 믹서로 곱게 갈고 우유와 소금으로 농도와 간을 조절한다. 접시에 담은 뒤 빵과 후추를 곁들여 따뜻할 때 먹는다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-unrelated-overlap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "단어 중복 무관: 쇼핑몰 검색 조건 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "봄옷 상품 검색 - 학습 자료",
+          "pageTitle": "봄옷 상품 검색",
+          "urlHost": "study.example",
+          "text": "쇼핑몰에서 봄 재킷을 고르기 위해 검색 조건에 색상과 사이즈를 지정한다. 할인율이 높은 상품부터 정렬하고 구매 후기의 착용 사진을 살펴본다. 배송비를 포함한 가격을 비교한 뒤 원하는 상품을 장바구니에 넣는다. 교환 기한과 소재 관리 방법도 상품 설명에서 확인한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-uncertain-generic",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "정보 부족: 시스템과 대상 불명 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "조회 확인 메모 - 학습 자료",
+          "pageTitle": "조회 확인 메모",
+          "urlHost": "study.example",
+          "text": "조건을 하나 추가하면 결과가 줄어든다. 입력이 없으면 해당 항목은 생략하고 다시 확인한다. 어느 테이블을 보는지는 화면에 나오지 않는다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-querydsl-uncertain-mixed",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "실제 양방향: 동적 조회와 게임 내용 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "공유 텍스트 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "QueryDSL의 BooleanExpression으로 입력이 있는 검색 조건만 JPA where에 결합해 동적 조회를 수행한다.\n\n게임에서 보스의 공격 패턴을 피하고 새로운 장비를 강화한다. 캐릭터의 스킬 순서를 바꾼 뒤 던전 보상을 받아 다음 전투에 사용할 물약을 구입한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-querydsl-uncertain-fragment",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "부분 추출: 불완전한 코드 조각 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "문서 일부 - 학습 자료",
+          "pageTitle": "문서 일부",
+          "urlHost": "study.example",
+          "text": "where( ... ) 다음에는 이 값을 … 조건이 있으면 …",
+          "extractionStatus": "PARTIAL",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    },
+    {
+      "split": "evaluation",
+      "goal": {
+        "goalId": "eval-eigen",
+        "goalVersion": 1,
+        "text": "행렬의 고유값과 고유벡터를 계산하고 선형변환의 의미 이해하기",
+        "confirmed": true
+      },
+      "cases": [
+        {
+          "caseId": "eval-eigen-direct-definition",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 고유값 정의 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "방향이 유지되는 벡터 - 학습 자료",
+          "pageTitle": "방향이 유지되는 벡터",
+          "urlHost": "study.example",
+          "text": "정사각행렬 A에 대해 영벡터가 아닌 v가 Av=λv를 만족하면 λ는 고유값이고 v는 그에 대응하는 고유벡터다. 선형변환 뒤 벡터의 방향은 같은 직선 위에 남고 크기와 방향 부호만 달라질 수 있다. 고유벡터를 영이 아닌 상수배해도 같은 고유값에 대응한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-eigen-direct-characteristic",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 특성방정식 계산 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "특성다항식으로 값 찾기 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "고유값을 구하려면 det(A−λI)=0을 푼다. 행렬 [[2,1],[1,2]]에서는 특성다항식이 (2−λ)^2−1이므로 고유값은 1과 3이다. 각 값을 대입해 (A−λI)v=0의 영이 아닌 해를 구하면 대응하는 고유벡터의 방향을 얻을 수 있다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-direct-eigenspace",
+          "expectedLabel": "RELATED",
+          "purpose": "직접: 고유공간과 선형변환 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "행렬을 적용한 방향 비교 - 학습 자료",
+          "pageTitle": "행렬을 적용한 방향 비교",
+          "urlHost": "study.example",
+          "text": "행렬 [[2,1],[1,2]]를 벡터 [1,1]에 곱하면 [3,3]이 되어 같은 방향으로 세 배 늘어난다. 벡터 [1,−1]은 곱한 뒤에도 그대로다. 두 방향을 기준으로 좌표를 표현하면 선형변환이 각 방향을 어떻게 늘리는지 고유값으로 설명할 수 있다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-support-determinant",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 행렬식과 비가역 조건 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "행렬식이 영인 경우 - 학습 자료",
+          "pageTitle": "행렬식이 영인 경우",
+          "urlHost": "study.example",
+          "text": "행렬식이 영인 정사각행렬은 역행렬이 없고 영이 아닌 벡터를 영벡터로 보낼 수 있다. 동차 연립방정식에서 자명하지 않은 해가 존재하는 조건과 연결된다. 2×2 행렬의 행렬식은 대각 성분 곱에서 반대 대각 성분 곱을 뺀 값이며 행렬에 매개변수가 있으면 다항식이 된다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-eigen-support-nullspace",
+          "expectedLabel": "RELATED",
+          "purpose": "선수: 동차 연립방정식 풀이 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "영공간의 기저 구하기 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "동차 연립방정식 Bx=0은 행 기본 연산으로 해를 구할 수 있다. 계단형으로 정리한 뒤 자유 변수를 정하고 해를 벡터의 선형결합으로 표현한다. 영공간의 기저는 영이 아닌 해의 방향을 나타내며, 상수배한 해를 별개의 독립 방향으로 세지 않도록 주의한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-support-check",
+          "expectedLabel": "RELATED",
+          "purpose": "보조: 수치 계산 결과 검산 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "고유쌍 잔차 확인 - 학습 자료",
+          "pageTitle": "고유쌍 잔차 확인",
+          "urlHost": "study.example",
+          "text": "계산한 고유값 λ와 고유벡터 v가 맞는지 확인하려면 Av−λv의 크기를 계산한다. 부동소수점 계산에서는 잔차가 정확히 영이 아닐 수 있으므로 벡터와 행렬의 크기를 고려해 상대 오차를 확인한다. v와 −v는 같은 고유 방향을 나타내므로 프로그램 출력의 부호 차이만으로 오류라고 판단하지 않는다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-unrelated-travel",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 식당과 관광 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "여행지 점심 식당 고르기 - 학습 자료",
+          "pageTitle": "여행지 점심 식당 고르기",
+          "urlHost": "study.example",
+          "text": "여행지에서 점심을 먹을 식당의 영업 시간과 메뉴를 확인한다. 대기 시간이 짧고 창가 자리가 있는 곳을 우선 고른다. 식사를 마친 뒤 근처 박물관을 방문하고 해 질 무렵에는 강변 산책로를 걷는다. 이동 동선과 교통비를 계산해 하루 일정을 마무리한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-eigen-unrelated-title-trap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "명확한 무관: 관련 제목과 다른 게임 본문 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "고유값과 고유벡터 연습 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "온라인 게임에서 신규 캐릭터의 스킬과 장비를 살펴본다. 친구와 파티를 구성해 던전에 입장하고 보스의 공격을 피한다. 보상으로 얻은 재료로 무기를 강화한 뒤 거래소에서 필요한 아이템을 구입한다. 다음 주에 열리는 게임 이벤트의 보상과 참여 조건도 공지에서 확인한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-unrelated-overlap",
+          "expectedLabel": "UNRELATED",
+          "purpose": "단어 중복 무관: 벡터 그래픽 편집 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "벡터 일러스트 포스터 제작 - 학습 자료",
+          "pageTitle": "벡터 일러스트 포스터 제작",
+          "urlHost": "study.example",
+          "text": "벡터 그래픽 편집기에서 포스터의 제목과 도형을 배치한다. 곡선의 제어점을 움직여 인물 실루엣을 다듬고 색상 팔레트로 배경과 글자 색을 맞춘다. 로고를 확대해도 가장자리가 깨지지 않는지 확인하고 인쇄용 파일로 내보낸다. 완성한 포스터에 행사 날짜와 장소를 넣어 디자인을 마무리한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-uncertain-generic",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "정보 부족: 값과 대상이 불명 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_DOM",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "계산 기록 - 학습 자료",
+          "pageTitle": "계산 기록",
+          "urlHost": "study.example",
+          "text": "먼저 값을 구한 다음 방향을 확인한다. 결과가 같으면 다음 식으로 넘어가고 다르면 앞의 계산을 다시 확인한다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false
+        },
+        {
+          "caseId": "eval-eigen-uncertain-mixed",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "실제 양방향: 고유쌍 설명과 요리 내용 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "DESKTOP_APP_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Preview",
+          "windowTitle": "정리 중인 문서 - 자료.pdf",
+          "pageTitle": "",
+          "urlHost": "",
+          "text": "행렬 A에 대해 Av=λv를 만족하는 영이 아닌 v를 고유벡터라고 한다. λ는 해당 방향의 확대 또는 축소를 나타내는 고유값이다.\n\n반죽에 버터와 설탕을 넣고 섞은 뒤 밀가루를 체에 내려 넣는다. 오븐을 예열하고 쿠키를 일정한 간격으로 올려 가장자리가 노릇해질 때까지 굽는다.",
+          "extractionStatus": "SUCCESS",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        },
+        {
+          "caseId": "eval-eigen-uncertain-fragment",
+          "expectedLabel": "UNCERTAIN",
+          "purpose": "부분 추출: 식과 설명이 끊긴 조각 · 직접 작성한 합성 개발/평가 사례이며 실제 추출·사람 독립 검수 자료가 아님.",
+          "contentSource": "CHROME_VIEWPORT_OCR",
+          "contentType": "DOCUMENT",
+          "appName": "Google Chrome",
+          "windowTitle": "화면 일부 - 학습 자료",
+          "pageTitle": "화면 일부",
+          "urlHost": "study.example",
+          "text": "이 값이 영이면 … 위 식의 다음 항은 … 방향은 여기서 …",
+          "extractionStatus": "PARTIAL",
+          "isSensitive": false,
+          "isExcluded": false,
+          "ocr": {
+            "confidence": 0.95,
+            "captureStatus": "SUCCESS"
+          }
+        }
+      ]
+    }
+  ]
+}

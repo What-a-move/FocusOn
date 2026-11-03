@@ -1,39 +1,60 @@
 # Extension 다음 작업
 
-> Extension 작업자는 작업 시작 전에 이 문서를 확인하고, 작업 종료 후 다음 작업을 갱신한다.
+> Frontend(`apps`) 담당자는 Extension 작업 시작 전에 이 문서를 확인하고, 작업 종료 후 다음 작업을 갱신한다.
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: 현재 탭 정보 수집과 Service Worker 전달 구조 확정
-- 담당 영역: Chrome Extension
+- 작업명: 팝업 세션 화면 실제 연동 QA (Issue #52, 2026-11-03)
+- 상태: 실제 서버로 연결·E02·E03(진행 중·멈춤)·토큰 갱신(rotation) 확인. 팝업 시간이 뒤로 튀는 오류와 E06 거짓 멈춤 안내를 고쳤고, 개발용 Extension ID를 고정했다(결정 017). 연결 해제 확인과 REPORT 완료(`session-popup-REPORT.md`). 남은 일: Backend CORS 반영 뒤 권한 해제 → E06·`local-events` 재확인.
+
+- 작업명: 모듈 연동 로거와 로그 복사 (Issue #105, `feat/105-extension-logger`)
+- 상태: 로거·요청 traceId·`sw.restart`·팝업 로그 복사 구현(2026-10-29). 남은 일: 실제 Chrome에서 Worker 종료 뒤 기록 유지와 로그 복사 확인, 서버가 `X-Trace-Id`를 찍으면 같은 traceId로 추적표 확인, 그 뒤 REPORT.
+- 다음 Issue 후보: 세션 상태 전이표를 shared-types로 모으는 리팩토링.
+
+- 작업명: Chrome 탭·페이지 분석 (Issue #61, `feat/61-extension-tab-analysis`)
+- 상태: Service Worker 분석·사이트 권한 E01b·E06·권한 철회 `local-events` 구현(2026-10-26). 실제 Chrome QA와 REPORT 완료(2026-11-03, `tab-analysis-REPORT.md`). 남은 일: 백엔드 `analysis-runs` 병합 뒤 연동 QA, CORS(#151) 뒤 권한 해제 확인. 같은 페이지 안 내용 변경(스크롤) 30초 재전송은 하지 않았다.
+- 다음 Issue 후보: 화면 분석 4단계 — Desktop 개입 표시(Floating Poki, `GET /sessions/{id}/interventions` 10초 조회).
+
+
+- 작업명: 팝업 세션 화면과 Access Token 갱신 (Issue #52, `feat/52-extension-session-popup`)
+- 상태: E02·E03(표시 전용)·E06, 토큰 갱신(single-flight·rotation)·재연결 처리, 이 브라우저 연결 해제를 구현했다(2026-10-25). 남은 일: 세션 API 병합 뒤 실제 계정 QA와 REPORT.
+- 다음 작업 후보: 현재 탭 추적과 페이지 분석 요청(결정 005·007, `POST /sessions/{id}/analysis-runs`), 사이트 접근 권한(E01b).
+
+## 이전 작업
+
+
+- 작업명: 온보딩용 일회용 연결 코드 pairing 구현
+- 담당 영역: Frontend(`apps`)
+- 대상 앱: Chrome Extension
 - 우선순위: 높음
-- 상태: 예정
+- 상태: 코드 입력·형식 검증, `POST /api/v1/extension-pairings` 제출, 오류 안내, token 저장(결정 011), 연결 완료 화면을 구현했다(2026-10-22). Chromium에 실제로 불러와 테스트용 가짜 서버로 왕복을 확인했다. 남은 일은 실제 Backend로 Desktop 발급 → Extension 입력 → Desktop 연결 반영 QA다. Desktop 온보딩 [Issue #36](https://github.com/What-a-move/FocusOn/issues/36)의 필수 단계다.
 
 ## 작업 목적
 
-Chrome의 현재 탭, 페이지 제목, 도메인 정보를 수집해 Desktop 학습 세션과 연결할 수 있도록 한다.
+Desktop에서 발급한 연결 코드를 Extension에 입력해 같은 계정에 연결하고, 연결 성공 결과를 Popup에 표시한다. 연결 코드는 6자리 대문자·숫자, 5분 유효, 최대 3회 실패 정책을 따른다. Extension 연결은 Desktop 온보딩의 필수 단계다.
 
 ## 선행 조건
 
 - Extension 기본 화면과 Manifest V3 구조가 실행되어야 한다.
-- 수집 가능한 데이터와 제외 도메인 정책을 확인해야 한다.
+- `POST /api/v1/extension-pairings`의 입력·오류 응답과 Extension token 저장 계약을 확인해야 한다.
+- Desktop과 Extension이 refresh token을 공유하지 않는 인증 경계를 지켜야 한다.
 - 기능 기획서를 `features/`에 작성해야 한다.
 
 ## 예상 작업 순서
 
-1. `tabs`, `webNavigation`, Content Script의 책임을 나눈다.
-2. 탭 변경·페이지 이동 이벤트 중복 제거 기준을 정한다.
-3. 제외 도메인에서 수집과 전송이 중지되는 흐름을 만든다.
-4. Desktop 또는 Server 전달 형식을 연결한다.
-5. Chrome 개발자 모드에서 정상·예외 흐름을 확인한다.
+1. 완료: 연결 코드 입력 화면과 `ABC-123` 형식 검증 UI를 구현했다.
+2. 완료: `POST /api/v1/extension-pairings`에 코드와 Extension installation ID를 전송한다.
+3. 완료: 만료·사용 완료·시도 초과·취소·429·네트워크 오류를 표시한다. 틀린 코드에는 `LINK_006_CODE_MISMATCH`와 숫자 `details.remainingAttempts`를 읽어 남은 횟수를 표시한다. 서버의 실패 횟수 귀속 방식은 공통 대조 기록에서 추적한다.
+4. 완료: 성공 시 Extension 전용 인증 정보를 결정 011에 따라 저장하고 연결 상태를 표시한다. Extension의 Access Token 갱신(refresh)은 이후 API를 붙일 때 구현한다.
+5. Backend API 병합 뒤 Desktop 발급 → Extension 입력 → Desktop 연결 완료 표시까지 실제 왕복을 확인한다.
 
 ## 이후 작업 후보
 
+- 현재 Tab 자동 추적과 Service Worker 전달 구조 구현
 - 15초 체류 후 페이지 재분석
 - 현재 페이지 관련성 분석 요청
 - 분석 제외 도메인 설정 UI
-- Desktop 연결 상태 표시
-- Service Worker 재시작 후 상태 복구
+- 팝업에서 세션 일시정지·재개·종료 명령 (P1, 결정 012. MVP 팝업은 표시만 하며 #52에서 구현 완료)
 
 ## 완료 조건
 
@@ -42,12 +63,15 @@ Chrome의 현재 탭, 페이지 제목, 도메인 정보를 수집해 Desktop �
 - [ ] 정상 탭 변경 흐름을 확인했다.
 - [ ] 제외 도메인 흐름을 확인했다.
 - [ ] Desktop 연결 실패를 확인했다.
-- [ ] 결과 리포트를 작성했다.
+- [ ] 새 기능을 완료했다면 결과 리포트를 작성했다.
 
 ## 작업 시작 전 확인
 
+- [ ] `EXTENSION_ARCHITECTURE.md`를 확인했다.
+- [ ] `MESSAGE_CONTRACT.md`에서 이번 기능에 필요한 Message와 Payload를 확인했다.
+- [ ] `MANIFEST_PERMISSION_POLICY.md`의 Host 권한 제안을 사용자와 확정했다.
+- [ ] `SERVICE_WORKER_LIFECYCLE.md`의 15초 체류·저장 기준을 확인했다.
 - [ ] `CONTEXT.md`를 읽었다.
 - [ ] `DECISION_RECORD.md`를 읽었다.
 - [ ] 관련 기능의 `*-PLAN.md`를 확인했다.
 - [ ] 현재 Branch가 Issue와 연결되어 있다.
-

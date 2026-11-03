@@ -1,0 +1,1 @@
+"""FocusOn AI application package."""

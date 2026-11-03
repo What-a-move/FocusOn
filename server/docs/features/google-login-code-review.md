@@ -1,0 +1,57 @@
+# Google 로그인 코드 리뷰
+
+- 날짜: 2026-10-25
+- Issue: #49
+- 범위: Google 교환·auth/me·요청 인증·초기 토큰 발급
+- 방법: 구현 대화 없이 diff·PLAN·공통 계약·컨벤션만 제공한 독립 에이전트 정적 리뷰. 테스트 결과는 QA 문서에서 구분한다.
+
+## 결과
+
+### 1. 🟡 Medium — Google 공개 키 장애를 재인증 실패로 분류
+
+**문제:** `GoogleOauthClient.verifyIdentity`의 포괄 JwtException 처리가 Google JWK 조회 장애도 401로 변환했다. 정상 인증 사용자에게 재인증을 요구할 수 있었다.
+
+**해결 방안:**
+1. 원인 체인의 timeout·키 서버 장애를 분리하고 connect/read timeout을 제한한다. 기존 decoder의 서명 검증을 유지하면서 오류 분류를 보강할 수 있다.
+2. 별도 JWK 다운로드·캐시 계층을 만든다. 실패 분류는 명확하지만 공개 키 회전·캐시 책임이 커진다.
+
+**반영:** 1번. timeout은 504, 키 서버 통신 장애는 503으로 구분하고 JWK connect/read를 각각 5초로 제한했다. 서명·클레임 실패만 401이다.
+
+### 2. 🟡 Medium — 익명 로그인으로 인증 API 한도 저장 공간 소진
+
+**문제:** 익명 로그인과 인증 요청이 10,000개 한도 맵을 공유했다. installationId를 바꾼 요청으로 채우면 정상 인증 API도 429가 될 수 있었다.
+
+**해결 방안:**
+1. 익명·인증 공간을 분리하고 redirect URI 검증을 키 생성보다 먼저 한다. 단일 서버에서 범위를 작게 유지할 수 있다.
+2. 게이트웨이·공유 저장소에 한도와 전역 수용량을 옮긴다. 다중 서버에 적합하지만 외부 의존성이 추가된다.
+
+**반영:** 1번. 공간을 분리하고 입력 순서를 수정했다. 로그인 공간 자체의 포화는 fail-closed 429이며 인증 API 한도와 분리된다. 다중 서버 전환은 후속 작업이다.
+
+## 재검토
+
+독립 리뷰어가 두 지적의 반영을 재확인했고 추가 actionable P1/P2는 보고하지 않았다. 이후 추가한 동시 로그인 테스트와 Google 교환 form 테스트는 QA에 기록한다. 실제 Google 계정 왕복·외부 키 서버 장애 주입은 수행하지 않았다.
+
+## 2차 독립 적합성 검토
+
+사용자의 재검증 요청으로 f9adf6f 및 현재 소스를 origin/dev·PLAN·공통 계약과 다시 대조했다. 최초 계정 경쟁, 사용자 잠금, 기기 한도·family 교체, 요청 인증 소유·활성 검사와 auth/me principal을 재확인했고 새로운 actionable P1/P2는 보고되지 않았다. 추가 HTTP 보안 사례의 실행 결과는 QA 문서를 따른다. 이 검토를 실제 Google 계정 왕복 완료로 해석하지 않는다.
+
+## PR #51 CodeRabbit 리뷰 반영
+
+- 실제 지적 4건: 로그인 IP 보호 상한 누락 1건, AI cooldown 및 AI·감사 문서의 오래된 구현 상태 3건. 모두 현재 코드·정책과 대조 후 수정했다.
+- 로그인 키 공간 고갈 대안: (1) IP 선행 검사와 기존 복합 키 한도를 함께 사용, (2) 외부 gateway·공유 limiter 도입. 단일 서버 범위에 맞춰 1번을 선택했다.
+- 공유 NAT를 고려해 IP 상한은 300회/10분, IP+installationId는 기존 5회/10분을 유지한다. proxy 뒤에서 주소를 공유할 수 있으므로 배포 전 신뢰 proxy·상한을 검토한다. 여러 IP를 통한 전체 포화는 별도 분산 방어 과제다.
+- 설치 ID 11,000개 시도, 다른 IP 및 인증 API 영향, 기존 설치별 5회, Controller에서 서비스 호출 차단을 회귀 테스트로 확인했다.
+- 구현 대화가 없는 독립 에이전트가 수정 diff·PLAN·계약·규칙을 검토했으며 추가 P1/P2를 보고하지 않았다.
+- 범위 경고: 사용자 승인으로 선행 계약 문서 commit을 같은 브랜치에 포함한 작업이다. 이미 승인된 문서 변경을 삭제하거나 별도 PR로 임의 분리하지 않는다.
+- 주석 비율 경고: CodeRabbit의 80% docstring 지표이며 현재 저장소 Checkstyle의 실패 조건이 아니다. 주요 공개 계약·보안 로직 설명은 유지하며, 단순 테스트·접근자에 비율만을 위한 주석은 추가하지 않았다.
+
+## 추가 P2: Google ID token azp 누락
+
+- 문제: aud에 Desktop Client ID가 들어 있어도 azp가 다른 Client라면 기존 audience 포함 검사만으로 통과할 수 있었다.
+- 대안 1: Google 전용 OAuth2TokenValidator를 합성한다. 기존 서명·issuer·audience·시간 검증과 역할을 분리할 수 있다.
+- 대안 2: GoogleOauthClient.verifyIdentity에 조건을 직접 추가한다. 파일은 적지만 외부 통신·오류 분류·claim 검증이 한 메서드에 섞인다.
+- 반영: 1번. package-private GoogleAuthorizedPartyValidator를 도입하고 Google decoder에만 등록했다. FocusOn Access JWT·DB 인증·API 계약·migration에는 적용하지 않는다.
+- 규칙: azp가 있으면 원본 타입이 문자열이고 Desktop Client ID와 일치해야 한다. 다중 aud는 azp 필수, 단일 aud는 생략 허용. aud 검증은 별도로 유지한다.
+- 출처: [Google OpenID Connect ID token claims](https://developers.google.com/identity/openid-connect/openid-connect). Google은 azp를 authorized presenter의 Client ID로 설명한다.
+
+- 최종 독립 정적 리뷰: bda78b5의 검증기·decoder 등록·서명/aud 검증 유지·테스트를 확인했고 P1/P2를 보고하지 않았다. 테스트 실행 결과는 root의 QA 기록이며 리뷰어는 테스트·외부 조회·파일 수정을 하지 않았다.
