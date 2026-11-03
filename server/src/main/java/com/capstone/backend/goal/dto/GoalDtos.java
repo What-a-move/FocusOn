@@ -36,10 +36,12 @@ public final class GoalDtos {
       @NotNull @Size(max = 2) List<@NotNull @Valid ClarificationAnswer> previousAnswers) {}
 
   /** 사용자에게 표시할 공개 명확성 판단이다. */
-  public enum ClarifyDecision { CLEAR, AMBIGUOUS, MULTI_GOAL, UNKNOWN_TERM }
+  public enum ClarifyStatus {
+    CLEAR, NEEDS_SELECTION, NEEDS_SUGGESTION, NEEDS_QUESTION, UNRECOGNIZED_TERM, INVALID
+  }
 
   /** 목표 명확화 응답과 서버가 관리하는 대화 ID다. */
-  public record ClarifyGoalResponse(ClarifyDecision decision, String normalizedGoalText,
+  public record ClarifyGoalResponse(ClarifyStatus clarityStatus, String normalizedGoalText,
       String question, List<String> suggestions, List<String> goalCandidates,
       int conversationTurn, String clarificationSessionId) {}
 

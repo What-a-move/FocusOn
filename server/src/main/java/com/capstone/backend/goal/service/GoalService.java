@@ -8,6 +8,8 @@ import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.goal.dto.GoalDtos.CreateGoalRequest;
 import com.capstone.backend.goal.dto.GoalDtos.GoalResponse;
 import com.capstone.backend.goal.dto.GoalDtos.UpdateGoalRequest;
+import com.capstone.backend.goal.persistence.GoalClarificationRepository;
+import com.capstone.backend.goal.persistence.GoalClarificationSession;
 import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
 import com.capstone.backend.goal.persistence.GoalRepository;
@@ -17,6 +19,7 @@ import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 /** 인증된 사용자의 학습 목표를 저장하고 조회한다. */
 @Service
@@ -26,18 +29,57 @@ public class GoalService {
   private final GoalRepository goals;
   private final UserRepository users;
   private final LearningSessionRepository sessions;
+  private final GoalClarificationRepository clarifications;
+  private final ObjectMapper json;
 
-  /** 수동 확정된 목표를 저장한다. */
+  /** 확정 방식과 명확화 이력을 검증하고 목표를 저장한다. */
   @Transactional
   public GoalResponse create(FocusOnPrincipal principal, CreateGoalRequest request) {
     String text = validatedText(request.goalText());
-    if (request.confirmationSource() != ConfirmationSource.MANUAL_CONFIRMED) {
-      throw new ApiException(ApiErrorCode.SERVICE_UNAVAILABLE);
-    }
     UserEntity user = users.findById(principal.userId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
-    return response(goals.save(GoalEntity.create(user, text, request.confirmationSource(),
-        Instant.now())));
+    Instant now = Instant.now();
+    GoalClarificationSession clarification = findClarification(principal.userId(), request, now);
+    GoalEntity goal = GoalEntity.create(user, text, request.confirmationSource(), now);
+    if (clarification != null) {
+      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
+        var result = json.readTree(clarification.getStateJson()).path("response");
+        if (!"CLEAR".equals(result.path("clarityStatus").asText())
+            || !text.equals(result.path("normalizedGoalText").asText())) {
+          throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+        }
+      }
+      goal.linkClarification(clarification);
+      clarification.confirm(now);
+    }
+    return response(goals.save(goal));
+  }
+
+  private GoalClarificationSession findClarification(Long userId, CreateGoalRequest request,
+      Instant now) {
+    String rawId = request.clarificationSessionId();
+    if (rawId == null) {
+      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
+        throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+      }
+      return null;
+    }
+    long id;
+    try {
+      id = Long.parseLong(rawId);
+      if (id <= 0) {
+        throw new NumberFormatException();
+      }
+    } catch (NumberFormatException exception) {
+      throw new ApiException(ApiErrorCode.NOT_FOUND);
+    }
+    GoalClarificationSession session = clarifications.findOwnedForUpdate(id, userId)
+        .orElseThrow(() -> new ApiException(ApiErrorCode.NOT_FOUND));
+    if (session.getStatus() != GoalClarificationSession.Status.READY
+        || !session.getExpiresAt().isAfter(now)) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    return session;
   }
 
   /** 다른 사용자의 목표와 존재하지 않는 목표를 동일하게 처리한다. */
