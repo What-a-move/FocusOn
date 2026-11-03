@@ -13,6 +13,7 @@ const POLL_MS = 5000
 type View =
   | { kind: 'loading' }
   | { kind: 'missing' }
+  | { kind: 'list' }
   | { kind: 'error'; code: string }
   | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary }
 
@@ -45,7 +46,10 @@ function asText(summary: SessionSummary, learning: LearningSummary): string {
   ].join('\n')
 }
 
-/** 회차 하나의 학습 노트 (`/notes/?session=ID`). 집중 리포트의 `정리 보기`에서 연다. */
+/**
+ * 회차 하나의 학습 노트 (`/notes/?session=ID`). 집중 리포트의 `정리 보기`에서 연다.
+ * 사이드바로 회차 없이 들어오면 목록 자리에 준비 중 안내를 둔다. 목록은 서버 `GET /learning-summaries` 이후 만든다.
+ */
 export function StudyNote() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [view, setView] = useState<View>({ kind: 'loading' })
@@ -60,7 +64,7 @@ export function StudyNote() {
   useEffect(() => {
     // 정적 빌드라 주소의 ?session= 값은 화면이 열린 뒤 읽는다.
     const id = new URLSearchParams(window.location.search).get('session')
-    queueMicrotask(() => { setSessionId(id); if (id) void load(id); else setView({ kind: 'missing' }) })
+    queueMicrotask(() => { setSessionId(id); if (id) void load(id); else setView({ kind: 'list' }) })
   }, [load])
 
   // 정리 중이면 5초마다 다시 묻는다. 완료·근거 부족·실패가 되면 멈춘다(리포트 설계서 2.1).
@@ -86,9 +90,15 @@ export function StudyNote() {
   const back = sessionId ? `/session-result/?session=${encodeURIComponent(sessionId)}` : '/'
   return <SettingsShell active="notes">
     <div className="fo-note-page">
-      <Link className="fo-back-link" href={back}>← 집중 리포트</Link>
+      {sessionId && <Link className="fo-back-link" href={back}>← 집중 리포트</Link>}
       {view.kind === 'loading' && <div className="fo-notebook fo-note-status" aria-busy="true" />}
       {view.kind === 'error' && <LoadError code={view.code} what="학습 노트를" onRetry={() => { if (sessionId) { setView({ kind: 'loading' }); void load(sessionId) } }} />}
+      {view.kind === 'list' && <section className="fo-notebook fo-note-status">
+        <Image src="/design/poki-floating-sleepy-v7.png" alt="" width={240} height={240} />
+        <h2>학습 노트 모아 보기는 준비 중이에요</h2>
+        <p>지금은 집중 리포트의 <b>정리 보기</b>에서 회차별 노트를 열 수 있어요.</p>
+        <Link className="fo-button fo-button-ghost" href="/records/">집중 기록으로</Link>
+      </section>}
       {view.kind === 'missing' && <section className="fo-notebook fo-note-status">
         <Image src="/design/poki-floating-curious-v8.png" alt="궁금해하는 포키" width={240} height={240} />
         <h2>노트를 찾을 수 없어요</h2>
