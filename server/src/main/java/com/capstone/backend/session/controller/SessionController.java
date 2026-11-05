@@ -3,6 +3,7 @@ package com.capstone.backend.session.controller;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.session.dto.SessionDtos.ActiveResponse;
+import com.capstone.backend.session.dto.SessionDtos.EndResponse;
 import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
 import com.capstone.backend.session.dto.SessionDtos.PauseResponse;
 import com.capstone.backend.session.dto.SessionDtos.ResumeRequest;
@@ -42,6 +43,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class SessionController {
   private final SessionService sessions;
   private final SessionCommandService commands;
+
+  /** 본문 없는 Desktop 종료 명령을 원자적으로 확정한다. */
+  @PostMapping("/{sessionId}/end")
+  @Operation(summary = "학습 세션 종료", description = "마지막 서버 검증 누적값으로 종료합니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "종료 성공 또는 동일 명령 재시도"),
+      @ApiResponse(responseCode = "400", description = "헤더 오류"),
+      @ApiResponse(responseCode = "401", description = "Desktop 인증 필요"),
+      @ApiResponse(responseCode = "404", description = "세션 또는 실행 기기 소유권 없음"),
+      @ApiResponse(responseCode = "409", description = "상태·버전·멱등 키 충돌")
+  })
+  public com.capstone.backend.common.api.ApiResponse<EndResponse> end(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId,
+      @Parameter(description = "명령 재시도를 위한 UUID", required = true)
+      @RequestHeader(value = "Idempotency-Key", required = false) String key,
+      @Parameter(description = "마지막으로 확인한 세션 버전", required = true)
+      @RequestHeader(value = "If-Match-Version", required = false) String version) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        commands.end(principal, sessionId, key, version));
+  }
 
   /** 인증된 Desktop 기기에서 실행 중인 세션을 일시정지한다. */
   @PostMapping("/{sessionId}/pause")

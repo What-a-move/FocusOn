@@ -5,6 +5,7 @@ import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.session.dto.SessionDtos.EndResponse;
 import com.capstone.backend.session.dto.SessionDtos.PauseReason;
 import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
 import com.capstone.backend.session.dto.SessionDtos.PauseResponse;
@@ -77,6 +78,49 @@ public class SessionCommandService {
     sessions.flush();
     var response = new PauseResponse(session.getStatus(), session.getVersion(), activeMs);
     records.save(IdempotencyRecordEntity.create(user, PAUSE_SCOPE, idempotencyKey, hash,
+        (short) 200, mapper.writeValueAsString(response), now, now.plus(IDEMPOTENCY_RETENTION)));
+    return response;
+  }
+
+  /** 마지막 검증 누적값으로 사용자 종료를 확정하고 동일 명령의 응답을 보존한다. */
+  @Transactional
+  public EndResponse end(FocusOnPrincipal principal, String sessionId, String key,
+      String versionHeader) {
+    requireDesktop(principal);
+    UUID idempotencyKey = SessionService.parseKey(key);
+    long expectedVersion = parseVersion(versionHeader);
+    var user = users.findByIdForUpdate(principal.userId())
+        .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+    var session = findOwnedSession(principal, sessionId);
+    String scope = "END_SESSION";
+    String hash = SessionService.requestHash(principal.deviceId() + ":" + sessionId + ":"
+        + expectedVersion);
+    Instant now = Instant.now();
+    var previous = records.findByUserIdAndScopeAndIdempotencyKey(user.getId(), scope,
+        idempotencyKey);
+    if (previous.isPresent()) {
+      var record = previous.get();
+      if (record.getExpiresAt().isAfter(now)) {
+        if (!record.getRequestHash().equals(hash)) {
+          throw new ApiException(ApiErrorCode.IDEMPOTENCY_CONFLICT);
+        }
+        return mapper.readValue(record.getResponseBodyJson(), EndResponse.class);
+      }
+      records.delete(record);
+      records.flush();
+    }
+    requireVersion(session, expectedVersion);
+    if (session.getStatus() != SessionStatus.RUNNING
+        && session.getStatus() != SessionStatus.PAUSED
+        && session.getStatus() != SessionStatus.AUTO_PAUSED
+        && session.getStatus() != SessionStatus.AWAITING_END_CONFIRMATION) {
+      throw new ApiException(ApiErrorCode.SESSION_STATE_INVALID);
+    }
+    session.end(now);
+    sessions.flush();
+    var response = new EndResponse(session.getStatus(), session.getVersion(),
+        session.getAccumulatedActiveMs(), session.getTargetDurationMs(), session.getEndedAt());
+    records.save(IdempotencyRecordEntity.create(user, scope, idempotencyKey, hash,
         (short) 200, mapper.writeValueAsString(response), now, now.plus(IDEMPOTENCY_RETENTION)));
     return response;
   }

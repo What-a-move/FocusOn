@@ -1,5 +1,12 @@
 # Backend 작업 컨텍스트
 
+## 최신 작업 (2026-11-05)
+
+- #116 로깅 PR #162가 CI 통과 후 사용자 승인으로 dev에 병합됐고 이슈는 종료했다. 최종 CodeRabbit 재리뷰는 skipping이었다.
+- #163 세션 종료 API 구현·H2 전체 build·분리 PostgreSQL 13개 테스트 완료. 브랜치 `feat/163-session-end`, 상세 `features/session-end-REPORT.md`. PR·실제 앱 QA는 아직이다.
+- 종료는 마지막 서버 검증 누적값을 확정한다. Heartbeat·summary가 아직 없어 전체 베타 시간 흐름 완료로 보지 않는다.
+
+
 ## 진행 중: 서버 요청 추적 (#116)
 
 `feat/#116-server-tracing`에서 traceId·JSON 요청 로그를 구현하고 로컬 QA를 수행했다. 범위와 한계는 `features/server-tracing-PLAN.md`, `server-tracing-QA.md`, `server-tracing-REPORT.md`를 확인한다. 독립 리뷰·PR은 아직 완료하지 않았다. 사용자의 기존 문서 수정은 작업 시작 전 Git stash에 보존했다.

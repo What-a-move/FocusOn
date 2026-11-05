@@ -135,6 +135,14 @@ public class LearningSessionEntity {
     this.lastResumedAt = null;
   }
 
+  /** 검증된 누적값을 유지하며 사용자 종료 시각과 사유를 확정한다. */
+  public void end(Instant endedAt) {
+    this.status = SessionStatus.ENDED;
+    this.endReason = "USER_ACTION";
+    this.endedAt = endedAt;
+    this.lastResumedAt = null;
+  }
+
   /** 서버가 확인한 시각부터 새 실행 구간을 시작한다. */
   public void resume(Instant resumedAt) {
     this.status = SessionStatus.RUNNING;

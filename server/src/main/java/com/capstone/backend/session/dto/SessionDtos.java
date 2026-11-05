@@ -67,4 +67,8 @@ public final class SessionDtos {
 
   /** 재개된 세션과 서버가 기록한 재개 시각이다. */
   public record ResumeResponse(SessionStatus status, long version, Instant lastResumedAt) {}
+
+  /** 종료된 세션의 서버 확정 상태와 마지막 검증 누적 시간이다. */
+  public record EndResponse(SessionStatus status, long version, long accumulatedActiveMs,
+      long targetDurationMs, Instant endedAt) {}
 }
