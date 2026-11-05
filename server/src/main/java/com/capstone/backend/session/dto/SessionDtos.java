@@ -68,7 +68,14 @@ public final class SessionDtos {
   /** 재개된 세션과 서버가 기록한 재개 시각이다. */
   public record ResumeResponse(SessionStatus status, long version, Instant lastResumedAt) {}
 
-  /** 종료된 세션의 서버 확정 상태와 마지막 검증 누적 시간이다. */
+  /** Desktop이 종료 시점에 고정한 monotonic 누적 시간이다. */
+  public record EndRequest(
+      @NotNull @PositiveOrZero @Digits(integer = 19, fraction = 0)
+      @jakarta.validation.constraints.DecimalMax("9223372036854775807")
+      @Schema(example = "1800000", description = "종료 시점의 최종 누적 진행 시간(ms), 필수")
+      BigDecimal accumulatedActiveMs) {}
+
+  /** 종료된 세션의 서버 확정 상태와 최종 검증 누적 시간이다. */
   public record EndResponse(SessionStatus status, long version, long accumulatedActiveMs,
       long targetDurationMs, Instant endedAt) {}
 }

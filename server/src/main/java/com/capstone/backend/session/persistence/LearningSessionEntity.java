@@ -135,8 +135,9 @@ public class LearningSessionEntity {
     this.lastResumedAt = null;
   }
 
-  /** 검증된 누적값을 유지하며 사용자 종료 시각과 사유를 확정한다. */
-  public void end(Instant endedAt) {
+  /** 최종 검증 누적값을 저장하며 사용자 종료 시각과 사유를 확정한다. */
+  public void end(Instant endedAt, long finalActiveMs) {
+    this.accumulatedActiveMs = finalActiveMs;
     this.status = SessionStatus.ENDED;
     this.endReason = "USER_ACTION";
     this.endedAt = endedAt;

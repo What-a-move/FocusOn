@@ -120,10 +120,12 @@ class SessionEndTests {
         .andExpect(status().isBadRequest());
     var stranger = desktop("end-stranger-" + UUID.randomUUID());
     mvc.perform(post(path).header("Authorization", "Bearer " + stranger.accessToken())
-            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", 0))
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", 0)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"accumulatedActiveMs\":0}"))
         .andExpect(status().isNotFound());
     mvc.perform(post("/api/v1/sessions/missing/end").header("Authorization", fixture.token())
-            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", 0))
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", 0)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"accumulatedActiveMs\":0}"))
         .andExpect(status().isNotFound());
     org.junit.jupiter.api.Assertions.assertEquals("RUNNING",
         sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getStatus().name());
@@ -140,7 +142,9 @@ class SessionEndTests {
         com.capstone.backend.auth.persistence.UserDeviceEntity.DeviceType.CHROME_EXTENSION);
     var rejected = org.junit.jupiter.api.Assertions.assertThrows(
         com.capstone.backend.common.api.ApiException.class,
-        () -> commands.end(extension, fixture.id(), UUID.randomUUID().toString(), "0"));
+        () -> commands.end(extension, fixture.id(), UUID.randomUUID().toString(), "0",
+            new com.capstone.backend.session.dto.SessionDtos.EndRequest(
+                java.math.BigDecimal.ZERO)));
     org.junit.jupiter.api.Assertions.assertEquals(
         com.capstone.backend.common.api.ApiErrorCode.AUTH_RELOGIN_REQUIRED, rejected.code());
     var otherDesktop = new com.capstone.backend.auth.security.FocusOnPrincipal(userId,
@@ -148,7 +152,9 @@ class SessionEndTests {
         com.capstone.backend.auth.persistence.UserDeviceEntity.DeviceType.DESKTOP);
     var missing = org.junit.jupiter.api.Assertions.assertThrows(
         com.capstone.backend.common.api.ApiException.class,
-        () -> commands.end(otherDesktop, fixture.id(), UUID.randomUUID().toString(), "0"));
+        () -> commands.end(otherDesktop, fixture.id(), UUID.randomUUID().toString(), "0",
+            new com.capstone.backend.session.dto.SessionDtos.EndRequest(
+                java.math.BigDecimal.ZERO)));
     org.junit.jupiter.api.Assertions.assertEquals(
         com.capstone.backend.common.api.ApiErrorCode.SESSION_NOT_FOUND, missing.code());
   }
@@ -179,6 +185,15 @@ class SessionEndTests {
                   .content("{\"readiness\":{\"screenAnalysisReady\":true}}"))
               .andReturn().getResponse().getStatus();
         }
+        if (mode.equals("resume")) {
+          return mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
+                  .header("Authorization", fixture.token())
+                  .header("Idempotency-Key", sharedKey)
+                  .header("If-Match-Version", fixture.version())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"accumulatedActiveMs\":0}"))
+              .andReturn().getResponse().getStatus();
+        }
         return end(fixture, mode.equals("same") ? sharedKey : UUID.randomUUID().toString(),
             fixture.version())
             .andReturn().getResponse().getStatus();
@@ -197,11 +212,74 @@ class SessionEndTests {
         sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getVersion());
   }
 
+  @Test
+  void runningThirtyMinutesIsSavedAndReplayedWithoutTimeLoss() throws Exception {
+    var fixture = started();
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at = ? WHERE id = ?",
+        java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(1800)),
+        Long.valueOf(fixture.id()));
+    String key = UUID.randomUUID().toString();
+    for (int attempt = 0; attempt < 2; attempt++) {
+      mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
+              .header("Authorization", fixture.token()).header("Idempotency-Key", key)
+              .header("If-Match-Version", fixture.version()).contentType(MediaType.APPLICATION_JSON)
+              .content("{\"accumulatedActiveMs\":1800000}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.accumulatedActiveMs").value(1800000));
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(1800000,
+        sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getAccumulatedActiveMs());
+    mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
+            .header("Authorization", fixture.token()).header("Idempotency-Key", key)
+            .header("If-Match-Version", fixture.version()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"accumulatedActiveMs\":1799999}"))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {
+      "", "{}", "{\"accumulatedActiveMs\":null}", "{\"accumulatedActiveMs\":-1}",
+      "{\"accumulatedActiveMs\":1.5}", "{\"accumulatedActiveMs\":9223372036854775808}",
+      "{\"accumulatedActiveMs\":1800000}"
+  })
+  void invalidFinalTimeCannotCommitEnd(String body) throws Exception {
+    var fixture = started();
+    mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
+            .header("Authorization", fixture.token()).header("Idempotency-Key", UUID.randomUUID())
+            .header("If-Match-Version", fixture.version()).contentType(MediaType.APPLICATION_JSON)
+            .content(body)).andExpect(status().isBadRequest());
+    var stored = sessions.findById(Long.valueOf(fixture.id())).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("RUNNING", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertNull(stored.getEndedAt());
+    org.junit.jupiter.api.Assertions.assertEquals(0, stored.getAccumulatedActiveMs());
+    org.junit.jupiter.api.Assertions.assertEquals(fixture.version(), stored.getVersion());
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"RUNNING", "PAUSED", "AUTO_PAUSED"})
+  void finalTimeCannotDecreaseOrIncreaseWhilePaused(String state) throws Exception {
+    var fixture = started();
+    jdbc.update("UPDATE learning_sessions SET status = ?, accumulated_active_ms = 2000"
+        + " WHERE id = ?", state, Long.valueOf(fixture.id()));
+    end(fixture, UUID.randomUUID().toString(), fixture.version())
+        .andExpect(status().isBadRequest());
+    if (!state.equals("RUNNING")) {
+      jdbc.update("UPDATE learning_sessions SET accumulated_active_ms = 1000 WHERE id = ?",
+          Long.valueOf(fixture.id()));
+      end(fixture, UUID.randomUUID().toString(), fixture.version())
+          .andExpect(status().isBadRequest());
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(state,
+        sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getStatus().name());
+  }
+
   private org.springframework.test.web.servlet.ResultActions end(
       Fixture fixture, String key, long version) throws Exception {
     return mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
         .header("Authorization", fixture.token()).header("Idempotency-Key", key)
-        .header("If-Match-Version", version));
+        .header("If-Match-Version", version).contentType(MediaType.APPLICATION_JSON)
+        .content("{\"accumulatedActiveMs\":1234}"));
   }
 
   private Fixture started() throws Exception {

@@ -5,6 +5,7 @@ import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.session.dto.SessionDtos.EndRequest;
 import com.capstone.backend.session.dto.SessionDtos.EndResponse;
 import com.capstone.backend.session.dto.SessionDtos.PauseReason;
 import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
@@ -82,19 +83,20 @@ public class SessionCommandService {
     return response;
   }
 
-  /** 마지막 검증 누적값으로 사용자 종료를 확정하고 동일 명령의 응답을 보존한다. */
+  /** 최종 누적값을 검증한 뒤 사용자 종료를 확정하고 동일 명령의 응답을 보존한다. */
   @Transactional
   public EndResponse end(FocusOnPrincipal principal, String sessionId, String key,
-      String versionHeader) {
+      String versionHeader, EndRequest request) {
     requireDesktop(principal);
     UUID idempotencyKey = SessionService.parseKey(key);
     long expectedVersion = parseVersion(versionHeader);
     var user = users.findByIdForUpdate(principal.userId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
     var session = findOwnedSession(principal, sessionId);
+    long finalActiveMs = request.accumulatedActiveMs().longValueExact();
     String scope = "END_SESSION";
     String hash = SessionService.requestHash(principal.deviceId() + ":" + sessionId + ":"
-        + expectedVersion);
+        + expectedVersion + ":" + finalActiveMs);
     Instant now = Instant.now();
     var previous = records.findByUserIdAndScopeAndIdempotencyKey(user.getId(), scope,
         idempotencyKey);
@@ -116,7 +118,13 @@ public class SessionCommandService {
         && session.getStatus() != SessionStatus.AWAITING_END_CONFIRMATION) {
       throw new ApiException(ApiErrorCode.SESSION_STATE_INVALID);
     }
-    session.end(now);
+    if (session.getStatus() == SessionStatus.RUNNING) {
+      validatedActiveTime(session, finalActiveMs, now);
+    } else if (finalActiveMs != session.getAccumulatedActiveMs()) {
+      // 멈춘 구간은 시간이 증가하지 않는다. 재시작 복구 등도 저장 확정값만 사용한다.
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    session.end(now, finalActiveMs);
     sessions.flush();
     var response = new EndResponse(session.getStatus(), session.getVersion(),
         session.getAccumulatedActiveMs(), session.getTargetDurationMs(), session.getEndedAt());
@@ -127,19 +135,23 @@ public class SessionCommandService {
 
   private long validatedPauseTime(LearningSessionEntity session, PauseRequest request,
       Instant now) {
-    long confirmed = session.getAccumulatedActiveMs();
     if (request.pauseReason() == PauseReason.APP_RESTART) {
-      return confirmed;
+      return session.getAccumulatedActiveMs();
     }
-    if (session.getLastResumedAt() == null || request.accumulatedActiveMs() < confirmed) {
+    return validatedActiveTime(session, request.accumulatedActiveMs(), now);
+  }
+
+  /** pause와 end가 같은 실행 구간 기준으로 누적값 감소·과다 증가를 거절한다. */
+  private long validatedActiveTime(LearningSessionEntity session, long activeMs, Instant now) {
+    if (session.getLastResumedAt() == null || activeMs < session.getAccumulatedActiveMs()) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
     long elapsed = Math.max(0, Duration.between(session.getLastResumedAt(), now).toMillis());
-    long delta = request.accumulatedActiveMs() - session.getAccumulatedAtResumeMs();
+    long delta = activeMs - session.getAccumulatedAtResumeMs();
     if (delta > elapsed && delta - elapsed > CLOCK_TOLERANCE_MS) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
-    return request.accumulatedActiveMs();
+    return activeMs;
   }
 
   /** 인증된 실행 기기에서 명시적으로 요청할 때만 세션을 재개한다. */

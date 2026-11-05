@@ -3,8 +3,8 @@
 ## 최신 작업 (2026-11-05)
 
 - #116 로깅 PR #162가 CI 통과 후 사용자 승인으로 dev에 병합됐고 이슈는 종료했다. 최종 CodeRabbit 재리뷰는 skipping이었다.
-- #163 세션 종료 API 구현·H2 전체 build·분리 PostgreSQL 13개 테스트 완료. 브랜치 `feat/163-session-end`, 상세 `features/session-end-REPORT.md`. PR·실제 앱 QA는 아직이다.
-- 종료는 마지막 서버 검증 누적값을 확정한다. Heartbeat·summary가 아직 없어 전체 베타 시간 흐름 완료로 보지 않는다.
+- #163 세션 종료 API P1 수정·H2151개·분리 PostgreSQL24개 검증 완료. 브랜치 `feat/163-session-end`, 상세 `features/session-end-REPORT.md`. PR #164는 Draft이며 Frontend 계약 반영·실제 앱 QA는 남아 있다.
+- P1 수정으로 종료 시 최종 누적값을 필수로 받아 원자 검증·저장한다. 기존 본문 없는 Desktop은 계약 반영이 필요하다. Heartbeat·summary·실제 앱 QA는 후속이다.
 
 
 ## 진행 중: 서버 요청 추적 (#116)
