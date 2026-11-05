@@ -1,6 +1,10 @@
 # Backend 다음 작업
 
-## 현재 작업 (2026-10-28)
+## 현재 우선 작업: Issue #116
+
+PR #162의 CodeRabbit 404·405 로그 코드 지적을 수정했다. 수정 커밋의 CI·재리뷰를 확인하고 사용자 승인 후 병합한다. 다음 기능 우선순위는 세션 종료 API이며, 최신 dev의 일시정지·재개와 동일한 인증·버전·멱등성·시간 확정 규칙을 재사용한다. #151 CORS·확장 1개 정책은 팀원 이슈로 중복 구현하지 않는다.
+
+## 과거 작업 기록 (2026-10-28, 현재 작업 아님)
 
 - 2026-11-03 Issue #132: Swagger와 격리 PostgreSQL 동시 출발·기존 세션 데이터의 V10 적용 전후 보존 및 Backend 빌드·Checkstyle을 확인했다. Heartbeat 연계는 후속 작업이다. 상세는 `features/session-pause-resume-REPORT.md`를 따른다.
 
@@ -15,7 +19,7 @@
 - 검증: 최신 dev 통합 후 build/Checkstyle·H2 JUnit87·PostgreSQL 연결16/사용자 설정7·V1~V5 통과. 이전 기준 HTTP33·DB제약6. 실제 Frontend UI 통합은 미완료다.
 - PR 생성·병합·이슈 종료는 승인 없이 실행하지 않는다.
 
-## 다음 순서
+## 과거 작업 순서 (현재 작업 아님)
 
 1. PR #91·#92의 리뷰와 CI를 확인하고 지적을 수정한다. #91을 먼저 처리하며 병합·이슈 종료는 별도 승인을 받는다.
 2. Frontend 담당에게 extension-pairing-frontend-handoff.md를 전달하고 실제 앱 연결 QA. 이 AI가 Frontend 파일을 수정하지 않는다.

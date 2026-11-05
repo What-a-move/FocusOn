@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## 진행 중: 서버 요청 추적 (#116)
+
+`feat/#116-server-tracing`에서 traceId·JSON 요청 로그를 구현하고 로컬 QA를 수행했다. 범위와 한계는 `features/server-tracing-PLAN.md`, `server-tracing-QA.md`, `server-tracing-REPORT.md`를 확인한다. 독립 리뷰·PR은 아직 완료하지 않았다. 사용자의 기존 문서 수정은 작업 시작 전 Git stash에 보존했다.
+
 ## 최신 작업 인계 (2026-11-01)
 
 이전 작업 상태 기록은 오래됐을 수 있다. Issue #112의 수정과 검증 범위, 로깅·가짜 판정기 후속 작업과 사용자 선호는 [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md)를 먼저 확인한다. 주요 장애와 재현 결과는 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)에 정리했다. 시작 전 실제 Git·이슈 상태를 다시 확인한다.
