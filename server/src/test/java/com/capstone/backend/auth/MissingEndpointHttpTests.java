@@ -63,9 +63,7 @@ class MissingEndpointHttpTests {
     org.junit.jupiter.api.Assertions.assertTrue(
         body.path("requestId").asString().startsWith("req_"));
     assertFalse(body.has("path"));
-    var completion = output.getOut().lines()
-        .filter(line -> line.contains("trace-method-12345") && line.contains("http.out"))
-        .findFirst().orElseThrow();
+    var completion = awaitCompletion(output, "trace-method-12345");
     var logged = JsonMapper.builder().build().readTree(completion);
     assertEquals("METHOD_NOT_ALLOWED", logged.path("code").asString());
   }
@@ -81,6 +79,7 @@ class MissingEndpointHttpTests {
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     assertEquals(404, response.statusCode());
     assertEquals("trace-test-12345", response.headers().firstValue("X-Trace-Id").orElseThrow());
+    awaitCompletion(output, "trace-test-12345");
     var lines = output.getOut().lines().filter(line -> line.contains("trace-test-12345")).toList();
     assertEquals(2, lines.size());
     var json = JsonMapper.builder().build();
@@ -107,8 +106,7 @@ class MissingEndpointHttpTests {
         + "/api/v1/reports/calendar")).header("X-Trace-Id", "trace-auth-12345").GET().build();
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     assertEquals(401, response.statusCode());
-    var outputLine = output.getOut().lines().filter(line -> line.contains("trace-auth-12345"))
-        .filter(line -> line.contains("http.out")).findFirst().orElseThrow();
+    var outputLine = awaitCompletion(output, "trace-auth-12345");
     var json = JsonMapper.builder().build().readTree(outputLine);
     assertEquals("security", json.path("stage").asString());
     assertEquals("AUTH_RELOGIN_REQUIRED", json.path("code").asString());
@@ -133,6 +131,21 @@ class MissingEndpointHttpTests {
     assertEquals(401, response.statusCode());
     org.junit.jupiter.api.Assertions.assertTrue(
         response.body().contains("AUTH_ACCESS_TOKEN_EXPIRED"));
+  }
+
+  /** 응답 스트림 종료와 필터 finally 로그의 실행 순서 차이를 기다린다. */
+  private String awaitCompletion(CapturedOutput output, String traceId) throws Exception {
+    long deadline = System.nanoTime() + java.time.Duration.ofSeconds(5).toNanos();
+    do {
+      var completion = output.getOut().lines()
+          .filter(line -> line.contains(traceId) && line.contains("http.out"))
+          .findFirst();
+      if (completion.isPresent()) {
+        return completion.get();
+      }
+      Thread.sleep(10);
+    } while (System.nanoTime() < deadline);
+    throw new AssertionError("Timed out waiting for http.out for " + traceId);
   }
 
   private HttpResponse<String> send(String path, String authorization) throws Exception {
