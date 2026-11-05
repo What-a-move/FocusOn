@@ -49,11 +49,12 @@ class MissingEndpointHttpTests {
   }
 
   @Test
-  void unsupportedMethodUsesCommonErrorBody() throws Exception {
+  void unsupportedMethodUsesCommonErrorBody(CapturedOutput output) throws Exception {
     when(authentication.authenticate("valid"))
         .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
     var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
         + "/api/v1/auth/me")).header("Authorization", "Bearer valid")
+        .header("X-Trace-Id", "trace-method-12345")
         .POST(HttpRequest.BodyPublishers.noBody()).build();
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     assertEquals(405, response.statusCode());
@@ -62,6 +63,11 @@ class MissingEndpointHttpTests {
     org.junit.jupiter.api.Assertions.assertTrue(
         body.path("requestId").asString().startsWith("req_"));
     assertFalse(body.has("path"));
+    var completion = output.getOut().lines()
+        .filter(line -> line.contains("trace-method-12345") && line.contains("http.out"))
+        .findFirst().orElseThrow();
+    var logged = JsonMapper.builder().build().readTree(completion);
+    assertEquals("METHOD_NOT_ALLOWED", logged.path("code").asString());
   }
 
   @Test
@@ -88,6 +94,7 @@ class MissingEndpointHttpTests {
     assertEquals("/api/v1/{redacted}", input.path("path").asString());
     assertEquals("http.out", result.path("event").asString());
     assertEquals(404, result.path("status").asInt());
+    assertEquals("NOT_FOUND", result.path("code").asString());
     assertEquals(input.path("requestId").asString(), result.path("requestId").asString());
     assertFalse(output.getOut().contains("private-path-secret"));
     assertFalse(output.getOut().contains("private-query-secret"));

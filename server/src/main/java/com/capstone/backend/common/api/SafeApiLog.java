@@ -40,6 +40,9 @@ public final class SafeApiLog {
           : status == 429 ? "rate_limit" : "unknown");
       if (code != null) {
         output.addKeyValue("code", code.name());
+      } else if (status == 404 || status == 405) {
+        // 프레임워크 오류는 도메인 예외 속성 없이 반환되므로 상태에서 고정값만 유도한다.
+        output.addKeyValue("code", status == 404 ? "NOT_FOUND" : "METHOD_NOT_ALLOWED");
       }
     }
     output.log("http.out");
