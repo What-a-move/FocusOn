@@ -54,7 +54,7 @@ function permText(name: PermName, perm: PermState): string {
   if (name === 'screen' && perm.state === 'denied') return '아직 꺼져 있어요. 켰다면 ‘다시 열기’를 눌러 주세요'
   // [유지보수] macOS가 알림 허용 여부를 알려 주지 않아 시험 알림을 보내고 사용자에게 보였는지 묻는다.
   if (name === 'notify' && perm.state === 'requested') return '방금 보낸 알림이 보였나요?'
-  if (name === 'notify' && perm.state === 'denied') return '시스템 설정 › 알림에서 FocusOn을 허용해 주세요.'
+  if (name === 'notify' && perm.state === 'denied') return '알림이 꺼져 있어요. ‘설정 열기’로 켜 주세요'
   if (name === 'notify' && perm.state === 'opened') return '허용한 뒤 ‘다시 보내기’를 눌러 주세요.'
   if (perm.state === 'denied') return '시스템 설정에서 언제든 허용할 수 있어요.'
   return permCopy[name].idle
@@ -167,9 +167,10 @@ export function PermissionsStep() {
       return
     }
     const result = await onboardingApi.requestNotifications()
-    if (!result.success) return failPerm(name, current.state, describeError(result.error, '시험 알림을 보내지 못했어요.'))
+    // Main은 실패해도 '꺼져 있음'으로 답한다. 여기로 오면 앱과 화면 연결이 끊긴 것이라 다시 열기를 안내한다.
+    if (!result.success) return failPerm(name, current.state, { title: '시험 알림을 보내지 못했어요.', body: '앱을 다시 연 뒤 시도해 주세요.' })
     setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
-    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림을 보내지 못했어요.', error: true })
+    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림이 꺼져 있나 봐요', error: false })
   }
 
   async function openScreenSettingsAgain() {

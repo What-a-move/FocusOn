@@ -9,6 +9,7 @@ import {
 } from '../shared/permission-contract.cjs'
 import type { PermissionStatus } from '../shared/permission-contract.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
+import { log } from './logger.cjs'
 import type { NotificationReadiness } from './notification-readiness.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
@@ -98,8 +99,15 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
     if (!Notification.isSupported()) return { success: true, data: { shown: false } }
     const { titleCode, bodyCode } = args[0]
     // macOS는 앱이 처음 알림을 보낼 때 허용 여부를 묻는다. 알림 상태를 직접 조회하는 API는 없다.
-    const shown = await showAndWait(new Notification({ title: NOTIFICATION_TEXT[titleCode].title, body: NOTIFICATION_TEXT[bodyCode].body, silent: true }))
-    return { success: true, data: { shown } }
+    // [주의] 거절(UNErrorDomain 1)이든 예외든 화면에는 '알림이 꺼져 있음'으로 알리고, 어느 쪽인지는 로그로 구분한다.
+    try {
+      const shown = await showAndWait(new Notification({ title: NOTIFICATION_TEXT[titleCode].title, body: NOTIFICATION_TEXT[bodyCode].body, silent: true }))
+      if (!shown) log('WARN', 'notify.fire', { component: 'permission', code: 'LOCAL_NOTIFICATION_BLOCKED' })
+      return { success: true, data: { shown } }
+    } catch {
+      log('WARN', 'notify.fire', { component: 'permission', code: 'LOCAL_NOTIFICATION_FAILED', errorClass: 'unknown' })
+      return { success: true, data: { shown: false } }
+    }
   })
 }
 
