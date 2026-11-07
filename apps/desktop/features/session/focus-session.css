@@ -12,10 +12,13 @@
 
 /* 타이머·목표·조작만 화면 정가운데에 */
 .focus-window .stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 32px 28px; }
-.focus-window .center { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.focus-window .center { width: min(100%, 1040px); min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(72px, 9vw, 120px); }
+/* 간격은 링 밖으로 16% 튀어나온 포키까지 감안한 값이다. */
+.focus-window .side { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.focus-window .goal-label { color: var(--muted); font-size: 14px; font-weight: 600; }
 
 /* 원형 타이머. [주의] 클래스 이름 `ring`은 Tailwind ring 유틸리티(테두리 그림자)와 겹쳐 `timer-ring`을 쓴다. */
-.focus-window .ring-wrap { container-type: inline-size; position: relative; width: clamp(200px, calc(100vh - 340px), 420px); aspect-ratio: 1; }
+.focus-window .ring-wrap { container-type: inline-size; position: relative; width: clamp(240px, min(calc(100vh - 200px), 44vw), 460px); aspect-ratio: 1; }
 .focus-window .timer-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
 .focus-window .timer-ring circle { fill: none; stroke-width: 14; }
 .focus-window .timer-ring .track { stroke: var(--track); }
@@ -27,10 +30,10 @@
 .focus-window .clock-caption { margin-top: 3cqw; color: var(--muted); font-size: clamp(12px, 4cqw, 15px); font-weight: 600; }
 .onboarding-window.focus-window .ring-wrap .poki { position: absolute; right: -16%; bottom: -2%; width: auto; height: 38%; }
 
-.focus-window .goal { margin-top: 32px; max-width: 600px; font-size: 26px; font-weight: 700; line-height: 1.45; letter-spacing: -.02em; text-align: center; }
+.focus-window .goal { margin-top: 6px; max-width: 460px; font-size: 28px; font-weight: 700; line-height: 1.4; letter-spacing: -.02em; text-wrap: balance; }
 
 /* 조작 */
-.focus-window .controls { display: flex; align-items: flex-start; justify-content: center; gap: 36px; margin-top: 30px; }
+.focus-window .controls { display: flex; align-items: flex-start; gap: 28px; margin-top: 32px; }
 .focus-window .control { display: flex; flex-direction: column; align-items: center; }
 .focus-window .round { width: 64px; height: 64px; display: grid; place-items: center; border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); box-shadow: 0 4px 0 var(--ghost-edge); cursor: pointer; transition: transform .12s ease-out, box-shadow .12s ease-out; }
 .focus-window .round:hover:not(.is-play):not(:disabled) { background: var(--field); }
@@ -74,15 +77,15 @@
 .focus-window .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-height: 680px) {
-  .focus-window .goal { margin-top: 16px; font-size: 18px; }
-  .focus-window .controls { margin-top: 16px; }
+  .focus-window .goal { font-size: 22px; }
+  .focus-window .controls { margin-top: 20px; }
   .focus-window .round { width: 56px; height: 56px; }
 }
 
 /* 화면 기록 권한이 꺼져 자동으로 멈춤 (FocusOn-design/session-states.html `권한 꺼짐`) */
 .focus-window .clock-caption.is-error { color: var(--danger); }
-.focus-window .halt-notice { display: grid; justify-items: center; gap: 14px; max-width: 420px; margin-top: 20px; }
-.focus-window .halt-notice p { margin: 0; color: var(--danger); font-size: 14px; font-weight: 600; line-height: 1.55; text-align: center; word-break: keep-all; }
+.focus-window .halt-notice { display: grid; justify-items: start; gap: 14px; max-width: 420px; margin-top: 28px; }
+.focus-window .halt-notice p { margin: 0; color: var(--danger); font-size: 14px; font-weight: 600; line-height: 1.55; word-break: keep-all; }
 .focus-window .halt-notice strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 16px; font-weight: 700; }
 .focus-window .btn-danger { background: var(--danger-strong); color: #fff; box-shadow: 0 4px 0 var(--danger-edge, #a32218); }
 .focus-window .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }

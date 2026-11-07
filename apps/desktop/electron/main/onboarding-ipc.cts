@@ -7,24 +7,24 @@ import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { OnboardingService } from './onboarding-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 function onlyKeys(value: unknown, keys: string[]): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     && Object.keys(value).every((key) => keys.includes(key)) && keys.every((key) => key in value)
 }
 
-/** 입력 검증 함수가 통과시킨 값만 Service로 넘긴다. Backend API 설정이 없으면 SERVICE_UNAVAILABLE이다. */
+/** 입력 검증 함수가 통과시킨 값만 Service로 넘긴다. Backend API 설정이 없으면 LOCAL_APP_ERROR이다. */
 export function registerOnboardingIpc(getMainWindow: () => BrowserWindow | null, rendererUrl: string, service: OnboardingService | null): void {
   function handle<T>(channel: string, accept: (args: unknown[]) => boolean, run: (service: OnboardingService, args: unknown[]) => Promise<ApiResult<T>>): void {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
       if (!isTrustedAuthSender(event, getMainWindow(), rendererUrl) || !accept(args)) return INVALID_REQUEST
-      if (!service) return SERVICE_UNAVAILABLE
+      if (!service) return LOCAL_APP_ERROR
       try {
         return await run(service, args)
       } catch {
         // [주의] 내부 오류 메시지는 Renderer로 보내지 않는다.
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }

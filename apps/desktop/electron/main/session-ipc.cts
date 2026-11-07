@@ -10,7 +10,7 @@ import type { SessionRuntime } from './session-runtime.cjs'
 import { isValidExtendMinutes } from '../shared/session-contract.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 /** 세션 Backend 계약 (Notion FocusOn API 명세서 POST /sessions). 시작은 자동 재전송하지 않고 같은 Idempotency-Key로만 다시 보낸다. */
 export class SessionService {
@@ -50,11 +50,11 @@ export function registerSessionIpc(getMainWindow: () => BrowserWindow | null, re
   function handle<T>(channel: string, accept: (args: unknown[]) => boolean, run: (service: SessionService, args: unknown[]) => Promise<ApiResult<T>>): void {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
       if (!isTrustedAuthSender(event, getMainWindow(), rendererUrl) || !accept(args)) return INVALID_REQUEST
-      if (!service) return SERVICE_UNAVAILABLE
+      if (!service) return LOCAL_APP_ERROR
       try {
         return await run(service, args)
       } catch {
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }
@@ -65,11 +65,11 @@ export function registerSessionIpc(getMainWindow: () => BrowserWindow | null, re
   function handleRuntime<T>(channel: string, accept: (args: unknown[]) => boolean, run: (runtime: SessionRuntime, args: unknown[]) => Promise<ApiResult<T>>): void {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
       if (!isTrustedAuthSender(event, getMainWindow(), rendererUrl) || !accept(args)) return INVALID_REQUEST
-      if (!runtime) return SERVICE_UNAVAILABLE
+      if (!runtime) return LOCAL_APP_ERROR
       try {
         return await run(runtime, args)
       } catch {
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }

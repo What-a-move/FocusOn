@@ -6,7 +6,7 @@ export type { ClarifyResult, CreatedGoal }
 // [주의] Renderer는 electron/shared/*.cts에서 타입만 가져온다. 값은 Next 빌드가 .cjs를 찾지 못한다. Main의 MAX_QUESTIONS와 같은 값이다.
 export const MAX_QUESTIONS = 2
 
-const UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 // [유지보수] 목표 요청도 Main IPC(window.focusOn.goals)로만 보낸다. 브라우저에서 화면만 열면 연결이 없어 실패로 보인다.
 async function viaGoals<T>(call: (api: NonNullable<Window['focusOn']>['goals']) => Promise<ApiResult<T>>): Promise<ApiResult<T>> {

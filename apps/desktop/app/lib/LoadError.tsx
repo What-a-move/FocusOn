@@ -13,7 +13,7 @@ const pokiOf = (code: string) => code === 'NOT_FOUND' ? 'poki-floating-sleepy-v7
 export function LoadError({ code, what, onRetry, compact = false, poki = !compact }: { code: string; what: string; onRetry: () => void; compact?: boolean; poki?: boolean }) {
   return <div className={`fo-error-state${compact ? ' is-compact' : ''}`} role="alert">
     {poki && <Image className="fo-error-poki" src={`/design/${pokiOf(code)}`} alt="" width={160} height={160} />}
-    <strong>{what} 불러오지 못했어요</strong>
+    <strong>{what} 불러오지 못했어요.</strong>
     <span className="fo-error-copy">{errorText({ code })}</span>
     <button className="fo-error-retry" type="button" onClick={onRetry}>다시 시도</button>
   </div>

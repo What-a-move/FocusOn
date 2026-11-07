@@ -23,7 +23,7 @@ function formatClock(ms: number): string {
 function sessionErrorText(code: string): string {
   switch (code) {
     case 'LOCAL_RESTART_PAUSE_UNSYNCED': return '멈춘 상태를 서버에 알리지 못했어요. 연결을 확인한 뒤 ‘이어\u00a0하기’를 눌러 주세요.'
-    case 'LOCAL_SCREEN_PERMISSION_REVOKED': return '화면 기록 권한이 꺼져 있어요. 시스템 설정에서 켠 뒤 다시 눌러 주세요.'
+    case 'LOCAL_SCREEN_PERMISSION_REVOKED': return '화면 기록이 꺼져 있어요. 켠 뒤 앱을 다시 열어 주세요.'
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return '알림이 보이는지 확인이 필요해요. 세션 설정에서 시험 알림을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_START_REQUIREMENT_MISSING': return '화면 기록 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.'
     case 'SESSION_VERSION_CONFLICT': return '다른 곳에서 상태가 바뀌어 최신 상태로 맞췄어요. 확인한 뒤 다시 눌러 주세요.'
@@ -43,6 +43,16 @@ export function FocusSession() {
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [screenOpened, setScreenOpened] = useState(false)
+
+  // 화면 기록은 켜도 앱을 다시 켜야 반영된다. 다시 켜면 세션은 멈춘 채로 이어받는다.
+  async function fixScreenPermission() {
+    const permissions = window.focusOn?.permissions
+    if (!permissions) return
+    if (!screenOpened) { await permissions.openScreenSettings(); setScreenOpened(true); return }
+    const status = await permissions.getScreenStatus()
+    if (!(status.success && status.data.status === 'granted')) await permissions.relaunch()
+  }
 
   const apply = (next: SessionSnapshot | null) => { const at = performance.now(); setView({ snapshot: next, receivedAt: at }); setNow(at) }
 
@@ -132,6 +142,9 @@ export function FocusSession() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="poki" key={permissionLost ? 'curious' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.curious : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '궁금해하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
         </div>
+        {/* 오른쪽: 목표·버튼·안내. 타이머가 세로로만 길어지지 않게 옆에 둔다. */}
+        <div className="side">
+        <p className="goal-label">지금 집중하는 목표</p>
         <p className="goal" id="goal-text">{snapshot.goalText}</p>
         <div className="controls">
           <div className="control">
@@ -150,10 +163,11 @@ export function FocusSession() {
           </div>
         </div>
         {permissionLost && !activeDialog && <div className="halt-notice" role="alert">
-          <p><strong>화면 분석 권한이 꺼졌어요.</strong>그래서 타이머와 분석을 멈췄어요.<br />권한을 켠 뒤 직접 이어 가 주세요.</p>
-          <button className="btn btn-danger" type="button" onClick={() => { void window.focusOn?.permissions.openScreenSettings() }}>권한 확인</button>
+          <p><strong>화면 기록이 꺼져 집중을 멈췄어요.</strong>{screenOpened ? '켠 뒤 ‘다시 열기’를 눌러 주세요.' : '설정에서 다시 켜 주세요.'}</p>
+          <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>
         </div>}
         {snapshot.error && !permissionLost && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{sessionErrorText(snapshot.error)}</p>}
+        </div>
       </div>
     </section>
 

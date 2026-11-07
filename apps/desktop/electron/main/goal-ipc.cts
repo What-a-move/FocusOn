@@ -8,7 +8,7 @@ import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 /** 목표 Backend 계약 (Notion FocusOn API 명세서). POST라 자동 재전송하지 않는다. AI 재시도는 Backend가 맡는다. */
 export class GoalService {
@@ -31,11 +31,11 @@ export function registerGoalIpc(getMainWindow: () => BrowserWindow | null, rende
   function handle<I, T>(channel: string, accept: (input: unknown) => input is I, run: (service: GoalService, input: I) => Promise<ApiResult<T>>): void {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
       if (!isTrustedAuthSender(event, getMainWindow(), rendererUrl) || args.length !== 1 || !accept(args[0])) return INVALID_REQUEST
-      if (!service) return SERVICE_UNAVAILABLE
+      if (!service) return LOCAL_APP_ERROR
       try {
         return await run(service, args[0])
       } catch {
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }

@@ -80,7 +80,7 @@
 .fo-badge.ok::before { background: var(--fo-success); }
 .fo-badge.bad { color: var(--fo-ink); }
 .fo-badge.bad::before { background: var(--fo-faint); }
-.fo-perm-alert { margin-top: 12px; }
+.fo-perm-alert { margin-top: 10px; color: var(--fo-danger); font-size: 15px; font-weight: 700; }
 .fo-perm-list { margin-top: 12px; }
 .fo-perm { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: clamp(38px, 6.6vh, 58px); }
 .fo-perm-icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--fo-success-soft); color: var(--fo-success); }

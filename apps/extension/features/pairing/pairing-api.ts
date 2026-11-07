@@ -93,17 +93,17 @@ export type PairingNotice = { title: string; lines: string[] }
 
 export function describePairingError(error: PairingError): PairingNotice {
   switch (error.code) {
-    case 'LINK_001_INVALID_FORMAT': return { title: '코드 형식이 맞지 않아요', lines: ['ABC-123 형식으로 입력해 주세요.'] }
-    case 'LINK_002_EXPIRED': return { title: '코드 시간이 지났어요', lines: ['코드는 5분 동안만 쓸 수 있어요.', '데스크톱 앱에서 새 코드를 받아 입력해 주세요.'] }
-    case 'LINK_003_ALREADY_USED': return { title: '이미 사용한 코드예요', lines: ['코드는 한 번만 쓸 수 있어요.', '데스크톱 앱에서 새 코드를 받아 주세요.'] }
-    case 'LINK_004_ATTEMPTS_EXCEEDED': return { title: '이 코드는 더 이상 쓸 수 없어요', lines: ['3번 틀려서 코드가 잠겼어요.', '데스크톱 앱에서 새 코드를 받아 주세요.'] }
-    case 'LINK_005_CANCELLED': return { title: '취소된 코드예요', lines: ['데스크톱 앱에서 새 코드를 받아 주세요.'] }
-    case 'TOO_MANY_REQUESTS': return { title: '잠시 후 다시 시도해 주세요', lines: [error.retryAfterSeconds ? `${error.retryAfterSeconds}초 뒤에 다시 입력할 수 있어요.` : '입력이 너무 잦았어요.'] }
-    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '서버에 연결할 수 없어요', lines: ['인터넷 연결을 확인해 주세요.'] }
-    case 'EXTENSION_CONTEXT_REQUIRED': return { title: 'Chrome 확장 프로그램에서 열어 주세요', lines: ['Chrome 오른쪽 위의 FocusOn 아이콘을 눌러 연결해 주세요.'] }
-    case 'STORAGE_UNAVAILABLE': return { title: '연결 정보를 저장하지 못했어요', lines: ['Chrome을 다시 연 뒤 새 코드로 연결해 주세요.'] }
-    case 'SERVICE_UNAVAILABLE': return { title: '연결하지 못했어요', lines: ['잠시 후 다시 시도해 주세요.'] }
-    case 'LINK_006_CODE_MISMATCH': return { title: '코드가 맞지 않아요', lines: ['글자를 다시 확인해 주세요.', ...(error.remainingAttempts !== undefined ? [`${error.remainingAttempts}번 더 시도할 수 있어요.`] : [])] }
-    default: return { title: '연결하지 못했어요', lines: ['잠시 후 다시 시도해 주세요.'] }
+    case 'LINK_001_INVALID_FORMAT': return { title: '코드 형식이 맞지 않아요.', lines: ['ABC-123 형식으로 입력해 주세요.'] }
+    case 'LINK_002_EXPIRED': return { title: '코드 시간이 지났어요.', lines: ['코드는 5분 동안만 쓸 수 있어요.', '데스크톱 앱에서 새 코드를 받아 입력해 주세요.'] }
+    case 'LINK_003_ALREADY_USED': return { title: '이미 사용한 코드예요.', lines: ['코드는 한 번만 쓸 수 있어요.', '데스크톱 앱에서 새 코드를 받아 주세요.'] }
+    case 'LINK_004_ATTEMPTS_EXCEEDED': return { title: '이 코드는 더 이상 쓸 수 없어요.', lines: ['3번 틀려서 코드가 잠겼어요.', '데스크톱 앱에서 새 코드를 받아 주세요.'] }
+    case 'LINK_005_CANCELLED': return { title: '취소된 코드예요.', lines: ['데스크톱 앱에서 새 코드를 받아 주세요.'] }
+    case 'TOO_MANY_REQUESTS': return { title: '입력이 너무 잦았어요.', lines: [error.retryAfterSeconds ? `${error.retryAfterSeconds}초 뒤에 다시 입력해 주세요.` : '잠시 후 다시 입력해 주세요.'] }
+    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '서버에 연결할 수 없어요.', lines: ['인터넷 연결을 확인해 주세요.'] }
+    case 'EXTENSION_CONTEXT_REQUIRED': return { title: 'Chrome 확장 프로그램에서 열어 주세요.', lines: ['Chrome 오른쪽 위의 FocusOn 아이콘을 눌러 연결해 주세요.'] }
+    case 'STORAGE_UNAVAILABLE': return { title: '연결 정보를 저장하지 못했어요.', lines: ['Chrome을 다시 연 뒤 새 코드로 연결해 주세요.'] }
+    case 'SERVICE_UNAVAILABLE': return { title: '연결하지 못했어요.', lines: ['잠시 후 다시 시도해 주세요.'] }
+    case 'LINK_006_CODE_MISMATCH': return { title: '코드가 맞지 않아요.', lines: ['글자를 다시 확인해 주세요.', ...(error.remainingAttempts !== undefined ? [`${error.remainingAttempts}번 더 시도할 수 있어요.`] : [])] }
+    default: return { title: '연결하지 못했어요.', lines: ['잠시 후 다시 시도해 주세요.'] }
   }
 }
