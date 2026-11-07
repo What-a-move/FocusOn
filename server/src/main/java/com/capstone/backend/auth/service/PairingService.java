@@ -211,6 +211,7 @@ public class PairingService {
     return new ClaimOutcome(linked, null, false);
   }
 
+  /** 사용자 잠금 안에서 이전 설치를 폐기한 뒤 새 독립 family를 발급한다. */
   private LinkedExtension link(
       UserEntity user, UserDeviceEntity desktop, String hash, Instant now) {
     // 사용자 잠금 안에서 이전 설치들을 먼저 폐기해 ACTIVE 확장 1개 제약을 유지한다.

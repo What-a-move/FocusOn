@@ -6,3 +6,9 @@
 - V11은 기존 복수 연결을 데이터 삭제 없이 정리하고 계정당 ACTIVE 확장 1개를 보장하는 partial unique를 추가한다. 기존 migration은 수정하지 않았다.
 - H2 전체 135개 중 실패0·생략4, 분리 PostgreSQL 30개 모두 통과, Checkstyle 통과. 마이그레이션의 기존 데이터 보존과 DB 제약 거절도 별도 SQL fixture로 확인했다. 상세는 extension-access-QA.md를 따른다.
 - 실제 Chrome 권한 철회·자동 멈춤 QA, 독립 리뷰와 PR은 남아 있다. #163/PR164 세션 종료 작업은 이번 브랜치에 포함하지 않았다.
+
+## PR #170 리뷰 반영
+
+- 제약 전체 스캔을 V11의 강한 잠금 transaction에서 분리했다. V11 NOT VALID 추가→커밋→V12 VALIDATE 순서다. 기존 정리·index 생성 잠금은 유지된다.
+- 연결·refresh POST preflight 테스트2개를 추가해 허용 origin·POST·요청 헤더를 검증했다.
+- 수정 후 H2전체137개 중 실패0·skip4, Checkstyle 통과. 분리 PostgreSQL32개 모두 통과 및 Flyway V11/V12 success=true·최종 제약 유효 상태 확인. 주석 부족 경고에 따라 연결 순서와 검증 의도 설명도 보완했다.

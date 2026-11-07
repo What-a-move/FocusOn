@@ -267,6 +267,7 @@ class PairingApiTests {
         owner.principal().userId()));
   }
 
+  /** 다른 Desktop의 연결이 겹쳐도 마지막 연결 하나만 인증 가능해야 한다. */
   @Test
   void simultaneousDifferentInstallationsLeaveOneActiveExtension() throws Exception {
     // 발급 시 이전 코드를 취소하므로 서로 다른 Desktop에서 각각 유효한 코드를 발급한다.

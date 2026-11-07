@@ -14,7 +14,7 @@
 
 - 설치→사용자 잠금 순서를 유지하고 새 연결 시 같은 사용자의 다른 ACTIVE 확장 family/refresh와 device를 REVOKED로 전환한다. family 사유 REPLACED.
 - 같은 installationId는 deviceId 재사용·이전family 폐기 흐름을 유지한다. 다른 사용자 소유 활성 설치는 기존 LINK007을 유지한다.
-- V11 신규 migration: REPLACED 사유 추가. 기존 복수 활성 확장은 가장 최근 ACTIVE family 생성시각(없으면 device 생성시각), id 순으로1개만 유지하고 나머지를 폐기한다. 데이터 삭제 없이 device/family/refresh 상태만 변경한다. 이후 사용자별 ACTIVE CHROME_EXTENSION partial unique index로 DB 제약을 둔다.
+- V11/V12 신규 migration: REPLACED 사유를 V11에서 NOT VALID로 추가하고 커밋 후 V12에서 검증한다(Flyway migration별 transaction, group=false). 기존 복수 활성 확장은 가장 최근 ACTIVE family 생성시각(없으면 device 생성시각), id 순으로1개만 유지하고 나머지를 폐기한다. 데이터 삭제 없이 device/family/refresh 상태만 변경한다. 이후 사용자별 ACTIVE CHROME_EXTENSION partial unique index로 DB 제약을 둔다.
 - migration은 배포 시 이전 확장의 로그인을 끊는다. 개발 DB에는 자동 적용하지 않고 격리DB에서 기존 데이터 전후 보존을 검증한다.
 
 ## 사전 점검

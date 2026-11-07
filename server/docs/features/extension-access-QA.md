@@ -1,6 +1,18 @@
 # 확장 접근 정책 QA (2026-11-08)
 
-## 검증 결과
+## PR #170 리뷰 수정 검증
+
+- 수정 후 H2 전체 build·Checkstyle:137 tests, failures0/errors0/skipped4. 기존135개 결과에 pairing/refresh POST preflight2개를 추가했다.
+- V11은 REPLACED check를 NOT VALID로 추가하고 V12가 별도 migration transaction에서 검증한다. 배포 전 PR 단계의 V11을 수정했으며 기존 사용자 DB에는 적용하지 않았다.
+- 분리 SQL fixture에서 V11 커밋 후 convalidated=false, V12 검증 후 true를 확인했다. V12 트랜잭션에서 ShareUpdateExclusiveLock을 관측했다.
+- 검증이 끝난 트랜잭션을15초간 열린 상태로 유지한 동안 다른 연결의 token_families UPDATE가2초 statement_timeout 안에 성공했다. 대규모 테이블 스캔 속도·운영 부하를 측정한 결과는 아니다.
+- V11의 기존 연결 정리 및 unique index 생성에 필요한 잠금까지 제거한 것은 아니다. Flyway group=true로 묶으면 transaction 분리 효과가 없어지므로 기본 group=false를 유지한다.
+- 검증 분리 근거: [PostgreSQL17 ALTER TABLE](https://www.postgresql.org/docs/17/sql-altertable.html). NOT VALID 추가 뒤 별도 VALIDATE가 더 약한 잠금으로 기존 행을 검증한다.
+
+- 수정 후 분리 PostgreSQL: PairingApiTests25개 + ExtensionCorsTests7개, 총32개 모두 통과. 실제 Flyway 히스토리에 V11/V12 success=true 및 최종 convalidated=true 확인. 전용 QA 컨테이너 종료.
+
+## 최초 구현 검증 이력
+
 
 - 기준: 최신 dev 71247cc + #151 변경분. 기본 H2 전체 build·Checkstyle 통과:135 tests/failures0/errors0/skipped4(기존 PG 조건부 테스트).
 - 분리 PostgreSQL17(전용 컨테이너·55441) Flyway V1~V11·Hibernate validate 및 PairingApiTests25개 + ExtensionCorsTests5개 총30개 통과(failures0/errors0/skipped0).

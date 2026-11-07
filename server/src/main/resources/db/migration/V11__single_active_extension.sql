@@ -1,7 +1,8 @@
+-- 배포 전 PR 단계의 V11. 제약 추가 시 전체 스캔을 피하고 V12에서 별도 검증한다.
 ALTER TABLE token_families DROP CONSTRAINT ck_token_families_revoked_reason;
 ALTER TABLE token_families ADD CONSTRAINT ck_token_families_revoked_reason
     CHECK (revoked_reason IS NULL OR revoked_reason IN
-        ('LOGOUT', 'UNLINK', 'TOKEN_REUSE', 'DEVICE_REVOKED', 'REPLACED'));
+        ('LOGOUT', 'UNLINK', 'TOKEN_REUSE', 'DEVICE_REVOKED', 'REPLACED')) NOT VALID;
 
 -- 기존 중복 연결은 가장 최근 연결 하나만 유지한다. 행과 이력은 삭제하지 않는다.
 CREATE TEMP TABLE focuson_replaced_extensions ON COMMIT DROP AS

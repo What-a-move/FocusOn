@@ -3,8 +3,8 @@
 ## 현재 작업: #151 (2026-11-08)
 
 - 사용자 담당 범위는 1기반·2인증/기기·6분석/개입·7리포트다. 기존 #151을 재사용하고 feat/151-extension-access에서 CORS·활성 확장1개를 구현했다.
-- H2 전체135개 중 실패0·생략4, 분리PG30개 모두 통과. 실제 HTTP preflight200·미인증 실제 요청401 및 V11 기존 데이터 보존·unique 거절 검증 완료. 상세는 features/extension-access-REPORT.md를 따른다.
-- PR 생성·독립 리뷰·실제 Chrome 권한 철회 QA는 남아 있다. 사용자 개발 DB·8080 서버에는 적용하지 않았다.
+- 최초 H2 전체135개·분리PG30개를 통과했고, PR170 리뷰 수정 후 H2 전체137개 중 실패0·생략4. 최신 PG 결과는 features/extension-access-QA.md를 따른다. 실제 HTTP preflight200·미인증 실제 요청401 및 V11 기존 데이터 보존·unique 거절 검증 완료. 상세는 features/extension-access-REPORT.md를 따른다.
+- PR #170을 제출했고 CodeRabbit의 migration 잠금 지적과 POST preflight 개선을 반영했다. 최신 커밋 CI·재리뷰·실제 Chrome 권한 철회 QA는 남아 있다. 사용자 개발 DB·8080 서버에는 적용하지 않았다.
 - #163 세션 종료는 담당 범위 밖의 기존 작업으로 별도 브랜치와 Draft PR164에 보존한다. #116은 PR162 병합·이슈 종료 완료다.
 
 ## 이전 작업: 서버 요청 추적 (#116, 당시 기록)

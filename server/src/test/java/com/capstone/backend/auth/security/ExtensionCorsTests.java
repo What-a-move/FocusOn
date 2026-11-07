@@ -43,6 +43,27 @@ class ExtensionCorsTests {
         .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
   }
 
+  /** 연결과 토큰 갱신의 POST 허용이 빠져도 회귀를 검출한다. */
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {
+      "/api/v1/extension-pairings", "/api/v1/auth/refresh"
+  })
+  void pairingAndRefreshPostPreflightsAllowRequiredHeaders(String path) throws Exception {
+    mvc.perform(options(path).header("Origin", ORIGIN)
+            .header("Access-Control-Request-Method", "POST")
+            .header("Access-Control-Request-Headers", "Content-Type,X-Device-Id,X-Trace-Id"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Access-Control-Allow-Origin", ORIGIN))
+        .andExpect(header().string("Access-Control-Allow-Methods",
+            org.hamcrest.Matchers.containsString("POST")))
+        .andExpect(header().string("Access-Control-Allow-Headers",
+            org.hamcrest.Matchers.containsString("Content-Type")))
+        .andExpect(header().string("Access-Control-Allow-Headers",
+            org.hamcrest.Matchers.containsString("X-Device-Id")))
+        .andExpect(header().string("Access-Control-Allow-Headers",
+            org.hamcrest.Matchers.containsString("X-Trace-Id")));
+  }
+
   @Test
   void actualRequestStillRequiresAuthenticationAndExposesRetryAfter() throws Exception {
     mvc.perform(get("/api/v1/auth/me").header("Origin", ORIGIN))
@@ -53,6 +74,7 @@ class ExtensionCorsTests {
         .andExpect(status().isUnauthorized());
   }
 
+  /** 허용되지 않은 출처·메서드·헤더를 브라우저에 열지 않는지 확인한다. */
   @Test
   void unrelatedOriginsMethodsAndHeadersAreRejected() throws Exception {
     for (String origin : new String[] {"https://example.com", "null",
@@ -89,6 +111,7 @@ class ExtensionCorsTests {
     org.junit.jupiter.api.Assertions.assertEquals(401, actual.statusCode());
   }
 
+  /** 잘못된 환경변수가 전체 origin 허용으로 바뀌지 않게 한다. */
   @Test
   void invalidConfigurationCannotEnableWildcardOrWebOrigin() {
     var config = new ExtensionCorsConfiguration();
