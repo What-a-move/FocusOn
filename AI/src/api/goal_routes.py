@@ -16,7 +16,7 @@ from src.models.errors import (
     ModelUnavailableError,
 )
 from src.models.jev_client import TypeSafeJevClient
-from src.models.llm_client import OpenAIGoalGenerationClient
+from src.models.llm_client import ClaudeGoalGenerationClient
 from src.workflow.goal_assistance import GoalAssistanceWorkflow
 
 
@@ -27,7 +27,7 @@ async def get_goal_workflow() -> AsyncIterator[GoalAssistanceWorkflow]:
     # Backend owns request-level retries; avoid multiplying them in provider SDKs.
     settings = get_settings().model_copy(update={"goal_assistance_max_retries": 0})
     judgments = TypeSafeJevClient(settings)
-    generator = OpenAIGoalGenerationClient(settings)
+    generator = ClaudeGoalGenerationClient(settings)
     try:
         yield GoalAssistanceWorkflow(settings, judgments, generator)
     finally:

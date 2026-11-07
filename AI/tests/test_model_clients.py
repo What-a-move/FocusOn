@@ -1,8 +1,11 @@
 import asyncio
 import json
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
+import httpx
 import pytest
+from anthropic import APIConnectionError
 
 from src.api.schemas import (
     ClarityStatus,
@@ -24,8 +27,12 @@ from src.models.langsmith_tracing import (
     summarize_goal_request,
     trace_goal_assessment_outputs,
 )
-from src.models.errors import ModelUnavailableError
-from src.models.llm_client import OpenAIGoalGenerationClient
+from src.models.errors import (
+    InvalidModelResponseError,
+    ModelConfigurationError,
+    ModelUnavailableError,
+)
+from src.models.llm_client import ClaudeGoalGenerationClient
 from src.prompts.goal_prompt import candidate_prompt, profile_prompt
 
 
@@ -93,29 +100,36 @@ def test_direct_provider_keys_configure_official_clients():
     settings = Settings(
         _env_file=None,
         typesafe_api_key="direct-typesafe-test-key",
-        openai_api_key="direct-openai-test-key",
+        ANTHROPIC_API_KEY="direct-claude-test-key",
     )
 
     jev = TypeSafeJevClient(settings)
-    generator = OpenAIGoalGenerationClient(settings)
+    generator = ClaudeGoalGenerationClient(settings)
 
     assert jev._client is not None
     assert jev._client._config.base_url == "https://api.typesafe.ai"
     assert jev._client._config.default_model == "jev-latest"
     assert jev._client._config.api_key == "direct-typesafe-test-key"
-    assert generator._llm is not None
-    assert generator._llm.model_name == "gpt-5-mini"
-    assert generator._llm.openai_api_base is None
-    assert generator._llm.reasoning_effort == "minimal"
-    assert generator._llm.verbosity == "low"
-    assert generator._llm.max_tokens == 600
+    assert generator._client is not None
+    assert str(generator._client.base_url) == "https://api.anthropic.com"
+    assert generator._client.api_key == "direct-claude-test-key"
+    assert generator._model == "claude-haiku-4-5-20251001"
+    assert generator._max_tokens == 1200
+
+
+def test_claude_key_alias_and_standard_key_precedence(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("CLAUDE_API_KEY", "alias-test-key")
+    assert Settings(_env_file=None).anthropic_api_key.get_secret_value() == "alias-test-key"
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "standard-test-key")
+    assert Settings(_env_file=None).anthropic_api_key.get_secret_value() == "standard-test-key"
 
 
 def test_rule_based_question_window_is_at_least_ten_seconds(monkeypatch):
-    monkeypatch.delenv("OPENAI_QUESTION_DEADLINE_SECONDS", raising=False)
-    assert Settings(_env_file=None).openai_question_deadline_seconds == 10
+    monkeypatch.delenv("CLAUDE_QUESTION_DEADLINE_SECONDS", raising=False)
+    assert Settings(_env_file=None).claude_question_deadline_seconds == 10
     with pytest.raises(ValueError):
-        Settings(_env_file=None, openai_question_deadline_seconds=9.9)
+        Settings(_env_file=None, claude_question_deadline_seconds=9.9)
 
 
 @pytest.mark.asyncio
@@ -245,33 +259,142 @@ def test_profile_prompt_requires_the_latest_answer_to_refine_the_goal():
 
 
 @pytest.mark.asyncio
-async def test_openai_schema_failure_is_repaired_at_most_once():
+async def test_claude_schema_failure_is_repaired_at_most_once():
     class Structured:
         def __init__(self):
             self.calls = 0
 
-        async def ainvoke(self, messages):
+        async def parse(self, **kwargs):
+            assert kwargs["output_format"] is RecommendedGoal
+            assert kwargs["model"] == "test-claude"
+            assert kwargs["max_tokens"] == 1200
             self.calls += 1
             if self.calls == 1:
-                return {"id": "missing-required-fields"}
-            return {"id": "goal-1", "title": "캐싱 학습", "reason": "범위를 명확히 함"}
-
-    class Llm:
-        def __init__(self, structured):
-            self.structured = structured
-
-        def with_structured_output(self, schema, method):
-            assert method == "json_schema"
-            return self.structured
+                result = {"id": "missing-required-fields"}
+            else:
+                result = {"id": "goal-1", "title": "캐싱 학습", "reason": "범위를 명확히 함"}
+                assert len(kwargs["messages"]) == 2
+            return SimpleNamespace(stop_reason="end_turn", parsed_output=result)
 
     structured = Structured()
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._llm = Llm(structured)
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = SimpleNamespace(messages=structured)
+    client._model = "test-claude"
+    client._max_tokens = 1200
 
     result = await client._generate(RecommendedGoal, "safe prompt")
 
     assert result.title == "캐싱 학습"
     assert structured.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_claude_official_sdk_sends_schema_and_validates_response():
+    from anthropic import AsyncAnthropic
+
+    def respond(request):
+        payload = json.loads(request.content)
+        assert request.url.host == "api.anthropic.com"
+        assert request.url.path == "/v1/messages"
+        assert request.headers["x-api-key"] == "fake-key"
+        assert payload["output_config"]["format"]["type"] == "json_schema"
+        assert payload["system"]
+        return httpx.Response(200, json={
+            "id": "msg-test", "type": "message", "role": "assistant",
+            "model": "test-claude", "stop_reason": "end_turn", "stop_sequence": None,
+            "content": [{"type": "text", "text": json.dumps({
+                "id": "goal-1", "title": "캐싱 학습", "reason": "범위를 명확히 함",
+            })}],
+            "usage": {"input_tokens": 10, "output_tokens": 20},
+        })
+
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._model = "test-claude"
+    client._max_tokens = 1200
+    client._client = AsyncAnthropic(
+        api_key="fake-key", max_retries=0,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond)),
+    )
+    transport = client._client
+    try:
+        assert (await client._generate(RecommendedGoal, "safe prompt")).id == "goal-1"
+    finally:
+        await client.aclose()
+    assert transport.is_closed()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status, expected", [
+    (400, ModelConfigurationError), (401, ModelConfigurationError),
+    (402, ModelConfigurationError), (403, ModelConfigurationError),
+    (404, ModelConfigurationError), (429, ModelUnavailableError),
+    (500, ModelUnavailableError), (529, ModelUnavailableError),
+])
+async def test_claude_provider_failures_keep_safe_retry_semantics(status, expected):
+    from anthropic import AsyncAnthropic
+
+    def respond(_request):
+        return httpx.Response(status, json={
+            "type": "error", "error": {"type": "api_error", "message": "private-provider-body"},
+        })
+
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._model = "test-claude"
+    client._max_tokens = 1200
+    client._client = AsyncAnthropic(
+        api_key="fake-key", max_retries=0,
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond)),
+    )
+    try:
+        with pytest.raises(expected) as error:
+            await client._generate(RecommendedGoal, "safe prompt")
+        assert "private-provider-body" not in str(error.value)
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stop_reason", ["max_tokens", "refusal"])
+async def test_claude_rejects_incomplete_results_after_one_repair(stop_reason):
+    parse = AsyncMock(return_value=SimpleNamespace(
+        stop_reason=stop_reason,
+        parsed_output={"id": "goal-1", "title": "캐싱 학습", "reason": "범위 확인"},
+    ))
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._model = "test-claude"
+    client._max_tokens = 1200
+    client._client = SimpleNamespace(messages=SimpleNamespace(parse=parse))
+    with pytest.raises(InvalidModelResponseError):
+        await client._generate(RecommendedGoal, "safe prompt")
+    assert parse.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_claude_missing_key_does_not_fall_back_to_revoked_openai_key(monkeypatch):
+    for name in ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "revoked-test-key")
+    client = ClaudeGoalGenerationClient(Settings(_env_file=None))
+    with pytest.raises(ModelConfigurationError):
+        await client._generate(RecommendedGoal, "safe prompt")
+    assert client._client is None
+
+
+@pytest.mark.asyncio
+async def test_claude_connection_failure_is_retryable_and_client_can_close_twice():
+    parse = AsyncMock(side_effect=APIConnectionError(
+        request=httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    ))
+    transport = SimpleNamespace(messages=SimpleNamespace(parse=parse), close=AsyncMock())
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._model = "test-claude"
+    client._max_tokens = 1200
+    client._client = transport
+    with pytest.raises(ModelUnavailableError):
+        await client._generate(RecommendedGoal, "safe prompt")
+    await client.aclose()
+    await client.aclose()
+    transport.close.assert_awaited_once()
 
 
 def question(text: str) -> ClarificationQuestion:
@@ -287,8 +410,8 @@ def question(text: str) -> ClarificationQuestion:
 
 @pytest.mark.asyncio
 async def test_parallel_question_generation_returns_first_valid_result():
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._llm = object()
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = object()
     client._question_parallelism = 2
     client._question_deadline_seconds = 10.0
     calls = 0
@@ -319,8 +442,8 @@ async def test_parallel_question_generation_returns_first_valid_result():
 
 @pytest.mark.asyncio
 async def test_parallel_question_generation_skips_previously_answered_question():
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._llm = object()
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = object()
     client._question_parallelism = 2
     client._question_deadline_seconds = 10.0
     calls = 0
@@ -356,8 +479,8 @@ async def test_parallel_question_generation_skips_previously_answered_question()
 
 @pytest.mark.asyncio
 async def test_parallel_question_generation_falls_back_if_both_repeat_prior_question():
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._llm = object()
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = object()
     client._question_parallelism = 2
     client._question_deadline_seconds = 0.03
 
@@ -398,26 +521,27 @@ async def test_streamed_question_emits_text_before_validated_result():
 
         async def __aiter__(self):
             yield SimpleNamespace(
-                type="response.output_text.delta",
-                delta='{"id":"scope","text":"어떤',
+                type="content_block_delta",
+                delta=SimpleNamespace(type="text_delta", text='{"id":"scope","text":"어떤'),
             )
             yield SimpleNamespace(
-                type="response.output_text.delta",
-                delta=' 범위를 다룰까요?","options":[]}',
+                type="content_block_delta",
+                delta=SimpleNamespace(type="text_delta", text=' 범위를 다룰까요?","options":[]}'),
             )
 
-        async def get_final_response(self):
-            return SimpleNamespace(output_parsed=question("어떤 범위를 다룰까요?"))
+        async def get_final_message(self):
+            return SimpleNamespace(stop_reason="end_turn", parsed_output=question("어떤 범위를 다룰까요?"))
 
-    class Responses:
-        def stream(self, **_kwargs):
+    class Messages:
+        def stream(self, **kwargs):
+            assert kwargs["output_format"] is ClarificationQuestion
+            assert kwargs["model"] == "test-claude"
             return Stream()
 
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._response_client = SimpleNamespace(responses=Responses())
-    client._openai_model = "gpt-5-mini"
-    client._openai_reasoning_effort = "minimal"
-    client._openai_max_completion_tokens = 600
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = SimpleNamespace(messages=Messages())
+    client._model = "test-claude"
+    client._max_tokens = 1200
     previews = []
 
     result = await client._stream_question("safe prompt", previews.append)
@@ -428,8 +552,8 @@ async def test_streamed_question_emits_text_before_validated_result():
 
 @pytest.mark.asyncio
 async def test_question_returns_local_fallback_after_deadline():
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._llm = object()
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = object()
     client._question_parallelism = 2
     client._question_deadline_seconds = 0.02
 
@@ -450,8 +574,8 @@ async def test_question_returns_local_fallback_after_deadline():
 
 @pytest.mark.asyncio
 async def test_question_returns_local_fallback_when_provider_is_unavailable():
-    client = OpenAIGoalGenerationClient.__new__(OpenAIGoalGenerationClient)
-    client._llm = object()
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = object()
     client._question_parallelism = 2
     client._question_deadline_seconds = 0.03
 

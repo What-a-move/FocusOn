@@ -23,18 +23,18 @@ MVP에서는 화면 판정 수정·저장·개인화가 제외되므로 관련 �
 
 ## 0. 학습 목표 설정 보조의 모델 역할
 
-Issue #12의 목표 설정 보조에서는 JEV와 OpenAI 역할을 다음처럼 고정한다.
+Issue #12의 목표 설정 보조에서는 JEV와 Claude 역할을 다음처럼 고정한다.
 
 | 구성요소 | 허용 역할 | 금지 역할 |
 | --- | --- | --- |
 | JEV System One | 유효성, 복수 목표, 불명확 용어, 구체성, 생성 결과 일치 여부의 타입화된 확률 판단 | 질문·추천·이유·GoalProfile 자연어 생성 |
-| OpenAI | 질문 한 개, 선택지 2~3개, 후보 2~3개, 추천 이유, GoalProfile 구조화 생성과 1회 Repair | `clarityStatus` 결정·변경, JEV 판단 덮어쓰기 |
+| Claude | 질문 한 개, 선택지 2~3개, 후보 2~3개, 추천 이유, GoalProfile 구조화 생성과 1회 Repair | `clarityStatus` 결정·변경, JEV 판단 덮어쓰기 |
 | Python·LangGraph | Threshold, 우선순위, 분기, 재시도, fallback, 사용자 확인 강제 | 모델의 자유 출력 신뢰, 무제한 반복 |
 | Laya Multilingual | JEV와 동일한 state·typed question으로 로컬 비교 판단 | `clarityStatus` 결정·변경, 질문·추천·GoalProfile 생성, 저장 흐름 참여 |
 
-목표·선택·답변 문자열은 모두 데이터로 직렬화한다. OpenAI Structured Output은 `json_schema` 방식을 사용하고 추가 필드, enum, 배열 개수와 중복을 Pydantic으로 검증한다. 후보와 GoalProfile은 JEV의 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough` 세 Noul 결과가 모두 Threshold 이상이어야 통과한다.
+목표·선택·답변 문자열은 모두 데이터로 직렬화한다. Claude 공식 SDK의 `messages.parse(output_format=...)`와 `messages.stream(output_format=...)`으로 구조화 출력을 요청하고 추가 필드, enum, 배열 개수와 중복을 Pydantic으로 검증한다. 후보와 GoalProfile은 JEV의 `preserves_user_intent`, `contains_one_goal`, `is_specific_enough` 세 Noul 결과가 모두 Threshold 이상이어야 통과한다.
 
-로컬 테스트는 직접 제공자 API를 사용한다. JEV 판단은 `TYPESAFE_API_KEY`와 기본 모델 `jev-latest`로 TypeSafe 공식 API를 호출하고, 문장 생성은 `OPENAI_API_KEY`와 기본 모델 `gpt-5-mini`로 OpenAI 공식 API를 호출한다. Vercel AI Gateway 설정과 우회 경로는 지원하지 않는다.
+로컬 테스트는 직접 제공자 API를 사용한다. JEV 판단은 `TYPESAFE_API_KEY`와 기본 모델 `jev-latest`로 TypeSafe 공식 API를 호출하고, 문장 생성은 `ANTHROPIC_API_KEY`와 기본 모델 `claude-haiku-4-5-20251001`로 Claude 공식 API를 호출한다. Vercel AI Gateway 설정과 우회 경로는 지원하지 않는다.
 
 검증 실패 시 실패한 검사 이름만 Repair Prompt에 추가하고 최대 한 번 실행한다. 두 번째 검증도 실패하면 원본 생성물을 표시하지 않고 `NEEDS_QUESTION`으로 이동한다. 모델 장애는 `INVALID`로 변환하지 않는다.
 
@@ -48,7 +48,7 @@ Issue #12의 목표 설정 보조에서는 JEV와 OpenAI 역할을 다음처럼 
 
 질문 답변은 단순 이력으로만 쓰지 않는다. 생성 Prompt는 최신 답변을 사용자 요구사항으로 명시하고, 답변에 주제·활동·범위·결과가 있으면 후보 제목과 GoalProfile의 `interpretedGoal` 및 관련 필드에 반영하도록 요구한다.
 
-질문·추천·GoalProfile 생성은 `gpt-5-mini`의 최소 추론량과 낮은 응답 길이를 기본값으로 사용한다. JEV 판단 결과를 먼저 보여 준 뒤 이루어지는 생성 단계의 지연을 줄이되, 구조화 Schema 검증과 재시도 정책은 유지한다.
+질문·추천·GoalProfile 생성은 `claude-haiku-4-5-20251001`, 최대 1,200 출력 토큰을 기본값으로 사용한다. OpenAI 전용 reasoning·verbosity 설정은 전달하지 않는다. JEV 판단 결과를 먼저 보여 준 뒤 이루어지는 생성 단계의 지연을 줄이되, 구조화 Schema 검증과 재시도 정책은 유지한다.
 
 Streamlit 비교용 Laya는 JEV와 동일한 네 typed question을 받지만 확률·Score 보정 체계가 JEV와 다르다. 따라서 결과를 비교 표로만 보여 주고 JEV Router의 Threshold나 실제 사용자 흐름에 사용하지 않는다.
 
