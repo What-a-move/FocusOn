@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #167 이어서 확인 (2026-11-07)
+
+- 실제 Google OAuth·Swagger 실계정 흐름과 Notion API 정본을 대조한다. 이 작업은 합성 JWT HTTP 검증과 구분한다.
+- 푸시·PR 전 최신 dev의 V11 충돌과 #163 종료 API 연계 여부를 확인한다. 상세는 `features/session-heartbeat-REPORT.md`.
+
 ## 현재 우선 작업: Issue #116
 
 PR #162의 CodeRabbit 404·405 로그 코드 지적을 수정했다. 수정 커밋의 CI·재리뷰를 확인하고 사용자 승인 후 병합한다. 다음 기능 우선순위는 세션 종료 API이며, 최신 dev의 일시정지·재개와 동일한 인증·버전·멱등성·시간 확정 규칙을 재사용한다. #151 CORS·확장 1개 정책은 팀원 이슈로 중복 구현하지 않는다.

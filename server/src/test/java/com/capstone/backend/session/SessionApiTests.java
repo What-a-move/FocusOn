@@ -17,18 +17,22 @@ import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.common.api.RequestIdFilter;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.service.SessionHeartbeatCleanup;
 import com.capstone.backend.user.service.OnboardingReadinessService;
 import com.capstone.backend.user.service.OnboardingReadinessService.Readiness;
 import com.capstone.backend.user.service.OnboardingReadinessService.Steps;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,6 +49,9 @@ class SessionApiTests {
   @Autowired private LoginService login;
   @Autowired private ObjectMapper json;
   @Autowired private LearningSessionRepository sessions;
+  @Autowired private JdbcTemplate jdbc;
+  @Autowired private SessionHeartbeatCleanup heartbeatCleanup;
+  @Autowired private DataSource dataSource;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private OnboardingReadinessService onboarding;
   private MockMvc mvc;
@@ -56,6 +63,296 @@ class SessionApiTests {
     when(google.exchange(any())).thenAnswer(invocation -> "session-" + UUID.randomUUID());
     when(onboarding.get(any(), isNull())).thenReturn(new Readiness(OnboardingStatus.COMPLETED,
         "COMPLETED", new Steps(true, true, true, true, true)));
+  }
+
+  @Test
+  void heartbeatEnforcesOrderingAndPreservesCommandVersion() throws Exception {
+    LoginResponse owner = desktop("heartbeat-" + UUID.randomUUID());
+    final LoginResponse other = desktop("heartbeat-other-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String sessionId = startForHeartbeat(owner);
+    long version = sessions.findById(Long.valueOf(sessionId)).orElseThrow().getVersion();
+    Instant observed = Instant.now().minusSeconds(3);
+    String first = heartbeatBody(observed, 1000);
+    String path = "/api/v1/sessions/" + sessionId + "/heartbeats";
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(first))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accumulatedActiveMs").value(1000));
+    var stored = sessions.findById(Long.valueOf(sessionId)).orElseThrow();
+    var received = stored.getLastHeartbeatAt();
+    org.junit.jupiter.api.Assertions.assertEquals(version, stored.getVersion());
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(heartbeatBody(observed, 2000)))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accumulatedActiveMs").value(1000));
+    org.junit.jupiter.api.Assertions.assertEquals(received,
+        sessions.findById(Long.valueOf(sessionId)).orElseThrow().getLastHeartbeatAt());
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(heartbeatBody(observed.plusSeconds(1), 999)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("SESSION_HEARTBEAT_INVALID"));
+    mvc.perform(post(path).header("Authorization", "Bearer " + other.accessToken())
+            .header("X-Device-Id", other.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(first))
+        .andExpect(status().isNotFound());
+    mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(first))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void heartbeatAtExpiredDeadlineCommitsAbandonedWithoutAddingTime() throws Exception {
+    LoginResponse owner = desktop("heartbeat-expire-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at = ? WHERE id = ?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(181)), Long.valueOf(id));
+    mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(heartbeatBody(Instant.now(), 1000)))
+        .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("SESSION_ABANDONED"))
+        .andExpect(jsonPath("$.details.endReason").value("HEARTBEAT_TIMEOUT"));
+    var stored = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("ABANDONED", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals(0, stored.getAccumulatedActiveMs());
+    org.junit.jupiter.api.Assertions.assertNotNull(stored.getEndedAt());
+  }
+
+  @Test
+  void heartbeatUsesAuthenticatedRateLimitAndRejectsFutureClock() throws Exception {
+    LoginResponse owner = desktop("heartbeat-limit-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    String path = "/api/v1/sessions/" + id + "/heartbeats";
+    String token = "Bearer " + owner.accessToken();
+    String device = owner.device().deviceId();
+    mvc.perform(post(path).header("Authorization", token).header("X-Device-Id", device)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(heartbeatBody(Instant.now().plusSeconds(60), 0)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("SESSION_HEARTBEAT_INVALID"));
+    boolean limited = false;
+    for (int i = 0; i < 60; i++) {
+      var result = mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", device).contentType(MediaType.APPLICATION_JSON)
+              .content(heartbeatBody(Instant.now(), 0)))
+          .andReturn().getResponse();
+      if (result.getStatus() == 429) {
+        org.junit.jupiter.api.Assertions.assertNotNull(result.getHeader("Retry-After"));
+        limited = true;
+        break;
+      }
+      org.junit.jupiter.api.Assertions.assertEquals(200, result.getStatus());
+    }
+    org.junit.jupiter.api.Assertions.assertTrue(limited);
+  }
+
+  @Test
+  void cleanupDistinguishesCandidateFromFinalAndPreservesLatestTime() throws Exception {
+    LoginResponse owner = desktop("heartbeat-worker-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at = ? WHERE id = ?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(65)), numericId);
+    heartbeatCleanup.cleanup();
+    org.junit.jupiter.api.Assertions.assertEquals("RUNNING",
+        sessions.findById(numericId).orElseThrow().getStatus().name());
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at = ?, accumulated_active_ms = ? "
+            + "WHERE id = ?", java.sql.Timestamp.from(Instant.now().minusSeconds(181)),
+        5000L, numericId);
+    heartbeatCleanup.cleanup();
+    var stored = sessions.findById(numericId).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("ABANDONED", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals(5000, stored.getAccumulatedActiveMs());
+    org.junit.jupiter.api.Assertions.assertEquals("HEARTBEAT_TIMEOUT", stored.getEndReason());
+  }
+
+  @Test
+  void reachingTargetTransitionsAndIncrementsVersion() throws Exception {
+    LoginResponse owner = desktop("heartbeat-target-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    long version = sessions.findById(numericId).orElseThrow().getVersion();
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at = ?, last_heartbeat_at = ? "
+            + "WHERE id = ?", java.sql.Timestamp.from(Instant.now().minusSeconds(300)),
+        java.sql.Timestamp.from(Instant.now().minusSeconds(1)), numericId);
+    mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(heartbeatBody(Instant.now(), 300000)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.status").value("AWAITING_END_CONFIRMATION"));
+    var stored = sessions.findById(numericId).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1, stored.getVersion());
+    org.junit.jupiter.api.Assertions.assertEquals(300000, stored.getAccumulatedActiveMs());
+  }
+
+  @Test
+  void concurrentOutOfOrderHeartbeatsNeverMoveTheConfirmedTimeBackwards() throws Exception {
+    LoginResponse owner = desktop("heartbeat-race-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    Instant now = Instant.now().minusSeconds(3);
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("동시 heartbeat 요청 대기 시간 초과");
+        }
+        return mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("X-Device-Id", owner.device().deviceId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(heartbeatBody(now.plusSeconds(index), 1000L + index * 1000L)))
+            .andReturn().getResponse().getStatus();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      for (var result : results) {
+        org.junit.jupiter.api.Assertions.assertEquals(200, result.get(20, TimeUnit.SECONDS));
+      }
+    }
+    var stored = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(2000, stored.getAccumulatedActiveMs());
+  }
+
+  @Test
+  void concurrentCleanupAndExpiredHeartbeatCannotReviveSession() throws Exception {
+    LoginResponse owner = desktop("heartbeat-cleanup-race-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at = ? WHERE id = ?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(181)), numericId);
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var heartbeat = executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("heartbeat 경쟁 대기 시간 초과");
+        }
+        return mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("X-Device-Id", owner.device().deviceId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(heartbeatBody(Instant.now(), 1000)))
+            .andReturn().getResponse().getStatus();
+      });
+      final var cleanup = executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("자동 종료 경쟁 대기 시간 초과");
+        }
+        heartbeatCleanup.cleanup();
+        return true;
+      });
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      org.junit.jupiter.api.Assertions.assertEquals(409, heartbeat.get(20, TimeUnit.SECONDS));
+      org.junit.jupiter.api.Assertions.assertTrue(cleanup.get(20, TimeUnit.SECONDS));
+    }
+    var stored = sessions.findById(numericId).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("ABANDONED", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals(0, stored.getAccumulatedActiveMs());
+  }
+
+  @Test
+  void postgresCleanupAndHeartbeatActuallyWaitOnSameUserLock() throws Exception {
+    try (var blocker = dataSource.getConnection()) {
+      org.junit.jupiter.api.Assumptions.assumeTrue(
+          "PostgreSQL".equals(blocker.getMetaData().getDatabaseProductName()));
+      LoginResponse owner = desktop("heartbeat-lock-" + UUID.randomUUID());
+      String id = startForHeartbeat(owner);
+      long numericId = Long.parseLong(id);
+      jdbc.update("UPDATE learning_sessions SET last_resumed_at = ? WHERE id = ?",
+          java.sql.Timestamp.from(Instant.now().minusSeconds(181)), numericId);
+      blocker.setAutoCommit(false);
+      int blockerPid;
+      try (var statement = blocker.prepareStatement("SELECT pg_backend_pid()")) {
+        try (var rows = statement.executeQuery()) {
+          rows.next();
+          blockerPid = rows.getInt(1);
+        }
+      }
+      try (var statement = blocker.prepareStatement(
+          "SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+        statement.setLong(1, Long.parseLong(owner.user().userId()));
+        statement.executeQuery().close();
+      }
+      CountDownLatch ready = new CountDownLatch(2);
+      CountDownLatch start = new CountDownLatch(1);
+      try (var executor = Executors.newFixedThreadPool(2)) {
+        var heartbeat = executor.submit(() -> {
+          ready.countDown();
+          if (!start.await(10, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("heartbeat 경쟁 대기 시간 초과");
+          }
+          return mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
+                  .header("Authorization", "Bearer " + owner.accessToken())
+                  .header("X-Device-Id", owner.device().deviceId())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(heartbeatBody(Instant.now(), 0)))
+              .andReturn().getResponse().getStatus();
+        });
+        var cleanup = executor.submit(() -> {
+          ready.countDown();
+          if (!start.await(10, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("정리 작업 경쟁 대기 시간 초과");
+          }
+          heartbeatCleanup.cleanup();
+          return true;
+        });
+        try {
+          org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+          start.countDown();
+          long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+          int blocked = 0;
+          while (System.nanoTime() < deadline && blocked < 2) {
+            blocked = jdbc.queryForObject("WITH RECURSIVE waiting(pid) AS ("
+                + "SELECT CAST(? AS integer) UNION "
+                + "SELECT a.pid FROM pg_stat_activity a JOIN waiting w "
+                + "ON w.pid = ANY(pg_blocking_pids(a.pid))) "
+                + "SELECT count(*) - 1 FROM waiting", Integer.class, blockerPid);
+            if (blocked < 2) {
+              Thread.sleep(20);
+            }
+          }
+          org.junit.jupiter.api.Assertions.assertTrue(blocked >= 2,
+              "heartbeat와 정리 작업의 실제 잠금 대기가 확인돼야 한다");
+        } finally {
+          blocker.commit();
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(409, heartbeat.get(20, TimeUnit.SECONDS));
+        org.junit.jupiter.api.Assertions.assertTrue(cleanup.get(20, TimeUnit.SECONDS));
+      }
+      var stored = sessions.findById(numericId).orElseThrow();
+      org.junit.jupiter.api.Assertions.assertEquals("ABANDONED", stored.getStatus().name());
+      org.junit.jupiter.api.Assertions.assertEquals(0, stored.getAccumulatedActiveMs());
+    }
+  }
+
+  private String startForHeartbeat(LoginResponse owner) throws Exception {
+    String token = "Bearer " + owner.accessToken();
+    String goal = mvc.perform(post("/api/v1/goals").header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"heartbeat goal\","
+                + "\"confirmationSource\":\"MANUAL_CONFIRMED\"}"))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    String goalId = json.readTree(goal).path("data").path("goalId").asText();
+    String started = mvc.perform(post("/api/v1/sessions").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+            .content(request(goalId, 300000)))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    return json.readTree(started).path("data").path("sessionId").asText();
+  }
+
+  private String heartbeatBody(Instant observed, long activeMs) {
+    return "{\"clientObservedAt\":\"" + observed + "\",\"accumulatedActiveMs\":" + activeMs + "}";
   }
 
   @Test

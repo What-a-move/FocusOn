@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## 진행 중: Issue #167 Heartbeat (2026-11-07)
+
+- `feat/167-session-heartbeat`에서 생존 신호와 180초 무신호 종료를 구현했다. 격리 PostgreSQL의 실제 잠금 대기·V10→V11 기존 세션 보존 및 합성 인증 HTTP를 확인했다.
+- 실제 Google 인증·Swagger 실계정 QA와 Notion API 정본 대조는 미완료다. 자세한 결과는 `features/session-heartbeat-REPORT.md`를 따른다.
+
 ## 진행 중: 서버 요청 추적 (#116)
 
 `feat/#116-server-tracing`에서 traceId·JSON 요청 로그를 구현하고 로컬 QA를 수행했다. 범위와 한계는 `features/server-tracing-PLAN.md`, `server-tracing-QA.md`, `server-tracing-REPORT.md`를 확인한다. 독립 리뷰·PR은 아직 완료하지 않았다. 사용자의 기존 문서 수정은 작업 시작 전 Git stash에 보존했다.

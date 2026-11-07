@@ -3,6 +3,8 @@ package com.capstone.backend.session.controller;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.session.dto.SessionDtos.ActiveResponse;
+import com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest;
+import com.capstone.backend.session.dto.SessionDtos.HeartbeatResponse;
 import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
 import com.capstone.backend.session.dto.SessionDtos.PauseResponse;
 import com.capstone.backend.session.dto.SessionDtos.ResumeRequest;
@@ -10,6 +12,7 @@ import com.capstone.backend.session.dto.SessionDtos.ResumeResponse;
 import com.capstone.backend.session.dto.SessionDtos.StartRequest;
 import com.capstone.backend.session.dto.SessionDtos.StartResponse;
 import com.capstone.backend.session.service.SessionCommandService;
+import com.capstone.backend.session.service.SessionHeartbeatService;
 import com.capstone.backend.session.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,6 +45,34 @@ import org.springframework.web.bind.annotation.RestController;
 public class SessionController {
   private final SessionService sessions;
   private final SessionCommandService commands;
+  private final SessionHeartbeatService heartbeats;
+
+  /** 인증된 실행 Desktop의 생존 신호를 반영한다. */
+  @PostMapping("/{sessionId}/heartbeats")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "학습 세션 Heartbeat",
+      description = "Desktop의 실행 기기와 누적 시간을 확인합니다. 명령 버전과 멱등 키는 필요하지 않습니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "생존 신호 수신 또는 이전 신호 무시"),
+      @ApiResponse(responseCode = "400", description = "관측 시각 또는 누적 시간 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "401", description = "인증 또는 기기 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "409", description = "종료된 세션 또는 상태 충돌",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "429", description = "요청 제한 초과",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public com.capstone.backend.common.api.ApiResponse<HeartbeatResponse> heartbeat(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId,
+      @Parameter(description = "현재 실행 Desktop 기기 ID", required = true)
+      @RequestHeader(value = "X-Device-Id", required = false) String deviceId,
+      @Valid @RequestBody HeartbeatRequest request) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        heartbeats.heartbeat(principal, deviceId, sessionId, request));
+  }
 
   /** 인증된 Desktop 기기에서 실행 중인 세션을 일시정지한다. */
   @PostMapping("/{sessionId}/pause")
