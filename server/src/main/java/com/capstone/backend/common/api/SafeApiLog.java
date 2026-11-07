@@ -19,6 +19,28 @@ public final class SafeApiLog {
 
   private SafeApiLog() {}
 
+  /** 분석 경계에서 고정 enum만 받고 원문·외부 예외 메시지를 받지 않는다. */
+  public static void analysisEvent(AnalysisEvent event, long startedNanos) {
+    boolean failure = event == AnalysisEvent.AI_FAIL || event == AnalysisEvent.STORE_FAIL;
+    var output = failure ? LOGGER.atWarn() : LOGGER.atInfo();
+    output.addKeyValue("component", "analysis-orchestrator").addKeyValue("event", event.value)
+        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000))
+        .log(event.value);
+  }
+
+  /** 모듈 연동 로깅 정본에서 정한 분석 이벤트다. */
+  public enum AnalysisEvent {
+    GATE_PASS("gate.rule.pass"), GATE_BLOCK("gate.rule.block"),
+    AI_START("ai.call.start"), AI_OK("ai.call.ok"), AI_FAIL("ai.call.fail"),
+    STORE_OK("store.write.ok"), STORE_FAIL("store.write.fail");
+
+    private final String value;
+
+    AnalysisEvent(String value) {
+      this.value = value;
+    }
+  }
+
   /** 요청 시작 시 고정된 필드만 기록한다. */
   public static void httpIn(String method, String path) {
     LOGGER.atInfo().addKeyValue("component", "request-filter").addKeyValue("event", "http.in")
