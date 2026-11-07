@@ -30,14 +30,31 @@ const NOTIFY_BLOCKED: Record<PermState['state'], string> = {
   granted: '',
 }
 
-// [유지보수] 화면 기록은 macOS가 앱 안에서 허용 창을 띄우지 않는다. 시스템 설정을 연 뒤 돌아와서 다시 확인한다.
+// [유지보수] 앱을 다시 켜면 동의 체크가 사라지므로 이 기기에만 잠깐 기억한다. 저장에 성공하면 지운다.
+const CONSENT_DRAFT_KEY = 'focuson.onboarding.consent-draft'
+type ConsentDraft = { accepted: string[]; cameraConsent: boolean }
+function readDraft(): ConsentDraft | null {
+  try {
+    const draft = JSON.parse(localStorage.getItem(CONSENT_DRAFT_KEY) ?? 'null') as ConsentDraft | null
+    return draft && Array.isArray(draft.accepted) ? draft : null
+  } catch { return null }
+}
+function writeDraft(draft: ConsentDraft | null) {
+  try {
+    if (draft) localStorage.setItem(CONSENT_DRAFT_KEY, JSON.stringify(draft))
+    else localStorage.removeItem(CONSENT_DRAFT_KEY)
+  } catch { /* 저장소를 못 쓰면 다시 켠 뒤 동의만 다시 받는다 */ }
+}
+
+// [유지보수] 화면 기록은 macOS가 앱 안에서 허용 창을 띄우지 않는다. 또 켜도 앱을 다시 켜야 허용으로 알려 준다.
+// 그래서 시스템 설정을 연 뒤 ‘다시 열기’로 앱을 다시 켠다.
 function permText(name: PermName, perm: PermState): string {
   if (perm.error) return perm.error
-  if (name === 'screen' && perm.state === 'opened') return '시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 FocusOn을 켜 주세요'
-  if (name === 'screen' && perm.state === 'denied') return '아직 꺼져 있어요. 켰다면 FocusOn을 다시 열어 주세요.'
+  if (name === 'screen' && perm.state === 'opened') return 'FocusOn을 켠 뒤 앱을 다시 열어야 적용돼요'
+  if (name === 'screen' && perm.state === 'denied') return '아직 꺼져 있어요. 켰다면 ‘다시 열기’를 눌러 주세요'
   // [유지보수] macOS가 알림 허용 여부를 알려 주지 않아 시험 알림을 보내고 사용자에게 보였는지 묻는다.
   if (name === 'notify' && perm.state === 'requested') return '방금 보낸 알림이 보였나요?'
-  if (name === 'notify' && perm.state === 'denied') return '시스템 설정 › 알림에서 FocusOn을 허용해 주세요.'
+  if (name === 'notify' && perm.state === 'denied') return '알림이 꺼져 있어요. ‘설정 열기’로 켜 주세요'
   if (name === 'notify' && perm.state === 'opened') return '허용한 뒤 ‘다시 보내기’를 눌러 주세요.'
   if (perm.state === 'denied') return '시스템 설정에서 언제든 허용할 수 있어요.'
   return permCopy[name].idle
@@ -54,6 +71,17 @@ export function PermissionsStep() {
   const [feedback, setFeedback] = useState<Notice | null>(null)
   const [saving, setSaving] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    const draft = readDraft()
+    if (!draft) return
+    queueMicrotask(() => {
+      setAccepted(new Set(draft.accepted))
+      setCameraConsent(draft.cameraConsent)
+      setView('permission')
+      setPrompt({ text: '다시 왔네요! 권한을 확인할게요', error: false })
+    })
+  }, [])
 
   const allAccepted = requiredConsents.every(({ id }) => accepted.has(id))
   const screenReady = perms.screen.state === 'granted'
@@ -121,10 +149,9 @@ export function PermissionsStep() {
       const result = await onboardingApi.openScreenRecordingSettings()
       if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.screen)
       setPerm(name, { state: 'opened', error: null })
-      setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
+      setPrompt({ text: '켠 다음 다시 열어 주세요!', error: false })
       return
     }
-    if (name === 'screen') return recheckScreen(false)
     if (name === 'camera') {
       const result = await onboardingApi.requestCamera()
       if (!result.success) return failPerm(name, current.state, describeError(result.error, '카메라 권한을 요청하지 못했어요.'))
@@ -140,9 +167,29 @@ export function PermissionsStep() {
       return
     }
     const result = await onboardingApi.requestNotifications()
-    if (!result.success) return failPerm(name, current.state, describeError(result.error, '시험 알림을 보내지 못했어요.'))
+    // Main은 실패해도 '꺼져 있음'으로 답한다. 여기로 오면 앱과 화면 연결이 끊긴 것이라 다시 열기를 안내한다.
+    if (!result.success) return failPerm(name, current.state, { title: '시험 알림을 보내지 못했어요.', body: '앱을 다시 연 뒤 시도해 주세요.' })
     setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
-    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림을 보내지 못했어요.', error: true })
+    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림이 꺼져 있나 봐요', error: false })
+  }
+
+  async function openScreenSettingsAgain() {
+    setFeedback(null)
+    const result = await onboardingApi.openScreenRecordingSettings()
+    if (!result.success || !result.data.opened) failPerm('screen', 'opened', SETTINGS_NOT_OPENED.screen)
+  }
+
+  // 이미 반영됐으면 다시 켜지 않는다. 아니면 앱을 다시 켜고, 돌아오면 이 화면에서 다시 확인한다.
+  async function relaunchForScreen() {
+    setFeedback(null)
+    const status = await onboardingApi.checkScreenRecording()
+    if (status.success && status.data.granted) {
+      setPerm('screen', { state: 'granted', error: null })
+      setPrompt({ text: '좋아요, 준비됐어요!', error: false })
+      return
+    }
+    const result = await onboardingApi.relaunchApp()
+    if (!result.success) failPerm('screen', 'opened', { title: '앱을 다시 열지 못했어요.', body: 'FocusOn을 직접 종료한 뒤 다시 열어 주세요.' })
   }
 
   async function answerNotification(seen: boolean) {
@@ -163,12 +210,13 @@ export function PermissionsStep() {
         return
       }
       setView('permission')
+      writeDraft({ accepted: [...accepted], cameraConsent })
       setFeedback(null)
       setPrompt({ text: '권한 두 개만 켜 주시면 돼요', error: false })
       return
     }
     if (!screenReady) {
-      setFeedback({ title: '화면 기록 권한이 필요해요.', body: perms.screen.state === 'idle' ? '‘설정 열기’로 시스템 설정을 열어 화면 기록을 켜 주세요.' : '시스템 설정에서 화면 기록을 켠 뒤 ‘다시 확인’을 눌러 주세요.', info: true })
+      setFeedback({ title: '화면 기록 권한이 필요해요.', body: perms.screen.state === 'idle' ? '‘설정 열기’로 시스템 설정을 열어 화면 기록을 켜 주세요.' : '시스템 설정에서 화면 기록을 켠 뒤 ‘다시 열기’를 눌러 주세요.', info: true })
       return
     }
     if (!notifyReady) {
@@ -182,6 +230,7 @@ export function PermissionsStep() {
       setFeedback(describeError(result.error, '동의와 권한을 저장하지 못했어요.'))
       return
     }
+    writeDraft(null)
     router.push('/onboarding/sites/')
   }
 
@@ -193,7 +242,7 @@ export function PermissionsStep() {
       prompt={prompt.text}
       promptError={prompt.error}
       backHref={view === 'consents' ? '/onboarding/extension/' : undefined}
-      onBack={view === 'permission' ? () => { setView('consents'); setFeedback(null); setPrompt({ text: '시작하려면 동의가 필요해요!', error: false }) } : undefined}
+      onBack={view === 'permission' ? () => { writeDraft(null); setView('consents'); setFeedback(null); setPrompt({ text: '시작하려면 동의가 필요해요!', error: false }) } : undefined}
       feedback={feedback}
       next={{ label: '다음', blocked: view === 'consents' ? !allAccepted : !(screenReady && notifyReady), busy: saving, onClick: () => { void goNext() } }}
     >
@@ -261,8 +310,7 @@ export function PermissionsStep() {
             {visiblePerms.map((name) => {
               const perm = perms[name]
               const copy = permCopy[name]
-              const action = name === 'screen' && perm.state !== 'idle' ? '다시 확인'
-                : name === 'notify' && perm.state === 'denied' ? '설정 열기'
+              const action = name === 'notify' && perm.state === 'denied' ? '설정 열기'
                   : name === 'notify' && perm.state === 'opened' ? '다시 보내기' : copy.action
               return (
                 <li className="perm" data-state={perm.state} key={name}>
@@ -273,6 +321,13 @@ export function PermissionsStep() {
                   </span>
                   {perm.state === 'granted'
                     ? <span className="perm-done">허용됨</span>
+                    : name === 'screen' && perm.state !== 'idle'
+                      ? (
+                        <span className="perm-answer">
+                          <button className="btn btn-ghost perm-action" type="button" onClick={() => { void openScreenSettingsAgain() }}>설정 열기</button>
+                          <button className="btn btn-primary perm-action" type="button" onClick={() => { void relaunchForScreen() }}>다시 열기</button>
+                        </span>
+                      )
                     : name === 'notify' && perm.state === 'requested'
                       ? (
                         <span className="perm-answer">

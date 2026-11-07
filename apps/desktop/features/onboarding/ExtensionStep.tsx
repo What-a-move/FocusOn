@@ -18,6 +18,7 @@ export function ExtensionStep() {
   const [now, setNow] = useState(0)
   const [hint, setHint] = useState<{ kind: '' | 'error' | 'success'; text: string }>({ kind: '', text: defaultHint })
   const [feedback, setFeedback] = useState<Notice | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const issue = useCallback(async () => {
     setStatus('loading')
@@ -30,6 +31,7 @@ export function ExtensionStep() {
       setHint({ kind: 'error', text: `${reason.title} ${reason.body}` })
       return
     }
+    setCopied(false)
     setCode(result.data.code.replace('-', ''))
     setDeadline(Date.parse(result.data.expiresAt))
     setNow(Date.now())
@@ -80,6 +82,17 @@ export function ExtensionStep() {
       ? { text: '새 코드를 받아 주세요!', error: false }
       : { text: 'Chrome이랑 연결해 볼까요?', error: false }
 
+  async function copyCode() {
+    try {
+      // Extension 입력칸은 하이픈이 있어도 받는다. 화면에 보이는 형식 그대로 복사한다.
+      await navigator.clipboard.writeText(`${code.slice(0, 3)}-${code.slice(3)}`)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setHint({ kind: 'error', text: '복사하지 못했어요. 코드를 보고 직접 입력해 주세요.' })
+    }
+  }
+
   function goNext() {
     if (status !== 'connected') {
       setFeedback(status === 'expired'
@@ -113,6 +126,11 @@ export function ExtensionStep() {
             {status === 'connected' ? '완료' : status === 'waiting' ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : '0:00'}
           </span>
         </> : <span className="spacer" />}
+        {status === 'waiting' && (
+          <button className="link-button" type="button" onClick={() => { void copyCode() }} aria-live="polite">
+            {copied ? '복사했어요' : '복사'}
+          </button>
+        )}
         <button className="link-button" type="button" disabled={status === 'loading' || status === 'connected'} onClick={() => { void issue() }}>
           새 코드 받기
         </button>

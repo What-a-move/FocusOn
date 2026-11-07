@@ -51,6 +51,7 @@ export const onboardingApi = {
   saveNickname: (nickname: string) => viaOnboarding((api) => api.saveProfile({ nickname }), same),
   issuePairingCode: () => viaOnboarding((api) => api.issuePairingCode(), ({ codeDisplay, expiresAt }) => ({ code: codeDisplay, expiresAt })),
   openScreenRecordingSettings: () => viaPermissions((api) => api.openScreenSettings(), same),
+  relaunchApp: () => viaPermissions((api) => api.relaunch(), same),
   checkScreenRecording: () => viaPermissions((api) => api.getScreenStatus(), ({ status }) => ({ granted: status === 'granted' })),
   requestCamera: () => viaPermissions((api) => api.requestCamera(), ({ status }) => ({ granted: status === 'granted' })),
   /** macOS는 알림 허용 상태를 조회할 수 없어 시험 알림을 보내 허용 창을 띄운다. */

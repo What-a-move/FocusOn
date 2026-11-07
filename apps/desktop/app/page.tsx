@@ -34,6 +34,11 @@ function Alert({ message, action }: { message: string | null; action: AuthAction
   return <div className="fo-notice" role="alert"><strong>{FAILED_TITLE[action]}</strong><span>{message}</span></div>
 }
 
+// [유지보수] 앱을 켤 때 로고 화면을 잠깐 보여 준다. 로그인 확인이 빨리 끝나도 이 시간은 채운다.
+// 모듈 변수라 앱 안에서 홈으로 다시 올 때는 보이지 않고, 앱을 다시 켜면 다시 보인다.
+const INTRO_MS = 1800
+let introShown = false
+
 function LoadingScreen() {
   return <main className="fo-loading" role="status" aria-label="로그인 상태 확인 중">
     <Image src="/design/poki-floating-logo-base-v1.png" alt="" width={1254} height={1254} priority />
@@ -86,6 +91,13 @@ export default function Page() {
   const running = useRef<AuthAction | null>(null)
   const [action, setAction] = useState<AuthAction>('login')
   const [available, setAvailable] = useState(true)
+  const [intro, setIntro] = useState(!introShown)
+
+  useEffect(() => {
+    if (!intro) return
+    const timer = setTimeout(() => { introShown = true; setIntro(false) }, INTRO_MS)
+    return () => clearTimeout(timer)
+  }, [intro])
 
   useEffect(() => {
     let active = true
@@ -141,7 +153,7 @@ export default function Page() {
   const view = selectAuthView(snapshot)
   const shownError = requestError ?? snapshot?.error ?? null
   const message = shownError ? errorText(shownError) : null
-  if (view === 'loading') return <LoadingScreen />
+  if (view === 'loading' || intro) return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
   if (view === 'home' && snapshot?.user) return <HomeDashboard name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
   return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} action={action} available={available} offline={view === 'offline'} />
