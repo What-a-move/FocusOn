@@ -36,7 +36,8 @@ public class TokenFamilyEntity {
     LOGOUT,
     UNLINK,
     TOKEN_REUSE,
-    DEVICE_REVOKED
+    DEVICE_REVOKED,
+    REPLACED
   }
 
   @Id
