@@ -41,6 +41,7 @@ public class AnalysisService {
     }
   }
 
+  /** 잘못된 식별자도 존재·소유 여부를 노출하지 않는 동일한 세션404로 응답한다. */
   private static long parseId(String value) {
     try {
       long id = Long.parseLong(value);

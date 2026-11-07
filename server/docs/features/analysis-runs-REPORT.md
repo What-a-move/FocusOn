@@ -13,13 +13,13 @@
 
 ## 검증
 
-- Backend build/Checkstyle:158개 실패0/오류0/생략6.
-- PostgreSQL:33개 전부 통과(분석14+분석 migration9+확장 migration9+닉네임1).
+- Backend build/Checkstyle:160개 실패0/오류0/생략6.
+- PostgreSQL:34개 전부 통과(분석15+분석 migration9+확장 migration9+닉네임1).
 - 격리 정적 리뷰와 timeout 보완 재리뷰에서 확정 P1/P2 없음. 상세는 QA·code-review·ERROR 문서다.
 
 ## 상태와 한계
 
-- Server 구현·로컬 QA 완료. PR 생성/원격 CI/CodeRabbit/병합/이슈 종료는 아직 하지 않았다.
+- Server 구현·로컬 QA 완료. PR #172 생성 후 초기 head의 원격 CI2개·CodeRabbit 성공을 확인했고, 리뷰의 host 검증1건·테스트 보강2건을 반영했다. 수정 커밋의 원격 CI·재리뷰는 push 후 확인하며 병합/이슈 종료는 하지 않았다.
 - 현재 dev AI는 정식 경로에서 판정 대신 수신 확인만 반환한다. 실제 AI 성공은 #154 후 연동 QA가 필요하다. 항상 RELATED인 가짜 성공으로 대체하지 않았다.
 - 개입 생성·조회·확인, heartbeat Policy Engine, 리포트·90일 삭제 worker는 이 Issue에 포함하지 않았다. 팀원 세션 명령·Frontend·AI·Notion은 수정하지 않았다.
 - 임시 PG는 QA 후 중지하고 기존 개발 DB/8080은 그대로 둔다. 다음 개발자는 frontend-handoff와 NEXT_TASK를 참고한다.

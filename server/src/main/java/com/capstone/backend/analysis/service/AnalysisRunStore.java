@@ -89,6 +89,7 @@ public class AnalysisRunStore {
     return run.response();
   }
 
+  /** AI 호출 중 기기·family가 폐기될 수 있어 필터 인증과 별도로 잠금 아래 재검증한다. */
   private UserDeviceEntity lockAndValidate(FocusOnPrincipal principal) {
     users.findByIdForUpdate(principal.userId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
@@ -104,6 +105,7 @@ public class AnalysisRunStore {
     return family.getDevice();
   }
 
+  /** 같은 계정의 다른 Desktop도 runner를 대신할 수 없으며 연결 Extension만 허용한다. */
   private LearningSessionEntity ownedSession(FocusOnPrincipal principal, long id,
       UserDeviceEntity device) {
     var session = sessions.findByIdAndUserId(id, principal.userId())
@@ -116,6 +118,7 @@ public class AnalysisRunStore {
     return session;
   }
 
+  /** 동의 철회·제외 목록 변경을 AI 전후에 확인해 오래된 허용 상태를 사용하지 않는다. */
   private GuardStatus guard(long userId, Request request, String goal) {
     if (request.guardStatus() == GuardStatus.PRIVACY_BLOCKED) {
       return GuardStatus.PRIVACY_BLOCKED;

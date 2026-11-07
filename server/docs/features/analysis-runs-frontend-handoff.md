@@ -2,10 +2,11 @@
 
 ## 이번 Server 작업
 
-POST /api/v1/sessions/{sessionId}/analysis-runs를 기존 클라이언트 필드명으로 구현했다. Bearer와 X-Device-Id가 필요하고 X-Trace-Id는 계속 clientRunId를 사용한다. 새 Frontend 요청 필드는 없다. PR·dev 병합 전이다.
+POST /api/v1/sessions/{sessionId}/analysis-runs를 기존 클라이언트 필드명으로 구현했다. Bearer와 X-Device-Id가 필요하고 X-Trace-Id는 계속 clientRunId를 사용한다. 새 Frontend 요청 필드는 없다. PR #172 리뷰 중이며 dev 병합 전이다.
 
 - 200 data: analysisRunId(문자열), analysisStatus, relation, confidence(숫자/null), reasonCode(문자열/null), observedAt, policyVersion(해당 세션 값).
 - guardStatus=EXCLUDED/PRIVACY_BLOCKED이면 metadata/contentPayload를 함께 보내지 않는다. AI 없이 SKIPPED다.
+- guard 없는 CHROME_DOM 본문은 유효한 metadata.urlHost가 필수다. metadata/host 누락·빈 값은400 VALIDATION_ERROR이며 AI로 보내지 않는다. guard만 보내는 요청은 host가 없어도 처리한다.
 - APP_META/TAB_META의 본문은 받지 않는다. CHROME_DOM/DESKTOP_APP_OCR 텍스트 최대2,000자. viewport OCR/카메라 입력은 이번 경로의 MVP 범위가 아니다.
 - 중복 clientRunId는409 IDEMPOTENCY_CONFLICT. 분당9번째 요청은429이며 Retry-After를 따른다. AI 장애를 자동 재시도하는 POST를 만들지 않는다.
 - AI 호출 장애/미설정/수신 확인만 반환하면200 UNCERTAIN, confidence:null, reasonCode:ANALYSIS_UNAVAILABLE다. 자동 로그아웃 대상이 아니다.

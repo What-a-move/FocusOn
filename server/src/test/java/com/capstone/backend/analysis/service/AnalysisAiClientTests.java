@@ -14,12 +14,16 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
 import com.capstone.backend.analysis.service.AnalysisRunStore.Prepared;
 import com.sun.net.httpserver.HttpServer;
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -113,44 +117,72 @@ class AnalysisAiClientTests {
   }
 
   @Test
-  void oversizedAndStalledResponsesCannotHoldRequestIndefinitely() throws Exception {
-    for (String scenario : new String[] {"oversized", "stalled"}) {
-      HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-      var finish = new CountDownLatch(1);
-      server.createContext("/internal/v1/analysis-runs", exchange -> {
-        exchange.getRequestBody().readAllBytes();
-        try {
-          if (scenario.equals("stalled")) {
-            exchange.sendResponseHeaders(200, 0);
-            exchange.getResponseBody().write('{');
-            exchange.getResponseBody().flush();
-            finish.await(10, TimeUnit.SECONDS);
-          } else {
-            byte[] body = "x".repeat(9000).getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, body.length);
-            exchange.getResponseBody().write(body);
+  void oversizedValidDecisionIsRejectedByByteLimit() throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext("/internal/v1/analysis-runs", exchange -> {
+      exchange.getRequestBody().readAllBytes();
+      byte[] body = (" ".repeat(9000)
+          + result("RELATED", "0.91", "SEMANTIC_GOAL_MATCH", "v1"))
+          .getBytes(StandardCharsets.UTF_8);
+      exchange.sendResponseHeaders(200, body.length);
+      exchange.getResponseBody().write(body);
+      exchange.close();
+    });
+    server.start();
+    try {
+      var client = new AnalysisAiClient(json, "http://127.0.0.1:"
+          + server.getAddress().getPort(), "test-only-service-key");
+      var input = new Request(UUID.randomUUID().toString(), ContentSource.APP_META,
+          Instant.now(), BigDecimal.ONE, null, null, null);
+      var p = new Prepared(1, 2, 3, 0, Instant.now(), "목표", "v1", null, true, null);
+      assertEquals(ReasonCode.ANALYSIS_UNAVAILABLE, client.analyze(p, input, 4).reasonCode());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void stalledRequestClosesConnectionBeforeStubCleanup() throws Exception {
+    try (var server = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"));
+        var executor = Executors.newSingleThreadExecutor()) {
+      server.setSoTimeout(8000);
+      var peerClosed = executor.submit(() -> {
+        try (var socket = server.accept()) {
+          socket.setSoTimeout(8000);
+          var input = socket.getInputStream();
+          var headers = new ByteArrayOutputStream();
+          while (!headers.toString(StandardCharsets.US_ASCII).endsWith("\r\n\r\n")) {
+            int value = input.read();
+            if (value == -1 || headers.size() > 16384) {
+              throw new IllegalStateException("INVALID_TEST_REQUEST");
+            }
+            headers.write(value);
           }
-        } catch (InterruptedException exception) {
-          Thread.currentThread().interrupt();
-        } finally {
-          exchange.close();
+          int length = headers.toString(StandardCharsets.US_ASCII).lines()
+              .filter(line -> line.toLowerCase(java.util.Locale.ROOT).startsWith("content-length:"))
+              .mapToInt(line -> Integer.parseInt(line.substring(line.indexOf(':') + 1).trim()))
+              .findFirst().orElseThrow();
+          assertEquals(length, input.readNBytes(length).length);
+          socket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Length: 1024\r\n"
+              + "Content-Type: application/json\r\nConnection: close\r\n\r\n{")
+              .getBytes(StandardCharsets.US_ASCII));
+          socket.getOutputStream().flush();
+          // Stub을 닫기 전에 client가 연결을 닫는지 관찰한다. 시간 초과는 성공이 아니다.
+          try {
+            return input.read() == -1;
+          } catch (SocketException reset) {
+            return true;
+          }
         }
       });
-      server.start();
-      try {
-        var client = new AnalysisAiClient(json, "http://127.0.0.1:"
-            + server.getAddress().getPort(), "test-only-service-key");
-        var input = new Request(UUID.randomUUID().toString(), ContentSource.APP_META,
-            Instant.now(), BigDecimal.ONE, null, null, null);
-        var p = new Prepared(1, 2, 3, 0, Instant.now(), "목표", "v1", null, true, null);
-        long started = System.nanoTime();
-        assertEquals(ReasonCode.ANALYSIS_UNAVAILABLE,
-            client.analyze(p, input, 4).reasonCode());
-        assertTrue(System.nanoTime() - started < TimeUnit.SECONDS.toNanos(8));
-      } finally {
-        finish.countDown();
-        server.stop(0);
-      }
+      var client = new AnalysisAiClient(json, "http://127.0.0.1:" + server.getLocalPort(), "test-key");
+      var input = new Request(UUID.randomUUID().toString(), ContentSource.APP_META,
+          Instant.now(), BigDecimal.ONE, null, null, null);
+      var p = new Prepared(1, 2, 3, 0, Instant.now(), "목표", "v1", null, true, null);
+      long started = System.nanoTime();
+      assertEquals(ReasonCode.ANALYSIS_UNAVAILABLE, client.analyze(p, input, 4).reasonCode());
+      assertTrue(System.nanoTime() - started < TimeUnit.SECONDS.toNanos(8));
+      assertTrue(peerClosed.get(2, TimeUnit.SECONDS));
     }
   }
 

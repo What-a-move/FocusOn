@@ -222,6 +222,24 @@ class AnalysisApiTests {
   }
 
   @Test
+  void chromeDomBodyRequiresHostBeforeStorageOrAi() throws Exception {
+    Fixture f = fixture();
+    var source = request(null);
+    long before = runs.count();
+    for (Metadata metadata : new Metadata[] {null, new Metadata("Chrome", null, "test", null),
+        new Metadata("Chrome", null, "test", "")}) {
+      var missingHost = new Request(UUID.randomUUID().toString(), ContentSource.CHROME_DOM,
+          source.observedAt(), BigDecimal.ONE, null, metadata, source.contentPayload());
+      mvc.perform(call(f, missingHost)).andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+    assertEquals(before, runs.count());
+    verify(ai, never()).analyze(any(), any(), anyLong());
+    mvc.perform(call(f, request(GuardStatus.EXCLUDED))).andExpect(status().isOk());
+    mvc.perform(call(f, request(GuardStatus.PRIVACY_BLOCKED))).andExpect(status().isOk());
+  }
+
+  @Test
   void oldAiCompletionCannotOverwriteLatestExcludedAcrossSources() throws Exception {
     Fixture f = fixture();
     var started = new CountDownLatch(1);

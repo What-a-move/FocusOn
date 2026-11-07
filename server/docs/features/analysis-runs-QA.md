@@ -6,15 +6,15 @@
 
 | 검사 | 결과 |
 | --- | --- |
-| Backend build·Checkstyle·H2 전체 |158개, 실패0/오류0/생략6|
-| PostgreSQL CI와 같은 선택 |33개 전부 통과|
-| PG 분석 API |14개 전부 통과|
+| Backend build·Checkstyle·H2 전체 |160개, 실패0/오류0/생략6|
+| PostgreSQL CI와 같은 선택 |34개 전부 통과|
+| PG 분석 API |15개 전부 통과|
 | PG 분석 migration |9개 전부 통과|
 | PG 기존 확장 migration |9개 전부 통과|
 | PG 닉네임 동시성 |1개 통과|
 | 별도 컨텍스트 정적 리뷰·timeout 수정 재리뷰 |확정 P1/P2 없음|
 
-기본 build의 생략6개는 PostgreSQL 전용 조건에 따른 것이며 전체158개가 모두 실행됐다는 뜻이 아니다. 별도 PG33개는 이 조건을 실제 PostgreSQL에서 검사한다. 원격 CI·CodeRabbit은 PR 생성 전이라 실행되지 않았다.
+PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건에 따른 것이며 전체160개가 모두 실행됐다는 뜻이 아니다. 별도 PG34개는 이 조건을 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
 
 ## 검증한 동작
 
@@ -52,4 +52,11 @@
 - 실제 Desktop·Extension/권한 철회/포키 알림/리포트 시연은 미완료다. 개입·heartbeat Policy Engine·90일 보관 삭제 작업은 후속이다.
 - 입력의 observedAt 최신성은 클라이언트 관측 계약에 따른다. 실제 화면 navigation을 서버가 직접 관찰했다고 간주하지 않는다. 같은 observedAt은 서버 run ID가 나중인 순으로 정렬한다.
 - 단일 인스턴스 메모리 rate limit이다. 다중 서버 공유 한도는 후속이다.
-- 요청 cancel 호출을 검사했고 소켓 자원 해제를 직접 계측하지는 않았다. 현재 sensitive 탐지는 추가 방어이며 모든 개인정보를 탐지한다고 주장하지 않는다.
+- 최초 검증은 요청 cancel 호출만 검사했으며 PR #172 보완에서 실제 loopback 연결의 EOF/reset을 추가 관찰한다. 운영 연결 pool·부하 자원 계측까지 수행한 것은 아니다. 현재 sensitive 탐지는 추가 방어이며 모든 개인정보를 탐지한다고 주장하지 않는다.
+
+## PR #172 리뷰 보완 재검증
+
+- Major1건: host 없는 CHROME_DOM 본문을400으로 차단한다. metadata 누락/host null/host 빈 값3종에서 저장 증가0·AI 호출0. 보호 상태만 보내는 요청은 정상 처리한다.
+- 테스트 지적2건: 정상 판정 JSON+9,000공백으로 크기 제한을 검증하고, raw loopback socket에서 cleanup 전 EOF/reset으로 실제 요청 취소를 확인한다.
+- 회귀 검증력 확인: byte limit과 pending.cancel을 로컬에서 임시 제거했을 때 두 테스트가 각각 실패했다. finally로 현재 구현을 복원하고 전체 build/Checkstyle160개(실패0/생략6)를 통과했다.
+- 격리 리뷰: 이번 수정 diff·PLAN으로 별도 에이전트가 정적 재검토했고 P1/P2 없음. 실제 AI·앱 QA를 수행했다는 의미가 아니다.

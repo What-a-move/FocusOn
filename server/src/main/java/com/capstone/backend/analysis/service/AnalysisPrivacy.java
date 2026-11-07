@@ -21,6 +21,7 @@ final class AnalysisPrivacy {
 
   private AnalysisPrivacy() {}
 
+  /** 출처와 보호 상태로 허용할 입력을 제한해 제외 검사를 우회한 본문 전송을 막는다. */
   static void validate(Request request) {
     boolean metadataSource = request.contentSource() == ContentSource.APP_META
         || request.contentSource() == ContentSource.TAB_META;
@@ -31,9 +32,15 @@ final class AnalysisPrivacy {
     } else if (metadataSource && request.contentPayload() != null) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
-    host(request);
+    String host = host(request);
+    // 본문 출처를 모르면 서버 제외 목록을 확인할 수 없으므로 AI 호출 전에 거절한다.
+    if (request.guardStatus() == null && request.contentSource() == ContentSource.CHROME_DOM
+        && request.contentPayload() != null && host.isEmpty()) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
   }
 
+  /** 경로를 잘라 수용하지 않고 host만 정규화해 제외 목록과 비교할 수 있게 한다. */
   static String host(Request request) {
     String input = request.metadata() == null ? null : request.metadata().urlHost();
     if (input == null || input.isEmpty()) {
@@ -53,6 +60,7 @@ final class AnalysisPrivacy {
     }
   }
 
+  /** 원문을 전송하기 전에 목표·메타데이터·본문 전체에 같은 추가 보호 검사를 적용한다. */
   static boolean containsSensitive(Request request, String goal) {
     var metadata = request.metadata();
     return sensitive(goal) || (request.contentPayload() != null
@@ -61,6 +69,7 @@ final class AnalysisPrivacy {
         || sensitive(metadata.pageTitle()) || sensitive(metadata.urlHost())));
   }
 
+  /** 눈에 보이지 않는 문자로 알려진 민감 패턴 검사를 우회하지 못하게 정규화한다. */
   private static boolean sensitive(String value) {
     if (value == null) {
       return false;

@@ -87,6 +87,7 @@ public class AnalysisAiClient {
     return AnalysisDecision.unavailable();
   }
 
+  /** 클라이언트 입력이 아닌 서버 설정의 서비스 origin만 내부 호출 대상으로 허용한다. */
   private static URI endpoint(String baseUrl) {
     if (baseUrl.isBlank()) {
       return null;
@@ -101,6 +102,7 @@ public class AnalysisAiClient {
     return base.resolve("/internal/v1/analysis-runs");
   }
 
+  /** 공개 요청의 관측과 서버가 검증한 세션 snapshot을 분리해 내부 AI 계약을 구성한다. */
   private Map<String, Object> envelope(Prepared p, Request request, long userId) {
     var input = new LinkedHashMap<String, Object>();
     input.put("sessionId", Long.toString(p.sessionId()));
@@ -196,6 +198,7 @@ public class AnalysisAiClient {
     }
   }
 
+  /** 버전은 원문 대신 남기는 고정 길이 식별자이므로 임의의 자유 텍스트를 받지 않는다. */
   private static boolean version(JsonNode value) {
     return value.isString() && value.asString().matches("[A-Za-z0-9][A-Za-z0-9._:-]{0,63}");
   }

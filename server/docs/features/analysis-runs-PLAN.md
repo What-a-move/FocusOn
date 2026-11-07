@@ -17,7 +17,7 @@ Desktop·연결된 Extension이 수집한 메타데이터/최대 2,000자 텍스
 - `POST /api/v1/sessions/{sessionId}/analysis-runs`
 - Bearer + X-Device-Id 필수. 인증 사용자 소유 RUNNING 세션의 runner Desktop 또는 그 Desktop에 연결된 활성 Extension만 허용한다.
 - body: `{clientRunId(UUID v4), contentSource, observedAt(UTC), sequence(양수), guardStatus:null|EXCLUDED|PRIVACY_BLOCKED, metadata?, contentPayload?:{text}}`.
-- MVP source: APP_META, TAB_META, CHROME_DOM, DESKTOP_APP_OCR. Chrome viewport OCR·CAMERA_LOCAL은 이 경로에서 받지 않는다. guard 요청은 metadata/contentPayload를 함께 보내면 400이다.
+- MVP source: APP_META, TAB_META, CHROME_DOM, DESKTOP_APP_OCR. Chrome viewport OCR·CAMERA_LOCAL은 이 경로에서 받지 않는다. guard 요청은 metadata/contentPayload를 함께 보내면 400이다. guard 없는 CHROME_DOM 본문은 metadata.urlHost가 유효해야 하며 출처가 없으면 저장·AI 호출 전에400으로 거절한다.
 - `200 data.{analysisRunId,analysisStatus,relation,confidence,reasonCode,observedAt,policyVersion}`. 정책 버전은 해당 세션 값이다. guard의 confidence/reasonCode는 null이다.
 - 400 VALIDATION_ERROR, 401 기존 인증 오류, 404 SESSION_NOT_FOUND(소유권 불일치 포함), 409 SESSION_STATE_INVALID, 409 IDEMPOTENCY_CONFLICT(중복 clientRunId), 429 TOO_MANY_REQUESTS + Retry-After.
 - 중복은 기존 공통 409 코드를 사용하고 응답에 입력 원문을 포함하지 않는다. 분석별 한도는 소유권 확인 후 session+device 분당8회이며 일반 인증 한도와 함께 적용한다.
