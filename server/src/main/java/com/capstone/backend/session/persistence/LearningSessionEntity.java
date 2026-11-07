@@ -142,4 +142,12 @@ public class LearningSessionEntity {
     this.accumulatedAtResumeMs = this.accumulatedActiveMs;
     this.lastResumedAt = resumedAt;
   }
+
+  /** 확인 대기 중 연장은 새 실행 구간을 열고 다른 상태에서는 상태를 유지한다. */
+  public void extend(long newTargetDurationMs, Instant now) {
+    this.targetDurationMs = newTargetDurationMs;
+    if (this.status == SessionStatus.AWAITING_END_CONFIRMATION) {
+      resume(now);
+    }
+  }
 }
