@@ -84,7 +84,7 @@ export function AccountPanel({ showToast }: { showToast: ShowToast }) {
   async function logout() {
     const result = await window.focusOn?.auth.logout()
     // 서버 로그아웃이 실패하면 로그인이 남아 있으므로 첫 화면으로 보내지 않는다.
-    if (!result?.success) return showToast({ text: failText(result?.error.code ?? 'SERVICE_UNAVAILABLE', '로그아웃하지') })
+    if (!result?.success) return showToast({ text: failText(result?.error.code ?? 'LOCAL_APP_ERROR', '로그아웃하지') })
     router.replace('/')
   }
 

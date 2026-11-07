@@ -13,7 +13,7 @@ import { log } from './logger.cjs'
 import type { NotificationReadiness } from './notification-readiness.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 // macOS 시스템 설정 › 개인정보 보호 및 보안 › 화면 기록
 const SCREEN_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
 // macOS 시스템 설정 › 알림
@@ -42,7 +42,7 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
         return { success: true, data: await run() }
       } catch {
         // [주의] macOS·Electron 내부 오류 메시지는 Renderer로 보내지 않는다.
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }
@@ -82,7 +82,7 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
       notificationReadiness.set(input.seen)
       return { success: true, data: { confirmed: input.seen } }
     } catch {
-      return SERVICE_UNAVAILABLE
+      return LOCAL_APP_ERROR
     }
   })
 

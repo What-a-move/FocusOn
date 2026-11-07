@@ -5,8 +5,8 @@ export type OAuthPageKind = 'ok' | 'cancelled' | 'failed'
 
 const PAGE: Record<OAuthPageKind, { title: string; body: string; poki: string }> = {
   ok: { title: '로그인했어요', body: 'FocusOn 앱으로 돌아가 주세요.', poki: POKI_WAVE },
-  cancelled: { title: '로그인을 취소했어요', body: '다시 하려면 FocusOn 앱에서 Google로 계속하기를 눌러 주세요.', poki: POKI_PAUSED },
-  failed: { title: '로그인하지 못했어요', body: 'FocusOn 앱으로 돌아가 다시 시도해 주세요.', poki: POKI_CURIOUS },
+  cancelled: { title: '로그인을 취소했어요', body: '다시 하려면 FocusOn 앱에서 로그인해 주세요.', poki: POKI_PAUSED },
+  failed: { title: '로그인하지 못했어요', body: 'FocusOn 앱에서 다시 로그인해 주세요.', poki: POKI_CURIOUS },
 }
 
 const escape = (text: string) => text.replace(/[&<>"']/gu, (char) => `&#${char.charCodeAt(0)};`)
@@ -14,9 +14,8 @@ const escape = (text: string) => text.replace(/[&<>"']/gu, (char) => `&#${char.c
 /**
  * 브라우저에 보여 줄 로그인 결과 페이지. loopback 응답이라 외부 파일 없이 HTML·CSS·이미지를 한 번에 보낸다.
  * 상자 없이 흰(다크: 검은) 배경 가운데에 포키와 글자만 둔다.
- * detail은 잘못된 요청처럼 앱이 정한 원인 문구가 있을 때 본문 대신 쓴다. 사용자 입력·code·state는 넣지 않는다.
  */
-export function oauthPage(kind: OAuthPageKind, detail?: string): string {
+export function oauthPage(kind: OAuthPageKind): string {
   const { title, body, poki } = PAGE[kind]
   return `<!doctype html>
 <html lang="ko">
@@ -45,7 +44,7 @@ p{margin:12px 0 0;max-width:400px;color:var(--muted);font-size:17px;line-height:
 <main class="${kind}" role="${kind === 'ok' ? 'status' : 'alert'}">
 <img src="${poki}" alt="" width="400" height="320">
 <h1>${escape(title)}</h1>
-<p>${escape(detail ?? body)}</p>
+<p>${escape(body)}</p>
 <p class="close">이 탭은 닫아도 돼요.</p>
 </main>
 </body>

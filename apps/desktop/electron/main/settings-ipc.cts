@@ -11,7 +11,7 @@ import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 const onlyKeys = (value: unknown, keys: string[]): value is Record<string, unknown> =>
@@ -115,11 +115,11 @@ export function registerSettingsIpc(
   function handle<T>(channel: string, accept: (args: unknown[]) => boolean, run: (service: SettingsService, args: unknown[]) => Promise<ApiResult<T>>): void {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
       if (!isTrustedAuthSender(event, getMainWindow(), rendererUrl) || !accept(args)) return INVALID_REQUEST
-      if (!service) return SERVICE_UNAVAILABLE
+      if (!service) return LOCAL_APP_ERROR
       try {
         return await run(service, args)
       } catch {
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }
@@ -154,7 +154,7 @@ export function registerSettingsIpc(
       theme.set(args[0].theme)
       return { success: true, data: { theme: args[0].theme } }
     } catch {
-      return SERVICE_UNAVAILABLE
+      return LOCAL_APP_ERROR
     }
   })
 }

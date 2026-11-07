@@ -26,7 +26,7 @@ type AuthAction = 'login' | 'retry' | 'logout'
 const FAILED_TITLE: Record<AuthAction, string> = {
   login: '로그인하지 못했어요.',
   retry: '로그인 상태를 확인하지 못했어요.',
-  logout: '로그아웃을 마치지 못했어요.',
+  logout: '로그아웃하지 못했어요.',
 }
 
 function Alert({ message, action }: { message: string | null; action: AuthAction }) {
@@ -118,7 +118,7 @@ export default function Page() {
       if (!active) return
       if (result.success) applySnapshot(result.data)
       else setSnapshot({ ...signedOut, error: result.error })
-    }).catch(() => { if (active) setSnapshot({ ...signedOut, error: { code: 'SERVICE_UNAVAILABLE', retryable: false } }) })
+    }).catch(() => { if (active) setSnapshot({ ...signedOut, error: { code: 'LOCAL_APP_ERROR', retryable: false } }) })
     return () => { active = false; unsubscribe() }
   }, [])
 
@@ -127,7 +127,7 @@ export default function Page() {
     if (!auth || busy) return
     setBusy(true); setRequestError(null); setAction('login'); running.current = 'login'
     try { const result = await auth.startGoogleLogin(); if (!result.success) setRequestError(result.error) }
-    catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
+    catch { setRequestError({ code: 'LOCAL_APP_ERROR', retryable: false }) }
     finally { setBusy(false); running.current = null }
   }
   const retry = async () => {
@@ -138,7 +138,7 @@ export default function Page() {
       const result = await auth.retrySession()
       if (result.success) setSnapshot((current) => !current || result.data.revision > current.revision ? result.data : current)
       else setRequestError(result.error)
-    } catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
+    } catch { setRequestError({ code: 'LOCAL_APP_ERROR', retryable: false }) }
     finally { setBusy(false); running.current = null }
   }
   const logout = async () => {
@@ -146,7 +146,7 @@ export default function Page() {
     if (!auth || busy) return
     setBusy(true); setRequestError(null); setAction('logout'); running.current = 'logout'
     try { const result = await auth.logout(); if (!result.success) setRequestError(result.error) }
-    catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
+    catch { setRequestError({ code: 'LOCAL_APP_ERROR', retryable: false }) }
     finally { setBusy(false); running.current = null }
   }
 

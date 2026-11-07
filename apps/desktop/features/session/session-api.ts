@@ -8,7 +8,7 @@ export type { FocusSettings, InterventionLevel, NotificationChannel, SessionSnap
 export const MIN_MINUTES = 5
 export const MAX_MINUTES = 300
 
-const UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 // [유지보수] 세션 요청도 Main IPC(window.focusOn.sessions)로만 보낸다. 브라우저에서 화면만 열면 연결이 없어 실패로 보인다.
 async function viaSessions<T>(call: (api: NonNullable<Window['focusOn']>['sessions']) => Promise<ApiResult<T>>): Promise<ApiResult<T>> {

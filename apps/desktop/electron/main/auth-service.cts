@@ -5,7 +5,8 @@ import type { RefreshTokenVault } from './auth-keychain.cjs'
 import type { GoogleOAuthOutcome } from './google-oauth.cjs'
 import { AuthSessionStore } from './auth-ipc.cjs'
 
-const SERVICE_UNAVAILABLE: AuthApiError = { code: 'SERVICE_UNAVAILABLE', retryable: false }
+// 로그인 처리 중 앱 안에서 난 예외. 서버 장애(SERVICE_UNAVAILABLE)와 구분한다.
+const LOCAL_APP_ERROR: AuthApiError = { code: 'LOCAL_APP_ERROR', retryable: false }
 // [유지보수] 화면이 원인을 알려 줄 수 있게 서버 장애와 Mac 쪽 실패(Keychain·Google 로그인 창)를 나눈다.
 const KEYCHAIN_UNAVAILABLE: AuthApiError = { code: 'LOCAL_KEYCHAIN_UNAVAILABLE', retryable: true }
 const GOOGLE_LOGIN_FAILED: AuthApiError = { code: 'LOCAL_GOOGLE_LOGIN_FAILED', retryable: true }
@@ -326,7 +327,7 @@ export class AuthService {
       this.deviceId = result.data.device.deviceId
       this.publish('SIGNED_IN', null, result.data)
     } catch {
-      if (generation === this.generation) this.publish('SIGNED_OUT', SERVICE_UNAVAILABLE)
+      if (generation === this.generation) this.publish('SIGNED_OUT', LOCAL_APP_ERROR)
     }
   }
 

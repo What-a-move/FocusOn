@@ -24,11 +24,11 @@ export const STEP_ROUTES: Record<OnboardingStep, string> = {
 }
 
 async function unavailable(): Promise<ApiResult<never>> {
-  return { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } }
+  return { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } }
 }
 
 // [유지보수] Backend 요청과 macOS 권한은 모두 Desktop Main IPC(window.focusOn)를 거친다. 토큰은 Renderer에 없다.
-// 브라우저에서 화면만 열면 연결이 없어 SERVICE_UNAVAILABLE이다. 성공을 꾸미지 않는다.
+// 브라우저에서 화면만 열면 연결이 없어 LOCAL_APP_ERROR다. 성공을 꾸미지 않는다.
 async function via<A, T, R>(pick: (api: NonNullable<Window['focusOn']>) => A | undefined, call: (api: A) => Promise<ApiResult<T>>, map: (data: T) => R): Promise<ApiResult<R>> {
   const bridge = typeof window === 'undefined' ? undefined : window.focusOn
   const api = bridge ? pick(bridge) : undefined

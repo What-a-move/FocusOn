@@ -129,7 +129,7 @@ type AuthSessionSnapshot = {
 - 모든 온보딩 요청은 `AuthService.authorizedRequest`를 거친다. 만료가 가까우면 먼저 refresh하고, 서버가 `AUTH_ACCESS_TOKEN_EXPIRED`를 주면 single-flight refresh 1회 뒤 원 요청을 1회만 다시 보낸다. `GET`은 `LOCAL_NETWORK_UNAVAILABLE`·`SERVICE_UNAVAILABLE`(503)·`REQUEST_TIMEOUT`(504)에서 1초 → 3초 간격으로 최대 2회 재시도하고, `PUT`·`POST`는 자동 재전송하지 않는다(공통 Error Code 정책 4.3, 2026-10-23). 성공 상태인데 본문이 계약과 다르면 `INVALID_RESPONSE`로 구분해 재시도하지 않는다. refresh가 재로그인 오류면 Keychain을 비우고 `SIGNED_OUT` Event를 보낸다.
 - `screenAnalysisReady`는 Renderer 입력을 받지 않고 Main이 `systemPreferences`로 직접 확인한 값만 보낸다.
 - 서버가 `COMPLETED`를 반환하면 Main은 `AuthSessionSnapshot.onboardingStatus`도 갱신해 홈·온보딩 사이를 오가지 않게 한다. 닉네임 저장 성공 시 `user.nickname`도 갱신한다.
-- `FOCUSON_API_BASE_URL`이 없으면 모든 온보딩 Channel은 `SERVICE_UNAVAILABLE`이다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
+- `FOCUSON_API_BASE_URL`이 없거나 Main 안에서 예외가 나면 Channel은 `LOCAL_APP_ERROR`다(2026-11-07, 서버 503인 `SERVICE_UNAVAILABLE`과 구분). Renderer bridge가 없거나 호출이 실패해도 같은 코드다. Main은 호출 창·Main Frame·허용 URL과 `void` 입력을 검사한다. Renderer에 내부 예외 메시지나 Token을 전달하지 않는다.
 
 Google 데스크톱 Client ID 또는 Backend origin이 없으면 `auth:google-login:start`는 `LOCAL_APP_CONFIG_MISSING`(`retryable: false`), 브라우저·listener를 시작할 수 없으면 `LOCAL_BROWSER_OPEN_FAILED`(`retryable: true`)를 반환한다. Google 로그인 창이 오류로 끝나면 `LOCAL_GOOGLE_LOGIN_FAILED`, 로그인·갱신·로그아웃 중 Keychain 읽기·쓰기·삭제가 실패하면 `LOCAL_KEYCHAIN_UNAVAILABLE`을 Snapshot `error`에 담는다(결정 032). 둘 다 설정되면 기본 브라우저·임시 loopback listener 시작 뒤 `{ started: true }`를 반환한다. 이는 **로그인 성공**이 아니라 **인증 시도 시작**만 뜻한다. code callback 뒤 Main이 Backend에 교환을 요청하고 성공 응답의 Refresh Token을 Keychain에 저장한 경우에만 `SIGNED_IN` Event를 보낸다. 서버 API가 아직 없으면 성공 상태를 만들지 않는다. `auth:session:get`은 앱 시작 시 Keychain 복구가 끝난 Snapshot을 반환한다.
 

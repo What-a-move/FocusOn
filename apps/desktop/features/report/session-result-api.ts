@@ -4,7 +4,7 @@ export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
 export type { LearningSummary, SessionSummary }
 
-const UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 // [유지보수] 리포트는 Main IPC(window.focusOn.reports)로만 조회한다. 브라우저에서 화면만 열면 연결이 없어 실패로 보인다.
 async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports']) => Promise<ApiResult<T>>): Promise<ApiResult<T>> {

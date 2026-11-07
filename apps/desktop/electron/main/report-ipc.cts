@@ -8,7 +8,7 @@ import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
 /** 리포트 조회 Backend 계약 (Notion FocusOn API 명세서). GET이라 AuthService가 일시 오류를 1초 → 3초로 재시도한다. */
 export class ReportService {
@@ -41,11 +41,11 @@ export function registerReportIpc(getMainWindow: () => BrowserWindow | null, ren
   function handle<T>(channel: string, accept: (args: unknown[]) => boolean, run: (service: ReportService, args: unknown[]) => Promise<ApiResult<T>>): void {
     ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
       if (!isTrustedAuthSender(event, getMainWindow(), rendererUrl) || !accept(args)) return INVALID_REQUEST
-      if (!service) return SERVICE_UNAVAILABLE
+      if (!service) return LOCAL_APP_ERROR
       try {
         return await run(service, args)
       } catch {
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }
