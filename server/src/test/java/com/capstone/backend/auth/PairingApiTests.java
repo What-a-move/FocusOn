@@ -232,11 +232,12 @@ class PairingApiTests {
   }
 
   @Test
-  void desktopCanUnlinkItsExtensionWithoutRevokingOtherExtensions() throws Exception {
+  void desktopCanUnlinkItsExtensionWithoutRevokingOtherUsersExtension() throws Exception {
     var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     var one = pairing.claim(new ClaimRequest(pairing.issue(owner.principal()).codeDisplay(),
         UUID.randomUUID().toString()), "unlink-ip");
-    var two = pairing.claim(new ClaimRequest(pairing.issue(owner.principal()).codeDisplay(),
+    var other = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var two = pairing.claim(new ClaimRequest(pairing.issue(other.principal()).codeDisplay(),
         UUID.randomUUID().toString()), "unlink-ip");
     mvc.perform(delete("/api/v1/extension-pairings/" + two.device().deviceId())
         .header("Authorization", "Bearer " + one.accessToken())).andExpect(status().isNotFound());
@@ -244,6 +245,70 @@ class PairingApiTests {
         .header("Authorization", "Bearer " + owner.access())).andExpect(status().isNoContent());
     mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + two.accessToken()))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void differentInstallationReplacesPreviousTokensAndDevice() throws Exception {
+    var owner = desktop(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    var first = claim(owner, UUID.randomUUID().toString());
+    var next = claim(owner, UUID.randomUUID().toString());
+    assertNotEquals(first.device().deviceId(), next.device().deviceId());
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + first.accessToken()))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("LINK_TOKEN_REVOKED"));
+    mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + next.accessToken()))
+        .andExpect(status().isOk());
+    assertThrows(ApiException.class, () -> lifecycle.refresh(first.refreshToken()));
+    assertEquals("REPLACED", jdbc.queryForObject(
+        "SELECT revoked_reason FROM token_families WHERE device_id = ?",
+        String.class, Long.valueOf(first.device().deviceId())));
+    assertEquals(1L, jdbc.queryForObject("SELECT count(*) FROM user_devices WHERE user_id = ?"
+        + " AND device_type = 'CHROME_EXTENSION' AND status = 'ACTIVE'", Long.class,
+        owner.principal().userId()));
+  }
+
+  /** 다른 Desktop의 연결이 겹쳐도 마지막 연결 하나만 인증 가능해야 한다. */
+  @Test
+  void simultaneousDifferentInstallationsLeaveOneActiveExtension() throws Exception {
+    // 발급 시 이전 코드를 취소하므로 서로 다른 Desktop에서 각각 유효한 코드를 발급한다.
+    String subject = UUID.randomUUID().toString();
+    var desktopOne = desktop(subject, UUID.randomUUID().toString());
+    var desktopTwo = desktop(subject, UUID.randomUUID().toString());
+    var firstCode = pairing.issue(desktopOne.principal());
+    var secondCode = pairing.issue(desktopTwo.principal());
+    var start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var tasks = List.<Callable<LinkedExtension>>of(
+          () -> {
+            assertTrue(start.await(10, TimeUnit.SECONDS));
+            return pairing.claim(new ClaimRequest(firstCode.codeDisplay(),
+                UUID.randomUUID().toString()), "race1");
+          },
+          () -> {
+            assertTrue(start.await(10, TimeUnit.SECONDS));
+            return pairing.claim(new ClaimRequest(secondCode.codeDisplay(),
+                UUID.randomUUID().toString()), "race2");
+          });
+      var one = executor.submit(tasks.get(0));
+      var two = executor.submit(tasks.get(1));
+      start.countDown();
+      var links = List.of(one.get(20, TimeUnit.SECONDS), two.get(20, TimeUnit.SECONDS));
+      int active = 0;
+      for (var linked : links) {
+        int result = mvc.perform(get("/api/v1/auth/me")
+                .header("Authorization", "Bearer " + linked.accessToken()))
+            .andReturn().getResponse().getStatus();
+        if (result == 200) {
+          active++;
+        } else {
+          assertEquals(401, result);
+        }
+      }
+      assertEquals(1, active);
+      assertEquals(1L, jdbc.queryForObject("SELECT count(*) FROM user_devices WHERE user_id = ?"
+          + " AND device_type = 'CHROME_EXTENSION' AND status = 'ACTIVE'", Long.class,
+          desktopOne.principal().userId()));
+    }
   }
 
   @Test
