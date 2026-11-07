@@ -12,3 +12,9 @@
 - 실제독립리뷰 지적: V11의 check 제약 전체검증이 ACCESS EXCLUSIVE transaction 안에서 수행됨. V11 NOT VALID 및 새 V12 VALIDATE로 수정했다. 제약 스캔의 잠금은 줄지만 V11의 정리/index 생성 잠금은 남는다.
 - 개선제안: pairing/refresh POST preflight 테스트 부족. 각 경로의 허용origin·메서드·헤더 검증2개 추가.
 - 주석 비율은 경고이며 기능오류와 구분한다. 변경한 주요 함수와 테스트의 의도 설명을 추가했다. 최신 수정 커밋의 재리뷰는 별도 확인한다.
+
+## 외부 P2: 인증 불가 최신 연결 보존
+
+- family가 ACTIVE여도 만료 또는 Desktop 연결 유실로 인증 불가일 수 있다는 지적을 확인했다. isActive 및 hasActiveLinkedDesktop의 사용자·기기·family·Desktop·부모 family 조건을 SQL 순위의 최우선 CASE로 반영했다.
+- family 상태만이 아닌 expires_at, Desktop 유형·활성·소유권, 부모 family의 ACTIVE·소유권·수명을 판정한다. 삭제 사용자도 인증 불가다.
+- 모두 유효한 경우에는 최신 연결, 모두 무효인 경우에는 최신 이력1개를 유지한다. 무효 연결을 활성 토큰으로 되살리지 않는다.

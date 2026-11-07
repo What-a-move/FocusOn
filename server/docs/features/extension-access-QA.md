@@ -1,5 +1,15 @@
 # 확장 접근 정책 QA (2026-11-08)
 
+## 최신 P2 수정: 인증 가능 연결 우선 보존
+
+- V11의 최우선 정렬 기준을 TokenFamilyGuard의 인증 가능 조건으로 맞췄다. 미탈퇴 사용자, 확장 ACTIVE family 수명·소유권, 연결 Desktop 유형·소유권·ACTIVE, Desktop의 ACTIVE family 수명을 함께 판정한다.
+- 같은 인증 가능 그룹에서만 생성시각·ID 기준을 적용한다. 모두 인증 불가일 때 최신 하나를 보존하지만 family 수명·Desktop 상태·사용자 탈퇴 상태를 복구하지 않는다.
+- 최종 기본 build·Checkstyle:138 tests, failures0/errors0/skipped5. 기본 환경에서 PostgreSQL 전용 클래스1개와 기존 조건부4개가 생략된다.
+- 분리 PostgreSQL에서 ExtensionMigrationTests9개 + PairingApiTests25개 + ExtensionCorsTests7개, 총41개 실패0/오류0/생략0.
+- 실제 Flyway V10→V12 회귀9종: 확장 family 만료, Desktop 비활성, Desktop family 만료·폐기, Desktop 연결 없음, 확장 family 없음, 둘 다 유효, 모두 무효, 삭제 사용자. 매번 선택 기기·기기/family/refresh 행 수·다른 계정 보존·이전 토큰 폐기를 확인했다.
+- 각 테스트는 무작위 전용 schema만 생성·삭제한다. public schema를 수정하지 않으며 PostgreSQL CI의 기존 nickname job에 테스트 실행 대상을 추가했다. 기본 H2에서는 PostgreSQL 전용 테스트를 생략한다.
+- 이전의 생성시각만으로 선택하던 기준은 이 수정으로 대체됐다. 실제 Chrome·운영 데이터 QA는 아직이다.
+
 ## PR #170 리뷰 수정 검증
 
 - 수정 후 H2 전체 build·Checkstyle:137 tests, failures0/errors0/skipped4. 기존135개 결과에 pairing/refresh POST preflight2개를 추가했다.

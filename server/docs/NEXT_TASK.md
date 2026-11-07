@@ -2,7 +2,7 @@
 
 ## 현재 작업: #151 CORS·확장1개
 
-- PR #170 리뷰의 migration 잠금 지적과 POST preflight 검증 부족을 수정했다. V11 NOT VALID→V12 별도 검증, H2 전체137개 실패0/skip4. 최신 커밋의 원격 CI·재리뷰와 실제 Chrome QA를 확인한다. 병합·이슈 종료는 별도 승인한다.
+- PR #170의 migration 잠금·POST preflight 지적과 외부 P2(만료된 최신 확장 보존)를 수정했다. 인증 가능 연결 우선 순위를 적용하고 실제 Flyway 업그레이드 회귀9종을 CI에 추가했다. V11 NOT VALID→V12 별도 검증, H2 전체137개 실패0/skip4. 최신 커밋의 원격 CI·재리뷰와 실제 Chrome QA를 확인한다. 병합·이슈 종료는 별도 승인한다.
 - 실제 Chrome 권한 철회→서버 요청 전송→local-events 자동 멈춤은 팀원 5번 담당과 연동해 확인한다. CORS 허용만으로 host 권한 문제가 모두 해결됐다고 판단하지 않는다.
 - 기존 다중 확장 정리 V11의 영향과 배포 CORS_ALLOWED_ORIGINS를 확인한다. 사용자 개발 DB에 즉시 적용하지 않는다.
 - 이후 사용자 담당 6번 분석 요청·결과 저장/개입→7번 리포트 순서다. 세션 시작·heartbeat·종료 등 5번은 팀원 범위다.

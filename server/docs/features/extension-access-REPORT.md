@@ -12,3 +12,10 @@
 - 제약 전체 스캔을 V11의 강한 잠금 transaction에서 분리했다. V11 NOT VALID 추가→커밋→V12 VALIDATE 순서다. 기존 정리·index 생성 잠금은 유지된다.
 - 연결·refresh POST preflight 테스트2개를 추가해 허용 origin·POST·요청 헤더를 검증했다.
 - 수정 후 H2전체137개 중 실패0·skip4, Checkstyle 통과. 분리 PostgreSQL32개 모두 통과 및 Flyway V11/V12 success=true·최종 제약 유효 상태 확인. 주석 부족 경고에 따라 연결 순서와 검증 의도 설명도 보완했다.
+
+## 인증 가능 연결 보존 P2 수정
+
+- V11을 실제 인증 가능 여부 우선 정렬로 보완했다. 더 오래됐어도 유효한 연결을 만료·비활성 Desktop의 최신 연결보다 먼저 보존한다.
+- ExtensionMigrationTests 9개 시나리오와 PostgreSQL CI 실행을 추가했다. 각 테스트는 고유 QA schema에서 V10→V12 업그레이드 후 선택 결과·행 수·타 사용자 보존을 검증하고 자신이 만든 schema만 정리한다.
+- CI의 기존 PostgreSQL job 이름을 유지하고 테스트 실행 대상만 확장해 기존 필수 체크 이름을 변경하지 않았다.
+- P2 수정 최종 검증: 기본 build·Checkstyle138개 중 실패0/생략5, 분리 PostgreSQL41개 모두 통과. 새 테스트의 임시 schema 잔여0개 확인 및 QA 컨테이너 종료.

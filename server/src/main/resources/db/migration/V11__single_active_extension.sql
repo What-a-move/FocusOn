@@ -4,15 +4,25 @@ ALTER TABLE token_families ADD CONSTRAINT ck_token_families_revoked_reason
     CHECK (revoked_reason IS NULL OR revoked_reason IN
         ('LOGOUT', 'UNLINK', 'TOKEN_REUSE', 'DEVICE_REVOKED', 'REPLACED')) NOT VALID;
 
--- 기존 중복 연결은 가장 최근 연결 하나만 유지한다. 행과 이력은 삭제하지 않는다.
+-- TokenFamilyGuard와 같은 인증 가능 조건을 먼저 적용하고 그 안에서 최신 연결을 유지한다.
+-- 모두 인증 불가이면 최신 연결 하나를 남기되 유효하지 않은 토큰을 되살리지는 않는다.
 CREATE TEMP TABLE focuson_replaced_extensions ON COMMIT DROP AS
 SELECT id FROM (
     SELECT d.id, row_number() OVER (
         PARTITION BY d.user_id
-        ORDER BY COALESCE(f.created_at, d.created_at) DESC, d.id DESC
+        ORDER BY CASE WHEN u.deleted_at IS NULL
+            AND f.user_id = d.user_id AND f.expires_at > CURRENT_TIMESTAMP
+            AND desktop.user_id = d.user_id AND desktop.device_type = 'DESKTOP'
+            AND desktop.status = 'ACTIVE'
+            AND parent.user_id = d.user_id AND parent.expires_at > CURRENT_TIMESTAMP
+            THEN 0 ELSE 1 END,
+            COALESCE(f.created_at, d.created_at) DESC, d.id DESC
     ) AS priority
     FROM user_devices d
     LEFT JOIN token_families f ON f.device_id = d.id AND f.status = 'ACTIVE'
+    JOIN users u ON u.id = d.user_id
+    LEFT JOIN user_devices desktop ON desktop.id = d.linked_desktop_device_id
+    LEFT JOIN token_families parent ON parent.device_id = desktop.id AND parent.status = 'ACTIVE'
     WHERE d.device_type = 'CHROME_EXTENSION' AND d.status = 'ACTIVE'
 ) ranked WHERE priority > 1;
 

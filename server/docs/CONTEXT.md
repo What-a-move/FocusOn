@@ -7,6 +7,8 @@
 - PR #170을 제출했고 CodeRabbit의 migration 잠금 지적과 POST preflight 개선을 반영했다. 최신 커밋 CI·재리뷰·실제 Chrome 권한 철회 QA는 남아 있다. 사용자 개발 DB·8080 서버에는 적용하지 않았다.
 - #163 세션 종료는 담당 범위 밖의 기존 작업으로 별도 브랜치와 Draft PR164에 보존한다. #116은 PR162 병합·이슈 종료 완료다.
 
+- 외부 P2 지적으로 V11을 실제 인증 가능 연결 우선 순위로 수정했다. ExtensionMigrationTests의 V10→V12 회귀9종을 CI에 추가하고 관련 PostgreSQL41개 모두 통과했다.
+
 ## 이전 작업: 서버 요청 추적 (#116, 당시 기록)
 
 `feat/#116-server-tracing`에서 traceId·JSON 요청 로그를 구현하고 로컬 QA를 수행했다. 범위와 한계는 `features/server-tracing-PLAN.md`, `server-tracing-QA.md`, `server-tracing-REPORT.md`를 확인한다. 독립 리뷰·PR은 아직 완료하지 않았다. 사용자의 기존 문서 수정은 작업 시작 전 Git stash에 보존했다.

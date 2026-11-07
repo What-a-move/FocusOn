@@ -347,4 +347,4 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 
 - 사용자 제공 확정 정책과 개발 승인으로 CORS 허용 origin을 환경변수로 관리한다. local 고정 개발 ID 외에는 기본 전체 불허이며 API 인증은 유지한다.
 - 같은 계정의 다른 설치 연결은 이전 ACTIVE 확장 device/family/refresh를 폐기하고 family 사유를 REPLACED로 남긴다. DB partial unique로1개를 보장하고 같은 설치 deviceId 재사용은 유지한다.
-- V11의 기존 여러 연결은 가장 최근 ACTIVE family 생성시각(없으면 device 생성시각), id 순으로1개를 유지한다. 삭제 없이 상태를 변경하되 기존 로그인이 끊기는 영향이 있다. QA 검증만 수행했고 개발 DB에는 적용하지 않았다.
+- V11의 기존 여러 연결은 실제 인증 가능 여부를 먼저 판정한 뒤 같은 그룹에서 ACTIVE family 생성시각(없으면 device 생성시각), id 순으로1개를 유지한다. 삭제 없이 상태를 변경하되 기존 로그인이 끊기는 영향이 있다. QA 검증만 수행했고 개발 DB에는 적용하지 않았다.
