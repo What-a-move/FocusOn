@@ -139,8 +139,9 @@ if (!hasSingleInstanceLock) {
     window.webContents.on('will-attach-webview', (event) => event.preventDefault())
 
     // [주의] 기능별 권한 UX가 구현되기 전에는 화면·카메라 등 권한을 자동 승인하지 않는다.
-    window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
-    window.webContents.session.setPermissionCheckHandler(() => false)
+    // 클립보드 쓰기(연결 코드 복사)만 허용한다. 읽기는 막는다.
+    window.webContents.session.setPermissionRequestHandler((_contents, permission, callback) => callback(permission === 'clipboard-sanitized-write'))
+    window.webContents.session.setPermissionCheckHandler((_contents, permission) => permission === 'clipboard-sanitized-write')
 
     // [유지보수] 개발 실행에서만 FOCUSON_DEV_START_PATH(예: /onboarding/permissions/)로 첫 화면을 바로 열 수 있다.
     // 같은 앱 출처의 경로만 허용하고, 패키징된 앱에서는 무시한다.

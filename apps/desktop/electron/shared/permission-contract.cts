@@ -10,6 +10,7 @@ export const PERMISSION_CHANNELS = {
   notificationOpenSettings: 'permission:notification:open-settings',
   notificationStatus: 'permission:notification:get-status',
   notificationConfirm: 'permission:notification:confirm',
+  relaunch: 'app:relaunch',
 } as const
 
 export type PermissionStatus = 'not-determined' | 'granted' | 'denied' | 'restricted' | 'unknown'
@@ -31,6 +32,8 @@ export type PermissionsApi = {
   /** 사용자가 시험 알림을 보고 확인한 기록. macOS 허용 상태가 아니라 이 기기의 사용자 확인 결과다. */
   getNotificationStatus(): Promise<IpcResult<{ confirmed: boolean }>>
   confirmNotification(input: { seen: boolean }): Promise<IpcResult<{ confirmed: boolean }>>
+  /** 앱을 껐다가 다시 켠다. macOS는 화면 기록 허용을 앱을 다시 켜야 반영한다. */
+  relaunch(): Promise<IpcResult<{ relaunching: boolean }>>
 }
 
 const STATUSES: readonly PermissionStatus[] = ['not-determined', 'granted', 'denied', 'restricted', 'unknown']

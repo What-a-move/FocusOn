@@ -46,6 +46,7 @@ const focusOnApi: FocusOnApi = {
     openNotificationSettings: () => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationOpenSettings),
     getNotificationStatus: () => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationStatus),
     confirmNotification: (input) => ipcRenderer.invoke(PERMISSION_CHANNELS.notificationConfirm, { seen: input.seen }),
+    relaunch: () => ipcRenderer.invoke(PERMISSION_CHANNELS.relaunch),
   },
   // [주의] 입력은 허용한 필드만 다시 만들어 보낸다. Main이 한 번 더 검증한다.
   onboarding: {

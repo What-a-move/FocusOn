@@ -1,5 +1,5 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
-import { desktopCapturer, ipcMain, Notification, shell, systemPreferences } from 'electron'
+import { app, desktopCapturer, ipcMain, Notification, shell, systemPreferences } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
 import {
   NOTIFICATION_TEXT,
@@ -62,6 +62,14 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
   handleVoid(PERMISSION_CHANNELS.notificationOpenSettings, async () => {
     await shell.openExternal(NOTIFICATION_SETTINGS_URL)
     return { opened: true }
+  })
+
+  // [주의] macOS는 화면 기록을 켜도 실행 중인 앱에는 계속 꺼짐으로 알려 준다. 앱을 다시 켜야 반영된다.
+  // 응답을 먼저 돌려준 뒤 종료한다. before-quit에서 창 닫기 막음이 풀린다.
+  handleVoid(PERMISSION_CHANNELS.relaunch, () => {
+    app.relaunch()
+    setImmediate(() => app.quit())
+    return { relaunching: true }
   })
 
   handleVoid(PERMISSION_CHANNELS.notificationStatus, () => ({ confirmed: notificationReadiness.isConfirmed() }))
