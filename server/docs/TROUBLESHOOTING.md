@@ -35,3 +35,10 @@
 - **증상:** Swift `module.modulemap`과 `bridging.modulemap`이 `SwiftBridging`을 중복 정의해 개발 빌드가 실패했다.
 - **확인:** 시스템 파일을 수정하지 않는 임시 VFS 환경에서는 전체 빌드가 성공한 이전 기록이 있다. 일반 환경이 복구됐다는 뜻은 아니다.
 - **상세:** `features/auth-lifecycle-ERROR.md`, `features/auth-lifecycle-QA.md`. 시스템 도구 복구 전 실제 설치 환경을 확인한다.
+
+## 분석 AI가 HTTP 헤더만 보내고 본문을 멈춘 경우 (#171, 2026-11-08)
+
+- 요청 timeout5초만 설정한 동기 HTTP 호출에서, AI stub이 헤더와 본문1글자를 보내고 멈추면8초 이내 종료 검증이 실패했다.
+- 전체 응답 future의5초 제한과 timeout/중단 시cancel을 추가했다. 수정 후 같은 합성 시나리오는 약5.1초에 안전한 UNCERTAIN으로 반환했다. 9KB 응답은8KB 상한에서 차단한다.
+- Backend 전체158개(실패0/오류0/생략6)를 통과했다. 소켓 자원 해제를 직접 계측하거나 실제 AI 성능을 측정한 것은 아니다.
+- 재현·회귀: features/analysis-runs-ERROR.md, AnalysisAiClientTests.oversizedAndStalledResponsesCannotHoldRequestIndefinitely.

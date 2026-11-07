@@ -1,6 +1,13 @@
 # Backend 다음 작업
 
-## 현재 작업: #151 CORS·확장1개
+## 현재 작업: #171 분석 요청·결과 저장
+
+- feat/171-analysis-runs에서 구현·격리 정적 리뷰와 QA를 수행했다. 최신 검증 수치·한계는 features/analysis-runs-QA.md, REPORT.md를 따른다. PR 생성·병합·이슈 종료는 별도 승인 대상이다.
+- AI #154가 dev에 반영되면 정식 내부 경로의 판정·서비스 키·같은 traceId·실제 Desktop/Extension 입력으로 통합 QA한다. 현재 수신 확인 응답은 UNCERTAIN/ANALYSIS_UNAVAILABLE로 처리된다.
+- 다음 사용자 담당6번은 Policy Engine·개입 생성/조회·확인, 이후7번 summary/일간/달력이다. heartbeat에서 판정할 수 있도록 팀원 #167과 호출 경계를 맞춘다. metadata UNRELATED 시간 제외와 기기별 source 무관 최신 observedAt 조회를 재사용한다.
+- #151의 PR170은 병합·CI 성공이나 실제 Chrome QA는 남았다. #163 Draft PR164와 #167~#169 세션 상태 명령은 다른 담당 범위다. 실제 테스트 없이 완료로 닫지 않는다.
+
+## 직전 작업: #151 CORS·확장1개 (아래는 당시 기록)
 
 - PR #170의 migration 잠금·POST preflight 지적과 외부 P2(만료된 최신 확장 보존)를 수정했다. 인증 가능 연결 우선 순위를 적용하고 실제 Flyway 업그레이드 회귀9종을 CI에 추가했다. V11 NOT VALID→V12 별도 검증, H2 전체137개 실패0/skip4. 최신 커밋의 원격 CI·재리뷰와 실제 Chrome QA를 확인한다. 병합·이슈 종료는 별도 승인한다.
 - 실제 Chrome 권한 철회→서버 요청 전송→local-events 자동 멈춤은 팀원 5번 담당과 연동해 확인한다. CORS 허용만으로 host 권한 문제가 모두 해결됐다고 판단하지 않는다.

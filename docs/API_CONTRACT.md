@@ -315,7 +315,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - `EXCLUDED`, `PRIVACY_BLOCKED`, `UNCERTAIN`은 HTTP 오류가 아닌 정상 분석 상태다.
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
-- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
+- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다. 2026-11-03 AI 계약의 베타 예외로 내부 AI 응답의 `promptVersion`이 `-uncalibrated`로 끝나고 `confidence: null`인 후보 판정만 수치 기준에서 제외한다. 버전을 이력에 남기며 confidence를 임의로 만들지 않는다. metadata만 근거인 UNRELATED는 이 예외에서도 이탈 시간에 포함하지 않는다.
 - AI 장애·시간 초과는 HTTP 오류가 아니라 `relation: UNCERTAIN`, `confidence: null`, `reasonCode: ANALYSIS_UNAVAILABLE`로 응답한다. 베타까지 AI가 준비되지 않으면 서버가 임시 규칙 판정으로 대신할 수 있으며, 응답 형식·`reasonCode` 허용 목록·세션 고정 `policyVersion`은 같게 유지한다(2026-11-02 확정).
 - 정책 `v1`에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
 - `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.

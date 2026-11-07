@@ -348,3 +348,14 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 사용자 제공 확정 정책과 개발 승인으로 CORS 허용 origin을 환경변수로 관리한다. local 고정 개발 ID 외에는 기본 전체 불허이며 API 인증은 유지한다.
 - 같은 계정의 다른 설치 연결은 이전 ACTIVE 확장 device/family/refresh를 폐기하고 family 사유를 REPLACED로 남긴다. DB partial unique로1개를 보장하고 같은 설치 deviceId 재사용은 유지한다.
 - V11의 기존 여러 연결은 실제 인증 가능 여부를 먼저 판정한 뒤 같은 그룹에서 ACTIVE family 생성시각(없으면 device 생성시각), id 순으로1개를 유지한다. 삭제 없이 상태를 변경하되 기존 로그인이 끊기는 영향이 있다. QA 검증만 수행했고 개발 DB에는 적용하지 않았다.
+
+## 결정: 화면 분석 요청·결과 저장 (#171, 2026-11-08)
+
+- 사용자 담당6번의 POST analysis-runs 한 개로 범위를 제한한다. Frontend·AI·session 명령 코드를 수정하지 않는다.
+- 공개 입력은 기존 UUID v4/clientRunId·contentSource·observedAt·sequence·guardStatus·metadata·일회성 text다. 서버 목표 snapshot/정책/기기 소유권/동의를 별도 검증한다.
+- ERD 기본 컬럼에 관측 기기 device_id, 결과 analysis_status/reason_code/prompt_version을 내부 저장 컬럼으로 추가해 보호 상태와 버전·출처를 보존한다. 원문/제목/URL/AI 전문/traceId는 DB에 저장하지 않는다. 새로운 analysis_runs만 V13으로 만들고 기존 테이블/migration은 바꾸지 않는다.
+- 사용자 잠금을 잡는 예약/완료 transaction을 AI 호출과 분리한다. source 무관 관측 순서(observedAt,id)로 최신을 조회하고 각 AI 결과는 자기 이력만 변경한다. 완료 시 실행 구간은 lastResumedAt으로 확인한다. heartbeat로 version만 증가한 것을 실행 중단으로 오인하지 않는다.
+- 중복 clientRunId는 기존409 IDEMPOTENCY_CONFLICT다. 한도는 소유 세션+기기8회/분이고 중복도 포함한다. 기기 일반60회/분 한도와 함께 적용한다. 단일 서버 메모리 한도의 한계는 기존과 같다.
+- AI URL/서비스 키 미설정, timeout, schema 불일치, 수신확인만 반환 모두200 UNCERTAIN/ANALYSIS_UNAVAILABLE다. 2026-11-03 Notion 베타 예외는 promptVersion의 -uncalibrated+confidence null에만 적용한다.
+- 내부 goalVersion=1은 불변인 세션 목표 snapshot의 revision이다. navigationId=analysis-{serverRunId}는 서버 관측 correlation이며 실제 브라우저 navigation을 검증했다는 뜻이 아니다. stateVersion=세션version+1, extractorVersion=public-text-v1은 서버 adapter의 계약 revision이다. 공개 요청에 없는 OCR 품질·앱/브라우저 원시 상태를 만들어내지 않는다.
+- AI 본문 stall 재현으로 HTTP request timeout만으로 부족함을 확인했다. 전체 response future5초 + 미완료 요청 cancel + 응답8KB 제한을 사용한다. 상세는 analysis-runs-ERROR.md다.
