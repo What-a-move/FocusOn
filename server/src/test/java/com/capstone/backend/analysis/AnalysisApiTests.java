@@ -64,6 +64,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -221,22 +224,75 @@ class AnalysisApiTests {
     }
   }
 
-  @Test
-  void chromeDomBodyRequiresHostBeforeStorageOrAi() throws Exception {
+  @ParameterizedTest
+  @EnumSource(value = ContentSource.class, names = {"CHROME_DOM", "TAB_META"})
+  void webInputRequiresHostBeforeStorageOrAi(ContentSource contentSource) throws Exception {
     Fixture f = fixture();
     var source = request(null);
     long before = runs.count();
     for (Metadata metadata : new Metadata[] {null, new Metadata("Chrome", null, "test", null),
         new Metadata("Chrome", null, "test", "")}) {
-      var missingHost = new Request(UUID.randomUUID().toString(), ContentSource.CHROME_DOM,
-          source.observedAt(), BigDecimal.ONE, null, metadata, source.contentPayload());
+      var missingHost = new Request(UUID.randomUUID().toString(), contentSource,
+          source.observedAt(), BigDecimal.ONE, null, metadata,
+          contentSource == ContentSource.CHROME_DOM ? source.contentPayload() : null);
       mvc.perform(call(f, missingHost)).andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
     assertEquals(before, runs.count());
     verify(ai, never()).analyze(any(), any(), anyLong());
-    mvc.perform(call(f, request(GuardStatus.EXCLUDED))).andExpect(status().isOk());
-    mvc.perform(call(f, request(GuardStatus.PRIVACY_BLOCKED))).andExpect(status().isOk());
+    for (var guard : GuardStatus.values()) {
+      var blocked = new Request(UUID.randomUUID().toString(), contentSource,
+          source.observedAt(), BigDecimal.ONE, guard, null, null);
+      mvc.perform(call(f, blocked)).andExpect(status().isOk());
+    }
+  }
+
+  @Test
+  void excludedTabTitleWithKnownHostSkipsAi() throws Exception {
+    Fixture f = fixture();
+    tx.executeWithoutResult(ignored -> exclusions.save(AnalysisExcludedDomainEntity.create(
+        users.getReferenceById(f.principal().userId()), "example.com", Instant.now())));
+    var r = new Request(UUID.randomUUID().toString(), ContentSource.TAB_META,
+        Instant.now(), BigDecimal.ONE, null,
+        new Metadata("Chrome", null, "excluded synthetic title", "EXAMPLE.COM."), null);
+    mvc.perform(call(f, r)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("EXCLUDED"));
+    verify(ai, never()).analyze(any(), any(), anyLong());
+  }
+
+  @ParameterizedTest
+  @ValueSource(longs = {-60, 60})
+  void deviceClockOffsetDoesNotRejectOrSuppressInitialObservation(long offset) throws Exception {
+    Fixture f = fixture(Instant.now().minusSeconds(1));
+    assertClockOffsetAccepted(f, offset);
+  }
+
+  @ParameterizedTest
+  @ValueSource(longs = {-60, 60})
+  void deviceClockOffsetDoesNotSuppressObservationAfterResume(long offset) throws Exception {
+    Fixture f = fixture();
+    tx.executeWithoutResult(ignored -> sessions.findById(f.sessionId()).orElseThrow()
+        .pause(SessionStatus.PAUSED, "USER", 1000));
+    tx.executeWithoutResult(ignored -> sessions.findById(f.sessionId()).orElseThrow()
+        .resume(Instant.now()));
+    assertClockOffsetAccepted(f, offset);
+  }
+
+  private void assertClockOffsetAccepted(Fixture f, long offset) throws Exception {
+    var observed = Instant.now().plusSeconds(offset)
+        .truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+    var base = request(null);
+    var r = new Request(base.clientRunId(), base.contentSource(), observed, BigDecimal.ONE,
+        null, base.metadata(), base.contentPayload());
+    Instant before = Instant.now();
+    String body = mvc.perform(call(f, r)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("RELATED"))
+        .andReturn().getResponse().getContentAsString();
+    var run = runs.findById(Long.parseLong(json.readTree(body).at("/data/analysisRunId")
+        .asString())).orElseThrow();
+    assertEquals(observed, run.getObservedAt());
+    assertFalse(run.getReceivedAt().isBefore(before.minusMillis(1)));
+    assertFalse(run.getReceivedAt().isAfter(Instant.now().plusMillis(1)));
   }
 
   @Test
@@ -293,7 +349,7 @@ class AnalysisApiTests {
         "test", "v1-uncalibrated"));
     var request = new Request(UUID.randomUUID().toString(), ContentSource.TAB_META,
         Instant.now().minusSeconds(1), BigDecimal.ONE, null,
-        new Metadata("Chrome", null, "test", ""), null);
+        new Metadata("Chrome", null, "test", "example.com"), null);
     assertEquals(Relation.UNRELATED, service.analyze(f.principal(),
         f.login().device().deviceId(),
         Long.toString(f.sessionId()), request).relation());
@@ -398,6 +454,10 @@ class AnalysisApiTests {
   }
 
   private Fixture fixture() {
+    return fixture(Instant.now().minusSeconds(120));
+  }
+
+  private Fixture fixture(Instant startedAt) {
     var account = login.exchange(new GoogleExchangeRequest("code", "a".repeat(43), "test",
         "http://127.0.0.1:49152", new DesktopDevice(UUID.randomUUID().toString(), "QA", "MACOS")));
     return tx.execute(ignored -> {
@@ -413,7 +473,7 @@ class AnalysisApiTests {
       var goal = goals.save(GoalEntity.create(user, "테스트 목표",
           GoalEntity.ConfirmationSource.MANUAL_CONFIRMED, Instant.now()));
       var session = sessions.saveAndFlush(LearningSessionEntity.create(user, goal, device,
-          1800000, "Asia/Seoul", LocalDate.now(), "{}", "v1", Instant.now().minusSeconds(120)));
+          1800000, "Asia/Seoul", LocalDate.now(), "{}", "v1", startedAt));
       return new Fixture(account, new FocusOnPrincipal(user.getId(), device.getId(), family.getId(),
           device.getDeviceType()), session.getId());
     });

@@ -17,7 +17,7 @@ Desktop·연결된 Extension이 수집한 메타데이터/최대 2,000자 텍스
 - `POST /api/v1/sessions/{sessionId}/analysis-runs`
 - Bearer + X-Device-Id 필수. 인증 사용자 소유 RUNNING 세션의 runner Desktop 또는 그 Desktop에 연결된 활성 Extension만 허용한다.
 - body: `{clientRunId(UUID v4), contentSource, observedAt(UTC), sequence(양수), guardStatus:null|EXCLUDED|PRIVACY_BLOCKED, metadata?, contentPayload?:{text}}`.
-- MVP source: APP_META, TAB_META, CHROME_DOM, DESKTOP_APP_OCR. Chrome viewport OCR·CAMERA_LOCAL은 이 경로에서 받지 않는다. guard 요청은 metadata/contentPayload를 함께 보내면 400이다. guard 없는 CHROME_DOM 본문은 metadata.urlHost가 유효해야 하며 출처가 없으면 저장·AI 호출 전에400으로 거절한다.
+- MVP source: APP_META, TAB_META, CHROME_DOM, DESKTOP_APP_OCR. Chrome viewport OCR·CAMERA_LOCAL은 이 경로에서 받지 않는다. guard 요청은 metadata/contentPayload를 함께 보내면 400이다. guard 없는 TAB_META와 CHROME_DOM 본문은 metadata.urlHost가 유효해야 하며 출처가 없으면 저장·AI 호출 전에400으로 거절한다.
 - `200 data.{analysisRunId,analysisStatus,relation,confidence,reasonCode,observedAt,policyVersion}`. 정책 버전은 해당 세션 값이다. guard의 confidence/reasonCode는 null이다.
 - 400 VALIDATION_ERROR, 401 기존 인증 오류, 404 SESSION_NOT_FOUND(소유권 불일치 포함), 409 SESSION_STATE_INVALID, 409 IDEMPOTENCY_CONFLICT(중복 clientRunId), 429 TOO_MANY_REQUESTS + Retry-After.
 - 중복은 기존 공통 409 코드를 사용하고 응답에 입력 원문을 포함하지 않는다. 분석별 한도는 소유권 확인 후 session+device 분당8회이며 일반 인증 한도와 함께 적용한다.
@@ -30,6 +30,12 @@ Desktop·연결된 Extension이 수집한 메타데이터/최대 2,000자 텍스
 - 원문·제목·host·AI envelope/응답 전문·토큰·traceId는 저장하지 않는다. 분석 이력 보관은 세션 종료 후90일(삭제 worker는 후속).
 - 초기 안전 결과(UNCERTAIN/ANALYSIS_UNAVAILABLE)를 먼저 예약하고 AI 완료 후 해당 행만 갱신한다. 실패/프로세스 종료가 정상 판정으로 남지 않는다.
 - 새 관측은 received/완료 순서가 아닌 observedAt·id로 선택한다. 늦은 AI 완료는 자기 이력만 바꾸며 최신 EXCLUDED를 덮는 현재상태 upsert를 하지 않는다. 후속 Policy Engine도 이 조회를 재사용해야 한다.
+
+## 시각 기준
+
+- observedAt은 기기 관측 시각 원본이다. 같은 기기 안에서 source 무관 관측 순서를 비교하며 서버 startedAt/lastResumedAt/현재 시각과 직접 비교해 거절하지 않는다. receivedAt은 서버 수신 시각이다.
+- AI 호출 전후 실행 구간 확인은 서버가 읽은 lastResumedAt끼리 비교한다. 서버 시간으로 확정할 세션 수명·학습 시간에 기기 시각을 그대로 사용하지 않는다.
+- 현재 공개 요청에는 실행 구간 식별자가 없어, 이전 구간에서 수집했지만 재개 후에 처음 도착한 요청을 서버 단독으로 완전히 식별할 수는 없다. 기기 시각을 서버 시각에 맞춘 것으로 간주하거나 receivedAt이 실제 화면 관측 시각이라고 주장하지 않는다.
 
 ## 처리 흐름
 

@@ -48,10 +48,7 @@ public class AnalysisRunStore {
       throw new ApiException(ApiErrorCode.SESSION_STATE_INVALID);
     }
     Instant now = Instant.now();
-    if (request.observedAt().isBefore(session.getStartedAt())
-        || request.observedAt().isAfter(now.plusSeconds(30))) {
-      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
-    }
+    // observedAt은 기기 시각이다. 서버 startedAt/lastResumedAt/now와 직접 비교하지 않는다.
     limits.check("analysis:" + sessionId + ":" + principal.deviceId(), 8,
         Duration.ofMinutes(1));
     if (runs.existsBySessionIdAndClientRunId(sessionId, request.runUuid())) {
@@ -62,8 +59,7 @@ public class AnalysisRunStore {
     if (guard != null) {
       run.complete(AnalysisDecision.guarded(guard));
     }
-    boolean latest = !request.observedAt().isBefore(session.getLastResumedAt())
-        && runs.findFirstBySessionIdAndDeviceIdOrderByObservedAtDescIdDesc(
+    boolean latest = runs.findFirstBySessionIdAndDeviceIdOrderByObservedAtDescIdDesc(
         sessionId, device.getId()).map(value -> value.getId().equals(run.getId())).orElse(false);
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),

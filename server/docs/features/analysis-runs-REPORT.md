@@ -13,8 +13,8 @@
 
 ## 검증
 
-- Backend build/Checkstyle:160개 실패0/오류0/생략6.
-- PostgreSQL:34개 전부 통과(분석15+분석 migration9+확장 migration9+닉네임1).
+- Backend build/Checkstyle:166개 실패0/오류0/생략6.
+- PostgreSQL:40개 전부 통과(분석21+분석 migration9+확장 migration9+닉네임1).
 - 격리 정적 리뷰와 timeout 보완 재리뷰에서 확정 P1/P2 없음. 상세는 QA·code-review·ERROR 문서다.
 
 ## 상태와 한계
@@ -23,3 +23,5 @@
 - 현재 dev AI는 정식 경로에서 판정 대신 수신 확인만 반환한다. 실제 AI 성공은 #154 후 연동 QA가 필요하다. 항상 RELATED인 가짜 성공으로 대체하지 않았다.
 - 개입 생성·조회·확인, heartbeat Policy Engine, 리포트·90일 삭제 worker는 이 Issue에 포함하지 않았다. 팀원 세션 명령·Frontend·AI·Notion은 수정하지 않았다.
 - 임시 PG는 QA 후 중지하고 기존 개발 DB/8080은 그대로 둔다. 다음 개발자는 frontend-handoff와 NEXT_TASK를 참고한다.
+
+- 외부 P2의 TAB_META host 검증과 기기/서버 시각 직접 비교를 보완했다. 고정 시차 회귀4종을 추가했다. 실행 도중 기기 시계 역행은 추가 순서 계약이 필요한 별도 경계이며 해결했다고 주장하지 않는다.

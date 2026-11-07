@@ -34,8 +34,10 @@ final class AnalysisPrivacy {
     }
     String host = host(request);
     // 본문 출처를 모르면 서버 제외 목록을 확인할 수 없으므로 AI 호출 전에 거절한다.
-    if (request.guardStatus() == null && request.contentSource() == ContentSource.CHROME_DOM
-        && request.contentPayload() != null && host.isEmpty()) {
+    boolean webContent = request.contentSource() == ContentSource.TAB_META
+        || (request.contentSource() == ContentSource.CHROME_DOM
+        && request.contentPayload() != null);
+    if (request.guardStatus() == null && webContent && host.isEmpty()) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
   }

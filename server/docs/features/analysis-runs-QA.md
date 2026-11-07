@@ -6,15 +6,15 @@
 
 | 검사 | 결과 |
 | --- | --- |
-| Backend build·Checkstyle·H2 전체 |160개, 실패0/오류0/생략6|
-| PostgreSQL CI와 같은 선택 |34개 전부 통과|
-| PG 분석 API |15개 전부 통과|
+| Backend build·Checkstyle·H2 전체 |166개, 실패0/오류0/생략6|
+| PostgreSQL CI와 같은 선택 |40개 전부 통과|
+| PG 분석 API |21개 전부 통과|
 | PG 분석 migration |9개 전부 통과|
 | PG 기존 확장 migration |9개 전부 통과|
 | PG 닉네임 동시성 |1개 통과|
 | 별도 컨텍스트 정적 리뷰·timeout 수정 재리뷰 |확정 P1/P2 없음|
 
-PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건에 따른 것이며 전체160개가 모두 실행됐다는 뜻이 아니다. 별도 PG34개는 이 조건을 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
+PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건에 따른 것이며 전체166개가 모두 실행됐다는 뜻이 아니다. 별도 PG40개는 이 조건을 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
 
 ## 검증한 동작
 
@@ -60,3 +60,9 @@ PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건
 - 테스트 지적2건: 정상 판정 JSON+9,000공백으로 크기 제한을 검증하고, raw loopback socket에서 cleanup 전 EOF/reset으로 실제 요청 취소를 확인한다.
 - 회귀 검증력 확인: byte limit과 pending.cancel을 로컬에서 임시 제거했을 때 두 테스트가 각각 실패했다. finally로 현재 구현을 복원하고 전체 build/Checkstyle160개(실패0/생략6)를 통과했다.
 - 격리 리뷰: 이번 수정 diff·PLAN으로 별도 에이전트가 정적 재검토했고 P1/P2 없음. 실제 AI·앱 QA를 수행했다는 의미가 아니다.
+
+## 외부 P2 두 건 보완
+
+- TAB_META host 없는 제목도 저장·AI 호출 전400으로 차단한다. host 검증 회귀는 CHROME_DOM/TAB_META 각각 metadata 누락·host null·빈 값과 보호 상태 요청을 검사한다. 알려진 제외 host의 TAB_META 제목은200 EXCLUDED·AI 미호출이다.
+- 기기와 서버의 시각 비교를 제거했다. 시작 직후·재개 직후 각각±60초 총4종을 검사하고200 RELATED, observedAt 원본 보존, receivedAt 서버 시각을 확인했다. 기존 지연 결과/보호 상태 순서와 AI 도중 실행 구간 변경 검사도 통과한다.
+- 추가 정적 검토에서 실행 도중 기기 시계가 역행하면 같은 기기의 observedAt 최신 조회가 이전 미래 시각을 유지할 수 있음을 발견했다. 이 경우를 해결한 것으로 기록하지 않는다. 전역 관측 순서/시계 구간 계약은 별도 협의가 필요하며 이번 두 지적의 고정 시차와 구분한다.

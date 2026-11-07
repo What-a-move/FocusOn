@@ -359,3 +359,9 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - AI URL/서비스 키 미설정, timeout, schema 불일치, 수신확인만 반환 모두200 UNCERTAIN/ANALYSIS_UNAVAILABLE다. 2026-11-03 Notion 베타 예외는 promptVersion의 -uncalibrated+confidence null에만 적용한다.
 - 내부 goalVersion=1은 불변인 세션 목표 snapshot의 revision이다. navigationId=analysis-{serverRunId}는 서버 관측 correlation이며 실제 브라우저 navigation을 검증했다는 뜻이 아니다. stateVersion=세션version+1, extractorVersion=public-text-v1은 서버 adapter의 계약 revision이다. 공개 요청에 없는 OCR 품질·앱/브라우저 원시 상태를 만들어내지 않는다.
 - AI 본문 stall 재현으로 HTTP request timeout만으로 부족함을 확인했다. 전체 response future5초 + 미완료 요청 cancel + 응답8KB 제한을 사용한다. 상세는 analysis-runs-ERROR.md다.
+
+## 보완: 분석의 시각 기준과 웹 콘텐츠 host (#171/PR172)
+
+- guard 없는 TAB_META와 CHROME_DOM 본문은 host 확인 전 AI로 보내지 않는다. 기존 공개 필드는 유지한다.
+- observedAt은 기기 원본, receivedAt은 서버 수신 시각이다. 기기 observedAt을 서버 세션 시작/재개/현재 시각과 직접 비교하지 않는다. 관측 순서는 같은 기기의 observedAt끼리 비교하고 세션 수명·학습 시간은 서버 시각을 사용한다.
+- AI 호출 중 실행 구간이 바뀌었는지는 서버 lastResumedAt snapshot과 현재 서버 lastResumedAt을 비교한다. 기기/서버 시계 차이를 임의의30초/몇 분 허용 오차로 감추지 않는다. API에 구간 식별자나 시계 동기화 정보를 새로 만들지 않았다. 한계는 PLAN의 시각 기준을 따른다.
