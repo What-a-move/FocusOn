@@ -2,7 +2,7 @@
 
 ## Issue #167 이어서 확인 (2026-11-08)
 
-- 최신 dev 통합 후 V13 migration을 검증한다. 기존 V11 Heartbeat 적용 DB의 이력 충돌을 별도로 해결해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
+- 최신 dev 통합 후 격리 PostgreSQL의 V1~V13 적용과 Heartbeat 테스트를 검증했다. 기존 V11 Heartbeat 적용 DB의 이력 충돌은 별도로 해결해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
 
 ## 현재 작업: #151 CORS·확장1개
 
