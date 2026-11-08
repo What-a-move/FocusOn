@@ -293,16 +293,21 @@ FOCUSON_LIVE_GOAL_EVAL=1 python -m evaluation.evaluate --live
 streamlit run streamlit_app.py
 ```
 
-- 전체 Workflow를 수동 테스트하려면 `AI/.env`에 `TYPESAFE_API_KEY`와 `OPENAI_API_KEY`를 입력한다. JEV와 생성 모델은 기본값으로 각각 `jev-latest`, `gpt-5-mini`를 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
+- 전체 Workflow를 수동 테스트하려면 `AI/.env`에 `TYPESAFE_API_KEY`와 `ANTHROPIC_API_KEY`를 입력한다. JEV와 생성 모델은 기본값으로 각각 `jev-latest`, `claude-haiku-4-5-20251001`를 사용하며 필요할 때만 선택 설정으로 덮어쓴다.
 - 프로젝트 상위 경로의 `.python-version`이 `what-a-move`를 선택하므로 pyenv shell 연동이 활성화된 터미널에서는 `pyenv activate`를 생략할 수 있다.
-- 기본 pytest와 Offline 평가는 실제 JEV·OpenAI를 호출하지 않는다.
+- 기본 pytest와 Offline 평가는 실제 JEV·Claude를 호출하지 않는다.
 - Live 평가는 `FOCUSON_LIVE_GOAL_EVAL=1`과 TypeSafe API 설정이 모두 있어야 실행된다.
 - 고정 사례는 6개 상태, 복수 목표, 약어, 의미 없는 문자열, Prompt Injection을 포함한다.
 - 구현 검증은 상태 우선순위, 후보별 독립 검수, 1회 Repair, 두 번째 실패 fallback, 후보 선택·답변 후 전체 재평가, 오류 envelope와 로그 개인정보 제외를 포함한다.
 - 실제 평가에서는 상태별 Precision·Recall, confusion matrix, fallback 비율, 후보 검수 실패율, 호출 횟수와 P50·P95 지연시간을 추가 기록한다.
-- Streamlit은 `AI/.env`의 실제 JEV·OpenAI Key를 사용하는 로컬 수동 테스트 전용이다. 목표 저장이나 학습 세션 시작은 수행하지 않는다.
+- Streamlit은 `AI/.env`의 실제 JEV·Claude Key를 사용하는 로컬 수동 테스트 전용이다. 목표 저장이나 학습 세션 시작은 수행하지 않는다.
 
 ### #12 현재 회귀 기준
+
+- 2026-11-03 GA-038: 공식 Anthropic SDK의 HTTP Mock으로 `/v1/messages`의 구조화 Schema 전달·파싱, 잘린 응답·refusal 거절, 4xx 설정 오류·429/5xx/연결 장애 분류를 검증한다. Streamlit의 Claude 표시, 기존 질문 병렬·스트리밍·fallback 및 저장 전 확인 회귀를 함께 실행한다.
+- Claude 합성 목표 Live smoke는 스트리밍 질문·프로필·추천 각각 1회 성공(5.58/6.12/5.79초)이다. 고정 Router Fixture는 이전과 같은 15건이다. Live smoke는 생성 품질 전체 평가나 JEV 통합·P95 검증을 대체하지 않는다.
+- 로컬 what-a-move 회귀는 87개 통과(6.35초), Offline Router 15건 오류 0건이다. 기본 tracing을 껐으며 import 시 외부 호출하는 사용자 미추적 `tests/openai_test.py`는 `--ignore=AI/tests/openai_test.py`로 제외했다. 파일은 수정·커밋하지 않는다.
+- PR #160의 dev 동기화 후 전체 AI는 405개·하위 테스트 27개 통과(14.70초), 동일 Offline Router 15건 오류 0건이다. 확장 실행에 필요한 기존 Kiwi 0.23.1을 what-a-move에 설치했다. 외부 모델 호출은 기존 Claude 합성 smoke 3건 외에 추가하지 않았다.
 
 - 고정 Fixture는 내부 6종 clarityStatus와 JEV 최초 4개 판단 및 Score Router 2.00/1.00을 검사한다. 폐기한 goalDetailLevel Choice나 isStartableAsIs를 현재 라우팅 기준으로 사용하지 않는다.
 - 공개 decision 4종 변환·Backend·실제 모델 품질·비용은 별도 통합/Live 평가가 필요하다. 기본 테스트 중에는 LANGSMITH_TRACING, LANGCHAIN_TRACING_V2, LANGSMITH_TRACE_RAW_GOAL_TEXT를 false로 설정한다.

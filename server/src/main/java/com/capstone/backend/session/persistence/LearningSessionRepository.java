@@ -44,9 +44,10 @@ public interface LearningSessionRepository extends JpaRepository<LearningSession
   /** 현재 실행 구간의 마지막 생존 기준을 기준으로 정리 후보를 찾는다. */
   @Query("select s.id from LearningSessionEntity s where s.status = "
       + "com.capstone.backend.session.persistence.SessionStatus.RUNNING "
-      + "and s.lastResumedAt <= :cutoff and "
+      + "and s.id > :afterId and s.lastResumedAt <= :cutoff and "
       + "(s.lastHeartbeatAt is null or s.lastHeartbeatAt <= :cutoff) order by s.id")
-  java.util.List<Long> findExpiredCandidates(@Param("cutoff") Instant cutoff, Pageable page);
+  java.util.List<Long> findExpiredCandidates(@Param("cutoff") Instant cutoff,
+      @Param("afterId") long afterId, Pageable page);
 
   /** 최신 신호가 이미 반영됐다면 조건부 갱신이 실패한다. */
   @Modifying

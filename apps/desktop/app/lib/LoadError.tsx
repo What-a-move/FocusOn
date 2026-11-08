@@ -2,9 +2,8 @@ import Image from 'next/image'
 import { errorText } from './error-text'
 
 // 원인별 포키. 같은 포키가 모든 오류에 반복되지 않게 원인마다 다르게 쓴다. 아이콘은 쓰지 않는다.
-const pokiOf = (code: string) => code === 'NOT_FOUND' ? 'poki-floating-sleepy-v7.png'
-  : code === 'LOCAL_NETWORK_UNAVAILABLE' ? 'poki-floating-paused-v3.png'
-    : 'poki-floating-curious-v8.png'
+// 찾지 못함은 두리번, 그 밖의 실패(오프라인 포함)는 걱정 포키.
+const pokiOf = (code: string) => code === 'NOT_FOUND' ? 'poki-looking.png' : 'poki-worried.png'
 
 /**
  * 불러오기 실패 화면. 포키 + 무엇을 못 불러왔는지 + 원인·할 일 + 다시 시도를 가운데에 쌓는다.

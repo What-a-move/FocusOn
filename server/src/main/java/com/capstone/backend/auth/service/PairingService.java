@@ -211,8 +211,27 @@ public class PairingService {
     return new ClaimOutcome(linked, null, false);
   }
 
+  /** 사용자 잠금 안에서 이전 설치를 폐기한 뒤 새 독립 family를 발급한다. */
   private LinkedExtension link(
       UserEntity user, UserDeviceEntity desktop, String hash, Instant now) {
+    // 사용자 잠금 안에서 이전 설치들을 먼저 폐기해 ACTIVE 확장 1개 제약을 유지한다.
+    for (var previous : devices.findByUserIdAndDeviceTypeAndStatus(user.getId(),
+        UserDeviceEntity.DeviceType.CHROME_EXTENSION, UserDeviceEntity.Status.ACTIVE)) {
+      if (!previous.getInstallationIdHash().equals(hash)) {
+        families.findByDeviceAndStatus(previous.getId(), TokenFamilyEntity.Status.ACTIVE)
+            .ifPresent(old -> {
+              var locked = families.findByIdForUpdate(old.getId()).orElseThrow();
+              locked.setStatus(TokenFamilyEntity.Status.REVOKED);
+              locked.setRevokedReason(TokenFamilyEntity.RevokedReason.REPLACED);
+              locked.setRevokedAt(now);
+              tokens.revokeActiveByFamily(locked.getId(), now);
+            });
+        previous.setStatus(UserDeviceEntity.Status.REVOKED);
+        previous.setRevokedAt(now);
+      }
+    }
+    // 새 설치 INSERT/기존 설치 재활성화 전에 partial unique에 반영한다.
+    devices.flush();
     var device = devices.findByInstallation(user.getId(),
         UserDeviceEntity.DeviceType.CHROME_EXTENSION, hash).orElseGet(UserDeviceEntity::new);
     if (device.getId() != null) {

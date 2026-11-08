@@ -20,7 +20,7 @@ from src.models.errors import (
 from src.models.jev_client import TypeSafeJevClient
 from src.models.laya_client import LayaComparisonClient
 from src.models.langsmith_tracing import trace_comparative_assessment_inputs
-from src.models.llm_client import OpenAIGoalGenerationClient
+from src.models.llm_client import ClaudeGoalGenerationClient
 from src.workflow.goal_assistance import GoalAssistanceWorkflow
 
 
@@ -115,7 +115,7 @@ async def _run_assessment(
     request: GoalClarifyRequest,
 ) -> tuple[GoalAssessment, ClarityStatus]:
     judgments = TypeSafeJevClient(settings)
-    generator = OpenAIGoalGenerationClient(settings)
+    generator = ClaudeGoalGenerationClient(settings)
     workflow = GoalAssistanceWorkflow(settings, judgments, generator)
     try:
         return await workflow.assess(request)
@@ -162,7 +162,7 @@ async def _run_after_assessment(
     question_progress: Callable[[str], None] | None = None,
 ) -> GoalClarifyData:
     judgments = TypeSafeJevClient(settings)
-    generator = OpenAIGoalGenerationClient(settings)
+    generator = ClaudeGoalGenerationClient(settings)
     workflow = GoalAssistanceWorkflow(
         settings, judgments, generator, question_progress=question_progress
     )
@@ -359,11 +359,11 @@ def _render_configuration(settings: Settings) -> None:
         "✅ API Key 감지됨" if settings.typesafe_api_key else "❌ API Key 없음",
     )
     st.sidebar.write(
-        "OpenAI",
-        "✅ API Key 감지됨" if settings.openai_api_key else "❌ API Key 없음",
+        "Claude",
+        "✅ API Key 감지됨" if settings.anthropic_api_key else "❌ API Key 없음",
     )
     st.sidebar.caption(f"JEV 모델: {settings.typesafe_default_model}")
-    st.sidebar.caption(f"문장 생성 모델: {settings.openai_model}")
+    st.sidebar.caption(f"문장 생성 모델: {settings.claude_model}")
     st.sidebar.write(
         "Laya 비교",
         "✅ 사용" if settings.laya_comparison_enabled else "➖ 비활성화",
@@ -372,7 +372,7 @@ def _render_configuration(settings: Settings) -> None:
         st.sidebar.caption(f"Laya 모델: {settings.laya_comparison_model}")
         st.sidebar.caption("첫 비교 시 공개 체크포인트 다운로드로 시간이 더 걸릴 수 있습니다.")
     st.sidebar.warning(
-        "입력한 목표와 답변은 외부 JEV·OpenAI 서비스로 전송됩니다. 테스트용 문장만 사용하세요."
+        "입력한 목표와 답변은 외부 JEV·Claude 서비스로 전송됩니다. 테스트용 문장만 사용하세요."
     )
     if st.session_state.saved_goal:
         st.sidebar.success("테스트 세션에 저장된 목표")

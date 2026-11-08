@@ -18,7 +18,7 @@ type Review = { goal: string; caption: string; source: ConfirmationSource }
 const EXAMPLES = ['React Query 캐싱 방식 이해하기', '미적분 적분 문제 풀기', '캡스톤 발표 자료 정리하기']
 const STAGE: Record<View, number> = { entry: 0, questions: 1, candidates: 1, review: 2, done: 3 }
 const STAGE_LABEL = ['입력', '다듬기', '확인', '완료']
-const POKI = { planning: '/design/poki-main-planning.png', curious: '/design/poki-floating-curious-v8.png', cheer: '/design/poki-floating-cheer-v7.png' }
+const POKI = { planning: '/design/poki-main-planning.png', thinking: '/design/poki-thinking.png', celebrate: '/design/poki-celebrate.png' }
 const TERM_OPTIONS = ['맞아요', '아니에요, 문장을 고칠게요']
 
 function Options({ labels, selected, onChoose, onSubmit, label }: { labels: string[]; selected: number; onChoose: (index: number) => void; onSubmit: () => void; label?: string }) {
@@ -226,8 +226,8 @@ export function GoalSetting() {
 
   const stage = STAGE[view]
   const primaryLabel = { entry: '다음', questions: '다음', candidates: '이 목표로', review: '이 목표로 정하기', done: '집중 시간 정하기' }[view]
-  const poki = view === 'questions' || view === 'candidates' ? POKI.curious : POKI.planning
-  const pokiAlt = view === 'questions' || view === 'candidates' ? '궁금해하는 포키' : '체크리스트를 든 포키'
+  const poki = view === 'questions' || view === 'candidates' ? POKI.thinking : POKI.planning
+  const pokiAlt = view === 'questions' || view === 'candidates' ? '생각하는 포키' : '체크리스트를 든 포키'
 
   return <main className="app-window onboarding-window goal-window">
     <div className="flow">
@@ -247,7 +247,7 @@ export function GoalSetting() {
             <p className="done-ok"><i aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg></i>목표가 정해졌어요. 이제 시간만 정하면 돼요</p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="poki" src={POKI.cheer} alt="응원하는 포키" />
+          <img className="poki" src={POKI.celebrate} alt="축하하는 포키" />
         </section> : <section className="view" key={view} aria-labelledby="goal-say">
           <div className="speaker">
             {/* eslint-disable-next-line @next/next/no-img-element */}

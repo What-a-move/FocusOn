@@ -19,10 +19,10 @@ type View =
 
 // 정리 전·실패 상태. 시스템 안내라 존댓말이며, 정리 실패는 요청 오류가 아니므로 빨간색을 쓰지 않는다(결정 031).
 const STATUS = {
-  QUEUED: { title: '학습 정리를 준비하고 있어요', copy: '곧 정리를 시작해요. 이 화면을 열어 두면 다 되는 대로 보여 드려요.', waiting: true },
-  GENERATING: { title: '학습 내용을 정리하고 있어요', copy: '다 되면 이 화면에 바로 보여 드려요.', waiting: true },
-  INSUFFICIENT_DATA: { title: '이번에는 학습 기록만 남겼어요', copy: '노트로 정리할 만큼 확인된 학습 내용이 부족했어요. 목표와 집중 시간은 기록됐어요.', waiting: false },
-  FAILED: { title: '학습 정리를 만들지 못했어요', copy: '집중 기록과 흐름은 집중 리포트에서 그대로 볼 수 있어요.', waiting: false },
+  QUEUED: { title: '학습 정리를 준비하고 있어요', copy: '곧 정리를 시작해요. 이 화면을 열어 두면 다 되는 대로 보여 드려요.', poki: 'poki-writing.png', waiting: true },
+  GENERATING: { title: '학습 내용을 정리하고 있어요', copy: '다 되면 이 화면에 바로 보여 드려요.', poki: 'poki-writing.png', waiting: true },
+  INSUFFICIENT_DATA: { title: '이번에는 학습 기록만 남겼어요', copy: '노트로 정리할 만큼 확인된 학습 내용이 부족했어요. 목표와 집중 시간은 기록됐어요.', poki: 'poki-empty-note.png', waiting: false },
+  FAILED: { title: '학습 정리를 만들지 못했어요', copy: '집중 기록과 흐름은 집중 리포트에서 그대로 볼 수 있어요.', poki: 'poki-worried.png', waiting: false },
 } as const
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' })
@@ -100,7 +100,7 @@ export function StudyNote() {
         <Link className="fo-button fo-button-ghost" href="/records/">집중 기록으로</Link>
       </section>}
       {view.kind === 'missing' && <section className="fo-notebook fo-note-status">
-        <Image src="/design/poki-floating-curious-v8.png" alt="궁금해하는 포키" width={240} height={240} />
+        <Image src="/design/poki-looking.png" alt="두리번거리는 포키" width={240} height={240} />
         <h2>노트를 찾을 수 없어요</h2>
         <p>집중 기록에서 회차를 다시 열어 주세요.</p>
         <Link className="fo-button fo-button-ghost" href="/records/">집중 기록으로</Link>
@@ -108,7 +108,7 @@ export function StudyNote() {
       {view.kind === 'ready' && (view.learning.status === 'READY'
         ? <Notebook summary={view.summary} learning={view.learning} />
         : <section className="fo-notebook fo-note-status" aria-live="polite">
-          <Image className={view.learning.status === 'GENERATING' ? 'is-turning' : undefined} src="/design/poki-records-journal.png" alt="" width={240} height={240} />
+          <Image className={view.learning.status === 'GENERATING' ? 'is-turning' : undefined} src={`/design/${STATUS[view.learning.status].poki}`} alt="" width={240} height={240} />
           <h2>{STATUS[view.learning.status].title}</h2>
           <p>{STATUS[view.learning.status].copy}</p>
           {STATUS[view.learning.status].waiting && <span className="fo-dots" aria-hidden="true"><i /><i /><i /></span>}
