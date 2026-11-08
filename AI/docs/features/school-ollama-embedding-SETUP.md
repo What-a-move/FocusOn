@@ -50,7 +50,7 @@ curl --noproxy '*' --connect-timeout 5 --max-time 60 --fail-with-body -sS \
 
 ## 현재 코드 실행
 
-Streamlit 화면은 삭제했다. FastAPI 수신 실행법은 [수신 지침](fastapi-reception-REPORT.md)을 따른다. 현재 FastAPI는 수신만 확인하며 관련성 판정을 실행하지 않는다.
+Streamlit 화면은 삭제했다. FastAPI 수신 실행법은 [수신 지침](fastapi-reception-REPORT.md)을 따른다. 현재 FastAPI의 `POST /internal/v1/analysis-runs`는 입력 검증 후 관련성 판정을 반환한다.
 
 ## 백엔드 서버 Tailscale 연결
 

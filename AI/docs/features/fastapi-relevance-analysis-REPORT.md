@@ -7,7 +7,7 @@
 - `POST /internal/v1/analysis-runs`가 서비스 Bearer 인증, 입력 Schema, 세션·목표·활성 화면·제외·민감정보 검사를 마친 뒤 Kiwi + Qwen Hybrid 분석을 실행한다.
 - `/internal/v1/analysis-runs/analyze`는 제거했다. 분석 제외·민감 화면은 임베딩 모델을 호출하지 않고 기존 409 상태를 반환한다.
 - 정상 응답은 `decision`, `confidence`, `reasonCode`, `modelVersion`, `promptVersion` 다섯 필드다. 판정이 미보정 후보임은 `promptVersion`의 `-uncalibrated`로 식별한다.
-- `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서는 미보정 Hybrid 후보 점수가 0.6 이상일 때만 후보를 `decision`으로 반환한다. 점수가 없거나 낮으면 `UNCERTAIN`이다. `promptVersion`은 `-uncalibrated`로 끝나며 이 점수는 보정된 확률이 아니다.
+- `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서는 미보정 Hybrid 후보 점수가 0.75 이상일 때만 후보를 `decision`으로 반환한다. 점수가 없거나 낮으면 `UNCERTAIN`이다. `promptVersion`은 `-uncalibrated`로 끝나며 이 점수는 보정된 확률이 아니다.
 - 앱·탭 메타데이터만으로 나온 `UNRELATED`는 `UNCERTAIN`으로 낮춰 DOM/OCR 글자 입력을 기다린다. 임베딩·분석 실패는 `UNCERTAIN`과 `ANALYSIS_UNAVAILABLE`로 반환한다.
 - 기본 `safe` 모드는 보정 confidence 없이 RELATED/UNRELATED를 확정하지 않는다. 현재 safe 경로는 보정 점수를 공급하지 않으므로 보정 이후 별도 연결이 필요하다.
 - Desktop OCR 입력은 `contentPayload.text`가 있으면 충분하다. `ocr.confidence`, `captureStatus`는 선택이며 생략해도 입력 처리와 판정이 가능하다.
@@ -24,7 +24,7 @@
 - 최신 dev의 Backend Java Adapter는 AI 관련성 경로를 호출한다. 실제 모델·제품 알림까지의 왕복은 미검증이다.
 - Server 담당자는 `AI/examples/analysis-reception.json`을 기반으로 요청을 구성하고 `FOCUSON_AI_API_KEY` Bearer 인증으로 단일 경로를 호출해야 한다. Backend가 3초 timeout을 적용하면 timeout·연결 오류를 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 처리해야 한다.
 - Server 쪽 `confidence`를 사용자에게 보정 확률로 해석하면 안 된다. 베타 모드에서 `promptVersion`의 `-uncalibrated`를 유지해 기록하고, `confidence`가 null일 수 있도록 계약을 확인한다.
-- AI는 사용자 요청에 따라 0.6을 적용한다. 루트 `docs/API_CONTRACT.md`는 아직 0.75이므로 Backend 담당자와 실제 기준을 확인해야 한다. 최신 dev Backend는 숫자 confidence가 0.75 미만이면 UNCERTAIN으로 바꾸며, -uncalibrated와 null이 함께 있을 때만 예외를 적용한다. 따라서 AI의 0.6 이상 0.75 미만 판정은 Backend에서 보류된다.
+- AI와 최신 dev Backend는 숫자 confidence 0.75 미만을 UNCERTAIN으로 처리한다. 실제 서버·모델 왕복과 알림은 아직 검증하지 않았다.
 - 전체 완료 조건은 Backend가 이 경로를 실제 호출하고 `RELATED`·`UNRELATED`의 지속 시간·알림 연결까지 통합 검증하는 것이다.
 
-검증: `PYENV_VERSION=what-a-move PYTHONPATH=AI:. pyenv exec python -m pytest AI/tests/test_fastapi_analysis.py AI/tests/test_fastapi_reception.py AI/tests/test_merged_routes.py AI/tests/test_beta_scores.py AI/tests/test_screen_analysis_contract.py -q` 결과 `96 passed`. `git diff --check`도 통과했다. 이 테스트는 합성 입력·FakeEmbedding 기반이며 실제 Qwen·Backend 연동을 검증하지 않는다.
+검증: `PYENV_VERSION=what-a-move PYTHONPATH=AI:. pyenv exec python -m pytest AI/tests/test_fastapi_analysis.py AI/tests/test_fastapi_reception.py AI/tests/test_merged_routes.py AI/tests/test_beta_scores.py AI/tests/test_screen_analysis_contract.py -q` 결과는 최신 테스트 실행 결과를 따른다. `git diff --check`도 통과했다. 이 테스트는 합성 입력·FakeEmbedding 기반이며 실제 Qwen·Backend 연동을 검증하지 않는다.

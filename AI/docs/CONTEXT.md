@@ -8,10 +8,10 @@
 ### 2026-11-08 베타 화면 판정 현재 상태
 
 - AI 경로는 `POST /internal/v1/analysis-runs` 하나다. 입력 검증 뒤 Kiwi + Qwen Hybrid 판정을 동기 반환하고 과거 `/internal/v1/analysis-runs/analyze`는 제거했다.
-- `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서는 미보정 후보 점수가 0.6 이상일 때 후보를 `decision`으로 반환하고 `promptVersion`에 `-uncalibrated`를 표시한다. 낮거나 없는 점수는 `UNCERTAIN`이다. 이 점수는 보정된 확률이 아니다. 루트 API 계약의 0.75와 차이는 확인이 필요하다. `AI/.env.example`은 베타 테스트를 위해 candidate를 명시한다.
+- `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서는 미보정 후보 점수가 0.75 이상일 때 후보를 `decision`으로 반환하고 `promptVersion`에 `-uncalibrated`를 표시한다. 낮거나 없는 점수는 `UNCERTAIN`이다. 이 점수는 보정된 확률이 아니다. `AI/.env.example`은 베타 테스트를 위해 candidate를 명시한다.
 - 앱·탭 메타데이터의 `UNRELATED`는 `UNCERTAIN`으로 유지하고 글자 기반 보완을 요청한다. 모델 실패는 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`; 제외·민감 입력은 모델 호출 전 409 차단이다.
 - Desktop OCR은 `contentPayload.text`만으로 처리하며 `ocr.confidence`·`captureStatus` 누락 시 값을 만들어 넣지 않는다.
-- `/health`는 실제 임베딩 요청과 2560차원 검증 결과를 알린다. 최신 dev의 Java Backend에는 AI API 호출 코드가 있지만 실제 모델·제품 알림 왕복은 미검증이다. 숫자 confidence 0.6~0.75 미만은 Backend에서 UNCERTAIN으로 바뀐다.
+- `/health`는 실제 임베딩 요청과 2560차원 검증 결과를 알린다. 최신 dev의 Java Backend에는 AI API 호출 코드가 있지만 실제 모델·제품 알림 왕복은 미검증이다. AI와 Backend는 숫자 confidence 0.75 미만을 UNCERTAIN으로 처리한다.
 - 학교 Ollama의 합성 HTTP 40건 p95는 2.32초였고, DOM 20건 p95는 3.76초였다. DOM 경로의 3초 목표는 미달이며 동시 부하 및 제품 전체 성능은 검증되지 않았다. 실측 범위는 [SETUP 보고서](features/school-ollama-embedding-SETUP.md)를 따른다.
 
 - 실제 HTTP FastAPI→Tailscale→Qwen 순차 합성 40건에서 p95 2.32초, 최대 4.04초, 3초 초과 2건이었다. DOM 20건 p95는 3.76초로 목표 미달이다. 측정 범위·제한은 학교 Ollama SETUP의 실측 절을 따른다.

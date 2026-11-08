@@ -54,7 +54,7 @@ PY
 - `extractionStatus`, 선택 `ocr`: 기존 Adapter 입력. Desktop OCR 베타는 정제된 `request.contentPayload.text`만 보내도 된다. 누락된 OCR confidence/capture status는 생성하지 않는다.
 - 401 서비스 인증 실패 / 409 종료·비활성·제외·출처 정책 차단 / 413 전체64KiB 초과 / 415 JSON 외 형식·압축 body / 422 Schema·목표/관측 불일치·잔존 민감정보.
 
-AI는 사용자 요청에 따라 0.6 미만과 점수 누락을 `UNCERTAIN`으로 처리한다. 루트 API 계약은 아직 0.75이므로 Server 구현 및 문서의 기준 정합성 확인이 필요하다.
+AI는 사용자 요청에 따라 0.75 미만과 점수 누락을 `UNCERTAIN`으로 처리한다.
 
 ## 검증과 다음 작업
 

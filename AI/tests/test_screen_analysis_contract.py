@@ -124,9 +124,9 @@ def test_similarity_is_never_synthesized_into_public_confidence():
     result = response("RELATED", None)
     assert result.decision == "UNCERTAIN" and result.confidence is None
     assert result.reason_code == "ANALYSIS_UNAVAILABLE"
-    assert response("RELATED", .599).decision == "UNCERTAIN"
-    accepted = response("RELATED", .6).model_dump(by_alias=True)
-    assert accepted == {"decision": "RELATED", "confidence": .6, "reasonCode": "SEMANTIC_GOAL_MATCH",
+    assert response("RELATED", .749).decision == "UNCERTAIN"
+    accepted = response("RELATED", .75).model_dump(by_alias=True)
+    assert accepted == {"decision": "RELATED", "confidence": .75, "reasonCode": "SEMANTIC_GOAL_MATCH",
                         "modelVersion": "qwen-v1", "promptVersion": "hybrid-v1"}
 
 

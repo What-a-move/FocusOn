@@ -138,7 +138,7 @@ MVP 화면 이탈은 `analysis_rules.md` 9.1의 정책 `v1`을 따른다. 연속
 | 내부 상태 | 공개 `FocusState` 매핑 |
 | --- | --- |
 | `RELATED` 또는 `SUPPORTING` + `LEARNING/RECOVERED` | `RELATED` |
-| `OFF_TASK` + 충분한 관련성 근거·confidence `≥ 0.6` | `UNRELATED` (`driftState`와 무관) |
+| `OFF_TASK` + 충분한 관련성 근거·confidence `≥ 0.75` | `UNRELATED` (`driftState`와 무관) |
 | `UNCERTAIN`, confidence 미달, 의미 판단 보류 | `UNCERTAIN` |
 | 정책 제외 | `EXCLUDED` |
 | 개인정보·권한 차단 또는 분석 입력 차단 | `PRIVACY_BLOCKED` |

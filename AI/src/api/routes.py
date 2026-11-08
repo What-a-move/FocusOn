@@ -146,7 +146,7 @@ def run_analysis(envelope, content, client_factory):
                 score = None
             if candidate not in {"RELATED", "UNRELATED"}:
                 label, score = "UNCERTAIN", None
-            elif score is None or score < 0.6:
+            elif score is None or score < 0.75:
                 label, score, reason = "UNCERTAIN", None, "INSUFFICIENT_CONTEXT"
             version = "title-hybrid-v3-mvp" if metadata else "body-context-hybrid-v3"
             return {"decision": label, "confidence": score,

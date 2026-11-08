@@ -31,12 +31,21 @@ def test_invalid_score_is_not_fabricated(value):
         experimental_score(row, ContentSource.CHROME_DOM)
 
 
-def test_beta_response_does_not_gate_low_scores():
+@pytest.mark.parametrize("confidence", [None, .49, .6, .749])
+def test_beta_response_rejects_low_scores(confidence):
+    with pytest.raises(ValueError):
+        AnalysisDecisionResponse.parse_safe({
+            "decision": "UNRELATED", "confidence": confidence, "reasonCode": "SEMANTIC_GOAL_MISMATCH",
+            "modelVersion": "test-model", "promptVersion": "beta-uncalibrated",
+        })
+
+
+def test_beta_response_accepts_threshold_score():
     result = AnalysisDecisionResponse.parse_safe({
-        "decision": "UNRELATED", "confidence": .49, "reasonCode": "SEMANTIC_GOAL_MISMATCH",
+        "decision": "UNRELATED", "confidence": .75, "reasonCode": "SEMANTIC_GOAL_MISMATCH",
         "modelVersion": "test-model", "promptVersion": "beta-uncalibrated",
     })
-    assert result.decision == "UNRELATED" and result.confidence == .49
+    assert result.decision == "UNRELATED" and result.confidence == .75
 
 
 def test_ordinary_response_still_requires_calibrated_threshold():

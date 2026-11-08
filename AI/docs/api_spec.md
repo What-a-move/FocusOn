@@ -6,7 +6,7 @@
 
 > Desktop OCR은 `contentPayload.text`만으로 분석할 수 있다. `ocr.confidence`와 `captureStatus`는 선택 입력이고, 누락값은 추정하거나 만들어 넣지 않는다.
 
-> 베타 응답의 `confidence`는 보정 확률이 아니다. 사용자 요청으로 AI는 0.6 미만 또는 점수 누락 시 `UNCERTAIN`을 반환한다. 루트 API 계약의 0.75와 차이는 Server 담당자 확인이 필요하다. 모델 또는 요청 timeout은 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 처리한다.
+> 베타 응답의 `confidence`는 보정 확률이 아니다. 사용자 요청으로 AI는 0.75 미만 또는 점수 누락 시 `UNCERTAIN`을 반환한다. 모델 또는 요청 timeout은 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 처리한다.
 
 > 2026-10-26 사용자 제공 최신 화면 분석 계약 적용: 공개 화면 입력은 `metadata`/`contentPayload.text`/`goalSnapshot` 구조이며 text는 최대 2,000자다. AI 내부 실행 문맥은 Server가 제공한다. 코드 경계는 `src/api/relevance_contract.py`, 적용 범위와 미완료 연동은 [정합성 보고서](features/screen-analysis-contract-v1-REPORT.md)를 따른다. 아래 과거 제안 API를 새 공개 계약으로 자동 적용하지 않는다.
 
@@ -218,7 +218,7 @@ MVP의 목표 문장은 2~40자, 명확화 질문은 전체 대화에서 최대 
 
 `confidence`는 설명용 판단 지표다. 임베딩 유사도, OCR 인식 점수 또는 LLM 자기평가를 그대로 정답 확률로 반환하지 않는다. 의미와 보정 방법은 평가 후 `confidenceType`과 함께 확정한다.
 
-MVP에서 `RELATED`·`UNRELATED` 후보의 confidence가 `0.6` 미만이면 `UNCERTAIN`으로 반환한다. 목표 이탈·복귀 정책은 최종 `relevanceLabel`·`confidence`를 그대로 소비하며 OCR `qualityScore`, 중복 여부, 임베딩 유사도로 다시 계산하지 않는다. `RELATED` 복귀는 이탈 구간과 대기 알림 후보를 초기화하고 `UNCERTAIN`은 시간을 누적하지 않는다.
+MVP에서 `RELATED`·`UNRELATED` 후보의 confidence가 `0.75` 미만이면 `UNCERTAIN`으로 반환한다. 목표 이탈·복귀 정책은 최종 `relevanceLabel`·`confidence`를 그대로 소비하며 OCR `qualityScore`, 중복 여부, 임베딩 유사도로 다시 계산하지 않는다. `RELATED` 복귀는 이탈 구간과 대기 알림 후보를 초기화하고 `UNCERTAIN`은 시간을 누적하지 않는다.
 
 ### 5.4 상태 필드
 

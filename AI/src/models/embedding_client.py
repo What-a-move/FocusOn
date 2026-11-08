@@ -5,7 +5,7 @@ import hashlib
 import json
 import math
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from threading import BoundedSemaphore
 from typing import Protocol, Sequence
 from urllib.parse import urlsplit
@@ -157,10 +157,13 @@ class OllamaEmbeddingClient:
 
 
 def configured_embedding_client(*, probe: bool = False) -> OllamaEmbeddingClient:
-    return OllamaEmbeddingClient(EmbeddingSettings(
+    settings = EmbeddingSettings(
         base_url=os.environ.get("FOCUSON_EMBEDDING_URL", "http://127.0.0.1:11435"),
         revision=os.environ.get("FOCUSON_EMBEDDING_REVISION", "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc"),
-        timeout_seconds=3.0 if probe else float(os.environ.get("FOCUSON_EMBEDDING_TIMEOUT_SECONDS", "2.5")),
-        max_retries=0 if probe else int(os.environ.get("FOCUSON_EMBEDDING_MAX_RETRIES", "0")),
+        timeout_seconds=float(os.environ.get("FOCUSON_EMBEDDING_TIMEOUT_SECONDS", "2.5")),
+        max_retries=int(os.environ.get("FOCUSON_EMBEDDING_MAX_RETRIES", "0")),
         keep_alive=os.environ.get("FOCUSON_EMBEDDING_KEEP_ALIVE", "10m"),
-    ))
+    )
+    if probe:
+        settings = replace(settings, timeout_seconds=3.0, max_retries=0)
+    return OllamaEmbeddingClient(settings)
