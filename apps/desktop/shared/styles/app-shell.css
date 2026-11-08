@@ -1,0 +1,49 @@
+/* 사이드바 화면 공용 창 틀 — 창 틀(.fo-home-window)·사이드바·기록 없음 상태. 홈·기록·노트·설정이 같이 쓴다. 색은 globals.css의 --fo-* 토큰을 쓴다. */
+.fo-home-window {
+  --fo-hover: #fafafa;
+  --fo-shadow: rgba(0, 0, 0, .18);
+  --fo-ease: cubic-bezier(.22, 1, .36, 1);
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  height: 100dvh;
+}
+@media (prefers-color-scheme: dark) {
+  .fo-home-window { --fo-hover: #232328; --fo-shadow: rgba(0, 0, 0, .5); }
+}
+
+/* 사이드바: 하위 화면에서도 고정하고 내용만 바뀐다. */
+.fo-sidebar { display: flex; flex-direction: column; min-height: 0; padding: clamp(24px, 4vh, 40px) 16px 20px; border-right: 1px solid var(--fo-line); }
+.fo-sidebar-logo { align-self: center; width: 136px; margin: 4px 0 clamp(28px, 5vh, 48px); }
+.fo-nav { display: grid; gap: clamp(4px, 1.4vh, 12px); }
+.fo-nav-item { position: relative; display: flex; align-items: center; gap: 16px; min-height: 54px; padding: 0 14px 0 22px; border-radius: 14px; font-size: 16px; font-weight: 600; }
+.fo-nav-item.active { font-weight: 700; }
+.fo-nav-item.active::before { position: absolute; top: 50%; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--fo-gold); content: ''; transform: translateY(-50%); }
+.fo-nav-item img { flex: 0 0 28px; object-fit: contain; }
+a.fo-nav-item { color: inherit; text-decoration: none; transition: background .15s ease; }
+a.fo-nav-item:hover { background: var(--fo-hover); }
+a.fo-nav-item:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-sidebar-spacer { flex: 1; }
+.fo-profile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; color: inherit; text-decoration: none; transition: background .15s ease; }
+.fo-profile:hover { background: var(--fo-hover); }
+.fo-profile:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-profile-avatar { flex: 0 0 36px; width: 36px; height: 36px; border: 1.5px solid var(--fo-line); border-radius: 50%; background: var(--fo-gold-soft) url('/design/poki-floating-logo-base-v1.png') 50% 62% / 165% no-repeat; }
+.fo-profile strong { display: block; overflow: hidden; max-width: 138px; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.fo-profile small { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 12px; }
+/* 로그아웃: 프로필 아래 같은 폭의 테두리 버튼. 되돌릴 수 있는 동작이라 빨간색을 쓰지 않는다(결정 031). */
+.fo-sidebar-logout { height: 40px; margin-top: 8px; border: 1.5px solid var(--fo-ghost-edge); border-radius: 12px; background: var(--fo-surface); box-shadow: 0 3px 0 var(--fo-ghost-edge); color: var(--fo-ink); font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s ease, transform .1s ease, box-shadow .1s ease; }
+.fo-sidebar-logout:hover:not(:disabled) { background: var(--fo-hover); }
+.fo-sidebar-logout:active:not(:disabled) { box-shadow: 0 0 0 var(--fo-ghost-edge); transform: translateY(3px); }
+.fo-sidebar-logout:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-sidebar-logout:disabled { color: var(--fo-muted); cursor: default; }
+.fo-records-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 12px; color: var(--fo-muted); font-size: 15px; line-height: 1.6; text-align: center; word-break: keep-all; }
+.fo-records-empty strong { color: var(--fo-ink); font-size: 17px; }
+@media (max-width: 900px) {
+  .fo-home-window { grid-template-columns: 76px minmax(0, 1fr); }
+  .fo-sidebar { align-items: center; padding: 16px 10px; }
+  .fo-sidebar-logo { width: 52px; }
+  .fo-nav-item { width: 52px; justify-content: center; padding: 0; }
+  .fo-nav-item span, .fo-profile > div { display: none; }
+  .fo-nav-item.active::before { left: -6px; }
+  .fo-profile { padding: 8px; }
+  .fo-sidebar-logout { width: 52px; font-size: 12px; }
+}

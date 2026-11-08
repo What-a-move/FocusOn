@@ -1,0 +1,113 @@
+/* 온보딩 전용 — 동의 선택·권한 확인·제외 사이트·Chrome 연결 코드·제외 앱. 공용 창은 shared/styles/onboarding-window.css. */
+.onboarding-window .choice:focus-visible, .onboarding-window .detail-link:focus-visible, .onboarding-window .link-button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.onboarding-window .name-row { display: flex; gap: 8px; }
+.onboarding-window .text-input { width: 100%; height: 60px; padding: 0 64px 0 20px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--field); font-size: 18px; font-weight: 600; outline: none; transition: border-color .15s ease, background .15s ease; }
+.onboarding-window .text-input.no-counter { padding-right: 20px; }
+.onboarding-window .text-input::placeholder { color: var(--faint); font-weight: 400; }
+.onboarding-window .text-input:focus { border-color: var(--ink); background: var(--surface); }
+.onboarding-window .text-input.is-error { border-color: var(--danger); background: var(--danger-soft); }
+.onboarding-window .text-input.is-success { border-color: var(--success); background: var(--surface); }
+.onboarding-window .check-button { height: 60px; min-width: 112px; padding: 0 18px; }
+
+/* 선택 카드 (동의) */
+.onboarding-window .substep { display: flex; align-items: baseline; justify-content: space-between; margin: 0 4px 12px; font-size: 16px; font-weight: 700; }
+.onboarding-window .substep span { color: var(--muted); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.onboarding-window .choice-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.onboarding-window .choice-list li:has(> .detail-link) { display: flex; align-items: center; gap: 4px; }
+.onboarding-window .detail-link { flex: 0 0 auto; padding: 8px 10px; border: 0; border-radius: 10px; background: none; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.onboarding-window .detail-link:hover { background: var(--field); color: var(--ink); }
+.onboarding-window .choice { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 12px 18px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--surface); text-align: left; cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .08s ease; }
+.onboarding-window .choice:hover { background: var(--hover); }
+.onboarding-window .choice:active { transform: scale(.97); }
+.onboarding-window .choice[aria-checked='true'] { border-color: var(--gold); background: var(--gold-tint); }
+.onboarding-window .check { width: 26px; height: 26px; flex: 0 0 26px; display: grid; place-items: center; border: 1.5px solid var(--dim); border-radius: 8px; color: transparent; font-size: 15px; font-weight: 700; transition: all .15s ease; }
+.onboarding-window [aria-checked='true'] > .check { border-color: var(--brand); background: var(--brand); color: var(--on-brand); animation: onboarding-pop-in .55s var(--ease); }
+.onboarding-window .choice-text { flex: 1; min-width: 0; }
+.onboarding-window .choice-text strong { display: block; font-size: 17px; font-weight: 700; line-height: 1.4; }
+.onboarding-window .choice-text small { display: block; margin-top: 3px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.onboarding-window .tag { flex: 0 0 auto; padding: 4px 10px; border-radius: 99px; background: var(--field); color: var(--ink); font-size: 13px; font-weight: 700; }
+.onboarding-window .tag.required { background: var(--field); color: var(--ink); }
+.onboarding-window .choice.all { min-height: 60px; background: var(--field); }
+.onboarding-window .choice.all[aria-checked='true'] { background: var(--gold-tint); }
+.onboarding-window .choice.all strong { font-size: 18px; }
+.onboarding-window .divider { height: 1px; margin: 4px; background: var(--line); }
+.onboarding-window .optional-label { margin: 10px 4px 0; color: var(--muted); font-size: 14px; font-weight: 700; }
+
+/* 동의 상세 팝업 */
+.onboarding-window .consent-dialog { width: min(520px, calc(100% - 48px)); padding: 28px; border: 0; border-radius: 20px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px var(--shadow); }
+.onboarding-window .consent-dialog[open] { animation: onboarding-pop-in .55s var(--ease); }
+.onboarding-window .consent-dialog::backdrop { background: var(--scrim); }
+.onboarding-window .consent-dialog .btn { width: 100%; margin-top: 24px; }
+
+/* 권한 확인: 상태 + 설명 + 행동 하나 */
+.onboarding-window .perm-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.onboarding-window .perm { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 14px 16px 14px 18px; border: 1.5px solid var(--line); border-radius: 16px; transition: border-color .2s ease; }
+.onboarding-window .perm[data-state='granted'] { border-color: var(--success-line); }
+.onboarding-window .perm-state { width: 26px; height: 26px; flex: 0 0 26px; display: grid; place-items: center; border: 1.5px solid var(--dim); border-radius: 50%; color: transparent; font-size: 14px; font-weight: 700; }
+.onboarding-window .perm[data-state='granted'] .perm-state { border-color: var(--success); background: var(--success); color: #fff; animation: onboarding-pop-in .55s var(--ease); }
+.onboarding-window .perm .choice-text strong { display: flex; align-items: center; gap: 8px; }
+.onboarding-window .perm-desc.is-error { color: var(--danger); font-weight: 600; }
+.onboarding-window .perm-action { flex: 0 0 auto; min-width: 0; height: 44px; padding: 0 16px; font-size: 15px; }
+.onboarding-window .perm-done { flex: 0 0 auto; color: var(--success); font-size: 15px; font-weight: 700; }
+.onboarding-window .perm-answer { display: flex; flex: 0 0 auto; gap: 6px; }
+.onboarding-window .perm-answer .perm-action { padding: 0 12px; }
+.onboarding-window .perm-note { margin: 16px 4px 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* 분석 제외 사이트 */
+.onboarding-window .site-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.onboarding-window .site-list li { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 6px 0 16px; border: 1.5px solid var(--line); border-radius: 99px; font-size: 15px; font-weight: 700; animation: onboarding-pop-in .55s var(--ease); }
+.onboarding-window .site-list button { width: 26px; height: 26px; border: 0; border-radius: 50%; background: var(--field); font-size: 12px; cursor: pointer; }
+.onboarding-window .exclude-note { margin: 20px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+/* Chrome 연결 */
+.onboarding-window .code-tiles { display: flex; gap: 8px; }
+.onboarding-window .code-tiles span { width: 56px; height: 68px; display: grid; place-items: center; border: 1.5px solid var(--line); border-radius: 14px; background: var(--field); font-size: 30px; font-weight: 700; }
+.onboarding-window .code-tiles span.dash { width: 20px; border: 0; background: none; color: var(--muted); }
+.onboarding-window .code-tiles.is-expired span { color: var(--faint); text-decoration: line-through; }
+.onboarding-window .code-tiles.is-connected span:not(.dash) { border-color: var(--success-line); background: var(--success-soft); color: var(--success); }
+.onboarding-window .code-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.onboarding-window .countdown { min-width: 48px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.onboarding-window .steps-guide { margin: 20px 0 0; padding-left: 20px; list-style: decimal; color: var(--muted); font-size: 15px; line-height: 1.9; }
+.onboarding-window .steps-guide b { color: var(--ink); font-weight: 700; }
+.onboarding-window .steps-guide code { padding: 1px 6px; border-radius: 6px; background: var(--field); color: var(--ink); font: inherit; font-weight: 700; letter-spacing: .04em; }
+.onboarding-window .link-button { border: 0; background: none; color: var(--ink); font-size: 15px; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.onboarding-window .link-button:disabled { color: var(--faint); cursor: default; }
+
+/* 낮은 창: 스크롤 없이 들어가게 */
+@media (max-height: 680px) and (min-width: 761px) {
+  .onboarding-window .choice { min-height: 50px; padding: 7px 16px; }
+  .onboarding-window .choice.all { min-height: 50px; }
+  .onboarding-window .choice-text small { margin-top: 1px; font-size: 13px; line-height: 1.4; }
+  .onboarding-window .consents .choice-text small { display: none; }
+  .onboarding-window .substep { margin-bottom: 8px; }
+  .onboarding-window .choice-list { gap: 5px; }
+  .onboarding-window .divider { margin: 2px 4px; }
+  .onboarding-window .perm { min-height: 62px; padding: 10px 14px; }
+  .onboarding-window .perm .choice-text small { font-size: 13px; }
+  .onboarding-window .text-input,
+  .onboarding-window .check-button { height: 52px; }
+  .onboarding-window .code-tiles span { width: 48px; height: 58px; font-size: 26px; }
+  .onboarding-window .steps-guide { line-height: 1.7; }
+}
+
+@media (max-width: 760px) {
+  .onboarding-window .code-tiles span { width: 44px; height: 56px; font-size: 24px; }
+}
+
+/* 분석 제외 앱 (FocusOn-design/exclusions.html 앱 탭·앱 고르기 대화상자) */
+.onboarding-window .app-field { margin-top: 32px; }
+.onboarding-window .app-add { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.onboarding-window .app-add p { margin: 0; color: var(--muted); font-size: 15px; }
+.onboarding-window .app-field .hint:empty { min-height: 0; margin: 0; }
+.onboarding-window .app-dialog { width: min(420px, calc(100% - 48px)); }
+.onboarding-window .app-dialog h2 { font-size: 21px; font-weight: 700; }
+.onboarding-window .app-dialog > p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; word-break: keep-all; }
+.onboarding-window .app-dialog .btn { margin-top: 22px; }
+.onboarding-window .app-list { display: grid; gap: 6px; max-height: min(360px, 50vh); margin-top: 16px; overflow-y: auto; }
+.onboarding-window .app-option { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 600; text-align: left; cursor: pointer; }
+.onboarding-window .app-option:hover:not(:disabled) { background: var(--field); }
+.onboarding-window .app-option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.onboarding-window .app-option:disabled { color: var(--faint); cursor: default; }
+.onboarding-window .app-option small { margin-left: auto; color: var(--muted); font-size: 12px; }
+.onboarding-window .app-option .item-icon { width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center; border-radius: 8px; background: var(--field); font-size: 14px; font-weight: 700; }
+.onboarding-window .app-error .btn { width: 100%; margin-top: 12px; }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppSidebar, type SidebarPage } from './AppSidebar'
 import { errorText } from '../lib/error-text'
-import '../styles/settings.css'
+import '../styles/settings-shell.css'
 
 /** 사이드바가 있는 하위 화면(설정·집중 기록)의 틀. 로그인이 풀리면 첫 화면(로그인)으로 돌려보낸다. */
 export function SettingsShell({ children, active = 'settings' }: { children: ReactNode; active?: SidebarPage }) {

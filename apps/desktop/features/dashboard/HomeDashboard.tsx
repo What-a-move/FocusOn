@@ -8,7 +8,7 @@ import { AppSidebar } from '../../shared/ui/AppSidebar'
 import { useOngoingSession } from '../../shared/api/useOngoingSession'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from '../../shared/api/dashboard-api'
 import { LoadError } from '../../shared/ui/LoadError'
-import '../../shared/styles/dashboard.css'
+import './dashboard.css'
 
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
 

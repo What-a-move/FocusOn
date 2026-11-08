@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CS
 import Image from 'next/image'
 import Link from 'next/link'
 // Pretendard 웹 글꼴(@font-face)이 여기 있다. 예전엔 온보딩·집중 준비 코드를 거쳐 함께 불려 왔다(#183).
-import '../../shared/styles/onboarding.css'
+import '../../shared/styles/onboarding-window.css'
 import { CHANNELS, LEVELS, PREVIEW } from '../../shared/lib/intervention-options'
 import { sessionApi, type NotificationChannel } from '../../shared/api/session-api'
 import { onboardingApi } from '../../shared/api/onboarding-api'
 import { AccountPanel, DevicesPanel } from './AccountPanels'
 import { LoadError, SettingsShell, ToastView, failText, useToast } from '../../shared/ui/SettingsShell'
+import './settings.css'
 import { settingsApi, type FocusSettings, type ThemeSource } from './settings-api'
 
 const TABS = [
