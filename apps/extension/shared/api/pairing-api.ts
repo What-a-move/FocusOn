@@ -1,5 +1,5 @@
 import { clearTokens, getInstallationId, saveTokens, storage, type TokenPair } from './extension-auth'
-import { chromeLogStore, createLogger, errorClassOf } from '../session/logger'
+import { chromeLogStore, createLogger, errorClassOf } from '../lib/logger'
 
 const log = createLogger('popup', chromeLogStore, { echo: process.env.NODE_ENV !== 'production' })
 

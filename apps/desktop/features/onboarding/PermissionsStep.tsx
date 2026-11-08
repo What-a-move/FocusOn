@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
-import { describeError, onboardingApi, type Notice } from './onboarding-api'
-import { cameraDetail, requiredConsents, type Detail } from './consent-docs'
-import { ConsentDocument } from './ConsentDocument'
+import { describeError, onboardingApi, type Notice } from '../../shared/api/onboarding-api'
+import { cameraDetail, requiredConsents, type Detail } from '../../shared/lib/consent-docs'
+import { ConsentDocument } from '../../shared/ui/ConsentDocument'
 
 type PermName = 'screen' | 'camera' | 'notify'
 type PermState = { state: 'idle' | 'opened' | 'granted' | 'denied' | 'requested'; error: string | null }

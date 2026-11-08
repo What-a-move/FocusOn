@@ -1,8 +1,8 @@
-import { resolveApiBase } from '../pairing/pairing-api'
-import { chromeTokenStore, clearTokens, getDeviceId } from '../pairing/extension-auth'
+import { resolveApiBase } from './pairing-api'
+import { chromeTokenStore, clearTokens, getDeviceId } from './extension-auth'
 import { createApiClient, type ApiResult } from './api-client'
-import { chromeLogStore, createLogger } from './logger'
-import { parseActiveSession, type ActiveSession } from './session-model'
+import { chromeLogStore, createLogger } from '../lib/logger'
+import { parseActiveSession, type ActiveSession } from '../lib/session-model'
 
 // 팝업과 service worker 둘 다 이 모듈을 쓴다. window가 없으면 service worker다.
 const component = typeof window === 'undefined' ? 'service-worker' : 'popup'

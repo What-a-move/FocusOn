@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 
 test('서버 온보딩 상태에 따라 로그인·온보딩·홈을 나눈다', async () => {
-  const { selectAuthView } = await import('../../app/lib/auth-view.ts')
+  const { selectAuthView } = await import('../../shared/lib/auth-view.ts')
   const base = { revision: 1, user: { userId: 'user-1', nickname: null }, error: null }
 
   assert.equal(selectAuthView(null), 'loading')

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
-import { onboardingApi, type OnboardingSummary } from './onboarding-api'
+import { onboardingApi, type OnboardingSummary } from '../../shared/api/onboarding-api'
 
 export function DoneStep() {
   const router = useRouter()

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { errorText } from './error-text'
+import { errorText } from '../lib/error-text'
 
 // 원인별 포키. 같은 포키가 모든 오류에 반복되지 않게 원인마다 다르게 쓴다. 아이콘은 쓰지 않는다.
 // 찾지 못함은 두리번, 그 밖의 실패(오프라인 포함)는 걱정 포키.

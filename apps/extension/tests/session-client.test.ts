@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createApiClient } from '../features/session/api-client.ts'
-import { displayActiveMs, formatClock, keepForward, parseActiveSession } from '../features/session/session-model.ts'
+import { createApiClient } from '../shared/api/api-client.ts'
+import { displayActiveMs, formatClock, keepForward, parseActiveSession } from '../shared/lib/session-model.ts'
 
 const NOW = Date.parse('2026-10-25T01:00:00Z')
 const json = (status: number, body: unknown) => new Response(status === 204 ? null : JSON.stringify(body), { status })

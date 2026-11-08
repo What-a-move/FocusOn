@@ -51,7 +51,7 @@ export async function clearTokens(): Promise<void> {
   await area.session.remove(KEYS.access)
 }
 
-/** 갱신 요청에 쓰는 저장소 (features/session/api-client.ts의 TokenStore). */
+/** 갱신 요청에 쓰는 저장소 (shared/api/api-client.ts의 TokenStore). */
 export const chromeTokenStore = {
   async getAccess(): Promise<{ accessToken: string; expiresAt: string } | null> {
     const saved = (await storage()?.session.get(KEYS.access))?.[KEYS.access] as { accessToken?: unknown; expiresAt?: unknown } | undefined

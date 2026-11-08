@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { chromeLogStore } from './logger'
+import { chromeLogStore } from '../lib/logger'
 
 /**
  * 팝업 하단 `로그 복사` (FocusOn-design/extension-popup.html의 `.p-foot`·`.text-btn`).

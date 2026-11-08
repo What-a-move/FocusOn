@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { requestSiteAccess } from '../../extension/shared/site-access'
-import { getActiveSession } from './session-api'
-import { formatClock, type ActiveSession } from './session-model'
-import '../pairing/pairing.css'
+import { getActiveSession } from '../../shared/api/session-api'
+import { formatClock, type ActiveSession } from '../../shared/lib/session-model'
+import '../../shared/styles/pairing.css'
 import './session-popup.css'
 
 /**

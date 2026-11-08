@@ -722,3 +722,15 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
   - 창 폭은 720px이고, 소제목은 왼쪽·내용은 오른쪽에 둔다. 버전은 표시하지 않는다(결정 034의 버전 불일치 문제는 표시를 없애 정리).
   - 내용은 Notion `개인정보 · 동의 · 데이터 보관 정책`(REVIEW)에 맞춰 저장하지 않는 것, 보지 않는 화면, 기기 연결·백업 보관 기간을 채웠다. 출시 전 법률 검토로 바뀔 수 있다.
 - 영향받는 파일: `electron/main/google-oauth.cts`, `oauth-page.cts`, `oauth-page-poki.cts`, `features/onboarding/consent-docs.ts`, `ConsentDocument.tsx`, `consent-doc.css`, `PermissionsStep.tsx`, `features/settings/AccountPanels.tsx`
+
+## 결정 037 - 폴더 구조는 가벼운 FSD 3층(app → features → shared)
+
+- 결정일: 2026-11-09 / 상태: 확정 / Issue #183.
+- 기능 폴더끼리 서로 가져다 쓰던 16곳을 없애려고 FSD의 의존 방향 규칙만 가져왔다. 6층 전체는 쓰지 않는다.
+  - 기능 폴더 파일이 2~12개라 층을 더 나누면 층마다 파일이 한두 개뿐이다.
+  - Next는 맨 위 `pages/`를 Pages Router로 읽어 FSD `pages` 층과 이름이 겹친다.
+  - `electron/`·`native/`는 화면 코드가 아니라 FSD 밖에 둔다.
+- 여러 화면이 쓰는 것만 `shared/{api,ui,lib,styles}`로 옮긴다. 한 화면만 쓰는 코드는 기능 폴더에 둔다.
+- ESLint `no-restricted-imports`로 `features/` 사이, `shared`·`electron` → `features` import를 막는다.
+- CSS 3개(`dashboard`·`settings`·`onboarding`)는 화면이 바뀌지 않게 파일째 `shared/styles/`로 옮겼다. 공용·전용 규칙 분리는 후속.
+- 영향받는 파일: `apps/docs/FOLDER_STRUCTURE.md`, `eslint.config.mjs`, `shared/**`, 공용 파일을 쓰던 `features/**`·`app/page.tsx`, `tests/electron/auth-view.test.cjs`
