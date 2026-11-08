@@ -24,6 +24,7 @@
 - Issue #179(2026-11-08): 상황별 새 포키 이미지로 교체. 오류는 걱정, 없음은 두리번, 온보딩·설정은 플러그·동의·열쇠, 완료는 축하 포키. 집중 달력·프로필 얼굴은 기존 유지.
 - Issue #183(2026-11-09): 폴더 구조를 가벼운 FSD(`app` → `features` → `shared`)로 정리. 여러 화면이 쓰던 API·사이드바·설정 틀·오류 문구·공용 CSS를 `shared/{api,ui,lib,styles}`로 옮기고 `features/` 사이 import를 없앴다(16곳 → 0). ESLint `no-restricted-imports`가 규칙을 검사한다. 화면·동작 변경 없음. 규칙은 `apps/docs/FOLDER_STRUCTURE.md`, 결정 037.
 - Issue #185(2026-11-09): 공용 CSS 3개를 공용·화면 전용으로 나눴다. `dashboard.css` → `shared/styles/app-shell.css`+홈 전용, `settings.css` → `settings-shell.css`+설정 전용, `onboarding.css` → `onboarding-window.css`+온보딩 전용. 값·클래스는 그대로이고, dev 빌드와 모든 요소의 계산된 스타일을 비교해 같음을 확인했다(라이트·다크, 창 크기 4개, 화면 상태 38개).
+- Issue #189(2026-11-09): 시연 모드 `pnpm dev:demo`. ⌘⇧D로 포키 이탈 알림을 바로 띄우고, 서버에 없는 세션 종료·결과 요약·달력·하루 기록은 그 실행의 세션으로 가짜 응답한다. 학습 정리는 가짜로 만들지 않는다(결정 038). 배포 앱에서는 꺼진다.
 - Next.js 기본 화면을 FocusOn 로그인·온보딩 시작·홈 화면으로 교체했다.
 - Desktop 앱 기본 실행·빌드 구조를 확인했다.
 - 공통 모노레포와 pnpm Workspace·Turborepo를 사용한다.
