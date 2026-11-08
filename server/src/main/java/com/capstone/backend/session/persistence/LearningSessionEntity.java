@@ -71,9 +71,6 @@ public class LearningSessionEntity {
   @Column(name = "last_heartbeat_at")
   private Instant lastHeartbeatAt;
 
-  @Column(name = "last_heartbeat_observed_at")
-  private Instant lastHeartbeatObservedAt;
-
   @Column(name = "pause_reason", length = 32)
   private String pauseReason;
 
@@ -144,12 +141,5 @@ public class LearningSessionEntity {
     this.pauseReason = null;
     this.accumulatedAtResumeMs = this.accumulatedActiveMs;
     this.lastResumedAt = resumedAt;
-  }
-
-  /** 확인되지 않은 시간은 더하지 않고 무신호 종료를 확정한다. */
-  public void abandon(Instant now) {
-    this.status = SessionStatus.ABANDONED;
-    this.endReason = "HEARTBEAT_TIMEOUT";
-    this.endedAt = now;
   }
 }

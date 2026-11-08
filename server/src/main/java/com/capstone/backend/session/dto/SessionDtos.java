@@ -67,13 +67,4 @@ public final class SessionDtos {
 
   /** 재개된 세션과 서버가 기록한 재개 시각이다. */
   public record ResumeResponse(SessionStatus status, long version, Instant lastResumedAt) {}
-
-  /** Desktop이 관측한 시각과 monotonic 누적 시간이다. */
-  public record HeartbeatRequest(@NotNull @Schema(example = "2026-11-07T12:00:00Z")
-      Instant clientObservedAt, @NotNull @Schema(example = "10000")
-      Long accumulatedActiveMs) {}
-
-  /** 마지막으로 서버가 수신하고 확정한 신호다. */
-  public record HeartbeatResponse(SessionStatus status, Instant lastHeartbeatAt,
-      long accumulatedActiveMs, String pauseReason) {}
 }

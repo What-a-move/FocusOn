@@ -16,9 +16,4 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select u from UserEntity u where u.id = :userId")
   Optional<UserEntity> findByIdForUpdate(@Param("userId") Long userId);
-
-  /** 정리 작업은 잠긴 사용자를 기다리지 않고 다음 주기에 다시 확인한다. */
-  @Query(value = "SELECT * FROM users WHERE id = :userId FOR UPDATE SKIP LOCKED",
-      nativeQuery = true)
-  Optional<UserEntity> findByIdForUpdateSkipLocked(@Param("userId") Long userId);
 }

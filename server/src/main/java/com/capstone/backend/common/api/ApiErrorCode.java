@@ -32,8 +32,6 @@ public enum ApiErrorCode {
   SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션을 찾을 수 없습니다.", false),
   SESSION_VERSION_CONFLICT(HttpStatus.CONFLICT, "세션 상태가 변경되었습니다.", false),
   SESSION_STATE_INVALID(HttpStatus.CONFLICT, "현재 세션 상태에서는 실행할 수 없습니다.", false),
-  SESSION_HEARTBEAT_INVALID(HttpStatus.BAD_REQUEST, "학습 시간 또는 신호 시각을 확인해 주세요.", false),
-  SESSION_ABANDONED(HttpStatus.CONFLICT, "응답이 없어 종료된 세션입니다.", false),
   IDEMPOTENCY_CONFLICT(HttpStatus.CONFLICT, "이미 사용된 멱등 키입니다.", false),
   PROFILE_NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "닉네임을 확인해 주세요.", false),
   PROFILE_NICKNAME_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.", false),
