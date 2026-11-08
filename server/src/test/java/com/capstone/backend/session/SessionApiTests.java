@@ -301,6 +301,49 @@ class SessionApiTests {
   }
 
   @Test
+  void postgresCleanupPreservesHeartbeatCommittingAfterCandidateSelection() throws Exception {
+    try (var connection = dataSource.getConnection()) {
+      org.junit.jupiter.api.Assumptions.assumeTrue(
+          "PostgreSQL".equals(connection.getMetaData().getDatabaseProductName()));
+      LoginResponse owner = desktop("heartbeat-in-flight-" + UUID.randomUUID());
+      long id = Long.parseLong(startForHeartbeat(owner));
+      connection.setAutoCommit(false);
+      try (var lock = connection.prepareStatement("SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+        lock.setLong(1, Long.parseLong(owner.user().userId()));
+        lock.executeQuery().close();
+      }
+      Instant cutoff = Instant.now().minusSeconds(180);
+      jdbc.update("UPDATE learning_sessions SET last_resumed_at = ? WHERE id = ?",
+          java.sql.Timestamp.from(cutoff.minusSeconds(1)), id);
+      try (var update = connection.prepareStatement(
+          "UPDATE learning_sessions SET last_heartbeat_at = ? WHERE id = ?")) {
+        update.setTimestamp(1, java.sql.Timestamp.from(Instant.now()));
+        update.setLong(2, id);
+        update.executeUpdate();
+      }
+      try {
+        var candidates = sessions.findExpiredCandidates(cutoff, 0,
+            org.springframework.data.domain.PageRequest.of(0, 100));
+        org.junit.jupiter.api.Assertions.assertTrue(candidates.contains(id));
+        try (var executor = Executors.newSingleThreadExecutor()) {
+          var cleanup = executor.submit(() -> {
+            heartbeatCleanup.cleanup();
+            return true;
+          });
+          org.junit.jupiter.api.Assertions.assertTrue(cleanup.get(10, TimeUnit.SECONDS));
+        }
+        connection.commit();
+      } finally {
+        connection.rollback();
+      }
+      heartbeatCleanup.cleanup();
+      var stored = sessions.findById(id).orElseThrow();
+      org.junit.jupiter.api.Assertions.assertEquals("RUNNING", stored.getStatus().name());
+      org.junit.jupiter.api.Assertions.assertNotNull(stored.getLastHeartbeatAt());
+    }
+  }
+
+  @Test
   void heartbeatRecoversAfterClockMovesBackwardWithNewProgress() throws Exception {
     LoginResponse owner = desktop("heartbeat-clock-" + UUID.randomUUID());
     String id = startForHeartbeat(owner);
