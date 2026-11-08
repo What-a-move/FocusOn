@@ -434,3 +434,5 @@ REQUEST_TIMEOUT
 ```
 
 TypeScript 공유 타입은 `packages/shared-types`에서 관리한다. Spring DTO와 AI 입력 스키마는 각 서버에서 런타임 검증을 별도로 수행한다.
+
+분석 입력 검증 보완(PR172 재리뷰): `CHROME_DOM`은 본문이 없어도 metadata가 있으면 유효한 urlHost가 필요하다. observedAt의 기기/서버 시각 차이는 허용하되 DB 유한 timestamp 저장 범위 밖 값은400 VALIDATION_ERROR이며 저장·AI 호출을 하지 않는다.

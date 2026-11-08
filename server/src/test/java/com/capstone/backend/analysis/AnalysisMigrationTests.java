@@ -40,8 +40,11 @@ class AnalysisMigrationTests {
         if (scenario.equals("noRawColumns")) {
           assertEquals(0, number(connection, "SELECT count(*) FROM information_schema.columns"
               + " WHERE table_schema='" + schema + "' AND table_name='analysis_runs'"
-              + " AND column_name IN ('content_payload','text','metadata','url_host','page_title',"
-              + "'window_title','goal_snapshot','request_body','response_body','trace_id')"));
+              + " AND column_name NOT IN ('id','session_id','device_id','client_run_id',"
+              + "'content_source','observed_at','received_at','sequence','relation',"
+              + "'relation_confidence','analysis_status','reason_code','error_code',"
+              + "'model_version','prompt_version','policy_version','created_at',"
+              + "'observation_sequence','current_eligible','ordering_untrusted')"));
         } else if (scenario.equals("crossSourceOrder")) {
           execute(connection, insert.replace("RELATED',0.9,'COMPLETED'",
               "EXCLUDED',NULL,'SKIPPED'").replace("CHROME_DOM", "APP_META")

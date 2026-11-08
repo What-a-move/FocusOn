@@ -6,15 +6,15 @@
 
 | 검사 | 결과 |
 | --- | --- |
-| Backend build·Checkstyle·H2 전체 |189개, 실패0/오류0/생략9|
-| PostgreSQL CI 선택 + 세션/heartbeat 회귀 |70개 전부 통과|
-| PG 분석 API |29개 전부 통과|
+| Backend build·Checkstyle·H2 전체 |200개, 실패0/오류0/생략9|
+| PostgreSQL CI 선택 + 세션/heartbeat 회귀 |80개 전부 통과|
+| PG 분석 API |39개 전부 통과|
 | PG 분석 migration |14개 전부 통과|
 | PG 기존 확장 migration |9개 전부 통과|
 | PG 닉네임 동시성 |1개 통과|
 | 별도 컨텍스트 정적 리뷰·timeout 수정 재리뷰 |확정 P1/P2 없음|
 
-최신 dev 통합 build의 생략9개는 PostgreSQL 전용 조건에 따른 것이며 전체189개가 모두 실행됐다는 뜻이 아니다. 별도 PG70개는 이 조건과 세션/heartbeat를 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
+최신 dev 통합 build의 생략9개는 PostgreSQL 전용 조건에 따른 것이며 전체200개가 모두 실행됐다는 뜻이 아니다. 별도 PG80개는 이 조건과 세션/heartbeat를 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
 
 ## 검증한 동작
 
@@ -84,3 +84,12 @@
 - 전체 build·Checkstyle:189개, 실패0/오류0/생략9. PostgreSQL:70개, 실패0/오류0/생략0(분석29+분석 migration14+확장 migration9+닉네임1+세션16+heartbeat cleanup1).
 - V13→V14→V15 적용 및 V14 분석 이력 보존을 확인했다. 임시 QA schema0개 확인 후55472 컨테이너를 중지했다.
 - 통합 diff의 별도 정적 재검토에서도 확정 P1/P2 없음. 실앱 전역 counter·실제 AI 판정 QA는 별도다. 이전 절의 수치는 해당 시점의 기록이며 이 절이 최신 결과다.
+
+## CodeRabbit 재리뷰 회귀 (2026-11-09)
+
+- 9d131e9 리뷰의 actionable5건 중4건(시각 저장 범위, DOM metadata host, OSIV snapshot, schema allowlist)을 보완했다. 낮은 legacy counter의 임의 수용은 지연 요청을 최신으로 올릴 수 있어 하지 않고 기존 전역 번호/새 세션 복구를 유지한다.
+- OSIV=true 실제 HTTP에서 AI 호출 중 별도 thread/transaction이 family 폐기·동의 철회·pause/resume한3종을 검증했다. 완료 시 clear를 임시 제거하면 각각401→200, PRIVACY_BLOCKED→RELATED, UNCERTAIN→RELATED로3개 모두 실패했다. 보호 코드 복원 후 테스트를 다시 실행했다.
+- PostgreSQL17 경계의 최소/최대 microsecond2종 수용, 저장 불가 및 상단 반올림 이탈4종400, 저장/AI0회를 확인했다. 출처 host 없는 본문 없는 DOM 제목은400, 알려진 제외 host는EXCLUDED·AI0회다.
+- 세션 내 Desktop/Extension 같은 전역 번호와 같은 기기의 서로 다른 세션 같은 번호를 각각 검증한다. RUNNING 재개 후 예전 AI 결과 거절, AI 요청 정확히1회, 유효 origin+빈 key일 때0회로 테스트 보강4건도 반영했다.
+- 최종 전체 build·Checkstyle200개(실패0/오류0/생략9), PostgreSQL80개 전부 통과(분석39+분석 migration14+확장 migration9+닉네임1+세션16+cleanup1). 최신 원격 CI는 push 후 확인한다.
+- 범위 근거: https://github.com/postgres/postgres/blob/REL_17_STABLE/src/include/datatype/timestamp.h . 기본OSIV=false 설정은 유지했다. 실제 앱/AI QA는 미실시다.

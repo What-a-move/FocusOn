@@ -32,3 +32,9 @@
 ## 최신 dev 통합 재검토 (2026-11-09)
 
 - a70e830을 별도 컨텍스트에서 정적으로 검토했다. V13 heartbeat·V14 분석·V15 순서의 번호/테스트 target, 양쪽 SafeApiLog 이벤트 보존, 분석·heartbeat 사용자 잠금 및 AI 완료 시 실행 상태 재확인에서 확정 P1/P2 없음. 검토자는 테스트/파일 수정/GitHub 작성을 수행하지 않았다.
+
+## CodeRabbit 9d131e9 재리뷰 반영
+
+- actionable5건: storage timestamp 범위, DOM metadata-only host, OSIV stale 상태, migration schema allowlist는 수정. lost legacy counter는 지연과 구별 불가하므로 기존 복구 계약을 유지하고 순서 검사를 약화하지 않았다. nitpick4건은 모두 테스트로 보강했다.
+- 구현과 분리된 정적 diff 검토에서 import 배치 P2가 나와 수정했다. 검토자가 수정 후 재확인했고 추가 확정 P1/P2는 없었다. 검토자는 테스트/수정/GitHub 작성을 하지 않았다. 실제 실행 결과는 QA 문서에 분리했다.
+- CodeRabbit Docstring coverage80% 경고는 유지보수 지표이며 런타임 결함/원격 CI 실패와 구분한다. 기존 Javadoc과 ordering의 counter 복구 설명을 유지하며 수치 충족 목적의 일괄 주석은 추가하지 않았다.

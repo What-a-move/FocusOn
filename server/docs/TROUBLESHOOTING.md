@@ -46,3 +46,9 @@
 ## 시계 보정과 관측 순서 (#171/PR172)
 
 source별 sequence·벽시각만으로 cross-source의 역순 도착과 clock 보정을 구별할 수 없었다. 선택 전역 observationSequence를 추가하고 구형은 순서가 불확실하면 AI를 보류·보호 상태를 유지한다. 번호 중복/downgrade/지연 완료 회귀 및 V14→V15 이력 보존을 포함해 build175개(실패0/생략7)·PG53개 통과. Frontend의 실제 counter 구현·실계정 QA는 별도 인계다. 상세: features/analysis-observation-order-handoff.md.
+
+## 분석 완료 시 OSIV 캐시로 철회 상태를 놓치는 문제 (PR172)
+
+- 기본OSIV=false지만 true로 변경한 실제HTTP에서 준비 단계의1차 캐시가 AI 완료까지 남을 수 있다. 새 transaction만 선언하는 것으로는 캐시 제거를 보장하지 않는다.
+- AI 대기 중 별도 transaction으로 토큰 폐기·동의 철회·pause/resume한3종을 재현했다. 완료 전 clear 보호를 잠시 제거하면 기대401이200, 기대PRIVACY_BLOCKED/UNCERTAIN이RELATED로 바뀌어3개 모두 실패했다. 보호 복원 뒤 전체 build200개(실패0/생략9), 격리PostgreSQL80개가 통과했다.
+- 분석 준비/완료를 독립 transaction으로 고정하고 조회 전 캐시를 비워 해결했다. 임의 운영 성능 수치로 해석하지 않으며 합성HTTP/DB 회귀 결과다.

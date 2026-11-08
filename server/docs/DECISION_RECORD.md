@@ -384,3 +384,10 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 기존 observedAt은 원본으로 보존하고 새 번호를 clock으로 추정하지 않는다. 순서 불명 fallback의 접수 ID는 실제 관측 순서를 복원한 값이 아니라 안전 상태를 유지하기 위한 내부 순서다.
 - V15 컬럼 observation_sequence/current_eligible/ordering_untrusted와 번호 unique·CHECK·index를 추가한다. 기존 V14 history는 바꾸지 않는다. 현재 조회는 findCurrent를 사용하며 원본 observedAt 정렬만으로 현재를 판단하지 않는다.
 - AI 내부 schema·공개 응답·정책v1 임계값은 유지한다. 실제 클라이언트 counter는 Frontend 인계 대상이며 코드 수정은 하지 않는다. API Request·AI2.2·ERD·카탈로그에 정본을 먼저 반영했다.
+
+## 분석 재리뷰의 방어 기준 (2026-11-09)
+
+- 입력 observedAt을 서버 시각과 비교하는 정책은 되살리지 않는다. DB 저장 범위 밖 값만400으로 거절한다.
+- DOM에서 본문이 없어도 제목은 개인정보일 수 있으므로 metadata가 있으면 host/제외 검사를 필수로 한다.
+- 기본OSIV=false는 유지하고 분석 준비/완료의 독립 transaction 및 캐시 초기화로 설정 변경에도 완료 검증을 보장한다.
+- 구형 counter 유실을 이유로 낮은 번호를 최신으로 승격하지 않는다. 기존 Frontend 지속 counter·전역 번호 복구/새 세션 계약을 유지한다. 새로운 복구 API/추정 규칙은 이번 리뷰 수정으로 만들지 않는다.

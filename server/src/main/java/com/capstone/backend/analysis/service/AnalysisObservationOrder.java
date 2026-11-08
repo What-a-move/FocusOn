@@ -9,6 +9,9 @@ import com.capstone.backend.analysis.persistence.AnalysisRunEntity;
 final class AnalysisObservationOrder {
   private AnalysisObservationOrder() {}
 
+  /** 전역 번호를 우선하고, 낮은 구형 번호를 지연 요청과 구분할 수 없으면 이력으로만 받는다.
+   * Counter 유실은 클라이언트가 전역 번호를 복구하거나 새 세션을 시작해야 한다.
+   */
   static Ordering classify(Request request, AnalysisRunEntity current, AnalysisRunEntity source) {
     if (request.observationSequence() != null) {
       return new Ordering(true, false);
@@ -36,5 +39,6 @@ final class AnalysisObservationOrder {
         ? GuardStatus.EXCLUDED : null;
   }
 
+  /** 현재 후보 여부와 기기 시각 역행에 따른 보수적 판정 보류를 구분한다. */
   record Ordering(boolean eligible, boolean untrusted) {}
 }

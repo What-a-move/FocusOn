@@ -6,11 +6,15 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import java.net.IDN;
 import java.text.Normalizer;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** AI 전송 전의 추가 방어다. 클라이언트 Privacy Guard를 대체하지 않는다. */
 final class AnalysisPrivacy {
+  // PostgreSQL 17 timestamp.h: Julian day zero inclusive, year 294277 exclusive.
+  private static final Instant FIRST_TIMESTAMP = Instant.parse("-4713-11-24T00:00:00Z");
+  private static final Instant END_TIMESTAMP = Instant.parse("+294277-01-01T00:00:00Z");
   private static final Pattern SENSITIVE = Pattern.compile(
       "(?i)\\bBearer\\s+[A-Za-z0-9._~+/=-]{8,}|"
       + "\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+|"
@@ -23,6 +27,11 @@ final class AnalysisPrivacy {
 
   /** 출처와 보호 상태로 허용할 입력을 제한해 제외 검사를 우회한 본문 전송을 막는다. */
   static void validate(Request request) {
+    // JDBC rounds nanos to micros; prevent rounding the final half microsecond out of range.
+    if (request.observedAt().isBefore(FIRST_TIMESTAMP)
+        || !request.observedAt().isBefore(END_TIMESTAMP.minusNanos(500))) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
     boolean metadataSource = request.contentSource() == ContentSource.APP_META
         || request.contentSource() == ContentSource.TAB_META;
     if (request.guardStatus() != null) {
@@ -36,7 +45,7 @@ final class AnalysisPrivacy {
     // 본문 출처를 모르면 서버 제외 목록을 확인할 수 없으므로 AI 호출 전에 거절한다.
     boolean webContent = request.contentSource() == ContentSource.TAB_META
         || (request.contentSource() == ContentSource.CHROME_DOM
-        && request.contentPayload() != null);
+        && (request.metadata() != null || request.contentPayload() != null));
     if (request.guardStatus() == null && webContent && host.isEmpty()) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }

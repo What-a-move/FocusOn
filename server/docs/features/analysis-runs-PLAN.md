@@ -70,3 +70,9 @@ observedAt은 원본으로 보존하고 receivedAt은 서버 수신 시각이다
 - 실계정·실제 AI/앱 통합은 별도다. 현 AI 정식 경로가 아직 receipt만 반환하면 안전 fallback이며 #154 반영 후 실제 판정을 QA한다.
 - 구간 식별자가 없는 요청이 재개 후 처음 도착하는 경우의 실제 캡처 구간을 서버가 완전히 증명한다고 주장하지 않는다. 클라이언트는 pause/resume·화면 이탈 시 오래된 수집/전송 의도를 폐기한다. 번호는 인증·실제 활동 검증 수단이 아니다.
 - PR #172에 반영하며 merge/이슈 종료는 별도 승인이다. 세션 종료 후90일 분석 이력 삭제 worker는 이번 범위 밖이다.
+
+## PR172 재리뷰 보완 (2026-11-09)
+
+- DOM 추출 본문이 없어도 metadata가 있으면 host 검증과 제외 검사를 거친다. 입력 시각은 서버 시각과 비교하지 않되 PostgreSQL17의 유한 timestamp 범위와 JDBC의 microsecond 반올림 가능 범위를 검증한다. 범위 밖은 예약/AI 전에400이다.
+- 준비·완료 transaction은 REQUIRES_NEW이며 시작 시 EntityManager snapshot을 비워 OSIV 설정과 무관하게 소유권·family·동의·세션 실행 구간을 새로 조회한다. 원문은 transaction 밖 AI 호출에만 사용한다.
+- 낮은 구형 source 번호를 새 관측으로 임의 수용하지 않는다. Counter 유실과 지연 요청은 서버 요청만으로 구별할 수 없어 Frontend의 지속 전역 번호 또는 새 세션 복구를 유지한다.

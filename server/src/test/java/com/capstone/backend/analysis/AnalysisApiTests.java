@@ -82,7 +82,8 @@ import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.ObjectMapper;
 
 /** 공개 HTTP·실제 저장·지연 결과 경쟁을 함께 검증한다. PG에서도 같은 테스트를 실행한다. */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "spring.jpa.open-in-view=true")
 @ActiveProfiles("test")
 class AnalysisApiTests {
   @Autowired private WebApplicationContext context;
@@ -124,7 +125,8 @@ class AnalysisApiTests {
             "Bearer " + f.login().accessToken())
         .header("X-Device-Id", f.login().device().deviceId()).header("X-Trace-Id", trace)
         .header("Content-Type", "application/json")
-        .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(request(null)))).build(),
+        .POST(HttpRequest.BodyPublishers.ofString(
+              json.writeValueAsString(request(null)))).build(),
         HttpResponse.BodyHandlers.ofString());
     assertEquals(200, response.statusCode());
     assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
@@ -249,6 +251,91 @@ class AnalysisApiTests {
   }
 
   @Test
+  void domMetadataWithoutBodyStillRequiresHostAndAppliesExclusions() throws Exception {
+    Fixture f = fixture();
+    long before = runs.count();
+    for (String host : new String[] {null, ""}) {
+      var request = new Request(UUID.randomUUID().toString(), ContentSource.CHROME_DOM,
+          Instant.now(), BigDecimal.ONE, null, new Metadata("Chrome", null, "title", host), null);
+      mvc.perform(call(f, request)).andExpect(status().isBadRequest());
+    }
+    assertEquals(before, runs.count());
+    tx.executeWithoutResult(ignored -> exclusions.save(AnalysisExcludedDomainEntity.create(
+        users.getReferenceById(f.principal().userId()), "example.com", Instant.now())));
+    var request = new Request(UUID.randomUUID().toString(), ContentSource.CHROME_DOM,
+        Instant.now(), BigDecimal.ONE, null,
+        new Metadata("Chrome", null, "title", "example.com"), null);
+    mvc.perform(call(f, request)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("EXCLUDED"));
+    verify(ai, never()).analyze(any(), any(), anyLong());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"+300000-01-01T00:00:00Z", "-5000-01-01T00:00:00Z",
+      "+294277-01-01T00:00:00Z", "+294276-12-31T23:59:59.999999500Z"})
+  void unrepresentableTimestampsAreRejectedBeforeStorage(String time) throws Exception {
+    Fixture f = fixture();
+    long before = runs.count();
+    mvc.perform(call(f, ordered(ContentSource.APP_META, 1, 1L, Instant.parse(time), null)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    assertEquals(before, runs.count());
+    verify(ai, never()).analyze(any(), any(), anyLong());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"-4713-11-24T00:00:00Z", "+294276-12-31T23:59:59.999999Z"})
+  void representableTimestampBoundariesRemainAccepted(String time) throws Exception {
+    Fixture f = fixture();
+    mvc.perform(call(f, ordered(ContentSource.APP_META, 1, 1L, Instant.parse(time), null)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("RELATED"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"REVOKE", "CONSENT", "RESUME"})
+  void actualHttpWithOsivReloadsStateCommittedDuringAi(String change) throws Exception {
+    Fixture f = fixture();
+    try (var worker = Executors.newSingleThreadExecutor()) {
+      when(ai.analyze(any(), any(), anyLong())).thenAnswer(invocation -> {
+        worker.submit(() -> tx.executeWithoutResult(ignored -> {
+          if (change.equals("REVOKE")) {
+            var family = families.findById(f.principal().tokenFamilyId()).orElseThrow();
+            family.setStatus(TokenFamilyEntity.Status.REVOKED);
+            family.setRevokedReason(TokenFamilyEntity.RevokedReason.LOGOUT);
+            family.setRevokedAt(Instant.now());
+          } else if (change.equals("CONSENT")) {
+            consents.findByUserIdAndConsentType(f.principal().userId(), ConsentType.SCREEN_ANALYSIS)
+                .orElseThrow().apply(false, "2026-09-17", "SETTINGS", Instant.now());
+          } else {
+            var session = sessions.findById(f.sessionId()).orElseThrow();
+            Instant previous = session.getLastResumedAt();
+            session.pause(SessionStatus.PAUSED, "USER", 1000);
+            session.resume(previous.plusSeconds(1));
+          }
+        })).get(10, TimeUnit.SECONDS);
+        return related();
+      });
+      var response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(
+          "http://127.0.0.1:" + port + path(f.sessionId())))
+          .header("Authorization", "Bearer " + f.login().accessToken())
+          .header("X-Device-Id", f.login().device().deviceId())
+          .header("Content-Type", "application/json")
+          .POST(HttpRequest.BodyPublishers.ofString(
+              json.writeValueAsString(request(null)))).build(),
+          HttpResponse.BodyHandlers.ofString());
+      assertEquals(change.equals("REVOKE") ? 401 : 200, response.statusCode());
+      var result = json.readTree(response.body());
+      if (change.equals("REVOKE")) {
+        assertEquals("AUTH_RELOGIN_REQUIRED", result.path("code").asString());
+      } else {
+        assertEquals(change.equals("CONSENT") ? "PRIVACY_BLOCKED" : "UNCERTAIN",
+            result.path("data").path("relation").asString());
+      }
+    }
+  }
+
+  @Test
   void excludedTabTitleWithKnownHostSkipsAi() throws Exception {
     Fixture f = fixture();
     tx.executeWithoutResult(ignored -> exclusions.save(AnalysisExcludedDomainEntity.create(
@@ -339,6 +426,11 @@ class AnalysisApiTests {
     var prepared = store.prepare(f.principal(), f.sessionId(), r);
     tx.executeWithoutResult(ignored -> sessions.findById(f.sessionId()).orElseThrow()
         .pause(SessionStatus.PAUSED, "USER", 1000));
+    assertEquals(Relation.UNCERTAIN,
+        store.complete(f.principal(), prepared, r, related()).relation());
+    tx.executeWithoutResult(ignored -> sessions.findById(f.sessionId()).orElseThrow()
+        .resume(prepared.runningSince().plusSeconds(1)));
+    assertEquals(SessionStatus.RUNNING, sessions.findById(f.sessionId()).orElseThrow().getStatus());
     assertEquals(Relation.UNCERTAIN,
         store.complete(f.principal(), prepared, r, related()).relation());
     tx.executeWithoutResult(ignored -> consents.findByUserIdAndConsentType(f.principal().userId(),
@@ -545,12 +637,28 @@ class AnalysisApiTests {
   }
 
   @Test
-  void globalSequenceIsScopedToSessionAndDevice() {
+  void globalSequenceIsScopedToSessionAndDevice() throws Exception {
     Fixture first = fixture();
-    Fixture second = fixture();
     assertEquals(Relation.RELATED, analyze(first,
         ordered(ContentSource.APP_META, 1, 1L, Instant.now(), null)).relation());
-    assertEquals(Relation.RELATED, analyze(second,
+    var linked = pairing.claim(new ClaimRequest(pairing.issue(first.principal()).codeDisplay(),
+        "analysis-sequence-" + UUID.randomUUID()), "127.0.0.171");
+    // Same session, different device: a session-only duplicate check would reject this.
+    mvc.perform(post(path(first.sessionId()))
+        .header("Authorization", "Bearer " + linked.accessToken())
+        .header("X-Device-Id", linked.device().deviceId()).contentType(MediaType.APPLICATION_JSON)
+        .content(json.writeValueAsString(ordered(ContentSource.TAB_META, 1, 1L,
+            Instant.now(), null)))).andExpect(status().isOk());
+    var nextId = tx.execute(ignored -> {
+      var old = sessions.findById(first.sessionId()).orElseThrow();
+      old.abandon(Instant.now());
+      sessions.flush();
+      return sessions.saveAndFlush(LearningSessionEntity.create(old.getUser(), old.getGoal(),
+          old.getRunnerDevice(), 1800000, "Asia/Seoul", LocalDate.now(), "{}", "v1",
+          Instant.now())).getId();
+    });
+    // Same device, different session: a device-only duplicate check would reject this.
+    assertEquals(Relation.RELATED, analyze(new Fixture(first.login(), first.principal(), nextId),
         ordered(ContentSource.APP_META, 1, 1L, Instant.now(), null)).relation());
   }
 

@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
@@ -65,10 +66,12 @@ class AnalysisAiClientTests {
   @Test
   void forwardsServerSnapshotServiceKeyTraceAndPublicInputOnlyOnce() throws Exception {
     var body = new AtomicReference<String>();
+    var requests = new AtomicInteger();
     var auth = new AtomicReference<String>();
     var trace = new AtomicReference<String>();
     HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     server.createContext("/internal/v1/analysis-runs", exchange -> {
+      requests.incrementAndGet();
       body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
       auth.set(exchange.getRequestHeaders().getFirst("Authorization"));
       trace.set(exchange.getRequestHeaders().getFirst("X-Trace-Id"));
@@ -89,6 +92,7 @@ class AnalysisAiClientTests {
           new ContentPayload("synthetic body"), BigDecimal.valueOf(105));
       var p = new Prepared(10, 20, 30, 0, Instant.now(), "서버 목표", "v1", null, true, null);
       assertEquals(Relation.RELATED, client.analyze(p, request, 40).relation());
+      assertEquals(1, requests.get());
       assertEquals("Bearer service-test-only", auth.get());
       assertEquals(id, trace.get());
       var envelope = json.readTree(body.get());
@@ -114,6 +118,30 @@ class AnalysisAiClientTests {
     for (String url : new String[] {"file:///tmp/test", "http://user:secret@127.0.0.1",
         "http://127.0.0.1/?secret=test", "http://127.0.0.1/other"}) {
       assertThrows(IllegalArgumentException.class, () -> new AnalysisAiClient(json, url, "test"));
+    }
+  }
+
+  @Test
+  void blankKeyWithConfiguredOriginDoesNotSendAnyRequest() throws Exception {
+    var requests = new AtomicInteger();
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext("/internal/v1/analysis-runs", exchange -> {
+      requests.incrementAndGet();
+      exchange.sendResponseHeaders(500, -1);
+      exchange.close();
+    });
+    server.start();
+    try {
+      var client = new AnalysisAiClient(json, "http://127.0.0.1:"
+          + server.getAddress().getPort(), " ");
+      var request = new Request(UUID.randomUUID().toString(), ContentSource.APP_META,
+          Instant.now(), BigDecimal.ONE, null, null, null);
+      var prepared = new Prepared(1, 2, 3, 0, Instant.now(), "목표", "v1", null, true, null);
+      assertEquals(ReasonCode.ANALYSIS_UNAVAILABLE,
+          client.analyze(prepared, request, 4).reasonCode());
+      assertEquals(0, requests.get());
+    } finally {
+      server.stop(0);
     }
   }
 

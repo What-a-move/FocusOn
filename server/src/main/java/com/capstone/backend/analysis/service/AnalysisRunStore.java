@@ -20,16 +20,19 @@ import com.capstone.backend.user.persistence.AnalysisExcludedDomainRepository;
 import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
+import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /** AI 호출 밖의 짧은 transaction 경계. 기존 사용자 잠금 순서를 유지한다. */
 @Service
 @RequiredArgsConstructor
 public class AnalysisRunStore {
+  private final EntityManager entityManager;
   private final UserRepository users;
   private final TokenFamilyRepository families;
   private final TokenFamilyGuard familyGuard;
@@ -40,8 +43,10 @@ public class AnalysisRunStore {
   private final AuthRateLimiter limits;
 
   /** 권한과 상태를 확인한 후 원문 없는 예약 행만 commit한다. */
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public Prepared prepare(FocusOnPrincipal principal, long sessionId, Request request) {
+    // These isolated transactions have no pending writes; discard any OSIV snapshot first.
+    entityManager.clear();
     var device = lockAndValidate(principal);
     var session = ownedSession(principal, sessionId, device);
     if (session.getStatus() != SessionStatus.RUNNING) {
@@ -82,9 +87,11 @@ public class AnalysisRunStore {
   }
 
   /** 호출 중의 unlink·동의 철회·세션 전이를 다시 확인하고 해당 이력만 완료한다. */
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public Response complete(FocusOnPrincipal principal, Prepared prepared, Request request,
       AnalysisDecision decision) {
+    // These isolated transactions have no pending writes; discard any OSIV snapshot first.
+    entityManager.clear();
     var device = lockAndValidate(principal);
     var session = ownedSession(principal, prepared.sessionId(), device);
     var run = runs.findById(prepared.runId()).orElseThrow();
