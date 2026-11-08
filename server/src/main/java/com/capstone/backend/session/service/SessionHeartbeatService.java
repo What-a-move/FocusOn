@@ -86,10 +86,12 @@ public class SessionHeartbeatService {
       throw new ApiException(ApiErrorCode.SESSION_HEARTBEAT_INVALID);
     }
     Instant previous = session.getLastHeartbeatObservedAt();
-    if (previous != null && !observed.isAfter(previous)) {
+    long active = request.accumulatedActiveMs();
+    // 시간이 뒤로 바뀌어도 누적 시간이 늘어난 새 신호는 복구한다. 같은 값의 재전송은 무시한다.
+    if (previous != null && (observed.equals(previous)
+        || (observed.isBefore(previous) && active <= session.getAccumulatedActiveMs()))) {
       return new HeartbeatOutcome(response(session), false);
     }
-    long active = request.accumulatedActiveMs();
     long elapsed = Math.max(0, Duration.between(session.getLastResumedAt(), now).toMillis());
     long delta = active - session.getAccumulatedAtResumeMs();
     if (active < session.getAccumulatedActiveMs() || delta > elapsed + CLOCK_TOLERANCE.toMillis()) {

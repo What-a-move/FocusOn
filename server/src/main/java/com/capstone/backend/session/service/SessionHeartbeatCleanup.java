@@ -1,6 +1,7 @@
 package com.capstone.backend.session.service;
 
 import com.capstone.backend.auth.persistence.UserRepository;
+import com.capstone.backend.common.api.SafeApiLog;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import java.time.Duration;
 import java.time.Instant;
@@ -26,13 +27,27 @@ public class SessionHeartbeatCleanup {
   @Scheduled(fixedDelayString = "${focuson.session.heartbeat-cleanup-delay-ms:10000}")
   public void cleanup() {
     Instant cutoff = Instant.now().minus(ABANDONED_AFTER);
-    var candidates = sessions.findExpiredCandidates(cutoff, PageRequest.of(0, BATCH_SIZE));
-    for (Long id : candidates) {
-      transactions.executeWithoutResult(status -> sessions.findById(id).ifPresent(session -> {
-        users.findByIdForUpdate(session.getUser().getId());
-        Instant now = Instant.now();
-        sessions.abandonIfExpired(id, now.minus(ABANDONED_AFTER), now);
-      }));
+    long afterId = 0;
+    while (true) {
+      var candidates = sessions.findExpiredCandidates(
+          cutoff, afterId, PageRequest.of(0, BATCH_SIZE));
+      if (candidates.isEmpty()) {
+        return;
+      }
+      for (Long id : candidates) {
+        try {
+          transactions.executeWithoutResult(status -> sessions.findById(id).ifPresent(session -> {
+            if (users.findByIdForUpdateSkipLocked(session.getUser().getId()).isEmpty()) {
+              return;
+            }
+            Instant now = Instant.now();
+            sessions.abandonIfExpired(id, now.minus(ABANDONED_AFTER), now);
+          }));
+        } catch (RuntimeException exception) {
+          SafeApiLog.sessionCleanupFailure(exception);
+        }
+        afterId = id;
+      }
     }
   }
 }

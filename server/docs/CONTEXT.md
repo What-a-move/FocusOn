@@ -2,6 +2,7 @@
 
 ## 진행 중: Issue #167 Heartbeat (2026-11-08)
 
+- PR #178 리뷰에 따라 자동 정리 잠금·실패 격리와 시계 역행 복구를 구현했다. 전체 build·Checkstyle과 격리 PostgreSQL 테스트를 확인했으며 지연 신호 구분의 한계는 `features/session-heartbeat-REPORT.md`를 따른다.
 - 실계정 HTTP와 PostgreSQL 동시성 검증을 수행했다. 상세 및 미검증 사항은 `features/session-heartbeat-REPORT.md`를 따른다.
 
 ## 현재 작업: #151 (2026-11-08)
