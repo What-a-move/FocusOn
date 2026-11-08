@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #167 이어서 확인 (2026-11-08)
+
+- PR #178 리뷰 수정 커밋을 푸시하고 재리뷰·원격 CI를 확인한다. 시계 역행과 이전에 처리되지 않은 지연 신호는 순번 없이 완전히 구분할 수 없다.
+- 최신 dev 통합 후 격리 PostgreSQL의 V1~V13 적용과 Heartbeat 테스트를 검증했다. 사용자 개발 DB의 이전 Heartbeat V11 이력은 백업·복제 검증 후 데이터 보존 방식으로 해결했다. 다른 DB는 별도로 확인해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
+
 ## 현재 작업: #151 CORS·확장1개
 
 - PR #170의 migration 잠금·POST preflight 지적과 외부 P2(만료된 최신 확장 보존)를 수정했다. 인증 가능 연결 우선 순위를 적용하고 실제 Flyway 업그레이드 회귀9종을 CI에 추가했다. V11 NOT VALID→V12 별도 검증, H2 전체137개 실패0/skip4. 최신 커밋의 원격 CI·재리뷰와 실제 Chrome QA를 확인한다. 병합·이슈 종료는 별도 승인한다.
