@@ -56,4 +56,4 @@
 ## 남은 일
 
 - Chrome 확장 팝업(개인정보 눈 가림·연결 코드 플러그)은 별도 Issue
-- 이제 쓰지 않는 `poki-floating-cheer-v7`·`poki-records-journal`은 #174 병합 뒤 사용처를 다시 확인하고 지운다
+- 쓰지 않게 된 `poki-floating-cheer-v7`·`poki-records-journal`은 #174 병합 뒤 사용처를 다시 확인하고 지웠다
