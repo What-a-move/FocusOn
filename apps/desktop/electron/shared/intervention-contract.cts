@@ -13,7 +13,7 @@ export const INTERVENTION_CHANNELS = {
  */
 export type FloatingShow = { interventionId: string; kind: 'OFF_TASK' | 'BREAK' | 'DISCONNECTED'; level: InterventionLevel; goalText: string; say: string; sub: string }
 export const DISCONNECTED_ID = 'local-disconnected'
-/** RECENTER: 조금 더 보기(확인 기록) · ACK: 확인했어(창 닫기) · REST: 잠시 쉬기(확인 기록 + 일시정지) · CLOSE: 닫기(해제 기록) · OPEN_APP: F07 앱 열기(기록 없음) */
+/** RECENTER: 확인했어(확인 기록) · ACK: 알겠어(목표 안내 닫기) · REST: 잠시 쉬기(확인 기록 + 일시정지) · CLOSE: 닫기(해제 기록) · OPEN_APP: F07 앱 열기(기록 없음) */
 export type InterventionAction = 'RECENTER' | 'ACK' | 'REST' | 'CLOSE' | 'OPEN_APP'
 
 export type InterventionsApi = {
