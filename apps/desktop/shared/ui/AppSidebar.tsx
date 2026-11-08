@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useOngoingSession } from '../api/useOngoingSession'
-import '../styles/dashboard.css'
+import '../styles/app-shell.css'
 
 // 아직 화면이 없는 메뉴는 링크 없이 보여 준다. 화면이 생기면 href를 채운다.
 const NAVIGATION = [

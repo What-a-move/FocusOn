@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
 import { errorText } from '../../shared/lib/error-text'
-import '../../shared/styles/onboarding.css'
+import '../../shared/styles/onboarding-window.css'
 import './focus-session.css'
 
 const CIRCUMFERENCE = 2 * Math.PI * 90

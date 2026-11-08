@@ -66,6 +66,10 @@ apps/extension/
 
 `common`, `misc`, `helpers`처럼 역할이 넓고 모호한 폴더는 만들지 않는다.
 
-## 남은 일
+## CSS 위치
 
-- `shared/styles/`의 `dashboard.css`·`settings.css`·`onboarding.css`는 공용 규칙과 한 화면 전용 규칙이 섞여 있다. 화면이 달라지지 않게 파일째 옮겼고, 나누는 일은 후속이다.
+- 여러 화면이 쓰는 CSS만 `shared/styles/`에 둔다. 한 화면 전용 규칙은 그 기능 폴더의 CSS에 둔다(Issue #185).
+  - `app-shell.css`: 사이드바 화면의 창 틀·사이드바·기록 없음 상태 (`AppSidebar`가 불러옴)
+  - `settings-shell.css`: 설정 틀 토큰·애니메이션·토스트·뒤로 링크 (`SettingsShell`이 불러옴, 기록·노트도 사용)
+  - `onboarding-window.css`: Pretendard 글꼴과 단계 화면 공용 창 `.onboarding-window` (온보딩·목표·집중 준비·집중·리포트)
+- 화면에 필요한 CSS는 그 화면 컴포넌트가 직접 import한다. 다른 컴포넌트를 거쳐 우연히 딸려 오는 CSS에 기대지 않는다.

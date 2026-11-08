@@ -10,7 +10,7 @@ import {
 } from '../../shared/api/session-api'
 import { CHANNELS, LEVELS, PREVIEW } from '../../shared/lib/intervention-options'
 import { errorText } from '../../shared/lib/error-text'
-import '../../shared/styles/onboarding.css'
+import '../../shared/styles/onboarding-window.css'
 import './session-setup.css'
 
 // 시간 선택지는 Notion 계약(30분·1시간·2시간·직접)을 따른다. MVP에 종료 없는 세션은 없다.

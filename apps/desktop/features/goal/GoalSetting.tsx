@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { ConfirmationSource, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
 import { CONFIRMED_GOAL_KEY, goalApi, goalLength, MAX_QUESTIONS, type ClarifyResult } from '../../shared/api/goal-api'
 import { errorText } from '../../shared/lib/error-text'
-import '../../shared/styles/onboarding.css'
+import '../../shared/styles/onboarding-window.css'
 import './goal.css'
 
 type View = 'entry' | 'questions' | 'candidates' | 'review' | 'done'
