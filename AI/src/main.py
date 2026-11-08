@@ -1,16 +1,22 @@
 """Run from the repository root: python3 -m uvicorn AI.src.main:app."""
 from contextlib import asynccontextmanager
 import os
+import logging
+from time import perf_counter
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 
 from .api.reception import AnalysisReception
 from .api.routes import router
 from src.api.goal_routes import router as goal_router
 from src.api.schemas import ErrorResponse
-from src.utils.logger import configure_logging
+from src.utils.logger import configure_logging, log_event
+from .models.embedding_client import configured_embedding_client
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(*, api_key: str | None = None) -> FastAPI:
@@ -30,7 +36,29 @@ def create_app(*, api_key: str | None = None) -> FastAPI:
 
     @application.get("/health")
     async def health():
-        return {"status": "ready", "mode": "experimental-analysis", "analysisEnabled": True}
+        def probe_model():
+            factory = getattr(application.state, "embedding_client_factory", None)
+            client = factory() if factory else configured_embedding_client(probe=True)
+            try:
+                vectors = client.embed(["FocusOn model readiness probe"])
+                if len(vectors) != 1 or len(vectors[0]) != 2560:
+                    raise ValueError("MODEL_PROBE_INVALID")
+            finally:
+                client.close()
+
+        started = perf_counter()
+        try:
+            await run_in_threadpool(probe_model)
+        except Exception:
+            log_event(logger, "request.fail", level=logging.WARNING,
+                      error_code="ANALYSIS_UNAVAILABLE", path="/health")
+            return JSONResponse(status_code=503, content={
+                "status": "unavailable", "analysisEnabled": False,
+                "modelConnected": False, "reasonCode": "ANALYSIS_UNAVAILABLE",
+            })
+        return {"status": "ready", "mode": "analysis", "analysisEnabled": True,
+                "decisionMode": os.environ.get("FOCUSON_ANALYSIS_DECISION_MODE", "safe"),
+                "modelConnected": True, "modelProbeMs": round((perf_counter() - started) * 1000, 1)}
 
     @application.exception_handler(RequestValidationError)
     async def invalid_request(request: Request, exc: RequestValidationError):

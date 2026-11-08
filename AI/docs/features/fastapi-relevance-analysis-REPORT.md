@@ -1,13 +1,30 @@
-# FastAPI 관련성 분석 경로
+# FastAPI 관련성 분석 베타 결과
 
-2026-11-03 사용자 요청으로 기존 #11 작업에 내부 실험 분석 경로를 연결했다. 수신 확인 API는 유지한다.
+**상태:** AI 단일 경로 구현 완료 · 실제 Backend 왕복 미검증
 
-- `POST /internal/v1/analysis-runs/analyze`: 기존 수신 API와 동일한 Backend Bearer 인증, `AI/examples/analysis-reception.json` 입력 및 검증을 사용한다.
-- 목표·관측 문맥 검사 후 기존 Kiwi + Qwen Hybrid 분석 함수를 실행한다. 환경 변수 `FOCUSON_EMBEDDING_URL`로 학교 API 기본 주소를 설정하며, 미설정 시 `http://127.0.0.1:11435`를 사용한다. `FOCUSON_EMBEDDING_REVISION`은 모델 캐시 버전 설정이며 서버 실측 조회값은 아니다.
-- `candidateDecision`은 보정 전 Hybrid 후보 라벨이며 `candidateCalibrated: false`다. `decision`은 기존 응답 규칙을 따르며 검증된 판정 confidence가 없어 현재 `UNCERTAIN`이다. 후보 라벨을 알림·이탈 확정에 사용하지 않는다. Backend와 이 내부 확장 필드의 계약 합의가 필요하다.
-- 모델 통신 또는 분석 실패 시 candidateDecision=null, decision=UNCERTAIN, reasonCode=ANALYSIS_UNAVAILABLE. 오류와 요청 본문은 응답에 노출하지 않는다. 민감·제외·오래된 관측은 수신 단계에서 차단한다.
-- `GET /health`의 analysisEnabled는 분석 경로가 존재한다는 뜻이며 Qwen의 준비 상태나 실제 연결 성공을 뜻하지 않는다.
+## 동작 경로
 
-요청은 수신 예제와 같으며 서버에 `FOCUSON_AI_API_KEY`, `FOCUSON_EMBEDDING_URL`을 설정하고 `/docs`에서 해당 분석 경로를 호출한다. 실행법: [FastAPI 수신 안내](fastapi-reception-REPORT.md). 기존 `.env`와 비밀값은 변경하지 않았다.
+- `POST /internal/v1/analysis-runs`가 서비스 Bearer 인증, 입력 Schema, 세션·목표·활성 화면·제외·민감정보 검사를 마친 뒤 Kiwi + Qwen Hybrid 분석을 실행한다.
+- `/internal/v1/analysis-runs/analyze`는 제거했다. 분석 제외·민감 화면은 임베딩 모델을 호출하지 않고 기존 409 상태를 반환한다.
+- 정상 응답은 `decision`, `confidence`, `reasonCode`, `modelVersion`, `promptVersion` 다섯 필드다. 판정이 미보정 후보임은 `promptVersion`의 `-uncalibrated`로 식별한다.
+- `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서는 미보정 Hybrid 후보 점수가 0.6 이상일 때만 후보를 `decision`으로 반환한다. 점수가 없거나 낮으면 `UNCERTAIN`이다. `promptVersion`은 `-uncalibrated`로 끝나며 이 점수는 보정된 확률이 아니다.
+- 앱·탭 메타데이터만으로 나온 `UNRELATED`는 `UNCERTAIN`으로 낮춰 DOM/OCR 글자 입력을 기다린다. 임베딩·분석 실패는 `UNCERTAIN`과 `ANALYSIS_UNAVAILABLE`로 반환한다.
+- 기본 `safe` 모드는 보정 confidence 없이 RELATED/UNRELATED를 확정하지 않는다. 현재 safe 경로는 보정 점수를 공급하지 않으므로 보정 이후 별도 연결이 필요하다.
+- Desktop OCR 입력은 `contentPayload.text`가 있으면 충분하다. `ocr.confidence`, `captureStatus`는 선택이며 생략해도 입력 처리와 판정이 가능하다.
 
-검증: 전체 AI 회귀 289 passed, 16 subtests passed. 실제 Hybrid 로직에 합성 벡터를 주어 RELATED·UNRELATED·UNCERTAIN 후보, 모델 오류·민감정보 차단을 검사했다. 실제 학교 Qwen 요청은 Tailscale 호스트 DNS 조회 실패로 후보를 얻지 못했으며 ANALYSIS_UNAVAILABLE을 확인했다. 실제 Backend 왕복, 성능, 독립 정확도와 판정 confidence 보정은 미검증이다.
+## 모델 준비 상태와 시간
+
+- `GET /health`는 실제 임베딩 요청과 2560차원 응답 검증을 수행한다. 성공은 `200`, `modelConnected: true`; 실패는 `503`, `analysisEnabled: false`, `reasonCode: ANALYSIS_UNAVAILABLE`이다.
+- 분석 임베딩 요청의 기본 timeout은 2.5초이며 재시도는 0회다. timeout/연결 실패는 위의 `UNCERTAIN` 실패 응답으로 정규화한다. `/health`는 3초 timeout으로 별도 probe를 한다.
+- 학교 Ollama 실측은 [학교 Ollama 임베딩 SETUP](school-ollama-embedding-SETUP.md)에 기록했다. 실제 HTTP 순차 합성 40건 전체 p95 2.32초였지만 DOM 20건 p95 3.76초, 최대 4.04초로 3초 목표를 넘었다. 첫 실행은 2.24초, 전체 표본 중 3초 초과 2건이었다.
+- 이 표본은 합성 목표/콘텐츠, 순차 요청, OCR 제외, 실제 Backend 미경유다. 전체 서비스 p95나 동시 사용자 성능으로 해석하지 않는다. 현재 자료 기준으로 3초 목표 달성은 확인되지 않았다.
+
+## Server 연동 상태와 다음 일
+
+- 최신 dev의 Backend Java Adapter는 AI 관련성 경로를 호출한다. 실제 모델·제품 알림까지의 왕복은 미검증이다.
+- Server 담당자는 `AI/examples/analysis-reception.json`을 기반으로 요청을 구성하고 `FOCUSON_AI_API_KEY` Bearer 인증으로 단일 경로를 호출해야 한다. Backend가 3초 timeout을 적용하면 timeout·연결 오류를 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 처리해야 한다.
+- Server 쪽 `confidence`를 사용자에게 보정 확률로 해석하면 안 된다. 베타 모드에서 `promptVersion`의 `-uncalibrated`를 유지해 기록하고, `confidence`가 null일 수 있도록 계약을 확인한다.
+- AI는 사용자 요청에 따라 0.6을 적용한다. 루트 `docs/API_CONTRACT.md`는 아직 0.75이므로 Backend 담당자와 실제 기준을 확인해야 한다. 최신 dev Backend는 숫자 confidence가 0.75 미만이면 UNCERTAIN으로 바꾸며, -uncalibrated와 null이 함께 있을 때만 예외를 적용한다. 따라서 AI의 0.6 이상 0.75 미만 판정은 Backend에서 보류된다.
+- 전체 완료 조건은 Backend가 이 경로를 실제 호출하고 `RELATED`·`UNRELATED`의 지속 시간·알림 연결까지 통합 검증하는 것이다.
+
+검증: `PYENV_VERSION=what-a-move PYTHONPATH=AI:. pyenv exec python -m pytest AI/tests/test_fastapi_analysis.py AI/tests/test_fastapi_reception.py AI/tests/test_merged_routes.py AI/tests/test_beta_scores.py AI/tests/test_screen_analysis_contract.py -q` 결과 `96 passed`. `git diff --check`도 통과했다. 이 테스트는 합성 입력·FakeEmbedding 기반이며 실제 Qwen·Backend 연동을 검증하지 않는다.

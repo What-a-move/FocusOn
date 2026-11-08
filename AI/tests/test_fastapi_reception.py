@@ -20,14 +20,44 @@ def payload():
 @pytest.fixture
 def client():
     with TestClient(create_app(api_key=KEY)) as client:
+        class ReadyModel:
+            def embed(self, texts):
+                return [[1.0] + [0.0] * 2559]
+
+            def close(self):
+                pass
+
+        client.app.state.embedding_client_factory = ReadyModel
         yield client
 
 
-def test_receipt_is_not_an_analysis_result(client, payload):
+def test_health_checks_model_and_reports_failure(client):
+    assert client.get("/health").json()["modelConnected"] is True
+
+    class BrokenModel:
+        def embed(self, texts):
+            raise RuntimeError("sensitive provider details")
+
+        def close(self):
+            pass
+
+    client.app.state.embedding_client_factory = BrokenModel
+    response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json()["modelConnected"] is False
+    assert response.json()["analysisEnabled"] is False
+    assert response.json()["reasonCode"] == "ANALYSIS_UNAVAILABLE"
+    assert "sensitive" not in response.text
+
+
+def test_primary_path_returns_analysis_result(client, payload, monkeypatch):
+    monkeypatch.setenv("FOCUSON_ANALYSIS_DECISION_MODE", "safe")
     response = client.post(PATH, json=payload, headers=HEADERS)
     assert response.status_code == 200
-    assert response.json() == {"status": "RECEIVED", "sessionId": "session-demo",
-                               "clientRunId": payload["request"]["clientRunId"], "analysisExecuted": False}
+    body = response.json()
+    assert {"decision", "confidence", "reasonCode", "modelVersion", "promptVersion"} <= body.keys()
+    assert body["decision"] in {"RELATED", "UNRELATED", "UNCERTAIN"}
+    assert "status" not in body
     assert client.get("/health").json()["analysisEnabled"] is True
 
 
@@ -48,8 +78,15 @@ def test_supported_sources(client, payload, source):
     if source.endswith("META"):
         payload["request"].pop("contentPayload")
     else:
-        payload["ocr"] = {"confidence": .91, "captureStatus": "SUCCESS"}
+        # Beta request contains only the already-extracted text; OCR quality
+        # metadata is optional and must not be fabricated by the AI service.
+        payload.pop("ocr", None)
     assert client.post(PATH, json=payload, headers=HEADERS).status_code == 200
+
+
+def test_legacy_analysis_route_is_not_registered(client, payload):
+    response = client.post(PATH + "/analyze", json=payload, headers=HEADERS)
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize("field,value", [("sequence", 2), ("goalVersion", 2), ("sessionId", "another")])

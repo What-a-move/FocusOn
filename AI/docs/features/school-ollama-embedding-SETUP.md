@@ -41,7 +41,7 @@ Content-Type: application/json
 curl --noproxy '*' --connect-timeout 5 --max-time 60 --fail-with-body -sS \
   -o /tmp/focuson-embed-response.json \
   -w '\nHTTP %{http_code} | 연결 %{time_connect}s | 전체 %{time_total}s\n' \
-  'https://desktop-n7o3o02.tail1023df.ts.net/api/embed' \
+  'https://<학교-PC의-Tailscale-호스트>/api/embed' \
   -H 'Content-Type: application/json' \
   -d '{"model":"qwen3-embedding:4b-fp16","input":["React useState 객체 상태 변경을 학습합니다."],"truncate":false,"keep_alive":"10m"}'
 ```
@@ -51,6 +51,24 @@ curl --noproxy '*' --connect-timeout 5 --max-time 60 --fail-with-body -sS \
 ## 현재 코드 실행
 
 Streamlit 화면은 삭제했다. FastAPI 수신 실행법은 [수신 지침](fastapi-reception-REPORT.md)을 따른다. 현재 FastAPI는 수신만 확인하며 관련성 판정을 실행하지 않는다.
+
+## 백엔드 서버 Tailscale 연결
+
+백엔드를 실제로 운영할 서버에 Tailscale을 설치하고 학교 PC와 같은 tailnet에 등록한다. 같은 tailnet에서 필요한 장치·서비스 접근을 허용한다. 개발자의 노트북 연결과 서버 연결을 각각 확인한다. 설치·장기 운영 지침은 https://tailscale.com/docs/how-to/set-up-servers 를 따른다.
+
+Linux에서 설치가 끝난 뒤 서버에서 `sudo tailscale up`을 실행하고 표시된 인증 URL로 해당 tailnet에 로그인한다. `tailscale status`로 등록과 연결을 확인한다. 팀원 계정 초대 및 접근 정책 설정은 tailnet 관리자가 진행한다.
+
+모델 접속 대상은 `https://<학교-PC의-Tailscale-호스트>/api/embed`이다. 위의 Mac 연결 확인과 같은 합성 요청으로 서버에서 HTTP 200과 벡터 응답을 확인한다. 학교 모델 프록시는 `keep_alive: "10m"`만 허용한다. 백엔드가 기존 Docker 컨테이너에서 실행된다면 그 컨테이너에서도 DNS와 HTTPS 요청을 별도로 확인한다.
+
+이 모델 주소는 임베딩 벡터를 반환한다. 관련성 판정용 FastAPI의 실행 위치·주소·인증 키는 별도로 확정해야 한다. 사용자에게 노출할 공개 API는 백엔드가 제공한다. FastAPI까지 학교 PC 또는 배포 서버에서 운영해야 개발자 Mac에 의존하지 않는다.
+
+## 2026-11-03 실제 모델 지연 측정
+
+Mac에서 localhost FastAPI HTTP → Tailscale → 실제 학교 Qwen을 호출했다. 모델은 `/health`로 먼저 준비했으며, 최초 분석 1건 뒤 합성 DOM·TAB_META 각 20건을 순차 실행했다. 같은 관련/무관 fixture를 반복했으며 OCR·실제 화면·배포 Backend·동시 부하는 포함하지 않는다. p95는 정렬 후 ceil(0.95 * N)번째 값이다.
+
+- 설정: candidate 모드, 모델 호출 timeout 2.5초, 재시도 0회, keep_alive=10m.
+- 최초 분석: 2.24초. 이후 40건 p50=1.10초, p95=2.32초, 최대=4.04초, 3초 초과=2건, 분석 불가=0건.
+- DOM 20건 p95=3.76초, 메타데이터 20건 p95=1.83초. 본문 판정은 이번 표본에서도 3초 목표를 넘었다. 전체 3초 내 완료 보장 및 전체 제품 p95 달성으로 해석하지 않는다.
 
 ## 코드 위치와 회귀 검사
 

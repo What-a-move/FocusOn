@@ -29,7 +29,7 @@ CLAUDE_MODEL=claude-haiku-4-5-20251001
 
 ## 담당 기능
 
-Backend 전용 FastAPI는 `POST /internal/v1/analysis-runs`에서 수신을 확인하고, `POST /internal/v1/analysis-runs/analyze`에서 Kiwi + Qwen Hybrid 후보를 계산한다. 판정 confidence가 아직 보정되지 않아 공개 `decision`은 UNCERTAIN이며, `candidateDecision`은 미보정 실험값이다. [분석 경로와 한계](docs/features/fastapi-relevance-analysis-REPORT.md) 및 [실행·인증·입력 예제](docs/features/fastapi-reception-REPORT.md)를 따른다.
+Backend 전용 FastAPI의 단일 경로 `POST /internal/v1/analysis-runs`가 검증 후 Kiwi + Qwen Hybrid 판정을 반환한다. 베타에서는 `FOCUSON_ANALYSIS_DECISION_MODE=candidate`로 미보정 후보를 `decision`으로 사용하며, `promptVersion`에 `-uncalibrated`가 붙는다. 운영 배포 전에는 confidence 보정이 필요하다. [분석 경로와 한계](docs/features/fastapi-relevance-analysis-REPORT.md) 및 [실행·인증·입력 예제](docs/features/fastapi-reception-REPORT.md)를 따른다.
 
 ## 현재 처리 과정
 

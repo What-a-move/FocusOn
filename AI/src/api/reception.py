@@ -1,7 +1,5 @@
 """Backend-only reception envelope; not a change to Client request fields."""
-from typing import Literal
-
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .relevance_contract import ScreenAnalysisRequest, ScreenAnalysisResponse
 from .schemas import ConfirmedGoal, Identifier, InternalSchema, OCRMetadata, VerifiedContext
@@ -16,14 +14,16 @@ class AnalysisReception(InternalSchema):
     ocr: OCRMetadata | None = Field(default=None, repr=False)
 
 
-class ReceptionReceipt(InternalSchema):
-    status: Literal["RECEIVED"] = "RECEIVED"
-    session_id: Identifier = Field(alias="sessionId")
-    client_run_id: Identifier = Field(alias="clientRunId")
-    analysis_executed: Literal[False] = Field(default=False, alias="analysisExecuted")
-
-
-class ExperimentalAnalysisResponse(ScreenAnalysisResponse):
-    candidate_decision: Literal["RELATED", "UNRELATED", "UNCERTAIN"] | None = Field(alias="candidateDecision")
-    candidate_reason_code: str | None = Field(alias="candidateReasonCode")
-    candidate_calibrated: Literal[False] = Field(alias="candidateCalibrated")
+class AnalysisDecisionResponse(ScreenAnalysisResponse):
+    @model_validator(mode="after")
+    def valid_decision(self):
+        # The version suffix marks a beta heuristic, not calibrated confidence.
+        if not self.prompt_version.endswith("-uncalibrated"):
+            return super().valid_decision()
+        reasons = {"RELATED": "SEMANTIC_GOAL_MATCH", "UNRELATED": "SEMANTIC_GOAL_MISMATCH"}
+        if self.decision in reasons:
+            if self.reason_code != reasons[self.decision]:
+                raise ValueError("INVALID_BETA_DECISION")
+        elif self.reason_code in reasons.values():
+            raise ValueError("INVALID_BETA_UNCERTAIN")
+        return self
