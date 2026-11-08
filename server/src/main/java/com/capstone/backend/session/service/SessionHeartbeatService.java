@@ -6,6 +6,7 @@ import com.capstone.backend.auth.security.DeviceHeaderValidator;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.intervention.service.HeartbeatPolicyTrigger;
 import com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest;
 import com.capstone.backend.session.dto.SessionDtos.HeartbeatResponse;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -28,6 +30,7 @@ public class SessionHeartbeatService {
   private final UserRepository users;
   private final LearningSessionRepository sessions;
   private final TransactionTemplate transactions;
+  private final ApplicationEventPublisher events;
 
   /** 만료 확정은 오류 응답을 보내기 전에 별도 트랜잭션에서 커밋한다. */
   public HeartbeatResponse heartbeat(FocusOnPrincipal principal, String deviceId,
@@ -99,6 +102,9 @@ public class SessionHeartbeatService {
     }
     boolean reached = active >= session.getTargetDurationMs();
     sessions.recordHeartbeat(sessionId, now, observed, active, reached);
+    if (!reached) {
+      events.publishEvent(new HeartbeatPolicyTrigger(principal.userId(), sessionId));
+    }
     return new HeartbeatOutcome(new HeartbeatResponse(reached
         ? SessionStatus.AWAITING_END_CONFIRMATION : SessionStatus.RUNNING, now, active, null),
         false);

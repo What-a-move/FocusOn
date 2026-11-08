@@ -13,6 +13,7 @@ import com.capstone.backend.auth.security.TokenFamilyGuard;
 import com.capstone.backend.auth.service.AuthRateLimiter;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.intervention.service.InterventionPolicyService;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
@@ -41,6 +42,7 @@ public class AnalysisRunStore {
   private final UserConsentRepository consents;
   private final AnalysisExcludedDomainRepository exclusions;
   private final AuthRateLimiter limits;
+  private final InterventionPolicyService interventionPolicy;
 
   /** 권한과 상태를 확인한 후 원문 없는 예약 행만 commit한다. */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -81,6 +83,9 @@ public class AnalysisRunStore {
     boolean latest = order.eligible() && !order.untrusted()
         && runs.findCurrent(sessionId, device.getId())
             .map(value -> value.getId().equals(run.getId())).orElse(false);
+    boolean policyCurrent = order.eligible() && runs.findCurrent(sessionId, device.getId())
+        .map(value -> value.getId().equals(run.getId())).orElse(false);
+    interventionPolicy.prepared(session, run, policyCurrent, guard != null, now);
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),
         session.getInterventionPolicyVersion(), guard, latest, run.response());
@@ -105,6 +110,7 @@ public class AnalysisRunStore {
       decision = AnalysisDecision.unavailable();
     }
     run.complete(decision);
+    interventionPolicy.completed(session, run, Instant.now());
     return run.response();
   }
 
