@@ -152,4 +152,5 @@ h1, h2,
 .fo-link-code b, .fo-week-total strong, .fo-day-time, .fo-nb-title,
 .result-window .big-time, .onboarding-window .code-tiles span,
 .onboarding-window.goal-window .bubble, .goal-window .goal-card p,
-.focus-window .clock, .focus-window .goal, .setup-window .duration-readout strong { font-family: var(--fo-font-display); }
+.focus-window .clock, .focus-window .goal, .setup-window .duration-readout strong,
+.floating-root .card span { font-family: var(--fo-font-display); }
