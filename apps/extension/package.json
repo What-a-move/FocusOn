@@ -7,7 +7,8 @@
     "dev": "next dev -p 3001",
     "build": "tsc --noEmit && next build --webpack && node scripts/prepare-extension-build.mjs",
     "lint": "eslint .",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "dist": "pnpm build && mkdir -p release && rm -f release/focuson-extension.zip && cd out && zip -qr ../release/focuson-extension.zip ."
   },
   "dependencies": {
     "@focuson/shared-types": "workspace:*",

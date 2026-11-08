@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
@@ -37,12 +38,19 @@ import { DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow }
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
+// 패키지 앱에는 .env가 없어 빌드할 때 넣은 값을 쓴다(scripts/write-build-config.cjs). 개발 실행은 환경 변수가 우선한다.
+const buildConfig: { apiBaseUrl?: string; googleClientId?: string } = (() => {
+  try { return JSON.parse(readFileSync(path.join(__dirname, '../build-config.json'), 'utf8')) } catch { return {} }
+})()
 
 // [주의] Scheme 권한은 app.whenReady() 전에 등록해야 한다.
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true } },
 ])
 
+// 설치한 앱은 `FocusOn` 폴더에 데이터를 둔다. 개발 실행(@focuson/desktop)과 섞이지 않고 함께 띄울 수 있다.
+// [주의] 단일 실행 잠금과 userData를 쓰기 전에 정해야 한다.
+if (app.isPackaged) app.setPath('userData', path.join(app.getPath('appData'), 'FocusOn'))
 const hasSingleInstanceLock = app.requestSingleInstanceLock()
 
 if (!hasSingleInstanceLock) {
@@ -59,7 +67,7 @@ if (!hasSingleInstanceLock) {
     }
   })
   let authService: AuthService | null = null
-  const googleClientId = process.env.FOCUSON_GOOGLE_CLIENT_ID?.trim()
+  const googleClientId = process.env.FOCUSON_GOOGLE_CLIENT_ID?.trim() || buildConfig.googleClientId
   const oauthFlow = googleClientId ? new GoogleOAuthFlow({
     clientId: googleClientId,
     openBrowser: (url) => shell.openExternal(url),
@@ -190,12 +198,13 @@ if (!hasSingleInstanceLock) {
       log('INFO', 'power.resume', { component: 'power', heldMono, heldWall, sleepSuspected: heldMono !== null && heldWall !== null && heldWall - heldMono > 5_000 })
       suspendedAt = null
     })
-    const apiBaseUrl = resolveAuthApiBaseUrl(process.env.FOCUSON_API_BASE_URL)
+    const apiBaseUrl = resolveAuthApiBaseUrl(process.env.FOCUSON_API_BASE_URL || buildConfig.apiBaseUrl)
     if (apiBaseUrl && process.platform === 'darwin') {
       authService = new AuthService(
         authStore,
         new AuthApiClient(apiBaseUrl),
-        new MacKeychainRefreshTokenVault(apiBaseUrl),
+        // [주의] 같은 Mac에서 설치 앱과 개발 실행이 같은 서버를 써도 로그인이 서로 풀리지 않게 Keychain 항목을 나눈다. 개발 실행 항목은 그대로 둔다.
+        new MacKeychainRefreshTokenVault(app.isPackaged ? `${apiBaseUrl}#installed` : apiBaseUrl),
         async () => ({
           installationId: await getInstallationId(app.getPath('userData')),
           deviceName: getDesktopDeviceName(),
