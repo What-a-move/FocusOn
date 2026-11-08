@@ -42,3 +42,13 @@
 - P3 전송 receipt 계약·서버 수신 → P4 Desktop 채널 결과/receipt 복구 → production cooldown 활성화 순서입니다.
 - P5 팀원 heartbeat/세션 경계, P6 #154 실제 AI, P7 전체 연동 QA를 이슈 #182에서 별도 추적합니다. 현재 생성 보류를 해제하지 않았습니다.
 - 원문이 훼손된 Notion 문단은 사용자 승인으로 원문 복구했습니다. 새 정책은 추가하지 않았으며 정본 반영이 남았습니다.
+
+## 시연 준비 재확인 (2026-11-09, dev 4e212de)
+
+- PR #164는 OPEN/Draft, CONFLICTING/DIRTY다. 종료 담당의 rebase/충돌 해소·QA·승인/병합이 필요하다. #164 병합만으로 전체 앱 시연 QA가 완료됐다고 볼 수 없다. 이 작업에서 팀원 브랜치를 수정하지 않았다.
+- AI #154의 구현 PR #190은 OPEN/MERGEABLE이다. 정식 내부 경로가 decision/confidence/reasonCode/modelVersion/promptVersion을 반환하도록 수정하고 candidate 모드 0.75 기준을 적용한다. 아직 dev에 병합되지 않았다. PR 설명도 실제 학교 모델·Backend·Desktop 전체 왕복 미검증을 명시한다. 자동 release note의 과거 0.6 설명은 최신 코드 0.75와 다르므로 코드 기준으로 판단한다.
+- 현재 dev의 정식 내부 AI 경로는 여전히 ReceptionReceipt/RECEIVED다. Backend의 호출 경로는 이미 정식 경로다. 현재 checkout server/.env의 AI_ANALYSIS_URL/FOCUSON_AI_API_KEY는 비어 있음만 확인했으며 비밀 값을 출력하지 않았다. 실행 중인 다른 서버/배포 환경 설정이나 실제 AI 왕복은 확인하지 않았다.
+- #182 코드는 로컬 1a53903/ccfa207에 있으며 아직 push/PR/병합하지 않았다. 기존 두 API 구현만으로 전경 context·관측 소속·전송 receipt 연결이 생기지 않는다. P1~P4가 실제 포키 생성의 선행이다.
+- dev PR #191/#193으로 Desktop 시연 모드가 추가됐다. apps/desktop/electron/main/demo-mode.cts는 interventions GET을 실제 서버에 보내지 않고 단축키로 만든 메모리 이벤트를 반환한다. 종료/요약/달력/일간은 실제 요청 실패 시 합성 응답으로 대체한다. learning-summary는 합성하지 않는다.
+- 실제 서버 연동 QA에서는 FOCUSON_DEMO=1을 사용하지 않는 일반 실행을 해야 한다. 시연 모드 영상과 실제 AI→포키·종료/리포트 연동 증거를 구분한다. 이 코드는 읽기만 했으며 Frontend를 수정하지 않았다.
+- 담당 우선순위는 #182의 실제 연동 계약/연결 → 세션 summary·learning-summary 조회(생성 AI와 역할 분리) → calendar/daily다. #164/#168 세션 명령 및 #99 목표 AI는 팀원 범위로 유지한다.

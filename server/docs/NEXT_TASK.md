@@ -1,5 +1,12 @@
 # Backend 다음 작업
 
+## 시연 준비 변경 확인 (2026-11-09)
+
+- 최신 원격 dev 4e212de: Desktop 시연 모드 추가(#191/#193). #182 실제 QA는 FOCUSON_DEMO=1을 끈 일반 실행으로 한다. demo는 interventions GET을 가로채며 일부 종료/리포트를 합성한다.
+- AI #154 구현 PR #190 OPEN, 아직 dev의 정식 경로는 RECEIVED. 로컬 server/.env AI 주소/키 비어 있음. 실제 AI 왕복 미검증.
+- #164 OPEN/Draft/CONFLICTING. 팀원 rebase/QA/승인 필요, 직접 수정하지 않음. 자세한 인계는 features/intervention-policy-handoff.md.
+
+
 ## #182 서버 검증 결과 (2026-11-09)
 
 - `feat/182-server-intervention-policy`: 내부 코어/영속화/V16/개입 GET·ack/최소 연결 구현. 전체 build·Checkstyle 통과(226개 실패0·생략10), 격리 PG87개 전부 통과. 임의 포트 실제 HTTP 검증 포함.
