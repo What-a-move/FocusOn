@@ -63,6 +63,18 @@ class GoogleOauthClientTests {
   }
 
   @Test
+  void rejectsTokenSignedByAnotherKey() throws Exception {
+    KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+    generator.initialize(2048);
+    var otherKey = generator.generateKeyPair();
+    var client = client(NimbusJwtDecoder.withPublicKey(
+        (RSAPublicKey) otherKey.getPublic()).build());
+    String value = token("accounts.google.com", "desktop-client", "synthetic-sub", 300);
+    assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+        assertThrows(ApiException.class, () -> client.verifyIdentity(value)).code().name());
+  }
+
+  @Test
   void acceptsMatchingAuthorizedPartyForSingleAndMultipleAudiences() {
     var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
     assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",

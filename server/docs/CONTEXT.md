@@ -2,7 +2,7 @@
 
 ## Google 로그인 시간 오차 (#177)
 
-Google ID 토큰 발급 시각에 30초 오차를 허용한다. 사용자는 수정 후 로그인 성공을 확인했다. 이전 401의 정확한 원인은 미확정이며 상세는 `features/google-login-clock-skew-REPORT.md`를 따른다.
+Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통합 후 실제 Google 로그인 교환 201과 인증 사용자 조회 200을 격리 DB에서 확인했다. 이전 401의 정확한 원인은 미확정이며 상세는 `features/google-login-clock-skew-REPORT.md`를 따른다.
 
 ## 진행 중: Issue #167 Heartbeat (2026-11-08)
 
