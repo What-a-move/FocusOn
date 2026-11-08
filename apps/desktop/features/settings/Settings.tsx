@@ -11,10 +11,10 @@ import { LoadError, SettingsShell, ToastView, failText, useToast } from './Setti
 import { settingsApi, type FocusSettings, type ThemeSource } from './settings-api'
 
 const TABS = [
-  { id: 'account', label: '계정', poki: 'poki-floating-cheer-v7.png' },
+  { id: 'account', label: '계정', poki: 'poki-celebrate.png' },
   { id: 'focus', label: '집중', poki: 'poki-floating-master-v3.png' },
-  { id: 'analysis', label: '분석·권한', poki: 'poki-floating-curious-v8.png' },
-  { id: 'devices', label: '기기 연결', poki: 'poki-floating-logo-base-v1.png' },
+  { id: 'analysis', label: '분석·권한', poki: 'poki-key.png' },
+  { id: 'devices', label: '기기 연결', poki: 'poki-plug.png' },
   { id: 'general', label: '화면', poki: 'poki-floating-sleepy-v7.png' },
 ] as const
 type TabId = (typeof TABS)[number]['id']

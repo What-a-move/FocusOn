@@ -10,7 +10,7 @@ import './focus-session.css'
 
 const CIRCUMFERENCE = 2 * Math.PI * 90
 const EXTEND_OPTIONS = [10, 25, 50]
-const POKI = { focus: '/design/poki-floating-master-v3.png', paused: '/design/poki-floating-paused-v3.png', curious: '/design/poki-floating-curious-v8.png' }
+const POKI = { focus: '/design/poki-floating-master-v3.png', paused: '/design/poki-floating-paused-v3.png', thinking: '/design/poki-thinking.png', worried: '/design/poki-worried.png', looking: '/design/poki-looking.png', timeUp: '/design/poki-time-up.png' }
 
 function formatClock(ms: number): string {
   const seconds = Math.max(0, Math.floor(ms / 1000))
@@ -87,7 +87,7 @@ export function FocusSession() {
     return <main className="app-window onboarding-window focus-window">
       <section className="finished">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="poki" src={POKI.curious} alt="궁금해하는 포키" />
+        <img className="poki" src={loadError ? POKI.worried : POKI.looking} alt="" />
         <h1>{loadError ? '집중 상태를 불러오지 못했어요' : '진행 중인 집중이 없어요'}</h1>
         <p>{loadError ? '인터넷 연결을 확인한 뒤 다시 열어 주세요.' : '홈에서 목표를 정하고 집중을 시작해 주세요.'}</p>
         <Link className="btn btn-primary" href="/">홈으로</Link>
@@ -140,7 +140,7 @@ export function FocusSession() {
             <div className={`clock-caption${permissionLost ? ' is-error' : ''}`}>{caption}</div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="poki" key={permissionLost ? 'curious' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.curious : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '궁금해하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
+          <img className="poki" key={permissionLost ? 'worried' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.worried : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '걱정하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
         </div>
         {/* 오른쪽: 목표·버튼·안내. 타이머가 세로로만 길어지지 않게 옆에 둔다. */}
         <div className="side">
@@ -173,7 +173,7 @@ export function FocusSession() {
 
     <dialog ref={dialogRef} aria-labelledby="dialog-title" onCancel={(event) => { event.preventDefault(); if (!awaiting) setDialog(null) }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="poki" src={activeDialog === 'finish' ? POKI.curious : POKI.focus} alt="" />
+      <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
       <p>{activeDialog === 'finish' ? '지금까지 집중한 시간을 기록하고 이번 회차를 마칩니다.'
         : activeDialog === 'extend' ? '얼마나 더 할까요? 같은 회차로 이어져요.' : '타이머와 분석은 멈췄어요.\n끝내거나 같은 목표로 더 공부할 수 있어요.'}</p>
