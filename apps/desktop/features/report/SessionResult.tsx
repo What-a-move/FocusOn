@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { flowOf, sessionResultApi, type LearningSummary, type SessionSummary } from './session-result-api'
-import { errorText } from '../../app/lib/error-text'
-import '../onboarding/onboarding.css'
+import { flowOf, sessionResultApi, type LearningSummary, type SessionSummary } from '../../shared/api/session-result-api'
+import { errorText } from '../../shared/lib/error-text'
+import '../../shared/styles/onboarding-window.css'
 import './session-result.css'
 
 const POLL_MS = 5000

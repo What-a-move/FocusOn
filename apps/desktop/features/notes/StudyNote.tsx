@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { sessionResultApi, type LearningSummary, type SessionSummary } from '../report/session-result-api'
-import { LoadError, SettingsShell } from '../settings/SettingsShell'
+import { sessionResultApi, type LearningSummary, type SessionSummary } from '../../shared/api/session-result-api'
+import { LoadError, SettingsShell } from '../../shared/ui/SettingsShell'
 import './notes.css'
 
 // 디자인 원본: FocusOn-design/study-review.html · fo-notes.js. 시안의 상태 미리보기 전환은 넣지 않는다.

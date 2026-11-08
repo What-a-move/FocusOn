@@ -1,5 +1,15 @@
 # Backend 작업 컨텍스트
 
+## 현재 작업: #171 분석 요청·결과 저장 (2026-11-08)
+
+- feat/171-analysis-runs는 최신 dev 91cd524에서 분기했다. POST /sessions/{id}/analysis-runs의 공개 요청·응답, runner/연결 Extension 권한, 보호 상태, 결과 저장과 AI 내부 adapter를 구현했다. 계획·검증은 features/analysis-runs-*를 따른다.
+- 기기별 source 무관 observationSequence 우선 조회와 metadata UNRELATED의 유효 UNCERTAIN 변환을 제공한다. 개입·heartbeat Policy Engine·리포트는 아직 구현하지 않았다. 세션 명령은 팀원 #167~#169 범위다.
+- AI 정본(2026-11-03)은 정식 /internal/v1/analysis-runs의 판정 반환·서비스 Bearer와 베타 uncalibrated 예외를 명시한다. 현재 dev AI 코드는 수신 확인만 반환하므로 서버는 안전 fallback하며, 실제 판정 통합은 #154 이후 확인한다.
+- 기본 Backend build/Checkstyle·테스트200개(실패0/오류0/생략9)를 통과했다. PostgreSQL 결과는 features/analysis-runs-QA.md를 따른다. PR #172 리뷰의 host 누락 검증·테스트 보강을 반영했다. merge·이슈 종료는 승인 후 진행한다.
+- 실제 개발 DB/8080/Frontend/AI는 수정하지 않았다. 관측 순서 정본은 사용자 위임에 따라 Notion에도 반영했다.
+
+- PR172 후속 P2: TAB_META host 검증과 기기·서버 시각 직접 비교를 보완했다. 고정±60초 시작/재개 회귀를 추가했으며, 실행 도중 기기 시계 보정은 선택 observationSequence·구형 판정 보류/보호 유지로 보완했다. 최신 dev24db7de 통합 후 로컬 PG80개 통과, 실제 Frontend counter는 analysis-observation-order-handoff.md에 인계했다.
+
 ## Google 로그인 시간 오차 (#177)
 
 Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통합 후 실제 Google 로그인 교환 201과 인증 사용자 조회 200을 격리 DB에서 확인했다. 이전 401의 정확한 원인은 미확정이며 상세는 `features/google-login-clock-skew-REPORT.md`를 따른다.
@@ -9,7 +19,7 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 - PR #178 리뷰에 따라 자동 정리 잠금·실패 격리와 시계 역행 복구를 구현했다. 전체 build·Checkstyle과 격리 PostgreSQL 테스트를 확인했으며 지연 신호 구분의 한계는 `features/session-heartbeat-REPORT.md`를 따른다.
 - 실계정 HTTP와 PostgreSQL 동시성 검증을 수행했다. 상세 및 미검증 사항은 `features/session-heartbeat-REPORT.md`를 따른다.
 
-## 현재 작업: #151 (2026-11-08)
+## 직전 작업: #151
 
 - 사용자 담당 범위는 1기반·2인증/기기·6분석/개입·7리포트다. 기존 #151을 재사용하고 feat/151-extension-access에서 CORS·활성 확장1개를 구현했다.
 - 최초 H2 전체135개·분리PG30개를 통과했고, PR170 리뷰 수정 후 H2 전체137개 중 실패0·생략4. 최신 PG 결과는 features/extension-access-QA.md를 따른다. 실제 HTTP preflight200·미인증 실제 요청401 및 V11 기존 데이터 보존·unique 거절 검증 완료. 상세는 features/extension-access-REPORT.md를 따른다.
@@ -138,3 +148,5 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 - 최신 dev d03c2d2 통합·문서 충돌 해소, 로그인 결정026/공유타입결정025 분리. PR #60의 push·CI·리뷰 스레드 결과를 확인하며 merge·Issue종료는 별도 승인받는다.
 
 - 2026-10-28 진행 중: #58 위에 #86 Extension 연결 해제와 #85 온보딩 준비 상태를 순차 브랜치로 개발했다. 두 기능은 dev 미병합이며 실제 앱 통합 QA와 기기 목록 기반 복구 경로 검증이 남았다. #85는 Desktop별 화면 권한/제외 단계 marker와 연결·필수 동의로 상태를 계산한다.
+
+- PR172의 9d131e9 CodeRabbit 재리뷰 actionable5건 중4건과 테스트 제안4건을 보완했다. 구형 counter 유실은 전역 번호/새 세션 복구 계약을 유지한다. OSIV를 켠 실제HTTP 경합 회귀와 PostgreSQL 경계2종·거절4종을 검증했다. 최신 QA·리뷰 문서를 따른다.

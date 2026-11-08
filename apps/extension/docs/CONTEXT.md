@@ -32,6 +32,7 @@
 - 팝업 세션 표시(Issue #52, 2026-10-25): 팝업을 연결 전(E01)·세션 없음(E02)·세션 진행 중(E03, 표시 전용)·서버 연결 불가(E06)로 나눴다. `features/session/api-client.ts`가 Access Token 갱신(만료 30초 전·서버 만료 응답 시 1회, single-flight, Refresh Token rotation 저장)과 재연결 처리(토큰 삭제 후 연결 화면)를 맡는다. 테스트는 `pnpm --filter @focuson/extension test`(Node 24 TypeScript 실행). 세션 API가 dev에 없어 실제 왕복은 미검증이며, 빌드 결과물에 가짜 저장소·서버 응답을 넣어 화면을 확인했다.
 
 - 탭·페이지 분석(Issue #61, 2026-10-26): Service Worker가 집중 중 활성 탭을 15초 본 뒤 제외·민감·Chrome 내부 판정 → `TAB_META` → 관련 없음·판단 보류면 정리한 본문으로 `CHROME_DOM`을 `analysis-runs`에 보낸다. 15초는 Worker 타이머+저장된 시작 시각+알람으로 복구하고 페이지는 필요할 때만 읽는다(결정 014). 사이트 권한은 optional로 바꾸고 팝업 E01b·E06을 추가했다. 집중 중 권한을 끄면 `local-events`. 가짜 서버로 실제 Chromium에서 문서·로그인·제외 사이트 흐름을 확인했고, 실제 백엔드 왕복은 미검증이다.
+- 폴더 구조 정리(Issue #183, 2026-11-09): 가벼운 FSD(`app` → `features` → `shared`)로 나눴다. 서버 요청·토큰·연결(`shared/api`), 로거·세션 모델(`shared/lib`), 로그 복사(`shared/ui`), 팝업 공통 CSS(`shared/styles`)를 옮겨 `pairing ↔ session` 서로 참조를 없앴고, 첫 화면 `Popup`은 `app/page.tsx`로 합쳤다. background도 `features/` 대신 `shared/`를 쓴다. 동작 변경 없음. 규칙은 `apps/docs/FOLDER_STRUCTURE.md`, 결정 018.
 
 ### 진행 중인 작업
 

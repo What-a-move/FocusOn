@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState, type FormEvent } from 'react'
-import { isLinked } from './extension-auth'
-import { describePairingError, submitPairing, type PairingNotice } from './pairing-api'
-import { LogCopy } from '../session/LogCopy'
-import './pairing.css'
+import { isLinked } from '../../shared/api/extension-auth'
+import { describePairingError, submitPairing, type PairingNotice } from '../../shared/api/pairing-api'
+import { LogCopy } from '../../shared/ui/LogCopy'
+import '../../shared/styles/pairing.css'
 
 function formatPairingCode(value: string) {
   const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)

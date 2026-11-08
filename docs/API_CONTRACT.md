@@ -272,6 +272,14 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 `GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
 
+### 분석 관측 순서 (2026-11-08 보완)
+
+- 기존 sequence는 source별 증가 번호다. 선택 observationSequence(양의 정수, JS 안전 정수 최대9007199254740991)는 같은 session+device 전체에서 source와 무관하게 관측 생성 시 배정·원자적으로 증가·영속화한다. 공개 응답과 AI 내부 schema는 유지한다.
+- 번호가 있으면 번호로 현재 상태를 선택한다. 번호 중복은409 IDEMPOTENCY_CONFLICT이며 작은 번호·늦은 AI 완료는 현재 보호 상태를 덮지 않는다. 번호 모드에 들어온 기기에 번호 없는 요청을 보내도 현재 상태에 사용하지 않는다.
+- 기존 요청은 source별 명백한 과거 sequence를 제외하고 observedAt으로 비교한다. 시계 역행/지연으로 순서를 확정할 수 없으면 AI를 보류하고 UNCERTAIN/ANALYSIS_UNAVAILABLE 또는 기존 보호 상태를 유지한다. 번호 있는 새 관측이나 새 세션으로 복구한다.
+- observedAt은 기기 원본, receivedAt은 서버 수신 시각이다. 다른 clock끼리 직접 비교하지 않는다. 원문이나 전체 URL을 저장하지 않는다. TAB_META와 CHROME_DOM 본문의 guard 없는 요청은 유효 host가 필수다.
+- [Notion POST 정본](https://app.notion.com/p/58cf7aade6614fc9a00e248affb052f9), [Frontend 인계](../server/docs/features/analysis-observation-order-handoff.md). 실제 클라이언트 적용·AI·앱 QA와 Server 구현을 구분한다.
+
 ### 리포트
 
 ```text
@@ -315,7 +323,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - `EXCLUDED`, `PRIVACY_BLOCKED`, `UNCERTAIN`은 HTTP 오류가 아닌 정상 분석 상태다.
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
-- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
+- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다. 2026-11-03 AI 계약의 베타 예외로 내부 AI 응답의 `promptVersion`이 `-uncalibrated`로 끝나고 `confidence: null`인 후보 판정만 수치 기준에서 제외한다. 버전을 이력에 남기며 confidence를 임의로 만들지 않는다. metadata만 근거인 UNRELATED는 이 예외에서도 이탈 시간에 포함하지 않는다.
 - AI 장애·시간 초과는 HTTP 오류가 아니라 `relation: UNCERTAIN`, `confidence: null`, `reasonCode: ANALYSIS_UNAVAILABLE`로 응답한다. 베타까지 AI가 준비되지 않으면 서버가 임시 규칙 판정으로 대신할 수 있으며, 응답 형식·`reasonCode` 허용 목록·세션 고정 `policyVersion`은 같게 유지한다(2026-11-02 확정).
 - 정책 `v1`에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
 - `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
@@ -426,3 +434,5 @@ REQUEST_TIMEOUT
 ```
 
 TypeScript 공유 타입은 `packages/shared-types`에서 관리한다. Spring DTO와 AI 입력 스키마는 각 서버에서 런타임 검증을 별도로 수행한다.
+
+분석 입력 검증 보완(PR172 재리뷰): `CHROME_DOM`은 본문이 없어도 metadata가 있으면 유효한 urlHost가 필요하다. observedAt의 기기/서버 시각 차이는 허용하되 DB 유한 timestamp 저장 범위 밖 값은400 VALIDATION_ERROR이며 저장·AI 호출을 하지 않는다.

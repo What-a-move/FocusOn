@@ -2,9 +2,18 @@
 
 ## Issue #168 세션 연장 후속
 
-- 최신 dev 통합 후 migration 번호와 기존 데이터 보존을 검증한다.
+- 최신 dev `8a5933f`와 충돌을 해결하고 연장 migration을 V16으로 조정했다. 새 격리 DB의 V1~V16은 검증했으며 V15 기존 데이터의 V16 적용 전후 보존 검증은 남았다.
 - 접근 가능한 Notion API 원본과 계약을 대조하고 실제 Google 로그인·Swagger 및 Desktop 연동을 확인한다. PostgreSQL 동시 요청의 실제 잠금 대기는 계측했다.
 - 상세 구현과 검증은 `features/session-extend-REPORT.md`를 따른다.
+
+## 현재 작업: #171 분석 요청·결과 저장
+
+- feat/171-analysis-runs에서 구현·격리 정적 리뷰와 QA를 수행했다. 최신 검증 수치·한계는 features/analysis-runs-QA.md, REPORT.md를 따른다. PR #172 생성·초기 CI2개 성공 후 리뷰 지적을 수정했다. 수정 커밋의 CI·재리뷰를 확인하며 병합·이슈 종료는 별도 승인 대상이다.
+- AI #154가 dev에 반영되면 정식 내부 경로의 판정·서비스 키·같은 traceId·실제 Desktop/Extension 입력으로 통합 QA한다. 현재 수신 확인 응답은 UNCERTAIN/ANALYSIS_UNAVAILABLE로 처리된다.
+- 다음 사용자 담당6번은 Policy Engine·개입 생성/조회·확인, 이후7번 summary/일간/달력이다. heartbeat에서 판정할 수 있도록 팀원 #167과 호출 경계를 맞춘다. metadata UNRELATED 시간 제외와 기기별 source 무관 findCurrent 조회를 재사용한다.
+- #151의 PR170은 병합·CI 성공이나 실제 Chrome QA는 남았다. #163 Draft PR164와 #167~#169 세션 상태 명령은 다른 담당 범위다. 실제 테스트 없이 완료로 닫지 않는다.
+
+- 관측 순서 계약: 사용자 위임으로 선택 observationSequence·V15·구형 판정 보류/보호 유지를 구현했다. 현재 조회는 findCurrent만 사용한다. Frontend가 전용 인계에 따라 전역 counter를 추가한 뒤 실제 앱에서 시계 역행/재시작/혼합 요청을 QA한다. 실제 AI 연결·최신 원격CI/재리뷰도 별도 확인한다.
 
 ## Google 로그인 시간 오차 (#177)
 
@@ -15,7 +24,7 @@
 - PR #178 리뷰 수정 커밋을 푸시하고 재리뷰·원격 CI를 확인한다. 시계 역행과 이전에 처리되지 않은 지연 신호는 순번 없이 완전히 구분할 수 없다.
 - 최신 dev 통합 후 격리 PostgreSQL의 V1~V13 적용과 Heartbeat 테스트를 검증했다. 사용자 개발 DB의 이전 Heartbeat V11 이력은 백업·복제 검증 후 데이터 보존 방식으로 해결했다. 다른 DB는 별도로 확인해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
 
-## 현재 작업: #151 CORS·확장1개
+## 직전 작업: #151
 
 - PR #170의 migration 잠금·POST preflight 지적과 외부 P2(만료된 최신 확장 보존)를 수정했다. 인증 가능 연결 우선 순위를 적용하고 실제 Flyway 업그레이드 회귀9종을 CI에 추가했다. V11 NOT VALID→V12 별도 검증, H2 전체137개 실패0/skip4. 최신 커밋의 원격 CI·재리뷰와 실제 Chrome QA를 확인한다. 병합·이슈 종료는 별도 승인한다.
 - 실제 Chrome 권한 철회→서버 요청 전송→local-events 자동 멈춤은 팀원 5번 담당과 연동해 확인한다. CORS 허용만으로 host 권한 문제가 모두 해결됐다고 판단하지 않는다.
@@ -88,3 +97,5 @@ PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionabl
 - 최신 dev d03c2d2 통합·문서 충돌 해소, 로그인 결정026/공유타입결정025 분리. PR #60의 push·CI·리뷰 스레드 결과를 확인하며 merge·Issue종료는 별도 승인받는다.
 
 - #58 → #86 → #85 의존 변경의 PR·병합은 승인 절차 후 순서대로 처리한다. 기기 목록 응답의 data.devices 래퍼를 Frontend와 확인하고, Frontend의 연결 취소·오류·연결 해제 UI 반영 후 실제 Desktop·Extension QA를 진행한다.
+
+- PR172 CodeRabbit9d131e9 재리뷰 후 host·범위·fresh snapshot·테스트 보강을 push하고 원격CI를 확인한다. 기본OSIV=false는 유지한다. Counter 유실 복구는 전용 Frontend 인계대로 적용하고 실앱에서 확인해야 한다. 병합/이슈 종료는 별도 승인이다.

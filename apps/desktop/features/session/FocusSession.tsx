@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from './session-api'
-import { errorText } from '../../app/lib/error-text'
-import '../onboarding/onboarding.css'
+import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
+import { errorText } from '../../shared/lib/error-text'
+import '../../shared/styles/onboarding-window.css'
 import './focus-session.css'
 
 const CIRCUMFERENCE = 2 * Math.PI * 90
