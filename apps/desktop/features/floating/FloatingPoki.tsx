@@ -5,7 +5,8 @@ import type { FloatingShow, InterventionAction } from '../../electron/shared/int
 import './floating.css'
 
 // [주의] Renderer는 electron/shared에서 타입만 가져온다(goal-setting-shared-runtime-import-ERROR.md).
-const POKI = { GENTLE: 'master-v3', NORMAL: 'curious-v8', ACTIVE: 'angry-v2', BREAK: 'curious-v8', RECENTER: 'master-v3', DISCONNECTED: 'curious-v8' } as const
+// 고개 내민 포키(B안, 2026-11-08 사용자 확정). 6장은 몸 위치가 같아 얼굴만 바뀐다.
+const POKI = { GENTLE: 'noticed', NORMAL: 'long-distraction', ACTIVE: 'caught-you', BREAK: 'take-a-break', RECENTER: 'back-to-study', DISCONNECTED: 'chrome-disconnected' } as const
 
 type View = { show: FloatingShow; step: 'say' | 'recenter'; failed?: boolean }
 
@@ -29,30 +30,31 @@ export function FloatingPoki() {
   const disconnected = show.kind === 'DISCONNECTED'
   const poki = recenter ? POKI.RECENTER : show.kind === 'OFF_TASK' ? POKI[show.level] : POKI[show.kind]
   const actions: Array<[string, InterventionAction, boolean]> = recenter
-    ? [['확인했어', 'ACK', true]]
+    ? [['알겠어', 'ACK', true]]
     : disconnected ? [['앱 열기', 'OPEN_APP', true]]
-      : show.kind === 'BREAK' ? [['잠시 쉬기', 'REST', true], ['계속할게', 'CLOSE', false]] : [['조금 더 보기', 'RECENTER', true], ['잠시 쉬기', 'REST', false]]
+      : show.kind === 'BREAK' ? [['잠시 쉬기', 'REST', true], ['계속할게', 'CLOSE', false]] : [['확인했어', 'RECENTER', true], ['잠시 쉬기', 'REST', false]]
+
 
   return <main className="floating-root">
-    <div className="pop" key={step}>
-      <div className={`bubble${disconnected ? ' is-error' : ''}`} role={disconnected ? 'alert' : 'status'} aria-live={disconnected ? 'assertive' : 'polite'}>
-        <span>{recenter ? '지금 목표는 이거야.' : show.say}</span>
-        <small>{recenter ? show.goalText : show.sub}</small>
-        {view.failed && <p className="fail" role="alert">지금은 멈추지 못했어요. FocusOn 앱에서 다시 시도해 주세요.</p>}
-        <div className="say-actions">
-          {actions.map(([label, action, primary]) => <button key={action} type="button" className={primary ? 'primary' : ''} onClick={() => { void act(action) }}>{label}</button>)}
+    {/* 포키가 먼저 화면 아래에서 고개를 내밀어 표정으로 알리고, 카드는 그 뒤에 포키 옆에 뜬다(2026-11-08 사용자 확정).
+        새 알림이면 둘 다 다시 나오고, 목표 안내로 넘어갈 때는 카드 내용과 표정만 바뀐다. */}
+    <div className="stack" key={show.interventionId}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="poki" src={`/design/poki-peek-${poki}.png`} alt="" />
+      <div className={`card${disconnected ? ' is-error' : ''}`} role={disconnected ? 'alert' : 'status'} aria-live={disconnected ? 'assertive' : 'polite'}>
+        <div key={step} className="card-body">
+          <em className="who">{disconnected ? 'FocusOn' : '포키'}</em>
+          <span>{recenter ? '지금 목표는 이거야.' : show.say}</span>
+          <small>{recenter ? show.goalText : show.sub}</small>
+          {view.failed && <p className="fail" role="alert">지금은 멈추지 못했어요. FocusOn 앱에서 다시 시도해 주세요.</p>}
+          <div className="say-actions">
+            {actions.map(([label, action, primary]) => <button key={action} type="button" className={primary ? 'primary' : ''} onClick={() => { void act(action) }}>{label}</button>)}
+          </div>
         </div>
-        {/* 말꼬리: 말풍선 오른쪽 아래에서 나와 포키 얼굴 쪽으로 휘어진다. 바탕을 말풍선 테두리 위에 겹쳐 이어 붙인다. */}
-        <svg className="tail" viewBox="0 0 36 30" aria-hidden="true">
-          <path className="tail-fill" d="M0 0C9 3 19 10 34 26C20 22 9 21 0 18Z" />
-          <path className="tail-line" d="M0 0C9 3 19 10 34 26C20 22 9 21 0 18" />
-        </svg>
         <button className="close" type="button" aria-label="포키 닫기" onClick={() => { void act(recenter ? 'ACK' : 'CLOSE') }}>
           <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
         </button>
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="poki" src={`/design/poki-floating-${poki}.png`} alt="" />
     </div>
   </main>
 }

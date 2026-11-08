@@ -239,6 +239,7 @@ export function PermissionsStep() {
   return (
     <OnboardingShell
       currentStep={2}
+      poki={view === 'consents' ? '/design/poki-consent.png' : '/design/poki-key.png'}
       prompt={prompt.text}
       promptError={prompt.error}
       backHref={view === 'consents' ? '/onboarding/extension/' : undefined}

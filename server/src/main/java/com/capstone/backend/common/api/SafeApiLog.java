@@ -41,6 +41,13 @@ public final class SafeApiLog {
     }
   }
 
+  /** 자동 정리 실패를 식별자나 예외 메시지 없이 기록한다. */
+  public static void sessionCleanupFailure(RuntimeException exception) {
+    LOGGER.atWarn().addKeyValue("component", "session-heartbeat-cleanup")
+        .addKeyValue("errorClass", exception.getClass().getSimpleName())
+        .log("session cleanup candidate failed");
+  }
+
   /** 요청 시작 시 고정된 필드만 기록한다. */
   public static void httpIn(String method, String path) {
     LOGGER.atInfo().addKeyValue("component", "request-filter").addKeyValue("event", "http.in")
