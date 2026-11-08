@@ -13,7 +13,9 @@ import java.net.http.HttpClient;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -53,11 +55,18 @@ class GoogleOauthClientTests {
 
   @Test
   void allowsSmallFutureIssuedAtButRejectsExcessiveClockSkew() {
-    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
-    assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",
-        List.of("desktop-client"), "synthetic-sub", 300, null, Instant.now().plusSeconds(20))));
+    Instant now = Instant.parse("2026-11-08T12:00:00Z");
+    Clock clock = Clock.fixed(now, ZoneOffset.UTC);
+    var decoder = NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build();
+    var client = new GoogleOauthClient("desktop-client", "", mock(HttpClient.class),
+        decoder, clock);
+    for (long seconds : new long[] {20, 25, 30}) {
+      assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",
+          List.of("desktop-client"), "synthetic-sub", null, now.plusSeconds(seconds),
+          now.plusSeconds(300))));
+    }
     String future = token("accounts.google.com", List.of("desktop-client"),
-        "synthetic-sub", 300, null, Instant.now().plusSeconds(40));
+        "synthetic-sub", null, now.plusSeconds(31), now.plusSeconds(300));
     assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
         assertThrows(ApiException.class, () -> client.verifyIdentity(future)).code().name());
   }
@@ -215,10 +224,16 @@ class GoogleOauthClientTests {
 
   private String token(String issuer, List<String> audiences, String subject, long expiresIn,
       Object authorizedParty, Instant issuedAt) {
+    return token(issuer, audiences, subject, authorizedParty, issuedAt,
+        Instant.now().plusSeconds(expiresIn));
+  }
+
+  private String token(String issuer, List<String> audiences, String subject,
+      Object authorizedParty, Instant issuedAt, Instant expiresAt) {
     final RSAKey key = new RSAKey.Builder((RSAPublicKey) keys.getPublic())
         .privateKey(keys.getPrivate()).keyID("synthetic-key").build();
     var claims = JwtClaimsSet.builder().claim("iss", issuer)
-        .issuedAt(issuedAt).expiresAt(Instant.now().plusSeconds(expiresIn));
+        .issuedAt(issuedAt).expiresAt(expiresAt);
     if (audiences != null) {
       claims.audience(audiences);
     }

@@ -11,6 +11,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class GoogleOauthClient {
   private final String clientSecret;
   private final HttpClient http;
   private final NimbusJwtDecoder decoder;
+  private final Clock clock;
   private final JsonMapper json = JsonMapper.builder().build();
 
   /** Desktop과 같은 Client ID를 서버 설정으로 받는다. 비밀값은 객체 문자열에 노출하지 않는다. */
@@ -51,18 +53,26 @@ public class GoogleOauthClient {
 
   GoogleOauthClient(String clientId, String clientSecret, HttpClient http,
       NimbusJwtDecoder decoder) {
+    this(clientId, clientSecret, http, decoder, Clock.systemUTC());
+  }
+
+  GoogleOauthClient(String clientId, String clientSecret, HttpClient http,
+      NimbusJwtDecoder decoder, Clock clock) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.http = http;
     this.decoder = decoder;
+    this.clock = clock;
     OAuth2TokenValidator<Jwt> issuer = jwt -> {
       String value = jwt.getClaimAsString("iss");
       return "accounts.google.com".equals(value) || "https://accounts.google.com".equals(value)
           ? OAuth2TokenValidatorResult.success()
           : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token"));
     };
+    JwtTimestampValidator timestamps = new JwtTimestampValidator(Duration.ZERO);
+    timestamps.setClock(clock);
     this.decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-        new JwtTimestampValidator(Duration.ZERO), issuer,
+        timestamps, issuer,
         new JwtAudienceValidator(clientId.isBlank() ? "unconfigured" : clientId),
         new GoogleAuthorizedPartyValidator(clientId)));
   }
@@ -119,10 +129,11 @@ public class GoogleOauthClient {
     try {
       Jwt jwt = decoder.decode(token);
       String subject = jwt.getSubject();
+      Instant now = clock.instant();
       if (subject == null || subject.isBlank() || subject.length() > 255
-          || jwt.getExpiresAt() == null || !jwt.getExpiresAt().isAfter(Instant.now())
+          || jwt.getExpiresAt() == null || !jwt.getExpiresAt().isAfter(now)
           || jwt.getIssuedAt() == null
-          || jwt.getIssuedAt().isAfter(Instant.now().plus(ISSUED_AT_CLOCK_SKEW))) {
+          || jwt.getIssuedAt().isAfter(now.plus(ISSUED_AT_CLOCK_SKEW))) {
         throw new ApiException(ApiErrorCode.AUTH_OAUTH_REAUTH_REQUIRED);
       }
       return subject;
