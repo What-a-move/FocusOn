@@ -1,5 +1,16 @@
 # Backend 결정 기록
 
+## 2026-11-09 #182 내부 구현과 통합 경계
+
+- 상태: 사용자 승인된 내부 구현. 새 전경/receipt 공개 계약은 미확정, Notion 새 정책 동기화는 미완료.
+- 분석 processing을 확정 UNCERTAIN과 분리한다. 같은 실행/context의 기존 episode·확정 누적을 유지하고 대기 중 시간/생성만 동결한다. 확정 실패/UNCERTAIN/보호/RELATED는 종료한다.
+- 사용자 추가 승인: rolling 창 내부 clipping·열린 구간 1회 포함, 미전송 TTL 30초. 확인했어 이후 5분은 기존 확정 Desktop UI 상태다.
+- 서버 내부 상태는 typed JSONB 시간 조각과 cause revision, 개입은 nullable pending slot/원인 UNIQUE 및 최초 action/actedAt으로 중복을 막는다.
+- 유효 heartbeat commit 후 별도 transaction에서 fresh 세션을 평가한다. 평가 실패가 생존 commit을 취소하지 않는다. outbox는 구현하지 않았으며 다음 유효 관측/heartbeat 재평가를 사용한다.
+- 기본 foreground adapter는 없음. 실제 전경 context/관측 소속·receipt 없이는 production 개입 생성을 보류한다. GET/사용자 ack를 전송으로 취급하지 않는다.
+- #182 서버 합성 QA와 실제 AI→포키 QA를 분리한다. P1~P7 담당/선행은 PLAN 및 이슈 추적표를 따른다.
+
+
 > Spring Boot 백엔드의 API·DB·인증 결정을 기록한다.
 > 기존 결정을 지우지 않고 새로운 번호로 추가한다.
 

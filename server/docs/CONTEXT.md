@@ -1,5 +1,43 @@
 # Backend 작업 컨텍스트
 
+## #182 서버 검증 결과 (2026-11-09)
+
+- `feat/182-server-intervention-policy`: 내부 코어/영속화/V16/개입 GET·ack/최소 연결 구현. 전체 build·Checkstyle 통과(226개 실패0·생략10), 격리 PG87개 전부 통과. 임의 포트 실제 HTTP 검증 포함.
+- 격리 리뷰 P1 순서 불명 관측의 정책 전이 누락 보완·재검토 완료. PG pending_slot NULL CHECK 보강 검증.
+- 남은 필수 연결: P1/P2 전경 context·관측 소속·유효성, P3/P4 전송 receipt, P5 세션 담당 경계, P6 #154, P7 전체 앱 QA. 기본 production 생성 보류.
+- Notion 문단 원문 복구 확인, 신규 rolling/30초 정책 정본 반영은 미완료. 정본 상세 404/actedAt nullable도 대조 필요. PR/CI/병합/Issue 종료 미수행.
+- QA/리뷰/결과: `features/intervention-policy-{QA,code-review,REPORT}.md`.
+
+
+## #182 내부 구현 진행 (2026-11-09)
+
+- 작업 브랜치 `feat/182-server-intervention-policy`, 최신 dev `5462afd` 기반. 기존 staged IDE 파일·stash 보존.
+- 사용자 지적 반영: 재분석 PENDING은 확정 UNCERTAIN과 분리해 같은 episode/누적을 유지하고 대기 시간/생성만 동결한다.
+- 사용자 추가 승인: rolling 창 내부 clipping·열린 구간 1회, 미전송 PENDING TTL 30초. Notion은 원문 복구만 승인받아 복구했고 신규 정책 반영은 미완료다.
+- 코어/typed JSONB 상태·개입 이벤트/V16/기존 조회·ack API/최소 분석·heartbeat 연결 구현, 검증 중. 전체 완료 아님.
+- 전경/관측 소속 adapter 기본값은 없음. 전송 receipt 수신도 미구현. 합성 테스트와 production 앱 알림은 구분한다.
+- 실제 통합 P1~P7은 Issue #182·PLAN·handoff에서 추적한다. Frontend/shared-types/AI 직접 수정 없음.
+
+
+## Issue #182 상세 기획 검토 (2026-11-09 KST)
+
+- 사용자 승인으로 [#182](https://github.com/What-a-move/FocusOn/issues/182) 생성 완료. 단계 0~3 완료, 계약 승인·기획 최종 승인·구현 승인은 대기다. 브랜치·구현·PR은 아직 없다.
+- `features/intervention-policy-PLAN.md`에 내부 저장/서버 시간 구간/잠금/멱등 ack/outbox 설계와 미정 사용자 동작 권고안을 작성했다.
+- 확인했어 이후 5분은 확정된 Desktop UI 상태다. 미정은 서버 실제 전송 확인 계약이며 GET/생성을 전송으로 간주하지 않는다.
+- 기기 선택은 Desktop 전경 context 위임을 권고한다. 기존 기기별 counter/시각 비교나 임의 보호 TTL로 최신 화면을 추정하지 않는다.
+- 추가 승인 대상: 전경 context 계약, 별도 delivery receipt와 수신 기준 cooldown, rolling 창 경계, 미전송 PENDING 만료. `features/intervention-policy-handoff.md`는 미전송 인계 초안이다.
+- #154 미완료와 무관하게 Policy/API·합성 테스트는 진행 가능하다. 실제 AI→포키 QA는 별도다.
+
+
+## 최신 원격 확인·다음 범위 검토 (2026-11-09 KST)
+
+- fetch한 origin/dev는 `fc340ffe578ff36762ebb027a8c09c545acf89e1`. PR #172 MERGED, head `e77438e`, 원격 Backend CI 두 job SUCCESS를 GitHub에서 재확인했다. CodeRabbit NEUTRAL은 한도에 따른 SKIPPING이며 최종 수정분 봇 재검토 완료가 아니다.
+- #171 체크리스트 0~11은 완료이며 별도 종료 승인이 없어 OPEN이다. 아래 PR172 미병합 문장은 과거 기록이다.
+- 사용자 담당은 ① 기반 ② 인증·기기 ⑥ 분석·개입 ⑦ 리포트·학습 정리다. 사용자·목표·세션 상태 명령은 팀원 범위이며 Frontend/shared-types/AI는 읽기·인계만 한다.
+- 다음 Policy Engine/개입 기존 Issue·PR은 전체 목록 검색에서 발견하지 못했다. `features/intervention-policy-PLAN.md`는 Issue 등록·기획 검토 승인을 위한 초안이며 구현 승인이 아니다. 실제 표시/cooldown·기기 간 현재 화면 선택 등 미정 경계를 확정 계약으로 취급하지 않는다.
+- #154는 OPEN이며 dev AI 정식 경로가 아직 RECEIVED를 반환함을 코드로 확인했다. 실제 AI/앱 통합 완료와 Server 구현 완료를 구분한다.
+- 현 checkout만 사용하고 IDE·Claude outputs·기존 stash를 보존한다. 새 worktree·FocusOn-swagger는 사용하지 않는다.
+
 ## 현재 작업: #171 분석 요청·결과 저장 (2026-11-08)
 
 - feat/171-analysis-runs는 최신 dev 91cd524에서 분기했다. POST /sessions/{id}/analysis-runs의 공개 요청·응답, runner/연결 Extension 권한, 보호 상태, 결과 저장과 AI 내부 adapter를 구현했다. 계획·검증은 features/analysis-runs-*를 따른다.

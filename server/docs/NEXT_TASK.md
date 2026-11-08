@@ -1,5 +1,42 @@
 # Backend 다음 작업
 
+## #182 서버 검증 결과 (2026-11-09)
+
+- `feat/182-server-intervention-policy`: 내부 코어/영속화/V16/개입 GET·ack/최소 연결 구현. 전체 build·Checkstyle 통과(226개 실패0·생략10), 격리 PG87개 전부 통과. 임의 포트 실제 HTTP 검증 포함.
+- 격리 리뷰 P1 순서 불명 관측의 정책 전이 누락 보완·재검토 완료. PG pending_slot NULL CHECK 보강 검증.
+- 남은 필수 연결: P1/P2 전경 context·관측 소속·유효성, P3/P4 전송 receipt, P5 세션 담당 경계, P6 #154, P7 전체 앱 QA. 기본 production 생성 보류.
+- Notion 문단 원문 복구 확인, 신규 rolling/30초 정책 정본 반영은 미완료. 정본 상세 404/actedAt nullable도 대조 필요. PR/CI/병합/Issue 종료 미수행.
+- QA/리뷰/결과: `features/intervention-policy-{QA,code-review,REPORT}.md`.
+
+
+## #182 내부 구현 진행 (2026-11-09)
+
+- 작업 브랜치 `feat/182-server-intervention-policy`, 최신 dev `5462afd` 기반. 기존 staged IDE 파일·stash 보존.
+- 사용자 지적 반영: 재분석 PENDING은 확정 UNCERTAIN과 분리해 같은 episode/누적을 유지하고 대기 시간/생성만 동결한다.
+- 사용자 추가 승인: rolling 창 내부 clipping·열린 구간 1회, 미전송 PENDING TTL 30초. Notion은 원문 복구만 승인받아 복구했고 신규 정책 반영은 미완료다.
+- 코어/typed JSONB 상태·개입 이벤트/V16/기존 조회·ack API/최소 분석·heartbeat 연결 구현, 검증 중. 전체 완료 아님.
+- 전경/관측 소속 adapter 기본값은 없음. 전송 receipt 수신도 미구현. 합성 테스트와 production 앱 알림은 구분한다.
+- 실제 통합 P1~P7은 Issue #182·PLAN·handoff에서 추적한다. Frontend/shared-types/AI 직접 수정 없음.
+
+
+## Issue #182 상세 기획 검토 (2026-11-09 KST)
+
+- 사용자 승인으로 [#182](https://github.com/What-a-move/FocusOn/issues/182) 생성 완료. 단계 0~3 완료, 계약 승인·기획 최종 승인·구현 승인은 대기다. 브랜치·구현·PR은 아직 없다.
+- `features/intervention-policy-PLAN.md`에 내부 저장/서버 시간 구간/잠금/멱등 ack/outbox 설계와 미정 사용자 동작 권고안을 작성했다.
+- 확인했어 이후 5분은 확정된 Desktop UI 상태다. 미정은 서버 실제 전송 확인 계약이며 GET/생성을 전송으로 간주하지 않는다.
+- 기기 선택은 Desktop 전경 context 위임을 권고한다. 기존 기기별 counter/시각 비교나 임의 보호 TTL로 최신 화면을 추정하지 않는다.
+- 추가 승인 대상: 전경 context 계약, 별도 delivery receipt와 수신 기준 cooldown, rolling 창 경계, 미전송 PENDING 만료. `features/intervention-policy-handoff.md`는 미전송 인계 초안이다.
+- #154 미완료와 무관하게 Policy/API·합성 테스트는 진행 가능하다. 실제 AI→포키 QA는 별도다.
+
+
+## 최신 우선 작업 (2026-11-09 KST)
+
+1. PR #172는 dev `fc340ff`에 병합 완료다. #171은 종료 승인 대기 OPEN이므로 재구현·재PR하지 않는다. 아래 병합 전 기록은 당시 이력이다.
+2. `features/intervention-policy-PLAN.md`의 1차 화면 OFF_TASK Policy Engine + 개입 조회/확인 API 2개를 검토한다. 기존 Server Policy/개입 Issue·PR은 발견하지 못했으며 새 Issue 생성 승인을 먼저 받는다. 아직 새 Branch·구현은 없다.
+3. 기기 간 현재 화면 선택·서버 기준 구간 시간·rolling 구간 포함·실제 표시/cooldown·ack 수명 경계를 정본과 함께 확정하고 최종 구현 승인을 받는다. 기존 heartbeat #167은 최소 정책 연결만 검토한다.
+4. #154 실제 AI 판정, Frontend 영속 observationSequence·표시/ack 흐름은 담당자 인계와 실제 연동 QA로 확인한다. 다른 영역 코드를 직접 수정하지 않는다.
+5. BREAK_SUGGESTION·카메라 개입, 분석 이력·local-events, summary/달력/일간, 학습 정리·cleanup은 후속 단위로 나누며 담당·기존 Issue를 각각 다시 확인한다. #163/PR164·#168 등 세션 명령은 팀원 범위를 유지한다.
+
 ## 현재 작업: #171 분석 요청·결과 저장
 
 - feat/171-analysis-runs에서 구현·격리 정적 리뷰와 QA를 수행했다. 최신 검증 수치·한계는 features/analysis-runs-QA.md, REPORT.md를 따른다. PR #172 생성·초기 CI2개 성공 후 리뷰 지적을 수정했다. 수정 커밋의 CI·재리뷰를 확인하며 병합·이슈 종료는 별도 승인 대상이다.
