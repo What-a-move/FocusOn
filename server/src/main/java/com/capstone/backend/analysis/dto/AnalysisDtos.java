@@ -58,7 +58,17 @@ public final class AnalysisDtos {
       @NotNull ContentSource contentSource, @NotNull Instant observedAt,
       @NotNull @Min(1) @Digits(integer = 19, fraction = 0)
       @DecimalMax("9223372036854775807") BigDecimal sequence, GuardStatus guardStatus,
-      @Valid Metadata metadata, @Valid ContentPayload contentPayload) {
+      @Valid Metadata metadata, @Valid ContentPayload contentPayload,
+      @Min(1) @Digits(integer = 16, fraction = 0)
+      @DecimalMax("9007199254740991") BigDecimal observationSequence) {
+    /** 기존 source별 번호 요청은 새 선택 필드 없이 계속 받을 수 있다. */
+    public Request(String clientRunId, ContentSource contentSource, Instant observedAt,
+        BigDecimal sequence, GuardStatus guardStatus, Metadata metadata,
+        ContentPayload contentPayload) {
+      this(clientRunId, contentSource, observedAt, sequence, guardStatus, metadata,
+          contentPayload, null);
+    }
+
     @Override
     public String toString() {
       return "AnalysisRequest[redacted]";

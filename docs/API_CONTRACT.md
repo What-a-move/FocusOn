@@ -272,6 +272,14 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 `GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
 
+### 분석 관측 순서 (2026-11-08 보완)
+
+- 기존 sequence는 source별 증가 번호다. 선택 observationSequence(양의 정수, JS 안전 정수 최대9007199254740991)는 같은 session+device 전체에서 source와 무관하게 관측 생성 시 배정·원자적으로 증가·영속화한다. 공개 응답과 AI 내부 schema는 유지한다.
+- 번호가 있으면 번호로 현재 상태를 선택한다. 번호 중복은409 IDEMPOTENCY_CONFLICT이며 작은 번호·늦은 AI 완료는 현재 보호 상태를 덮지 않는다. 번호 모드에 들어온 기기에 번호 없는 요청을 보내도 현재 상태에 사용하지 않는다.
+- 기존 요청은 source별 명백한 과거 sequence를 제외하고 observedAt으로 비교한다. 시계 역행/지연으로 순서를 확정할 수 없으면 AI를 보류하고 UNCERTAIN/ANALYSIS_UNAVAILABLE 또는 기존 보호 상태를 유지한다. 번호 있는 새 관측이나 새 세션으로 복구한다.
+- observedAt은 기기 원본, receivedAt은 서버 수신 시각이다. 다른 clock끼리 직접 비교하지 않는다. 원문이나 전체 URL을 저장하지 않는다. TAB_META와 CHROME_DOM 본문의 guard 없는 요청은 유효 host가 필수다.
+- [Notion POST 정본](https://app.notion.com/p/58cf7aade6614fc9a00e248affb052f9), [Frontend 인계](../server/docs/features/analysis-observation-order-handoff.md). 실제 클라이언트 적용·AI·앱 QA와 Server 구현을 구분한다.
+
 ### 리포트
 
 ```text

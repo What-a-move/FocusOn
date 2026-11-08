@@ -47,20 +47,35 @@ public class AnalysisRunStore {
     if (session.getStatus() != SessionStatus.RUNNING) {
       throw new ApiException(ApiErrorCode.SESSION_STATE_INVALID);
     }
-    Instant now = Instant.now();
+    final Instant now = Instant.now();
     // observedAt은 기기 시각이다. 서버 startedAt/lastResumedAt/now와 직접 비교하지 않는다.
     limits.check("analysis:" + sessionId + ":" + principal.deviceId(), 8,
         Duration.ofMinutes(1));
     if (runs.existsBySessionIdAndClientRunId(sessionId, request.runUuid())) {
       throw new ApiException(ApiErrorCode.IDEMPOTENCY_CONFLICT);
     }
-    var run = runs.saveAndFlush(AnalysisRunEntity.reserve(session, device, request, now));
+    if (request.observationSequence() != null
+        && runs.existsBySessionIdAndDeviceIdAndObservationSequence(sessionId, device.getId(),
+            request.observationSequence().longValueExact())) {
+      throw new ApiException(ApiErrorCode.IDEMPOTENCY_CONFLICT);
+    }
+    var current = runs.findCurrent(sessionId, device.getId()).orElse(null);
+    var source = runs.findFirstBySessionIdAndDeviceIdAndContentSourceOrderBySequenceDescIdDesc(
+        sessionId, device.getId(), request.contentSource()).orElse(null);
+    var order = AnalysisObservationOrder.classify(request, current, source);
+    var run = AnalysisRunEntity.reserve(session, device, request, now);
+    run.order(order.eligible(), order.untrusted());
     GuardStatus guard = guard(principal.userId(), request, session.getGoalTextSnapshot());
+    if (order.untrusted()) {
+      guard = AnalysisObservationOrder.retainGuard(guard, current);
+    }
     if (guard != null) {
       run.complete(AnalysisDecision.guarded(guard));
     }
-    boolean latest = runs.findFirstBySessionIdAndDeviceIdOrderByObservedAtDescIdDesc(
-        sessionId, device.getId()).map(value -> value.getId().equals(run.getId())).orElse(false);
+    runs.saveAndFlush(run);
+    boolean latest = order.eligible() && !order.untrusted()
+        && runs.findCurrent(sessionId, device.getId())
+            .map(value -> value.getId().equals(run.getId())).orElse(false);
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),
         session.getInterventionPolicyVersion(), guard, latest, run.response());
@@ -76,7 +91,8 @@ public class AnalysisRunStore {
     var guard = guard(principal.userId(), request, session.getGoalTextSnapshot());
     if (guard != null) {
       decision = AnalysisDecision.guarded(guard);
-    } else if (session.getStatus() != SessionStatus.RUNNING
+    } else if (!prepared.latest() || run.isOrderingUntrusted() || !run.isCurrentEligible()
+        || session.getStatus() != SessionStatus.RUNNING
         || !java.util.Objects.equals(session.getLastResumedAt(), prepared.runningSince())) {
       // pause/resume 동안 도착한 결과로 새 실행 구간을 판정하지 않는다.
       decision = AnalysisDecision.unavailable();

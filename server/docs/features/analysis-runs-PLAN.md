@@ -1,65 +1,72 @@
-# 화면 분석 요청·결과 저장 기획
+# 화면 분석 요청·결과 저장 기획 (#171)
 
-## 기본 정보
+- 작성/보완: 2026-11-08. 사용자 담당6번, MVP 핵심.
+- Branch: feat/171-analysis-runs / PR #172, 기준 dev91cd524.
+- 사용자 승인: 다음 작업 진행 및 후속 관측 순서 결정을 문서에 근거해 판단·반영하도록 위임했다.
+- 정본: [POST analysis-runs](https://app.notion.com/p/58cf7aade6614fc9a00e248affb052f9), [AI 계약2.2](https://app.notion.com/p/3de0b6e5e64c80fbb0bccb985e38002c), [ERD6.1/7.1](https://app.notion.com/p/3de0b6e5e64c80a4bf5ef7ff3ac01f17), [테이블 카탈로그](https://app.notion.com/p/777b158c982f4769b2f2f2e292afc48e).
+- 위 정본에 2026-11-08 관측 순서 보완을 브라우저로 먼저 반영·확인했다. 공개 응답과 AI 내부 schema는 유지한다.
 
-- 작성일: 2026-11-08 / 사용자 다음 작업 진행 승인
-- 담당: Server(사용자 담당 6번), 우선순위: MVP 핵심
-- 관련 Issue: #171 / Branch: feat/171-analysis-runs (최신 dev 91cd524 기반)
-- 정본: [POST analysis-runs](https://app.notion.com/p/58cf7aade6614fc9a00e248affb052f9), [AI 계약](https://app.notion.com/p/3de0b6e5e64c80fbb0bccb985e38002c), [ERD](https://app.notion.com/p/3de0b6e5e64c80a4bf5ef7ff3ac01f17)
-- 2026-11-08 브라우저로 위 문서의 관련 절을 확인했다. API 오류 속성의 과거 503 문구보다 Response의 2026-11-02 확정(200 UNCERTAIN)을 적용한다. Notion은 수정하지 않는다.
+## 범위
 
-## 목적과 범위
+POST 한 개의 입력 검증·권한·Privacy Guard·AI adapter·결과 저장. 개입/heartbeat Policy Engine/리포트/보관 삭제 worker는 후속이다. 팀원 세션 상태 명령·Frontend·공유 TS·AI 코드는 수정하지 않는다.
 
-Desktop·연결된 Extension이 수집한 메타데이터/최대 2,000자 텍스트를 일회성 AI 입력으로 받고 안전한 판정 이력만 남긴다. 이번 Issue는 POST 한 개다. 개입 생성/조회, heartbeat Policy Engine, 시간 집계, 리포트, 세션 상태 명령은 변경하지 않는다. 팀원 #167~#169와 겹치지 않도록 기존 session 클래스를 수정하지 않는다.
+## API
 
-## API 정의
+`POST /api/v1/sessions/{sessionId}/analysis-runs`, Bearer + X-Device-Id 필수.
 
-- `POST /api/v1/sessions/{sessionId}/analysis-runs`
-- Bearer + X-Device-Id 필수. 인증 사용자 소유 RUNNING 세션의 runner Desktop 또는 그 Desktop에 연결된 활성 Extension만 허용한다.
-- body: `{clientRunId(UUID v4), contentSource, observedAt(UTC), sequence(양수), guardStatus:null|EXCLUDED|PRIVACY_BLOCKED, metadata?, contentPayload?:{text}}`.
-- MVP source: APP_META, TAB_META, CHROME_DOM, DESKTOP_APP_OCR. Chrome viewport OCR·CAMERA_LOCAL은 이 경로에서 받지 않는다. guard 요청은 metadata/contentPayload를 함께 보내면 400이다. guard 없는 TAB_META와 CHROME_DOM 본문은 metadata.urlHost가 유효해야 하며 출처가 없으면 저장·AI 호출 전에400으로 거절한다.
-- `200 data.{analysisRunId,analysisStatus,relation,confidence,reasonCode,observedAt,policyVersion}`. 정책 버전은 해당 세션 값이다. guard의 confidence/reasonCode는 null이다.
-- 400 VALIDATION_ERROR, 401 기존 인증 오류, 404 SESSION_NOT_FOUND(소유권 불일치 포함), 409 SESSION_STATE_INVALID, 409 IDEMPOTENCY_CONFLICT(중복 clientRunId), 429 TOO_MANY_REQUESTS + Retry-After.
-- 중복은 기존 공통 409 코드를 사용하고 응답에 입력 원문을 포함하지 않는다. 분석별 한도는 소유권 확인 후 session+device 분당8회이며 일반 인증 한도와 함께 적용한다.
+```json
+{
+  "clientRunId": "4f1a2d24-b3fd-4b62-874a-8f8650aa26c9",
+  "contentSource": "CHROME_DOM",
+  "observedAt": "2026-11-08T10:00:00Z",
+  "sequence": 2,
+  "observationSequence": 17,
+  "guardStatus": null,
+  "metadata": { "appName": "Google Chrome", "pageTitle": "synthetic", "urlHost": "example.com" },
+  "contentPayload": { "text": "ephemeral input" }
+}
+```
 
-## 데이터 설계
+- sequence: 기존 source별 양의 정수 유지. observationSequence: 선택 양의 정수, 최대9007199254740991(JS 안전 정수). 같은 session+device의 모든 source에서 관측 생성 순서대로 증가하고 재시작 후에도 유지한다. 실제 관측 생성 때 배정하며 이미 오래된 수집 결과를 늦게 전송하면서 새 번호로 만들지 않는다.
+- clientRunId는 UUID v4. guard는 EXCLUDED/PRIVACY_BLOCKED만 허용하고 metadata/contentPayload를 함께 보내면400이다.
+- MVP source: APP_META, TAB_META, CHROME_DOM, DESKTOP_APP_OCR. metadata source의 본문은 받지 않는다. guard 없는 TAB_META 및 CHROME_DOM 본문에는 유효 host가 필수다. text 최대2,000자.
+- 200 data: analysisRunId/analysisStatus/relation/confidence/reasonCode/observedAt/policyVersion. policyVersion은 세션 snapshot이다.
+- 400 VALIDATION_ERROR, 기존401, 소유권 포함404 SESSION_NOT_FOUND, 상태409 SESSION_STATE_INVALID, 중복409 IDEMPOTENCY_CONFLICT, 429+Retry-After.
+- 중복 범위: session+clientRunId 및 session+device+observationSequence. 같은 번호로 새 UUID를 만들거나 source별 번호를 전역 번호로 재사용하면409다.
+- 한도는 소유 세션+기기8회/분이며 인증 일반60회/분과 함께 적용한다. 중복 요청도 분석 한도에 포함한다.
 
-- 새 analysis_runs: ERD의 id/session_id/client_run_id/content_source/observed_at/received_at/sequence/relation/relation_confidence/model_version/policy_version/error_code/created_at.
-- 실제 저장에 필요한 device_id(관측 기기), analysis_status, reason_code, prompt_version을 부가 컬럼으로 명시한다. 공개 계약 변경 없이 출처·결과를 재현하기 위한 내부 컬럼이다.
-- UNIQUE(session_id,client_run_id), 양수 sequence, enum·confidence CHECK, 세션/기기 FK. (session_id,device_id,observed_at DESC,id DESC) index로 source와 무관하게 최신 관측을 찾는다.
-- 원문·제목·host·AI envelope/응답 전문·토큰·traceId는 저장하지 않는다. 분석 이력 보관은 세션 종료 후90일(삭제 worker는 후속).
-- 초기 안전 결과(UNCERTAIN/ANALYSIS_UNAVAILABLE)를 먼저 예약하고 AI 완료 후 해당 행만 갱신한다. 실패/프로세스 종료가 정상 판정으로 남지 않는다.
-- 새 관측은 received/완료 순서가 아닌 observedAt·id로 선택한다. 늦은 AI 완료는 자기 이력만 바꾸며 최신 EXCLUDED를 덮는 현재상태 upsert를 하지 않는다. 후속 Policy Engine도 이 조회를 재사용해야 한다.
+## 관측 순서와 시각
 
-## 시각 기준
+1. **번호 모드:** observationSequence가 있는 이력 중 가장 큰 번호가 현재 상태다. source·기기 벽시계·AI 완료 순서와 무관하다. 작은 번호는 이력만 남고 AI/현재 판정에 사용하지 않는다. 같은 기기에 번호 모드가 한번 들어오면 번호 없는 요청은 현재 후보에서 제외한다. nullable 필드는 기존 설치본을 받기 위한 호환성이고 downgrade 허용을 뜻하지 않는다.
+2. **기존 모드:** 전역 번호가 없으면 source별 가장 큰 sequence 이하 요청은 명백한 과거로 분리한다. 나머지는 observedAt으로 비교한다. 더 새 source 순서인데 시각이 현재 관측보다 뒤로 가면 시계 역행/지연을 구별할 수 없어 해당 session+device를 순서 불명으로 취급한다.
+3. **기존 모드의 순서 불명:** AI를 호출하지 않고 UNCERTAIN/ANALYSIS_UNAVAILABLE로 기록한다. 이전 보호 상태는 일반 관측이 완화할 수 없다. PRIVACY_BLOCKED가 EXCLUDED보다 우선하며 새 보호 신호를 적용한다. 이 안전 모드의 현재 조회는 과거 미래 시각이 아닌 안전 이력의 접수 ID 순이다. 명백히 오래된 source sequence는 이 상태도 바꾸지 않는다. 전역 번호가 있는 관측 또는 새 세션에서 복구한다.
 
-- observedAt은 기기 관측 시각 원본이다. 같은 기기 안에서 source 무관 관측 순서를 비교하며 서버 startedAt/lastResumedAt/현재 시각과 직접 비교해 거절하지 않는다. receivedAt은 서버 수신 시각이다.
-- AI 호출 전후 실행 구간 확인은 서버가 읽은 lastResumedAt끼리 비교한다. 서버 시간으로 확정할 세션 수명·학습 시간에 기기 시각을 그대로 사용하지 않는다.
-- 현재 공개 요청에는 실행 구간 식별자가 없어, 이전 구간에서 수집했지만 재개 후에 처음 도착한 요청을 서버 단독으로 완전히 식별할 수는 없다. 기기 시각을 서버 시각에 맞춘 것으로 간주하거나 receivedAt이 실제 화면 관측 시각이라고 주장하지 않는다.
+observedAt은 원본으로 보존하고 receivedAt은 서버 수신 시각이다. 서로 다른 clock을 비교해 요청을 거절하지 않는다. 번호를 벽시계로 추정·보정하지 않으며 source별 counter를 전역 counter로 잘못 합치지 않는다. 서버 수명·학습 시간에는 서버 시각을 사용한다.
 
-## 처리 흐름
+현재 관측 조회는 `AnalysisRunRepository.findCurrent`만 사용한다. raw observedAt 내림차순으로 현재를 다시 고르면 시계 보정 문제를 재도입한다. 원문 없이 관측별 이력을 보존하며 늦은 AI 완료는 자기 행만 갱신한다.
 
-1. DTO·기기 헤더·host 형식·guard payload를 검증한다.
-2. 짧은 사용자 잠금 transaction에서 인증 family/기기·runner 연결·세션 상태를 재검증한다. 중복을 확인하고 이력을 예약한다. DB 잠금을 AI 호출 동안 유지하지 않는다.
-3. guard/서버 제외 도메인·동의·민감 입력 차단이면 AI를 호출하지 않는다. 차단 이력만 남긴다.
-4. 서버 세션의 목표 snapshot과 정책을 사용해 AI 내부 envelope를 만든다. 목표 snapshot은 불변이므로 내부 goalVersion=1이며 stateVersion은 서버 세션 version+1이다. runId/navigationId는 서버 분석 실행 식별자이며 실제 브라우저 navigation ID를 안다고 주장하지 않는다.
-5. 고정 서비스 URL + 별도 서비스 Bearer + 같은 traceId로 POST /internal/v1/analysis-runs를 호출한다. 짧은 timeout, 자동 재시도 없음. 서비스 미설정/장애/수신확인만 반환/비정상 schema는 200 UNCERTAIN,null,ANALYSIS_UNAVAILABLE.
-6. 정상 결과는 0.75 기준을 적용한다. 2026-11-03 베타 계약의 promptVersion '-uncalibrated' + confidence null 예외만 인정한다. APP_META/TAB_META UNRELATED는 후속 Policy Engine에서 시간에 넣지 않도록 별도 유효 판정 helper를 제공한다.
-7. 짧은 transaction에서 권한·세션 상태/마지막 재개 시각을 다시 검증한 뒤 자기 행만 완료한다. 실행 구간이 바뀐 결과는 안전 UNCERTAIN으로 보관한다. heartbeat의 누적 시간 저장으로 version만 증가해도 정상 결과를 버리지 않도록 마지막 재개 시각을 비교한다.
+## 저장·동시성
 
-## 연동과 로깅
+- V14 analysis_runs: 세션/기기, clientRunId/source/observedAt/receivedAt/sequence, 안전 결과·model/prompt/policy 버전만 저장한다. 원문·제목·host·AI 전문·traceId는 저장하지 않는다.
+- V15: observation_sequence BIGINT NULL, current_eligible BOOLEAN true, ordering_untrusted BOOLEAN false. 번호 unique와 양수/JS 안전 범위 CHECK. 순서 불명 이력은 현재 후보·번호 없음·비확정 관련성만 허용한다.
+- V15 index: 기기별 전역 번호·순서 불명 최신·source별 sequence. 기존 V14 이력/시간/판정은 변경하지 않는다.
+- 사용자 잠금 아래 준비·완료 transaction을 분리한다. 같은 계정의 동시 요청/연결 변경을 직렬화하되 AI 동안 잠금을 유지하지 않는다. 번호 중복은 잠금 아래 확인하고 DB unique로도 보장한다.
+- runner Desktop 또는 그 Desktop의 활성 연결 Extension만 허용한다. 완료 때 family/기기/동의/실행 구간을 다시 확인한다. 서버 lastResumedAt snapshot끼리 비교하며 heartbeat로 version만 증가한 것은 구간 변경이 아니다.
+- session+device의 전역 번호이지 여러 기기나 여러 세션을 합친 하나의 번호가 아니다. 앱 재시작/잠깐 pause/resume에도 같은 세션이면 계속 증가한다. counter 유실 시 같은 세션에서 임의로1로 초기화하지 않고 새 세션을 사용한다.
 
-- Frontend/shared-types/AI 코드는 수정하지 않는다. 기존 공개 필드를 받는다.
-- 현재 dev의 AI 정식 경로는 RECEIVED만 반환하므로 실제 판정 성공 QA는 #154 반영 후 필요하다. 임의의 항상 RELATED 판정이나 미보정 confidence 수치를 만들지 않는다.
-- 공용 SafeApiLog에 gate.rule.pass/block, ai.call.start/ok/fail, store.write.ok/fail을 추가한다. 원문·외부 예외 메시지/응답 본문은 기록하지 않는다.
-- 환경변수: AI_ANALYSIS_URL(서비스 origin), FOCUSON_AI_API_KEY(공유 서비스 키). 비어 있으면 안전 fallback이며 자격증명을 만들거나 실제 .env를 덮지 않는다.
+## AI·로깅
 
-## 완료 조건과 검증
+- AI_ANALYSIS_URL/FOCUSON_AI_API_KEY: 서버 전용. 정식 POST /internal/v1/analysis-runs, 같은 traceId, connect2초·전체 응답5초·8KB 상한·미완료 future cancel, 애플리케이션 자동 재시도 없음.
+- request/context 내부에는 새 observationSequence를 전달하지 않는다. 서버가 current 순서를 검증하고 기존 isActiveTarget을 제공한다.
+- AI 미설정/장애/receipt/schema 오류 및 검증 불가 순서는200 UNCERTAIN/null/ANALYSIS_UNAVAILABLE다.
+- confidence0.75 및 2026-11-03 Notion의 -uncalibrated/null 예외. metadata UNRELATED는 effectiveRelation에서 UNCERTAIN으로 처리해 이탈 근거로 쓰지 않는다.
+- SafeApiLog의 고정 gate/ai/store 이벤트만 사용한다. 원문·외부 예외 메시지를 남기지 않는다.
 
-- 구현·로컬 QA·격리 리뷰 완료. 결과는 QA/REPORT/code-review 문서로 확인한다. 원격 CI·실제 AI·Desktop/Extension 통합은 미완료다.
+## 검증·인계
 
-- 정상/guard/권한/동의/형식/중복/분당8회/AI 실패/저신뢰/베타 예외/receipt 거절을 HTTP·서비스 테스트로 검증한다.
-- 지연 AI 결과와 최신 EXCLUDED, 일시정지/재개·unlink 경쟁을 검증한다.
-- PostgreSQL 실제 Flyway 및 제약을 별도 격리 DB에서 검증한다. 개발 DB·8080은 건드리지 않는다.
-- Backend build·Checkstyle·전체 회귀, 별도 컨텍스트 코드 리뷰를 수행한다.
-- ERROR/QA/REPORT/리뷰와 CONTEXT/NEXT_TASK/DECISION_RECORD를 결과에 맞게 갱신한다. PR 생성·merge·이슈 종료는 별도 승인 대상이다.
+- 기존 입력·권한·보호·중복·한도 회귀와 새 전역 번호의 시계 역행/역순 도착/다른 source/늦은 AI 완료/동시 중복을 검증한다.
+- 기존 시계 역행의 AI 미호출·보호 유지·번호 모드 복구, downgrade 차단·scope 분리·전역 번호 형식·AI 내부 schema 보존을 검증한다.
+- PostgreSQL V14→V15 이력 보존과 새 CHECK/unique를 검증하고 전체 build/Checkstyle·격리 리뷰·QA를 기록한다.
+- 실계정·실제 AI/앱 통합은 별도다. 현 AI 정식 경로가 아직 receipt만 반환하면 안전 fallback이며 #154 반영 후 실제 판정을 QA한다.
+- 구간 식별자가 없는 요청이 재개 후 처음 도착하는 경우의 실제 캡처 구간을 서버가 완전히 증명한다고 주장하지 않는다. 클라이언트는 pause/resume·화면 이탈 시 오래된 수집/전송 의도를 폐기한다. 번호는 인증·실제 활동 검증 수단이 아니다.
+- PR #172에 반영하며 merge/이슈 종료는 별도 승인이다. 세션 종료 후90일 분석 이력 삭제 worker는 이번 범위 밖이다.

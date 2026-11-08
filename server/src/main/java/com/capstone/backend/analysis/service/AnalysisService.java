@@ -31,7 +31,8 @@ public class AnalysisService {
       if (prepared.guard() != null) {
         return prepared.initialResponse();
       }
-      var decision = ai.analyze(prepared, request, principal.userId());
+      var decision = prepared.latest() ? ai.analyze(prepared, request, principal.userId())
+          : AnalysisDecision.unavailable();
       var result = store.complete(principal, prepared, request, decision);
       SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.STORE_OK, start);
       return result;

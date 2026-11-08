@@ -20,3 +20,7 @@ POST /api/v1/sessions/{sessionId}/analysis-runs를 기존 클라이언트 필드
 - 이번에는 interventions/acknowledgements/리포트가 추가되지 않았다. 포키 알림까지 전체 연동 완료라는 의미가 아니다.
 
 - observedAt은 기기 관측 원본이며 서버 시작·재개 시각과 직접 비교하지 않는다. 서버 수신 시각 receivedAt과 구분한다. 기존 공개 필드나 Frontend 변경은 없다. 같은 기기 내 관측 순서는 기존 observedAt 기준을 유지한다. 기기 시계가 세션 중 뒤로 바뀌는 문제나 구간 식별자 없는 재개 전 지연 요청을 완전히 검증했다고 해석하지 않는다.
+
+## 관측 번호 보완 (사용자 판단 위임 후 확정)
+
+새 observationSequence는 선택 양의 정수이며 기기 전체 source를 합친 순서다. 기존 요청의 시계 역행은 AI 보류·보호 상태 유지로 처리한다. 정확한 capture 시점 배정·원자적 영속 counter·재시작·전환 규칙은 [전용 인계](analysis-observation-order-handoff.md)를 따른다. 앞의 관측 시각만 사용하던 설명과 미해결 기록은 이 계약으로 보완됐다. Frontend/공유 타입의 실제 적용은 해당 담당자의 후속이다.

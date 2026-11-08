@@ -86,7 +86,7 @@ class AnalysisAiClientTests {
           + server.getAddress().getPort(), "service-test-only");
       var request = new Request(id, ContentSource.CHROME_DOM, Instant.now(), BigDecimal.ONE, null,
           new Metadata("Chrome", null, "synthetic title", "EXAMPLE.COM."),
-          new ContentPayload("synthetic body"));
+          new ContentPayload("synthetic body"), BigDecimal.valueOf(105));
       var p = new Prepared(10, 20, 30, 0, Instant.now(), "서버 목표", "v1", null, true, null);
       assertEquals(Relation.RELATED, client.analyze(p, request, 40).relation());
       assertEquals("Bearer service-test-only", auth.get());
@@ -97,6 +97,7 @@ class AnalysisAiClientTests {
       assertEquals(1, envelope.at("/context/stateVersion").asInt());
       assertEquals("example.com", envelope.at("/request/metadata/urlHost").asString());
       assertEquals("synthetic body", envelope.at("/request/contentPayload/text").asString());
+      assertTrue(envelope.at("/request/observationSequence").isMissingNode());
     } finally {
       MDC.remove("traceId");
       server.stop(0);

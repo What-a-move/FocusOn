@@ -30,8 +30,12 @@ import lombok.NoArgsConstructor;
 
 /** 원문 없이 출처·관측 시각·정규화된 결과만 저장하는 분석 이력이다. */
 @Entity
-@Table(name = "analysis_runs", uniqueConstraints = @UniqueConstraint(
-    name = "uq_analysis_client_run", columnNames = {"session_id", "client_run_id"}))
+@Table(name = "analysis_runs", uniqueConstraints = {
+    @UniqueConstraint(name = "uq_analysis_client_run",
+        columnNames = {"session_id", "client_run_id"}),
+    @UniqueConstraint(name = "uq_analysis_observation_sequence",
+        columnNames = {"session_id", "device_id", "observation_sequence"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AnalysisRunEntity {
@@ -62,6 +66,15 @@ public class AnalysisRunEntity {
 
   @Column(nullable = false)
   private long sequence;
+
+  @Column(name = "observation_sequence")
+  private Long observationSequence;
+
+  @Column(name = "current_eligible", nullable = false)
+  private boolean currentEligible = true;
+
+  @Column(name = "ordering_untrusted", nullable = false)
+  private boolean orderingUntrusted;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 32)
@@ -104,10 +117,18 @@ public class AnalysisRunEntity {
     run.observedAt = request.observedAt();
     run.receivedAt = now;
     run.sequence = request.sequence().longValueExact();
+    run.observationSequence = request.observationSequence() == null ? null
+        : request.observationSequence().longValueExact();
     run.policyVersion = session.getInterventionPolicyVersion();
     run.createdAt = now;
     run.complete(AnalysisDecision.unavailable());
     return run;
+  }
+
+  /** 과거 이력과 순서 불명 상태를 판정값과 분리해 보존한다. */
+  public void order(boolean eligible, boolean untrusted) {
+    currentEligible = eligible;
+    orderingUntrusted = untrusted;
   }
 
   /** 해당 실행의 결과만 변경하며 최신 관측 포인터를 덮어쓰지 않는다. */

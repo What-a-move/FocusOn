@@ -353,7 +353,7 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 
 - 사용자 담당6번의 POST analysis-runs 한 개로 범위를 제한한다. Frontend·AI·session 명령 코드를 수정하지 않는다.
 - 공개 입력은 기존 UUID v4/clientRunId·contentSource·observedAt·sequence·guardStatus·metadata·일회성 text다. 서버 목표 snapshot/정책/기기 소유권/동의를 별도 검증한다.
-- ERD 기본 컬럼에 관측 기기 device_id, 결과 analysis_status/reason_code/prompt_version을 내부 저장 컬럼으로 추가해 보호 상태와 버전·출처를 보존한다. 원문/제목/URL/AI 전문/traceId는 DB에 저장하지 않는다. 새로운 analysis_runs만 V13으로 만들고 기존 테이블/migration은 바꾸지 않는다.
+- ERD 기본 컬럼에 관측 기기 device_id, 결과 analysis_status/reason_code/prompt_version을 내부 저장 컬럼으로 추가해 보호 상태와 버전·출처를 보존한다. 원문/제목/URL/AI 전문/traceId는 DB에 저장하지 않는다. 새로운 analysis_runs만 V14으로 만들고 기존 테이블/migration은 바꾸지 않는다.
 - 사용자 잠금을 잡는 예약/완료 transaction을 AI 호출과 분리한다. source 무관 관측 순서(observedAt,id)로 최신을 조회하고 각 AI 결과는 자기 이력만 변경한다. 완료 시 실행 구간은 lastResumedAt으로 확인한다. heartbeat로 version만 증가한 것을 실행 중단으로 오인하지 않는다.
 - 중복 clientRunId는 기존409 IDEMPOTENCY_CONFLICT다. 한도는 소유 세션+기기8회/분이고 중복도 포함한다. 기기 일반60회/분 한도와 함께 적용한다. 단일 서버 메모리 한도의 한계는 기존과 같다.
 - AI URL/서비스 키 미설정, timeout, schema 불일치, 수신확인만 반환 모두200 UNCERTAIN/ANALYSIS_UNAVAILABLE다. 2026-11-03 Notion 베타 예외는 promptVersion의 -uncalibrated+confidence null에만 적용한다.
@@ -365,3 +365,11 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - guard 없는 TAB_META와 CHROME_DOM 본문은 host 확인 전 AI로 보내지 않는다. 기존 공개 필드는 유지한다.
 - observedAt은 기기 원본, receivedAt은 서버 수신 시각이다. 기기 observedAt을 서버 세션 시작/재개/현재 시각과 직접 비교하지 않는다. 관측 순서는 같은 기기의 observedAt끼리 비교하고 세션 수명·학습 시간은 서버 시각을 사용한다.
 - AI 호출 중 실행 구간이 바뀌었는지는 서버 lastResumedAt snapshot과 현재 서버 lastResumedAt을 비교한다. 기기/서버 시계 차이를 임의의30초/몇 분 허용 오차로 감추지 않는다. API에 구간 식별자나 시계 동기화 정보를 새로 만들지 않았다. 한계는 PLAN의 시각 기준을 따른다.
+
+## 확정: 기기 전체 관측 번호·구형 안전 전환 (#171/PR172)
+
+- 2026-11-08 사용자: 문서에 근거해 판단·반영하도록 위임. source별 sequence만으로 clock 보정을 해결할 수 없으므로 선택 observationSequence를 추가한다. 같은 session+device의 source 전체에서 관측 생성 때 원자적 증가·영속화, 최대JS 안전 정수다.
+- 번호 우선·번호 중복409·작은 번호 이력·번호 없는 downgrade 제외를 강제한다. 구형의 명백한 source 과거 sequence는 현재 후보에서 제외하고, 시계 역행/지연으로 순서 불명일 때는 AI 보류·기존 보호 상태 유지다. 번호 모드 또는 새 세션으로 복구한다.
+- 기존 observedAt은 원본으로 보존하고 새 번호를 clock으로 추정하지 않는다. 순서 불명 fallback의 접수 ID는 실제 관측 순서를 복원한 값이 아니라 안전 상태를 유지하기 위한 내부 순서다.
+- V15 컬럼 observation_sequence/current_eligible/ordering_untrusted와 번호 unique·CHECK·index를 추가한다. 기존 V14 history는 바꾸지 않는다. 현재 조회는 findCurrent를 사용하며 원본 observedAt 정렬만으로 현재를 판단하지 않는다.
+- AI 내부 schema·공개 응답·정책v1 임계값은 유지한다. 실제 클라이언트 counter는 Frontend 인계 대상이며 코드 수정은 하지 않는다. API Request·AI2.2·ERD·카탈로그에 정본을 먼저 반영했다.

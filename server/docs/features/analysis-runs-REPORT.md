@@ -5,7 +5,7 @@
 ## 변경
 
 - 공개 계약·기기/세션 소유권·runner/연결 Extension·동의·제외 도메인·guard를 검증한다. clientRunId 중복409와 세션+기기8회/분 제한을 적용한다.
-- V13 analysis_runs에 안전한 결과만 저장한다. AI 입력·제목·URL·traceId는 영속화하지 않는다. 추가 내부 컬럼과 보관 기준은 PLAN/DECISION_RECORD에 명시했다.
+- V14 analysis_runs에 안전한 결과만 저장한다. AI 입력·제목·URL·traceId는 영속화하지 않는다. 추가 내부 컬럼과 보관 기준은 PLAN/DECISION_RECORD에 명시했다.
 - AI 전에 안전 UNCERTAIN 이력을 예약하고 DB transaction 밖에서 고정 내부 서비스에 호출한다. 완료 시 권한·실행 구간을 다시 확인한다. 기기별 source 무관 observedAt 최신 조회로 지연 결과 역전을 방지한다.
 - AI_ANALYSIS_URL/서비스 키 미설정·장애·receipt·schema 오류는200 UNCERTAIN/ANALYSIS_UNAVAILABLE다. 최신 Notion의 베타 confidence 예외도 반영한다. 본문 stall까지5초·응답8KB로 제한하고 취소한다.
 - Swagger에 공개 API가 노출되고 .env.example/Compose에 내부 AI 주소·공유 키 전달을 추가했다. 실제 .env는 변경하지 않았다.
@@ -13,8 +13,8 @@
 
 ## 검증
 
-- Backend build/Checkstyle:166개 실패0/오류0/생략6.
-- PostgreSQL:40개 전부 통과(분석21+분석 migration9+확장 migration9+닉네임1).
+- Backend build/Checkstyle:175개 실패0/오류0/생략7.
+- PostgreSQL:53개 전부 통과(분석29+분석 migration14+확장 migration9+닉네임1).
 - 격리 정적 리뷰와 timeout 보완 재리뷰에서 확정 P1/P2 없음. 상세는 QA·code-review·ERROR 문서다.
 
 ## 상태와 한계
@@ -25,3 +25,9 @@
 - 임시 PG는 QA 후 중지하고 기존 개발 DB/8080은 그대로 둔다. 다음 개발자는 frontend-handoff와 NEXT_TASK를 참고한다.
 
 - 외부 P2의 TAB_META host 검증과 기기/서버 시각 직접 비교를 보완했다. 고정 시차 회귀4종을 추가했다. 실행 도중 기기 시계 역행은 추가 순서 계약이 필요한 별도 경계이며 해결했다고 주장하지 않는다.
+
+## 시계 보정 후속 결과
+
+사용자가 문서를 근거로 판단·반영하도록 위임해 observationSequence 선택 필드를 추가했다. 원래 source별 sequence와 응답/AI 내부 schema는 유지한다. 서버는 전역 번호 우선·downgrade 차단·기존 요청의 순서 불명 시 AI 보류와 보호 상태 유지로 시계 역행을 처리한다. V15는 기존 이력을 보존한다. Notion API·AI2.2·ERD·카탈로그와 로컬 공통 계약을 먼저 갱신했다.
+
+최신 로컬 build/Checkstyle175개(실패0/생략7)·PG53개 통과, 격리 정적 리뷰 P1/P2 없음. 시계 보정 P2를 계속 미해결이라고 남긴 앞 절은 당시 이력이며 이 보완으로 대체한다. 실제 Frontend에 전역 counter를 추가한 것은 아니므로 [전용 인계](analysis-observation-order-handoff.md)를 전달한다. 실제 AI/앱 QA·PR 최신 원격 검증·병합은 별도다.

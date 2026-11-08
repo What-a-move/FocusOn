@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -151,7 +152,7 @@ class AnalysisApiTests {
     mvc.perform(call(f, request(null))).andExpect(status().isOk())
         .andExpect(jsonPath("$.data.relation").value("PRIVACY_BLOCKED"));
     verify(ai, never()).analyze(any(), any(), anyLong());
-    assertTrue(runs.findFirstBySessionIdAndDeviceIdOrderByObservedAtDescIdDesc(
+    assertTrue(runs.findCurrent(
         f.sessionId(), f.principal().deviceId()).orElseThrow().getModelVersion() == null);
   }
 
@@ -295,8 +296,10 @@ class AnalysisApiTests {
     assertFalse(run.getReceivedAt().isAfter(Instant.now().plusMillis(1)));
   }
 
-  @Test
-  void oldAiCompletionCannotOverwriteLatestExcludedAcrossSources() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void oldAiCompletionCannotOverwriteLatestExcludedAcrossSources(
+      boolean numbered) throws Exception {
     Fixture f = fixture();
     var started = new CountDownLatch(1);
     var finish = new CountDownLatch(1);
@@ -305,14 +308,18 @@ class AnalysisApiTests {
       assertTrue(finish.await(10, TimeUnit.SECONDS));
       return related();
     });
-    Request first = request(null);
+    Request base = request(null);
+    Request first = numbered ? new Request(base.clientRunId(), base.contentSource(),
+        base.observedAt().plusSeconds(3600), base.sequence(), null, base.metadata(),
+        base.contentPayload(), BigDecimal.ONE) : base;
     try (var executor = Executors.newSingleThreadExecutor()) {
       var pending = executor.submit(() -> service.analyze(f.principal(),
           f.login().device().deviceId(), Long.toString(f.sessionId()), first));
       assertTrue(started.await(10, TimeUnit.SECONDS));
       try {
         var guard = new Request(UUID.randomUUID().toString(), ContentSource.APP_META,
-            first.observedAt().plusMillis(1), BigDecimal.ONE, GuardStatus.EXCLUDED, null, null);
+            numbered ? base.observedAt() : first.observedAt().plusMillis(1), BigDecimal.ONE,
+            GuardStatus.EXCLUDED, null, null, numbered ? BigDecimal.valueOf(2) : null);
         assertEquals(Relation.EXCLUDED, service.analyze(f.principal(),
             f.login().device().deviceId(), Long.toString(f.sessionId()), guard).relation());
       } finally {
@@ -320,7 +327,7 @@ class AnalysisApiTests {
       }
       assertEquals(Relation.RELATED, pending.get(10, TimeUnit.SECONDS).relation());
     }
-    var latest = runs.findFirstBySessionIdAndDeviceIdOrderByObservedAtDescIdDesc(
+    var latest = runs.findCurrent(
         f.sessionId(), f.principal().deviceId()).orElseThrow();
     assertEquals(Relation.EXCLUDED, latest.effectiveRelation());
   }
@@ -354,7 +361,7 @@ class AnalysisApiTests {
         f.login().device().deviceId(),
         Long.toString(f.sessionId()), request).relation());
     assertEquals(Relation.UNCERTAIN,
-        runs.findFirstBySessionIdAndDeviceIdOrderByObservedAtDescIdDesc(
+        runs.findCurrent(
         f.sessionId(), f.principal().deviceId()).orElseThrow().effectiveRelation());
   }
 
@@ -451,6 +458,156 @@ class AnalysisApiTests {
     });
     assertEquals("SESSION_NOT_FOUND", assertThrows(ApiException.class,
         () -> store.prepare(otherPrincipal, f.sessionId(), request(null))).code().name());
+  }
+
+  @Test
+  void globalOrderSurvivesClockRollbackAndIgnoresDelayedAndLegacyRequests() {
+    Fixture f = fixture();
+    Instant future = Instant.now().plusSeconds(3600);
+    assertEquals(Relation.RELATED, analyze(f, ordered(ContentSource.APP_META, 1, 10L,
+        future, null)).relation());
+    assertEquals(Relation.EXCLUDED, analyze(f, ordered(ContentSource.DESKTOP_APP_OCR, 1, 11L,
+        future.minusSeconds(3600), GuardStatus.EXCLUDED)).relation());
+    // 큰 벽시각이라도 전역 번호가 작으면 과거 이력이며 현재 보호 상태를 바꾸지 않는다.
+    assertEquals(Relation.UNCERTAIN, analyze(f, ordered(ContentSource.APP_META, 2, 9L,
+        future.plusSeconds(10), null)).relation());
+    analyze(f, ordered(ContentSource.APP_META, 3, null,
+        future.plusSeconds(20), GuardStatus.PRIVACY_BLOCKED));
+    var current = runs.findCurrent(f.sessionId(), f.principal().deviceId()).orElseThrow();
+    assertEquals(11L, current.getObservationSequence());
+    assertEquals(Relation.EXCLUDED, current.getRelation());
+    assertEquals(Relation.RELATED, analyze(f, ordered(ContentSource.APP_META, 4, 12L,
+        future.minusSeconds(7200), null)).relation());
+    assertEquals(12L, runs.findCurrent(f.sessionId(), f.principal().deviceId())
+        .orElseThrow().getObservationSequence());
+    verify(ai, times(2)).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void legacyRollbackQuarantinesAndPreservesProtectionUntilNumberedRecovery() {
+    Fixture f = fixture();
+    Instant future = Instant.now().plusSeconds(3600);
+    analyze(f, ordered(ContentSource.APP_META, 1, null, future, null));
+    assertEquals(Relation.UNCERTAIN, analyze(f, ordered(ContentSource.APP_META, 2, null,
+        future.minusSeconds(3600), null)).relation());
+    var current = runs.findCurrent(f.sessionId(), f.principal().deviceId()).orElseThrow();
+    assertTrue(current.isOrderingUntrusted());
+    assertEquals(2, current.getSequence());
+    assertEquals(Relation.EXCLUDED, analyze(f, ordered(ContentSource.DESKTOP_APP_OCR, 1, null,
+        future.minusSeconds(3700), GuardStatus.EXCLUDED)).relation());
+    assertEquals(Relation.EXCLUDED, analyze(f, ordered(ContentSource.APP_META, 3, null,
+        future.plusSeconds(20), null)).relation());
+    assertEquals(Relation.PRIVACY_BLOCKED, analyze(f, ordered(ContentSource.APP_META, 4, null,
+        future.minusSeconds(3800), GuardStatus.PRIVACY_BLOCKED)).relation());
+    assertEquals(Relation.PRIVACY_BLOCKED, analyze(f, ordered(ContentSource.DESKTOP_APP_OCR, 2,
+        null, future.plusSeconds(30), null)).relation());
+    assertEquals(Relation.RELATED, analyze(f, ordered(ContentSource.APP_META, 5, 1L,
+        future.minusSeconds(3900), null)).relation());
+    current = runs.findCurrent(f.sessionId(), f.principal().deviceId()).orElseThrow();
+    assertFalse(current.isOrderingUntrusted());
+    assertEquals(1L, current.getObservationSequence());
+    verify(ai, times(2)).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void oldSourceSequenceCannotTriggerClockQuarantineOrOverrideCurrent() {
+    Fixture f = fixture();
+    Instant time = Instant.now();
+    analyze(f, ordered(ContentSource.APP_META, 2, null, time, null));
+    var old = analyze(f, ordered(ContentSource.APP_META, 1, null,
+        time.plusSeconds(1000), null));
+    assertEquals(Relation.UNCERTAIN, old.relation());
+    var current = runs.findCurrent(f.sessionId(), f.principal().deviceId()).orElseThrow();
+    assertEquals(2, current.getSequence());
+    assertFalse(current.isOrderingUntrusted());
+    assertEquals(Relation.RELATED, analyze(f, ordered(ContentSource.APP_META, 3, null,
+        time.plusSeconds(1), null)).relation());
+  }
+
+  @Test
+  void globalSequenceDuplicatesAndInvalidValuesAreRejectedOverHttp() throws Exception {
+    Fixture f = fixture();
+    var r = ordered(ContentSource.APP_META, 1, 42L, Instant.now(), null);
+    mvc.perform(call(f, r)).andExpect(status().isOk());
+    mvc.perform(call(f, ordered(ContentSource.DESKTOP_APP_OCR, 1, 42L, Instant.now(), null)))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
+    String body = json.writeValueAsString(r);
+    for (String invalid : new String[] {"0", "-1", "1.5", "9007199254740992"}) {
+      mvc.perform(post(path(f.sessionId())).header("Authorization",
+              "Bearer " + f.login().accessToken())
+          .header("X-Device-Id", f.login().device().deviceId())
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(body.replace("\"observationSequence\":42",
+              "\"observationSequence\":" + invalid)))
+          .andExpect(status().isBadRequest());
+    }
+  }
+
+  @Test
+  void globalSequenceIsScopedToSessionAndDevice() {
+    Fixture first = fixture();
+    Fixture second = fixture();
+    assertEquals(Relation.RELATED, analyze(first,
+        ordered(ContentSource.APP_META, 1, 1L, Instant.now(), null)).relation());
+    assertEquals(Relation.RELATED, analyze(second,
+        ordered(ContentSource.APP_META, 1, 1L, Instant.now(), null)).relation());
+  }
+
+  @Test
+  void rollbackGuardOnAnotherLegacySourceImmediatelyProtectsCurrent() {
+    Fixture f = fixture();
+    Instant future = Instant.now().plusSeconds(3600);
+    analyze(f, ordered(ContentSource.APP_META, 1, null, future, null));
+    analyze(f, ordered(ContentSource.DESKTOP_APP_OCR, 1, null,
+        future.minusSeconds(3600), GuardStatus.PRIVACY_BLOCKED));
+    var current = runs.findCurrent(f.sessionId(), f.principal().deviceId()).orElseThrow();
+    assertTrue(current.isOrderingUntrusted());
+    assertEquals(Relation.PRIVACY_BLOCKED, current.getRelation());
+    assertEquals(Relation.PRIVACY_BLOCKED, analyze(f, ordered(ContentSource.APP_META, 2, null,
+        future.plusSeconds(1), null)).relation());
+    verify(ai, times(1)).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void concurrentGlobalSequenceDuplicatesCreateExactlyOneObservation() throws Exception {
+    Fixture f = fixture();
+    var start = new CountDownLatch(1);
+    var ready = new CountDownLatch(2);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var tasks = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        assertTrue(start.await(10, TimeUnit.SECONDS));
+        return mvc.perform(call(f, ordered(ContentSource.APP_META, 1, 1L, Instant.now(),
+            GuardStatus.EXCLUDED))).andReturn().getResponse().getStatus();
+      })).toList();
+      assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      var results = new java.util.ArrayList<Integer>();
+      for (var task : tasks) {
+        results.add(task.get(10, TimeUnit.SECONDS));
+      }
+      results.sort(Integer::compareTo);
+      assertEquals(java.util.List.of(200, 409), results);
+    }
+    assertEquals(1L, runs.findCurrent(f.sessionId(), f.principal().deviceId())
+        .orElseThrow().getObservationSequence());
+  }
+
+  private com.capstone.backend.analysis.dto.AnalysisDtos.Response analyze(Fixture fixture,
+      Request request) {
+    return service.analyze(fixture.principal(), fixture.login().device().deviceId(),
+        Long.toString(fixture.sessionId()), request);
+  }
+
+  private static Request ordered(ContentSource source, long sequence, Long global,
+      Instant observedAt, GuardStatus guard) {
+    boolean meta = source == ContentSource.APP_META || source == ContentSource.TAB_META;
+    return new Request(UUID.randomUUID().toString(), source, observedAt,
+        BigDecimal.valueOf(sequence), guard,
+        guard == null ? new Metadata("Xcode", "synthetic", "synthetic", "example.com") : null,
+        guard == null && !meta ? new ContentPayload("synthetic text") : null,
+        global == null ? null : BigDecimal.valueOf(global));
   }
 
   private Fixture fixture() {

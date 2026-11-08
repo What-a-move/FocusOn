@@ -6,15 +6,15 @@
 
 | 검사 | 결과 |
 | --- | --- |
-| Backend build·Checkstyle·H2 전체 |166개, 실패0/오류0/생략6|
-| PostgreSQL CI와 같은 선택 |40개 전부 통과|
-| PG 분석 API |21개 전부 통과|
-| PG 분석 migration |9개 전부 통과|
+| Backend build·Checkstyle·H2 전체 |175개, 실패0/오류0/생략7|
+| PostgreSQL CI와 같은 선택 |53개 전부 통과|
+| PG 분석 API |29개 전부 통과|
+| PG 분석 migration |14개 전부 통과|
 | PG 기존 확장 migration |9개 전부 통과|
 | PG 닉네임 동시성 |1개 통과|
 | 별도 컨텍스트 정적 리뷰·timeout 수정 재리뷰 |확정 P1/P2 없음|
 
-PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건에 따른 것이며 전체166개가 모두 실행됐다는 뜻이 아니다. 별도 PG40개는 이 조건을 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
+PR #172 리뷰 반영 후 기본 build의 생략7개는 PostgreSQL 전용 조건에 따른 것이며 전체175개가 모두 실행됐다는 뜻이 아니다. 별도 PG53개는 이 조건을 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
 
 ## 검증한 동작
 
@@ -28,7 +28,7 @@ PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건
 - AI 완료 전 pause·동의 철회·Extension family 폐기를 재검증. heartbeat로 version만 증가하면 같은 RUNNING 구간의 정상 결과는 유지.
 - 내부 adapter를 실제 loopback stub으로 검사: 서비스 Bearer·같은 traceId·서버 목표/정책/context·정규화 host·일회성 본문 전달. 0.75 경계/저신뢰·베타 suffix/null 예외·receipt/잘못된 schema 거절.
 - 외부 응답9KB는8KB 제한에서 차단, 헤더 이후 본문 stall은 전체5초 deadline에서 fallback. 합성 테스트 약5.1초(운영 응답시간 지표가 아님).
-- 실제 Flyway V12→V13: 기존 세션 accumulatedActiveMs1234 보존, clientRunId unique, source/sequence/confidence/relation/guard CHECK, session FK, 원문 컬럼 부재, source를 가로지르는 observedAt 최신 정렬. 시나리오별 임시 schema를 삭제했다.
+- 실제 Flyway V12→V14: 기존 세션 accumulatedActiveMs1234 보존, clientRunId unique, source/sequence/confidence/relation/guard CHECK, session FK, 원문 컬럼 부재, source를 가로지르는 observedAt 최신 정렬. 시나리오별 임시 schema를 삭제했다.
 
 ## 실행
 
@@ -66,3 +66,14 @@ PR #172 리뷰 반영 후 기본 build의 생략6개는 PostgreSQL 전용 조건
 - TAB_META host 없는 제목도 저장·AI 호출 전400으로 차단한다. host 검증 회귀는 CHROME_DOM/TAB_META 각각 metadata 누락·host null·빈 값과 보호 상태 요청을 검사한다. 알려진 제외 host의 TAB_META 제목은200 EXCLUDED·AI 미호출이다.
 - 기기와 서버의 시각 비교를 제거했다. 시작 직후·재개 직후 각각±60초 총4종을 검사하고200 RELATED, observedAt 원본 보존, receivedAt 서버 시각을 확인했다. 기존 지연 결과/보호 상태 순서와 AI 도중 실행 구간 변경 검사도 통과한다.
 - 추가 정적 검토에서 실행 도중 기기 시계가 역행하면 같은 기기의 observedAt 최신 조회가 이전 미래 시각을 유지할 수 있음을 발견했다. 이 경우를 해결한 것으로 기록하지 않는다. 전역 관측 순서/시계 구간 계약은 별도 협의가 필요하며 이번 두 지적의 고정 시차와 구분한다.
+
+## 관측 순서 계약 확정·구현 (사용자 판단 위임)
+
+- Notion API Request/비고/오류, AI2.2, ERD6.1/7.1/완료 기준과 analysis_runs 카탈로그를 보완했다. 선택 observationSequence와 source sequence를 구분하고 단계적 전환·구형 판정 보류를 명시했다.
+- Server의 current 조회는 findCurrent만 사용한다. 번호 모드는 전체 번호, 구형 순서 불명 모드는 안전 이력의 ID, 나머지 구형은 source 과거 이력을 제외한 observedAt 순서다.
+- 새 회귀: 다른 source·시계 역행·작은 번호 역순 도착·번호 없는 downgrade·번호 scope·번호 중복/형식·동시 중복·지연 AI 완료·구형 시계 역행·보호 상태 유지·번호 모드 복구. AI 내부 envelope에 새 필드를 전달하지 않는 것도 확인했다.
+- 최신 전체 build/Checkstyle:175개 실패0/오류0/생략7. PostgreSQL53개 전부 통과(분석 API29+분석 migration14+확장 migration9+닉네임1).
+- PG migration은 기존 V14의 미래 observed_at/판정/누적 시간1234를 보존한 채 V15를 적용했다. 전역 번호 unique·양수/JS 안전 범위·순서 불명 상태의 확정 관련성 금지 CHECK를 검증했다.
+- 별도 컨텍스트 정적 리뷰에서 확정 P1/P2 없음. 이전 시계 보정 P2는 이 계약·서버 보호 경로로 보완됐다. 번호 없는 기존 클라이언트도 시계 역행 뒤 무리하게 AI 판단을 이어가지 않는다.
+- 실제 Desktop/Extension은 observationSequence 전송을 아직 구현하지 않았다. 시계 보정 중에도 계속 정상 분석하려면 전용 인계에 따라 counter를 추가해야 한다. 기존 요청의 판정 보류를 정상 AI 판정 성공으로 표현하지 않는다.
+- 실제 AI/앱 QA, 원격 최신 CI·CodeRabbit은 각각 별도 확인한다. merge/이슈 종료는 하지 않는다.
