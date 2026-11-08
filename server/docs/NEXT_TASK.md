@@ -1,13 +1,16 @@
 # Backend 다음 작업
 
-## Issue #167 이어서 확인 (2026-11-07)
+## Issue #167 이어서 확인 (2026-11-08)
 
-- 실제 Google OAuth·Swagger 실계정 흐름과 Notion API 정본을 대조한다. 이 작업은 합성 JWT HTTP 검증과 구분한다.
-- 푸시·PR 전 최신 dev의 V11 충돌과 #163 종료 API 연계 여부를 확인한다. 상세는 `features/session-heartbeat-REPORT.md`.
+- 최신 dev 통합 후 V13 migration을 검증한다. 기존 V11 Heartbeat 적용 DB의 이력 충돌을 별도로 해결해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
 
-## 현재 우선 작업: Issue #116
+## 현재 작업: #151 CORS·확장1개
 
-PR #162의 CodeRabbit 404·405 로그 코드 지적을 수정했다. 수정 커밋의 CI·재리뷰를 확인하고 사용자 승인 후 병합한다. 다음 기능 우선순위는 세션 종료 API이며, 최신 dev의 일시정지·재개와 동일한 인증·버전·멱등성·시간 확정 규칙을 재사용한다. #151 CORS·확장 1개 정책은 팀원 이슈로 중복 구현하지 않는다.
+- PR #170의 migration 잠금·POST preflight 지적과 외부 P2(만료된 최신 확장 보존)를 수정했다. 인증 가능 연결 우선 순위를 적용하고 실제 Flyway 업그레이드 회귀9종을 CI에 추가했다. V11 NOT VALID→V12 별도 검증, H2 전체137개 실패0/skip4. 최신 커밋의 원격 CI·재리뷰와 실제 Chrome QA를 확인한다. 병합·이슈 종료는 별도 승인한다.
+- 실제 Chrome 권한 철회→서버 요청 전송→local-events 자동 멈춤은 팀원 5번 담당과 연동해 확인한다. CORS 허용만으로 host 권한 문제가 모두 해결됐다고 판단하지 않는다.
+- 기존 다중 확장 정리 V11의 영향과 배포 CORS_ALLOWED_ORIGINS를 확인한다. 사용자 개발 DB에 즉시 적용하지 않는다.
+- 이후 사용자 담당 6번 분석 요청·결과 저장/개입→7번 리포트 순서다. 세션 시작·heartbeat·종료 등 5번은 팀원 범위다.
+- #86은 최신 dev 구현 확인 후 닫혔고 실제 앱 QA는 후속이다. #163은 Draft PR164에 보존한다.
 
 ## 과거 작업 기록 (2026-10-28, 현재 작업 아님)
 

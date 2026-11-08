@@ -195,7 +195,7 @@ async def test_http_dependency_disables_provider_retries_without_mutating_local_
     make_generator = Mock(return_value=generator)
     monkeypatch.setattr(routes, "get_settings", lambda: settings)
     monkeypatch.setattr(routes, "TypeSafeJevClient", make_jev)
-    monkeypatch.setattr(routes, "OpenAIGoalGenerationClient", make_generator)
+    monkeypatch.setattr(routes, "ClaudeGoalGenerationClient", make_generator)
     dependency = get_goal_workflow()
     await anext(dependency)
     await dependency.aclose()
