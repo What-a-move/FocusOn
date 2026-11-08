@@ -3,7 +3,7 @@
 ## Issue #167 이어서 확인 (2026-11-08)
 
 - PR #178 리뷰 수정 커밋을 푸시하고 재리뷰·원격 CI를 확인한다. 시계 역행과 이전에 처리되지 않은 지연 신호는 순번 없이 완전히 구분할 수 없다.
-- 최신 dev 통합 후 격리 PostgreSQL의 V1~V13 적용과 Heartbeat 테스트를 검증했다. 기존 V11 Heartbeat 적용 DB의 이력 충돌은 별도로 해결해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
+- 최신 dev 통합 후 격리 PostgreSQL의 V1~V13 적용과 Heartbeat 테스트를 검증했다. 사용자 개발 DB의 이전 Heartbeat V11 이력은 백업·복제 검증 후 데이터 보존 방식으로 해결했다. 다른 DB는 별도로 확인해야 한다. 상세는 `features/session-heartbeat-REPORT.md`.
 
 ## 현재 작업: #151 CORS·확장1개
 
