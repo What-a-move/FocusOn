@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
-import { selectAuthView } from './lib/auth-view'
-import { errorText } from './lib/error-text'
-import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
+import { selectAuthView } from '../shared/lib/auth-view'
+import { errorText } from '../shared/lib/error-text'
+import { onboardingApi, STEP_ROUTES } from '../shared/api/onboarding-api'
 import { HomeDashboard } from '../features/dashboard/HomeDashboard'
 
 const signedOut: AuthSessionSnapshot = {

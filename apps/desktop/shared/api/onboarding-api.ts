@@ -1,7 +1,7 @@
 import type { PermissionsApi } from '../../electron/shared/permission-contract.cjs'
 import type { AnalysisApi, ExcludedApp, InstalledApp } from '../../electron/shared/analysis-contract.cjs'
 import type { OnboardingApi as MainOnboardingApi, OnboardingReadiness, OnboardingStep, OnboardingSummary, RequiredConsent } from '../../electron/shared/onboarding-contract.cjs'
-import { errorText } from '../../app/lib/error-text'
+import { errorText } from '../lib/error-text'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }

@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { DOMAIN, MAX_SITES, normalizeDomain } from '../onboarding/ExcludedSitesStep'
-import { analysisApi, type ExcludedApp, type InstalledApp } from '../onboarding/onboarding-api'
-import { LoadError, SettingsShell, ToastView, failText, useToast, type Toast } from './SettingsShell'
+// Pretendard 웹 글꼴(@font-face)이 여기 있다. 예전엔 온보딩·집중 준비 코드를 거쳐 함께 불려 왔다(#183).
+import '../../shared/styles/onboarding.css'
+import { DOMAIN, MAX_SITES, normalizeDomain } from '../../shared/lib/domain'
+import { analysisApi, type ExcludedApp, type InstalledApp } from '../../shared/api/onboarding-api'
+import { LoadError, SettingsShell, ToastView, failText, useToast, type Toast } from '../../shared/ui/SettingsShell'
 import { settingsApi } from './settings-api'
 
 const MAX_APPS = 50

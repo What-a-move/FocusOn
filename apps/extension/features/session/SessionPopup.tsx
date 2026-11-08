@@ -1,10 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getActiveSession, unlinkThisBrowser } from './session-api'
-import { LogCopy } from './LogCopy'
-import { displayActiveMs, formatClock, keepForward, type ActiveSession } from './session-model'
-import '../pairing/pairing.css'
+import { getActiveSession, unlinkThisBrowser } from '../../shared/api/session-api'
+import { LogCopy } from '../../shared/ui/LogCopy'
+import { displayActiveMs, formatClock, keepForward, type ActiveSession } from '../../shared/lib/session-model'
+import '../../shared/styles/pairing.css'
 import './session-popup.css'
 
 // 팝업이 열려 있는 동안만 서버 상태를 다시 읽는다. 시간 확정·조작은 Desktop이 맡는다(팝업은 표시만, 결정 012).

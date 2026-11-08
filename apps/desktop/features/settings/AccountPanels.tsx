@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { errorText } from '../../app/lib/error-text'
-import { requiredConsents } from '../onboarding/consent-docs'
-import { ConsentDocument } from '../onboarding/ConsentDocument'
-import { onboardingApi } from '../onboarding/onboarding-api'
-import { LoadError, failText } from './SettingsShell'
+import { errorText } from '../../shared/lib/error-text'
+import { requiredConsents } from '../../shared/lib/consent-docs'
+import { ConsentDocument } from '../../shared/ui/ConsentDocument'
+import { onboardingApi } from '../../shared/api/onboarding-api'
+import { LoadError, failText } from '../../shared/ui/SettingsShell'
 import { settingsApi, type ConsentList, type DeviceStatus } from './settings-api'
 
 // 디자인 원본: FocusOn-design/settings.html 계정(D25)·기기 연결(D24) 패널. 철회·해제·삭제는 오류가 아니므로 빨간색을 쓰지 않는다(결정 031).

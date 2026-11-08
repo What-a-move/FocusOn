@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { analysisApi, type ExcludedApp, type InstalledApp } from './onboarding-api'
+import { analysisApi, type ExcludedApp, type InstalledApp } from '../../shared/api/onboarding-api'
 
 const MAX_APPS = 50
 

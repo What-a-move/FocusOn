@@ -3,8 +3,8 @@
 import { useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { Notice } from './onboarding-api'
-import './onboarding.css'
+import type { Notice } from '../../shared/api/onboarding-api'
+import '../../shared/styles/onboarding.css'
 
 type OnboardingShellProps = {
   children: ReactNode

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
-import { describeError, onboardingApi, type Notice } from './onboarding-api'
+import { describeError, onboardingApi, type Notice } from '../../shared/api/onboarding-api'
 
 const CODE_TTL_MS = 5 * 60 * 1000
 const defaultHint = '5분 동안 유효 · 3번까지 입력할 수 있어요'

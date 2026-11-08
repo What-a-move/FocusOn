@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Detail } from './consent-docs'
+import type { Detail } from '../lib/consent-docs'
 import './consent-doc.css'
 
 /** 동의 문서 하나를 읽기 쉬운 문서 형태로 보여 준다. 여러 개면 위에 문서 고르기 탭을 둔다. */

@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { dashboardApi, dayKey, monthKey, type DailySession } from '../dashboard/dashboard-api'
+import { dashboardApi, dayKey, monthKey, type DailySession } from '../../shared/api/dashboard-api'
 import type { DailyReport } from '../../electron/shared/report-contract.cjs'
-import { LoadError, SettingsShell } from '../settings/SettingsShell'
+import { LoadError, SettingsShell } from '../../shared/ui/SettingsShell'
 import './records.css'
 
 // 디자인 원본: FocusOn-design/records.html. 시안의 `기록 시안 보기`·`예시` 태그, 하루 흐름 막대, 회차 `n회 연장`은

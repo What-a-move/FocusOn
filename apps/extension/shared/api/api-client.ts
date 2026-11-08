@@ -5,7 +5,7 @@
 // - GET은 네트워크·503·504에서 1초 → 3초로 두 번까지 다시 보낸다. POST·DELETE 같은 변경 요청은 자동으로 다시 보내지 않는다.
 // [주의] 이 파일은 node --test로 직접 실행하므로 상대 import 없이 필요한 것을 주입받는다.
 
-import type { ErrorClass, Logger } from './logger'
+import type { ErrorClass, Logger } from '../lib/logger'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
