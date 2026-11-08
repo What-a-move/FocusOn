@@ -67,7 +67,7 @@ jobs:
             server/build.gradle
             server/settings.gradle
             server/gradle/wrapper/gradle-wrapper.properties
-      - name: Test nickname conflict with Flyway schema
+      - name: Test nickname concurrency and extension migrations
         working-directory: server
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/focuson_test
@@ -76,4 +76,4 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: focuson_test
           SPRING_JPA_HIBERNATE_DDL_AUTO: validate
           SPRING_FLYWAY_ENABLED: 'true'
-        run: ./gradlew test --tests '*UserConfigurationApiTests.concurrentNicknameConflictsOnPostgres' --no-daemon --rerun-tasks
+        run: ./gradlew test --tests '*UserConfigurationApiTests.concurrentNicknameConflictsOnPostgres' --tests '*ExtensionMigrationTests' --no-daemon --rerun-tasks

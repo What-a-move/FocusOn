@@ -106,6 +106,7 @@ export function ExtensionStep() {
   return (
     <OnboardingShell
       currentStep={1}
+      poki="/design/poki-plug.png"
       prompt={prompt.text}
       promptError={prompt.error}
       backHref="/onboarding/"

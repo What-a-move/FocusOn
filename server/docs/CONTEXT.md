@@ -1,6 +1,24 @@
 # Backend 작업 컨텍스트
 
-## 진행 중: 서버 요청 추적 (#116)
+## Google 로그인 시간 오차 (#177)
+
+Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통합 후 실제 Google 로그인 교환 201과 인증 사용자 조회 200을 격리 DB에서 확인했다. 이전 401의 정확한 원인은 미확정이며 상세는 `features/google-login-clock-skew-REPORT.md`를 따른다.
+
+## 진행 중: Issue #167 Heartbeat (2026-11-08)
+
+- PR #178 리뷰에 따라 자동 정리 잠금·실패 격리와 시계 역행 복구를 구현했다. 전체 build·Checkstyle과 격리 PostgreSQL 테스트를 확인했으며 지연 신호 구분의 한계는 `features/session-heartbeat-REPORT.md`를 따른다.
+- 실계정 HTTP와 PostgreSQL 동시성 검증을 수행했다. 상세 및 미검증 사항은 `features/session-heartbeat-REPORT.md`를 따른다.
+
+## 현재 작업: #151 (2026-11-08)
+
+- 사용자 담당 범위는 1기반·2인증/기기·6분석/개입·7리포트다. 기존 #151을 재사용하고 feat/151-extension-access에서 CORS·활성 확장1개를 구현했다.
+- 최초 H2 전체135개·분리PG30개를 통과했고, PR170 리뷰 수정 후 H2 전체137개 중 실패0·생략4. 최신 PG 결과는 features/extension-access-QA.md를 따른다. 실제 HTTP preflight200·미인증 실제 요청401 및 V11 기존 데이터 보존·unique 거절 검증 완료. 상세는 features/extension-access-REPORT.md를 따른다.
+- PR #170을 제출했고 CodeRabbit의 migration 잠금 지적과 POST preflight 개선을 반영했다. 최신 커밋 CI·재리뷰·실제 Chrome 권한 철회 QA는 남아 있다. 사용자 개발 DB·8080 서버에는 적용하지 않았다.
+- #163 세션 종료는 담당 범위 밖의 기존 작업으로 별도 브랜치와 Draft PR164에 보존한다. #116은 PR162 병합·이슈 종료 완료다.
+
+- 외부 P2 지적으로 V11을 실제 인증 가능 연결 우선 순위로 수정했다. ExtensionMigrationTests의 V10→V12 회귀9종을 CI에 추가하고 관련 PostgreSQL41개 모두 통과했다.
+
+## 이전 작업: 서버 요청 추적 (#116, 당시 기록)
 
 `feat/#116-server-tracing`에서 traceId·JSON 요청 로그를 구현하고 로컬 QA를 수행했다. 범위와 한계는 `features/server-tracing-PLAN.md`, `server-tracing-QA.md`, `server-tracing-REPORT.md`를 확인한다. 독립 리뷰·PR은 아직 완료하지 않았다. 사용자의 기존 문서 수정은 작업 시작 전 Git stash에 보존했다.
 

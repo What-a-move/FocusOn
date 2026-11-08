@@ -29,6 +29,6 @@ relevance-analysis-REPORT.md
 
 ## 목표 보조 #12 구현 기록
 
-- `goal-assistance-PLAN.md`: 공개 계약과 내부 JEV·OpenAI 구현의 차이
+- `goal-assistance-PLAN.md`: 공개 계약과 내부 JEV·Claude 구현의 차이
 - `goal-assistance-ERROR.md`: 구현 중 오류와 해결 이력
 - `goal-assistance-REPORT.md`: 내부 검증 결과; Backend·제품 통합 완료와 구분

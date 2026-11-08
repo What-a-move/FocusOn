@@ -31,9 +31,11 @@ import tools.jackson.databind.ObjectMapper;
 public class ApiSecurityConfiguration {
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http,
-      RequestAuthenticationService authentication, AuthRateLimiter limits, ObjectMapper json)
+      RequestAuthenticationService authentication, AuthRateLimiter limits, ObjectMapper json,
+      org.springframework.web.cors.UrlBasedCorsConfigurationSource corsConfigurationSource)
       throws Exception {
-    http.csrf(csrf -> csrf.disable())
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource))
+        .csrf(csrf -> csrf.disable())
         .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())
         .logout(logout -> logout.disable())
         .sessionManagement(session -> session

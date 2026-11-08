@@ -76,4 +76,13 @@ public final class SessionDtos {
   /** 연장 후 확정된 상태와 목표 시간이다. */
   public record ExtendResponse(SessionStatus status, long version, long targetDurationMs,
       long accumulatedActiveMs, Instant lastResumedAt) {}
+
+  /** Desktop이 관측한 시각과 monotonic 누적 시간이다. */
+  public record HeartbeatRequest(@NotNull @Schema(example = "2026-11-07T12:00:00Z")
+      Instant clientObservedAt, @NotNull @Schema(example = "10000")
+      Long accumulatedActiveMs) {}
+
+  /** 마지막으로 서버가 수신하고 확정한 신호다. */
+  public record HeartbeatResponse(SessionStatus status, Instant lastHeartbeatAt,
+      long accumulatedActiveMs, String pauseReason) {}
 }

@@ -75,6 +75,8 @@ def test_streamlit_test_ui_renders_without_external_calls():
     assert app.text_area[0].label == "학습 목표"
     assert app.sidebar.button[0].label == "전체 초기화"
     assert app.button[0].label == "목표 저장"
+    assert any("Claude" in item.value for item in app.sidebar.markdown)
+    assert any("JEV·Claude" in item.value for item in app.sidebar.warning)
 
 
 def test_pending_answer_updates_goal_input_before_widget_render():
