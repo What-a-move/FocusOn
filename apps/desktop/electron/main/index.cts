@@ -261,12 +261,13 @@ if (!hasSingleInstanceLock) {
     // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
     let pendingShow: FloatingShow | null = null
-    const FLOATING_SIZE = { width: 580, height: 400 }
+    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기. 화면 오른쪽 아래 모서리에 붙인다.
+    const FLOATING_SIZE = { width: 720, height: 300 }
     function showFloating(payload: FloatingShow): void {
       if (!floatingWindow || floatingWindow.isDestroyed()) {
         const area = screen.getPrimaryDisplay().workArea
         const window = new BrowserWindow({
-          ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width - 48, y: area.y + area.height - FLOATING_SIZE.height,
+          ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width, y: area.y + area.height - FLOATING_SIZE.height,
           // macOS panel: 다른 앱을 쓰는 중에도 클릭할 수 있고 FocusOn을 앞으로 가져오지 않는다.
           type: 'panel', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false,
           minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, show: false,
@@ -322,7 +323,7 @@ if (!hasSingleInstanceLock) {
         return { success: true, data: { done: true } }
       }
       const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
-      // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 조금 더 보기는 같은 창에서 목표 안내로 이어진다.
+      // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 확인했어는 같은 창에서 목표 안내로 이어진다.
       if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }
       if (action !== 'RECENTER') hideFloating()
       return { success: true, data: { done: true } }

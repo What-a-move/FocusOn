@@ -23,7 +23,7 @@ test('처음 보는 PENDING 알림 하나만 강도별 문구로 보여 주고, 
   await t.watcher.poll('901', '미적분 풀기', OPTIONS)
   await t.watcher.poll('901', '미적분 풀기', OPTIONS)
   assert.equal(t.calls[0].path, '/api/v1/sessions/901/interventions')
-  assert.deepEqual(t.shown, [{ interventionId: 'i-1', kind: 'OFF_TASK', level: 'NORMAL', goalText: '미적분 풀기', say: '어? 또 다른 데 보고 있네 👀', sub: '지금 목표로 돌아가자!' }])
+  assert.deepEqual(t.shown, [{ interventionId: 'i-1', kind: 'OFF_TASK', level: 'NORMAL', goalText: '미적분 풀기', say: '어? 또 딴 데 보고 있네 👀', sub: '목표로 돌아가자!' }])
 })
 
 test('채널에 따라 포키·macOS 알림·소리를 고른다. 휴식 제안은 휴식 문구다', async () => {
@@ -33,10 +33,10 @@ test('채널에 따라 포키·macOS 알림·소리를 고른다. 휴식 제안�
   assert.deepEqual(t.notified, [['b-1', true]])
   const g = setup([[{ interventionId: 'g-1', type: 'OFF_TASK', status: 'PENDING', channels: [] }]])
   await g.watcher.poll('901', '목표', { ...OPTIONS, interventionLevel: 'GENTLE' })
-  assert.equal(g.shown[0].say, '어, 잠깐 샜네.')
+  assert.equal(g.shown[0].say, '어, 잠깐 샜네?')
 })
 
-test('조금 더 보기·잠시 쉬기는 확인, 닫기는 해제로 기록하고 잠시 쉬기는 세션을 멈춘다. 확인했어는 기록하지 않는다', async () => {
+test('확인했어·잠시 쉬기는 확인, 닫기는 해제로 기록하고 잠시 쉬기는 세션을 멈춘다. 알겠어는 기록하지 않는다', async () => {
   const t = setup([])
   await t.watcher.act('i-1', 'RECENTER')
   await t.watcher.act('i-1', 'ACK')
