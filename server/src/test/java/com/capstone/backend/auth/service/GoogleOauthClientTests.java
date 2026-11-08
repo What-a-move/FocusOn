@@ -52,6 +52,17 @@ class GoogleOauthClientTests {
   }
 
   @Test
+  void allowsSmallFutureIssuedAtButRejectsExcessiveClockSkew() {
+    var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
+    assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",
+        List.of("desktop-client"), "synthetic-sub", 300, null, Instant.now().plusSeconds(20))));
+    String future = token("accounts.google.com", List.of("desktop-client"),
+        "synthetic-sub", 300, null, Instant.now().plusSeconds(40));
+    assertEquals("AUTH_OAUTH_REAUTH_REQUIRED",
+        assertThrows(ApiException.class, () -> client.verifyIdentity(future)).code().name());
+  }
+
+  @Test
   void acceptsMatchingAuthorizedPartyForSingleAndMultipleAudiences() {
     var client = client(NimbusJwtDecoder.withPublicKey((RSAPublicKey) keys.getPublic()).build());
     assertEquals("synthetic-sub", client.verifyIdentity(token("accounts.google.com",
@@ -186,10 +197,16 @@ class GoogleOauthClientTests {
 
   private String token(String issuer, List<String> audiences, String subject, long expiresIn,
       Object authorizedParty) {
+    return token(issuer, audiences, subject, expiresIn, authorizedParty,
+        Instant.now().minusSeconds(30));
+  }
+
+  private String token(String issuer, List<String> audiences, String subject, long expiresIn,
+      Object authorizedParty, Instant issuedAt) {
     final RSAKey key = new RSAKey.Builder((RSAPublicKey) keys.getPublic())
         .privateKey(keys.getPrivate()).keyID("synthetic-key").build();
     var claims = JwtClaimsSet.builder().claim("iss", issuer)
-        .issuedAt(Instant.now().minusSeconds(30)).expiresAt(Instant.now().plusSeconds(expiresIn));
+        .issuedAt(issuedAt).expiresAt(Instant.now().plusSeconds(expiresIn));
     if (audiences != null) {
       claims.audience(audiences);
     }

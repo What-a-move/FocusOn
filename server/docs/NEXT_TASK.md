@@ -1,5 +1,9 @@
 # Backend 다음 작업
 
+## Google 로그인 시간 오차 (#177)
+
+`fix/177-google-login-clock-skew`는 #167에서 분기했다. PR 전에 선행 브랜치와 dev 병합 순서 및 CI를 확인한다. 이전 401과 시각 오차의 인과관계는 미확정이다.
+
 ## Issue #167 이어서 확인 (2026-11-07)
 
 - 실제 Google OAuth·Swagger 실계정 흐름과 Notion API 정본을 대조한다. 이 작업은 합성 JWT HTTP 검증과 구분한다.

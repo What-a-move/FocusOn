@@ -32,6 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Service
 public class GoogleOauthClient {
   private static final URI TOKEN_ENDPOINT = URI.create("https://oauth2.googleapis.com/token");
+  private static final Duration ISSUED_AT_CLOCK_SKEW = Duration.ofSeconds(30);
   private final String clientId;
   private final String clientSecret;
   private final HttpClient http;
@@ -120,7 +121,8 @@ public class GoogleOauthClient {
       String subject = jwt.getSubject();
       if (subject == null || subject.isBlank() || subject.length() > 255
           || jwt.getExpiresAt() == null || !jwt.getExpiresAt().isAfter(Instant.now())
-          || jwt.getIssuedAt() == null || jwt.getIssuedAt().isAfter(Instant.now())) {
+          || jwt.getIssuedAt() == null
+          || jwt.getIssuedAt().isAfter(Instant.now().plus(ISSUED_AT_CLOCK_SKEW))) {
         throw new ApiException(ApiErrorCode.AUTH_OAUTH_REAUTH_REQUIRED);
       }
       return subject;

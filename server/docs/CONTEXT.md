@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Google 로그인 시간 오차 (#177)
+
+Google ID 토큰 발급 시각에 30초 오차를 허용한다. 사용자는 수정 후 로그인 성공을 확인했다. 이전 401의 정확한 원인은 미확정이며 상세는 `features/google-login-clock-skew-REPORT.md`를 따른다.
+
 ## 진행 중: Issue #167 Heartbeat (2026-11-07)
 
 - `feat/167-session-heartbeat`에서 생존 신호와 180초 무신호 종료를 구현했다. 격리 PostgreSQL의 실제 잠금 대기·V10→V11 기존 세션 보존 및 합성 인증 HTTP를 확인했다.
