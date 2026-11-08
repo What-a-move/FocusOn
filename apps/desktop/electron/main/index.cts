@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -34,6 +34,7 @@ import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
 import { SettingsService, ThemePreference, registerSettingsIpc } from './settings-ipc.cjs'
 import { InterventionWatcher } from './intervention-watcher.cjs'
+import { installDemoMode } from './demo-mode.cjs'
 import { DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
@@ -321,6 +322,16 @@ if (!hasSingleInstanceLock) {
       pause: () => runtime.pause('USER'),
       isCurrent: (sessionId) => { const current = runtime.snapshot(); return current?.status === 'RUNNING' && current.sessionId === sessionId },
     }) : null
+    // 시연 모드(#189): `pnpm dev:demo`로 실행할 때만 켠다(빌드한 화면을 써서 Next 개발 표시가 영상에 안 나온다). 배포 앱은 환경 변수가 있어도 켜지 않는다.
+    if (authService && runtime && process.env.FOCUSON_DEMO === '1' && !app.isPackaged) {
+      const demo = installDemoMode(authService, () => runtime.snapshot())
+      // ⌘⇧D: 진행 중 세션에 이탈 알림을 만들고 10초 조회를 기다리지 않고 바로 보여 준다.
+      globalShortcut.register('CommandOrControl+Shift+D', () => {
+        const current = runtime.snapshot()
+        if (current && demo.triggerAlert()) void watcher?.poll(current.sessionId, current.goalText, runtime.sessionOptions())
+      })
+      app.on('will-quit', () => globalShortcut.unregisterAll())
+    }
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
       const { interventionId, action } = args[0]
