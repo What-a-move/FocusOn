@@ -1,20 +1,20 @@
 # 화면 분석 요청 QA (#171)
 
-검증일: 2026-11-08. 개발 DB5432·기존8080 서버 대신 임시 PostgreSQL17(55471)과 random-port HTTP/stub을 사용했다. 실제 Google/Chrome/Desktop/AI 모델 성공으로 해석하지 않는다.
+검증일: 2026-11-08. 개발 DB5432·기존8080 서버 대신 임시 PostgreSQL17(초기55471, 최신 통합55472)과 random-port HTTP/stub을 사용했다. 실제 Google/Chrome/Desktop/AI 모델 성공으로 해석하지 않는다.
 
 ## 결과
 
 | 검사 | 결과 |
 | --- | --- |
-| Backend build·Checkstyle·H2 전체 |175개, 실패0/오류0/생략7|
-| PostgreSQL CI와 같은 선택 |53개 전부 통과|
+| Backend build·Checkstyle·H2 전체 |189개, 실패0/오류0/생략9|
+| PostgreSQL CI 선택 + 세션/heartbeat 회귀 |70개 전부 통과|
 | PG 분석 API |29개 전부 통과|
 | PG 분석 migration |14개 전부 통과|
 | PG 기존 확장 migration |9개 전부 통과|
 | PG 닉네임 동시성 |1개 통과|
 | 별도 컨텍스트 정적 리뷰·timeout 수정 재리뷰 |확정 P1/P2 없음|
 
-PR #172 리뷰 반영 후 기본 build의 생략7개는 PostgreSQL 전용 조건에 따른 것이며 전체175개가 모두 실행됐다는 뜻이 아니다. 별도 PG53개는 이 조건을 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
+최신 dev 통합 build의 생략9개는 PostgreSQL 전용 조건에 따른 것이며 전체189개가 모두 실행됐다는 뜻이 아니다. 별도 PG70개는 이 조건과 세션/heartbeat를 실제 PostgreSQL에서 검사한다. 초기 head6c54dc8의 원격 CI2개·CodeRabbit은 성공했다. 이번 리뷰 수정 커밋의 원격 결과는 push 후 확인한다.
 
 ## 검증한 동작
 
@@ -77,3 +77,10 @@ PR #172 리뷰 반영 후 기본 build의 생략7개는 PostgreSQL 전용 조건
 - 별도 컨텍스트 정적 리뷰에서 확정 P1/P2 없음. 이전 시계 보정 P2는 이 계약·서버 보호 경로로 보완됐다. 번호 없는 기존 클라이언트도 시계 역행 뒤 무리하게 AI 판단을 이어가지 않는다.
 - 실제 Desktop/Extension은 observationSequence 전송을 아직 구현하지 않았다. 시계 보정 중에도 계속 정상 분석하려면 전용 인계에 따라 counter를 추가해야 한다. 기존 요청의 판정 보류를 정상 AI 판정 성공으로 표현하지 않는다.
 - 실제 AI/앱 QA, 원격 최신 CI·CodeRabbit은 각각 별도 확인한다. merge/이슈 종료는 하지 않는다.
+
+## 최신 dev 통합 재검증 (2026-11-09)
+
+- origin/dev24db7de를 작업 브랜치에 통합했다. 기존 heartbeat V13을 보존하고 분석 신규 파일을 V14·V15로 조정했다. 아직 배포되지 않은 PR 마이그레이션 번호만 바꿨으며 사용자 개발 DB는 수정하지 않았다.
+- 전체 build·Checkstyle:189개, 실패0/오류0/생략9. PostgreSQL:70개, 실패0/오류0/생략0(분석29+분석 migration14+확장 migration9+닉네임1+세션16+heartbeat cleanup1).
+- V13→V14→V15 적용 및 V14 분석 이력 보존을 확인했다. 임시 QA schema0개 확인 후55472 컨테이너를 중지했다.
+- 통합 diff의 별도 정적 재검토에서도 확정 P1/P2 없음. 실앱 전역 counter·실제 AI 판정 QA는 별도다. 이전 절의 수치는 해당 시점의 기록이며 이 절이 최신 결과다.

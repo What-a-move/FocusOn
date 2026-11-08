@@ -31,3 +31,7 @@
 사용자가 문서를 근거로 판단·반영하도록 위임해 observationSequence 선택 필드를 추가했다. 원래 source별 sequence와 응답/AI 내부 schema는 유지한다. 서버는 전역 번호 우선·downgrade 차단·기존 요청의 순서 불명 시 AI 보류와 보호 상태 유지로 시계 역행을 처리한다. V15는 기존 이력을 보존한다. Notion API·AI2.2·ERD·카탈로그와 로컬 공통 계약을 먼저 갱신했다.
 
 최신 로컬 build/Checkstyle175개(실패0/생략7)·PG53개 통과, 격리 정적 리뷰 P1/P2 없음. 시계 보정 P2를 계속 미해결이라고 남긴 앞 절은 당시 이력이며 이 보완으로 대체한다. 실제 Frontend에 전역 counter를 추가한 것은 아니므로 [전용 인계](analysis-observation-order-handoff.md)를 전달한다. 실제 AI/앱 QA·PR 최신 원격 검증·병합은 별도다.
+
+## 최신 통합 결과 (2026-11-09)
+
+사용자 승인으로 origin/dev24db7de를 통합했다. heartbeat V13은 보존하고 이번 PR의 분석 migration을 V14·V15로 이동했다. 전체 build/Checkstyle189개(실패0/생략9), 격리 PostgreSQL70개 전부 통과, 통합 정적 리뷰 확정 P1/P2 없음. 이전 수치는 당시 기록이다. 실제 Frontend counter와 AI 판정 QA는 남아 있으며 PR 병합·이슈 종료는 하지 않았다.

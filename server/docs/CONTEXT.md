@@ -5,10 +5,10 @@
 - feat/171-analysis-runs는 최신 dev 91cd524에서 분기했다. POST /sessions/{id}/analysis-runs의 공개 요청·응답, runner/연결 Extension 권한, 보호 상태, 결과 저장과 AI 내부 adapter를 구현했다. 계획·검증은 features/analysis-runs-*를 따른다.
 - 기기별 source 무관 observationSequence 우선 조회와 metadata UNRELATED의 유효 UNCERTAIN 변환을 제공한다. 개입·heartbeat Policy Engine·리포트는 아직 구현하지 않았다. 세션 명령은 팀원 #167~#169 범위다.
 - AI 정본(2026-11-03)은 정식 /internal/v1/analysis-runs의 판정 반환·서비스 Bearer와 베타 uncalibrated 예외를 명시한다. 현재 dev AI 코드는 수신 확인만 반환하므로 서버는 안전 fallback하며, 실제 판정 통합은 #154 이후 확인한다.
-- 기본 Backend build/Checkstyle·테스트175개(실패0/오류0/생략7)를 통과했다. PostgreSQL 결과는 features/analysis-runs-QA.md를 따른다. PR #172 리뷰의 host 누락 검증·테스트 보강을 반영했다. merge·이슈 종료는 승인 후 진행한다.
+- 기본 Backend build/Checkstyle·테스트189개(실패0/오류0/생략9)를 통과했다. PostgreSQL 결과는 features/analysis-runs-QA.md를 따른다. PR #172 리뷰의 host 누락 검증·테스트 보강을 반영했다. merge·이슈 종료는 승인 후 진행한다.
 - 실제 개발 DB/8080/Frontend/AI는 수정하지 않았다. 관측 순서 정본은 사용자 위임에 따라 Notion에도 반영했다.
 
-- PR172 후속 P2: TAB_META host 검증과 기기·서버 시각 직접 비교를 보완했다. 고정±60초 시작/재개 회귀를 추가했으며, 실행 도중 기기 시계 보정은 선택 observationSequence·구형 판정 보류/보호 유지로 보완했다. 로컬 PG53개 통과, 실제 Frontend counter는 analysis-observation-order-handoff.md에 인계했다.
+- PR172 후속 P2: TAB_META host 검증과 기기·서버 시각 직접 비교를 보완했다. 고정±60초 시작/재개 회귀를 추가했으며, 실행 도중 기기 시계 보정은 선택 observationSequence·구형 판정 보류/보호 유지로 보완했다. 최신 dev24db7de 통합 후 로컬 PG70개 통과, 실제 Frontend counter는 analysis-observation-order-handoff.md에 인계했다.
 
 ## Google 로그인 시간 오차 (#177)
 
