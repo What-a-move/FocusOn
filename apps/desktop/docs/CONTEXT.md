@@ -19,6 +19,7 @@
 
 ### 완료된 작업
 
+- Issue #175(2026-11-08): 큰 글자(h1·h2·집중 타이머·목표 문구·큰 숫자·연결 코드)에 페이퍼로지 적용, 작은 글자는 Pretendard 유지. 글꼴은 `public/fonts/`(TTF 2종)에 넣어 인터넷 없이도 보인다. 토큰 `--fo-font-display`.
 - Next.js 기본 화면을 FocusOn 로그인·온보딩 시작·홈 화면으로 교체했다.
 - Desktop 앱 기본 실행·빌드 구조를 확인했다.
 - 공통 모노레포와 pnpm Workspace·Turborepo를 사용한다.
