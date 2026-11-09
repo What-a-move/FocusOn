@@ -1,5 +1,14 @@
 # #182 구현 결과 (통합 완료 아님)
 
+## PR #205 생성 및 최신 dev 충돌 해소 (2026-11-09)
+
+- 사용자 승인으로 d5e8b2e를 push하고 [PR #205](https://github.com/What-a-move/FocusOn/pull/205)를 dev 대상으로 생성했다. 병합·Issue 종료는 승인받지 않았으며 실행하지 않는다.
+- 생성 직후 dev ba58e5c(#202 세션 요약·#204 Desktop 시연 수정)가 추가돼 DECISION_RECORD 문서 충돌을 양쪽 기록 보존으로 해소했다. 통합 커밋 ef37f37이며 새 migration 충돌/자체 코드 변경은 없다.
+- 최신 통합 후 전체 build·Checkstyle270개 실패0·오류0·생략14, 격리 PostgreSQL 관련133개 실패0·생략0. 실행 근거: server/build/ai-integration-qa/pr205-devba58e5c-{build,pg}.log 및 요약 JSON. 이전267/131은 당시 dev0ca256e 기준 이력이다.
+- summary GET은 팀원 #201/PR #202에서 이미 추가됐다. 현재 저장된 종료 시간/연장 이력만 반환하며 분석·개입 선택 통계는 아직 집계하지 않는다. 다음 작업에서 중복 개발하지 않는다.
+- PR 갱신 후 원격 CI/CodeRabbit을 확인한다. 로컬 성공을 원격 CI/봇 리뷰 완료로 취급하지 않는다. 실제 Desktop/Extension 소비자 연결·포키 실표시·AI 실연결 QA는 여전히 미완료다.
+
+
 ## 실제 알림 서버 연결 완료 범위 (2026-11-09)
 
 - 구현 `792d36f`, 최신 dev0ca256e 통합 `c767669`. V17 개입·V18 전경/receipt, context PUT/GET·deliveries POST와 기존 분석/heartbeat/조회 연결을 구현했다.
