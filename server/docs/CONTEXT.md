@@ -257,3 +257,7 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 ## Issue #201 세션 결과 요약 (2026-11-09)
 
 - feat/201-session-summary에서 종료 세션 요약과 실제 연장 통계를 구현했다. 실계정HTTP200·PostgreSQL27개 결과는 features/session-summary-REPORT.md를 따른다. 다음 리포트 범위는 일간/달력이며 학습 정리는 별도다. Notion 원문·실제Desktop QA는 미완료다.
+
+## Issue #206 로컬 이벤트·학습 정리 조회 (2026-11-09)
+
+- feat/206-session-events-learning: 권한유실2종 저장/자동정지/재전송 중복제거와 저장된학습정리5상태 조회를 구현했다. 실계정HTTP·PG34개·V19보존 검증은 features/session-events-learning-REPORT.md를 따른다. 생성자/AI/근거수집은 기존#29 선행작업이며 전체자동정리완료가 아니다. 실제앱/Notion원문 대조는 남았다.

@@ -12,10 +12,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.capstone.backend.auth.dto.AuthDtos.DesktopDevice;
 import com.capstone.backend.auth.dto.AuthDtos.GoogleExchangeRequest;
 import com.capstone.backend.auth.dto.AuthDtos.LoginResponse;
+import com.capstone.backend.auth.dto.PairingDtos.ClaimRequest;
+import com.capstone.backend.auth.dto.PairingDtos.LinkedExtension;
+import com.capstone.backend.auth.persistence.UserDeviceEntity.DeviceType;
 import com.capstone.backend.auth.persistence.UserEntity.OnboardingStatus;
+import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.report.dto.LearningSummaryResponse;
+import com.capstone.backend.report.persistence.LearningSummaryEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.service.SessionHeartbeatCleanup;
 import com.capstone.backend.user.service.OnboardingReadinessService;
@@ -29,17 +35,20 @@ import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.ObjectMapper;
+
 
 /** HTTP 요청을 통해 시작, 재시도 및 사용자 분리를 확인한다. */
 @SpringBootTest
@@ -47,6 +56,8 @@ import tools.jackson.databind.ObjectMapper;
 class SessionApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
+  @Autowired private com.capstone.backend.auth.service.PairingService pairing;
+  @Autowired private com.capstone.backend.report.persistence.LearningSummaryRepository summaries;
   @Autowired private ObjectMapper json;
   @Autowired private LearningSessionRepository sessions;
   @Autowired private JdbcTemplate jdbc;
@@ -1003,6 +1014,267 @@ class SessionApiTests {
     org.junit.jupiter.api.Assertions.assertEquals(before.getVersion(), after.getVersion());
     org.junit.jupiter.api.Assertions.assertEquals(before.getStatus(), after.getStatus());
     org.junit.jupiter.api.Assertions.assertEquals(before.getEndedAt(), after.getEndedAt());
+  }
+
+  @Test
+  void localEventValidatesHeadersAndReplaysWithoutPausingResumedSession() throws Exception {
+    LoginResponse owner = desktop("events-owner-" + UUID.randomUUID());
+    LoginResponse other = desktop("events-other-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    String path = "/api/v1/sessions/" + id + "/local-events";
+    String token = "Bearer " + owner.accessToken();
+    String body = "{\"localEventCode\":\"LOCAL_SCREEN_PERMISSION_REVOKED\","
+        + "\"occurredAt\":\"2026-11-09T01:00:00.123456789Z\"}";
+    mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isUnauthorized());
+    mvc.perform(post(path).header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isBadRequest());
+    mvc.perform(post(path).header("Authorization", token).header("X-Device-Id", "0")
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isUnauthorized());
+    mvc.perform(post(path).header("Authorization", "Bearer " + other.accessToken())
+            .header("X-Device-Id", other.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isNotFound());
+    for (String bad : new String[] {"{}", body.replace("LOCAL_SCREEN_PERMISSION_REVOKED",
+        "LOCAL_EXTENSION_HOST_PERMISSION_MISSING"), body.replace("2026-11-09", "+999999-11-09")}) {
+      mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(bad))
+          .andExpect(status().isBadRequest());
+    }
+    var before = sessions.findById(Long.valueOf(id)).orElseThrow();
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("AUTO_PAUSED"))
+        .andExpect(jsonPath("$.data.pauseReason").value("REQUIRED_PERMISSION"))
+        .andExpect(jsonPath("$.data.version").value(before.getVersion() + 1));
+    mvc.perform(post("/api/v1/sessions/" + id + "/resume").header("Authorization", token)
+            .header("Idempotency-Key", UUID.randomUUID())
+            .header("If-Match-Version", before.getVersion() + 1)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"readiness\":{\"screenAnalysisReady\":true}}"))
+        .andExpect(status().isOk());
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("RUNNING"));
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_local_events WHERE session_id = ?", Integer.class,
+        Long.valueOf(id)));
+    org.junit.jupiter.api.Assertions.assertEquals(before.getAccumulatedActiveMs(),
+        sessions.findById(Long.valueOf(id)).orElseThrow().getAccumulatedActiveMs());
+  }
+
+  private LinkedExtension linked(LoginResponse owner) {
+    long familyId = jdbc.queryForObject("SELECT id FROM token_families WHERE device_id = ? "
+        + "AND status = 'ACTIVE'", Long.class, Long.valueOf(owner.device().deviceId()));
+    var principal = new FocusOnPrincipal(
+        Long.parseLong(owner.user().userId()), Long.parseLong(owner.device().deviceId()), familyId,
+        DeviceType.DESKTOP);
+    return pairing.claim(new ClaimRequest(
+        pairing.issue(principal).codeDisplay(), "event-ext-" + UUID.randomUUID()),
+        "qa-" + UUID.randomUUID());
+  }
+
+  @Test
+  void linkedExtensionPausesRunnerAndCannotReadLearningSummary() throws Exception {
+    LoginResponse owner = desktop("event-extension-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    var extension = linked(owner);
+    String path = "/api/v1/sessions/" + id;
+    String body = "{\"localEventCode\":\"LOCAL_EXTENSION_HOST_PERMISSION_MISSING\","
+        + "\"occurredAt\":\"2026-11-09T01:00:00Z\"}";
+    mvc.perform(post(path + "/local-events")
+            .header("Authorization", "Bearer " + extension.accessToken())
+            .header("X-Device-Id", extension.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("AUTO_PAUSED"))
+        .andExpect(jsonPath("$.data.pauseReason").value("EXTENSION_UNLINKED"));
+    mvc.perform(get(path + "/learning-summary")
+            .header("Authorization", "Bearer " + extension.accessToken()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void learningSummaryReadsFiveActualStatesAndDoesNotInventMissingData() throws Exception {
+    LoginResponse owner = desktop("learning-owner-" + UUID.randomUUID());
+    LoginResponse other = desktop("learning-other-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    String path = "/api/v1/sessions/" + id + "/learning-summary";
+    String token = "Bearer " + owner.accessToken();
+    mvc.perform(get(path)).andExpect(status().isUnauthorized());
+    mvc.perform(get(path).header("Authorization", token)).andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
+        .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("SESSION_NOT_FOUND"));
+    for (var state : LearningSummaryResponse.Status.values()) {
+      var entity = BeanUtils.instantiateClass(
+          LearningSummaryEntity.class);
+      ReflectionTestUtils.setField(entity, "sessionId",
+          Long.valueOf(id));
+      ReflectionTestUtils.setField(entity, "status", state);
+      boolean ready = state == LearningSummaryResponse.Status.READY;
+      ReflectionTestUtils.setField(entity, "overview",
+          ready ? "확인한 개념 정리" : null);
+      ReflectionTestUtils.setField(entity, "nextStartPrompt",
+          ready ? "개념을 다시 살펴보세요." : null);
+      ReflectionTestUtils.setField(entity, "keyConcepts", ready
+          ? java.util.List.of(new LearningSummaryResponse.KeyConcept(
+              "트랜잭션", "원자적 변경", "관련 자료 열람")) : java.util.List.of());
+      summaries.saveAndFlush(entity);
+      mvc.perform(get(path).header("Authorization", token)).andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.learningSummaryStatus").value(state.name()))
+          .andExpect(jsonPath("$.data.keyConcepts.length()").value(ready ? 1 : 0));
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM learning_summaries WHERE session_id = ?", Integer.class,
+        Long.valueOf(id)));
+  }
+
+  @Test
+  void concurrentDuplicateLocalEventsCreateOneHistoryAndOneVersionChange() throws Exception {
+    LoginResponse owner = desktop("event-race-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("로컬 이벤트 동시 실행 대기 초과");
+        }
+        return mvc.perform(post("/api/v1/sessions/" + id + "/local-events")
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("X-Device-Id", owner.device().deviceId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"localEventCode\":\"LOCAL_SCREEN_PERMISSION_REVOKED\","
+                    + "\"occurredAt\":\"2026-11-09T01:00:00Z\"}"))
+            .andExpect(status().isOk()).andReturn();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      for (var result : results) {
+        result.get(10, TimeUnit.SECONDS);
+      }
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1,
+        sessions.findById(Long.valueOf(id)).orElseThrow().getVersion());
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_local_events WHERE session_id = ?", Integer.class,
+        Long.valueOf(id)));
+  }
+
+  @Test
+  void localEventsPreserveStoppedStatesAndRejectTerminalStates() throws Exception {
+    LoginResponse owner = desktop("event-states-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    int offset = 0;
+    for (String state : new String[] {"PAUSED", "AUTO_PAUSED", "AWAITING_END_CONFIRMATION",
+        "ENDING", "ENDED", "ABANDONED"}) {
+      jdbc.update("UPDATE learning_sessions SET status = ? WHERE id = ?", state, Long.valueOf(id));
+      var before = sessions.findById(Long.valueOf(id)).orElseThrow();
+      var response = mvc.perform(post("/api/v1/sessions/" + id + "/local-events")
+              .header("Authorization", "Bearer " + owner.accessToken())
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"localEventCode\":\"LOCAL_SCREEN_PERMISSION_REVOKED\","
+                  + "\"occurredAt\":\"2026-11-09T01:00:0" + offset++ + "Z\"}"))
+          .andReturn().getResponse();
+      boolean terminal = java.util.Set.of("ENDING", "ENDED", "ABANDONED").contains(state);
+      org.junit.jupiter.api.Assertions.assertEquals(terminal ? 409 : 200, response.getStatus());
+      var after = sessions.findById(Long.valueOf(id)).orElseThrow();
+      org.junit.jupiter.api.Assertions.assertEquals(before.getVersion(), after.getVersion());
+      org.junit.jupiter.api.Assertions.assertEquals(state, after.getStatus().name());
+    }
+  }
+
+  @Test
+  void anotherDesktopAndItsLinkedExtensionCannotPauseRunner() throws Exception {
+    when(google.exchange(any())).thenReturn("same-user-event-" + UUID.randomUUID());
+    LoginResponse owner = desktop("runner-" + UUID.randomUUID());
+    LoginResponse second = desktop("other-desktop-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    var extension = linked(second);
+    String path = "/api/v1/sessions/" + id + "/local-events";
+    mvc.perform(post(path).header("Authorization", "Bearer " + second.accessToken())
+            .header("X-Device-Id", second.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"localEventCode\":\"LOCAL_SCREEN_PERMISSION_REVOKED\","
+                + "\"occurredAt\":\"2026-11-09T01:00:00Z\"}"))
+        .andExpect(status().isNotFound());
+    mvc.perform(post(path).header("Authorization", "Bearer " + extension.accessToken())
+            .header("X-Device-Id", extension.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"localEventCode\":\"LOCAL_EXTENSION_HOST_PERMISSION_MISSING\","
+                + "\"occurredAt\":\"2026-11-09T01:00:00Z\"}"))
+        .andExpect(status().isNotFound());
+    org.junit.jupiter.api.Assertions.assertEquals("RUNNING",
+        sessions.findById(Long.valueOf(id)).orElseThrow().getStatus().name());
+  }
+
+  @Test
+  void concurrentHeartbeatAndPermissionEventCannotRevivePausedSession() throws Exception {
+    LoginResponse owner = desktop("event-heartbeat-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("권한 이벤트와 신호 동시 실행 대기 초과");
+        }
+        String command = index == 0 ? "local-events" : "heartbeats";
+        String body = index == 0
+            ? "{\"localEventCode\":\"LOCAL_SCREEN_PERMISSION_REVOKED\","
+                + "\"occurredAt\":\"2026-11-09T01:00:00Z\"}"
+            : heartbeatBody(Instant.now(), 1000);
+        return mvc.perform(post("/api/v1/sessions/" + id + "/" + command)
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("X-Device-Id", owner.device().deviceId())
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isOk()).andReturn();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      for (var result : results) {
+        result.get(10, TimeUnit.SECONDS);
+      }
+    }
+    var stored = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("AUTO_PAUSED", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1, stored.getVersion());
+    org.junit.jupiter.api.Assertions.assertTrue(java.util.Set.of(0L, 1000L)
+        .contains(stored.getAccumulatedActiveMs()));
+  }
+
+  @Test
+  void postgresSummarySchemaRejectsMalformedConceptsAndExcessiveText() throws Exception {
+    try (var connection = dataSource.getConnection()) {
+      org.junit.jupiter.api.Assumptions.assumeTrue(
+          "PostgreSQL".equals(connection.getMetaData().getDatabaseProductName()));
+    }
+    LoginResponse owner = desktop("learning-schema-" + UUID.randomUUID());
+    long id = Long.parseLong(startForHeartbeat(owner));
+    jdbc.update("INSERT INTO learning_summaries(session_id,summary_status,overview,"
+        + "next_start_prompt,key_concepts) VALUES (?,'READY','학습 내용','이어 살펴보기',"
+        + "CAST(? AS jsonb))", id, "[{\"name\":\"개념\",\"briefExplanation\":\"설명\"}]");
+    for (String invalid : new String[] {"[{}]", "[null]", "{}",
+        "[{\"name\":null,\"briefExplanation\":\"설명\"}]",
+        "[{\"name\":\"개념\",\"briefExplanation\":\"설명\",\"contentPayload\":\"raw\"}]"}) {
+      org.junit.jupiter.api.Assertions.assertThrows(
+          org.springframework.dao.DataIntegrityViolationException.class, () -> jdbc.update(
+              "UPDATE learning_summaries SET key_concepts=CAST(? AS jsonb) WHERE session_id=?",
+              invalid, id));
+    }
+    org.junit.jupiter.api.Assertions.assertThrows(
+        org.springframework.dao.DataIntegrityViolationException.class, () -> jdbc.update(
+            "UPDATE learning_summaries SET overview=? WHERE session_id=?", "a".repeat(1200), id));
   }
 
   private LoginResponse desktop(String installationId) {
