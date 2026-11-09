@@ -431,3 +431,6 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 별도 컨텍스트 리뷰: 추가 actionable finding 없음. 이번 변경은 숫자 정규화만이며 SQL 변경이 없어 PostgreSQL QA는 재실행하지 않았다(기존 #182 PG87개 결과와 구분).
 - Notion AI 분석 계약 4.4/7 numeric 기준 및 null 예외의 기준 참조를 동기화했다. API POST 페이지에는 별도 0.75 기준 문구가 없어 수정하지 않았다. Notion의 관측 순서·rolling/30초 만료 등 다른 미동기화 항목은 이번 작업으로 해결됐다고 보지 않는다.
 - AI PR #190 head252b513의 0.75는 AI 담당 수정 대기다. 실제 AI/학교 Ollama/포키 QA·PR 생성·병합·이슈 종료는 미수행이다.
+## #201 세션 결과 요약 조회 기준 (2026-11-09)
+
+사용자 위임에 따라 결과 요약은 Desktop 본인의 ENDED/ABANDONED만 제공하며 진행 상태는 기존 SESSION_STATE_INVALID409로 처리한다. 정확한 집계 근거 없는 선택 통계는 생략하고 실제 연장 이력만 집계한다. 기존 상세 조회와 역할을 구분하며 알 수 없는 값을0으로 반환하지 않기 위한 기준이다. Notion 최신 원문은 접근 불가이고 로컬 확정 필드 및 Desktop 파서를 대조했다. 이슈 댓글로 공유한다.

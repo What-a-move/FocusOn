@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { AuthService, AuthorizedRequest } from './auth-service.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import type { SessionSnapshot } from '../shared/session-contract.cjs'
@@ -45,6 +46,15 @@ export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapsh
     sessions.set(current.sessionId, played)
     return played
   }
+  const resumeOnServer = async (sessionId: string) => {
+    const active = await real({ path: '/api/v1/sessions/active', method: 'GET', expectedStatus: 200, parse: (value) => value as { sessionId?: string; status?: string; version?: number } | null })
+    const remote = active.success ? active.data : null
+    if (remote?.sessionId !== sessionId || (remote.status !== 'PAUSED' && remote.status !== 'AUTO_PAUSED') || typeof remote.version !== 'number') return
+    await real({
+      path: `/api/v1/sessions/${sessionId}/resume`, method: 'POST', expectedStatus: 200, parse: () => true,
+      body: { readiness: { screenAnalysisReady: true } }, headers: { 'Idempotency-Key': randomUUID(), 'If-Match-Version': String(remote.version) },
+    })
+  }
   const ended = () => [...sessions.values()].filter((s): s is Played & { endedAt: string } => s.endedAt !== null)
 
   auth.authorizedRequest = async <T,>(request: AuthorizedRequest<T>): Promise<ApiResult<T>> => {
@@ -89,8 +99,11 @@ export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapsh
         played.goalText = current.goalText
         played.endedAt = new Date().toISOString()
         played.activeMs = current.accumulatedActiveMs
-        // #164 병합 전에는 서버에 종료 API가 없다. 앱 안에서만 끝낸다(서버 세션은 진행 중으로 남는다).
-        return result.success ? result : parsed(request, { version: 0, status: 'ENDED', accumulatedActiveMs: current.accumulatedActiveMs })
+        if (result.success) return result
+        // #164 병합 전에는 서버에 종료 API가 없다. 앱 안에서만 끝낸다.
+        // 서버는 진행 중(RUNNING)인 세션만 무신호 3분 뒤 자동 종료한다. 멈춘 채 끝냈으면 서버에서만 다시 이어 두어 자동 종료되게 한다.
+        if (current.status !== 'RUNNING') await resumeOnServer(sessionId)
+        return parsed(request, { version: 0, status: 'ENDED', accumulatedActiveMs: current.accumulatedActiveMs })
       }
       if (action === 'summary' && request.method === 'GET') {
         const result = await real(request)
