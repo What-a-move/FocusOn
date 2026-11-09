@@ -14,3 +14,7 @@
 - 실제 PG QA에서 발견한 pending_slot NULL CHECK 누락도 추가 재검토했다. `IS NOT NULL` 보강으로 SQL UNKNOWN 통과를 막았다.
 - JDBC Timestamp 변환·추가 회귀 2건도 재검토했고 추가 actionable finding 없음으로 보고받았다.
 - production adapter/receipt 및 Notion 동기화 미완료는 명시된 통합 제한이다. 봇 리뷰나 실제 앱 QA 완료를 뜻하지 않는다.
+
+## 0.6 기준 변경 후 독립 리뷰
+
+별도 대화 이력이 없는 리뷰 에이전트가 HEAD 대비 AnalysisAiClient/테스트 변경과 최신 요구사항을 검토했다. numeric 일반/베타 모두 <0.6 보류, >=0.6 다른 게이트 유지, null 베타 예외/실패 보호 유지에 부합하며 추가 actionable finding 없음. 리뷰자는 테스트를 실행하지 않았다.

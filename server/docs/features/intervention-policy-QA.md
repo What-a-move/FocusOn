@@ -35,3 +35,10 @@ PG 실행 대상: intervention 전체 + AnalysisApiTests + AnalysisMigrationTest
 - #154 실제 AI 응답 연결 및 팀원 종료/연장 API·향후 리포트 통합 QA는 별도다.
 - Notion 원문 복구는 확인했으나 사용자 승인된 rolling/만료 신규 정책 정본 반영은 미완료다. 개입 미존재 404 code/EXPIRED actedAt null 상세도 최종 정본 대조가 필요하다.
 - PR 생성·원격 CI·봇 리뷰·병합·Issue 종료를 수행하지 않았다.
+
+## confidence 0.6 변경 후 최종 회귀
+
+- 사용자 최종 변경: numeric confidence 기준 0.6. 일반·베타 각각의 0.599/0.6/0.6001/0.65/0.749/0.75/1.0과 null 예외를 검사했다.
+- 전체 build/Checkstyle 성공: 테스트234, 실패0, 오류0, 생략10.
+- DB/SQL 변경 없음으로 PG를 재실행하지 않았다. 위 PG87개는 confidence 변경 전 #182 검증 결과다.
+- Notion AI 분석 계약4.4/7을 numeric 0.6으로 수정·저장 확인, 공통 API/Backend 규칙 동기화. AI 코드/실제 모델·앱 연동은 여전히 별도다.

@@ -1,6 +1,15 @@
 # Backend 결정 기록
 
-## 2026-11-09 확정 — AI 숫자 점수 기준 0.75
+## 2026-11-09 최종 변경 — AI 숫자 점수 기준 0.6
+
+- 사용자의 최신 지시로 앞선 0.75 결정을 대체한다. 숫자 confidence는 0.6 미만이면 UNCERTAIN, 정확히 0.6 이상이면 기존 권한·출처·보호·시간 정책을 추가 검증한다.
+- 숫자 점수를 반환하는 -uncalibrated 베타 응답도 0.6이다. 기존 승인된 -uncalibrated + confidence:null 예외는 변경하지 않는다. APP_META/TAB_META UNRELATED 비누적·실패 시 안전 보류도 유지한다.
+- 서버 AnalysisAiClient와 경계/중간값 회귀를 0.6으로 변경했다. AI PR #190 head252b513은 아직 0.75이므로 AI 담당의 별도 수정이 필요하다. AI/shared-types/Frontend는 직접 수정하지 않았다.
+- 사용자 추가 승인으로 Notion AI 분석 계약 4.4/7장의 confidence 기준과 베타 예외 내 수치 참조 총 5곳을 0.6으로 수정하고 재접속 후 저장을 확인했다. 공통 docs/API_CONTRACT.md와 Backend DEVELOPMENT_RULES의 현재 숫자 기준도 0.6으로 동기화했다. null 예외/이탈 시간/cooldown은 유지했다.
+- 실제 AI/학교 Ollama/포키 전체 왕복·production adapter/receipt 연결 완료를 뜻하지 않는다.
+
+
+## 2026-11-09 이전 결정 — AI 숫자 점수 기준 0.75 (이후 0.6으로 대체)
 
 - 사용자 확정: 공통 문서 기준 0.75로 Backend·AI 연동을 진행한다. 0.6으로 낮추지 않는다.
 - 숫자 confidence는 0.75 미만이면 UNCERTAIN, 정확히 0.75 이상이면 다른 권한·출처·보호·정책 게이트를 추가 검증한다. 점수만으로 개입을 생성하지 않는다.
@@ -410,3 +419,10 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - DOM에서 본문이 없어도 제목은 개인정보일 수 있으므로 metadata가 있으면 host/제외 검사를 필수로 한다.
 - 기본OSIV=false는 유지하고 분석 준비/완료의 독립 transaction 및 캐시 초기화로 설정 변경에도 완료 검증을 보장한다.
 - 구형 counter 유실을 이유로 낮은 번호를 최신으로 승격하지 않는다. 기존 Frontend 지속 counter·전역 번호 복구/새 세션 계약을 유지한다. 새로운 복구 API/추정 규칙은 이번 리뷰 수정으로 만들지 않는다.
+
+### 0.6 변경 검증·정본 동기화 결과
+
+- 전체 build/Checkstyle 성공: 234개, 실패0·오류0·생략10. numeric 일반/베타 양쪽의 0.599 보류, 0.6·0.6001·0.65·0.749 통과 및 null 예외를 검증했다.
+- 별도 컨텍스트 리뷰: 추가 actionable finding 없음. 이번 변경은 숫자 정규화만이며 SQL 변경이 없어 PostgreSQL QA는 재실행하지 않았다(기존 #182 PG87개 결과와 구분).
+- Notion AI 분석 계약 4.4/7 numeric 기준 및 null 예외의 기준 참조를 동기화했다. API POST 페이지에는 별도 0.75 기준 문구가 없어 수정하지 않았다. Notion의 관측 순서·rolling/30초 만료 등 다른 미동기화 항목은 이번 작업으로 해결됐다고 보지 않는다.
+- AI PR #190 head252b513의 0.75는 AI 담당 수정 대기다. 실제 AI/학교 Ollama/포키 QA·PR 생성·병합·이슈 종료는 미수행이다.

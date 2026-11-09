@@ -53,9 +53,31 @@
 - 실제 서버 연동 QA에서는 FOCUSON_DEMO=1을 사용하지 않는 일반 실행을 해야 한다. 시연 모드 영상과 실제 AI→포키·종료/리포트 연동 증거를 구분한다. 이 코드는 읽기만 했으며 Frontend를 수정하지 않았다.
 - 담당 우선순위는 #182의 실제 연동 계약/연결 → 세션 summary·learning-summary 조회(생성 AI와 역할 분리) → calendar/daily다. #164/#168 세션 명령 및 #99 목표 AI는 팀원 범위로 유지한다.
 
-## 2026-11-09 확정 — AI 숫자 점수 기준 0.75
+## 2026-11-09 이전 결정 — AI 숫자 점수 기준 0.75 (이후 0.6으로 대체)
 
 - 사용자 확정: 공통 문서 기준 0.75로 Backend·AI 연동을 진행한다. 0.6으로 낮추지 않는다.
 - 숫자 confidence는 0.75 미만이면 UNCERTAIN, 정확히 0.75 이상이면 다른 권한·출처·보호·정책 게이트를 추가 검증한다. 점수만으로 개입을 생성하지 않는다.
 - 숫자를 반환하는 베타 -uncalibrated 응답에도 같은 0.75를 적용한다. 기존 승인된 -uncalibrated + confidence:null 예외는 별도 계약이며 이번 승인으로 임의 제거/확장하지 않는다.
 - 현재 AnalysisAiClient와 PR #190 실제 코드가 이미 0.75라 임계값 코드 변경은 필요 없다. 실제 AI/학교 Ollama/포키 왕복 QA는 여전히 별도다.
+
+## 2026-11-09 최종 변경 — AI 숫자 점수 기준 0.6
+
+- 사용자의 최신 지시로 앞선 0.75 결정을 대체한다. 숫자 confidence는 0.6 미만이면 UNCERTAIN, 정확히 0.6 이상이면 기존 권한·출처·보호·시간 정책을 추가 검증한다.
+- 숫자 점수를 반환하는 -uncalibrated 베타 응답도 0.6이다. 기존 승인된 -uncalibrated + confidence:null 예외는 변경하지 않는다. APP_META/TAB_META UNRELATED 비누적·실패 시 안전 보류도 유지한다.
+- 서버 AnalysisAiClient와 경계/중간값 회귀를 0.6으로 변경했다. AI PR #190 head252b513은 아직 0.75이므로 AI 담당의 별도 수정이 필요하다. AI/shared-types/Frontend는 직접 수정하지 않았다.
+- 사용자 추가 승인으로 Notion AI 분석 계약 4.4/7장의 confidence 기준과 베타 예외 내 수치 참조 총 5곳을 0.6으로 수정하고 재접속 후 저장을 확인했다. 공통 docs/API_CONTRACT.md와 Backend DEVELOPMENT_RULES의 현재 숫자 기준도 0.6으로 동기화했다. null 예외/이탈 시간/cooldown은 유지했다.
+- 실제 AI/학교 Ollama/포키 전체 왕복·production adapter/receipt 연결 완료를 뜻하지 않는다.
+
+### AI·공통 문서 담당자에게 전달할 정확한 수정안 (미전송)
+
+- AI PR #190의 AI/src/api/routes.py candidate 점수 gate `score < 0.75` → `score < 0.6`. AI/src/api/reception.py의 numeric beta 검증 `confidence < .75` → `confidence < .6`. 실제 코드·PR 설명·AI 문서·경계 테스트를 함께 맞춘다.
+- 공통 API 계약과 QA의 confidence 숫자 기준: '0.75 미만은 UNCERTAIN' → '0.6 미만은 UNCERTAIN'. 정확히 0.6은 점수 게이트를 통과하지만 다른 보호/개입 조건은 그대로다.
+- Notion의 같은 numeric confidence 기준 0.75를 0.6으로 동기화한다. confidence:null 베타 예외, 이탈 시간 임계값과 cooldown은 이 변경 대상이 아니다.
+- 단순 모의 판정으로 포키가 보이는 것과 실제 모델 점수의 정확도 검증을 구분한다.
+
+### 0.6 변경 검증·정본 동기화 결과
+
+- 전체 build/Checkstyle 성공: 234개, 실패0·오류0·생략10. numeric 일반/베타 양쪽의 0.599 보류, 0.6·0.6001·0.65·0.749 통과 및 null 예외를 검증했다.
+- 별도 컨텍스트 리뷰: 추가 actionable finding 없음. 이번 변경은 숫자 정규화만이며 SQL 변경이 없어 PostgreSQL QA는 재실행하지 않았다(기존 #182 PG87개 결과와 구분).
+- Notion AI 분석 계약 4.4/7 numeric 기준 및 null 예외의 기준 참조를 동기화했다. API POST 페이지에는 별도 0.75 기준 문구가 없어 수정하지 않았다. Notion의 관측 순서·rolling/30초 만료 등 다른 미동기화 항목은 이번 작업으로 해결됐다고 보지 않는다.
+- AI PR #190 head252b513의 0.75는 AI 담당 수정 대기다. 실제 AI/학교 Ollama/포키 QA·PR 생성·병합·이슈 종료는 미수행이다.

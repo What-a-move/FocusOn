@@ -1,5 +1,12 @@
 # Backend 다음 작업
 
+## 최신 confidence 기준 변경 (2026-11-09)
+
+- 사용자 최신 승인으로 0.75 → 0.6. 서버 numeric confidence/경계 회귀 변경·전체 build/Checkstyle 통과(234개 실패0·생략10). 이전 0.75 결정은 대체됐다.
+- 공통 API 문서·Backend 규칙·Notion AI 분석 계약 4.4/7을 0.6으로 동기화했다. AI PR #190은 아직 0.75여서 AI 담당 수정 필요. 정확한 수정안은 features/intervention-policy-handoff.md. 아직 외부 담당자에게 전송하지 않음.
+- 기존 null 베타 예외·metadata 비누적·보호·실제 앱 연동 보류는 그대로다.
+
+
 ## 시연 준비 변경 확인 (2026-11-09)
 
 - 최신 원격 dev 4e212de: Desktop 시연 모드 추가(#191/#193). #182 실제 QA는 FOCUSON_DEMO=1을 끈 일반 실행으로 한다. demo는 interventions GET을 가로채며 일부 종료/리포트를 합성한다.
