@@ -67,6 +67,259 @@ class SessionApiTests {
   }
 
   @Test
+  void extendIsIdempotentAndValidatesDurationAndOwnership() throws Exception {
+    LoginResponse owner = desktop("extend-owner-" + UUID.randomUUID());
+    final LoginResponse other = desktop("extend-other-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String id = startForExtend(owner);
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    String path = "/api/v1/sessions/" + id + "/extend";
+    String key = UUID.randomUUID().toString();
+    String body = "{\"additionalDurationMs\":600000}";
+    String first = mvc.perform(post(path).header("Authorization", token)
+            .header("Idempotency-Key", key).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("RUNNING"))
+        .andExpect(jsonPath("$.data.targetDurationMs").value(2400000))
+        .andReturn().getResponse().getContentAsString();
+    String replay = mvc.perform(post(path).header("Authorization", token)
+            .header("Idempotency-Key", key).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    org.junit.jupiter.api.Assertions.assertEquals(json.readTree(first), json.readTree(replay));
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_extensions WHERE session_id = ?", Integer.class,
+        Long.valueOf(id)));
+    mvc.perform(post(path).header("Authorization", token)
+            .header("Idempotency-Key", key).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"additionalDurationMs\":300000}"))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
+    mvc.perform(post(path).header("Authorization", token)
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("SESSION_VERSION_CONFLICT"));
+    long currentVersion = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    for (String invalid : new String[] {"0", "299999", "360001", "18060000", "300000.5"}) {
+      mvc.perform(post(path).header("Authorization", token)
+              .header("Idempotency-Key", UUID.randomUUID())
+              .header("If-Match-Version", currentVersion).contentType(MediaType.APPLICATION_JSON)
+              .content("{\"additionalDurationMs\":" + invalid + "}"))
+          .andExpect(status().isBadRequest());
+    }
+    mvc.perform(post(path).header("Authorization", "Bearer " + other.accessToken())
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", currentVersion)
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isNotFound());
+    mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isUnauthorized());
+    org.junit.jupiter.api.Assertions.assertEquals(2400000,
+        sessions.findById(Long.valueOf(id)).orElseThrow().getTargetDurationMs());
+  }
+
+  @Test
+  void extendResumesOnlyAwaitingAndPreservesPausedStates() throws Exception {
+    for (String statusName : new String[] {"PAUSED", "AUTO_PAUSED", "AWAITING_END_CONFIRMATION"}) {
+      LoginResponse owner = desktop("extend-state-" + UUID.randomUUID());
+      String id = startForExtend(owner);
+      long numericId = Long.parseLong(id);
+      jdbc.update("UPDATE learning_sessions SET status = ?, accumulated_active_ms = ?, "
+          + "last_resumed_at = NULL WHERE id = ?", statusName, 1000L, numericId);
+      var before = sessions.findById(numericId).orElseThrow();
+      String expected = statusName.equals("AWAITING_END_CONFIRMATION") ? "RUNNING" : statusName;
+      mvc.perform(post("/api/v1/sessions/" + id + "/extend")
+              .header("Authorization", "Bearer " + owner.accessToken())
+              .header("Idempotency-Key", UUID.randomUUID())
+              .header("If-Match-Version", before.getVersion())
+              .contentType(MediaType.APPLICATION_JSON).content("{\"additionalDurationMs\":300000}"))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value(expected))
+          .andExpect(jsonPath("$.data.targetDurationMs").value(2100000));
+      var stored = sessions.findById(numericId).orElseThrow();
+      org.junit.jupiter.api.Assertions.assertEquals(before.getVersion() + 1, stored.getVersion());
+      if (expected.equals("RUNNING")) {
+        org.junit.jupiter.api.Assertions.assertNotNull(stored.getLastResumedAt());
+        org.junit.jupiter.api.Assertions.assertEquals(1000, stored.getAccumulatedAtResumeMs());
+      } else {
+        org.junit.jupiter.api.Assertions.assertNull(stored.getLastResumedAt());
+      }
+    }
+  }
+
+  @Test
+  void concurrentExtensionsWithSameVersionOnlyOneCommits() throws Exception {
+    LoginResponse owner = desktop("extend-race-" + UUID.randomUUID());
+    String id = startForExtend(owner);
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("연장 동시 요청 대기 시간 초과");
+        }
+        return mvc.perform(post("/api/v1/sessions/" + id + "/extend")
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"additionalDurationMs\":300000}"))
+            .andReturn().getResponse().getStatus();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      var statuses = new java.util.ArrayList<Integer>();
+      for (var result : results) {
+        statuses.add(result.get(20, TimeUnit.SECONDS));
+      }
+      java.util.Collections.sort(statuses);
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), statuses);
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_extensions WHERE session_id = ?", Integer.class,
+        Long.valueOf(id)));
+    org.junit.jupiter.api.Assertions.assertEquals(2100000,
+        sessions.findById(Long.valueOf(id)).orElseThrow().getTargetDurationMs());
+  }
+
+  @Test
+  void concurrentExtendAndPauseWithSameVersionOnlyOneCommits() throws Exception {
+    LoginResponse owner = desktop("extend-pause-race-" + UUID.randomUUID());
+    String id = startForExtend(owner);
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("연장과 일시정지 동시 요청 대기 시간 초과");
+        }
+        String command = index == 0 ? "extend" : "pause";
+        String body = index == 0 ? "{\"additionalDurationMs\":300000}"
+            : "{\"pauseReason\":\"USER\",\"accumulatedActiveMs\":0}";
+        return mvc.perform(post("/api/v1/sessions/" + id + "/" + command)
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+            .andReturn().getResponse().getStatus();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      var statuses = new java.util.ArrayList<Integer>();
+      for (var result : results) {
+        statuses.add(result.get(20, TimeUnit.SECONDS));
+      }
+      java.util.Collections.sort(statuses);
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), statuses);
+    }
+    var stored = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1, stored.getVersion());
+    int extensionCount = jdbc.queryForObject(
+        "SELECT count(*) FROM session_extensions WHERE session_id = ?", Integer.class,
+        Long.valueOf(id));
+    org.junit.jupiter.api.Assertions.assertEquals(extensionCount == 1 ? 2100000 : 1800000,
+        stored.getTargetDurationMs());
+    org.junit.jupiter.api.Assertions.assertEquals(extensionCount == 1 ? "RUNNING" : "PAUSED",
+        stored.getStatus().name());
+  }
+
+  @Test
+  void postgresConcurrentExtensionsActuallyWaitForUserLock() throws Exception {
+    try (var blocker = dataSource.getConnection()) {
+      org.junit.jupiter.api.Assumptions.assumeTrue(
+          "PostgreSQL".equals(blocker.getMetaData().getDatabaseProductName()));
+      LoginResponse owner = desktop("extend-lock-" + UUID.randomUUID());
+      String id = startForExtend(owner);
+      long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+      blocker.setAutoCommit(false);
+      int blockerPid;
+      try (var statement = blocker.prepareStatement("SELECT pg_backend_pid()");
+          var rows = statement.executeQuery()) {
+        rows.next();
+        blockerPid = rows.getInt(1);
+      }
+      try (var statement = blocker.prepareStatement(
+          "SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+        statement.setLong(1, Long.parseLong(owner.user().userId()));
+        statement.executeQuery().close();
+      }
+      try (var executor = Executors.newFixedThreadPool(2)) {
+        var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() ->
+            mvc.perform(post("/api/v1/sessions/" + id + "/extend")
+                    .header("Authorization", "Bearer " + owner.accessToken())
+                    .header("Idempotency-Key", UUID.randomUUID())
+                    .header("If-Match-Version", version)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"additionalDurationMs\":300000}"))
+                .andReturn().getResponse().getStatus())).toList();
+        try {
+          long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+          int blocked = 0;
+          while (System.nanoTime() < deadline && blocked < 2) {
+            blocked = jdbc.queryForObject("WITH RECURSIVE waiting(pid) AS ("
+                + "SELECT CAST(? AS integer) UNION "
+                + "SELECT a.pid FROM pg_stat_activity a JOIN waiting w "
+                + "ON w.pid = ANY(pg_blocking_pids(a.pid))) "
+                + "SELECT count(*) - 1 FROM waiting", Integer.class, blockerPid);
+            if (blocked < 2) {
+              Thread.sleep(20);
+            }
+          }
+          org.junit.jupiter.api.Assertions.assertTrue(blocked >= 2,
+              "연장 요청 두 건이 실제 잠금을 기다려야 한다");
+        } finally {
+          blocker.commit();
+        }
+        var statuses = new java.util.ArrayList<Integer>();
+        for (var result : results) {
+          statuses.add(result.get(20, TimeUnit.SECONDS));
+        }
+        java.util.Collections.sort(statuses);
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), statuses);
+      }
+      org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+          "SELECT count(*) FROM session_extensions WHERE session_id = ?", Integer.class,
+          Long.valueOf(id)));
+    }
+  }
+
+  @Test
+  void terminalSessionCannotBeExtended() throws Exception {
+    for (String terminal : new String[] {"ENDING", "ENDED", "ABANDONED"}) {
+      LoginResponse owner = desktop("extend-terminal-" + UUID.randomUUID());
+      String id = startForExtend(owner);
+      long numericId = Long.parseLong(id);
+      jdbc.update("UPDATE learning_sessions SET status = ? WHERE id = ?", terminal, numericId);
+      long version = sessions.findById(numericId).orElseThrow().getVersion();
+      mvc.perform(post("/api/v1/sessions/" + id + "/extend")
+              .header("Authorization", "Bearer " + owner.accessToken())
+              .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+              .contentType(MediaType.APPLICATION_JSON).content("{\"additionalDurationMs\":300000}"))
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("SESSION_STATE_INVALID"));
+      org.junit.jupiter.api.Assertions.assertEquals(0, jdbc.queryForObject(
+          "SELECT count(*) FROM session_extensions WHERE session_id = ?", Integer.class,
+          numericId));
+    }
+  }
+
+  private String startForExtend(LoginResponse owner) throws Exception {
+    String token = "Bearer " + owner.accessToken();
+    String goal = mvc.perform(post("/api/v1/goals").header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"extend goal\",\"confirmationSource\":\"MANUAL_CONFIRMED\"}"))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    String goalId = json.readTree(goal).path("data").path("goalId").asText();
+    String started = mvc.perform(post("/api/v1/sessions").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+            .content(request(goalId, 1800000)))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    return json.readTree(started).path("data").path("sessionId").asText();
+  }
+
+  @Test
   void heartbeatEnforcesOrderingAndPreservesCommandVersion() throws Exception {
     LoginResponse owner = desktop("heartbeat-" + UUID.randomUUID());
     final LoginResponse other = desktop("heartbeat-other-" + UUID.randomUUID());

@@ -13,15 +13,17 @@
 
 # AI 다음 작업
 
-- 2026-11-03 실험 분석 API `POST /internal/v1/analysis-runs/analyze` 연결. candidateDecision은 미보정 후보, decision은 보정 confidence가 없어 UNCERTAIN이다. 실제 Qwen DNS/연결, Backend 내부 응답 계약, confidence 독립 보정과 왕복 검증이 남았다. [결과](features/fastapi-relevance-analysis-REPORT.md).
+- Backend 배포 환경에서 학교 PC 모델 주소를 실제로 resolve/connect 할 수 있는지 `/health`와 함께 확인한다. 최신 dev의 AI 호출 Adapter는 구현되어 있으나 배포와 실제 연결 확인은 남았다.
+
+- 2026-11-08 `POST /internal/v1/analysis-runs` 단일 판정 경로, 베타 candidate 응답, 실제 모델 health probe, OCR 품질 필드 선택성을 구현했다. 최신 dev Backend의 호출부와 실제 AI 모델 왕복을 확인하고 AI의 0.6에 맞춘 Backend 변경과 실제 실행 환경의 AI·Backend 왕복을 확인해야 한다. Desktop→Server→AI→지속 이탈 알림 전체 왕복은 아직 검증하지 않았다. [결과](features/fastapi-relevance-analysis-REPORT.md).
 
 화면 관련성 Streamlit UI는 2026-11-03 제거했다. Hybrid runner는 `evaluation/analysis_runner.py`에 유지하며, 목표 보조의 별도 Streamlit 테스트 화면은 유지한다.
 
 ## 가장 먼저 진행할 작업
 
-- 작업명: 화면 분석 입력 계약을 실제 Server 경로에 연결하고 OCR 품질 필드 전달을 합의한다.
+- 작업명: Server Adapter에서 AI 단일 판정 경로를 실제 호출하고 전체 이탈 알림 왕복을 확인한다.
 - 담당 영역: AI + Server + Desktop/Extension 계약 담당자
-- 상태: AI Adapter와 내부 FastAPI 수신·실험 분석 구현. 실제 Backend 왕복은 미연결이다. `features/fastapi-reception-REPORT.md` 참고.
+- 상태: AI 내부 경로 구현 완료. Backend Java 호출부는 구현됐고 실제 왕복은 미검증이다. `features/fastapi-relevance-analysis-REPORT.md` 참고.
 
 ## 현재 계약 기준
 
@@ -31,19 +33,19 @@ Server → AI에서는 인증된 세션·목표·실행 문맥을 조회해 `Ver
 
 ## 남은 작업
 
-1. Server가 공개 요청을 검증하고 현재 `VerifiedContext`·확정 목표를 조립해 AI Adapter에 연결한다.
-   - `POST /internal/v1/analysis-runs`의 내부 envelope와 서비스 Bearer 키를 합의한다. 이후 실제 분석 실행·공개 판정 응답을 연결한다. 현재 수신 확인 `RECEIVED`는 관련성 라벨이 아니다.
-2. `extractionStatus`와 Desktop OCR의 `ocr.confidence`·`captureStatus`를 Server → AI에서 어디에 전달할지 합의한다. 공개 Client 요청 타입에는 현재 이 필드가 없다.
-3. Server가 제공하는 `navigationId`가 실제 탭/창 이동을 구분하는지, AI에 계속 제공할지 확인한다.
-4. Server/AI 결과 연결에서 `RELATED`·`UNRELATED`·`UNCERTAIN`, `reasonCode`, stale 관측, 중복 요청, 순서 역전 및 모델 실패를 통합 검증한다.
-5. 독립 검수 자료로 판정 confidence를 보정한다. 보정 전 cosine/Hybrid 점수나 OCR 품질을 판정 confidence로 사용하지 않는다.
+1. Server가 공개 요청을 검증하고 현재 `VerifiedContext`·확정 목표를 조립해 단일 AI 경로에 연결한다. `AI/examples/analysis-reception.json`과 `FOCUSON_AI_API_KEY` Bearer 인증을 사용한다.
+2. Desktop OCR `contentPayload.text`만으로 호출하고 `ocr.confidence`·`captureStatus`를 필수로 요구하지 않는지 확인한다.
+3. Server 결과 계약이 `decision`, nullable `confidence`, `reasonCode`, `modelVersion`, `promptVersion`를 수용하고 `-uncalibrated`를 기록하는지 확인한다.
+4. Server timeout·연결 실패·모델 실패를 알림 근거가 아닌 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 정규화하는지 통합 검증한다.
+5. Desktop→Server→AI→지속 이탈 타이머·알림을 실제 환경에서 확인하고 DOM 경로 p95 3초 목표를 다시 측정한다.
+6. 독립 검수 자료로 confidence를 보정하기 전까지 베타 모드를 유지하되 운영 배포 환경에는 적용하지 않는다.
 
 ## 현재 검증 결과와 제한
 
 - `PYTHONPATH=AI:. python3 -m pytest AI/tests/test_screen_analysis_contract.py -q`: 47 passed.
 - `AI/tests/test_graphless_hybrid.py`, `AI/tests/test_graphless_metadata.py`를 제외한 AI 회귀: 158 passed, 1 skipped, 16 subtests passed.
 - 전체 회귀 실행 시 현재 Python 환경에 `kiwipiepy==0.23.1`이 없어 Kiwi 의존 평가 테스트 75건이 실행되지 못했다. 네트워크 제한으로 임시 설치도 완료하지 못했다.
-- 실제 Qwen 임베딩 요청, 공개 Server endpoint, Client 캡처/OCR 왕복은 검증하지 않았다.
+- 합성 fixture/FakeEmbedding으로 AI HTTP 경로 검증. 실제 Server endpoint와 Client 캡처/OCR 왕복은 검증하지 않았다. 기존 학교 Ollama 표본은 `school-ollama-embedding-SETUP.md`에서 범위를 확인한다.
 
 ## 선행 문서
 

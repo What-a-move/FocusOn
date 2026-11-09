@@ -41,7 +41,7 @@
 6. 목록은 data 배열·기존 enum·문자열 ID다. GET은 DB 상태/전송 시각을 변경하지 않는다. TTL 만료는 읽기 시 EXPIRED view로 보이고, 다음 mutation에서 영속화한다. 실행 세대·현재 context·pending 보호가 유효하지 않은 PENDING은 표시하지 않는다.
 7. ack는 사용자→세션 잠금 아래 첫 결정을 유지한다. 같은/반대 action도 최초 status/actedAt을 200으로 반환한다. EXPIRED 늦은 ack는 EXPIRED/actedAt null이며 허위 사용자 시각을 만들지 않는다. 새 Idempotency-Key/If-Match-Version을 요구하지 않는다. 자원 비존재/타인 개입은 기존 공통 NOT_FOUND(404), 타인 세션 목록은 SESSION_NOT_FOUND(404)다. 정본의 상세 404 code/nullable actedAt 보완은 최종 계약 대조 항목이다.
 8. 전송 미확인 이벤트는 ack/TTL 뒤에도 새 생성을 막는다. deliveryConfirmedAt을 임의로 채우는 공개/내부 수신 API는 만들지 않았다. 전송 receipt와 cooldown 시작점은 P3 합의/구현 선행이며 확인했어 UI 상태는 서버에서 저장하지 않는다.
-9. V16은 additive 신규 테이블만 추가한다. V1~V15는 수정하지 않는다. 리포트·이력·카메라·BREAK_SUGGESTION 생성·세션 명령은 추가하지 않았다.
+9. V17은 additive 신규 테이블만 추가한다. 최신 dev의 V16 세션 연장을 포함한 V1~V16은 수정하지 않는다. 리포트·이력·카메라·BREAK_SUGGESTION 생성·세션 명령은 추가하지 않았다.
 
 ## 2026-11-09 이전 결정 — AI 숫자 점수 기준 0.75 (이후 0.6으로 대체)
 
@@ -133,7 +133,7 @@
 - 분석 예약·보호 관측 도착에서 기존 후보를 차단하고, AI 완료는 findCurrent 재확인 뒤 해당 관측이 여전히 유효할 때만 정책을 갱신한다.
 - heartbeat 연결 위치는 기존 유효 신호 검증·누적 확정 뒤다. 무시된 재전송·오류·ABANDONED/목표 도달 응답에서 개입을 생성하지 않는다. bulk update와 persistence context도 함께 검토한다.
 - 정책 호출의 실패 격리·commit 경계를 확정해 heartbeat 생존 기록을 부당하게 유실하거나 실패한 transaction의 개입을 반환하지 않는다.
-- 최신 migration은 V13 heartbeat / V14 analysis_runs / V15 관측 순서다. V16은 현재 후보 번호일 뿐, 실제 작성 직전 최신 dev·팀원 PR과 다시 대조한다. V1~V15는 수정하지 않는다.
+- 최신 dev 255085a의 migration은 V13 heartbeat / V14 analysis_runs / V15 관측 순서 / V16 세션 연장이다. 미배포 개입 migration을 V17로 이동했다. V1~V16은 수정하지 않는다. 이후 추가 migration 전에도 원격 번호를 다시 대조한다.
 - #163 Draft PR164의 session 파일과 충돌 가능한 최소 연결만 검토하고 종료 기능은 가져오지 않는다.
 
 ## 검증 계획
@@ -173,7 +173,7 @@
 
 - 이벤트 원인은 unique(session_id, type, evaluationRevision)로 중복 생성하지 않는다. 추가로 같은 세션+타입의 미완료 PENDING은 하나만 유지하는 PostgreSQL partial unique index를 둔다. 이후 새 관측에서 같은 연속 구간을 재평가할 수 있으므로 intervalId만 영구 UNIQUE로 묶지 않는다.
 - 분석 원문·제목·전체 URL·host·AI 전문·token·알림 대사는 새 테이블/로그에 저장하지 않는다. 입력 DTO/Entity 전체를 로그로 덤프하지 않는다.
-- DB migration은 새로 추가한다. 기존 V13~V15는 건드리지 않으며 V16 충돌을 작성 직전 재확인한다.
+- DB migration은 새로 추가한다. 기존 V13~V16은 건드리지 않으며 개입 V17 이후 번호도 작성 직전 재확인한다.
 
 **시간/구간:** 정책 누적은 서버 시간만 사용한다. 유효한 UNRELATED 완료가 확정된 commit부터 열린 구간을 시작한다. 새 분석 요청의 처리 중(PENDING)은 확정 UNCERTAIN과 다르다. 같은 실행 세대·선택 context의 기존 이탈 구간 ID와 확정 누적은 유지하고, 대기 중 시간 누적/알림 생성만 동결한다. 최신 요청이 UNRELATED로 완료되면 같은 구간에서 누적을 재개한다. 대기 시간을 소급 가산하지 않는다. 결과가 UNCERTAIN/실패/보호/RELATED이거나 실행 세대·선택 context가 바뀌면 구간을 닫는다. AI 대기 상태는 DB에 별도로 식별하고, #172의 공개 예약 응답 UNCERTAIN과 혼동하지 않는다. pending을 무기한 유효 판정으로 사용하거나 예전 UNCERTAIN 30초 연결 규칙을 적용하지 않는다. 확정 판정과 foreground 유효성이 유지되는 동안 heartbeat가 경과 시간만 평가하며 heartbeat 횟수를 반복 횟수로 세지 않는다. 이벤트는 당시 policyVersion/강도/channels를 고정한다. 서버 재시작 뒤 상태는 DB에서 복구한다. 시계 역행에서는 음수 기간을 0으로 누르고 이미 확정된 시간을 줄이거나 만들어내지 않는다.
 

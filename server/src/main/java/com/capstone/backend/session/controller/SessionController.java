@@ -3,6 +3,8 @@ package com.capstone.backend.session.controller;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.session.dto.SessionDtos.ActiveResponse;
+import com.capstone.backend.session.dto.SessionDtos.ExtendRequest;
+import com.capstone.backend.session.dto.SessionDtos.ExtendResponse;
 import com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest;
 import com.capstone.backend.session.dto.SessionDtos.HeartbeatResponse;
 import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
@@ -72,6 +74,32 @@ public class SessionController {
       @Valid @RequestBody HeartbeatRequest request) {
     return com.capstone.backend.common.api.ApiResponse.of(
         heartbeats.heartbeat(principal, deviceId, sessionId, request));
+  }
+
+  /** 같은 세션의 목표 시간을 연장한다. */
+  @PostMapping("/{sessionId}/extend")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "학습 세션 시간 연장")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "시간 연장 성공"),
+      @ApiResponse(responseCode = "400", description = "연장 시간 또는 필수 헤더 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "401", description = "인증 또는 기기 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "409", description = "상태·버전·멱등 키 충돌",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public com.capstone.backend.common.api.ApiResponse<ExtendResponse> extend(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId,
+      @Parameter(description = "명령 재시도를 위한 UUID", required = true)
+      @RequestHeader(value = "Idempotency-Key", required = false) String key,
+      @Parameter(description = "마지막으로 확인한 세션 버전", required = true)
+      @RequestHeader(value = "If-Match-Version", required = false) String version,
+      @Valid @RequestBody ExtendRequest request) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        commands.extend(principal, sessionId, key, version, request));
   }
 
   /** 인증된 Desktop 기기에서 실행 중인 세션을 일시정지한다. */

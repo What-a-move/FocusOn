@@ -20,14 +20,86 @@ def payload():
 @pytest.fixture
 def client():
     with TestClient(create_app(api_key=KEY)) as client:
+        class ReadyModel:
+            def embed(self, texts):
+                return [[1.0] + [0.0] * 2559]
+
+            def close(self):
+                pass
+
+        client.app.state.embedding_client_factory = ReadyModel
         yield client
 
 
-def test_receipt_is_not_an_analysis_result(client, payload):
+def test_health_checks_model_and_reports_failure(client):
+    assert client.get("/health").json()["modelConnected"] is True
+
+    class BrokenModel:
+        def embed(self, texts):
+            raise RuntimeError("sensitive provider details")
+
+        def close(self):
+            pass
+
+    client.app.state.embedding_client_factory = BrokenModel
+    response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json()["modelConnected"] is False
+    assert response.json()["analysisEnabled"] is False
+    assert response.json()["reasonCode"] == "ANALYSIS_UNAVAILABLE"
+    assert "sensitive" not in response.text
+
+
+@pytest.mark.parametrize("key,value", [("FOCUSON_EMBEDDING_MAX_RETRIES", "invalid"),
+                                       ("FOCUSON_EMBEDDING_TIMEOUT_SECONDS", "-1")])
+def test_health_rejects_invalid_analysis_configuration(monkeypatch, key, value):
+    monkeypatch.setenv(key, value)
+    with TestClient(create_app(api_key=KEY)) as client:
+        response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json()["analysisEnabled"] is False
+
+
+def test_health_probe_uses_bounded_settings(monkeypatch):
+    monkeypatch.setenv("FOCUSON_EMBEDDING_TIMEOUT_SECONDS", "10")
+    monkeypatch.setenv("FOCUSON_EMBEDDING_MAX_RETRIES", "2")
+    seen = []
+
+    class Probe:
+        def __init__(self, settings):
+            seen.append(settings)
+        def embed(self, texts):
+            return [[1.0] + [0.0] * 2559]
+        def close(self):
+            pass
+
+    monkeypatch.setattr("AI.src.models.embedding_client.OllamaEmbeddingClient", Probe)
+    with TestClient(create_app(api_key=KEY)) as client:
+        assert client.get("/health").status_code == 200
+    assert seen[0].timeout_seconds == 3.0 and seen[0].max_retries == 0
+
+
+def test_default_analysis_timeout_is_four_seconds(monkeypatch):
+    from AI.src.models.embedding_client import configured_embedding_client
+
+    monkeypatch.delenv("FOCUSON_EMBEDDING_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("FOCUSON_EMBEDDING_MAX_RETRIES", raising=False)
+    client = configured_embedding_client()
+    try:
+        assert client.settings.timeout_seconds == 4.0
+        assert client.settings.max_retries == 0
+    finally:
+        client.close()
+
+
+def test_primary_path_returns_analysis_result(client, payload, monkeypatch):
+    monkeypatch.setenv("FOCUSON_ANALYSIS_DECISION_MODE", "safe")
     response = client.post(PATH, json=payload, headers=HEADERS)
     assert response.status_code == 200
-    assert response.json() == {"status": "RECEIVED", "sessionId": "session-demo",
-                               "clientRunId": payload["request"]["clientRunId"], "analysisExecuted": False}
+    body = response.json()
+    assert {"decision", "confidence", "reasonCode", "modelVersion", "promptVersion"} <= body.keys()
+    assert body["decision"] in {"RELATED", "UNRELATED", "UNCERTAIN"}
+    assert "status" not in body
     assert client.get("/health").json()["analysisEnabled"] is True
 
 
@@ -48,8 +120,15 @@ def test_supported_sources(client, payload, source):
     if source.endswith("META"):
         payload["request"].pop("contentPayload")
     else:
-        payload["ocr"] = {"confidence": .91, "captureStatus": "SUCCESS"}
+        # Beta request contains only the already-extracted text; OCR quality
+        # metadata is optional and must not be fabricated by the AI service.
+        payload.pop("ocr", None)
     assert client.post(PATH, json=payload, headers=HEADERS).status_code == 200
+
+
+def test_legacy_analysis_route_is_not_registered(client, payload):
+    response = client.post(PATH + "/analyze", json=payload, headers=HEADERS)
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize("field,value", [("sequence", 2), ("goalVersion", 2), ("sessionId", "another")])

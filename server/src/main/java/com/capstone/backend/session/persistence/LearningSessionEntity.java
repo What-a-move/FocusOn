@@ -146,6 +146,14 @@ public class LearningSessionEntity {
     this.lastResumedAt = resumedAt;
   }
 
+  /** 확인 대기 중 연장은 새 실행 구간을 열고 다른 상태에서는 상태를 유지한다. */
+  public void extend(long newTargetDurationMs, Instant now) {
+    this.targetDurationMs = newTargetDurationMs;
+    if (this.status == SessionStatus.AWAITING_END_CONFIRMATION) {
+      resume(now);
+    }
+  }
+
   /** 확인되지 않은 시간은 더하지 않고 무신호 종료를 확정한다. */
   public void abandon(Instant now) {
     this.status = SessionStatus.ABANDONED;

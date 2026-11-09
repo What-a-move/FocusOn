@@ -1,5 +1,12 @@
 # Backend 작업 컨텍스트
 
+## 실제 알림 작업 재개 (2026-11-09)
+
+- 사용자 지시로 AI 실연결 QA는 보류하고 실제 알림용 서버 연결 작업을 우선한다. 새 공개 계약/정책/범위 확장 검토안을 제시했으며 구체 승인 응답은 대기다. Frontend 코드는 직접 수정하지 않는다.
+- 원격 dev 255085a: AI #190 및 세션 연장 #194 병합. 기존 체크리스트의 미병합 문구는 과거 기록이다. 실제 AI 네트워크/모델/앱 QA 완료를 뜻하지 않는다.
+- dev의 V16 세션 연장과 충돌한 미배포 개입 migration을 V17로 조정한다. V16 데이터에서의 보존 회귀로 기준을 갱신한다. 이전 V15→V16/PG87 결과는 당시 번호로 실행한 이력이다.
+
+
 ## 실제 AI 연결 검사 준비 (2026-11-09)
 
 - 학교 모델 IP 100.116.183.94를 받았으나 HTTPS443/HTTP11434 연결 시간 초과, 현재 경로 en0. 사용자가 11434 포트를 확인했으며 Tailscale 연결 확인 중이다. 학교 모델/실제 AI 성공으로 기록하지 않는다.
@@ -90,6 +97,8 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 - PostgreSQL 스키마와 Flyway migration
 
 ## 현재 작업 (2026-10-28)
+
+- 2026-11-09 Issue #168: 세션 연장과 이력·멱등성 처리를 구현했고 최신 dev 통합 후 migration을 V16으로 조정했다. 복제 DB에서 기존 데이터 보존, 실제 Google 로그인 및 연장 HTTP, PostgreSQL 동시성 테스트를 확인했다. Swagger UI·Desktop 통합과 Notion 원본 대조는 남았다. 상세는 `features/session-extend-REPORT.md`를 따른다.
 
 - 2026-11-03 Issue #132: 세션 일시정지·재개를 구현했다. Swagger·PostgreSQL 동시 출발 및 전체 빌드·Checkstyle을 확인했다. 격리 DB에서 V9 세션 3건의 Flyway V10 적용 전후 기존 데이터 보존을 확인했다. Heartbeat 연계는 후속 작업이다. 상세는 `features/session-pause-resume-REPORT.md`를 따른다.
 

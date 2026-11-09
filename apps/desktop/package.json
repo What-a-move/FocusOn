@@ -7,6 +7,7 @@
     "scripts": {
         "dev": "next dev -H 127.0.0.1 -p 3000",
         "dev:electron": "pnpm build:electron && electron .",
+        "dev:demo": "pnpm build && FOCUSON_DEMO=1 FOCUSON_RENDERER_MODE=production electron .",
         "preview:electron": "pnpm build && FOCUSON_RENDERER_MODE=production electron .",
         "build:electron": "tsc -p tsconfig.electron.json && node scripts/build-electron-preload.cjs && node scripts/build-native.cjs",
         "build": "tsc --noEmit && pnpm build:electron && next build --webpack",

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** V15 데이터 보존과 실제 PostgreSQL의 NULL unique/CHECK/FK를 확인한다. */
+/** V16 데이터 보존과 실제 PostgreSQL의 NULL unique/CHECK/FK를 확인한다. */
 @EnabledIfEnvironmentVariable(named = "SPRING_DATASOURCE_URL", matches = "jdbc:postgresql:.*")
 class InterventionMigrationTests {
   @ParameterizedTest
@@ -26,13 +26,15 @@ class InterventionMigrationTests {
     try (var connection = DriverManager.getConnection(url, user, password)) {
       try {
         Flyway.configure().dataSource(url, user, password).schemas(schema).defaultSchema(schema)
-            .target("15").load().migrate();
+            .target("16").load().migrate();
         execute(connection, "SET search_path TO " + schema);
         fixture(connection);
         Flyway.configure().dataSource(url, user, password).schemas(schema).defaultSchema(schema)
             .load().migrate();
         assertEquals(1234, number(connection,
             "SELECT accumulated_active_ms FROM learning_sessions WHERE id=1"));
+        assertEquals(1, number(connection, "SELECT count(*) FROM information_schema.tables"
+            + " WHERE table_schema='" + schema + "' AND table_name='session_extensions'"));
         String insert = "INSERT INTO intervention_events(session_id,type,status,cause,pending_slot,"
             + "channels_json,policy_version,running_since,created_at,expires_at)"
             + " VALUES(1,'OFF_TASK','PENDING',1,1,'[\"MOLE_UI\"]','v1',now(),now(),"

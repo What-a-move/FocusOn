@@ -68,6 +68,15 @@ public final class SessionDtos {
   /** 재개된 세션과 서버가 기록한 재개 시각이다. */
   public record ResumeResponse(SessionStatus status, long version, Instant lastResumedAt) {}
 
+  /** 추가 학습 시간이다. */
+  public record ExtendRequest(@NotNull @Digits(integer = 8, fraction = 0)
+      @Schema(example = "600000", description = "추가 시간: 5~300분, 1분 단위 밀리초")
+      BigDecimal additionalDurationMs) {}
+
+  /** 연장 후 확정된 상태와 목표 시간이다. */
+  public record ExtendResponse(SessionStatus status, long version, long targetDurationMs,
+      long accumulatedActiveMs, Instant lastResumedAt) {}
+
   /** Desktop이 관측한 시각과 monotonic 누적 시간이다. */
   public record HeartbeatRequest(@NotNull @Schema(example = "2026-11-07T12:00:00Z")
       Instant clientObservedAt, @NotNull @Schema(example = "10000")
