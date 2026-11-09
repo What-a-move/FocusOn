@@ -79,6 +79,19 @@ def test_health_probe_uses_bounded_settings(monkeypatch):
     assert seen[0].timeout_seconds == 3.0 and seen[0].max_retries == 0
 
 
+def test_default_analysis_timeout_is_four_seconds(monkeypatch):
+    from AI.src.models.embedding_client import configured_embedding_client
+
+    monkeypatch.delenv("FOCUSON_EMBEDDING_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("FOCUSON_EMBEDDING_MAX_RETRIES", raising=False)
+    client = configured_embedding_client()
+    try:
+        assert client.settings.timeout_seconds == 4.0
+        assert client.settings.max_retries == 0
+    finally:
+        client.close()
+
+
 def test_primary_path_returns_analysis_result(client, payload, monkeypatch):
     monkeypatch.setenv("FOCUSON_ANALYSIS_DECISION_MODE", "safe")
     response = client.post(PATH, json=payload, headers=HEADERS)
