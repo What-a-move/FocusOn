@@ -89,8 +89,9 @@ public class InterventionPolicyService {
     var state = load(session, selected, now);
     var timeline = read(state);
     if (!Objects.equals(timeline.snapshot().pendingRun(), run.getId())) {
-      // 위임/프로세스 전환 중 놓친 prepare의 시간을 소급 가산하지 않는다.
-      timeline = timeline.interrupt(now).pending(run.getId(), now);
+      // 철회/보호/실행 전이가 이미 지운 pending을 이전 분석 완료로 복원하지 않는다.
+      // 유효 관측은 prepare와 pending 상태를 같은 transaction에서 저장한다.
+      return;
     }
     timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(),
         run.getReceivedAt(), now);

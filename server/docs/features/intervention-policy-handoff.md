@@ -28,6 +28,15 @@ GET 같은 observation-context 경로를 Authorization·X-Device-Id로 조회합
 
 정본과 전체 필드/오류: intervention-policy-integration-contract.md 및 docs/API_CONTRACT.md. 실제 앱 QA에서는 FOCUSON_DEMO=1을 끕니다. UI demo의 interventions 대체 응답을 서버 성공으로 기록하지 않습니다. 외부 담당자에게 이 문서를 자동 전송하지 않았습니다.
 
+
+### 늦은 receipt와 표시 사이의 클라이언트 직렬화
+
+- Desktop의 단일 전송 coordinator가 후보 GET의 수용/폐기, 표시 시도 journal, 비동기 채널 결과, receipt outbox·재시도를 하나의 직렬 흐름으로 관리한다. 다른 worker/process가 별도로 receipt를 보내거나 후보를 표시하지 않으며 단일 instance/공유 broker로 소유권을 보장해야 한다.
+- 채널 callback 미완료·전송 여부 UNKNOWN·미확인 SENT receipt/outbox가 하나라도 있으면 다른 후보를 표시하지 않는다. NOT_SENT는 모든 채널의 미전송이 최종 확정됐을 때만 기록한다. 늦은 성공 callback 가능성이 남아 있으면 NOT_SENT로 확정하지 않는다.
+- receipt 상태가 바뀌면 이전에 시작한 GET 응답/캐시 후보를 모두 무효화한다. SENT receipt 응답을 확정한 뒤에만 새 세대의 GET을 시작한다. 응답을 받은 뒤 표시까지 같은 coordinator의 barrier를 유지하므로 receipt 재시도/콜백이 중간에 끼어들면 응답을 버린다. 단순 GET 재조회만으로 경쟁이 사라졌다고 보지 않는다.
+- 예: B 조회가 진행 중일 때 A의 SENT 결과/재전송이 생기면 B 응답은 폐기하고 표시를 막는다. A receipt가 확정된 뒤 새 GET을 하면 서버 cooldown이 B를 숨긴다. 프로세스 재시작 때도 journal/outbox를 먼저 복구하며 불명 상태를 임의 해제하지 않는다.
+- 서버는 알려진 cooldown에서 후보를 숨기지만 이미 반환한 HTTP 응답/OS 표시를 취소할 수 없다. 위 소비자 coordinator가 구현·검증되기 전에는 실제 표시 경쟁이 해결됐다고 주장하지 않는다. OS side effect와 DB의 exactly-once 보장은 여전히 없다. 별도 서버 endpoint/클라이언트 시각 비교/확인했어 UI 정책은 추가하지 않는다.
+
 <details>
 <summary>과거 검토 이력 — 현재 미완료 작업으로 다시 요청하지 않음</summary>
 

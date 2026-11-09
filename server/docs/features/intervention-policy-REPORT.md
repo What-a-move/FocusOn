@@ -1,5 +1,14 @@
 # #182 구현 결과 (통합 완료 아님)
 
+## 병합 승인 후 추가2건 최종 보완 (2026-11-09)
+
+- 사용자가 PR205 병합을 승인했다. 병합 전3664598 자동 재리뷰에서 추가2건을 확인해 보완했다. Issue182 종료 승인은 별도이며 실행하지 않는다.
+- 철회/보호로 없어진 pending을 늦은 완료가 재구성하지 않는다. 필수 동의3종의 prepare→철회→재동의→옛complete 차단 및 fresh 관측 허용 회귀를 추가했다.
+- 이미 반환된 GET과 늦은 SENT 경쟁은 서버 재조회만으로 제거되지 않는다. 소비자 단일 coordinator·journal/outbox barrier·GET 응답 세대 폐기 규칙을 인계문/연결 설계에 명시했다. 소비자 구현·OS exactly-once를 완료/보장했다고 주장하지 않는다.
+- 독립 재검토 추가 지적 없음. 전체 build·Checkstyle282개 실패0·오류0·생략14, 격리 PostgreSQL Flyway+validate155개 실패0·생략0. 실행 근거는 server/build/ai-integration-qa/pr205-premerge-{build,pg}.log 및 요약 JSON이다.
+- 최종 수정분 원격 CI를 확인한 뒤 병합한다. 새 endpoint/사용자 정책/마이그레이션은 추가하지 않았다. 실제 AI/소비자/포키 QA는 별도다.
+
+
 ## PR205 피드백9건 보완 — 로컬 검증 완료 (2026-11-09)
 
 - CodeRabbit7ab8f6e 리뷰의 actionable9건과 동의 철회 테스트 제안을 대조·반영했다. 처리표: features/intervention-policy-review-response.md. 현재 기준 PR은 생성·push 완료 상태이며 생성 승인을 다시 요청하지 않는다.

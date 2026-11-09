@@ -27,3 +27,7 @@
 - context 없는 높은 관측 번호가 context 안의 늦은 보호 관측 처리를 막는 선택 경계를 수정했다. 실제 서버 receivedAt과 완료 시각을 분리하고 늦은 receipt의 cooldown 표시도 차단했다.
 - heartbeat 부모 transaction 정리 전에 새 transaction이 연결을 기다리는 경계를 execute 반환 이후로 이동했다. max pool1에서 실제 평가 성공을 검증했다. 필수 동의 철회/재동의도 같은 user/session 잠금에서 중단 이력을 보존한다. 선택 카메라 철회는 화면 정책에 영향을 주지 않는다.
 - 전체279개 실패0·생략14, 격리 Flyway+validate PostgreSQL152개 모두 통과. 개인정보/원문·키는 기록하지 않았다.
+
+## 병합 전 추가2건
+
+동의 철회가 지운 pending을 완료 단계의 fallback이 다시 만들어 episode를 열 수 있었다. 완료는 동일 pending과 일치할 때만 반영한다. 이전 분석 완료 차단/새 관측 허용을 필수 동의3종에 검증했다. 이미 받은 GET은 늦은 receipt로 취소할 수 없으므로 소비자 직렬 coordinator/outbox barrier가 필수임도 명시했다. 서버 alone/GET 재조회 alone으로 표시 경쟁이 해결됐다고 주장하지 않는다.

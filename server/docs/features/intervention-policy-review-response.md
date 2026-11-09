@@ -18,3 +18,8 @@
 - 독립 리뷰: 구현 대화 없는 새 리뷰 에이전트가 diff/계약/신규 listener/회귀를 읽었고 추가 actionable finding 없음. 리뷰자는 코드를 수정하거나 테스트를 실행하지 않았다.
 - 실행 결과: 전체 build·Checkstyle279개 실패0·오류0·생략14. CI와 같은 Flyway+validate 및 정확한 원격 목록의 격리 PostgreSQL152개 실패0·생략0. 원격 결과는 최종 push의 체크에서 별도로 확인한다.
 - 실제 AI/학교 모델·Desktop/Extension/shared-types 연결·포키 실표시는 미완료다. 기존 개발 DB5432/8080·IDE staged/stash는 보존한다. PR 병합·Issue 종료는 별도 승인이다.
+
+## 3664598 재리뷰의 추가2건 (병합 전 보완)
+
+- [4509321391](https://github.com/What-a-move/FocusOn/pull/205#discussion_r4509321391): 철회/보호가 지운 pending을 늦은 complete에서 재구성하지 않는다. 유효 prepare와 상태 저장은 같은 transaction이므로 일치하는 pending만 완료한다. 필수 동의3종의 prepare→철회→재동의→옛 완료 차단 및 새 관측 허용 회귀를 추가했다.
+- [4509321382](https://github.com/What-a-move/FocusOn/pull/205#discussion_r4509321382): 단순 새 GET만으로는 늦은 receipt/표시 경쟁을 제거할 수 없음을 인정한다. Desktop 단일 coordinator/journal/outbox barrier·GET 응답 세대 폐기·UNKNOWN 차단 규칙을 handoff와 연결 설계에 명시했다. Frontend를 구현했거나 OS 표시의 exactly-once를 보장한 것은 아니다.

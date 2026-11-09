@@ -528,6 +528,33 @@ class ObservationDeliveryIntegrationTests {
     assertEquals(InterventionDtos.Status.PENDING, events.findById(event).orElseThrow().getStatus());
   }
 
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.EnumSource(value = ConsentType.class,
+      names = {"TERMS_OF_SERVICE", "PRIVACY_POLICY", "SCREEN_ANALYSIS"})
+  void preWithdrawalCompletionCannotReopenButNewObservationCan(ConsentType type) {
+    var f = fixture();
+    String contextId = contexts.put(f.principal(), f.device(), f.sessionString(),
+        contextRequest(1, Observer.DESKTOP)).observationContextId();
+    var old = analysis(contextId, 1);
+    final var prepared = store.prepare(f.principal(), f.session(), old);
+    configuration.updateConsent(f.principal(), type,
+        new com.capstone.backend.user.dto.UserConfigurationDtos.UpdateConsentRequest(
+            false, "2026-09-17", "QA"));
+    configuration.updateConsent(f.principal(), type,
+        new com.capstone.backend.user.dto.UserConfigurationDtos.UpdateConsentRequest(
+            true, "2026-09-17", "QA"));
+    store.complete(f.principal(), prepared, old, unrelated());
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(null, snapshot(f).openEpisode());
+    assertEquals(null, snapshot(f).pendingRun());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+    var fresh = analysis(contextId, 2);
+    var next = store.prepare(f.principal(), f.session(), fresh);
+    store.complete(f.principal(), next, fresh, unrelated());
+    assertNotNull(snapshot(f).openEpisode());
+    assertNotNull(snapshot(f).latestReceivedAt());
+  }
+
   private OffTaskTimeline.Snapshot snapshot(Fixture f) {
     return json.readValue(states.findById(f.session()).orElseThrow().getTimelineJson(),
         OffTaskTimeline.Snapshot.class);

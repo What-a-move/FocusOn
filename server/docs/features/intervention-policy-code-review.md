@@ -42,3 +42,7 @@
 
 - 구현 대화 없는 새 에이전트가7ab 이후 diff·신규 동의 listener·계약·회귀를 읽기 검토했다. context 현재성/후보 보존/동의 중단/cooldown freshness/connection cleanup 변경에서 재현 가능한 추가 버그를 확인하지 못했다.
 - 테스트 실행/파일·원격 변경은 하지 않았다. 실제 실행 결과279개/격리PG152개는 구현자가 별도로 검증했다. CodeRabbit 원본9건별 처리는 intervention-policy-review-response.md를 따른다. 자동 재리뷰 결과와 혼동하지 않는다.
+
+## 3664598 재리뷰 추가2건 독립 재검토
+
+같은 독립 리뷰자가 HEAD3664598 이후 diff를 읽고 matching pending 없는 완료를 무시하는 보호 경계·필수 동의3종 재동의 회귀·소비자 coordinator/barrier 문서에서 새 버그/계약 위반을 확인하지 못했다. 테스트 실행·파일/원격 변경은 하지 않았다. 구현자 검증은 전체282개(실패0·생략14)/격리PG155개 전부 통과다.

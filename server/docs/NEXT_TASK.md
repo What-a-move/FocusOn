@@ -2,7 +2,7 @@
 
 ## 현재 작업 — PR #205 코드리뷰 피드백 반영 (2026-11-09)
 
-- PR은 이미 생성·push했다. 생성 승인을 다시 요청하지 않는다. 병합·Issue #182 종료는 여전히 별도 승인이다.
+- PR은 이미 생성·push했다. 생성 승인을 다시 요청하지 않는다. PR205 병합은 사용자 승인을 받았다. 추가2건 보완/독립 리뷰/로컬282개·격리PG155개 검증을 마쳤고 최종 원격CI 후 병합한다. Issue #182 종료는 별도다.
 - 기준7ab8f6e의 Backend CI2개는 SUCCESS이고 CodeRabbit 리뷰가 완료돼 actionable9건·테스트 제안1건을 받았다. 후속 보완 로컬 검증은 전체279개 실패0·생략14 및 격리PG152개 전부 통과다. 최종 수정분 자동 재리뷰가 완료됐다는 뜻은 아니다.
 - 코드 보완: context 범위 policyCurrent, ordinary pending 후보 보존/표시 동결, 동의 철회 즉시 구간 종료, cooldown 후보 표시 차단·관측 receivedAt 검증, heartbeat connection cleanup 이후 평가. 관련 회귀·독립 리뷰·최종 build/격리PG를 통과했다. 다음은 같은 PR에 push하고 최종 커밋의 원격CI/자동 재리뷰 상태 확인이다.
 - 문서 보완: AI0.6은 #190으로 dev 병합 완료. context/receipt 서버 구현과 Notion 동기화도 완료다. 남은 것은 Desktop/Extension/shared-types 소비자 연결·실표시 QA이며 실제 AI 연결은 사용자 지시로 보류했다.
