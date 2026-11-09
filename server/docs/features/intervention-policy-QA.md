@@ -1,5 +1,28 @@
 # #182 서버 QA
 
+## 실제 알림 서버 연결 최종 검증 (2026-11-09)
+
+- 기준: 원격 dev `0ca256e`까지 통합한 `c767669`, 연결 구현 `792d36f`. Backend 변경만 직접 구현했고 Frontend/shared-types/AI는 수정하지 않았다.
+- 전체 build·Checkstyle 통과: **267개, 실패0·오류0·생략14**. 생략에는 명시 실행 flag가 없는 실제 AI2개 및 PostgreSQL 전용 검사가 포함된다.
+- PostgreSQL17.11 격리 관련 회귀 **131개, 실패0·오류0·생략0**. 대상: intervention 전체, AnalysisApiTests/AnalysisMigrationTests, SessionHeartbeatCleanupTests, SessionApiTests. 개발5432/8080은 사용·변경하지 않았다.
+- 임의 HTTP 포트에서 실제 context PUT/GET → heartbeat 정책 생성 → interventions GET → deliveries POST → 재조회 미표시를 검증했다. X-Trace-Id 왕복·data envelope·문자열 ID를 확인했다. 시간/판정은 합성이며 실제 학교 모델·Desktop 표시가 아니다.
+- V16→V17 및 기존 V17 이벤트가 있는 V17→V18 보존·FK/unique/CHECK를 실제 PostgreSQL에서 검증했다. SENT PENDING은 slotNULL을 허용하고 미전송 PENDING의 slotNULL은 거절한다.
+- context nonce/순번 충돌·JS 경계/소수 거절·기기 권한·Extension 연결/해제·만료 lease 비복구·유효 heartbeat만 갱신·중복/오류 신호 비갱신·옛 context의 늦은 AI·context 없는 구형 이력 비간섭을 검증했다.
+- SENT receipt의 멱등/최초 수신 cooldown·GET 재노출 차단·확인 반응 유지·NOT_SENT 재시도·UNKNOWN 뒤 NOT_SENT로 보류 해제 불가·늦은 SENT의 만료 상태 보존·동시 context/receipt·lease 정확한 종료 경계를 검증했다.
+- `server/build/ai-integration-qa/`의 `context-delivery-dev0ca256e-{recheck,pg}.log` 및 요약 JSON이 이번 실행 근거다. 앞선 실패 실행과 이전267개 미만 결과는 이력으로 남긴다.
+
+### 보완한 실패와 남은 제한
+
+- 초기 PG 확장 검사에서 테스트 fixture의 JDBC Instant 바인딩9건과 새 안전 컬럼 허용 목록1건을 수정했다. 운영 동작 실패로 단정하지 않았다. 이후129개·최신 dev 통합 후131개 전부 통과했다.
+- 최신 dev 전체 검사에서 기존 CORS 실제 HTTP preflight가1회404였다. 단독 재실행 및 전체267개 재실행에서 통과했고 원인은 미확정이다. 추측으로 CORS/보안 설정을 변경하지 않았다.
+- 격리 리뷰 P2(구형 이력의 현재 전경 간섭)를 수정하고 별도 재검토했다. migration 추가 리뷰도 actionable finding 없음. 봇 리뷰/원격 CI를 실행한 것은 아니다.
+- Desktop/Extension/shared-types 소비자 연결, 내구성 있는 전송 시도/receipt 재시도 및 일반 모드 실표시 QA가 필요하다. 실제 AI/학교 모델 연결은 사용자 지시로 보류했다. 실제 포키 표시·전체 앱 완료로 표현하지 않는다.
+- Notion 새 API3행, 기존 분석/heartbeat 요청, 개입 GET 응답·권한·cooldown, 화면 분석 추가 정책을 반영했다. ack 원본은404/401과 status/actedAt만 정의하며 서버 기존 코드/nullable 제한을 별도로 명시하지 않았다. 별도 ack 테이블 없이 이벤트에 최초 action을 저장하는 실제 구조를 문서화했다.
+- PR 생성·원격 CI·봇 리뷰·병합·Issue 종료는 아직 수행하지 않았다. 각각 별도 승인 대상이다.
+
+## 아래는 이전 실행 이력
+
+
 - 일자: 2026-11-09
 - 기준: `feat/182-server-intervention-policy`, origin/dev `5462afd` 기반.
 - 실제 AI·Desktop 포키 표시 QA가 아닌 서버 합성 입력/인증/DB/HTTP 검증이다.

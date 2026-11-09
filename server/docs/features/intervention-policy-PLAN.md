@@ -1,21 +1,21 @@
-# 화면 이탈 Policy Engine과 개입 API 기획 초안
+# 화면 이탈 Policy Engine과 실제 개입 연결 기획
 
 ## 2026-11-09 최종 변경 — AI 숫자 점수 기준 0.6
 
 - 사용자의 최신 지시로 앞선 0.75 결정을 대체한다. 숫자 confidence는 0.6 미만이면 UNCERTAIN, 정확히 0.6 이상이면 기존 권한·출처·보호·시간 정책을 추가 검증한다.
 - 숫자 점수를 반환하는 -uncalibrated 베타 응답도 0.6이다. 기존 승인된 -uncalibrated + confidence:null 예외는 변경하지 않는다. APP_META/TAB_META UNRELATED 비누적·실패 시 안전 보류도 유지한다.
-- 서버 AnalysisAiClient와 경계/중간값 회귀를 0.6으로 변경했다. AI PR #190 head252b513은 아직 0.75이므로 AI 담당의 별도 수정이 필요하다. AI/shared-types/Frontend는 직접 수정하지 않았다.
+- 서버 AnalysisAiClient와 경계/중간값 회귀를 0.6으로 변경했다. AI PR #190은 0.6으로 수정돼 dev에 병합됐다. 실제 연결 QA는 보류다. AI/shared-types/Frontend는 직접 수정하지 않았다.
 - 사용자 추가 승인으로 Notion AI 분석 계약 4.4/7장의 confidence 기준과 베타 예외 내 수치 참조 총 5곳을 0.6으로 수정하고 재접속 후 저장을 확인했다. 공통 docs/API_CONTRACT.md와 Backend DEVELOPMENT_RULES의 현재 숫자 기준도 0.6으로 동기화했다. null 예외/이탈 시간/cooldown은 유지했다.
-- 실제 AI/학교 Ollama/포키 전체 왕복·production adapter/receipt 연결 완료를 뜻하지 않는다.
+- 실제 AI/학교 Ollama/포키 전체 왕복 완료를 뜻하지 않는다. 서버 context/receipt 구현은 아래 현행 범위를 따른다.
 
 
 ## 기본 정보
 
-- 상태: 사용자 지적 2건 반영 후 내부 구현 착수 승인(2026-11-09). 미정 공개 계약·정책은 별도 승인 대기.
+- 상태: 사용자 승인으로 #182에 context/receipt 3개 API를 포함해 확장 구현. 실제 소비자 연결/표시 QA와 PR은 별도다.
 - 작성일: 2026-11-09 (Asia/Seoul)
 - 관련 Issue: https://github.com/What-a-move/FocusOn/issues/182
 - 담당: 사용자 담당 ⑥ 분석·개입, Server만 수정한다.
-- 기준: fetch한 origin/dev `5462afd` (PR #188까지; Server 변경 없음).
+- 기준: 원격 dev `0ca256e`까지 통합. AI #190·연장 #194·조회 #196 반영. V16 연장/V17 개입/V18 연결.
 - 선행: PR #172 MERGED, 검증 head `e77438e`. Issue #171은 단계 0~11 완료·종료 승인 대기로 OPEN이다. 새 기능과 구분한다.
 - 중복 확인: GitHub 전체 이슈 최대 300개 및 전체 PR 최대 200개 조회 결과, 별도 Server Policy Engine·개입 구현 Issue/PR을 찾지 못했다. 생성 직전 다시 확인한다.
 - 제안 Issue 제목: `[Server] 화면 이탈 Policy Engine 및 개입 조회·확인 API 구현`
@@ -24,12 +24,11 @@
 
 ## 이번 구현의 실제 경계
 
-- 2026-11-09 사용자 승인: 지적 2건을 보완한 뒤 내부 구현 착수. rolling 창 내부 시간 clipping·열린 구간 1회 포함, 미전송 30초 만료 권고안도 추가 승인됐다.
-- 상태: `feat/182-server-intervention-policy`, 기준 dev `5462afd`. 서버 코어/영속화/기존 두 API/분석·heartbeat 연결을 구현하고 검증 중이다. 전체 완료/PR/실제 앱 QA 완료가 아니다.
-- 기본 `ForegroundPolicyContext`는 context 없음/관측 소속 불명으로 응답한다. 실제 전경 계약·전송 receipt가 없으므로 production 후보 생성은 보류한다. 공개 요청 필드를 추가하거나 기존 클라이언트가 신호를 보내는 것처럼 가정하지 않는다.
-- 테스트만 명시적인 합성 Binding·관측 소속을 주입한다. 이 내부 포트는 공개 API가 아니며 production의 기기별 sequence/observedAt으로 바인딩을 추측하지 않는다.
-- 아래 설계 방향 중 초기 테이블 분리/outbox/별도 ack 테이블은 실제 구현과 다르다. 아래 '구현 모델' 절이 현재 구현 기준이다. 미정 외부 계약은 P1~P7 추적표를 따른다.
-- Notion은 편집 중 문단 순서가 훼손됐으나 사용자 원문 복구 승인 후 복구 확인했다. 사용자가 원문 복구만 승인해 새 정책은 Notion에 반영하지 않았다. 정본 동기화는 미완료이며 PR/연동 완료 조건에서 누락시키지 않는다.
+- 내부 엔진/기존 조회·ack API에 이어 사용자 승인으로 context PUT/GET·receipt POST와 분석/heartbeat 선택 필드, 개입 조회의 context/잔여TTL을 구현했다. 구체 계약은 `intervention-policy-integration-contract.md`를 따른다.
+- 서버는 실제 저장된 context/관측 소속과 lease를 검증한다. 필수 신호가 없는 기존 클라이언트의 요청은 이력 호환만 유지하며 생성 근거로 쓰지 않는다. 클라이언트가 구현된 것으로 가정하지 않는다.
+- rolling 창 clipping·열린 구간1회·미전송30초 만료, 전경 lease30초, 최초 SENT receipt 수신부터5분 cooldown, 불명 전송 보류를 사용자 승인 및 Notion 정본에 반영했다. 기존 화면 분석5.2 원문은 유지했다.
+- 기존 heartbeat의 유효 RUNNING commit만 lease를 갱신한다. 세션 명령·타이머는 팀원 구현을 재사용한다. Frontend/shared-types/AI를 직접 수정하지 않았으며 P2/P4 소비자 구현·실제 앱 QA는 남았다.
+- 아래 초기 설계 중 outbox/별도 ack 테이블은 채택하지 않았다. 실제 저장/시간/재시도 계약은 이 절과 연결 계약 문서를 우선한다. PR 생성·병합·Issue 종료는 각각 별도 승인이다.
 
 ### 구현 모델
 
@@ -38,10 +37,12 @@
 3. `intervention_events`: session FK, type/status, cause revision, nullable pendingSlot(1), channels JSONB, policyVersion, runningSince, createdAt/expiresAt, actedAt, deliveryConfirmedAt. cause UNIQUE와 pending slot UNIQUE로 DB에서도 중복을 막는다. 사용자 반응은 해당 행의 최초 action/actedAt으로 보존해 별도 중복 ack 테이블을 추가하지 않았다.
 4. `InterventionPolicyService`: 분석 prepare/complete와 같은 짧은 transaction에서 pending/확정 전이를 저장한다. `findCurrent`·관측 소속·동의·활성 family·runner/연결 Extension을 확인한다. AI 호출은 기존처럼 transaction 밖이다.
 5. heartbeat: 유효 RUNNING 신호만 내부 식별자 이벤트를 발행한다. AFTER_COMMIT listener → 별도 REQUIRES_NEW evaluator가 fresh 세션을 다시 잠근다. bulk managed snapshot을 재사용하지 않는다. 실패는 공용 로거 WARN이며 이미 commit된 생존 기록은 유지한다. outbox는 이번에 구현하지 않았다. 실패한 평가는 다음 유효 heartbeat/분석에서 재평가하며 종료 직전의 평가 성공을 보장하지 않는다.
-6. 목록은 data 배열·기존 enum·문자열 ID다. GET은 DB 상태/전송 시각을 변경하지 않는다. TTL 만료는 읽기 시 EXPIRED view로 보이고, 다음 mutation에서 영속화한다. 실행 세대·현재 context·pending 보호가 유효하지 않은 PENDING은 표시하지 않는다.
-7. ack는 사용자→세션 잠금 아래 첫 결정을 유지한다. 같은/반대 action도 최초 status/actedAt을 200으로 반환한다. EXPIRED 늦은 ack는 EXPIRED/actedAt null이며 허위 사용자 시각을 만들지 않는다. 새 Idempotency-Key/If-Match-Version을 요구하지 않는다. 자원 비존재/타인 개입은 기존 공통 NOT_FOUND(404), 타인 세션 목록은 SESSION_NOT_FOUND(404)다. 정본의 상세 404 code/nullable actedAt 보완은 최종 계약 대조 항목이다.
-8. 전송 미확인 이벤트는 ack/TTL 뒤에도 새 생성을 막는다. deliveryConfirmedAt을 임의로 채우는 공개/내부 수신 API는 만들지 않았다. 전송 receipt와 cooldown 시작점은 P3 합의/구현 선행이며 확인했어 UI 상태는 서버에서 저장하지 않는다.
-9. V17은 additive 신규 테이블만 추가한다. 최신 dev의 V16 세션 연장을 포함한 V1~V16은 수정하지 않는다. 리포트·이력·카메라·BREAK_SUGGESTION 생성·세션 명령은 추가하지 않았다.
+6. 목록은 data 배열·기존 enum·문자열 ID다. GET은 DB 상태/전송 시각을 변경하지 않는다. 미전송 TTL 만료는 읽기 시 EXPIRED view로 보이고, 다음 mutation에서 영속화한다. SENT 확인 PENDING은 표시 대상에서 제외하며 사용자 ack는 수용한다. 실행 세대·현재 context·pending 보호가 유효하지 않은 PENDING은 표시하지 않는다.
+7. ack는 사용자→세션 잠금 아래 첫 결정을 유지한다. 같은/반대 action도 최초 status/actedAt을 200으로 반환한다. EXPIRED 늦은 ack는 EXPIRED/actedAt null이며 허위 사용자 시각을 만들지 않는다. 새 Idempotency-Key/If-Match-Version을 요구하지 않는다. 자원 비존재/타인 개입은 기존 공통 NOT_FOUND(404), 타인 세션 목록은 SESSION_NOT_FOUND(404)다. Notion ack 원본은404/401 및 status/actedAt을 정의하며 세부 code/nullable 제한은 별도 명시하지 않았다. 현재 서버는 기존 오류와 허위 시각 없는 응답을 유지한다.
+8. 전송 미확인 이벤트는 ack/TTL 뒤에도 새 생성을 막는다. 별도 deliveries API가 실제 결과만 수집한다. NOT_SENT가 확실하면 같은 후보를 TTL 안 재시도하고 UNKNOWN/유실은 생성 보류한다. 최초 SENT만 cooldown을 시작하며 확인했어 UI 상태는 서버에서 저장하지 않는다.
+9. V17은 개입 테이블, V18은 전경/receipt 테이블과 참조 및 전송 후 slot CHECK를 추가한다. 최신 dev의 V16 세션 연장을 포함한 V1~V16은 수정하지 않는다. 리포트·이력·카메라·BREAK_SUGGESTION 생성·세션 명령은 추가하지 않았다.
+
+## 아래 초기 검토 이력 — 현행 구현은 위 경계와 연결 계약 우선
 
 ## 2026-11-09 이전 결정 — AI 숫자 점수 기준 0.75 (이후 0.6으로 대체)
 

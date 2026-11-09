@@ -1,5 +1,17 @@
 # #182 구현 결과 (통합 완료 아님)
 
+## 실제 알림 서버 연결 완료 범위 (2026-11-09)
+
+- 구현 `792d36f`, 최신 dev0ca256e 통합 `c767669`. V17 개입·V18 전경/receipt, context PUT/GET·deliveries POST와 기존 분석/heartbeat/조회 연결을 구현했다.
+- 명시적 전경 선택/lease30초, 유효 RUNNING keepalive, context 소속 findCurrent, 최초 SENT 서버 수신부터5분 cooldown, 미전송/불명/사용자 반응 분리, nonce 멱등·동시성 보호를 제공한다.
+- 전체 build·Checkstyle267개 실패0·생략14. 격리 PostgreSQL131개 모두 통과. 실제 임의 포트 HTTP 연결을 포함하며 판정/시간은 합성이다. 상세 QA와 격리 리뷰 문서를 따른다.
+- 사용자 승인 계약/rolling/미전송30초 정책을 Notion에 반영했고 공통 요약과 소비자 인계문을 맞췄다. IDE staged 파일·Claude outputs·기존 stash 및 개발 DB5432/8080은 보존했다.
+- 서버 코드가 실제 신호를 받을 준비가 됐다는 의미다. Desktop/Extension/shared-types 소비자 구현·내구성 있는 전송 receipt와 실표시 QA는 미완료다. AI 실연결 검사는 보류했다. 서버 성공을 실제 포키 표시 성공으로 취급하지 않는다.
+- PR 생성·원격 CI·봇 리뷰·병합·Issue 종료 미수행. PR 초안만 준비하고 별도 승인을 받는다.
+
+## 아래는 확장 전 이력
+
+
 - 브랜치: `feat/182-server-intervention-policy`
 - 구현: 순수 시간 정책 코어·재분석 pending 동결/재개·typed JSONB 영속 상태·개입 이벤트/V16·기존 조회/ack 두 API·분석/heartbeat 최소 연결.
 - 경계: 기본 foreground adapter 없음, receipt 수신 미구현으로 production 생성 보류. 사용자·목표·세션 명령·Frontend/shared-types/AI 코드는 수정하지 않았다.

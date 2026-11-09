@@ -1,5 +1,17 @@
 # Backend 다음 작업
 
+## #182 실제 알림 서버 연결 — 최신 상태 (2026-11-09)
+
+- `feat/182-server-intervention-policy`: 구현792d36f, 최신 dev0ca256e 통합c767669. 기존 개입 조회/ack에 context PUT/GET·receipt POST와 분석/heartbeat 선택 필드를 연결했다. V16 세션 연장/V17 개입/V18 연결이며 배포된 migration은 수정하지 않았다.
+- 사용자 승인: #182 범위 확장, 전경 lease30초, 최초 SENT 수신부터 서버 cooldown5분, UNKNOWN/유실 생성 보류, Notion/계약 동기화. 확인했어 이후5분 UI 상태는 유지한다. 원문·토큰 비저장 및 기존 관측/보호 계약은 유지한다.
+- Notion 새 API3행과 기존 분석/heartbeat/개입 조회·화면 분석 추가 정책을 반영했다. docs/API_CONTRACT.md·PROJECT_CONTEXT.md도 동기화했다. 아래 '미합의/빈 adapter'는 확장 전 이력이다.
+- 전체 build·Checkstyle267개 실패0·생략14, 격리 PostgreSQL131개 실패0·생략0. 실제 임의 포트 HTTP와 독립 리뷰 포함. 기존 CORS preflight1회404는 단독/전체 재실행에서 재현되지 않았으며 원인 미확정으로 QA에 기록했다.
+- 다음: PR 초안 검토·생성 승인 → 원격 CI/리뷰. Desktop/Extension/shared-types 담당의 context·표시 직전 보호·receipt 영속 재시도 연결 후 일반 모드 포키 실표시 QA. AI/학교 모델 실연결은 사용자 지시로 보류. 서버 구현 완료와 실제 앱 알림 완료를 구분한다.
+- 상세: features/intervention-policy-integration-contract.md, -handoff.md, -QA.md, -code-review.md, -REPORT.md. 외부 담당자에게 메시지는 전송하지 않았다. PR 생성·병합·Issue 종료는 각각 별도 승인이다.
+
+## 아래는 이전 진행 이력 — 위 최신 상태 우선
+
+
 ## 실제 알림 작업 재개 (2026-11-09)
 
 - 사용자 지시로 AI 실연결 QA는 보류하고 실제 알림용 서버 연결 작업을 우선한다. 새 공개 계약/정책/범위 확장 검토안을 제시했으며 구체 승인 응답은 대기다. Frontend 코드는 직접 수정하지 않는다.

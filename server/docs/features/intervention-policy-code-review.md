@@ -25,3 +25,10 @@
 - 발견: Java health assertion/JSON 예외의 원문 노출 가능성, Python BadStatusLine 예외 원문 노출 가능성, Java health 본문 수신 전체 기한 누락.
 - 보완: 고정 실패 메시지·원인 미노출, HTTPException 안전 처리, 비동기 응답 전체 기한·취소·크기 제한. 각 회귀 추가 후 독립 재검토에서 추가 actionable finding 없음. 허용된 version 필드에 키를 반사하는 응답도 거절하도록 추가 보강·재검토했다.
 - 리뷰자는 실제 외부 모델 연결이나 테스트를 실행하지 않았다. 실행 결과는 analysis-ai-live-qa.md와 구분한다.
+
+## 전경 context·전송 receipt 확장 격리 리뷰
+
+- 구현 대화 이력이 없는 별도 리뷰 에이전트가 diff/신규 파일/정본 계약을 읽었다. 코드를 변경하거나 테스트를 실행하지 않았다.
+- P2: context 없는 호환 분석이 현재 전경의 episode/PENDING을 invalidate하고 heartbeat 최신 관측을 바꿀 수 있음. 정책 조기 반환과 context 소속 findCurrent overload로 분리했다. 번호/순서 불명 우선순위를 유지하며 더 큰 번호의 구형 이력이 현재 구간/후보를 바꾸지 않는 회귀를 추가했다. 재검토에서 해결 확인.
+- 늦은 SENT의 수명 만료 후 감사 기록, 전송된 PENDING slot 해제/ack 유지 및 V18 CHECK를 추가 재검토했고 actionable finding 없음.
+- 별도 migration 리뷰는 V17→V18 보존·FK/nonce/순번 unique·JS 범위·slot CHECK를 대조했으며 추가 지적 없음. 런타임 QA 성공을 대신하지 않는다.

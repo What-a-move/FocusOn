@@ -1,8 +1,10 @@
 # 실제 Backend–AI–학교 모델 연결 QA
 
+사용자 지시로 현재 실제 AI 연결 QA는 보류했다. 최신 dev0ca256e에는 AI #190의 0.6 판정 코드가 병합됐다. 아래 네트워크/설정 결과는 마지막 검사 당시 이력이며 실제 모델 연결 성공은 아니다. 서버 context/receipt 연결은 intervention-policy-QA.md의 최신 결과를 따른다.
+
 관련: #182, AI #154 / PR #190. 이 문서는 실행 절차와 관측 결과를 구분한다.
 
-## 현재 확인 (2026-11-09)
+## 이전 실행 확인 (2026-11-09)
 
 - dev `4e212de`, #190은 OPEN이며 최신 head `d703397`의 실제 candidate 기준은 0.6이다.
 - server/.env와 현재 실행 shell에 AI_ANALYSIS_URL/FOCUSON_AI_API_KEY가 없다. AI/.env 및 8000/8001의 실행 AI 서비스도 이번 확인에서 찾지 못했다.
