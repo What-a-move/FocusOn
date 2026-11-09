@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #168 세션 연장 후속
+
+- 최신 dev `8a5933f`와 충돌을 해결하고 연장 migration을 V16으로 조정했다. 기존 개발 DB 복제본에서 V15 상태를 재현한 뒤 V16 적용 및 주요 데이터 보존을 확인했다.
+- 실제 Google 로그인과 연장 HTTP 및 PostgreSQL 동시 요청을 확인했다. 접근 가능한 Notion API 원본 대조와 Swagger UI·Desktop 통합 검증은 남았다.
+- 상세 구현과 검증은 `features/session-extend-REPORT.md`를 따른다.
+
 ## 현재 작업: #171 분석 요청·결과 저장
 
 - feat/171-analysis-runs에서 구현·격리 정적 리뷰와 QA를 수행했다. 최신 검증 수치·한계는 features/analysis-runs-QA.md, REPORT.md를 따른다. PR #172 생성·초기 CI2개 성공 후 리뷰 지적을 수정했다. 수정 커밋의 CI·재리뷰를 확인하며 병합·이슈 종료는 별도 승인 대상이다.

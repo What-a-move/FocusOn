@@ -45,6 +45,8 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 
 ## 현재 작업 (2026-10-28)
 
+- 2026-11-09 Issue #168: 세션 연장과 이력·멱등성 처리를 구현했고 최신 dev 통합 후 migration을 V16으로 조정했다. 복제 DB에서 기존 데이터 보존, 실제 Google 로그인 및 연장 HTTP, PostgreSQL 동시성 테스트를 확인했다. Swagger UI·Desktop 통합과 Notion 원본 대조는 남았다. 상세는 `features/session-extend-REPORT.md`를 따른다.
+
 - 2026-11-03 Issue #132: 세션 일시정지·재개를 구현했다. Swagger·PostgreSQL 동시 출발 및 전체 빌드·Checkstyle을 확인했다. 격리 DB에서 V9 세션 3건의 Flyway V10 적용 전후 기존 데이터 보존을 확인했다. Heartbeat 연계는 후속 작업이다. 상세는 `features/session-pause-resume-REPORT.md`를 따른다.
 
 - 2026-11-02 Issue #97: `feat/97-goal-update-delete`에서 목표 수정·soft delete와 활성 세션 참조 차단을 구현했다. 사용자 Swagger 테스트 확인 후 PostgreSQL 동시 출발과 실제 잠금 대기 테스트가 각각 2개씩 통과했다. Backend 빌드·Checkstyle도 통과했으며 Notion 세부 계약 대조는 남았다. 상세는 `features/goal-update-delete-REPORT.md`를 따른다.
