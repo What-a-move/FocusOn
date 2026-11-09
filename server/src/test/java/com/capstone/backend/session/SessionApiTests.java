@@ -941,6 +941,70 @@ class SessionApiTests {
         after.getAccumulatedActiveMs());
   }
 
+  @Test
+  void summaryValidatesStateOwnershipAndPreservesConfirmedTime() throws Exception {
+    LoginResponse owner = desktop("summary-owner-" + UUID.randomUUID());
+    LoginResponse other = desktop("summary-other-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    String path = "/api/v1/sessions/" + id + "/summary";
+    String token = "Bearer " + owner.accessToken();
+    mvc.perform(get(path)).andExpect(status().isUnauthorized());
+    mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
+        .andExpect(status().isNotFound());
+    mvc.perform(get("/api/v1/sessions/bad/summary").header("Authorization", token))
+        .andExpect(status().isNotFound());
+    for (String state : new String[] {"RUNNING", "PAUSED", "AUTO_PAUSED",
+        "AWAITING_END_CONFIRMATION", "ENDING"}) {
+      jdbc.update("UPDATE learning_sessions SET status = ? WHERE id = ?", state, Long.valueOf(id));
+      mvc.perform(get(path).header("Authorization", token)).andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("SESSION_STATE_INVALID"));
+    }
+    for (String state : new String[] {"ENDED", "ABANDONED"}) {
+      jdbc.update("UPDATE learning_sessions SET status = ?, accumulated_active_ms = ?, "
+          + "ended_at = ? WHERE id = ?", state, 123000L,
+          java.sql.Timestamp.from(Instant.now()), Long.valueOf(id));
+      mvc.perform(get(path).header("Authorization", token)).andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.sessionId").value(id))
+          .andExpect(jsonPath("$.data.goalSnapshot").value("heartbeat goal"))
+          .andExpect(jsonPath("$.data.status").value(state))
+          .andExpect(jsonPath("$.data.accumulatedActiveMs").value(123000))
+          .andExpect(jsonPath("$.data.extensionCount").value(0))
+          .andExpect(jsonPath("$.data.extendedDurationMs").value(0))
+          .andExpect(jsonPath("$.data.relatedDurationMs").doesNotExist());
+    }
+  }
+
+  @Test
+  void concurrentSummaryReadsAggregateActualExtensionsWithoutChangingSession() throws Exception {
+    LoginResponse owner = desktop("summary-race-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    jdbc.update("UPDATE learning_sessions SET status = 'ENDED', target_duration_ms = 1200000, "
+        + "ended_at = ? WHERE id = ?", java.sql.Timestamp.from(Instant.now()), numericId);
+    for (long previous : new long[] {300000L, 600000L}) {
+      long additional = previous;
+      jdbc.update("INSERT INTO session_extensions (session_id, additional_duration_ms, "
+          + "previous_target_duration_ms, target_duration_ms, created_at) VALUES (?, ?, ?, ?, ?)",
+          numericId, additional, previous, previous + additional,
+          java.sql.Timestamp.from(Instant.now()));
+    }
+    var before = sessions.findById(numericId).orElseThrow();
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() ->
+          mvc.perform(get("/api/v1/sessions/" + id + "/summary")
+                  .header("Authorization", "Bearer " + owner.accessToken()))
+              .andExpect(status().isOk()).andExpect(jsonPath("$.data.extensionCount").value(2))
+              .andExpect(jsonPath("$.data.extendedDurationMs").value(900000))
+              .andReturn().getResponse().getContentAsString())).toList();
+      org.junit.jupiter.api.Assertions.assertEquals(json.readTree(results.getFirst()
+          .get(10, TimeUnit.SECONDS)), json.readTree(results.getLast().get(10, TimeUnit.SECONDS)));
+    }
+    var after = sessions.findById(numericId).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(before.getVersion(), after.getVersion());
+    org.junit.jupiter.api.Assertions.assertEquals(before.getStatus(), after.getStatus());
+    org.junit.jupiter.api.Assertions.assertEquals(before.getEndedAt(), after.getEndedAt());
+  }
+
   private LoginResponse desktop(String installationId) {
     return login.exchange(new GoogleExchangeRequest("code", "a".repeat(43), installationId,
         "http://127.0.0.1:49152", new DesktopDevice(installationId, "QA", "MACOS")));

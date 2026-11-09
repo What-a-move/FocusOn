@@ -103,3 +103,7 @@ PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionabl
 ## Issue #195 세션 조회 (2026-11-09)
 
 - feat/195-session-queries에서 상세·목록 조회를 구현했다. 실계정 HTTP와 PostgreSQL 검증 결과는 features/session-queries-REPORT.md를 따른다. Notion 원문 상세 대조와 앱 통합은 미완료다.
+
+## Issue #201 세션 결과 요약 (2026-11-09)
+
+- feat/201-session-summary에서 종료 세션 요약과 실제 연장 통계를 구현했다. 실계정HTTP200·PostgreSQL27개 결과는 features/session-summary-REPORT.md를 따른다. 다음 리포트 범위는 일간/달력이며 학습 정리는 별도다. Notion 원문·실제Desktop QA는 미완료다.
