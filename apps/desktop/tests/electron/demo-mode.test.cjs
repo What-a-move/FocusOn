@@ -79,3 +79,17 @@ test('앱 안에서만 끝낸 세션은 서버가 진행 중이라고 해도 다
   snap = null
   assert.equal((await auth.authorizedRequest({ path: '/api/v1/sessions/active', method: 'GET', parse })).data, NONE)
 })
+
+test('멈춘 채 끝내면 서버에서만 다시 이어 두어 무신호 자동 종료가 되게 한다', async () => {
+  const calls = []
+  const auth = { authorizedRequest: async (request) => {
+    calls.push(`${request.method} ${request.path} ${request.headers?.['If-Match-Version'] ?? ''}`.trim())
+    if (request.path === '/api/v1/sessions/active') return { success: true, data: request.parse({ sessionId: 's1', status: 'PAUSED', version: 4 }) }
+    if (request.path.endsWith('/resume')) return { success: true, data: true }
+    return missing
+  } }
+  installDemoMode(auth, () => ({ ...running, status: 'PAUSED' }))
+  const end = await auth.authorizedRequest({ path: '/api/v1/sessions/s1/end', method: 'POST', parse: parseCommandResult })
+  assert.equal(end.success, true)
+  assert.deepEqual(calls, ['POST /api/v1/sessions/s1/end', 'GET /api/v1/sessions/active', 'POST /api/v1/sessions/s1/resume 4'])
+})
