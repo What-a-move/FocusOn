@@ -52,3 +52,10 @@
 - dev PR #191/#193으로 Desktop 시연 모드가 추가됐다. apps/desktop/electron/main/demo-mode.cts는 interventions GET을 실제 서버에 보내지 않고 단축키로 만든 메모리 이벤트를 반환한다. 종료/요약/달력/일간은 실제 요청 실패 시 합성 응답으로 대체한다. learning-summary는 합성하지 않는다.
 - 실제 서버 연동 QA에서는 FOCUSON_DEMO=1을 사용하지 않는 일반 실행을 해야 한다. 시연 모드 영상과 실제 AI→포키·종료/리포트 연동 증거를 구분한다. 이 코드는 읽기만 했으며 Frontend를 수정하지 않았다.
 - 담당 우선순위는 #182의 실제 연동 계약/연결 → 세션 summary·learning-summary 조회(생성 AI와 역할 분리) → calendar/daily다. #164/#168 세션 명령 및 #99 목표 AI는 팀원 범위로 유지한다.
+
+## 2026-11-09 확정 — AI 숫자 점수 기준 0.75
+
+- 사용자 확정: 공통 문서 기준 0.75로 Backend·AI 연동을 진행한다. 0.6으로 낮추지 않는다.
+- 숫자 confidence는 0.75 미만이면 UNCERTAIN, 정확히 0.75 이상이면 다른 권한·출처·보호·정책 게이트를 추가 검증한다. 점수만으로 개입을 생성하지 않는다.
+- 숫자를 반환하는 베타 -uncalibrated 응답에도 같은 0.75를 적용한다. 기존 승인된 -uncalibrated + confidence:null 예외는 별도 계약이며 이번 승인으로 임의 제거/확장하지 않는다.
+- 현재 AnalysisAiClient와 PR #190 실제 코드가 이미 0.75라 임계값 코드 변경은 필요 없다. 실제 AI/학교 Ollama/포키 왕복 QA는 여전히 별도다.
