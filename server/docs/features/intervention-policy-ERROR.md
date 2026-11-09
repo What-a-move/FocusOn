@@ -20,3 +20,10 @@
 - cb2d530 원격 전체 build에서 동시 ack의 최초 응답/재조회 응답 동등성 및 lease 종료 시각 assertion이 실패했다. 로컬 Mac 전체/PG는 통과했지만 원격 실패를 숨기지 않는다.
 - ack 최초 Instant를 PostgreSQL 마이크로초로 고정해 첫 응답과 DB 재조회 시각을 일치시킨다. lease 테스트의 JDBC 입력도 처음부터 마이크로초로 고정해 DB 반올림 차이를 제거한다.
 - 원격 PostgreSQL job의 기존 검사 범위에 신규 intervention/heartbeat/SessionApi 회귀를 추가한다. job 이름/DB 설정/권한은 유지한다. 최종 재검증 결과는 PR/QA를 따른다.
+
+## CodeRabbit 실제 경계 피드백 보완
+
+- 일반 prepare가 후보를 무조건 만료해 receipt 미확인 보류로 이후 알림도 막을 수 있었다. 일반 pending은 보존/표시 동결, TTL/확정 보호에서만 만료하도록 분리했다. NOT_SENT 후보가 남아 있으면 같은 후보만 재시도한다.
+- context 없는 높은 관측 번호가 context 안의 늦은 보호 관측 처리를 막는 선택 경계를 수정했다. 실제 서버 receivedAt과 완료 시각을 분리하고 늦은 receipt의 cooldown 표시도 차단했다.
+- heartbeat 부모 transaction 정리 전에 새 transaction이 연결을 기다리는 경계를 execute 반환 이후로 이동했다. max pool1에서 실제 평가 성공을 검증했다. 필수 동의 철회/재동의도 같은 user/session 잠금에서 중단 이력을 보존한다. 선택 카메라 철회는 화면 정책에 영향을 주지 않는다.
+- 전체279개 실패0·생략14, 격리 Flyway+validate PostgreSQL152개 모두 통과. 개인정보/원문·키는 기록하지 않았다.

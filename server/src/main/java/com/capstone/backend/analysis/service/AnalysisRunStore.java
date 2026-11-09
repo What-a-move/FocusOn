@@ -83,11 +83,12 @@ public class AnalysisRunStore {
       run.complete(AnalysisDecision.guarded(guard));
     }
     runs.saveAndFlush(run);
-    boolean latest = order.eligible() && !order.untrusted()
-        && runs.findCurrent(sessionId, device.getId())
-            .map(value -> value.getId().equals(run.getId())).orElse(false);
-    boolean policyCurrent = order.eligible() && runs.findCurrent(sessionId, device.getId())
-        .map(value -> value.getId().equals(run.getId())).orElse(false);
+    var selected = run.getObservationContextId() == null
+        ? runs.findCurrent(sessionId, device.getId())
+        : runs.findCurrent(sessionId, device.getId(), run.getObservationContextId());
+    boolean policyCurrent = order.eligible()
+        && selected.map(value -> value.getId().equals(run.getId())).orElse(false);
+    boolean latest = policyCurrent && !order.untrusted();
     interventionPolicy.prepared(session, run, policyCurrent, guard != null, now);
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),

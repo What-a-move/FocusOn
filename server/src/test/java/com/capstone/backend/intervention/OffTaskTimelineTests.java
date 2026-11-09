@@ -17,6 +17,24 @@ import org.junit.jupiter.params.provider.EnumSource;
 class OffTaskTimelineTests {
   private static final Instant START = Instant.parse("2026-11-09T00:00:00Z");
 
+  @Test
+  void observationReceivedBeforeCooldownCannotQualifyByCompletingAfterward() {
+    Instant at = Instant.parse("2026-11-09T00:00:00Z");
+    var timeline = OffTaskTimeline.empty(at, "context", at).pending(1, at)
+        .complete(1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, at);
+    timeline = timeline.pending(2, at.plusSeconds(290))
+        .complete(2, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR,
+            at.plusSeconds(290), at.plusSeconds(301));
+    assertFalse(timeline.evaluate("v1", InterventionLevel.NORMAL, at.plusSeconds(400),
+        at.plusSeconds(300)).candidate());
+    timeline = timeline.pending(3, at.plusSeconds(401))
+        .complete(3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR,
+            at.plusSeconds(401), at.plusSeconds(402));
+    assertTrue(timeline.evaluate("v1", InterventionLevel.NORMAL, at.plusSeconds(403),
+        at.plusSeconds(300)).candidate());
+  }
+
+
   @ParameterizedTest
   @EnumSource(InterventionLevel.class)
   void strictContinuousBoundaries(InterventionLevel level) {

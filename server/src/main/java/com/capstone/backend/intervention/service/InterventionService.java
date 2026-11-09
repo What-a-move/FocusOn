@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,7 +74,7 @@ public class InterventionService {
         .orElseThrow(() -> new ApiException(ApiErrorCode.NOT_FOUND));
     Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
     if (event.getDeliveryConfirmedAt() == null
-        && (!now.isBefore(event.getExpiresAt()) || !presentable(session, event, now))) {
+        && (!now.isBefore(event.getExpiresAt()) || !validCandidate(session, event, now))) {
       event.expire();
     }
     event.acknowledge(request.action(), now);
@@ -82,19 +83,31 @@ public class InterventionService {
 
   boolean presentable(LearningSessionEntity session, InterventionEventEntity event,
       Instant now) {
+    return candidateState(session, event, now)
+        .map(value -> value.pendingRun() == null).orElse(false);
+  }
+
+  boolean validCandidate(LearningSessionEntity session, InterventionEventEntity event,
+      Instant now) {
+    return candidateState(session, event, now).isPresent();
+  }
+
+  private Optional<OffTaskTimeline.Snapshot> candidateState(LearningSessionEntity session,
+      InterventionEventEntity event, Instant now) {
     if (!Objects.equals(session.getLastResumedAt(), event.getRunningSince())) {
-      return false;
+      return Optional.empty();
     }
     var context = policy.binding(session, now).orElse(null);
     var state = states.findById(session.getId()).orElse(null);
-    if (context == null || !context.deliveryContractReady() || state == null) {
-      return false;
+    if (context == null || !context.deliveryContractReady() || state == null
+        || (context.cooldownUntil() != null && now.isBefore(context.cooldownUntil()))) {
+      return Optional.empty();
     }
     var timeline = json.readValue(state.getTimelineJson(), OffTaskTimeline.Snapshot.class);
     return event.getObservationContextId() != null
         && event.getObservationContextId().toString().equals(context.context())
-        && timeline.pendingRun() == null && timeline.openEpisode() != null
-        && timeline.context().equals(context.context());
+        && timeline.openEpisode() != null && timeline.context().equals(context.context())
+        ? Optional.of(timeline) : Optional.empty();
   }
 
   private Item item(InterventionEventEntity event, Instant now) {

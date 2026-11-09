@@ -1,5 +1,13 @@
 # Backend 작업 컨텍스트
 
+## PR205 피드백9건 보완 — 로컬 검증 완료 (2026-11-09)
+
+- CodeRabbit7ab8f6e 리뷰의 actionable9건과 동의 철회 테스트 제안을 대조·반영했다. 처리표: features/intervention-policy-review-response.md. 현재 기준 PR은 생성·push 완료 상태이며 생성 승인을 다시 요청하지 않는다.
+- 보호 관측의 context 범위 현재성, 재분석 후보 보존/표시 동결, 동의 철회 즉시 중단, cooldown 표시/receivedAt 경계, heartbeat connection cleanup 이후 평가를 보완했다. 공개 계약/정책 변경이나 새 migration은 없다.
+- 전체 build·Checkstyle279개 실패0·오류0·생략14. 같은 CI 설정(Flyway+validate)의 격리 PostgreSQL152개 실패0·생략0. 단일 connection pool·필수 동의3종 철회/재동의·선택 카메라 비간섭·늦은 SENT·cooldown 지연 완료 등을 포함한다.
+- 구현 대화 없는 새 에이전트의 독립 리뷰에서 추가 actionable finding 없음. 최종 수정분 원격 CI/자동 재리뷰 결과는 별도 확인한다. 기존7ab의 봇 체크 SUCCESS를 새 수정분 승인으로 쓰지 않는다.
+
+
 ## PR205 원격 시각 정밀도 보완·CI 범위 확장 (2026-11-09)
 
 - cb2d530 원격 전체 검사에서 동시 ack 응답과 lease 종료 시각 assertion2건이 실패했다. ack 최초 시각을 PostgreSQL MICROS 정밀도로 고정하고 lease fixture 입력도 MICROS로 고정했다. 최초 사용자 결정·만료·cooldown 계약은 유지한다.

@@ -37,3 +37,8 @@
 
 - 별도 리뷰 에이전트가 ack 최초 now MICROS 고정, lease JDBC fixture 정밀도, 원격 PG 테스트 범위 확장을 읽기 재검토했다. 최초/반대/동시 ack 및 수명 계약 변경 없음, 추가 actionable finding 없음. 파일·원격 변경과 테스트 실행은 하지 않았다.
 - 원격 PG의 기존 job/DB/권한을 유지하며 새 개입/heartbeat/SessionApi 회귀를 포함한 변경도 별도 읽기 검토했다. 로컬 Flyway+validate143개 결과와 리뷰 판단은 분리한다.
+
+## CodeRabbit9건 후속 보완 독립 리뷰 (2026-11-09)
+
+- 구현 대화 없는 새 에이전트가7ab 이후 diff·신규 동의 listener·계약·회귀를 읽기 검토했다. context 현재성/후보 보존/동의 중단/cooldown freshness/connection cleanup 변경에서 재현 가능한 추가 버그를 확인하지 못했다.
+- 테스트 실행/파일·원격 변경은 하지 않았다. 실제 실행 결과279개/격리PG152개는 구현자가 별도로 검증했다. CodeRabbit 원본9건별 처리는 intervention-policy-review-response.md를 따른다. 자동 재리뷰 결과와 혼동하지 않는다.

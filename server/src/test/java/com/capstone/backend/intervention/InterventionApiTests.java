@@ -88,6 +88,7 @@ class InterventionApiTests {
   private HeartbeatPolicyEvaluator evaluator;
   @Autowired private com.capstone.backend.session.service.SessionHeartbeatService heartbeats;
   @Autowired private InterventionService service;
+  @Autowired private com.zaxxer.hikari.HikariDataSource dataSource;
   @Autowired private com.capstone.backend.analysis.service.AnalysisRunStore analysisStore;
   @Autowired private tools.jackson.databind.ObjectMapper json;
   @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
@@ -320,6 +321,25 @@ class InterventionApiTests {
     var saved = sessions.findById(f.session()).orElseThrow();
     assertEquals(100, saved.getAccumulatedActiveMs());
     assertTrue(saved.getLastHeartbeatAt() != null);
+  }
+
+  @Test
+  void heartbeatEvaluationWorksAfterCleanupWithSingleConnectionPool() {
+    var f = fixture(true);
+    seedUnrelated(f);
+    int previousMax = dataSource.getMaximumPoolSize();
+    long previousTimeout = dataSource.getConnectionTimeout();
+    try {
+      dataSource.getHikariConfigMXBean().setMaximumPoolSize(1);
+      dataSource.getHikariConfigMXBean().setConnectionTimeout(1000);
+      dataSource.getHikariPoolMXBean().softEvictConnections();
+      heartbeats.heartbeat(f.principal(), f.device(), Long.toString(f.session()),
+          new com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest(Instant.now(), 100L));
+      assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+    } finally {
+      dataSource.getHikariConfigMXBean().setMaximumPoolSize(previousMax);
+      dataSource.getHikariConfigMXBean().setConnectionTimeout(previousTimeout);
+    }
   }
 
   private void generate(Fixture f) {

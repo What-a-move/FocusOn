@@ -29,7 +29,8 @@ class UserConfigurationServiceTests {
   private final UserRepository users = mock(UserRepository.class);
   private final UserConfigurationService service = new UserConfigurationService(users,
       mock(UserConsentRepository.class), mock(UserFocusSettingsRepository.class),
-      mock(AnalysisExcludedDomainRepository.class));
+      mock(AnalysisExcludedDomainRepository.class),
+      mock(org.springframework.context.ApplicationEventPublisher.class));
   private final FocusOnPrincipal principal = new FocusOnPrincipal(1L, 2L, 3L, DeviceType.DESKTOP);
 
   @Test

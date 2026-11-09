@@ -1,3 +1,15 @@
+# Issue #182 기록
+
+## 현재 상태 (2026-11-09)
+
+- 현재 진행 정본은 GitHub [#182](https://github.com/What-a-move/FocusOn/issues/182) 본문이며 PR은 [#205](https://github.com/What-a-move/FocusOn/pull/205)로 이미 생성했다. 이슈 생성/PR 생성 승인을 다시 요청하지 않는다.
+- 내부 정책·조회/ack와 전경 PUT/GET·전송 receipt POST 및 분석/heartbeat 연결을 구현했고 Notion 정본/공통 계약을 맞췄다. 아래 '빈 adapter/receipt 없음/미합의'는 확장 전 기록이다.
+- rolling/TTL30초·lease30초·최초 SENT 수신 기준 cooldown/불명 전송 보류는 사용자 승인됐다. numeric confidence0.6과 AI #190은 dev 반영 완료다.
+- 남은 범위: PR205 리뷰 피드백 반영 검증, 소비자 P2/P4 연결, 실제 포키 표시 및 사용자 지시로 보류한 AI 실연결 QA. 서버 구현 완료를 실제 앱 완료로 취급하지 않는다. 병합·Issue 종료는 별도다.
+
+<details>
+<summary>등록 및 초기 검토 당시 기록 — 현행 구현 상태가 아님</summary>
+
 # 기능 또는 작업 요청
 
 ## 작업 유형
@@ -130,3 +142,5 @@ server/docs/**
 - 기본 전경 adapter/관측 소속은 없음. receipt 수신 API도 없음. production 후보 생성 보류. 실제 앱 알림/실제 AI 통합 완료 아님.
 - 신규 정책 Notion 동기화 미완료, PR 생성/원격 CI/봇 리뷰/병합/종료 미수행.
 - QA/리뷰/결과: server/docs/features/intervention-policy-{QA,code-review,REPORT}.md
+
+</details>

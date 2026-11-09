@@ -47,6 +47,10 @@ public class SessionHeartbeatService {
       throw ApiException.withDetails(ApiErrorCode.SESSION_ABANDONED,
           Map.of("currentStatus", SessionStatus.ABANDONED, "endReason", "HEARTBEAT_TIMEOUT"));
     }
+    // execute가 commit뿐 아니라 connection cleanup까지 마친 뒤 새 평가 transaction을 연다.
+    if (outcome.evaluate()) {
+      events.publishEvent(new HeartbeatPolicyTrigger(principal.userId(), sessionId));
+    }
     return outcome.response();
   }
 
@@ -105,11 +109,10 @@ public class SessionHeartbeatService {
     sessions.recordHeartbeat(sessionId, now, observed, active, reached);
     if (!reached) {
       foreground.renew(session, request.observationContextId(), now);
-      events.publishEvent(new HeartbeatPolicyTrigger(principal.userId(), sessionId));
     }
     return new HeartbeatOutcome(new HeartbeatResponse(reached
         ? SessionStatus.AWAITING_END_CONFIRMATION : SessionStatus.RUNNING, now, active, null),
-        false);
+        false, !reached);
   }
 
   private HeartbeatResponse response(LearningSessionEntity session) {
@@ -129,5 +132,9 @@ public class SessionHeartbeatService {
     }
   }
 
-  private record HeartbeatOutcome(HeartbeatResponse response, boolean abandoned) {}
+  private record HeartbeatOutcome(HeartbeatResponse response, boolean abandoned, boolean evaluate) {
+    HeartbeatOutcome(HeartbeatResponse response, boolean abandoned) {
+      this(response, abandoned, false);
+    }
+  }
 }

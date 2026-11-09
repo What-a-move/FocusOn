@@ -1,5 +1,10 @@
 # Backend 결정 기록
 
+## PR205 리뷰 보완 — 기존 정책의 경계 보장 (2026-11-09)
+
+공개 API/확정 사용자 동작은 유지한다. 정책 현재성은 명시적 context 안에서 선택하며, 일반 재분석은 후보를 보존하고 표시만 동결한다. NOT_SENT 후보가 TTL 안 남아 있으면 같은 후보만 재시도한다. 필수 동의 철회는 동의 저장 transaction의 사용자→세션 잠금 안에서 구간을 즉시 종료해 재동의가 중단을 숨기지 못하게 한다. 선택 CAMERA_ANALYSIS 철회는 화면 정책을 끊지 않는다. cooldown 중 표시를 차단하며 '새 관측'은 완료 시각이 아닌 실제 서버 receivedAt으로 검증한다. heartbeat 정책 평가는 원래 transaction의 connection cleanup 뒤에 시작해 작은 pool에서도 새 transaction이 연결을 얻을 수 있게 한다.
+
+
 ## 2026-11-09 #182 실제 알림 계약 승인
 
 전경 context PUT/GET과 deliveries POST를 #182 범위 안에 추가하는 사용자 승인을 받았다. 전경 lease30초, 유효 RUNNING heartbeat만 연장·만료 복구는 새 번호, 최초 SENT receipt 서버 수신부터5분 cooldown, UNKNOWN/유실은 추가 생성 보류다. GET/ack를 전송으로 취급하지 않는다. Desktop 확인했어 UI5분은 유지한다. 표시 직전 context/보호 및 monotonic TTL 검증은 소비자 담당이다. Notion 계약을 구현 전에 기록한다. AI 실연결 QA는 사용자 지시로 보류하며 합성 검증과 실제 앱 알림을 구분한다.

@@ -90,6 +90,7 @@ class ObservationDeliveryIntegrationTests {
   @Autowired private GoalRepository goals;
   @Autowired private LearningSessionRepository sessions;
   @Autowired private UserConsentRepository consents;
+  @Autowired private com.capstone.backend.user.service.UserConfigurationService configuration;
   @Autowired private ObservationContextService contexts;
   @Autowired private ObservationContextRepository contextRows;
   @Autowired private ForegroundPolicyContext foreground;
@@ -235,7 +236,7 @@ class ObservationDeliveryIntegrationTests {
     var item = contexts.put(f.principal(), f.device(), f.sessionString(),
         contextRequest(1, Observer.DESKTOP));
     var input = analysis(item.observationContextId(), 1);
-    var prepared = store.prepare(f.principal(), f.session(), input);
+    final var prepared = store.prepare(f.principal(), f.session(), input);
     contexts.put(f.principal(), f.device(), f.sessionString(), contextRequest(2, Observer.NONE));
     store.complete(f.principal(), prepared, input, unrelated());
     evaluator.evaluate(f.principal().userId(), f.session());
@@ -284,7 +285,7 @@ class ObservationDeliveryIntegrationTests {
     final long event = generate(f);
     var before = states.findById(f.session()).orElseThrow().getTimelineJson();
     var input = analysis(null, 2);
-    var prepared = store.prepare(f.principal(), f.session(), input);
+    final var prepared = store.prepare(f.principal(), f.session(), input);
     store.complete(f.principal(), prepared, input, unrelated());
     evaluator.evaluate(f.principal().userId(), f.session());
     assertEquals(before, states.findById(f.session()).orElseThrow().getTimelineJson());
@@ -425,12 +426,126 @@ class ObservationDeliveryIntegrationTests {
     assertEquals(InterventionDtos.Status.EXPIRED, events.findById(event).orElseThrow().getStatus());
   }
 
+  @Test
+  void contextProtectedRunIsCurrentEvenAfterHigherUnboundObservation() {
+    var f = fixture();
+    final long event = generate(f);
+    String contextId = contexts.get(f.principal(), f.device(), f.sessionString())
+        .orElseThrow().observationContextId();
+    store.prepare(f.principal(), f.session(), analysis(null, 3));
+    var input = new AnalysisDtos.Request(UUID.randomUUID().toString(),
+        AnalysisDtos.ContentSource.DESKTOP_APP_OCR, Instant.now(), BigDecimal.valueOf(2),
+        AnalysisDtos.GuardStatus.EXCLUDED, null, null, BigDecimal.valueOf(2), contextId);
+    store.prepare(f.principal(), f.session(), input);
+    assertEquals(null, snapshot(f).openEpisode());
+    assertEquals(InterventionDtos.Status.EXPIRED, events.findById(event).orElseThrow().getStatus());
+    tx.executeWithoutResult(ignored -> assertEquals(AnalysisDtos.Relation.EXCLUDED,
+        runs.findCurrent(f.session(), f.principal().deviceId(), Long.parseLong(contextId))
+            .orElseThrow().getRelation()));
+  }
+
+  @Test
+  void ordinaryReanalysisHidesButPreservesCandidateAndNotSentRetry() {
+    var f = fixture();
+    final long event = generate(f);
+    String contextId = contexts.get(f.principal(), f.device(), f.sessionString())
+        .orElseThrow().observationContextId();
+    var input = analysis(contextId, 2);
+    final var prepared = store.prepare(f.principal(), f.session(), input);
+    assertEquals(InterventionDtos.Status.PENDING, events.findById(event).orElseThrow().getStatus());
+    assertTrue(interventions.list(f.principal(), f.sessionString()).isEmpty());
+    deliveries.receive(f.principal(), f.device(), Long.toString(event),
+        delivery(UUID.randomUUID().toString(), InterventionDtos.DispatchStatus.NOT_SENT));
+    assertEquals(InterventionDtos.Status.PENDING, events.findById(event).orElseThrow().getStatus());
+    store.complete(f.principal(), prepared, input, unrelated());
+    assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+    assertEquals(Long.toString(event), interventions.list(f.principal(), f.sessionString())
+        .getFirst().interventionId());
+  }
+
+  @Test
+  void lateSentForEarlierEventSuppressesNewPendingDuringCooldown() {
+    var f = fixture();
+    long first = generate(f);
+    String contextId = contexts.get(f.principal(), f.device(), f.sessionString())
+        .orElseThrow().observationContextId();
+    deliveries.receive(f.principal(), f.device(), Long.toString(first),
+        delivery(UUID.randomUUID().toString(), InterventionDtos.DispatchStatus.NOT_SENT));
+    jdbc.update("UPDATE intervention_events SET expires_at=created_at WHERE id=?", first);
+    var input = analysis(contextId, 2);
+    final var prepared = store.prepare(f.principal(), f.session(), input);
+    store.complete(f.principal(), prepared, input, unrelated());
+    assertEquals(2, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+    assertTrue(interventions.list(f.principal(), f.sessionString()).stream()
+        .anyMatch(item -> item.status() == InterventionDtos.Status.PENDING));
+    deliveries.receive(f.principal(), f.device(), Long.toString(first),
+        delivery(UUID.randomUUID().toString(), InterventionDtos.DispatchStatus.SENT));
+    assertFalse(interventions.list(f.principal(), f.sessionString()).stream()
+        .anyMatch(item -> item.status() == InterventionDtos.Status.PENDING));
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.EnumSource(value = ConsentType.class,
+      names = {"TERMS_OF_SERVICE", "PRIVACY_POLICY", "SCREEN_ANALYSIS"})
+  void withdrawalAndRegrantBetweenHeartbeatsCannotAccrueOrRestoreCandidates(ConsentType type) {
+    for (boolean pending : List.of(false, true)) {
+      var f = fixture();
+      String contextId = contexts.put(f.principal(), f.device(), f.sessionString(),
+          contextRequest(1, Observer.DESKTOP)).observationContextId();
+      seedUnrelatedContext(f, contextId);
+      if (pending) {
+        evaluator.evaluate(f.principal().userId(), f.session());
+      }
+      assertEquals(pending ? 1 : 0,
+          events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+      final Instant generation = sessions.findById(f.session()).orElseThrow().getLastResumedAt();
+      configuration.updateConsent(f.principal(), type,
+          new com.capstone.backend.user.dto.UserConfigurationDtos.UpdateConsentRequest(
+              false, "2026-09-17", "QA"));
+      assertEquals(null, snapshot(f).openEpisode());
+      assertFalse(interventions.list(f.principal(), f.sessionString()).stream()
+          .anyMatch(item -> item.status() == InterventionDtos.Status.PENDING));
+      configuration.updateConsent(f.principal(), type,
+          new com.capstone.backend.user.dto.UserConfigurationDtos.UpdateConsentRequest(
+              true, "2026-09-17", "QA"));
+      evaluator.evaluate(f.principal().userId(), f.session());
+      assertEquals(null, snapshot(f).openEpisode());
+      assertEquals(generation, sessions.findById(f.session()).orElseThrow().getLastResumedAt());
+      assertEquals(pending ? 1 : 0,
+          events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+    }
+  }
+
+  @Test
+  void optionalCameraWithdrawalDoesNotInterruptScreenCandidate() {
+    var f = fixture();
+    final long event = generate(f);
+    var before = snapshot(f);
+    configuration.updateConsent(f.principal(), ConsentType.CAMERA_ANALYSIS,
+        new com.capstone.backend.user.dto.UserConfigurationDtos.UpdateConsentRequest(
+            false, "2026-09-17", "QA"));
+    assertEquals(before, snapshot(f));
+    assertEquals(InterventionDtos.Status.PENDING, events.findById(event).orElseThrow().getStatus());
+  }
+
+  private OffTaskTimeline.Snapshot snapshot(Fixture f) {
+    return json.readValue(states.findById(f.session()).orElseThrow().getTimelineJson(),
+        OffTaskTimeline.Snapshot.class);
+  }
+
   private long generate(Fixture f) {
     return generateWithContext(f, contexts.put(f.principal(), f.device(), f.sessionString(),
         contextRequest(1, Observer.DESKTOP)).observationContextId());
   }
 
   private long generateWithContext(Fixture f, String contextId) {
+    seedUnrelatedContext(f, contextId);
+    heartbeat.heartbeat(f.principal(), f.device(), f.sessionString(),
+        new SessionDtos.HeartbeatRequest(Instant.now(), 100L, contextId));
+    return events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+  }
+
+  private void seedUnrelatedContext(Fixture f, String contextId) {
     // 시간 경과를 합성한다. 외부 AI 없이 실제 context 소속·정책·heartbeat·이벤트를 연결한다.
     Instant at = Instant.now().minusSeconds(70);
     jdbc.update("UPDATE session_observation_contexts SET created_at=?,valid_until=? WHERE id=?",
@@ -448,9 +563,6 @@ class ObservationDeliveryIntegrationTests {
       run.complete(unrelated());
       policy.completed(session, run, at);
     });
-    heartbeat.heartbeat(f.principal(), f.device(), f.sessionString(),
-        new SessionDtos.HeartbeatRequest(Instant.now(), 100L, contextId));
-    return events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
   }
 
   private AnalysisDtos.Request analysis(String contextId, int sequence) {

@@ -64,7 +64,7 @@ public class InterventionDeliveryService {
     Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
     if (event.getDeliveryConfirmedAt() == null
         && (!now.isBefore(event.getExpiresAt())
-            || !interventions.presentable(session, event, now))) {
+            || !interventions.validCandidate(session, event, now))) {
       event.expire();
     }
     if (request.dispatchStatus() == DispatchStatus.SENT) {

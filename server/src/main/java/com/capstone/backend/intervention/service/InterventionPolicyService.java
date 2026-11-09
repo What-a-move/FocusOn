@@ -64,7 +64,7 @@ public class InterventionPolicyService {
       timeline = timeline.interrupt(now);
     }
     state.transition(json.writeValueAsString(timeline.snapshot()));
-    expirePending(session, now, true);
+    expirePending(session, now, guarded || run.isOrderingUntrusted());
   }
 
   /** 늦은 결과는 findCurrent로 다시 확인하며 다른 기기/context의 보호 상태를 풀지 않는다. */
@@ -92,7 +92,8 @@ public class InterventionPolicyService {
       // 위임/프로세스 전환 중 놓친 prepare의 시간을 소급 가산하지 않는다.
       timeline = timeline.interrupt(now).pending(run.getId(), now);
     }
-    timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(), now);
+    timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(),
+        run.getReceivedAt(), now);
     state.transition(json.writeValueAsString(timeline.snapshot()));
     evaluate(session, selected, state, timeline, now);
   }
@@ -184,6 +185,11 @@ public class InterventionPolicyService {
         json.readValue(state.getTimelineJson(), OffTaskTimeline.Snapshot.class));
   }
 
+  /** 동의 철회 저장 transaction에서 즉시 닫아 재동의가 중단 이력을 숨기지 못하게 한다. */
+  public void consentWithdrawn(LearningSessionEntity session, Instant now) {
+    invalidate(session, now);
+  }
+
   private void invalidate(LearningSessionEntity session, Instant now) {
     states.findById(session.getId()).ifPresent(state -> {
       var timeline = read(state);
@@ -209,6 +215,12 @@ public class InterventionPolicyService {
       return;
     }
     var history = events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId());
+    // NOT_SENT도 TTL 안에는 같은 후보를 재시도하며 별도 pending 후보를 생성하지 않는다.
+    if (history.stream().anyMatch(event -> event.getStatus()
+        == com.capstone.backend.intervention.dto.InterventionDtos.Status.PENDING
+        && event.getDeliveryConfirmedAt() == null)) {
+      return;
+    }
     // receipt 미확인 이벤트는 ack/만료 뒤에도 재발송을 막는다. ack는 receipt가 아니다.
     if (history.stream().anyMatch(event -> event.getDeliveryConfirmedAt() == null
         && !contexts.definitelyNotSent(event.getId()))) {
