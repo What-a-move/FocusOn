@@ -183,6 +183,48 @@ class SessionApiTests {
   }
 
   @Test
+  void concurrentExtendAndPauseWithSameVersionOnlyOneCommits() throws Exception {
+    LoginResponse owner = desktop("extend-pause-race-" + UUID.randomUUID());
+    String id = startForExtend(owner);
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("연장과 일시정지 동시 요청 대기 시간 초과");
+        }
+        String command = index == 0 ? "extend" : "pause";
+        String body = index == 0 ? "{\"additionalDurationMs\":300000}"
+            : "{\"pauseReason\":\"USER\",\"accumulatedActiveMs\":0}";
+        return mvc.perform(post("/api/v1/sessions/" + id + "/" + command)
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+            .andReturn().getResponse().getStatus();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      var statuses = new java.util.ArrayList<Integer>();
+      for (var result : results) {
+        statuses.add(result.get(20, TimeUnit.SECONDS));
+      }
+      java.util.Collections.sort(statuses);
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), statuses);
+    }
+    var stored = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1, stored.getVersion());
+    int extensionCount = jdbc.queryForObject(
+        "SELECT count(*) FROM session_extensions WHERE session_id = ?", Integer.class,
+        Long.valueOf(id));
+    org.junit.jupiter.api.Assertions.assertEquals(extensionCount == 1 ? 2100000 : 1800000,
+        stored.getTargetDurationMs());
+    org.junit.jupiter.api.Assertions.assertEquals(extensionCount == 1 ? "RUNNING" : "PAUSED",
+        stored.getStatus().name());
+  }
+
+  @Test
   void postgresConcurrentExtensionsActuallyWaitForUserLock() throws Exception {
     try (var blocker = dataSource.getConnection()) {
       org.junit.jupiter.api.Assumptions.assumeTrue(
