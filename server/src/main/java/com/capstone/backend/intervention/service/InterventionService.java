@@ -19,6 +19,7 @@ import com.capstone.backend.session.dto.SessionDtos.NotificationChannel;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import jakarta.persistence.EntityManager;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +51,8 @@ public class InterventionService {
     var session = owned(principal, id(rawSessionId, ApiErrorCode.SESSION_NOT_FOUND));
     Instant now = Instant.now();
     return events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).stream()
+        .filter(event -> event.getStatus() != Status.PENDING
+            || event.getDeliveryConfirmedAt() == null)
         .filter(event -> event.getStatus() != Status.PENDING || !now.isBefore(event.getExpiresAt())
             || presentable(session, event, now))
         .map(event -> item(event, now)).toList();
@@ -69,14 +72,15 @@ public class InterventionService {
         .filter(value -> value.getRunnerDevice().getId().equals(principal.deviceId()))
         .orElseThrow(() -> new ApiException(ApiErrorCode.NOT_FOUND));
     Instant now = Instant.now();
-    if (!now.isBefore(event.getExpiresAt()) || !presentable(session, event, now)) {
+    if (event.getDeliveryConfirmedAt() == null
+        && (!now.isBefore(event.getExpiresAt()) || !presentable(session, event, now))) {
       event.expire();
     }
     event.acknowledge(request.action(), now);
     return new Acknowledgement(event.getStatus(), event.getActedAt());
   }
 
-  private boolean presentable(LearningSessionEntity session, InterventionEventEntity event,
+  boolean presentable(LearningSessionEntity session, InterventionEventEntity event,
       Instant now) {
     if (!Objects.equals(session.getLastResumedAt(), event.getRunningSince())) {
       return false;
@@ -87,7 +91,9 @@ public class InterventionService {
       return false;
     }
     var timeline = json.readValue(state.getTimelineJson(), OffTaskTimeline.Snapshot.class);
-    return timeline.pendingRun() == null && timeline.openEpisode() != null
+    return event.getObservationContextId() != null
+        && event.getObservationContextId().toString().equals(context.context())
+        && timeline.pendingRun() == null && timeline.openEpisode() != null
         && timeline.context().equals(context.context());
   }
 
@@ -96,7 +102,10 @@ public class InterventionService {
         ? Status.EXPIRED : event.getStatus();
     return new Item(event.getId().toString(), event.getType(), status,
         Arrays.asList(json.readValue(event.getChannelsJson(), NotificationChannel[].class)),
-        event.getCreatedAt(), event.getPolicyVersion());
+        event.getCreatedAt(), event.getPolicyVersion(),
+        event.getObservationContextId() == null ? null : event.getObservationContextId().toString(),
+        status == Status.PENDING && event.getDeliveryConfirmedAt() == null
+            ? Math.max(0, Duration.between(now, event.getExpiresAt()).toMillis()) : 0);
   }
 
   private void authenticate(FocusOnPrincipal principal) {

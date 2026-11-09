@@ -1,6 +1,6 @@
 # 개입 정책 소비자 연결 제안 — Issue #182
 
-상태: 2026-11-09 서버 내부 구현·검증 진행, 통합 계약 검토안. **미합의 제안이며 현재 구현된 계약이 아니다.** 담당자에게 보낼 수 있는 글이며 실제로 전송하지 않았다.
+상태: 2026-11-09 사용자 승인 계약으로 Backend 연결을 구현·검증 중이다. 아래 이전 제안 기록은 최신 승인 절로 대체된다. Desktop/Extension/shared-types는 미수정이며 이 문서는 미전송 인계문이다.
 
 ## Desktop·Extension 담당자에게
 
@@ -81,3 +81,29 @@
 - 별도 컨텍스트 리뷰: 추가 actionable finding 없음. 이번 변경은 숫자 정규화만이며 SQL 변경이 없어 PostgreSQL QA는 재실행하지 않았다(기존 #182 PG87개 결과와 구분).
 - Notion AI 분석 계약 4.4/7 numeric 기준 및 null 예외의 기준 참조를 동기화했다. API POST 페이지에는 별도 0.75 기준 문구가 없어 수정하지 않았다. Notion의 관측 순서·rolling/30초 만료 등 다른 미동기화 항목은 이번 작업으로 해결됐다고 보지 않는다.
 - AI PR #190 head252b513의 0.75는 AI 담당 수정 대기다. 실제 AI/학교 Ollama/포키 QA·PR 생성·병합·이슈 종료는 미수행이다.
+
+## 최신 승인 계약의 소비자 연결 요청 (2026-11-09)
+
+Backend #182에서 전경 context와 전송 receipt를 연결했습니다. 아직 dev 병합/배포 전이며 PR 생성도 별도 승인 대상입니다. AI 실연결 검사는 보류했습니다. 서버 합성 QA와 실제 포키 표시 QA는 구분합니다.
+
+### Desktop
+
+1. 세션 runner가 전경 변경/미확인 즉시 PUT `/api/v1/sessions/{sessionId}/observation-context`를 보냅니다. Authorization·X-Device-Id를 붙이고 `{clientContextId,foregroundSequence,observer}`를 전송합니다. observer는 DESKTOP/EXTENSION/NONE이며 실제 앱/탭 제목·URL은 보내지 않습니다. 전경 sequence와 nonce는 영속화하고 재시도 때 유지합니다. 늦은 PUT 응답을 이미 더 큰 순번의 local context에 덮어쓰지 않습니다.
+2. 현재 전경을 확인할 수 있을 때만 기존 유효 RUNNING heartbeat에 `observationContextId`를 연결합니다. lease30초가 만료되면 같은 heartbeat로 복구되지 않습니다. 전경을 다시 확인하고 더 큰 순번의 새 context가 필요합니다. 기존 타이머/명령 version은 유지합니다.
+3. Desktop 분석 요청에 현재 context ID를 연결합니다. 관측 순번은 기존 인계대로 session+device 영속 전역 counter입니다. 전경 context 순번과 분석 관측 순번은 다릅니다. context 없는 구형 분석은 수용하지만 현재 정책에는 영향을 주지 않습니다.
+4. interventions GET의 PENDING을 표시하기 직전에 현재 세션/RUNNING/context/보호 상태를 확인합니다. `remainingTtlMs`에서 HTTP 요청 시작 이후 monotonic 경과 시간을 차감합니다. 서버 expiresAt과 기기 Date.now를 직접 비교하지 않습니다.
+5. 표시 시도 nonce를 영속화하고 실제 성공 채널을 모아 POST `/api/v1/interventions/{interventionId}/deliveries`로 `{clientDeliveryId,dispatchStatus,channels}`를 보냅니다. SENT는 실제 성공한 허용 채널(MOLE_UI/MACOS_NOTIFICATION/SOUND)의 비어 있지 않은 부분집합, NOT_SENT/UNKNOWN은 빈 배열입니다. 같은 시도/결과의 재전송은 nonce를 유지합니다.
+6. receipt를 내구성 있게 재시도합니다. 모든 채널의 미전송이 확실한 NOT_SENT만 TTL 안 같은 이벤트를 재시도합니다. 재시작 뒤 전송 여부가 불명이면 자동 재전송 대신 UNKNOWN을 보냅니다. UNKNOWN/유실은 서버 추가 생성 보류입니다. 첫 SENT 수신 이후 GET에서 같은 PENDING을 다시 표시 대상으로 주지 않습니다.
+7. 사용자 확인/닫기는 기존 acknowledgements로 보냅니다. 전송 receipt와 분리하며 확인했어 이후5분 UI 상태는 유지합니다. 전송 확인된 PENDING은 미전송30초 TTL로 사용자 반응을 만료하지 않습니다.
+
+### Extension / shared-types
+
+GET 같은 observation-context 경로를 Authorization·X-Device-Id로 조회합니다.204면 유효 위임 없음,200이면 자신의 observerDeviceId/EXTENSION 담당 여부를 확인해 분석 요청에 ID를 연결합니다. 오래된 조회 응답을 새 전경에 적용하지 않습니다. 탭 전환/민감 화면/전경 미확인 중에는 Desktop도 이전 후보를 표시하지 않도록 양쪽의 로컬 보호·확인 상태를 연결해야 합니다. 필요한 신호를 기존 흐름에서 제공할 수 없으면 담당자가 근거와 함께 알려주고 계약을 임의 우회하지 않습니다.
+
+공유 타입 추가: context PUT/GET DTO, analysis/heartbeat의 선택 observationContextId, interventions의 observationContextId(string|null)·remainingTtlMs(number), delivery request/response. UI 표시·전송·receipt 재시도/복구 구현은 Backend가 직접 수정하지 않았습니다.
+
+### 세션 API 담당
+
+기존 SessionHeartbeatService의 유효 RUNNING commit에서만 context lease 갱신을 추가했습니다. 무시된 신호·오류·목표 도달은 갱신하지 않습니다. 세션 시간/연장/종료 로직을 재구현하지 않았습니다. V16 세션 연장을 통합하고 개입 V17, 연결 V18로 번호 충돌을 해소했습니다.
+
+정본과 전체 필드/오류: intervention-policy-integration-contract.md 및 docs/API_CONTRACT.md. 실제 앱 QA에서는 FOCUSON_DEMO=1을 끕니다. UI demo의 interventions 대체 응답을 서버 성공으로 기록하지 않습니다. 외부 담당자에게 이 문서를 자동 전송하지 않았습니다.

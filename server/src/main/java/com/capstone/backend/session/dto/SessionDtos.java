@@ -80,7 +80,14 @@ public final class SessionDtos {
   /** Desktop이 관측한 시각과 monotonic 누적 시간이다. */
   public record HeartbeatRequest(@NotNull @Schema(example = "2026-11-07T12:00:00Z")
       Instant clientObservedAt, @NotNull @Schema(example = "10000")
-      Long accumulatedActiveMs) {}
+      Long accumulatedActiveMs,
+      @jakarta.validation.constraints.Pattern(regexp = "[1-9][0-9]{0,18}")
+      String observationContextId) {
+    /** 기존 클라이언트의 두 필드 heartbeat를 계속 수용한다. */
+    public HeartbeatRequest(Instant clientObservedAt, Long accumulatedActiveMs) {
+      this(clientObservedAt, accumulatedActiveMs, null);
+    }
+  }
 
   /** 마지막으로 서버가 수신하고 확정한 신호다. */
   public record HeartbeatResponse(SessionStatus status, Instant lastHeartbeatAt,

@@ -58,6 +58,8 @@ public class InterventionEventEntity {
   private Instant runningSince;
   @Column(name = "delivery_confirmed_at")
   private Instant deliveryConfirmedAt;
+  @Column(name = "observation_context_id")
+  private Long observationContextId;
   @Column(name = "acted_at")
   private Instant actedAt;
 
@@ -78,9 +80,22 @@ public class InterventionEventEntity {
     return event;
   }
 
+  /** 검증된 관측 소속을 표시 직전 재확인할 수 있게 고정한다. */
+  public void bindContext(Long contextId) {
+    observationContextId = contextId;
+  }
+
+  /** 첫 receipt 수신을 보존하며 사용자 상태를 변경하지 않는다. */
+  public void confirmDelivery(Instant now) {
+    if (deliveryConfirmedAt == null) {
+      deliveryConfirmedAt = now;
+      pendingSlot = null;
+    }
+  }
+
   /** 반응/전송 성공을 추정하지 않고 미전송 후보를 만료한다. */
   public void expire() {
-    if (status == Status.PENDING) {
+    if (status == Status.PENDING && deliveryConfirmedAt == null) {
       status = Status.EXPIRED;
       pendingSlot = null;
     }

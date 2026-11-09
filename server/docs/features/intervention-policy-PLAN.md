@@ -345,3 +345,9 @@ server/docs/**
 - 별도 컨텍스트 리뷰: 추가 actionable finding 없음. 이번 변경은 숫자 정규화만이며 SQL 변경이 없어 PostgreSQL QA는 재실행하지 않았다(기존 #182 PG87개 결과와 구분).
 - Notion AI 분석 계약 4.4/7 numeric 기준 및 null 예외의 기준 참조를 동기화했다. API POST 페이지에는 별도 0.75 기준 문구가 없어 수정하지 않았다. Notion의 관측 순서·rolling/30초 만료 등 다른 미동기화 항목은 이번 작업으로 해결됐다고 보지 않는다.
 - AI PR #190 head252b513의 0.75는 AI 담당 수정 대기다. 실제 AI/학교 Ollama/포키 QA·PR 생성·병합·이슈 종료는 미수행이다.
+
+## 2026-11-09 실제 알림 연결 확장 승인
+
+사용자는 #182 범위 확장으로 전경 context PUT/GET·전송 receipt POST와 기존 분석/heartbeat/개입 조회 필드 연결, lease30초, 최초 SENT receipt 수신 기준5분 cooldown, 전송 여부 불명 보류 및 Notion 동기화를 승인했다. 기존 1~2 endpoint 제한은 이번 사용자의 명시 범위 확장으로 예외 적용한다. 상세 계약/검증은 intervention-policy-integration-contract.md를 따른다. Frontend/shared-types/AI 코드는 직접 수정하지 않는다. 기존 heartbeat 유효 commit 경계에 context keepalive만 추가하고 시간/세션 명령을 재구현하지 않는다. PR/병합/종료는 별도다.
+
+저장은 V17 개입 테이블 이후 V18에 context 및 receipt 테이블과 run/event context 참조를 additive하게 추가한다. 사용자→세션 잠금으로 기존 분석·heartbeat·조회·receipt를 직렬화한다. context 식별자는 DB 양의 BIGINT 문자열, public nonce는 UUID-v4, foregroundSequence는 영속 JS 안전 정수다. PK/unique/FK와 typed DTO로 nonce 충돌/소유권을 보장한다.

@@ -70,6 +70,9 @@ public class AnalysisRunEntity {
   @Column(name = "observation_sequence")
   private Long observationSequence;
 
+  @Column(name = "observation_context_id")
+  private Long observationContextId;
+
   @Column(name = "current_eligible", nullable = false)
   private boolean currentEligible = true;
 
@@ -123,6 +126,11 @@ public class AnalysisRunEntity {
     run.createdAt = now;
     run.complete(AnalysisDecision.unavailable());
     return run;
+  }
+
+  /** 권한 검증한 전경 참조만 연결한다. */
+  public void bindContext(Long contextId) {
+    observationContextId = contextId;
   }
 
   /** 과거 이력과 순서 불명 상태를 판정값과 분리해 보존한다. */

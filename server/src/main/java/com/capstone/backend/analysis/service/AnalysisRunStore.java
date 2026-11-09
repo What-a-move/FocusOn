@@ -43,6 +43,7 @@ public class AnalysisRunStore {
   private final AnalysisExcludedDomainRepository exclusions;
   private final AuthRateLimiter limits;
   private final InterventionPolicyService interventionPolicy;
+  private final com.capstone.backend.intervention.service.ForegroundPolicyContext foreground;
 
   /** 권한과 상태를 확인한 후 원문 없는 예약 행만 commit한다. */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -71,6 +72,8 @@ public class AnalysisRunStore {
         sessionId, device.getId(), request.contentSource()).orElse(null);
     var order = AnalysisObservationOrder.classify(request, current, source);
     var run = AnalysisRunEntity.reserve(session, device, request, now);
+    run.bindContext(foreground.requireForRun(session, device.getId(),
+        request.observationContextId(), now));
     run.order(order.eligible(), order.untrusted());
     GuardStatus guard = guard(principal.userId(), request, session.getGoalTextSnapshot());
     if (order.untrusted()) {

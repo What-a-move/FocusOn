@@ -81,6 +81,8 @@ class InterventionApiTests {
   @Autowired private UserConsentRepository consents;
   @Autowired private InterventionEventRepository events;
   @Autowired private InterventionPolicyRepository states;
+  @Autowired private com.capstone.backend.intervention.persistence.ObservationContextRepository
+      observationContexts;
   @Autowired private InterventionPolicyService policy;
   @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
   private HeartbeatPolicyEvaluator evaluator;
@@ -100,6 +102,10 @@ class InterventionApiTests {
         .addFilters(new RequestIdFilter()).build();
     when(google.exchange(any())).thenAnswer(invocation -> "intervention-" + UUID.randomUUID());
     when(foreground.contains(anyLong(), anyLong(), anyString())).thenReturn(true);
+    when(foreground.requireForRun(any(), anyLong(), any(), any())).thenAnswer(invocation -> {
+      String raw = invocation.getArgument(2);
+      return raw == null ? null : Long.parseLong(raw);
+    });
   }
 
   @Test
@@ -159,7 +165,7 @@ class InterventionApiTests {
     assertFalse(states.existsById(f.session()));
     mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
         .andExpect(jsonPath("$.data").isEmpty());
-    assertTrue(new ForegroundPolicyContext().resolve(f.session()).isEmpty());
+    assertTrue(foreground.resolve(f.session()).isEmpty());
   }
 
   @Test
@@ -241,7 +247,7 @@ class InterventionApiTests {
   void analysisStorePendingPreservesEpisodeAndLateResultCannotOverrideGuard() {
     var f = fixture(true);
     seedUnrelated(f);
-    var next = observation(2, 2L, null);
+    var next = observation(f, 2, 2L, null);
     var pending = analysisStore.prepare(f.principal(), f.session(), next);
     var frozen = snapshot(f);
     assertEquals(1L, frozen.openEpisode());
@@ -250,9 +256,9 @@ class InterventionApiTests {
     analysisStore.complete(f.principal(), pending, next, unrelatedDecision());
     assertEquals(1L, snapshot(f).openEpisode());
     assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
-    var later = observation(3, 3L, null);
+    var later = observation(f, 3, 3L, null);
     var delayed = analysisStore.prepare(f.principal(), f.session(), later);
-    analysisStore.prepare(f.principal(), f.session(), observation(4, 4L,
+    analysisStore.prepare(f.principal(), f.session(), observation(f, 4, 4L,
         com.capstone.backend.analysis.dto.AnalysisDtos.GuardStatus.EXCLUDED));
     analysisStore.complete(f.principal(), delayed, later, unrelatedDecision());
     assertEquals(null, snapshot(f).openEpisode());
@@ -264,7 +270,7 @@ class InterventionApiTests {
   void untrustedCurrentInterruptsPreviousEpisodeInsteadOfAccruingUnknownTime() {
     var f = fixture(true);
     seedUnrelated(f);
-    var legacy = observation(2, null, null);
+    var legacy = observation(f, 2, null, null);
     // 번호 모드 이후의 legacy는 current를 대체하지 않는다. 별도 legacy fixture로 전환한다.
     jdbc.update("UPDATE analysis_runs SET observation_sequence=NULL WHERE session_id=?",
         f.session());
@@ -274,7 +280,7 @@ class InterventionApiTests {
     assertTrue(runs.findCurrent(f.session(), f.principal().deviceId()).orElseThrow()
         .isOrderingUntrusted());
     assertEquals(null, snapshot(f).openEpisode());
-    var recovered = observation(3, 1L, null);
+    var recovered = observation(f, 3, 1L, null);
     var prepared = analysisStore.prepare(f.principal(), f.session(), recovered);
     analysisStore.complete(f.principal(), prepared, recovered, unrelatedDecision());
     assertEquals(2L, snapshot(f).openEpisode());
@@ -286,14 +292,15 @@ class InterventionApiTests {
         com.capstone.backend.intervention.service.OffTaskTimeline.Snapshot.class);
   }
 
-  private Request observation(long sequence, Long global,
+  private Request observation(Fixture f, long sequence, Long global,
       com.capstone.backend.analysis.dto.AnalysisDtos.GuardStatus guard) {
     return new Request(UUID.randomUUID().toString(), ContentSource.DESKTOP_APP_OCR,
         Instant.now(), BigDecimal.valueOf(sequence), guard,
         guard == null ? new com.capstone.backend.analysis.dto.AnalysisDtos.Metadata(
             "Xcode", "synthetic", null, null) : null,
         guard == null ? new com.capstone.backend.analysis.dto.AnalysisDtos.ContentPayload(
-            "synthetic test") : null, global == null ? null : BigDecimal.valueOf(global));
+            "synthetic test") : null, global == null ? null : BigDecimal.valueOf(global),
+        Long.toString(f.observationContext()));
   }
 
   private AnalysisDecision unrelatedDecision() {
@@ -327,8 +334,10 @@ class InterventionApiTests {
       Instant at = Instant.now().minusSeconds(100);
       var request = new Request(UUID.randomUUID().toString(), ContentSource.DESKTOP_APP_OCR,
           at, BigDecimal.ONE, null, null, null, BigDecimal.ONE);
-      var run = runs.saveAndFlush(AnalysisRunEntity.reserve(session,
-          devices.getReferenceById(f.principal().deviceId()), request, at));
+      var run = AnalysisRunEntity.reserve(session,
+          devices.getReferenceById(f.principal().deviceId()), request, at);
+      run.bindContext(f.observationContext());
+      runs.saveAndFlush(run);
       policy.prepared(session, run, true, false, at);
       run.complete(new AnalysisDecision(
           com.capstone.backend.analysis.dto.AnalysisDtos.Relation.UNRELATED, .9,
@@ -357,12 +366,18 @@ class InterventionApiTests {
           1800000, "Asia/Seoul", LocalDate.now(), "{\"interventionLevel\":\"NORMAL\","
               + "\"notificationChannels\":[\"MOLE_UI\"],\"cameraAnalysisEnabled\":false}",
           "v1", Instant.now().minusSeconds(150)));
+      var observationContext = observationContexts.saveAndFlush(
+          com.capstone.backend.intervention.persistence.ObservationContextEntity.create(
+              session.getId(), device.getId(), device.getId(),
+              com.capstone.backend.intervention.dto.ObservationContextDtos.Observer.DESKTOP,
+              UUID.randomUUID(), 1, session.getLastResumedAt(), Instant.now()));
       return new Fixture(account, new FocusOnPrincipal(user.getId(), device.getId(), family.getId(),
-          device.getDeviceType()), session.getId());
+          device.getDeviceType()), session.getId(), observationContext.getId());
     });
     if (binding) {
       when(foreground.resolve(result.session())).thenReturn(Optional.of(
-          new ForegroundPolicyContext.Binding(result.principal().deviceId(), "synthetic-context",
+          new ForegroundPolicyContext.Binding(result.principal().deviceId(),
+              Long.toString(result.observationContext()),
               Instant.now().minusSeconds(120), true, null, false)));
     }
     return result;
@@ -380,7 +395,8 @@ class InterventionApiTests {
     return "/api/v1/interventions/" + id + "/acknowledgements";
   }
 
-  private record Fixture(LoginResponse account, FocusOnPrincipal principal, long session) {
+  private record Fixture(LoginResponse account, FocusOnPrincipal principal, long session,
+      long observationContext) {
     String device() {
       return Long.toString(principal.deviceId());
     }

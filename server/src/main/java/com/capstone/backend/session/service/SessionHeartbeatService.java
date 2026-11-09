@@ -31,6 +31,7 @@ public class SessionHeartbeatService {
   private final LearningSessionRepository sessions;
   private final TransactionTemplate transactions;
   private final ApplicationEventPublisher events;
+  private final com.capstone.backend.intervention.service.ForegroundPolicyContext foreground;
 
   /** 만료 확정은 오류 응답을 보내기 전에 별도 트랜잭션에서 커밋한다. */
   public HeartbeatResponse heartbeat(FocusOnPrincipal principal, String deviceId,
@@ -103,6 +104,7 @@ public class SessionHeartbeatService {
     boolean reached = active >= session.getTargetDurationMs();
     sessions.recordHeartbeat(sessionId, now, observed, active, reached);
     if (!reached) {
+      foreground.renew(session, request.observationContextId(), now);
       events.publishEvent(new HeartbeatPolicyTrigger(principal.userId(), sessionId));
     }
     return new HeartbeatOutcome(new HeartbeatResponse(reached

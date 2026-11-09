@@ -43,7 +43,7 @@ public class InterventionPolicyService {
   /** 분석 예약의 processing과 이미 확정된 보호 결과를 구분한다. */
   public void prepared(LearningSessionEntity session, AnalysisRunEntity run, boolean current,
       boolean guarded, Instant now) {
-    if (!current) {
+    if (!current || run.getObservationContextId() == null) {
       return;
     }
     var binding = binding(session, now);
@@ -51,8 +51,11 @@ public class InterventionPolicyService {
       invalidate(session, now);
       return;
     }
-    if (binding.get().deviceId() != run.getDevice().getId()
-        || !contexts.contains(session.getId(), run.getId(), binding.get().context())) {
+    if (binding.get().deviceId() != run.getDevice().getId()) {
+      return;
+    }
+    if (!contexts.contains(session.getId(), run.getId(), binding.get().context())) {
+      invalidate(session, now);
       return;
     }
     var state = load(session, binding.get(), now);
@@ -66,6 +69,9 @@ public class InterventionPolicyService {
 
   /** 늦은 결과는 findCurrent로 다시 확인하며 다른 기기/context의 보호 상태를 풀지 않는다. */
   public void completed(LearningSessionEntity session, AnalysisRunEntity run, Instant now) {
+    if (run.getObservationContextId() == null) {
+      return;
+    }
     var binding = binding(session, now);
     if (binding.isEmpty()) {
       invalidate(session, now);
@@ -75,7 +81,8 @@ public class InterventionPolicyService {
     if (selected.deviceId() != run.getDevice().getId()
         || !contexts.contains(session.getId(), run.getId(), selected.context())
         || run.isOrderingUntrusted()
-        || !run.isCurrentEligible() || runs.findCurrent(session.getId(), selected.deviceId())
+        || !run.isCurrentEligible() || runs.findCurrent(session.getId(), selected.deviceId(),
+            Long.parseLong(selected.context()))
             .map(current -> !current.getId().equals(run.getId())).orElse(true)) {
       return;
     }
@@ -107,7 +114,8 @@ public class InterventionPolicyService {
       invalidate(session, now);
       return;
     }
-    var current = runs.findCurrent(session.getId(), binding.get().deviceId()).orElse(null);
+    var current = runs.findCurrent(session.getId(), binding.get().deviceId(),
+        Long.parseLong(binding.get().context())).orElse(null);
     if (current != null && current.isOrderingUntrusted()) {
       invalidate(session, current.getReceivedAt());
       return;
@@ -133,7 +141,8 @@ public class InterventionPolicyService {
     }
     return contexts.resolve(session.getId()).filter(value -> value.context() != null
         && !value.context().isBlank() && value.context().length() <= 128
-        && value.validSince() != null && !value.validSince().isAfter(now))
+        && value.validSince() != null && !value.validSince().isAfter(now)
+        && value.validUntil() != null && value.validUntil().isAfter(now))
         .filter(value -> activeDevice(session, value.deviceId(), now));
   }
 
@@ -176,8 +185,12 @@ public class InterventionPolicyService {
   }
 
   private void invalidate(LearningSessionEntity session, Instant now) {
-    states.findById(session.getId()).ifPresent(state ->
-        state.transition(json.writeValueAsString(read(state).interrupt(now).snapshot())));
+    states.findById(session.getId()).ifPresent(state -> {
+      var timeline = read(state);
+      Instant cutoff = contexts.expiry(timeline.snapshot().context())
+          .filter(at -> at.isBefore(now)).orElse(now);
+      state.transition(json.writeValueAsString(timeline.interrupt(cutoff).snapshot()));
+    });
     expirePending(session, now, true);
   }
 
@@ -197,7 +210,8 @@ public class InterventionPolicyService {
     }
     var history = events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId());
     // receipt 미확인 이벤트는 ack/만료 뒤에도 재발송을 막는다. ack는 receipt가 아니다.
-    if (history.stream().anyMatch(event -> event.getDeliveryConfirmedAt() == null)) {
+    if (history.stream().anyMatch(event -> event.getDeliveryConfirmedAt() == null
+        && !contexts.definitelyNotSent(event.getId()))) {
       return;
     }
     var options = json.readValue(session.getSessionOptionsSnapshotJson(), SessionOptions.class);
@@ -206,9 +220,12 @@ public class InterventionPolicyService {
       boolean duplicate = history.stream()
           .anyMatch(event -> event.getCause() == state.getRevision());
       if (!duplicate) {
-        events.saveAndFlush(InterventionEventEntity.offTask(session.getId(), state.getRevision(),
+        var event = InterventionEventEntity.offTask(session.getId(), state.getRevision(),
             json.writeValueAsString(options.notificationChannels()),
-            session.getInterventionPolicyVersion(), session.getLastResumedAt(), now));
+            session.getInterventionPolicyVersion(), session.getLastResumedAt(), now);
+        event.bindContext(InterventionAccess.id(context.context(),
+            com.capstone.backend.common.api.ApiErrorCode.VALIDATION_ERROR));
+        events.saveAndFlush(event);
       }
     }
   }

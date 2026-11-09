@@ -1,5 +1,10 @@
 # Backend 결정 기록
 
+## 2026-11-09 #182 실제 알림 계약 승인
+
+전경 context PUT/GET과 deliveries POST를 #182 범위 안에 추가하는 사용자 승인을 받았다. 전경 lease30초, 유효 RUNNING heartbeat만 연장·만료 복구는 새 번호, 최초 SENT receipt 서버 수신부터5분 cooldown, UNKNOWN/유실은 추가 생성 보류다. GET/ack를 전송으로 취급하지 않는다. Desktop 확인했어 UI5분은 유지한다. 표시 직전 context/보호 및 monotonic TTL 검증은 소비자 담당이다. Notion 계약을 구현 전에 기록한다. AI 실연결 QA는 사용자 지시로 보류하며 합성 검증과 실제 앱 알림을 구분한다.
+
+
 ## 2026-11-09 최종 변경 — AI 숫자 점수 기준 0.6
 
 - 사용자의 최신 지시로 앞선 0.75 결정을 대체한다. 숫자 confidence는 0.6 미만이면 UNCERTAIN, 정확히 0.6 이상이면 기존 권한·출처·보호·시간 정책을 추가 검증한다.

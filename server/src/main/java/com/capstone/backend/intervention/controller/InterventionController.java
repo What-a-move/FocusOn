@@ -4,7 +4,10 @@ import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiResponse;
 import com.capstone.backend.intervention.dto.InterventionDtos.Acknowledge;
 import com.capstone.backend.intervention.dto.InterventionDtos.Acknowledgement;
+import com.capstone.backend.intervention.dto.InterventionDtos.Delivery;
+import com.capstone.backend.intervention.dto.InterventionDtos.DeliveryReceipt;
 import com.capstone.backend.intervention.dto.InterventionDtos.Item;
+import com.capstone.backend.intervention.service.InterventionDeliveryService;
 import com.capstone.backend.intervention.service.InterventionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "focusOnBearer")
 public class InterventionController {
   private final InterventionService interventions;
+  private final InterventionDeliveryService deliveries;
 
   /** 조회는 전송/표시 영수증이 아니다. */
   @GetMapping("/api/v1/sessions/{sessionId}/interventions")
@@ -45,4 +49,15 @@ public class InterventionController {
       @Valid @RequestBody Acknowledge request) {
     return ApiResponse.of(interventions.acknowledge(principal, deviceId, interventionId, request));
   }
+
+  /** OS 제출/포키 표시 결과를 사용자 반응과 분리한다. */
+  @PostMapping("/api/v1/interventions/{interventionId}/deliveries")
+  @Operation(summary = "개입 전송 결과 기록")
+  public ApiResponse<DeliveryReceipt> delivery(@AuthenticationPrincipal FocusOnPrincipal principal,
+      @PathVariable String interventionId,
+      @RequestHeader(value = "X-Device-Id", required = false) String deviceId,
+      @Valid @RequestBody Delivery request) {
+    return ApiResponse.of(deliveries.receive(principal, deviceId, interventionId, request));
+  }
+
 }
