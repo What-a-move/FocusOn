@@ -89,7 +89,7 @@ def test_beta_candidate_uncertain_below_server_threshold(payload, monkeypatch):
     assert response.json()["promptVersion"].endswith("-uncalibrated")
 
 
-@pytest.mark.parametrize("score,expected", [(0.6, "UNCERTAIN"), (0.749, "UNCERTAIN"), (0.75, "RELATED")])
+@pytest.mark.parametrize("score,expected", [(0.599, "UNCERTAIN"), (0.6, "RELATED"), (0.749, "RELATED")])
 def test_beta_threshold_boundary(payload, monkeypatch, score, expected):
     monkeypatch.setenv("FOCUSON_ANALYSIS_DECISION_MODE", "candidate")
     monkeypatch.setattr("AI.src.api.routes.experimental_score", lambda *_: score)

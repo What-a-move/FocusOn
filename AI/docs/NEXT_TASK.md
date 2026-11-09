@@ -15,7 +15,7 @@
 
 - Backend 배포 환경에서 학교 PC 모델 주소를 실제로 resolve/connect 할 수 있는지 `/health`와 함께 확인한다. 최신 dev의 AI 호출 Adapter는 구현되어 있으나 배포와 실제 연결 확인은 남았다.
 
-- 2026-11-08 `POST /internal/v1/analysis-runs` 단일 판정 경로, 베타 candidate 응답, 실제 모델 health probe, OCR 품질 필드 선택성을 구현했다. 최신 dev Backend의 호출부와 실제 AI 모델 왕복을 확인하고 0.75 기준과 실제 실행 환경의 AI·Backend 왕복을 확인해야 한다. Desktop→Server→AI→지속 이탈 알림 전체 왕복은 아직 검증하지 않았다. [결과](features/fastapi-relevance-analysis-REPORT.md).
+- 2026-11-08 `POST /internal/v1/analysis-runs` 단일 판정 경로, 베타 candidate 응답, 실제 모델 health probe, OCR 품질 필드 선택성을 구현했다. 최신 dev Backend의 호출부와 실제 AI 모델 왕복을 확인하고 AI의 0.6에 맞춘 Backend 변경과 실제 실행 환경의 AI·Backend 왕복을 확인해야 한다. Desktop→Server→AI→지속 이탈 알림 전체 왕복은 아직 검증하지 않았다. [결과](features/fastapi-relevance-analysis-REPORT.md).
 
 화면 관련성 Streamlit UI는 2026-11-03 제거했다. Hybrid runner는 `evaluation/analysis_runner.py`에 유지하며, 목표 보조의 별도 Streamlit 테스트 화면은 유지한다.
 

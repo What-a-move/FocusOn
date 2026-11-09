@@ -22,7 +22,7 @@ class AnalysisDecisionResponse(ScreenAnalysisResponse):
             return super().valid_decision()
         reasons = {"RELATED": "SEMANTIC_GOAL_MATCH", "UNRELATED": "SEMANTIC_GOAL_MISMATCH"}
         if self.decision in reasons:
-            if self.confidence is None or self.confidence < .75 or self.reason_code != reasons[self.decision]:
+            if self.confidence is None or self.confidence < .6 or self.reason_code != reasons[self.decision]:
                 raise ValueError("INVALID_BETA_DECISION")
         elif self.reason_code in reasons.values():
             raise ValueError("INVALID_BETA_UNCERTAIN")
