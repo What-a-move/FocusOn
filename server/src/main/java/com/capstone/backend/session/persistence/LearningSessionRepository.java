@@ -13,6 +13,13 @@ import org.springframework.data.repository.query.Param;
 
 /** 사용자별 학습 세션에 접근한다. */
 public interface LearningSessionRepository extends JpaRepository<LearningSessionEntity, Long> {
+  /** 고정된 학습 날짜와 ID 커서로 본인의 기록을 조회한다. */
+  @Query("select s from LearningSessionEntity s where s.user.id = :userId "
+      + "and s.studyDate >= :from and s.studyDate <= :to and s.id < :cursor order by s.id desc")
+  java.util.List<LearningSessionEntity> findHistory(@Param("userId") Long userId,
+      @Param("from") java.time.LocalDate from, @Param("to") java.time.LocalDate to,
+      @Param("cursor") long cursor, Pageable page);
+
   /** 현재 사용자의 활성 상태 세션을 찾는다. */
   Optional<LearningSessionEntity> findByUserIdAndStatusIn(Long userId,
       Collection<SessionStatus> statuses);

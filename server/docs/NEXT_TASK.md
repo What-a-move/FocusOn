@@ -99,3 +99,7 @@ PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionabl
 - #58 → #86 → #85 의존 변경의 PR·병합은 승인 절차 후 순서대로 처리한다. 기기 목록 응답의 data.devices 래퍼를 Frontend와 확인하고, Frontend의 연결 취소·오류·연결 해제 UI 반영 후 실제 Desktop·Extension QA를 진행한다.
 
 - PR172 CodeRabbit9d131e9 재리뷰 후 host·범위·fresh snapshot·테스트 보강을 push하고 원격CI를 확인한다. 기본OSIV=false는 유지한다. Counter 유실 복구는 전용 Frontend 인계대로 적용하고 실앱에서 확인해야 한다. 병합/이슈 종료는 별도 승인이다.
+
+## Issue #195 세션 조회 (2026-11-09)
+
+- feat/195-session-queries에서 상세·목록 조회를 구현했다. 실계정 HTTP와 PostgreSQL 검증 결과는 features/session-queries-REPORT.md를 따른다. Notion 원문 상세 대조와 앱 통합은 미완료다.
