@@ -18,3 +18,10 @@
 ## 0.6 기준 변경 후 독립 리뷰
 
 별도 대화 이력이 없는 리뷰 에이전트가 HEAD 대비 AnalysisAiClient/테스트 변경과 최신 요구사항을 검토했다. numeric 일반/베타 모두 <0.6 보류, >=0.6 다른 게이트 유지, null 베타 예외/실패 보호 유지에 부합하며 추가 actionable finding 없음. 리뷰자는 테스트를 실행하지 않았다.
+
+## 실제 AI 검사 도구 독립 리뷰
+
+- 범위: Python 검사 도구 및 loopback 회귀, 명시 실행 Java live/readiness 검사.
+- 발견: Java health assertion/JSON 예외의 원문 노출 가능성, Python BadStatusLine 예외 원문 노출 가능성, Java health 본문 수신 전체 기한 누락.
+- 보완: 고정 실패 메시지·원인 미노출, HTTPException 안전 처리, 비동기 응답 전체 기한·취소·크기 제한. 각 회귀 추가 후 독립 재검토에서 추가 actionable finding 없음. 허용된 version 필드에 키를 반사하는 응답도 거절하도록 추가 보강·재검토했다.
+- 리뷰자는 실제 외부 모델 연결이나 테스트를 실행하지 않았다. 실행 결과는 analysis-ai-live-qa.md와 구분한다.

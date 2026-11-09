@@ -1,5 +1,13 @@
 # Backend 다음 작업
 
+## 학교 모델 연결 확인 후 진행 (2026-11-09)
+
+- 학교 모델 IP 100.116.183.94를 받았으나 HTTPS443/HTTP11434 연결 시간 초과, 현재 경로 en0. 사용자가 11434 포트를 확인했으며 Tailscale 연결 확인 중이다. 학교 모델/실제 AI 성공으로 기록하지 않는다.
+- AI PR #190 최신 d703397의 candidate 기준은 0.6이다. 아래 0.75 인계 필요 문장은 이전 head 당시 기록이다. Backend AI 주소/키와 실제 실행 AI 서비스는 추가 확인이 필요하다.
+- 합성 검사 도구/명시 실행 Java live 검사 준비. loopback14개 통과, Backend build·Checkstyle 239개 실패0·생략12(실제 AI2개 포함). 상세는 features/analysis-ai-live-qa.md.
+- 새 공개 계약 검토안: features/intervention-policy-integration-contract.md. 전경 context/receipt·lease·수신 기준 cooldown은 승인 전이며 구현하지 않았다. 기존 production 생성 보류는 유지한다.
+
+
 ## 최신 confidence 기준 변경 (2026-11-09)
 
 - 사용자 최신 승인으로 0.75 → 0.6. 서버 numeric confidence/경계 회귀 변경·전체 build/Checkstyle 통과(234개 실패0·생략10). 이전 0.75 결정은 대체됐다.
