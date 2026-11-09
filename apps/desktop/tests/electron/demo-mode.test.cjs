@@ -66,3 +66,16 @@ test('끝나지 않은 세션의 리포트는 만들지 않고 서버 실패를 
   setSnap(running)
   assert.deepEqual(await auth.authorizedRequest({ path: '/api/v1/sessions/s1/summary', method: 'GET', parse: parseSessionSummary }), missing)
 })
+
+test('앱 안에서만 끝낸 세션은 서버가 진행 중이라고 해도 다시 불러오지 않는다', async () => {
+  const remote = { sessionId: 's1', status: 'RUNNING', version: 3, goalTextSnapshot: '선형대수 3장', targetDurationMs: 1_500_000, accumulatedActiveMs: 600_000 }
+  const NONE = Symbol('none')
+  const parse = (value) => value === null ? NONE : value
+  let snap = running
+  const auth = { authorizedRequest: async (request) => request.path === '/api/v1/sessions/active' ? { success: true, data: parse(remote) } : missing }
+  installDemoMode(auth, () => snap)
+  assert.equal((await auth.authorizedRequest({ path: '/api/v1/sessions/active', method: 'GET', parse })).data, remote)
+  await auth.authorizedRequest({ path: '/api/v1/sessions/s1/end', method: 'POST', parse: parseCommandResult })
+  snap = null
+  assert.equal((await auth.authorizedRequest({ path: '/api/v1/sessions/active', method: 'GET', parse })).data, NONE)
+})

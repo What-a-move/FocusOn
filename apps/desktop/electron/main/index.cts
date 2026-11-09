@@ -271,11 +271,11 @@ if (!hasSingleInstanceLock) {
     // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
     let pendingShow: FloatingShow | null = null
-    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기. 화면 오른쪽 아래 모서리에 붙인다.
+    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기. Dock을 피하지 않고 화면 오른쪽 아래 모서리에 바로 붙인다(2026-11-09 사용자 확정).
     const FLOATING_SIZE = { width: 720, height: 300 }
     function showFloating(payload: FloatingShow): void {
       if (!floatingWindow || floatingWindow.isDestroyed()) {
-        const area = screen.getPrimaryDisplay().workArea
+        const area = screen.getPrimaryDisplay().bounds
         const window = new BrowserWindow({
           ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width, y: area.y + area.height - FLOATING_SIZE.height,
           // macOS panel: 다른 앱을 쓰는 중에도 클릭할 수 있고 FocusOn을 앞으로 가져오지 않는다.
@@ -283,7 +283,8 @@ if (!hasSingleInstanceLock) {
           minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, show: false,
           webPreferences: { preload: path.join(__dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
         })
-        window.setAlwaysOnTop(true, 'floating')
+        // Dock보다 위에 그려야 모서리에 붙인 포키가 Dock에 가리지 않는다.
+        window.setAlwaysOnTop(true, 'pop-up-menu')
         window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
         window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
         window.webContents.on('will-navigate', (event) => event.preventDefault())
