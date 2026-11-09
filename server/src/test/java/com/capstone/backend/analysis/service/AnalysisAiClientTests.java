@@ -37,9 +37,9 @@ class AnalysisAiClientTests {
 
   @Test
   void calibratedBoundaryAndBetaException() {
-    assertEquals(Relation.RELATED, decision("RELATED", "0.75", "SEMANTIC_GOAL_MATCH", "v1")
+    assertEquals(Relation.RELATED, decision("RELATED", "0.6", "SEMANTIC_GOAL_MATCH", "v1")
         .relation());
-    assertEquals(Relation.UNCERTAIN, decision("UNRELATED", "0.749", "SEMANTIC_GOAL_MISMATCH",
+    assertEquals(Relation.UNCERTAIN, decision("UNRELATED", "0.599", "SEMANTIC_GOAL_MISMATCH",
         "v1").relation());
     var candidate = decision("UNRELATED", "null", "SEMANTIC_GOAL_MISMATCH", "v1-uncalibrated");
     assertEquals(Relation.UNRELATED, candidate.relation());
@@ -47,6 +47,28 @@ class AnalysisAiClientTests {
     assertEquals(AnalysisStatus.COMPLETED, candidate.status());
     assertEquals(Relation.UNCERTAIN, decision("RELATED", "null", "SEMANTIC_GOAL_MATCH", "v1")
         .relation());
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.CsvSource({
+      "0.0, UNCERTAIN", "0.599, UNCERTAIN", "0.6, UNRELATED", "0.6001, UNRELATED",
+      "0.65, UNRELATED", "0.749, UNRELATED", "0.75, UNRELATED", "1.0, UNRELATED"
+  })
+  void numericBetaAndNormalResultsUseTheSamePointSixBoundary(String score, Relation expected) {
+    for (String prompt : new String[] {"v1", "v1-uncalibrated"}) {
+      var result = decision("UNRELATED", score, "SEMANTIC_GOAL_MISMATCH", prompt);
+      assertEquals(expected, result.relation());
+      if (expected == Relation.UNCERTAIN) {
+        assertNull(result.confidence());
+        assertEquals(ReasonCode.INSUFFICIENT_CONTEXT, result.reasonCode());
+      } else {
+        assertEquals(Double.parseDouble(score), result.confidence());
+        assertEquals(AnalysisStatus.COMPLETED, result.status());
+      }
+      var related = decision("RELATED", score, "SEMANTIC_GOAL_MATCH", prompt);
+      assertEquals(expected == Relation.UNRELATED ? Relation.RELATED : Relation.UNCERTAIN,
+          related.relation());
+    }
   }
 
   @Test

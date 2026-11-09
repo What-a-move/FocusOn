@@ -1,5 +1,43 @@
 # Backend 결정 기록
 
+## PR205 리뷰 보완 — 기존 정책의 경계 보장 (2026-11-09)
+
+공개 API/확정 사용자 동작은 유지한다. 정책 현재성은 명시적 context 안에서 선택하며, 일반 재분석은 후보를 보존하고 표시만 동결한다. NOT_SENT 후보가 TTL 안 남아 있으면 같은 후보만 재시도한다. 필수 동의 철회는 동의 저장 transaction의 사용자→세션 잠금 안에서 구간을 즉시 종료해 재동의가 중단을 숨기지 못하게 한다. 선택 CAMERA_ANALYSIS 철회는 화면 정책을 끊지 않는다. cooldown 중 표시를 차단하며 '새 관측'은 완료 시각이 아닌 실제 서버 receivedAt으로 검증한다. heartbeat 정책 평가는 원래 transaction의 connection cleanup 뒤에 시작해 작은 pool에서도 새 transaction이 연결을 얻을 수 있게 한다.
+
+
+## 2026-11-09 #182 실제 알림 계약 승인
+
+전경 context PUT/GET과 deliveries POST를 #182 범위 안에 추가하는 사용자 승인을 받았다. 전경 lease30초, 유효 RUNNING heartbeat만 연장·만료 복구는 새 번호, 최초 SENT receipt 서버 수신부터5분 cooldown, UNKNOWN/유실은 추가 생성 보류다. GET/ack를 전송으로 취급하지 않는다. Desktop 확인했어 UI5분은 유지한다. 표시 직전 context/보호 및 monotonic TTL 검증은 소비자 담당이다. Notion 계약을 구현 전에 기록한다. AI 실연결 QA는 사용자 지시로 보류하며 합성 검증과 실제 앱 알림을 구분한다.
+
+
+## 2026-11-09 최종 변경 — AI 숫자 점수 기준 0.6
+
+- 사용자의 최신 지시로 앞선 0.75 결정을 대체한다. 숫자 confidence는 0.6 미만이면 UNCERTAIN, 정확히 0.6 이상이면 기존 권한·출처·보호·시간 정책을 추가 검증한다.
+- 숫자 점수를 반환하는 -uncalibrated 베타 응답도 0.6이다. 기존 승인된 -uncalibrated + confidence:null 예외는 변경하지 않는다. APP_META/TAB_META UNRELATED 비누적·실패 시 안전 보류도 유지한다.
+- 서버 AnalysisAiClient와 경계/중간값 회귀를 0.6으로 변경했다. AI PR #190 head252b513은 아직 0.75이므로 AI 담당의 별도 수정이 필요하다. AI/shared-types/Frontend는 직접 수정하지 않았다.
+- 사용자 추가 승인으로 Notion AI 분석 계약 4.4/7장의 confidence 기준과 베타 예외 내 수치 참조 총 5곳을 0.6으로 수정하고 재접속 후 저장을 확인했다. 공통 docs/API_CONTRACT.md와 Backend DEVELOPMENT_RULES의 현재 숫자 기준도 0.6으로 동기화했다. null 예외/이탈 시간/cooldown은 유지했다.
+- 실제 AI/학교 Ollama/포키 전체 왕복·production adapter/receipt 연결 완료를 뜻하지 않는다.
+
+
+## 2026-11-09 이전 결정 — AI 숫자 점수 기준 0.75 (이후 0.6으로 대체)
+
+- 사용자 확정: 공통 문서 기준 0.75로 Backend·AI 연동을 진행한다. 0.6으로 낮추지 않는다.
+- 숫자 confidence는 0.75 미만이면 UNCERTAIN, 정확히 0.75 이상이면 다른 권한·출처·보호·정책 게이트를 추가 검증한다. 점수만으로 개입을 생성하지 않는다.
+- 숫자를 반환하는 베타 -uncalibrated 응답에도 같은 0.75를 적용한다. 기존 승인된 -uncalibrated + confidence:null 예외는 별도 계약이며 이번 승인으로 임의 제거/확장하지 않는다.
+- 현재 AnalysisAiClient와 PR #190 실제 코드가 이미 0.75라 임계값 코드 변경은 필요 없다. 실제 AI/학교 Ollama/포키 왕복 QA는 여전히 별도다.
+
+
+## 2026-11-09 #182 내부 구현과 통합 경계
+
+- 상태: 사용자 승인된 내부 구현. 새 전경/receipt 공개 계약은 미확정, Notion 새 정책 동기화는 미완료.
+- 분석 processing을 확정 UNCERTAIN과 분리한다. 같은 실행/context의 기존 episode·확정 누적을 유지하고 대기 중 시간/생성만 동결한다. 확정 실패/UNCERTAIN/보호/RELATED는 종료한다.
+- 사용자 추가 승인: rolling 창 내부 clipping·열린 구간 1회 포함, 미전송 TTL 30초. 확인했어 이후 5분은 기존 확정 Desktop UI 상태다.
+- 서버 내부 상태는 typed JSONB 시간 조각과 cause revision, 개입은 nullable pending slot/원인 UNIQUE 및 최초 action/actedAt으로 중복을 막는다.
+- 유효 heartbeat commit 후 별도 transaction에서 fresh 세션을 평가한다. 평가 실패가 생존 commit을 취소하지 않는다. outbox는 구현하지 않았으며 다음 유효 관측/heartbeat 재평가를 사용한다.
+- 기본 foreground adapter는 없음. 실제 전경 context/관측 소속·receipt 없이는 production 개입 생성을 보류한다. GET/사용자 ack를 전송으로 취급하지 않는다.
+- #182 서버 합성 QA와 실제 AI→포키 QA를 분리한다. P1~P7 담당/선행은 PLAN 및 이슈 추적표를 따른다.
+
+
 > Spring Boot 백엔드의 API·DB·인증 결정을 기록한다.
 > 기존 결정을 지우지 않고 새로운 번호로 추가한다.
 
@@ -392,6 +430,12 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 - 기본OSIV=false는 유지하고 분석 준비/완료의 독립 transaction 및 캐시 초기화로 설정 변경에도 완료 검증을 보장한다.
 - 구형 counter 유실을 이유로 낮은 번호를 최신으로 승격하지 않는다. 기존 Frontend 지속 counter·전역 번호 복구/새 세션 계약을 유지한다. 새로운 복구 API/추정 규칙은 이번 리뷰 수정으로 만들지 않는다.
 
+### 0.6 변경 검증·정본 동기화 결과
+
+- 전체 build/Checkstyle 성공: 234개, 실패0·오류0·생략10. numeric 일반/베타 양쪽의 0.599 보류, 0.6·0.6001·0.65·0.749 통과 및 null 예외를 검증했다.
+- 별도 컨텍스트 리뷰: 추가 actionable finding 없음. 이번 변경은 숫자 정규화만이며 SQL 변경이 없어 PostgreSQL QA는 재실행하지 않았다(기존 #182 PG87개 결과와 구분).
+- Notion AI 분석 계약 4.4/7 numeric 기준 및 null 예외의 기준 참조를 동기화했다. API POST 페이지에는 별도 0.75 기준 문구가 없어 수정하지 않았다. Notion의 관측 순서·rolling/30초 만료 등 다른 미동기화 항목은 이번 작업으로 해결됐다고 보지 않는다.
+- AI PR #190 head252b513의 0.75는 AI 담당 수정 대기다. 실제 AI/학교 Ollama/포키 QA·PR 생성·병합·이슈 종료는 미수행이다.
 ## #201 세션 결과 요약 조회 기준 (2026-11-09)
 
 사용자 위임에 따라 결과 요약은 Desktop 본인의 ENDED/ABANDONED만 제공하며 진행 상태는 기존 SESSION_STATE_INVALID409로 처리한다. 정확한 집계 근거 없는 선택 통계는 생략하고 실제 연장 이력만 집계한다. 기존 상세 조회와 역할을 구분하며 알 수 없는 값을0으로 반환하지 않기 위한 기준이다. Notion 최신 원문은 접근 불가이고 로컬 확정 필드 및 Desktop 파서를 대조했다. 이슈 댓글로 공유한다.

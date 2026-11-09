@@ -187,7 +187,7 @@ public class AnalysisAiClient {
       }
       // 최신 Notion의 베타 예외: 수치 confidence를 지어내지 않고 버전을 함께 보존한다.
       boolean candidate = prompt.endsWith("-uncalibrated") && confidence == null;
-      if (!candidate && (confidence == null || confidence < .75)) {
+      if (!candidate && (confidence == null || confidence < .6)) {
         return new AnalysisDecision(Relation.UNCERTAIN, null, ReasonCode.INSUFFICIENT_CONTEXT,
             AnalysisStatus.NEEDS_CONFIRMATION, model, prompt);
       }

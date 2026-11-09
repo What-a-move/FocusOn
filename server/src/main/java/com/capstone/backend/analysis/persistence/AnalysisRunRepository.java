@@ -27,6 +27,42 @@ public interface AnalysisRunRepository extends JpaRepository<AnalysisRunEntity, 
         : findLegacy(sessionId, deviceId, first).stream().findFirst();
   }
 
+  /** 명시적 전경의 정책 선택도 같은 번호/순서 불명 우선순위를 사용한다. */
+  default Optional<AnalysisRunEntity> findCurrent(Long sessionId, Long deviceId, Long contextId) {
+    var first = PageRequest.of(0, 1);
+    var numbered = findContextNumbered(sessionId, deviceId, contextId, first)
+        .stream().findFirst();
+    if (numbered.isPresent()) {
+      return numbered;
+    }
+    var uncertain = findContextUntrusted(sessionId, deviceId, contextId, first)
+        .stream().findFirst();
+    return uncertain.isPresent() ? uncertain
+        : findContextLegacy(sessionId, deviceId, contextId, first).stream().findFirst();
+  }
+
+  /** context 없는 호환 이력은 명시적 전경의 현재 관측을 변경하지 않는다. */
+  @Query("select r from AnalysisRunEntity r where r.session.id = :sessionId "
+      + "and r.device.id = :deviceId and r.observationContextId = :contextId "
+      + "and r.currentEligible = true and r.observationSequence is not null "
+      + "order by r.observationSequence desc, r.id desc")
+  List<AnalysisRunEntity> findContextNumbered(@Param("sessionId") Long sessionId,
+      @Param("deviceId") Long deviceId, @Param("contextId") Long contextId, Pageable page);
+
+  /** context 안의 순서 불명 안전 결과는 기기 원본 시각보다 우선한다. */
+  @Query("select r from AnalysisRunEntity r where r.session.id = :sessionId "
+      + "and r.device.id = :deviceId and r.observationContextId = :contextId "
+      + "and r.currentEligible = true and r.orderingUntrusted = true order by r.id desc")
+  List<AnalysisRunEntity> findContextUntrusted(@Param("sessionId") Long sessionId,
+      @Param("deviceId") Long deviceId, @Param("contextId") Long contextId, Pageable page);
+
+  /** 번호 없는 요청도 검증된 context 소속 안에서만 선택한다. */
+  @Query("select r from AnalysisRunEntity r where r.session.id = :sessionId "
+      + "and r.device.id = :deviceId and r.observationContextId = :contextId "
+      + "and r.currentEligible = true order by r.observedAt desc, r.id desc")
+  List<AnalysisRunEntity> findContextLegacy(@Param("sessionId") Long sessionId,
+      @Param("deviceId") Long deviceId, @Param("contextId") Long contextId, Pageable page);
+
   /** source와 기기 시각에 의존하지 않는 기기 전체 관측 번호다. */
   @Query("select r from AnalysisRunEntity r where r.session.id = :sessionId "
       + "and r.device.id = :deviceId and r.currentEligible = true "

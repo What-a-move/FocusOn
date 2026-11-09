@@ -6,6 +6,7 @@ import com.capstone.backend.auth.security.DeviceHeaderValidator;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.intervention.service.HeartbeatPolicyTrigger;
 import com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest;
 import com.capstone.backend.session.dto.SessionDtos.HeartbeatResponse;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -28,6 +30,8 @@ public class SessionHeartbeatService {
   private final UserRepository users;
   private final LearningSessionRepository sessions;
   private final TransactionTemplate transactions;
+  private final ApplicationEventPublisher events;
+  private final com.capstone.backend.intervention.service.ForegroundPolicyContext foreground;
 
   /** 만료 확정은 오류 응답을 보내기 전에 별도 트랜잭션에서 커밋한다. */
   public HeartbeatResponse heartbeat(FocusOnPrincipal principal, String deviceId,
@@ -42,6 +46,10 @@ public class SessionHeartbeatService {
     if (outcome.abandoned()) {
       throw ApiException.withDetails(ApiErrorCode.SESSION_ABANDONED,
           Map.of("currentStatus", SessionStatus.ABANDONED, "endReason", "HEARTBEAT_TIMEOUT"));
+    }
+    // execute가 commit뿐 아니라 connection cleanup까지 마친 뒤 새 평가 transaction을 연다.
+    if (outcome.evaluate()) {
+      events.publishEvent(new HeartbeatPolicyTrigger(principal.userId(), sessionId));
     }
     return outcome.response();
   }
@@ -99,9 +107,12 @@ public class SessionHeartbeatService {
     }
     boolean reached = active >= session.getTargetDurationMs();
     sessions.recordHeartbeat(sessionId, now, observed, active, reached);
+    if (!reached) {
+      foreground.renew(session, request.observationContextId(), now);
+    }
     return new HeartbeatOutcome(new HeartbeatResponse(reached
         ? SessionStatus.AWAITING_END_CONFIRMATION : SessionStatus.RUNNING, now, active, null),
-        false);
+        false, !reached);
   }
 
   private HeartbeatResponse response(LearningSessionEntity session) {
@@ -121,5 +132,9 @@ public class SessionHeartbeatService {
     }
   }
 
-  private record HeartbeatOutcome(HeartbeatResponse response, boolean abandoned) {}
+  private record HeartbeatOutcome(HeartbeatResponse response, boolean abandoned, boolean evaluate) {
+    HeartbeatOutcome(HeartbeatResponse response, boolean abandoned) {
+      this(response, abandoned, false);
+    }
+  }
 }

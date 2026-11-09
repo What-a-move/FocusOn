@@ -1,5 +1,104 @@
 # Backend 작업 컨텍스트
 
+## 병합 승인 후 추가2건 최종 보완 (2026-11-09)
+
+- 사용자가 PR205 병합을 승인했다. 병합 전3664598 자동 재리뷰에서 추가2건을 확인해 보완했다. Issue182 종료 승인은 별도이며 실행하지 않는다.
+- 철회/보호로 없어진 pending을 늦은 완료가 재구성하지 않는다. 필수 동의3종의 prepare→철회→재동의→옛complete 차단 및 fresh 관측 허용 회귀를 추가했다.
+- 이미 반환된 GET과 늦은 SENT 경쟁은 서버 재조회만으로 제거되지 않는다. 소비자 단일 coordinator·journal/outbox barrier·GET 응답 세대 폐기 규칙을 인계문/연결 설계에 명시했다. 소비자 구현·OS exactly-once를 완료/보장했다고 주장하지 않는다.
+- 독립 재검토 추가 지적 없음. 전체 build·Checkstyle282개 실패0·오류0·생략14, 격리 PostgreSQL Flyway+validate155개 실패0·생략0. 실행 근거는 server/build/ai-integration-qa/pr205-premerge-{build,pg}.log 및 요약 JSON이다.
+- 최종 수정분 원격 CI를 확인한 뒤 병합한다. 새 endpoint/사용자 정책/마이그레이션은 추가하지 않았다. 실제 AI/소비자/포키 QA는 별도다.
+
+
+## PR205 피드백9건 보완 — 로컬 검증 완료 (2026-11-09)
+
+- CodeRabbit7ab8f6e 리뷰의 actionable9건과 동의 철회 테스트 제안을 대조·반영했다. 처리표: features/intervention-policy-review-response.md. 현재 기준 PR은 생성·push 완료 상태이며 생성 승인을 다시 요청하지 않는다.
+- 보호 관측의 context 범위 현재성, 재분석 후보 보존/표시 동결, 동의 철회 즉시 중단, cooldown 표시/receivedAt 경계, heartbeat connection cleanup 이후 평가를 보완했다. 공개 계약/정책 변경이나 새 migration은 없다.
+- 전체 build·Checkstyle279개 실패0·오류0·생략14. 같은 CI 설정(Flyway+validate)의 격리 PostgreSQL152개 실패0·생략0. 단일 connection pool·필수 동의3종 철회/재동의·선택 카메라 비간섭·늦은 SENT·cooldown 지연 완료 등을 포함한다.
+- 구현 대화 없는 새 에이전트의 독립 리뷰에서 추가 actionable finding 없음. 최종 수정분 원격 CI/자동 재리뷰 결과는 별도 확인한다. 기존7ab의 봇 체크 SUCCESS를 새 수정분 승인으로 쓰지 않는다.
+
+
+## PR205 원격 시각 정밀도 보완·CI 범위 확장 (2026-11-09)
+
+- cb2d530 원격 전체 검사에서 동시 ack 응답과 lease 종료 시각 assertion2건이 실패했다. ack 최초 시각을 PostgreSQL MICROS 정밀도로 고정하고 lease fixture 입력도 MICROS로 고정했다. 최초 사용자 결정·만료·cooldown 계약은 유지한다.
+- 기존 원격 PostgreSQL job에 intervention 전체·heartbeat cleanup·SessionApiTests를 포함했다. job 이름/권한/DB 설정은 유지한다. 별도 읽기 리뷰에서 추가 actionable finding 없음.
+- 보완 후 전체 build·Checkstyle270개 실패0·오류0·생략14. CI와 같은 Flyway enabled+Hibernate validate 설정 및 확장한 정확한 테스트 목록에서 PostgreSQL143개 실패0·생략0. 이전133개는 확장 전 범위다.
+- 실행 근거: server/build/ai-integration-qa/pr205-precision-{build,pg-validate}.log 및 요약 JSON. 이 결과는 로컬이며 최종 push의 원격 CI/봇 리뷰 결과는 PR #205에서 따로 확인한다.
+
+
+## PR #205 생성 및 최신 dev 충돌 해소 (2026-11-09)
+
+- 사용자 승인으로 d5e8b2e를 push하고 [PR #205](https://github.com/What-a-move/FocusOn/pull/205)를 dev 대상으로 생성했다. 병합·Issue 종료는 승인받지 않았으며 실행하지 않는다.
+- 생성 직후 dev ba58e5c(#202 세션 요약·#204 Desktop 시연 수정)가 추가돼 DECISION_RECORD 문서 충돌을 양쪽 기록 보존으로 해소했다. 통합 커밋 ef37f37이며 새 migration 충돌/자체 코드 변경은 없다.
+- 최신 통합 후 전체 build·Checkstyle270개 실패0·오류0·생략14, 격리 PostgreSQL 관련133개 실패0·생략0. 실행 근거: server/build/ai-integration-qa/pr205-devba58e5c-{build,pg}.log 및 요약 JSON. 이전267/131은 당시 dev0ca256e 기준 이력이다.
+- summary GET은 팀원 #201/PR #202에서 이미 추가됐다. 현재 저장된 종료 시간/연장 이력만 반환하며 분석·개입 선택 통계는 아직 집계하지 않는다. 다음 작업에서 중복 개발하지 않는다.
+- PR 갱신 후 원격 CI/CodeRabbit을 확인한다. 로컬 성공을 원격 CI/봇 리뷰 완료로 취급하지 않는다. 실제 Desktop/Extension 소비자 연결·포키 실표시·AI 실연결 QA는 여전히 미완료다.
+
+
+## #182 실제 알림 서버 연결 — 최신 상태 (2026-11-09)
+
+- `feat/182-server-intervention-policy`: 구현792d36f, 최신 dev0ca256e 통합c767669. 기존 개입 조회/ack에 context PUT/GET·receipt POST와 분석/heartbeat 선택 필드를 연결했다. V16 세션 연장/V17 개입/V18 연결이며 배포된 migration은 수정하지 않았다.
+- 사용자 승인: #182 범위 확장, 전경 lease30초, 최초 SENT 수신부터 서버 cooldown5분, UNKNOWN/유실 생성 보류, Notion/계약 동기화. 확인했어 이후5분 UI 상태는 유지한다. 원문·토큰 비저장 및 기존 관측/보호 계약은 유지한다.
+- Notion 새 API3행과 기존 분석/heartbeat/개입 조회·화면 분석 추가 정책을 반영했다. docs/API_CONTRACT.md·PROJECT_CONTEXT.md도 동기화했다. 아래 '미합의/빈 adapter'는 확장 전 이력이다.
+- 전체 build·Checkstyle267개 실패0·생략14, 격리 PostgreSQL131개 실패0·생략0. 실제 임의 포트 HTTP와 독립 리뷰 포함. 기존 CORS preflight1회404는 단독/전체 재실행에서 재현되지 않았으며 원인 미확정으로 QA에 기록했다.
+- 다음: PR 초안 검토·생성 승인 → 원격 CI/리뷰. Desktop/Extension/shared-types 담당의 context·표시 직전 보호·receipt 영속 재시도 연결 후 일반 모드 포키 실표시 QA. AI/학교 모델 실연결은 사용자 지시로 보류. 서버 구현 완료와 실제 앱 알림 완료를 구분한다.
+- 상세: features/intervention-policy-integration-contract.md, -handoff.md, -QA.md, -code-review.md, -REPORT.md. 외부 담당자에게 메시지는 전송하지 않았다. PR 생성·병합·Issue 종료는 각각 별도 승인이다.
+
+## 아래는 이전 진행 이력 — 위 최신 상태 우선
+
+
+## 실제 알림 작업 재개 (2026-11-09)
+
+- 사용자 지시로 AI 실연결 QA는 보류하고 실제 알림용 서버 연결 작업을 우선한다. 새 공개 계약/정책/범위 확장 검토안을 제시했으며 구체 승인 응답은 대기다. Frontend 코드는 직접 수정하지 않는다.
+- 원격 dev 255085a: AI #190 및 세션 연장 #194 병합. 기존 체크리스트의 미병합 문구는 과거 기록이다. 실제 AI 네트워크/모델/앱 QA 완료를 뜻하지 않는다.
+- dev의 V16 세션 연장과 충돌한 미배포 개입 migration을 V17로 조정한다. V16 데이터에서의 보존 회귀로 기준을 갱신한다. 이전 V15→V16/PG87 결과는 당시 번호로 실행한 이력이다.
+
+
+## 실제 AI 연결 검사 준비 (2026-11-09)
+
+- 학교 모델 IP 100.116.183.94를 받았으나 HTTPS443/HTTP11434 연결 시간 초과, 현재 경로 en0. 사용자가 11434 포트를 확인했으며 Tailscale 연결 확인 중이다. 학교 모델/실제 AI 성공으로 기록하지 않는다.
+- AI PR #190 최신 d703397의 candidate 기준은 0.6이다. 아래 0.75 인계 필요 문장은 이전 head 당시 기록이다. Backend AI 주소/키와 실제 실행 AI 서비스는 추가 확인이 필요하다.
+- 합성 검사 도구/명시 실행 Java live 검사 준비. loopback14개 통과, Backend build·Checkstyle 239개 실패0·생략12(실제 AI2개 포함). 상세는 features/analysis-ai-live-qa.md.
+- 새 공개 계약 검토안: features/intervention-policy-integration-contract.md. 전경 context/receipt·lease·수신 기준 cooldown은 승인 전이며 구현하지 않았다. 기존 production 생성 보류는 유지한다.
+
+
+## #182 서버 검증 결과 (2026-11-09)
+
+- `feat/182-server-intervention-policy`: 내부 코어/영속화/V16/개입 GET·ack/최소 연결 구현. 전체 build·Checkstyle 통과(226개 실패0·생략10), 격리 PG87개 전부 통과. 임의 포트 실제 HTTP 검증 포함.
+- 격리 리뷰 P1 순서 불명 관측의 정책 전이 누락 보완·재검토 완료. PG pending_slot NULL CHECK 보강 검증.
+- 남은 필수 연결: P1/P2 전경 context·관측 소속·유효성, P3/P4 전송 receipt, P5 세션 담당 경계, P6 #154, P7 전체 앱 QA. 기본 production 생성 보류.
+- Notion 문단 원문 복구 확인, 신규 rolling/30초 정책 정본 반영은 미완료. 정본 상세 404/actedAt nullable도 대조 필요. PR/CI/병합/Issue 종료 미수행.
+- QA/리뷰/결과: `features/intervention-policy-{QA,code-review,REPORT}.md`.
+
+
+## #182 내부 구현 진행 (2026-11-09)
+
+- 작업 브랜치 `feat/182-server-intervention-policy`, 최신 dev `5462afd` 기반. 기존 staged IDE 파일·stash 보존.
+- 사용자 지적 반영: 재분석 PENDING은 확정 UNCERTAIN과 분리해 같은 episode/누적을 유지하고 대기 시간/생성만 동결한다.
+- 사용자 추가 승인: rolling 창 내부 clipping·열린 구간 1회, 미전송 PENDING TTL 30초. Notion은 원문 복구만 승인받아 복구했고 신규 정책 반영은 미완료다.
+- 코어/typed JSONB 상태·개입 이벤트/V16/기존 조회·ack API/최소 분석·heartbeat 연결 구현, 검증 중. 전체 완료 아님.
+- 전경/관측 소속 adapter 기본값은 없음. 전송 receipt 수신도 미구현. 합성 테스트와 production 앱 알림은 구분한다.
+- 실제 통합 P1~P7은 Issue #182·PLAN·handoff에서 추적한다. Frontend/shared-types/AI 직접 수정 없음.
+
+
+## Issue #182 상세 기획 검토 (2026-11-09 KST)
+
+- 사용자 승인으로 [#182](https://github.com/What-a-move/FocusOn/issues/182) 생성 완료. 단계 0~3 완료, 계약 승인·기획 최종 승인·구현 승인은 대기다. 브랜치·구현·PR은 아직 없다.
+- `features/intervention-policy-PLAN.md`에 내부 저장/서버 시간 구간/잠금/멱등 ack/outbox 설계와 미정 사용자 동작 권고안을 작성했다.
+- 확인했어 이후 5분은 확정된 Desktop UI 상태다. 미정은 서버 실제 전송 확인 계약이며 GET/생성을 전송으로 간주하지 않는다.
+- 기기 선택은 Desktop 전경 context 위임을 권고한다. 기존 기기별 counter/시각 비교나 임의 보호 TTL로 최신 화면을 추정하지 않는다.
+- 추가 승인 대상: 전경 context 계약, 별도 delivery receipt와 수신 기준 cooldown, rolling 창 경계, 미전송 PENDING 만료. `features/intervention-policy-handoff.md`는 미전송 인계 초안이다.
+- #154 미완료와 무관하게 Policy/API·합성 테스트는 진행 가능하다. 실제 AI→포키 QA는 별도다.
+
+
+## 최신 원격 확인·다음 범위 검토 (2026-11-09 KST)
+
+- fetch한 origin/dev는 `fc340ffe578ff36762ebb027a8c09c545acf89e1`. PR #172 MERGED, head `e77438e`, 원격 Backend CI 두 job SUCCESS를 GitHub에서 재확인했다. CodeRabbit NEUTRAL은 한도에 따른 SKIPPING이며 최종 수정분 봇 재검토 완료가 아니다.
+- #171 체크리스트 0~11은 완료이며 별도 종료 승인이 없어 OPEN이다. 아래 PR172 미병합 문장은 과거 기록이다.
+- 사용자 담당은 ① 기반 ② 인증·기기 ⑥ 분석·개입 ⑦ 리포트·학습 정리다. 사용자·목표·세션 상태 명령은 팀원 범위이며 Frontend/shared-types/AI는 읽기·인계만 한다.
+- 다음 Policy Engine/개입 기존 Issue·PR은 전체 목록 검색에서 발견하지 못했다. `features/intervention-policy-PLAN.md`는 Issue 등록·기획 검토 승인을 위한 초안이며 구현 승인이 아니다. 실제 표시/cooldown·기기 간 현재 화면 선택 등 미정 경계를 확정 계약으로 취급하지 않는다.
+- #154는 OPEN이며 dev AI 정식 경로가 아직 RECEIVED를 반환함을 코드로 확인했다. 실제 AI/앱 통합 완료와 Server 구현 완료를 구분한다.
+- 현 checkout만 사용하고 IDE·Claude outputs·기존 stash를 보존한다. 새 worktree·FocusOn-swagger는 사용하지 않는다.
+
 ## 현재 작업: #171 분석 요청·결과 저장 (2026-11-08)
 
 - feat/171-analysis-runs는 최신 dev 91cd524에서 분기했다. POST /sessions/{id}/analysis-runs의 공개 요청·응답, runner/연결 Extension 권한, 보호 상태, 결과 저장과 AI 내부 adapter를 구현했다. 계획·검증은 features/analysis-runs-*를 따른다.
