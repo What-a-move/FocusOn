@@ -115,7 +115,7 @@ class ScreenAnalysisResponse(InternalSchema):
     def valid_decision(self):
         expected = {"RELATED": "SEMANTIC_GOAL_MATCH", "UNRELATED": "SEMANTIC_GOAL_MISMATCH"}
         if self.decision in expected:
-            if self.confidence is None or self.confidence < .75 or self.reason_code != expected[self.decision]:
+            if self.confidence is None or self.confidence < .6 or self.reason_code != expected[self.decision]:
                 raise ValueError("UNVERIFIED_DECISION")
         elif self.reason_code in expected.values():
             raise ValueError("UNCERTAIN_REASON_REQUIRED")
@@ -167,7 +167,7 @@ def public_response(label: str, internal_reason: str, *, source: ContentSource,
         label, confidence, reason = "UNCERTAIN", None, "INSUFFICIENT_CONTEXT"
     elif label != "UNCERTAIN" and confidence is None:
         label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
-    elif label == "UNCERTAIN" or confidence < .75:
+    elif label == "UNCERTAIN" or confidence < .6:
         label = "UNCERTAIN"
         reason = contract_reason_code(label, internal_reason)
     else:

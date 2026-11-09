@@ -6,4 +6,4 @@ def test_goal_and_relevance_routes_are_both_registered():
     paths = app.openapi()["paths"]
     assert "/internal/v1/goals/clarify" in paths
     assert "/internal/v1/analysis-runs" in paths
-    assert "/internal/v1/analysis-runs/analyze" in paths
+    assert "/internal/v1/analysis-runs/analyze" not in paths
