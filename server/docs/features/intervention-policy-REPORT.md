@@ -1,5 +1,13 @@
 # #182 구현 결과 (통합 완료 아님)
 
+## PR205 원격 시각 정밀도 보완·CI 범위 확장 (2026-11-09)
+
+- cb2d530 원격 전체 검사에서 동시 ack 응답과 lease 종료 시각 assertion2건이 실패했다. ack 최초 시각을 PostgreSQL MICROS 정밀도로 고정하고 lease fixture 입력도 MICROS로 고정했다. 최초 사용자 결정·만료·cooldown 계약은 유지한다.
+- 기존 원격 PostgreSQL job에 intervention 전체·heartbeat cleanup·SessionApiTests를 포함했다. job 이름/권한/DB 설정은 유지한다. 별도 읽기 리뷰에서 추가 actionable finding 없음.
+- 보완 후 전체 build·Checkstyle270개 실패0·오류0·생략14. CI와 같은 Flyway enabled+Hibernate validate 설정 및 확장한 정확한 테스트 목록에서 PostgreSQL143개 실패0·생략0. 이전133개는 확장 전 범위다.
+- 실행 근거: server/build/ai-integration-qa/pr205-precision-{build,pg-validate}.log 및 요약 JSON. 이 결과는 로컬이며 최종 push의 원격 CI/봇 리뷰 결과는 PR #205에서 따로 확인한다.
+
+
 ## PR #205 생성 및 최신 dev 충돌 해소 (2026-11-09)
 
 - 사용자 승인으로 d5e8b2e를 push하고 [PR #205](https://github.com/What-a-move/FocusOn/pull/205)를 dev 대상으로 생성했다. 병합·Issue 종료는 승인받지 않았으며 실행하지 않는다.

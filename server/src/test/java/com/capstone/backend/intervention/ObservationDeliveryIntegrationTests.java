@@ -411,7 +411,8 @@ class ObservationDeliveryIntegrationTests {
     var item = contexts.put(f.principal(), f.device(), f.sessionString(),
         contextRequest(1, Observer.DESKTOP));
     final long event = generateWithContext(f, item.observationContextId());
-    Instant expired = Instant.now().minusSeconds(20);
+    Instant expired = Instant.now().minusSeconds(20)
+        .truncatedTo(java.time.temporal.ChronoUnit.MICROS);
     jdbc.update("UPDATE session_observation_contexts SET valid_until=? WHERE id=?",
         java.sql.Timestamp.from(expired),
         Long.parseLong(item.observationContextId()));

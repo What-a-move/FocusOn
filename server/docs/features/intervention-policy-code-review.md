@@ -32,3 +32,8 @@
 - P2: context 없는 호환 분석이 현재 전경의 episode/PENDING을 invalidate하고 heartbeat 최신 관측을 바꿀 수 있음. 정책 조기 반환과 context 소속 findCurrent overload로 분리했다. 번호/순서 불명 우선순위를 유지하며 더 큰 번호의 구형 이력이 현재 구간/후보를 바꾸지 않는 회귀를 추가했다. 재검토에서 해결 확인.
 - 늦은 SENT의 수명 만료 후 감사 기록, 전송된 PENDING slot 해제/ack 유지 및 V18 CHECK를 추가 재검토했고 actionable finding 없음.
 - 별도 migration 리뷰는 V17→V18 보존·FK/nonce/순번 unique·JS 범위·slot CHECK를 대조했으며 추가 지적 없음. 런타임 QA 성공을 대신하지 않는다.
+
+## PR205 원격 precision/CI 보완 재검토
+
+- 별도 리뷰 에이전트가 ack 최초 now MICROS 고정, lease JDBC fixture 정밀도, 원격 PG 테스트 범위 확장을 읽기 재검토했다. 최초/반대/동시 ack 및 수명 계약 변경 없음, 추가 actionable finding 없음. 파일·원격 변경과 테스트 실행은 하지 않았다.
+- 원격 PG의 기존 job/DB/권한을 유지하며 새 개입/heartbeat/SessionApi 회귀를 포함한 변경도 별도 읽기 검토했다. 로컬 Flyway+validate143개 결과와 리뷰 판단은 분리한다.

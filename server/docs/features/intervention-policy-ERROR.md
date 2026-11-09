@@ -14,3 +14,9 @@
 - 격리 리뷰 P2: context 없는 호환 관측의 현재 정책 간섭. context 범위 findCurrent와 이력 전용 경계를 보강하고 회귀/재검토했다.
 - 첫 PostgreSQL 확장 QA에서 신규 테스트 fixture의 JDBC Instant 바인딩 실패9건과 안전 컬럼 허용 목록 누락1건이 발생했다. Timestamp.from과 observation_context_id 허용 목록을 보강했다. 운영 코드를 추측 변경하지 않았다. 수정 후129개 전부 통과.
 - 최신 dev0ca256e 통합 후 전체 검사 중 기존 실제 HTTP CORS preflight가1회404였다. 단독 재실행은 성공했으며 원인은 미확정이다. 코드/보안 설정은 변경하지 않았다. 전체267개 재실행 및 최종 PostgreSQL131개는 통과했으며 원인은 여전히 미확정이다. 최종 결과는 QA를 따른다.
+
+## PR205 원격 CI의 시각 정밀도 보완
+
+- cb2d530 원격 전체 build에서 동시 ack의 최초 응답/재조회 응답 동등성 및 lease 종료 시각 assertion이 실패했다. 로컬 Mac 전체/PG는 통과했지만 원격 실패를 숨기지 않는다.
+- ack 최초 Instant를 PostgreSQL 마이크로초로 고정해 첫 응답과 DB 재조회 시각을 일치시킨다. lease 테스트의 JDBC 입력도 처음부터 마이크로초로 고정해 DB 반올림 차이를 제거한다.
+- 원격 PostgreSQL job의 기존 검사 범위에 신규 intervention/heartbeat/SessionApi 회귀를 추가한다. job 이름/DB 설정/권한은 유지한다. 최종 재검증 결과는 PR/QA를 따른다.

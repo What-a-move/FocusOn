@@ -71,7 +71,7 @@ public class InterventionService {
     var session = sessions.findOwnedForUpdate(event.getSessionId(), principal.userId())
         .filter(value -> value.getRunnerDevice().getId().equals(principal.deviceId()))
         .orElseThrow(() -> new ApiException(ApiErrorCode.NOT_FOUND));
-    Instant now = Instant.now();
+    Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
     if (event.getDeliveryConfirmedAt() == null
         && (!now.isBefore(event.getExpiresAt()) || !presentable(session, event, now))) {
       event.expire();
