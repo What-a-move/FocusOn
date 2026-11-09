@@ -28,3 +28,16 @@
 {'tests': 290, 'failures': 0, 'errors': 0, 'skipped': 15}
 
 - 최종 enum사유 정리 뒤 전체 build·Checkstyle 재통과: {'tests': 290, 'failures': 0, 'errors': 0, 'skipped': 15}. PostgreSQL조건부테스트15개 생략은 앞선 별도PG34개전부통과와 구분한다.
+
+## VERIFICATION.md 기준 추가 검증 (2026-11-09)
+
+- 대상 코드296f63d, 위험도HIGH(권한·상태전이·트랜잭션·중복처리). 시작 시 사용자 변경은 .gitignore와 .idea뿐이며 해당 파일은 수정/커밋하지 않았다.
+- 요구사항은 #206 완료조건과 Client 인계·요청코드, 기존 확정계약으로 재확인했다. Notion최신원문 미대조와 AI자동생성 제외는 기존 제한 그대로다.
+- STEP2 PASS: 격리PostgreSQL17(15480/qa206check)에서 `./gradlew test --tests 'com.capstone.backend.session.SessionApiTests' --rerun` 실행. 테스트34개 실패0·오류0·생략0. 실제 환경변수로 PostgreSQL driver, Flyway=true, ddl-auto=validate를 지정했다.
+- STEP3 PASS: 별도 앱18099에서 합성QA전용서명JWT로 보호API200과 local-events/learning-summary의 실제HTTP·DB를 확인했다. Google로그인으로 발급된 토큰이 아니며 기존 인증필터·DB활성검사는 정상 적용했다.
+- 실패HTTP401(미인증)·400(헤더누락)·401(기기불일치)·400(본문누락) 뒤 세션version/누적값 및 이벤트이력0건 보존. 학습정리없음404와 저장5상태각200.
+- STEP4 SKIP: Google로그인코드 변경이 없는 #206 재검증이므로 OAuth 재실행은 불필요하다. 앞선 같은커밋의 실계정201/200 결과와 이번합성JWT검증을 구분한다.
+- STEP5 PASS: 실제HTTP 동일이벤트 동시요청2건을3회반복(각회새이벤트). 매회200두건·이력한건추가·version한번증가·AUTO_PAUSED·확정누적1234ms유지. 자동PG회귀에도 duplicate/heartbeat경합을 포함했다.
+- STEP6 PASS(기존증거재사용): migration파일은296f63d와동일해 앞선V18재현복제본→V19 데이터보존검증을재사용한다. 이번새PG에도V1~V19 Flyway/validate는성공했으나 기존데이터보존을다시실행한것은아니다.
+- STEP7 PASS(기존증거재사용): 소스·빌드설정변경이없어 앞선동일커밋의전체build/Checkstyle통과(290개 실패0·오류0·조건부생략15)를재사용했다. 전체검사를추가실행하지않았다.
+- 오류/코드수정없음. 관련결과리포트만갱신. QA프로세스와컨테이너를종료했고기존DB/서버는보존했다. 최종diff검토후문서commit/push/PR가능,자동실행하지않음. 범위한정판정READY.
