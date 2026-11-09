@@ -888,6 +888,59 @@ class SessionApiTests {
         + "\"startReadiness\":{\"screenAnalysisReady\":true}}";
   }
 
+  @Test
+  void detailAndHistoryEnforceOwnershipAndPagination() throws Exception {
+    LoginResponse owner = desktop("query-owner-" + UUID.randomUUID());
+    LoginResponse other = desktop("query-other-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    String token = "Bearer " + owner.accessToken();
+    String path = "/api/v1/sessions/" + id;
+    mvc.perform(get(path).header("Authorization", token))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.sessionId").value(id))
+        .andExpect(jsonPath("$.data.interventionPolicyVersion").isString());
+    mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
+        .andExpect(status().isNotFound());
+    mvc.perform(get(path)).andExpect(status().isUnauthorized());
+    mvc.perform(get("/api/v1/sessions/bad").header("Authorization", token))
+        .andExpect(status().isNotFound());
+    mvc.perform(get("/api/v1/sessions").header("Authorization", token)
+            .param("from", "2000-01-01").param("to", "2099-12-31").param("limit", "1"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].sessionId").value(id))
+        .andExpect(jsonPath("$.data.nextCursor").isEmpty());
+    mvc.perform(get("/api/v1/sessions").header("Authorization", token)
+            .param("from", "2000-01-01").param("to", "2099-12-31").param("cursor", id))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.items").isEmpty());
+    mvc.perform(get("/api/v1/sessions").header("Authorization", token)
+            .param("from", "bad").param("to", "2099-12-31"))
+        .andExpect(status().isBadRequest());
+    mvc.perform(get("/api/v1/sessions").header("Authorization", "Bearer " + other.accessToken())
+            .param("from", "2000-01-01").param("to", "2099-12-31"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.items").isEmpty());
+  }
+
+  @Test
+  void concurrentQueriesDoNotModifySessionVersionOrState() throws Exception {
+    LoginResponse owner = desktop("query-concurrent-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    var before = sessions.findById(Long.valueOf(id)).orElseThrow();
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var first = executor.submit(() -> mvc.perform(get("/api/v1/sessions/" + id)
+          .header("Authorization", "Bearer " + owner.accessToken())).andReturn());
+      var second = executor.submit(() -> mvc.perform(get("/api/v1/sessions")
+          .header("Authorization", "Bearer " + owner.accessToken())
+          .param("from", "2000-01-01").param("to", "2099-12-31")).andReturn());
+      org.junit.jupiter.api.Assertions.assertEquals(200,
+          first.get(10, TimeUnit.SECONDS).getResponse().getStatus());
+      org.junit.jupiter.api.Assertions.assertEquals(200,
+          second.get(10, TimeUnit.SECONDS).getResponse().getStatus());
+    }
+    var after = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(before.getVersion(), after.getVersion());
+    org.junit.jupiter.api.Assertions.assertEquals(before.getStatus(), after.getStatus());
+    org.junit.jupiter.api.Assertions.assertEquals(before.getAccumulatedActiveMs(),
+        after.getAccumulatedActiveMs());
+  }
+
   private LoginResponse desktop(String installationId) {
     return login.exchange(new GoogleExchangeRequest("code", "a".repeat(43), installationId,
         "http://127.0.0.1:49152", new DesktopDevice(installationId, "QA", "MACOS")));

@@ -203,3 +203,7 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 - 2026-10-28 진행 중: #58 위에 #86 Extension 연결 해제와 #85 온보딩 준비 상태를 순차 브랜치로 개발했다. 두 기능은 dev 미병합이며 실제 앱 통합 QA와 기기 목록 기반 복구 경로 검증이 남았다. #85는 Desktop별 화면 권한/제외 단계 marker와 연결·필수 동의로 상태를 계산한다.
 
 - PR172의 9d131e9 CodeRabbit 재리뷰 actionable5건 중4건과 테스트 제안4건을 보완했다. 구형 counter 유실은 전역 번호/새 세션 복구 계약을 유지한다. OSIV를 켠 실제HTTP 경합 회귀와 PostgreSQL 경계2종·거절4종을 검증했다. 최신 QA·리뷰 문서를 따른다.
+
+## Issue #195 세션 조회 (2026-11-09)
+
+- feat/195-session-queries에서 상세·목록 조회를 구현했다. 실계정 HTTP와 PostgreSQL 검증 결과는 features/session-queries-REPORT.md를 따른다. Notion 원문 상세 대조와 앱 통합은 미완료다.

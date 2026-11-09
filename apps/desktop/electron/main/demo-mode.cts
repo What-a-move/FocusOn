@@ -59,6 +59,14 @@ export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapsh
       return result
     }
 
+    // 앱 안에서만 끝낸 세션은 서버가 아직 진행 중으로 알려 줘도 다시 불러오지 않는다.
+    // 다시 불러오면 heartbeat가 이어져 서버가 그 세션을 자동 종료(무신호 3분)하지 못한다.
+    if (request.method === 'GET' && path === '/api/v1/sessions/active') {
+      const result = await real(request)
+      const remote = result.success ? result.data as { sessionId?: string } | null : null
+      return remote?.sessionId && sessions.get(remote.sessionId)?.endedAt ? parsed(request, null) : result
+    }
+
     const match = SESSION_PATH.exec(path)
     if (match) {
       const [, sessionId, action] = match
