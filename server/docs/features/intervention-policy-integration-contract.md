@@ -122,4 +122,3 @@
 - receipt 상태가 바뀌면 이전에 시작한 GET 응답/캐시 후보를 모두 무효화한다. SENT receipt 응답을 확정한 뒤에만 새 세대의 GET을 시작한다. 응답을 받은 뒤 표시까지 같은 coordinator의 barrier를 유지하므로 receipt 재시도/콜백이 중간에 끼어들면 응답을 버린다. 단순 GET 재조회만으로 경쟁이 사라졌다고 보지 않는다.
 - 예: B 조회가 진행 중일 때 A의 SENT 결과/재전송이 생기면 B 응답은 폐기하고 표시를 막는다. A receipt가 확정된 뒤 새 GET을 하면 서버 cooldown이 B를 숨긴다. 프로세스 재시작 때도 journal/outbox를 먼저 복구하며 불명 상태를 임의 해제하지 않는다.
 - 서버는 알려진 cooldown에서 후보를 숨기지만 이미 반환한 HTTP 응답/OS 표시를 취소할 수 없다. 위 소비자 coordinator가 구현·검증되기 전에는 실제 표시 경쟁이 해결됐다고 주장하지 않는다. OS side effect와 DB의 exactly-once 보장은 여전히 없다. 별도 서버 endpoint/클라이언트 시각 비교/확인했어 UI 정책은 추가하지 않는다.
-
