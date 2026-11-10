@@ -86,4 +86,5 @@ jobs:
           --tests '*SessionHeartbeatCleanupTests'
           --tests '*SessionApiTests'
           --tests '*LearningSummaryMigrationTests'
+          --tests '*SessionEndTests'
           --no-daemon --rerun-tasks

@@ -8,6 +8,22 @@
 - 다음: 별도 컨텍스트 리뷰, 실제 Desktop QA와 Notion 접근 복구 후 정본 대조. 이 대화는 sub-agent 사용 금지 조건이 있어 별도 에이전트 리뷰를 수행하지 않았다. PR 생성·병합·이슈 종료는 별도 승인이다. 사용자 IDE 변경과 기존 stash·5432·8080은 보존했다.
 
 
+## #163 세션 종료 API — 최신 dev 통합 (2026-11-10)
+
+- 브랜치 `feat/163-session-end`에 origin/dev(100커밋 차이)를 병합해 충돌 6개(SessionController·SessionDtos·SessionCommandService import/DTO, DECISION_RECORD·NEXT_TASK·CONTEXT 문서)를 양쪽 보존으로 해소했다. 새 migration은 없다.
+- 개발: `ABANDONED` 세션 종료는 `409 SESSION_ABANDONED`(heartbeat·local-events와 일관), heartbeat가 저장한 누적값 위에서 종료하는 회귀와 ABANDONED 회귀를 추가했다. 원격 PostgreSQL job에 `*SessionEndTests`를 추가했다.
+- 검증(로컬): 전체 build·Checkstyle 329개 실패0·오류0·생략16(PostgreSQL 전용). 격리 PostgreSQL 17(Flyway+validate, 55433) 관련 194개 실패0·생략0.
+- 미완료: Desktop `end()`가 아직 본문 없이 호출해 연동 전에는 400이다(Frontend 담당 반영 필요). 원격 CI·독립 리뷰·실제 Desktop QA는 미확인이다. push·Draft 해제·머지는 하지 않았다.
+
+## 최신 작업 (2026-11-05)
+
+- #116 로깅 PR #162가 CI 통과 후 사용자 승인으로 dev에 병합됐고 이슈는 종료했다. 최종 CodeRabbit 재리뷰는 skipping이었다.
+- #163 세션 종료 API P1 수정·H2151개·분리 PostgreSQL24개 검증 완료. 브랜치 `feat/163-session-end`, 상세 `features/session-end-REPORT.md`. PR #164는 Draft이며 Frontend 계약 반영·실제 앱 QA는 남아 있다.
+- P1 수정으로 종료 시 최종 누적값을 필수로 받아 원자 검증·저장한다. 기존 본문 없는 Desktop은 계약 반영이 필요하다. Heartbeat·summary·실제 앱 QA는 후속이다.
+
+
+## 진행 중: 서버 요청 추적 (#116)
+
 ## PR #207 리뷰 보완 — 로컬 검증 완료 (2026-11-10)
 
 - 브랜치 `feat/206-session-events-learning`. CodeRabbit 3건(이벤트 저장 상한 256, 180초 기한 선확정, 공백뿐인 READY 거절)과 Codex P2(Extension 권한 유실의 pauseReason)를 반영했다. 테스트 제안 2건(READY 본문 단언, 개념 5개 허용·6개 거절 경계)도 추가했다. 새 migration은 V20 하나이며 V19는 수정하지 않았다.

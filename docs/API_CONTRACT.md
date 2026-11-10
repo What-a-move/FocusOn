@@ -295,6 +295,14 @@ POST /api/v1/sessions/{sessionId}/local-events
 - 세션당 서로 다른 이벤트 저장은 256건이다. 한도 이후 새 이벤트는 필수 정지를 반영한 뒤 저장 없이 `409 SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(retryable=false)를 반환하고, 이미 저장된 이벤트의 재전송은 계속 200이다. **이 오류 코드는 Notion 공통 Error Code 정책에 아직 정의되지 않았다. 구현 전 정본 추가가 필요하다.**
 - learning-summary는 저장된 READY의 필수 문구가 공백뿐이면 정상 결과로 내보내지 않고 `503 SERVICE_UNAVAILABLE`을 반환한다. 저장 행은 수정하지 않는다. V20은 새 쓰기에서 같은 값을 거절한다(기존 행 보존을 위해 `NOT VALID`).
 
+### 세션 종료 (#163, PR #164)
+
+- `POST /api/v1/sessions/{sessionId}/end`: Desktop 실행 기기만. 필수 헤더 `Authorization`, `Idempotency-Key`, `If-Match-Version`(`X-Device-Id` 불필요). 본문은 필수 `{ "accumulatedActiveMs": 정수ms }`이며 종료 버튼 시점의 Desktop monotonic 전체 누적값이다. 재시도에는 최초 본문·키·버전을 유지한다.
+- 허용 상태는 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`이다. `RUNNING`은 저장 누적값 이상이고 현재 실행 구간 시작 누적값 + 서버 경과시간 + 30초 이내여야 한다(pause와 같은 검증). 멈춘 상태는 저장 누적값과 같아야 한다. 어긋나면 `400 VALIDATION_ERROR`이며 상태·누적값·종료 시각·버전을 바꾸지 않는다.
+- 성공 `200 data`: `status(ENDED)`, `version`, `accumulatedActiveMs`, `targetDurationMs`, `endedAt`. `endReason`은 `USER_ACTION`이다. 같은 키·같은 본문은 최초 응답을 재생하고, 같은 키에 다른 최종값은 `409 IDEMPOTENCY_CONFLICT`다.
+- 서버가 이미 무신호로 끝낸 `ABANDONED` 세션은 `409 SESSION_ABANDONED`(details `currentStatus`, `endReason: HEARTBEAT_TIMEOUT`)로 응답한다. 버전 비교보다 먼저 판단하며 세션을 되살리지 않는다. 클라이언트는 최신 세션을 조회한다(heartbeat·local-events와 같은 규칙, 2026-11-10 정함). `ENDED`·`ENDING`은 `If-Match-Version`이 맞으면 `409 SESSION_STATE_INVALID`, 오래된 버전이면 `409 SESSION_VERSION_CONFLICT`다(버전 검사가 상태 검사보다 먼저이며 `ABANDONED`만 예외로 그보다 앞선다).
+- heartbeat가 저장 누적값을 갱신하므로 본문 없는 종료도 가능하지만, 마지막 heartbeat 이후 구간을 잃지 않도록 최종값 본문을 필수로 유지한다(2026-11-05 사용자 승인). **현재 Desktop `session-runtime.cts`의 `end()`는 본문 없이 호출하므로 반영 전에는 400이다.** 전달 문서는 `server/docs/features/session-end-frontend-handoff.md`.
+
 ### 분석 관측 순서 (2026-11-08 보완)
 
 - 기존 sequence는 source별 증가 번호다. 선택 observationSequence(양의 정수, JS 안전 정수 최대9007199254740991)는 같은 session+device 전체에서 source와 무관하게 관측 생성 시 배정·원자적으로 증가·영속화한다. 공개 응답과 AI 내부 schema는 유지한다.
