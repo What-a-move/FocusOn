@@ -6,4 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface LocalEventRepository extends JpaRepository<LocalEventEntity, Long> {
   /** 같은 기기가 보낸 동일 이벤트의 최초 수신 여부를 확인한다. */
   boolean existsBySessionIdAndDeviceIdAndEventHash(Long sessionId, Long deviceId, String hash);
+
+  /** 사용자 잠금 안에서 세션 전체의 저장 상한을 확인한다. */
+  long countBySessionId(Long sessionId);
 }

@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
     @ApiResponse(responseCode = "403", description = "호출 권한 없음",
         content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
     @ApiResponse(responseCode = "404", description = "정리 없음 또는 세션 소유권 없음",
+        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+    @ApiResponse(responseCode = "503", description = "과거 저장 결과가 유효하지 않아 제공 불가",
         content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
 })
 public class LearningSummaryController {
@@ -41,7 +43,8 @@ public class LearningSummaryController {
   @ResponseStatus(HttpStatus.OK)
   @ApiResponse(responseCode = "200", description = "실제 학습 정리 상태 조회 성공")
   @Operation(summary = "세션 학습 정리 조회",
-      description = "저장된5상태는200, 정리 행이 없으면404. 조회로 정리 작업을 생성하지 않습니다.")
+      description = "유효한 저장 상태는200, 정리 행이 없으면404, 불량 READY 결과는503입니다. "
+          + "조회로 정리 작업을 생성하거나 저장 결과를 변경하지 않습니다.")
   public com.capstone.backend.common.api.ApiResponse<LearningSummaryResponse> get(
       @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId) {
     return com.capstone.backend.common.api.ApiResponse.of(summaries.get(principal, sessionId));

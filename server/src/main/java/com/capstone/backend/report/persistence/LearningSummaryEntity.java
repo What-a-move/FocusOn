@@ -1,5 +1,7 @@
 package com.capstone.backend.report.persistence;
 
+import com.capstone.backend.common.api.ApiErrorCode;
+import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.report.dto.LearningSummaryResponse;
 import com.capstone.backend.report.dto.LearningSummaryResponse.KeyConcept;
 import com.capstone.backend.report.dto.LearningSummaryResponse.Status;
@@ -36,8 +38,21 @@ public class LearningSummaryEntity {
 
   /** READY 이외 상태는 생성 중간 내용이나 실패 출력을 노출하지 않는다. */
   public LearningSummaryResponse response() {
+    if (status == Status.READY && (!nonBlank(overview) || !nonBlank(nextStartPrompt)
+        || keyConcepts == null || keyConcepts.stream().anyMatch(concept -> concept == null
+            || !nonBlank(concept.name()) || !nonBlank(concept.briefExplanation())))) {
+      // V20 이전의 불량 READY는 보존하되 정상 결과로 노출하지 않는다.
+      throw new ApiException(ApiErrorCode.SERVICE_UNAVAILABLE);
+    }
     return status == Status.READY
         ? new LearningSummaryResponse(status, overview, List.copyOf(keyConcepts), nextStartPrompt)
         : new LearningSummaryResponse(status, null, List.of(), null);
+  }
+
+  /** SQL과 같은 공백 기준으로 탭·줄바꿈·Unicode 공백과 BOM만 있는 필드를 거절한다. */
+  private boolean nonBlank(String value) {
+    return value != null && value.codePoints().anyMatch(character ->
+        !Character.isWhitespace(character) && !Character.isSpaceChar(character)
+            && character != 0xfeff);
   }
 }

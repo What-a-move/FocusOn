@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
         content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
     @ApiResponse(responseCode = "404", description = "데이터 없음 또는 세션 소유권 없음",
         content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
-    @ApiResponse(responseCode = "409", description = "처리할 수 없는 세션 상태",
+    @ApiResponse(responseCode = "409", description = "세션 만료·최종 상태 또는 이벤트 저장 한도",
         content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
 })
 public class LocalEventController {
@@ -49,7 +49,8 @@ public class LocalEventController {
   @ApiResponse(responseCode = "200", description = "이벤트 처리 또는 중복 확인")
   @Operation(summary = "세션 로컬 이벤트 수신",
       description = "Authorization·X-Device-Id 필수. 동일 코드·발생 시각의 재전송은 다시 정지하지 않습니다. "
-          + "클라이언트는 재시도 시 최초 occurredAt을 유지해야 합니다.")
+          + "클라이언트는 재시도 시 최초 occurredAt을 유지해야 합니다. 세션당256건 이후 새 이벤트는 "
+          + "정지를 반영한 뒤 재시도 불가409로 응답하며, 기존 재전송은 허용합니다.")
   public com.capstone.backend.common.api.ApiResponse<Response> receive(
       @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId,
       @Parameter(required = true, description = "토큰의 현재 기기 ID")

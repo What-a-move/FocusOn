@@ -1,5 +1,12 @@
 # Backend 결정 기록
 
+## 2026-11-10 PR #207 리뷰 보완 — 로컬 권한 이벤트·학습 정리 조회
+
+- 이벤트 저장은 세션당 256건으로 제한한다. 한도 뒤에도 필수 정지는 같은 트랜잭션에서 반영하고, 새 이벤트만 `409 SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(재시도 불가)로 거절한다. 이미 저장된 이벤트의 재전송은 200을 유지한다. 새 오류 코드이므로 Notion 공통 Error Code 정책에 먼저 정의해야 한다(BE-002). 현재 Notion 복제본은 읽기만 했고 수정하지 않았다.
+- 180초 생존 기준을 지난 RUNNING 세션에 이벤트가 오면 `AUTO_PAUSED`로 되돌릴 수 없는 정리 우회를 막기 위해 `ABANDONED`를 먼저 확정·커밋한 뒤 `409 SESSION_ABANDONED`를 반환한다. 기준 시각은 현재 `lastResumedAt`과 마지막 유효 heartbeat 중 최신값이다.
+- Extension 사이트 접근 권한 유실(`LOCAL_EXTENSION_HOST_PERMISSION_MISSING`)은 연결이 유지된 상태이므로 `pauseReason: REQUIRED_PERMISSION`이다. `EXTENSION_UNLINKED`는 실제 연결 해제에만 남긴다(Desktop 복구 안내가 다름). Codex 리뷰 P2 반영이다.
+- V19 checksum을 바꾸지 않고 V20에서 READY 필수 문구의 공백뿐인 값을 새 쓰기에서 거절한다. 기존 행은 보존해야 하므로 CHECK는 `NOT VALID`이며, 조회 시 불량 READY는 `503 SERVICE_UNAVAILABLE`로 막고 저장 값은 바꾸지 않는다.
+
 ## PR205 리뷰 보완 — 기존 정책의 경계 보장 (2026-11-09)
 
 공개 API/확정 사용자 동작은 유지한다. 정책 현재성은 명시적 context 안에서 선택하며, 일반 재분석은 후보를 보존하고 표시만 동결한다. NOT_SENT 후보가 TTL 안 남아 있으면 같은 후보만 재시도한다. 필수 동의 철회는 동의 저장 transaction의 사용자→세션 잠금 안에서 구간을 즉시 종료해 재동의가 중단을 숨기지 못하게 한다. 선택 CAMERA_ANALYSIS 철회는 화면 정책을 끊지 않는다. cooldown 중 표시를 차단하며 '새 관측'은 완료 시각이 아닌 실제 서버 receivedAt으로 검증한다. heartbeat 정책 평가는 원래 transaction의 connection cleanup 뒤에 시작해 작은 pool에서도 새 transaction이 연결을 얻을 수 있게 한다.

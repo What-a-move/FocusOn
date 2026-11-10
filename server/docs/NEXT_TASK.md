@@ -1,6 +1,14 @@
 # Backend 다음 작업
 
-## 현재 작업 — PR #205 코드리뷰 피드백 반영 (2026-11-09)
+## 현재 작업 — PR #207 코드리뷰 피드백 반영 (2026-11-10)
+
+- 로컬 변경은 커밋까지만 했다. push와 PR 댓글·리뷰 resolve는 사용자 승인 뒤 진행한다.
+- 다음: push 뒤 원격 CI(PostgreSQL job 포함)와 CodeRabbit/Codex 재리뷰 결과를 확인한다. 로컬 통과를 원격 결과로 취급하지 않는다.
+- Notion 공통 Error Code 정책에 `SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(409, retryable=false)를 먼저 추가해야 한다. 정본 수정은 PM 확인이 필요하다.
+- Desktop·Extension 담당: 한도 오류를 재시도하지 말고, 재시도 시 최초 `occurredAt`을 유지한다. Extension 사이트 권한 유실은 `REQUIRED_PERMISSION` 안내를 쓴다. 실제 권한 철회 QA는 미완료다.
+- 개발 DB 5432·8080·`.idea`·로컬 `.gitignore` 변경은 보존한다.
+
+## 이전 작업 — PR #205 코드리뷰 피드백 반영 (2026-11-09, 병합 완료)
 
 - PR은 이미 생성·push했다. 생성 승인을 다시 요청하지 않는다. PR205 병합은 사용자 승인을 받았다. 추가2건 보완/독립 리뷰/로컬282개·격리PG155개 검증을 마쳤고 최종 원격CI 후 병합한다. Issue #182 종료는 별도다.
 - 기준7ab8f6e의 Backend CI2개는 SUCCESS이고 CodeRabbit 리뷰가 완료돼 actionable9건·테스트 제안1건을 받았다. 후속 보완 로컬 검증은 전체279개 실패0·생략14 및 격리PG152개 전부 통과다. 최종 수정분 자동 재리뷰가 완료됐다는 뜻은 아니다.

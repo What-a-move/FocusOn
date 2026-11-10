@@ -85,4 +85,5 @@ jobs:
           --tests 'com.capstone.backend.intervention.*'
           --tests '*SessionHeartbeatCleanupTests'
           --tests '*SessionApiTests'
+          --tests '*LearningSummaryMigrationTests'
           --no-daemon --rerun-tasks

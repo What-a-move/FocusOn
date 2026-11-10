@@ -1092,7 +1092,7 @@ class SessionApiTests {
             .header("X-Device-Id", extension.device().deviceId())
             .contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("AUTO_PAUSED"))
-        .andExpect(jsonPath("$.data.pauseReason").value("EXTENSION_UNLINKED"));
+        .andExpect(jsonPath("$.data.pauseReason").value("REQUIRED_PERMISSION"));
     mvc.perform(get(path + "/learning-summary")
             .header("Authorization", "Bearer " + extension.accessToken()))
         .andExpect(status().isForbidden());
@@ -1125,9 +1125,18 @@ class SessionApiTests {
           ? java.util.List.of(new LearningSummaryResponse.KeyConcept(
               "트랜잭션", "원자적 변경", "관련 자료 열람")) : java.util.List.of());
       summaries.saveAndFlush(entity);
-      mvc.perform(get(path).header("Authorization", token)).andExpect(status().isOk())
+      var result = mvc.perform(get(path).header("Authorization", token))
+          .andExpect(status().isOk())
           .andExpect(jsonPath("$.data.learningSummaryStatus").value(state.name()))
           .andExpect(jsonPath("$.data.keyConcepts.length()").value(ready ? 1 : 0));
+      if (ready) {
+        // 저장된 READY 본문이 바뀌거나 빠지지 않고 그대로 반환되는지 확인한다.
+        result.andExpect(jsonPath("$.data.overview").value("확인한 개념 정리"))
+            .andExpect(jsonPath("$.data.nextStartPrompt").value("개념을 다시 살펴보세요."))
+            .andExpect(jsonPath("$.data.keyConcepts[0].name").value("트랜잭션"))
+            .andExpect(jsonPath("$.data.keyConcepts[0].briefExplanation").value("원자적 변경"))
+            .andExpect(jsonPath("$.data.keyConcepts[0].sessionEvidence").value("관련 자료 열람"));
+      }
     }
     org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
         "SELECT count(*) FROM learning_summaries WHERE session_id = ?", Integer.class,
@@ -1275,6 +1284,163 @@ class SessionApiTests {
     org.junit.jupiter.api.Assertions.assertThrows(
         org.springframework.dao.DataIntegrityViolationException.class, () -> jdbc.update(
             "UPDATE learning_summaries SET overview=? WHERE session_id=?", "a".repeat(1200), id));
+    // 개념 개수 경계: 짧은 유효 개념 5개는 허용하고 6개는 총 글자 수가 한도 안이어도 거절한다.
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.update(
+        "UPDATE learning_summaries SET key_concepts=CAST(? AS jsonb) WHERE session_id=?",
+        conceptsJson(5), id));
+    org.junit.jupiter.api.Assertions.assertThrows(
+        org.springframework.dao.DataIntegrityViolationException.class, () -> jdbc.update(
+            "UPDATE learning_summaries SET key_concepts=CAST(? AS jsonb) WHERE session_id=?",
+            conceptsJson(6), id));
+  }
+
+  /** 총 1,200자보다 훨씬 짧은 유효 개념 count개의 JSON 배열을 만든다. */
+  private static String conceptsJson(int count) {
+    return java.util.stream.IntStream.rangeClosed(1, count)
+        .mapToObj(index -> "{\"name\":\"개념" + index + "\",\"briefExplanation\":\"설명" + index
+            + "\"}")
+        .collect(java.util.stream.Collectors.joining(",", "[", "]"));
+  }
+
+  /** 만료된 세션은 이벤트로 정리 대상에서 빠져나갈 수 없다. */
+  @Test
+  void lateLocalEventCommitsAbandonedBeforeReturningConflict() throws Exception {
+    LoginResponse owner = desktop("late-event-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    final long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at=?,last_heartbeat_at=NULL,"
+        + "accumulated_active_ms=1234 WHERE id=?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(181)), Long.valueOf(id));
+    mvc.perform(post("/api/v1/sessions/" + id + "/local-events")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(localEventBody(Instant.now())))
+        .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("SESSION_ABANDONED"))
+        .andExpect(jsonPath("$.details.endReason").value("HEARTBEAT_TIMEOUT"));
+    var stored = sessions.findById(Long.valueOf(id)).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("ABANDONED", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals(version + 1, stored.getVersion());
+    org.junit.jupiter.api.Assertions.assertEquals(1234, stored.getAccumulatedActiveMs());
+    org.junit.jupiter.api.Assertions.assertNotNull(stored.getEndedAt());
+    org.junit.jupiter.api.Assertions.assertEquals(0, jdbc.queryForObject(
+        "SELECT count(*) FROM session_local_events WHERE session_id=?", Integer.class,
+        Long.valueOf(id)));
+  }
+
+  /** 상한 도달 오류가 필수 정지를 롤백하지 않고 이미 수신된 재전송은 그대로 허용된다. */
+  @Test
+  void localEventLimitPreservesPauseAndAcceptsStoredReplayAfterResume() throws Exception {
+    LoginResponse owner = desktop("event-cap-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    Instant occurred = Instant.now();
+    for (int index = 0; index < 255; index++) {
+      jdbc.update("INSERT INTO session_local_events(session_id,device_id,event_code,event_hash,"
+          + "occurred_at,received_at) VALUES (?,?,'LOCAL_SCREEN_PERMISSION_REVOKED',?,?,?)",
+          numericId, Long.valueOf(owner.device().deviceId()), String.format("%064x", index),
+          java.sql.Timestamp.from(occurred), java.sql.Timestamp.from(occurred));
+    }
+    String path = "/api/v1/sessions/" + id + "/local-events";
+    mvc.perform(post(path).header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(localEventBody(occurred))).andExpect(status().isOk());
+    resumeForEventTest(owner, id);
+    mvc.perform(post(path).header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(localEventBody(occurred.plusSeconds(1))))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("SESSION_LOCAL_EVENT_LIMIT_EXCEEDED"))
+        .andExpect(jsonPath("$.retryable").value(false))
+        .andExpect(jsonPath("$.details.currentStatus").value("AUTO_PAUSED"));
+    org.junit.jupiter.api.Assertions.assertEquals("AUTO_PAUSED",
+        sessions.findById(numericId).orElseThrow().getStatus().name());
+    resumeForEventTest(owner, id);
+    mvc.perform(post(path).header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(localEventBody(occurred)))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("RUNNING"));
+    org.junit.jupiter.api.Assertions.assertEquals(256, jdbc.queryForObject(
+        "SELECT count(*) FROM session_local_events WHERE session_id=?", Integer.class, numericId));
+  }
+
+  private void resumeForEventTest(LoginResponse owner, String id) throws Exception {
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    mvc.perform(post("/api/v1/sessions/" + id + "/resume")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"readiness\":{\"screenAnalysisReady\":true}}"))
+        .andExpect(status().isOk());
+  }
+
+  private String localEventBody(Instant occurred) {
+    return "{\"localEventCode\":\"LOCAL_SCREEN_PERMISSION_REVOKED\",\"occurredAt\":\""
+        + occurred + "\"}";
+  }
+
+  /** 이전 구간의 신호가 오래돼도 방금 재개한 세션을 만료시키지 않는다. */
+  @Test
+  void localEventUsesLatestResumeOrHeartbeatForDeadline() throws Exception {
+    LoginResponse owner = desktop("fresh-event-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    for (boolean resumed : new boolean[] {true, false}) {
+      Instant now = Instant.now();
+      jdbc.update("UPDATE learning_sessions SET status='RUNNING',last_resumed_at=?,"
+          + "last_heartbeat_at=? WHERE id=?",
+          java.sql.Timestamp.from(resumed ? now : now.minusSeconds(600)),
+          java.sql.Timestamp.from(resumed ? now.minusSeconds(600) : now), Long.valueOf(id));
+      mvc.perform(post("/api/v1/sessions/" + id + "/local-events")
+              .header("Authorization", "Bearer " + owner.accessToken())
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(localEventBody(now)))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("AUTO_PAUSED"));
+    }
+  }
+
+  /** 마지막 저장 슬롯 경쟁에서도 상한을 넘기지 않고 모든 권한 유실 정지를 유지한다. */
+  @Test
+  void concurrentDistinctEventsCannotExceedSessionLimit() throws Exception {
+    LoginResponse owner = desktop("event-cap-race-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    for (int index = 0; index < 255; index++) {
+      jdbc.update("INSERT INTO session_local_events(session_id,device_id,event_code,event_hash,"
+          + "occurred_at,received_at) VALUES (?,?,'LOCAL_SCREEN_PERMISSION_REVOKED',?,?,?)",
+          numericId, Long.valueOf(owner.device().deviceId()), String.format("%064x", index),
+          java.sql.Timestamp.from(Instant.now()), java.sql.Timestamp.from(Instant.now()));
+    }
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var results = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
+        ready.countDown();
+        if (!start.await(10, TimeUnit.SECONDS)) {
+          throw new IllegalStateException("이벤트 저장 한도 경쟁 대기 초과");
+        }
+        return mvc.perform(post("/api/v1/sessions/" + id + "/local-events")
+                .header("Authorization", "Bearer " + owner.accessToken())
+                .header("X-Device-Id", owner.device().deviceId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(localEventBody(Instant.now().plusSeconds(index))))
+            .andReturn().getResponse().getStatus();
+      })).toList();
+      org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+      start.countDown();
+      var codes = new java.util.ArrayList<Integer>();
+      for (var result : results) {
+        codes.add(result.get(10, TimeUnit.SECONDS));
+      }
+      java.util.Collections.sort(codes);
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), codes);
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(256, jdbc.queryForObject(
+        "SELECT count(*) FROM session_local_events WHERE session_id=?", Integer.class, numericId));
+    org.junit.jupiter.api.Assertions.assertEquals("AUTO_PAUSED",
+        sessions.findById(numericId).orElseThrow().getStatus().name());
   }
 
   private LoginResponse desktop(String installationId) {

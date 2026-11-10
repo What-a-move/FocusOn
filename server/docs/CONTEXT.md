@@ -1,5 +1,11 @@
 # Backend 작업 컨텍스트
 
+## PR #207 리뷰 보완 — 로컬 검증 완료 (2026-11-10)
+
+- 브랜치 `feat/206-session-events-learning`. CodeRabbit 3건(이벤트 저장 상한 256, 180초 기한 선확정, 공백뿐인 READY 거절)과 Codex P2(Extension 권한 유실의 pauseReason)를 반영했다. 테스트 제안 2건(READY 본문 단언, 개념 5개 허용·6개 거절 경계)도 추가했다. 새 migration은 V20 하나이며 V19는 수정하지 않았다.
+- 전체 build·Checkstyle 304개 실패0·오류0·생략16(PostgreSQL 전용). 같은 CI 설정(Flyway enabled + Hibernate validate)의 격리 PostgreSQL 17(55432)에서 관련 177개 실패0·생략0. 원격 CI 목록에 `*LearningSummaryMigrationTests`를 추가했다.
+- 새 오류 코드 `SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`는 Notion 공통 Error Code 정책에 아직 없다. 로컬 `docs/API_CONTRACT.md`에만 기록했다. 최종 push의 원격 CI·봇 재리뷰 결과와 실제 Desktop/Extension 권한 철회 QA는 미확인이다.
+
 ## 병합 승인 후 추가2건 최종 보완 (2026-11-09)
 
 - 사용자가 PR205 병합을 승인했다. 병합 전3664598 자동 재리뷰에서 추가2건을 확인해 보완했다. Issue182 종료 승인은 별도이며 실행하지 않는다.

@@ -41,3 +41,10 @@
 - STEP6 PASS(기존증거재사용): migration파일은296f63d와동일해 앞선V18재현복제본→V19 데이터보존검증을재사용한다. 이번새PG에도V1~V19 Flyway/validate는성공했으나 기존데이터보존을다시실행한것은아니다.
 - STEP7 PASS(기존증거재사용): 소스·빌드설정변경이없어 앞선동일커밋의전체build/Checkstyle통과(290개 실패0·오류0·조건부생략15)를재사용했다. 전체검사를추가실행하지않았다.
 - 오류/코드수정없음. 관련결과리포트만갱신. QA프로세스와컨테이너를종료했고기존DB/서버는보존했다. 최종diff검토후문서commit/push/PR가능,자동실행하지않음. 범위한정판정READY.
+
+## PR #207 리뷰 보완 (2026-11-10)
+
+- 반영: 이벤트 저장 세션당 256건 상한(한도 뒤에도 필수 정지 유지, 저장된 재전송은 200), 180초 기한 지난 세션은 `ABANDONED` 선확정 뒤 409, 공백뿐인 READY 거절(V20 `NOT VALID` CHECK + 조회 503), Extension 사이트 권한 유실의 `pauseReason`을 `REQUIRED_PERMISSION`으로 변경.
+- 테스트: READY 본문 전체 단언, 개념 5개 허용·6개 거절 경계, 늦은 이벤트·상한·동시 경쟁·공백 변형 회귀 추가.
+- 검증: 전체 build·Checkstyle 304개 실패0·오류0·생략16. 격리 PostgreSQL 17(Flyway+validate)에서 관련 177개 실패0·생략0. 이 결과는 로컬이며 원격 CI·봇 재리뷰는 별도 확인한다.
+- 제한: `SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`는 Notion 오류 정책에 미정의. 실제 Desktop/Extension 권한 철회 동작은 미검증.
