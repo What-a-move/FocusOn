@@ -87,4 +87,5 @@ jobs:
           --tests '*SessionApiTests'
           --tests '*LearningSummaryMigrationTests'
           --tests '*SessionEndTests'
+          --tests 'com.capstone.backend.report.Report*Tests'
           --no-daemon --rerun-tasks

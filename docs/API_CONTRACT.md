@@ -313,6 +313,8 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 ### 리포트
 
+2026-11-10 #208 사용자 승인: 일간·달력 조회는 Desktop 전용이며 `Authorization`과 `X-Device-Id`가 필수다. 연결 Extension은 `403 SESSION_QUERY_FORBIDDEN`이다. 달력은 `{month,studyDayCount,days:[{date,totalActiveMs,sessionCount,hasStudyActivity}]}`이며 월 전체 날짜를 오름차순으로 제공하고 빈 날은0으로 채운다. 일간은 `{date,totalActiveMs,sessions}`이며 `startedAt DESC,id DESC` 순서다. 두 조회는 본인의 ENDED/ABANDONED만 고정 studyDate로 집계한다. Notion 두 API 접근은404여서 로컬 확정 계약과 실제 Desktop 파서 기준 구현을 승인받았으며, 최신 정본 대조·실제 앱 QA 완료를 뜻하지 않는다.
+
 ```text
 GET /api/v1/reports/daily
 GET /api/v1/reports/calendar?month=YYYY-MM
