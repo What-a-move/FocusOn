@@ -25,6 +25,7 @@
 - Issue #183(2026-11-09): 폴더 구조를 가벼운 FSD(`app` → `features` → `shared`)로 정리. 여러 화면이 쓰던 API·사이드바·설정 틀·오류 문구·공용 CSS를 `shared/{api,ui,lib,styles}`로 옮기고 `features/` 사이 import를 없앴다(16곳 → 0). ESLint `no-restricted-imports`가 규칙을 검사한다. 화면·동작 변경 없음. 규칙은 `apps/docs/FOLDER_STRUCTURE.md`, 결정 037.
 - Issue #185(2026-11-09): 공용 CSS 3개를 공용·화면 전용으로 나눴다. `dashboard.css` → `shared/styles/app-shell.css`+홈 전용, `settings.css` → `settings-shell.css`+설정 전용, `onboarding.css` → `onboarding-window.css`+온보딩 전용. 값·클래스는 그대로이고, dev 빌드와 모든 요소의 계산된 스타일을 비교해 같음을 확인했다(라이트·다크, 창 크기 4개, 화면 상태 38개).
 - Issue #189(2026-11-09): 시연 모드 `pnpm dev:demo`. ⌘⇧D로 포키 이탈 알림을 바로 띄우고, 서버에 없는 세션 종료·결과 요약·달력·하루 기록은 그 실행의 세션으로 가짜 응답한다. 학습 정리는 가짜로 만들지 않는다(결정 038). 배포 앱에서는 꺼진다.
+- Issue #214(2026-11-10): 서버 세션 종료 API(#164) 연동. 집중 끝내기 요청에 종료 시점 전체 누적값 `{ accumulatedActiveMs }`를 보내고(재시도는 처음 값·키 유지), 명령 응답이 `409 SESSION_ABANDONED`면 heartbeat와 같이 ABANDONED로 정리한다. 실제 서버 연동 QA는 로컬 서버를 최신 dev로 다시 빌드한 뒤 진행.
 - Next.js 기본 화면을 FocusOn 로그인·온보딩 시작·홈 화면으로 교체했다.
 - Desktop 앱 기본 실행·빌드 구조를 확인했다.
 - 공통 모노레포와 pnpm Workspace·Turborepo를 사용한다.
