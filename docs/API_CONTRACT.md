@@ -291,7 +291,7 @@ POST /api/v1/sessions/{sessionId}/local-events
 ### 로컬 권한 이벤트·학습 정리 조회 보완 (#206, PR #207 리뷰 반영 2026-11-10)
 
 - local-events는 코드 2종(`LOCAL_SCREEN_PERMISSION_REVOKED`, `LOCAL_EXTENSION_HOST_PERMISSION_MISSING`)만 받고, 유효한 RUNNING 세션을 `AUTO_PAUSED`·`pauseReason: REQUIRED_PERMISSION`으로 바꾼다. Extension 사이트 접근 권한 유실도 연결이 살아 있으므로 `EXTENSION_UNLINKED`가 아니라 `REQUIRED_PERMISSION`이다.
-- 마지막 유효 신호 뒤 180초가 지난 RUNNING 세션에 이벤트가 도착하면 정지시키지 않고 `ABANDONED`(`HEARTBEAT_TIMEOUT`)를 먼저 확정한 뒤 `409 SESSION_ABANDONED`를 반환한다.
+- 마지막 유효 신호 뒤 180초가 지난 RUNNING 세션에 **새** 이벤트가 도착하면 정지시키지 않고 `ABANDONED`(`HEARTBEAT_TIMEOUT`)를 먼저 확정한 뒤 `409 SESSION_ABANDONED`를 반환한다. 이미 저장된 이벤트의 재전송은 만료 뒤에도 상태를 바꾸지 않고 `200`이며, 만료 정리는 기존 정리 작업이 맡는다.
 - 세션당 서로 다른 이벤트 저장은 256건이다. 한도 이후 새 이벤트는 필수 정지를 반영한 뒤 저장 없이 `409 SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(retryable=false)를 반환하고, 이미 저장된 이벤트의 재전송은 계속 200이다. **이 오류 코드는 Notion 공통 Error Code 정책에 아직 정의되지 않았다. 구현 전 정본 추가가 필요하다.**
 - learning-summary는 저장된 READY의 필수 문구가 공백뿐이면 정상 결과로 내보내지 않고 `503 SERVICE_UNAVAILABLE`을 반환한다. 저장 행은 수정하지 않는다. V20은 새 쓰기에서 같은 값을 거절한다(기존 행 보존을 위해 `NOT VALID`).
 

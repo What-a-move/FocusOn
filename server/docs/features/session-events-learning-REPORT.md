@@ -46,5 +46,6 @@
 
 - 반영: 이벤트 저장 세션당 256건 상한(한도 뒤에도 필수 정지 유지, 저장된 재전송은 200), 180초 기한 지난 세션은 `ABANDONED` 선확정 뒤 409, 공백뿐인 READY 거절(V20 `NOT VALID` CHECK + 조회 503), Extension 사이트 권한 유실의 `pauseReason`을 `REQUIRED_PERMISSION`으로 변경.
 - 테스트: READY 본문 전체 단언, 개념 5개 허용·6개 거절 경계, 늦은 이벤트·상한·동시 경쟁·공백 변형 회귀 추가.
-- 검증: 전체 build·Checkstyle 304개 실패0·오류0·생략16. 격리 PostgreSQL 17(Flyway+validate)에서 관련 177개 실패0·생략0. 이 결과는 로컬이며 원격 CI·봇 재리뷰는 별도 확인한다.
+- 2차 리뷰 반영: 저장된 이벤트의 재전송은 세션 만료 뒤에도 200이며 상태를 바꾸지 않는다(만료 선확정은 새 이벤트에만 적용, 회귀 테스트 추가).
+- 검증: 전체 build·Checkstyle 305개 실패0·오류0·생략16. 격리 PostgreSQL 17(Flyway+validate)에서 관련 178개 실패0·생략0. 이 결과는 로컬이며 원격 CI·봇 재리뷰는 별도 확인한다.
 - 제한: `SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`는 Notion 오류 정책에 미정의. 실제 Desktop/Extension 권한 철회 동작은 미검증.

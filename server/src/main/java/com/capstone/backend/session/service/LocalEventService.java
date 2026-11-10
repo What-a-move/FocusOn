@@ -85,13 +85,17 @@ public class LocalEventService {
     if (!session.getRunnerDevice().getId().equals(runnerId)) {
       throw new ApiException(ApiErrorCode.SESSION_NOT_FOUND);
     }
-    if (session.getStatus() == SessionStatus.RUNNING && expired(session, now)) {
+    String hash = hash(request);
+    boolean stored = events.existsBySessionIdAndDeviceIdAndEventHash(
+        session.getId(), device.getId(), hash);
+    // 이미 저장된 재전송은 만료 세션에서도 상태를 바꾸지 않고 200으로 응답한다.
+    // 만료 정리는 새 이벤트에만 적용하고, 재전송은 기존 정리 작업이 처리하게 둔다.
+    if (!stored && session.getStatus() == SessionStatus.RUNNING && expired(session, now)) {
       session.abandon(now);
       sessions.flush();
       return new Result(response(session), ApiErrorCode.SESSION_ABANDONED);
     }
-    String hash = hash(request);
-    if (!events.existsBySessionIdAndDeviceIdAndEventHash(session.getId(), device.getId(), hash)) {
+    if (!stored) {
       if (session.getStatus() == SessionStatus.ENDED
           || session.getStatus() == SessionStatus.ABANDONED
           || session.getStatus() == SessionStatus.ENDING) {

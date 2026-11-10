@@ -1328,6 +1328,40 @@ class SessionApiTests {
         Long.valueOf(id)));
   }
 
+  /** 이미 저장된 재전송은 세션이 만료된 뒤에도 상태를 바꾸지 않고 200으로 응답한다. */
+  @Test
+  void storedDuplicateAfterExpiryReturnsOkWithoutChangingSession() throws Exception {
+    LoginResponse owner = desktop("dup-expired-" + UUID.randomUUID());
+    String id = startForHeartbeat(owner);
+    long numericId = Long.parseLong(id);
+    String path = "/api/v1/sessions/" + id + "/local-events";
+    Instant occurred = Instant.now();
+    mvc.perform(post(path).header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(localEventBody(occurred)))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("AUTO_PAUSED"));
+    resumeForEventTest(owner, id);
+    jdbc.update("UPDATE learning_sessions SET last_resumed_at=?,last_heartbeat_at=NULL WHERE id=?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(181)), numericId);
+    long version = sessions.findById(numericId).orElseThrow().getVersion();
+    mvc.perform(post(path).header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(localEventBody(occurred)))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("RUNNING"));
+    var stored = sessions.findById(numericId).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("RUNNING", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals(version, stored.getVersion());
+    org.junit.jupiter.api.Assertions.assertNull(stored.getEndedAt());
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_local_events WHERE session_id=?", Integer.class, numericId));
+    // 새 이벤트는 같은 만료 세션에서 여전히 ABANDONED 정리 뒤 409다.
+    mvc.perform(post(path).header("Authorization", "Bearer " + owner.accessToken())
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(localEventBody(occurred.plusSeconds(5))))
+        .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("SESSION_ABANDONED"));
+  }
+
   /** 상한 도달 오류가 필수 정지를 롤백하지 않고 이미 수신된 재전송은 그대로 허용된다. */
   @Test
   void localEventLimitPreservesPauseAndAcceptsStoredReplayAfterResume() throws Exception {
