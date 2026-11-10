@@ -1,0 +1,100 @@
+name: AI Codex review
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'AI/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-codex-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    outputs:
+      eligible: ${{ steps.prepare.outputs.eligible }}
+      number: ${{ steps.prepare.outputs.number }}
+      head: ${{ steps.prepare.outputs.head }}
+      base: ${{ steps.prepare.outputs.base }}
+      final_message: ${{ steps.codex.outputs.final-message }}
+    steps:
+      - name: Check out trusted automation from PR base
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Check eligibility and prepare context
+        id: prepare
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { prepare } = require('./.github/codex/automation.cjs');
+            await prepare({ github, context, core, mode: 'review' });
+      - name: Require API secret
+        if: steps.prepare.outputs.eligible == 'true'
+        env:
+          CODEX_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$CODEX_KEY" ]; then
+            echo '::error::Configure repository Actions secret OPENAI_API_KEY before using Codex review.'
+            exit 1
+          fi
+      - name: Check out PR source for reading
+        if: steps.prepare.outputs.eligible == 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.prepare.outputs.head }}
+          path: pr-source
+          fetch-depth: 0
+          persist-credentials: false
+      # Keep Codex last: it receives no GitHub write token.
+      - name: Review AI changes
+        if: steps.prepare.outputs.eligible == 'true'
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/review.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          effort: medium
+          codex-args: '["--ephemeral"]'
+
+  post_review:
+    needs: review
+    if: needs.review.outputs.eligible == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.review.outputs.base }}
+          persist-credentials: false
+      - name: Post one review per head after checking current PR
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ needs.review.outputs.number }}
+          REVIEW_HEAD: ${{ needs.review.outputs.head }}
+          CODEX_MESSAGE: ${{ needs.review.outputs.final_message }}
+        with:
+          script: |
+            const { publish } = require('./.github/codex/automation.cjs');
+            await publish({ github, context, core,
+              number: Number(process.env.PR_NUMBER), head: process.env.REVIEW_HEAD,
+              raw: process.env.CODEX_MESSAGE });

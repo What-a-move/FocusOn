@@ -1,0 +1,107 @@
+name: Codex reply draft
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+# Drafts never get a token that can publish comments or edit source.
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: codex-reply-${{ github.event.comment.id || github.event.review.id || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  draft:
+    if: >-
+      github.actor != 'kshi3430' &&
+      github.event.sender.type == 'User' &&
+      (github.event_name != 'issue_comment' || github.event.issue.pull_request)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    outputs:
+      eligible: ${{ steps.prepare.outputs.eligible }}
+      number: ${{ steps.prepare.outputs.number }}
+      head: ${{ steps.prepare.outputs.head }}
+      base: ${{ steps.prepare.outputs.base }}
+      comment_id: ${{ steps.prepare.outputs.comment_id }}
+      final_message: ${{ steps.codex.outputs.final-message }}
+    steps:
+      - name: Check out trusted automation
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+      - name: Check own PR, human reviewer and permissions
+        id: prepare
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { prepare } = require('./.github/codex/automation.cjs');
+            await prepare({ github, context, core, mode: 'reply' });
+      - name: Require API secret
+        if: steps.prepare.outputs.eligible == 'true'
+        env:
+          CODEX_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$CODEX_KEY" ]; then
+            echo '::error::Configure repository Actions secret OPENAI_API_KEY before generating reply drafts.'
+            exit 1
+          fi
+      - name: Check out PR source for reading
+        if: steps.prepare.outputs.eligible == 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.prepare.outputs.head }}
+          path: pr-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Generate an unpublished reply draft
+        if: steps.prepare.outputs.eligible == 'true'
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/reply.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          effort: medium
+          codex-args: '["--ephemeral"]'
+
+  save_draft:
+    needs: draft
+    if: needs.draft.outputs.eligible == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.draft.outputs.base }}
+          persist-credentials: false
+      - name: Save draft in run summary and artifact only
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ needs.draft.outputs.number }}
+          REVIEW_HEAD: ${{ needs.draft.outputs.head }}
+          COMMENT_ID: ${{ needs.draft.outputs.comment_id }}
+          CODEX_MESSAGE: ${{ needs.draft.outputs.final_message }}
+        with:
+          script: |
+            const { saveDraft } = require('./.github/codex/automation.cjs');
+            await saveDraft({ core, number: Number(process.env.PR_NUMBER),
+              head: process.env.REVIEW_HEAD, commentId: process.env.COMMENT_ID,
+              raw: process.env.CODEX_MESSAGE });
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-reply-pr-${{ needs.draft.outputs.number }}-comment-${{ needs.draft.outputs.comment_id }}
+          path: codex-draft/reply.md
+          retention-days: 7
+          overwrite: true
+          if-no-files-found: error
