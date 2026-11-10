@@ -32,6 +32,8 @@ Desktop과 Extension은 각각 독립된 token family로 Backend에 HTTPS 요청
 
 Desktop Google 인증은 macOS 기본 시스템 브라우저와 임시 loopback callback을 사용한다. Electron Main이 OAuth·Token·인증 API 요청을 담당하고, Renderer에는 Preload의 타입이 정해진 IPC를 통해 Token 없는 인증 상태와 사용자 요약만 전달한다.
 
+2026-11-09 #182 승인: 실제 화면 개입은 Desktop이 지정한 전경 context(lease30초)를 분석·유효 heartbeat에 연결하고, 실제 채널 전송 receipt의 최초 SENT 서버 수신부터5분 cooldown을 계산한다. GET/사용자 ack는 전송을 대신하지 않는다. context 없는 호환 분석은 현재 정책 근거가 아니며, 전송 불명은 추가 생성을 보류한다. Desktop/Extension/shared-types 소비자 구현과 실제 AI·포키 표시 QA는 Backend 구현과 구분한다. 상세는 `API_CONTRACT.md`와 Notion 새 API 행을 따른다.
+
 ## 3. 정본과 읽는 순서
 
 새 채팅에서 노션 페이지를 다시 찾을 때는 아래 주소를 사용한다. 세부 정책이 필요한 작업에서는 링크의 현재 내용을 직접 읽는다.

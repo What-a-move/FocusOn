@@ -267,10 +267,49 @@ GET  /api/v1/sessions/{sessionId}/analysis-runs
 POST /api/v1/sessions/{sessionId}/analysis-runs
 GET  /api/v1/sessions/{sessionId}/interventions
 POST /api/v1/interventions/{interventionId}/acknowledgements
+PUT  /api/v1/sessions/{sessionId}/observation-context
+GET  /api/v1/sessions/{sessionId}/observation-context
+POST /api/v1/interventions/{interventionId}/deliveries
 POST /api/v1/sessions/{sessionId}/local-events
 ```
 
-`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+
+### 실제 알림 연결 (#182, 2026-11-09 사용자 승인)
+
+- 전경 PUT: Authorization·X-Device-Id, RUNNING runner Desktop만. JSON 필수 `clientContextId`(UUID-v4), `foregroundSequence`(양의 JS 안전 정수), `observer`(DESKTOP|EXTENSION|NONE). 실제 Extension device는 활성 연결에서 서버가 결정한다. nonce 재시도는 같은 context, 충돌/낮은 번호는409 IDEMPOTENCY_CONFLICT. 전경 순번은 session+runner 전체 영속 counter다.
+- 전경 GET: 같은 헤더, runner 또는 활성 연결 Extension. 유효 context 없으면204 빈 본문. PUT/GET의200 data는 `{observationContextId,observer,observerDeviceId,foregroundSequence,createdAt,leaseRemainingMs}`. BIGINT ID는 문자열, NONE의 observerDeviceId는 null, 시간은 서버 UTC/잔여 ms다. GET/PUT 재시도로 lease를 연장하지 않는다.
+- lease는30초다. 전경을 실제 확인한 Desktop이 유효 RUNNING heartbeat에 선택 `observationContextId`를 연결할 때만 갱신한다. 무시된 재전송·오류·목표 도달·만료 lease는 갱신하지 않는다. 만료 후 새 큰 번호의 context로 복구한다. 기존 세션 시간/명령 version 계약은 유지한다.
+- analysis-runs에 선택 문자열 `observationContextId`를 추가한다. 현재 session/runner/담당 device/실행 세대 소속을 검증한다. context 없는 기존 요청은 호환 이력이며 현재 전경 정책을 변경하지 않는다. 정책은 context 내부 `findCurrent`에서 기존 번호/순서 불명 우선순위를 적용한다. 서로 다른 기기 번호/기기·서버 시각은 직접 비교하지 않는다.
+- 명시적 context 전환/lease 만료는 연속 이탈을 끝내며 rolling 이력은 보존한다. 만료 뒤 시간은 누적하지 않는다. AI 처리 대기는 기존 episode와 확정 누적을 보존하고 누적·생성만 동결한다. 확정 UNCERTAIN/실패/RELATED/보호는 구간을 끝낸다. rolling10분은 창 내부 시간만, 열린 구간은1회 계산한다.
+- deliveries POST: Authorization·X-Device-Id, 해당 runner Desktop. JSON 필수 `clientDeliveryId`(UUID-v4), `dispatchStatus`(SENT|NOT_SENT|UNKNOWN), `channels`(허용 채널의 중복 없는 배열). SENT는 비어 있지 않은 세션 snapshot 부분집합, 나머지는 빈 배열이다.200 data는 `{dispatchStatus,acceptedAt,cooldownUntil}`이며 cooldownUntil은 UTC/null이다. nonce 재전송은 최초 응답/시각 유지, 다른 결과는409 IDEMPOTENCY_CONFLICT다.
+- 최초 SENT receipt 서버 수신부터 서버 cooldown5분. SENT는 실제 포키 표시/OS 제출 성공이며 사용자 인지가 아니다. GET/생성/사용자 ack는 전송을 대신하지 않는다. 확인했어 이후5분 Desktop UI는 유지한다. UNKNOWN/receipt 유실은 추가 생성 보류, NOT_SENT만 TTL 안 같은 이벤트 재시도 가능하다.
+- 미전송 PENDING TTL30초는 전송된 사용자 PENDING에 적용하지 않는다. 전송 뒤 미전송 slot을 해제하고 GET 표시 대상에서 제외하며 ack는 받을 수 있다. 늦은 receipt는 기존 만료/사용자 반응 상태를 되돌리지 않는다.
+- GET interventions의 `observationContextId`는 문자열/null(기존 이력), `remainingTtlMs`는0 이상 정수 ms다. Desktop은 표시 직전 RUNNING·현재 context·보호를 확인하고 HTTP 요청 시작 이후 monotonic 경과 시간을 TTL에서 차감한다. 시도/receipt를 영속화하며 전송 여부 불명인 재시작은 UNKNOWN으로 보고한다. OS 표시와 DB의 exactly-once를 보장하지 않는다.
+- [전경 PUT 정본](https://app.notion.com/p/4130b6e5e64c801da7bbd8a8159db5d1), [전경 GET 정본](https://app.notion.com/p/4130b6e5e64c80b88a53ff3bf6d38644), [receipt 정본](https://app.notion.com/p/4130b6e5e64c80cbb9dac57f9723d9bd). Backend 구현과 Desktop/Extension/shared-types 소비자 연결·실제 표시 QA는 별개다.
+
+### 로컬 권한 이벤트·학습 정리 조회 보완 (#206, PR #207 리뷰 반영 2026-11-10)
+
+- local-events는 코드 2종(`LOCAL_SCREEN_PERMISSION_REVOKED`, `LOCAL_EXTENSION_HOST_PERMISSION_MISSING`)만 받고, 유효한 RUNNING 세션을 `AUTO_PAUSED`·`pauseReason: REQUIRED_PERMISSION`으로 바꾼다. Extension 사이트 접근 권한 유실도 연결이 살아 있으므로 `EXTENSION_UNLINKED`가 아니라 `REQUIRED_PERMISSION`이다.
+- 마지막 유효 신호 뒤 180초가 지난 RUNNING 세션에 **새** 이벤트가 도착하면 정지시키지 않고 `ABANDONED`(`HEARTBEAT_TIMEOUT`)를 먼저 확정한 뒤 `409 SESSION_ABANDONED`를 반환한다. 이미 저장된 이벤트의 재전송은 만료 뒤에도 상태를 바꾸지 않고 `200`이며, 만료 정리는 기존 정리 작업이 맡는다.
+- 세션당 서로 다른 이벤트 저장은 256건이다. 한도 이후 새 이벤트는 필수 정지를 반영한 뒤 저장 없이 `409 SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(retryable=false)를 반환하고, 이미 저장된 이벤트의 재전송은 계속 200이다. **이 오류 코드는 Notion 공통 Error Code 정책에 아직 정의되지 않았다. 구현 전 정본 추가가 필요하다.**
+- learning-summary는 저장된 READY의 필수 문구가 공백뿐이면 정상 결과로 내보내지 않고 `503 SERVICE_UNAVAILABLE`을 반환한다. 저장 행은 수정하지 않는다. V20은 새 쓰기에서 같은 값을 거절한다(기존 행 보존을 위해 `NOT VALID`).
+
+### 세션 종료 (#163, PR #164)
+
+- `POST /api/v1/sessions/{sessionId}/end`: Desktop 실행 기기만. 필수 헤더 `Authorization`, `Idempotency-Key`, `If-Match-Version`(`X-Device-Id` 불필요). 본문은 필수 `{ "accumulatedActiveMs": 정수ms }`이며 종료 버튼 시점의 Desktop monotonic 전체 누적값이다. 재시도에는 최초 본문·키·버전을 유지한다.
+- 허용 상태는 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`이다. `RUNNING`은 저장 누적값 이상이고 현재 실행 구간 시작 누적값 + 서버 경과시간 + 30초 이내여야 한다(pause와 같은 검증). 멈춘 상태는 저장 누적값과 같아야 한다. 어긋나면 `400 VALIDATION_ERROR`이며 상태·누적값·종료 시각·버전을 바꾸지 않는다.
+- 성공 `200 data`: `status(ENDED)`, `version`, `accumulatedActiveMs`, `targetDurationMs`, `endedAt`. `endReason`은 `USER_ACTION`이다. 같은 키·같은 본문은 최초 응답을 재생하고, 같은 키에 다른 최종값은 `409 IDEMPOTENCY_CONFLICT`다.
+- 서버가 이미 무신호로 끝낸 `ABANDONED` 세션은 `409 SESSION_ABANDONED`(details `currentStatus`, `endReason: HEARTBEAT_TIMEOUT`)로 응답한다. 버전 비교보다 먼저 판단하며 세션을 되살리지 않는다. 클라이언트는 최신 세션을 조회한다(heartbeat·local-events와 같은 규칙, 2026-11-10 정함). `ENDED`·`ENDING`은 `409 SESSION_STATE_INVALID`다.
+- heartbeat가 저장 누적값을 갱신하므로 본문 없는 종료도 가능하지만, 마지막 heartbeat 이후 구간을 잃지 않도록 최종값 본문을 필수로 유지한다(2026-11-05 사용자 승인). **현재 Desktop `session-runtime.cts`의 `end()`는 본문 없이 호출하므로 반영 전에는 400이다.** 전달 문서는 `server/docs/features/session-end-frontend-handoff.md`.
+
+### 분석 관측 순서 (2026-11-08 보완)
+
+- 기존 sequence는 source별 증가 번호다. 선택 observationSequence(양의 정수, JS 안전 정수 최대9007199254740991)는 같은 session+device 전체에서 source와 무관하게 관측 생성 시 배정·원자적으로 증가·영속화한다. 공개 응답과 AI 내부 schema는 유지한다.
+- 번호가 있으면 번호로 현재 상태를 선택한다. 번호 중복은409 IDEMPOTENCY_CONFLICT이며 작은 번호·늦은 AI 완료는 현재 보호 상태를 덮지 않는다. 번호 모드에 들어온 기기에 번호 없는 요청을 보내도 현재 상태에 사용하지 않는다.
+- 기존 요청은 source별 명백한 과거 sequence를 제외하고 observedAt으로 비교한다. 시계 역행/지연으로 순서를 확정할 수 없으면 AI를 보류하고 UNCERTAIN/ANALYSIS_UNAVAILABLE 또는 기존 보호 상태를 유지한다. 번호 있는 새 관측이나 새 세션으로 복구한다.
+- observedAt은 기기 원본, receivedAt은 서버 수신 시각이다. 다른 clock끼리 직접 비교하지 않는다. 원문이나 전체 URL을 저장하지 않는다. TAB_META와 CHROME_DOM 본문의 guard 없는 요청은 유효 host가 필수다.
+- [Notion POST 정본](https://app.notion.com/p/58cf7aade6614fc9a00e248affb052f9), [Frontend 인계](../server/docs/features/analysis-observation-order-handoff.md). 실제 클라이언트 적용·AI·앱 QA와 Server 구현을 구분한다.
 
 ### 리포트
 
@@ -315,7 +354,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - `EXCLUDED`, `PRIVACY_BLOCKED`, `UNCERTAIN`은 HTTP 오류가 아닌 정상 분석 상태다.
 - 관련성, 신뢰도, 판단 근거는 서로 다른 필드로 유지한다.
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
-- `confidence < 0.75`인 관련성 결과는 `UNCERTAIN`으로 정규화한다.
+- `confidence < 0.6`인 관련성 결과는 `UNCERTAIN`으로 정규화한다. 2026-11-03 AI 계약의 베타 예외로 내부 AI 응답의 `promptVersion`이 `-uncalibrated`로 끝나고 `confidence: null`인 후보 판정만 수치 기준에서 제외한다. 버전을 이력에 남기며 confidence를 임의로 만들지 않는다. metadata만 근거인 UNRELATED는 이 예외에서도 이탈 시간에 포함하지 않는다.
 - AI 장애·시간 초과는 HTTP 오류가 아니라 `relation: UNCERTAIN`, `confidence: null`, `reasonCode: ANALYSIS_UNAVAILABLE`로 응답한다. 베타까지 AI가 준비되지 않으면 서버가 임시 규칙 판정으로 대신할 수 있으며, 응답 형식·`reasonCode` 허용 목록·세션 고정 `policyVersion`은 같게 유지한다(2026-11-02 확정).
 - 정책 `v1`에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
 - `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
@@ -426,3 +465,5 @@ REQUEST_TIMEOUT
 ```
 
 TypeScript 공유 타입은 `packages/shared-types`에서 관리한다. Spring DTO와 AI 입력 스키마는 각 서버에서 런타임 검증을 별도로 수행한다.
+
+분석 입력 검증 보완(PR172 재리뷰): `CHROME_DOM`은 본문이 없어도 metadata가 있으면 유효한 urlHost가 필요하다. observedAt의 기기/서버 시각 차이는 허용하되 DB 유한 timestamp 저장 범위 밖 값은400 VALIDATION_ERROR이며 저장·AI 호출을 하지 않는다.

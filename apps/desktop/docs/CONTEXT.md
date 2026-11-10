@@ -19,6 +19,12 @@
 
 ### 완료된 작업
 
+- Issue #173(2026-11-08): 화면 위 포키 알림 개편. 포키가 먼저 화면 오른쪽 아래에서 크게 고개를 내밀어 표정으로 알리고, 0.6초 뒤 흰 카드(이름표·말·설명·버튼)가 포키 왼쪽에 뜬다. 상황별 이미지 `poki-peek-*.png` 6장, 포키 대사 반말(적극은 약 올리는 말투), F07 오류는 존댓말 유지. 버튼 `확인했어`(→목표 안내)·`알겠어`. 서버 알림 API 전이라 실제 왕복은 미검증.
+- Issue #175(2026-11-08): 큰 글자(h1·h2·집중 타이머·목표 문구·큰 숫자·연결 코드)에 페이퍼로지 적용, 작은 글자는 Pretendard 유지. 글꼴은 `public/fonts/`(TTF 2종)에 넣어 인터넷 없이도 보인다. 토큰 `--fo-font-display`.
+- Issue #179(2026-11-08): 상황별 새 포키 이미지로 교체. 오류는 걱정, 없음은 두리번, 온보딩·설정은 플러그·동의·열쇠, 완료는 축하 포키. 집중 달력·프로필 얼굴은 기존 유지.
+- Issue #183(2026-11-09): 폴더 구조를 가벼운 FSD(`app` → `features` → `shared`)로 정리. 여러 화면이 쓰던 API·사이드바·설정 틀·오류 문구·공용 CSS를 `shared/{api,ui,lib,styles}`로 옮기고 `features/` 사이 import를 없앴다(16곳 → 0). ESLint `no-restricted-imports`가 규칙을 검사한다. 화면·동작 변경 없음. 규칙은 `apps/docs/FOLDER_STRUCTURE.md`, 결정 037.
+- Issue #185(2026-11-09): 공용 CSS 3개를 공용·화면 전용으로 나눴다. `dashboard.css` → `shared/styles/app-shell.css`+홈 전용, `settings.css` → `settings-shell.css`+설정 전용, `onboarding.css` → `onboarding-window.css`+온보딩 전용. 값·클래스는 그대로이고, dev 빌드와 모든 요소의 계산된 스타일을 비교해 같음을 확인했다(라이트·다크, 창 크기 4개, 화면 상태 38개).
+- Issue #189(2026-11-09): 시연 모드 `pnpm dev:demo`. ⌘⇧D로 포키 이탈 알림을 바로 띄우고, 서버에 없는 세션 종료·결과 요약·달력·하루 기록은 그 실행의 세션으로 가짜 응답한다. 학습 정리는 가짜로 만들지 않는다(결정 038). 배포 앱에서는 꺼진다.
 - Next.js 기본 화면을 FocusOn 로그인·온보딩 시작·홈 화면으로 교체했다.
 - Desktop 앱 기본 실행·빌드 구조를 확인했다.
 - 공통 모노레포와 pnpm Workspace·Turborepo를 사용한다.
@@ -72,7 +78,7 @@
 
 - Issue #80(2026-10-27): 설정 화면(`/settings/`, `settings.html`) 집중·분석·권한·화면 탭과 분석 제외 목록(`/settings/exclusions/`, `exclusions.html`)을 구현했다(결정 029). 홈 사이드바를 `AppSidebar`로 꺼내 `홈`·`설정`을 링크로 연결했다. 집중 설정은 `PUT focus-settings`로 바꿀 때마다 저장하고 실패하면 되돌린다. 제외 사이트는 서버 전체 교체, 제외 앱은 이 기기에 저장한다. 화면 모드는 `nativeTheme`으로 앱 전체에 적용한다. focus-settings·제외 도메인 API가 dev에 없어 실제 왕복은 미검증이며, 가짜 bridge로 6가지 상태와 저장·되돌리기·권한 다시 확인을 확인했다. 계정·기기 연결 탭은 다음 Issue다.
 - Issue #80 QA(2026-10-31): 실제 Google 계정과 로컬 Docker 서버로 집중 설정·제외 사이트 저장, 제외 앱·화면 모드 재실행 유지, 서버 끊김 시 조회 재시도를 로그·DB로 확인했다(`settings-REPORT.md`). 서버에 없는 API가 `401 AUTH_RELOGIN_REQUIRED`로 응답해 홈에서 로그아웃되는 문제는 백엔드에 요청했다(`settings-missing-api-relogin-ERROR.md`). 권한 QA는 `open -a`로 실행해야 한다(README).
-- 오류 표시 정리(2026-11-01): 빨간색은 실제 오류에만 쓴다(결정 031, #111). 오류 제목은 무엇을 못 했는지, 본문은 `app/lib/error-text.ts`의 원인·할 일 문구다(결정 032, #115). 로그인 실패는 `LOCAL_APP_CONFIG_MISSING`·`LOCAL_BROWSER_OPEN_FAILED`·`LOCAL_GOOGLE_LOGIN_FAILED`·`LOCAL_KEYCHAIN_UNAVAILABLE`로 나뉜다. 시험 알림은 macOS가 거절하면 `shown: false`다(#118). 서버는 없는 API에 `404 NOT_FOUND`를 준다(백엔드 #112). Desktop은 "아직 준비 중"으로 안내하고 로그아웃하지 않는다(#119).
+- 오류 표시 정리(2026-11-01): 빨간색은 실제 오류에만 쓴다(결정 031, #111). 오류 제목은 무엇을 못 했는지, 본문은 `shared/lib/error-text.ts`의 원인·할 일 문구다(결정 032, #115). 로그인 실패는 `LOCAL_APP_CONFIG_MISSING`·`LOCAL_BROWSER_OPEN_FAILED`·`LOCAL_GOOGLE_LOGIN_FAILED`·`LOCAL_KEYCHAIN_UNAVAILABLE`로 나뉜다. 시험 알림은 macOS가 거절하면 `shown: false`다(#118). 서버는 없는 API에 `404 NOT_FOUND`를 준다(백엔드 #112). Desktop은 "아직 준비 중"으로 안내하고 로그아웃하지 않는다(#119).
 
 ### 아직 진행하지 않은 작업
 

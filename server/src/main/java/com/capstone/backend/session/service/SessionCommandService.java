@@ -7,6 +7,8 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.session.dto.SessionDtos.EndRequest;
 import com.capstone.backend.session.dto.SessionDtos.EndResponse;
+import com.capstone.backend.session.dto.SessionDtos.ExtendRequest;
+import com.capstone.backend.session.dto.SessionDtos.ExtendResponse;
 import com.capstone.backend.session.dto.SessionDtos.PauseReason;
 import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
 import com.capstone.backend.session.dto.SessionDtos.PauseResponse;
@@ -16,6 +18,8 @@ import com.capstone.backend.session.persistence.IdempotencyRecordEntity;
 import com.capstone.backend.session.persistence.IdempotencyRecordRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionExtensionEntity;
+import com.capstone.backend.session.persistence.SessionExtensionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.service.OnboardingReadinessService;
 import java.time.Duration;
@@ -33,14 +37,75 @@ import tools.jackson.databind.ObjectMapper;
 public class SessionCommandService {
   private static final String RESUME_SCOPE = "RESUME_SESSION";
   private static final String PAUSE_SCOPE = "PAUSE_SESSION";
+  private static final String EXTEND_SCOPE = "EXTEND_SESSION";
+  private static final long MIN_EXTENSION_MS = 300_000L;
+  private static final long MAX_EXTENSION_MS = 18_000_000L;
+  private static final long MINUTE_MS = 60_000L;
   private static final Duration IDEMPOTENCY_RETENTION = Duration.ofHours(24);
   private static final long CLOCK_TOLERANCE_MS = 30_000L;
 
   private final UserRepository users;
   private final LearningSessionRepository sessions;
   private final IdempotencyRecordRepository records;
+  private final SessionExtensionRepository extensions;
   private final OnboardingReadinessService onboarding;
   private final ObjectMapper mapper;
+
+  /** 사용자 행 잠금 안에서 연장·이력·멱등 응답을 원자적으로 확정한다. */
+  @Transactional
+  public ExtendResponse extend(FocusOnPrincipal principal, String sessionId, String key,
+      String versionHeader, ExtendRequest request) {
+    requireDesktop(principal);
+    UUID idempotencyKey = SessionService.parseKey(key);
+    long expectedVersion = parseVersion(versionHeader);
+    var user = users.findByIdForUpdate(principal.userId())
+        .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+    var session = findOwnedSession(principal, sessionId);
+    String hash = SessionService.requestHash(principal.deviceId() + ":" + sessionId + ":"
+        + expectedVersion + ":" + mapper.writeValueAsString(request));
+    Instant now = Instant.now();
+    var previous = records.findByUserIdAndScopeAndIdempotencyKey(user.getId(), EXTEND_SCOPE,
+        idempotencyKey);
+    if (previous.isPresent()) {
+      var record = previous.get();
+      if (record.getExpiresAt().isAfter(now)) {
+        if (!record.getRequestHash().equals(hash)) {
+          throw new ApiException(ApiErrorCode.IDEMPOTENCY_CONFLICT);
+        }
+        return mapper.readValue(record.getResponseBodyJson(), ExtendResponse.class);
+      }
+      records.delete(record);
+      records.flush();
+    }
+    requireVersion(session, expectedVersion);
+    if (session.getStatus() != SessionStatus.RUNNING
+        && session.getStatus() != SessionStatus.PAUSED
+        && session.getStatus() != SessionStatus.AUTO_PAUSED
+        && session.getStatus() != SessionStatus.AWAITING_END_CONFIRMATION) {
+      throw new ApiException(ApiErrorCode.SESSION_STATE_INVALID);
+    }
+    long additional;
+    long newTarget;
+    long previousTarget = session.getTargetDurationMs();
+    try {
+      additional = request.additionalDurationMs().longValueExact();
+      if (additional < MIN_EXTENSION_MS || additional > MAX_EXTENSION_MS
+          || additional % MINUTE_MS != 0) {
+        throw new ArithmeticException();
+      }
+      newTarget = Math.addExact(previousTarget, additional);
+    } catch (ArithmeticException exception) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    session.extend(newTarget, now);
+    sessions.flush();
+    extensions.save(SessionExtensionEntity.create(session, additional, previousTarget, now));
+    var response = new ExtendResponse(session.getStatus(), session.getVersion(), newTarget,
+        session.getAccumulatedActiveMs(), session.getLastResumedAt());
+    records.save(IdempotencyRecordEntity.create(user, EXTEND_SCOPE, idempotencyKey, hash,
+        (short) 200, mapper.writeValueAsString(response), now, now.plus(IDEMPOTENCY_RETENTION)));
+    return response;
+  }
 
   /** 실행 구간의 검증된 누적 시간을 저장하고 일시정지한다. */
   @Transactional
@@ -110,6 +175,13 @@ public class SessionCommandService {
       }
       records.delete(record);
       records.flush();
+    }
+    if (session.getStatus() == SessionStatus.ABANDONED) {
+      // heartbeat·local-events와 같게 응답 없음으로 이미 끝난 세션은 별도 코드로 알려
+      // 클라이언트가 최신 세션을 조회하게 한다. 버전 비교보다 먼저 판단해야 오래된 버전으로
+      // 누른 종료도 같은 안내를 받는다. 종료 시간은 서버가 확정한 값만 남는다.
+      throw ApiException.withDetails(ApiErrorCode.SESSION_ABANDONED,
+          Map.of("currentStatus", SessionStatus.ABANDONED, "endReason", "HEARTBEAT_TIMEOUT"));
     }
     requireVersion(session, expectedVersion);
     if (session.getStatus() != SessionStatus.RUNNING

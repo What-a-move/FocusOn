@@ -1,14 +1,15 @@
-"""Receive verified Backend input without storing text or running a model."""
+"""Analyze verified Backend input without storing or logging content text."""
 import json
 import secrets
 import os
+import math
 
 from fastapi import APIRouter, HTTPException, Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
 
-from .reception import AnalysisReception, ReceptionReceipt, ExperimentalAnalysisResponse
-from .relevance_contract import adapt_screen_request, public_response
+from .reception import AnalysisReception, AnalysisDecisionResponse
+from .relevance_contract import adapt_screen_request, public_response, contract_reason_code
 from .schemas import SafeInputError
 from ..analysis.acquisition_policy import desktop_target_block_reason
 from ..preprocessing.adapter import observation_is_current
@@ -81,15 +82,38 @@ async def validated_input(request: Request):
     return envelope, content
 
 
-@router.post("/internal/v1/analysis-runs", response_model=ReceptionReceipt,
+@router.post("/internal/v1/analysis-runs", response_model=AnalysisDecisionResponse,
              dependencies=[Security(require_backend)],
              openapi_extra={"requestBody": {"required": True, "content": {
                  "application/json": {"schema": {"$ref": "#/components/schemas/AnalysisReception"}}}}})
-async def receive_analysis(request: Request) -> ReceptionReceipt:
-    """HTTP 200 confirms reception only; no queue, persistence or scoring."""
+async def analyze_relevance(request: Request) -> AnalysisDecisionResponse:
+    """Validate the trusted envelope and return the Hybrid relevance decision."""
     envelope, content = await validated_input(request)
-    return ReceptionReceipt.parse_safe({"status": "RECEIVED", "sessionId": content.session_id,
-                                       "clientRunId": content.client_run_id, "analysisExecuted": False})
+    result = await run_in_threadpool(run_analysis, envelope, content,
+                                     getattr(request.app.state, "embedding_client_factory", None))
+    return AnalysisDecisionResponse.parse_safe(result)
+
+
+def experimental_score(row, source):
+    """Return an uncalibrated per-observation beta score, never change a label."""
+    label = row.get("relevanceLabel")
+    if row.get("status") != "COMPLETED" or label not in {"RELATED", "UNRELATED"}:
+        return None
+    is_metadata = source in {ContentSource.APP_META, ContentSource.TAB_META}
+    if is_metadata and label != "RELATED":
+        return None
+
+    def number(key):
+        value = row.get(key)
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or not 0 <= value <= 1):
+            raise ValueError("INVALID_EXPERIMENTAL_SCORE")
+        return float(value)
+
+    if label == "RELATED":
+        score = number("decisionScore")
+        return score if is_metadata else .7 * score + .3 * number("relatedCoverage")
+    return number("unrelatedCoverage") * (1 - number("relatedCoverage"))
 
 
 def run_analysis(envelope, content, client_factory):
@@ -97,15 +121,13 @@ def run_analysis(envelope, content, client_factory):
     # the boundary so that Enum class identities remain consistent.
     from AI.evaluation.analysis_runner import compare_graphless
     from src.api.schemas import ConfirmedGoal, ContentInput, VerifiedContext
-    from ..models.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
+    from ..models.embedding_client import configured_embedding_client
 
     goal = ConfirmedGoal.parse_safe(envelope.goal.model_dump(mode="json", by_alias=True))
     observation = ContentInput.parse_safe(content.model_dump(mode="json", by_alias=True))
     context = VerifiedContext.parse_safe(envelope.context.model_dump(mode="json", by_alias=True))
-    revision = os.environ.get("FOCUSON_EMBEDDING_REVISION", "3c93b6415795f9cc3e16c403a492ce25b1c0e260f2f760acc90e2035de25f9bc")
     try:
-        client = client_factory() if client_factory else OllamaEmbeddingClient(EmbeddingSettings(
-            base_url=os.environ.get("FOCUSON_EMBEDDING_URL", "http://127.0.0.1:11435"), revision=revision))
+        client = client_factory() if client_factory else configured_embedding_client()
         try:
             row = compare_graphless(goal, [("request", observation, context, None)], client)["rows"][0]
         finally:
@@ -114,30 +136,36 @@ def run_analysis(envelope, content, client_factory):
         candidate = label if row["status"] == "COMPLETED" and label in {"RELATED", "UNRELATED", "UNCERTAIN"} else None
         if row["status"] == "FAILED":
             label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
+        if os.environ.get("FOCUSON_ANALYSIS_DECISION_MODE", "safe") == "candidate":
+            metadata = content.content_source in {ContentSource.APP_META, ContentSource.TAB_META}
+            if metadata and label == "UNRELATED":
+                label, reason, candidate = "UNCERTAIN", "INSUFFICIENT_CONTEXT", "UNCERTAIN"
+            try:
+                score = experimental_score(row, content.content_source)
+            except (ValueError, TypeError):
+                score = None
+            if candidate not in {"RELATED", "UNRELATED"}:
+                label, score = "UNCERTAIN", None
+            elif score is None or score < 0.6:
+                label, score, reason = "UNCERTAIN", None, "INSUFFICIENT_CONTEXT"
+            version = "title-hybrid-v3-mvp" if metadata else "body-context-hybrid-v3"
+            return {"decision": label, "confidence": score,
+                    "reasonCode": contract_reason_code(label, reason),
+                    "modelVersion": "qwen3-embedding-4b-fp16",
+                    "promptVersion": version + "-uncalibrated"}
         response = public_response(label if label in {"RELATED", "UNRELATED", "UNCERTAIN"} else "UNCERTAIN",
                                    reason, source=content.content_source, confidence=None,
                                    model_version="qwen3-embedding-4b-fp16", prompt_version=(
                                        "title-hybrid-v3-mvp" if content.content_source in {ContentSource.APP_META, ContentSource.TAB_META}
                                        else "body-context-hybrid-v3"))
-        return {**response.model_dump(mode="json", by_alias=True), "candidateDecision": candidate,
-                "candidateReasonCode": reason if candidate else None, "candidateCalibrated": False}
+        return response.model_dump(mode="json", by_alias=True)
     except Exception:
         # Avoid logging provider errors, input text and configuration secrets.
         response = public_response("UNCERTAIN", "ANALYSIS_UNAVAILABLE", source=content.content_source,
                                    confidence=None, model_version="qwen3-embedding-4b-fp16",
-                                   prompt_version="body-context-hybrid-v3")
-        return {**response.model_dump(mode="json", by_alias=True), "candidateDecision": None,
-                "candidateReasonCode": None, "candidateCalibrated": False}
-
-
-@router.post("/internal/v1/analysis-runs/analyze", response_model=ExperimentalAnalysisResponse,
-             dependencies=[Security(require_backend)],
-             openapi_extra={"requestBody": {"required": True, "content": {
-                 "application/json": {"schema": {"$ref": "#/components/schemas/AnalysisReception"}}}}})
-async def analyze_relevance(request: Request):
-    envelope, content = await validated_input(request)
-    return await run_in_threadpool(run_analysis, envelope, content,
-                                   getattr(request.app.state, "embedding_client_factory", None))
+                                   prompt_version="body-context-hybrid-v3" + (
+                                       "-uncalibrated" if os.environ.get("FOCUSON_ANALYSIS_DECISION_MODE", "safe") == "candidate" else ""))
+        return response.model_dump(mode="json", by_alias=True)
 
 
 from src.api.goal_routes import get_goal_workflow

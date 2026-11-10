@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { AuthSessionSnapshot, IpcError } from '../electron/shared/auth-contract.cjs'
-import { selectAuthView } from './lib/auth-view'
-import { errorText } from './lib/error-text'
-import { onboardingApi, STEP_ROUTES } from '../features/onboarding/onboarding-api'
+import { selectAuthView } from '../shared/lib/auth-view'
+import { errorText } from '../shared/lib/error-text'
+import { onboardingApi, STEP_ROUTES } from '../shared/api/onboarding-api'
 import { HomeDashboard } from '../features/dashboard/HomeDashboard'
 
 const signedOut: AuthSessionSnapshot = {
@@ -26,13 +26,18 @@ type AuthAction = 'login' | 'retry' | 'logout'
 const FAILED_TITLE: Record<AuthAction, string> = {
   login: '로그인하지 못했어요.',
   retry: '로그인 상태를 확인하지 못했어요.',
-  logout: '로그아웃을 마치지 못했어요.',
+  logout: '로그아웃하지 못했어요.',
 }
 
 function Alert({ message, action }: { message: string | null; action: AuthAction }) {
   if (!message) return null
   return <div className="fo-notice" role="alert"><strong>{FAILED_TITLE[action]}</strong><span>{message}</span></div>
 }
+
+// [유지보수] 앱을 켤 때 로고 화면을 잠깐 보여 준다. 로그인 확인이 빨리 끝나도 이 시간은 채운다.
+// 모듈 변수라 앱 안에서 홈으로 다시 올 때는 보이지 않고, 앱을 다시 켜면 다시 보인다.
+const INTRO_MS = 1800
+let introShown = false
 
 function LoadingScreen() {
   return <main className="fo-loading" role="status" aria-label="로그인 상태 확인 중">
@@ -86,6 +91,13 @@ export default function Page() {
   const running = useRef<AuthAction | null>(null)
   const [action, setAction] = useState<AuthAction>('login')
   const [available, setAvailable] = useState(true)
+  const [intro, setIntro] = useState(!introShown)
+
+  useEffect(() => {
+    if (!intro) return
+    const timer = setTimeout(() => { introShown = true; setIntro(false) }, INTRO_MS)
+    return () => clearTimeout(timer)
+  }, [intro])
 
   useEffect(() => {
     let active = true
@@ -106,7 +118,7 @@ export default function Page() {
       if (!active) return
       if (result.success) applySnapshot(result.data)
       else setSnapshot({ ...signedOut, error: result.error })
-    }).catch(() => { if (active) setSnapshot({ ...signedOut, error: { code: 'SERVICE_UNAVAILABLE', retryable: false } }) })
+    }).catch(() => { if (active) setSnapshot({ ...signedOut, error: { code: 'LOCAL_APP_ERROR', retryable: false } }) })
     return () => { active = false; unsubscribe() }
   }, [])
 
@@ -115,7 +127,7 @@ export default function Page() {
     if (!auth || busy) return
     setBusy(true); setRequestError(null); setAction('login'); running.current = 'login'
     try { const result = await auth.startGoogleLogin(); if (!result.success) setRequestError(result.error) }
-    catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
+    catch { setRequestError({ code: 'LOCAL_APP_ERROR', retryable: false }) }
     finally { setBusy(false); running.current = null }
   }
   const retry = async () => {
@@ -126,7 +138,7 @@ export default function Page() {
       const result = await auth.retrySession()
       if (result.success) setSnapshot((current) => !current || result.data.revision > current.revision ? result.data : current)
       else setRequestError(result.error)
-    } catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
+    } catch { setRequestError({ code: 'LOCAL_APP_ERROR', retryable: false }) }
     finally { setBusy(false); running.current = null }
   }
   const logout = async () => {
@@ -134,14 +146,14 @@ export default function Page() {
     if (!auth || busy) return
     setBusy(true); setRequestError(null); setAction('logout'); running.current = 'logout'
     try { const result = await auth.logout(); if (!result.success) setRequestError(result.error) }
-    catch { setRequestError({ code: 'SERVICE_UNAVAILABLE', retryable: false }) }
+    catch { setRequestError({ code: 'LOCAL_APP_ERROR', retryable: false }) }
     finally { setBusy(false); running.current = null }
   }
 
   const view = selectAuthView(snapshot)
   const shownError = requestError ?? snapshot?.error ?? null
   const message = shownError ? errorText(shownError) : null
-  if (view === 'loading') return <LoadingScreen />
+  if (view === 'loading' || intro) return <LoadingScreen />
   if (view === 'onboarding' && snapshot?.user) return <OnboardingRedirect reconnect={snapshot.status === 'LINK_REQUIRED'} />
   if (view === 'home' && snapshot?.user) return <HomeDashboard name={snapshot.user.nickname || 'FocusOn 사용자'} onLogout={() => { void logout() }} busy={busy} message={message} />
   return <LoginScreen onLogin={() => { void login() }} onRetry={() => { void retry() }} busy={busy} authenticating={snapshot?.status === 'AUTHENTICATING'} message={message} action={action} available={available} offline={view === 'offline'} />

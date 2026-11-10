@@ -1,10 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getActiveSession, unlinkThisBrowser } from './session-api'
-import { LogCopy } from './LogCopy'
-import { displayActiveMs, formatClock, keepForward, type ActiveSession } from './session-model'
-import '../pairing/pairing.css'
+import { getActiveSession, unlinkThisBrowser } from '../../shared/api/session-api'
+import { LogCopy } from '../../shared/ui/LogCopy'
+import { displayActiveMs, formatClock, keepForward, type ActiveSession } from '../../shared/lib/session-model'
+import '../../shared/styles/pairing.css'
 import './session-popup.css'
 
 // 팝업이 열려 있는 동안만 서버 상태를 다시 읽는다. 시간 확정·조작은 Desktop이 맡는다(팝업은 표시만, 결정 012).
@@ -100,7 +100,7 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
         {view.kind === 'session' && <SessionView session={view.session} activeMs={displayActiveMs(view.session, view.fetchedAt, Math.max(now, view.fetchedAt))} />}
 
         {view.kind === 'offline' && <>
-          <div className="notice is-error" role="alert"><strong>서버에 연결할 수 없어요</strong><span>인터넷 연결을 확인해 주세요.</span><span>타이머는 데스크톱 앱이 계속 재고 있어요.</span></div>
+          <div className="notice is-error" role="alert"><strong>서버에 연결할 수 없어요.</strong><span>인터넷 연결을 확인해 주세요.</span><span>타이머는 데스크톱 앱이 계속 재고 있어요.</span></div>
           {last && <div>
             <span className="label">마지막으로 확인한 남은 시간</span>
             <div className="timer-row"><span className="timer is-dim">{formatClock(last.session.targetDurationMs - last.session.accumulatedActiveMs)}</span></div>
@@ -130,7 +130,7 @@ function SessionView({ session, activeMs }: { session: ActiveSession; activeMs: 
 
   return <>
     <div className="goal">{session.goalText}</div>
-    {session.status === 'AUTO_PAUSED' && <div className="notice is-error" role="alert"><strong>집중이 자동으로 멈췄어요</strong><span>데스크톱 앱에서 확인한 뒤 직접 재개해 주세요.</span></div>}
+    {session.status === 'AUTO_PAUSED' && <div className="notice is-error" role="alert"><strong>집중이 자동으로 멈췄어요.</strong><span>데스크톱 앱에서 확인한 뒤 직접 재개해 주세요.</span></div>}
     <div className="timer-row">
       <div>
         <span className={`timer${paused ? ' is-dim' : ''}`} role="timer" aria-live="off">{formatClock(remaining)}</span>

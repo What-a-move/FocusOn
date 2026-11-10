@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { flowOf, sessionResultApi, type LearningSummary, type SessionSummary } from './session-result-api'
-import { errorText } from '../../app/lib/error-text'
-import '../onboarding/onboarding.css'
+import { flowOf, sessionResultApi, type LearningSummary, type SessionSummary } from '../../shared/api/session-result-api'
+import { errorText } from '../../shared/lib/error-text'
+import '../../shared/styles/onboarding-window.css'
 import './session-result.css'
 
 const POLL_MS = 5000
@@ -92,7 +92,7 @@ export function SessionResult() {
         {view.kind !== 'ready' ? <>
           <header className="hero is-missing">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="poki" src="/design/poki-floating-curious-v8.png" alt="궁금해하는 포키" />
+            <img className="poki" src={view.kind === 'missing' ? '/design/poki-looking.png' : '/design/poki-worried.png'} alt="" />
             <div>
               <p className="kicker">집중 리포트</p>
               <h1>{view.kind === 'missing' ? '기록을 찾을 수 없어요' : '기록을 불러오지 못했어요'}</h1>
@@ -132,7 +132,7 @@ function ResultBody({ summary, learning, shownMinutes, shownSeconds }: { summary
   return <>
     <header className="hero">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="poki" src={abandoned ? '/design/poki-floating-curious-v8.png' : '/design/poki-floating-cheer-v7.png'} alt={abandoned ? '궁금해하는 포키' : '응원하는 포키'} />
+      <img className="poki" src={abandoned ? '/design/poki-thinking.png' : '/design/poki-celebrate.png'} alt={abandoned ? '생각하는 포키' : '축하하는 포키'} />
       <div>
         <p className="kicker">집중 리포트</p>
         <h1>{abandoned ? '집중이 자동으로 끝났어요' : '이번 집중을 마쳤어요'}</h1>

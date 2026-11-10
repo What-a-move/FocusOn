@@ -1,6 +1,12 @@
 # AI API 계약 초안
 
-> 2026-10-29 내부 수신 API: `POST /internal/v1/analysis-runs`를 구현했다. 기존 Adapter 인자 request/goal/context/extractionStatus/선택 ocr를 받아 수신·검증 확인만 반환한다. 분석 실행·공개 판정 응답은 미연결이다. 이 Backend 전용 envelope는 Client 공개 요청 변경이 아니며 Backend 합의가 필요하다. [실행·입력·출력](features/fastapi-reception-REPORT.md).
+> 2026-11-03 `/health`는 실제 Qwen 임베딩 호출·응답 검증이 성공해야 HTTP 200과 `modelConnected: true`를 반환한다. 실패 시 HTTP 503, `analysisEnabled: false`, `modelConnected: false`, `reasonCode: ANALYSIS_UNAVAILABLE`을 반환한다. 고정 합성 문장을 사용하며 `/health` 성공은 전체 Backend·Desktop 연결 검증과 별개다.
+
+> 2026-11-08 베타 구현: `POST /internal/v1/analysis-runs`가 기존 내부 envelope를 검증하고 Hybrid 관련성 판정을 동기 반환한다. 별도 `/internal/v1/analysis-runs/analyze` 경로는 제거했다. 베타 candidate 모드는 미보정 후보를 decision으로 반환하며, 전체 Backend 왕복은 아직 미검증이다. [실행·입력·출력](features/fastapi-reception-REPORT.md).
+
+> Desktop OCR은 `contentPayload.text`만으로 분석할 수 있다. `ocr.confidence`와 `captureStatus`는 선택 입력이고, 누락값은 추정하거나 만들어 넣지 않는다.
+
+> 베타 응답의 `confidence`는 보정 확률이 아니다. 사용자 요청으로 AI는 0.6 미만 또는 점수 누락 시 `UNCERTAIN`을 반환한다. 모델 또는 요청 timeout은 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 처리한다.
 
 > 2026-10-26 사용자 제공 최신 화면 분석 계약 적용: 공개 화면 입력은 `metadata`/`contentPayload.text`/`goalSnapshot` 구조이며 text는 최대 2,000자다. AI 내부 실행 문맥은 Server가 제공한다. 코드 경계는 `src/api/relevance_contract.py`, 적용 범위와 미완료 연동은 [정합성 보고서](features/screen-analysis-contract-v1-REPORT.md)를 따른다. 아래 과거 제안 API를 새 공개 계약으로 자동 적용하지 않는다.
 
@@ -68,7 +74,7 @@ Extension / macOS 네이티브 모듈
 | 기능 | 공개 Server 경로 | 내부 AI 경로 | 상태 |
 | --- | --- | --- |
 | 목표 명확화 | `POST /api/v1/goals/clarify` | `POST /internal/v1/goals/clarify` | 공개 경로는 Notion 확정, 내부 경로 제안 |
-| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | Notion 기준 |
+| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | AI는 판정 응답 구현, 실제 Backend 호출·왕복은 미검증 |
 | 사용자 관련성 판정 수정·무효화 | MVP 공개 경로 없음 | Server 소유권 검증 후 후속 검토 | P1 이후 제안; Notion API 계약 변경 전 구현 금지 |
 | 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안·미구현; #29는 합성 입력 생성 코어·시연 단계다. MVP 응답은 `overview`, `keyConcepts`(name·briefExplanation·sessionEvidence 객체 최대 5개), `nextStartPrompt`만 사용 |
 
@@ -212,7 +218,7 @@ MVP의 목표 문장은 2~40자, 명확화 질문은 전체 대화에서 최대 
 
 `confidence`는 설명용 판단 지표다. 임베딩 유사도, OCR 인식 점수 또는 LLM 자기평가를 그대로 정답 확률로 반환하지 않는다. 의미와 보정 방법은 평가 후 `confidenceType`과 함께 확정한다.
 
-MVP에서 `RELATED`·`UNRELATED` 후보의 confidence가 `0.75` 미만이면 `UNCERTAIN`으로 반환한다. 목표 이탈·복귀 정책은 최종 `relevanceLabel`·`confidence`를 그대로 소비하며 OCR `qualityScore`, 중복 여부, 임베딩 유사도로 다시 계산하지 않는다. `RELATED` 복귀는 이탈 구간과 대기 알림 후보를 초기화하고 `UNCERTAIN`은 시간을 누적하지 않는다.
+MVP에서 `RELATED`·`UNRELATED` 후보의 confidence가 `0.6` 미만이면 `UNCERTAIN`으로 반환한다. 목표 이탈·복귀 정책은 최종 `relevanceLabel`·`confidence`를 그대로 소비하며 OCR `qualityScore`, 중복 여부, 임베딩 유사도로 다시 계산하지 않는다. `RELATED` 복귀는 이탈 구간과 대기 알림 후보를 초기화하고 `UNCERTAIN`은 시간을 누적하지 않는다.
 
 ### 5.4 상태 필드
 
@@ -403,7 +409,7 @@ Server가 실제 집계와 허용된 근거 Snapshot을 구성한다. Client가 
 ## PR #137 충돌 해소와 현재 구현 경계
 
 - 기준: `dev`의 공개 목표 `decision` 4종과 최신 화면 개입 `v1`, Client별 OCR·개인정보 계약을 유지한다. 2026-11-03 Notion 조회는 404였으므로 새 계약을 확정하지 않았다.
-- 이 브랜치의 목표 보조 코드는 내부 `clarityStatus` 6종을 반환하는 JEV·OpenAI·LangGraph 구현이다. 공개 4종으로의 Backend 어댑터는 아직 검증되지 않았고 내부 결과를 공개 응답에 그대로 사용할 수 없다.
+- 이 브랜치의 목표 보조 코드는 내부 `clarityStatus` 6종을 반환하는 JEV·Claude·LangGraph 구현이다. 공개 4종으로의 Backend 어댑터는 아직 검증되지 않았고 내부 결과를 공개 응답에 그대로 사용할 수 없다.
 - 내부 요청은 `requestId`, `goalText`, `conversationTurn`(0~2), 선택적 `clarificationSessionId`, `previousAnswers[{question,answer}]`다. 회차와 답변 수가 같아야 하며 답변 2개 이후 추가 질문은 생성하지 않는다.
 - 대화 ID의 발급·소유권·이력 검증, 사용자 최종 확인·목표 저장은 Backend 책임이다. AI는 전달받은 ID만 반환한다. AI HTTP 경로의 제공자 SDK 재시도는 0이며 Backend 재시도와 구분한다.
 - 질문 스트리밍·최대 2건 병렬 생성·10초 이후 기본 질문 전환과 최대 3개 후보 검수/Repair는 유지한다. Laya는 비교 전용이다.

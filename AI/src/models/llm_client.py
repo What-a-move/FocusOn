@@ -3,19 +3,18 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Callable, Protocol, TypeVar
 
-from langchain_core.exceptions import OutputParserException
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.outputs import Generation
-from langchain_openai import ChatOpenAI
-from openai import (
+from anthropic import (
+    APIConnectionError,
     APIStatusError,
-    AsyncOpenAI,
+    APIResponseValidationError,
+    AsyncAnthropic,
     AuthenticationError,
     BadRequestError,
+    NotFoundError,
     PermissionDeniedError,
 )
 from pydantic import BaseModel, ValidationError
+from pydantic_core import from_json
 
 from src.api.schemas import (
     ClarityStatus,
@@ -73,85 +72,85 @@ class GoalGenerationClient(Protocol):
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 
-class OpenAIGoalGenerationClient:
-    """OpenAI adapter restricted to schema-bound natural-language generation."""
+class ClaudeGoalGenerationClient:
+    """Claude adapter restricted to schema-bound natural-language generation."""
 
     def __init__(self, settings: Settings) -> None:
-        self._question_parallelism = settings.openai_question_parallelism
-        self._question_deadline_seconds = settings.openai_question_deadline_seconds
-        self._openai_model = settings.openai_model
-        self._openai_reasoning_effort = settings.openai_reasoning_effort
-        self._openai_max_completion_tokens = settings.openai_max_completion_tokens
-        api_key = settings.openai_api_key
-        self._response_client: AsyncOpenAI | None = None
-        self._response_api_key = api_key.get_secret_value() if api_key else None
-        self._response_timeout_seconds = settings.goal_assistance_timeout_seconds
-        self._response_max_retries = settings.goal_assistance_max_retries
-        if api_key is None:
-            self._llm = None
-        else:
-            self._llm = ChatOpenAI(
-                model=settings.openai_model,
-                api_key=api_key,
+        self._question_parallelism = settings.claude_question_parallelism
+        self._question_deadline_seconds = settings.claude_question_deadline_seconds
+        self._model = settings.claude_model
+        self._max_tokens = settings.claude_max_tokens
+        api_key = settings.anthropic_api_key
+        self._client = (
+            AsyncAnthropic(
+                api_key=api_key.get_secret_value(),
                 timeout=settings.goal_assistance_timeout_seconds,
                 max_retries=settings.goal_assistance_max_retries,
-                reasoning_effort=settings.openai_reasoning_effort,
-                verbosity=settings.openai_verbosity,
-                max_completion_tokens=settings.openai_max_completion_tokens,
             )
+            if api_key and api_key.get_secret_value().strip()
+            else None
+        )
 
     async def aclose(self) -> None:
-        if self._response_client is not None:
-            await self._response_client.close()
-            self._response_client = None
+        if self._client is not None:
+            await self._client.close()
+            self._client = None
+
+    @staticmethod
+    def _validated_output(response: Any, schema: type[SchemaT]) -> SchemaT:
+        # Refusals and truncated JSON must never reach the workflow as valid drafts.
+        if response.stop_reason != "end_turn" or response.parsed_output is None:
+            raise ValueError("Incomplete structured response")
+        return schema.model_validate(response.parsed_output)
+
+    @staticmethod
+    def _provider_error(exc: Exception) -> Exception:
+        # Do not expose provider bodies (which can contain input text or credentials).
+        if isinstance(
+            exc, (AuthenticationError, PermissionDeniedError, BadRequestError, NotFoundError)
+        ):
+            return ModelConfigurationError(
+                "Claude API Key·잔액 또는 문장 생성 모델 설정을 확인해 주세요."
+            )
+        if isinstance(exc, APIStatusError) and exc.status_code == 402:
+            return ModelConfigurationError("Claude 사용 가능 잔액 또는 결제 설정을 확인해 주세요.")
+        return ModelUnavailableError("Claude 생성 서비스를 일시적으로 사용할 수 없습니다.")
 
     async def _generate(self, schema: type[SchemaT], prompt: str) -> SchemaT:
-        if self._llm is None:
-            raise ModelConfigurationError("OpenAI API 설정을 사용할 수 없습니다.")
-        structured = self._llm.with_structured_output(schema, method="json_schema")
-        messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)]
+        if self._client is None:
+            raise ModelConfigurationError("Claude API Key 설정을 확인해 주세요.")
+        messages = [{"role": "user", "content": prompt}]
         last_schema_error: Exception | None = None
         for attempt in range(2):
             try:
-                result = await structured.ainvoke(messages)
-                if isinstance(result, schema):
-                    return result
-                return schema.model_validate(result)
-            except (ValidationError, TypeError, OutputParserException) as exc:
+                result = await self._client.messages.parse(
+                    model=self._model,
+                    max_tokens=self._max_tokens,
+                    system=SYSTEM_PROMPT,
+                    messages=messages,
+                    output_format=schema,
+                )
+                return self._validated_output(result, schema)
+            except (ValidationError, TypeError, ValueError, APIResponseValidationError) as exc:
                 last_schema_error = exc
                 if attempt == 0:
                     messages = [
                         *messages,
-                        HumanMessage(
-                            content=(
+                        {
+                            "role": "user",
+                            "content": (
                                 "The previous result failed schema validation. Repair it and "
                                 "return only an object that exactly matches the requested schema."
                             )
-                        ),
+                        },
                     ]
                     continue
-            except (TimeoutError, ConnectionError) as exc:
-                raise ModelUnavailableError(
-                    "OpenAI 생성 서비스를 사용할 수 없습니다."
-                ) from exc
-            except (AuthenticationError, PermissionDeniedError, BadRequestError) as exc:
-                raise ModelConfigurationError(
-                    "OpenAI API Key 또는 문장 생성 모델 설정이 올바르지 않습니다."
-                ) from exc
-            except APIStatusError as exc:
-                if exc.status_code == 402:
-                    raise ModelConfigurationError(
-                        "OpenAI 사용 가능 잔액이 부족하거나 결제가 중지됐습니다."
-                    ) from exc
-                raise ModelUnavailableError(
-                    "문장 생성 서비스를 사용할 수 없습니다."
-                ) from exc
-            except Exception as exc:  # provider exception types vary by SDK version
-                raise ModelUnavailableError(
-                    "OpenAI 생성 서비스를 사용할 수 없습니다."
-                ) from exc
+            except (APIStatusError, APIConnectionError, TimeoutError, ConnectionError) as exc:
+                raise self._provider_error(exc) from exc
+            except Exception as exc:
+                raise ModelUnavailableError("Claude 생성 서비스를 사용할 수 없습니다.") from exc
         raise InvalidModelResponseError(
-            "OpenAI 구조화 응답이 올바르지 않습니다."
+            "Claude 구조화 응답을 확인하지 못했습니다."
         ) from last_schema_error
 
     async def generate_candidates(
@@ -164,68 +163,41 @@ class OpenAIGoalGenerationClient:
     async def _stream_question(
         self, prompt: str, on_partial: Callable[[str], None]
     ) -> ClarificationQuestion:
-        if self._response_client is None and self._response_api_key is None:
-            raise ModelConfigurationError("OpenAI API 설정을 사용할 수 없습니다.")
-        if self._response_client is None:
-            self._response_client = AsyncOpenAI(
-                api_key=self._response_api_key,
-                timeout=self._response_timeout_seconds,
-                max_retries=self._response_max_retries,
-            )
-        parser = JsonOutputParser()
+        if self._client is None:
+            raise ModelConfigurationError("Claude API Key 설정을 확인해 주세요.")
         raw_text = ""
         last_preview = ""
         try:
-            async with self._response_client.responses.stream(
-                model=self._openai_model,
-                instructions=SYSTEM_PROMPT,
-                input=prompt,
-                text_format=ClarificationQuestion,
-                reasoning={"effort": self._openai_reasoning_effort},
-                max_output_tokens=self._openai_max_completion_tokens,
+            async with self._client.messages.stream(
+                model=self._model,
+                max_tokens=self._max_tokens,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+                output_format=ClarificationQuestion,
             ) as stream:
                 async for event in stream:
-                    if event.type != "response.output_text.delta":
+                    if event.type != "content_block_delta" or event.delta.type != "text_delta":
                         continue
-                    raw_text += event.delta
+                    raw_text += event.delta.text
                     try:
-                        partial = parser.parse_result(
-                            [Generation(text=raw_text)], partial=True
-                        )
-                    except (ValueError, OutputParserException):
+                        partial = from_json(raw_text, allow_partial="trailing-strings")
+                    except ValueError:
                         continue
                     preview = partial.get("text") if isinstance(partial, dict) else None
                     if isinstance(preview, str) and preview and preview != last_preview:
                         on_partial(preview)
                         last_preview = preview
-                response = await stream.get_final_response()
-            question = response.output_parsed
-            if isinstance(question, ClarificationQuestion):
-                return question
-            return ClarificationQuestion.model_validate(question)
-        except (ValidationError, TypeError, ValueError, AttributeError) as exc:
+                response = await stream.get_final_message()
+            return self._validated_output(response, ClarificationQuestion)
+        except (ValidationError, TypeError, ValueError, AttributeError, APIResponseValidationError) as exc:
             raise InvalidModelResponseError(
-                "OpenAI 구조화 응답이 올바르지 않습니다."
+                "Claude 구조화 응답을 확인하지 못했습니다."
             ) from exc
-        except (TimeoutError, ConnectionError) as exc:
-            raise ModelUnavailableError(
-                "OpenAI 생성 서비스를 사용할 수 없습니다."
-            ) from exc
-        except (AuthenticationError, PermissionDeniedError, BadRequestError) as exc:
-            raise ModelConfigurationError(
-                "OpenAI API Key 또는 문장 생성 모델 설정이 올바르지 않습니다."
-            ) from exc
-        except APIStatusError as exc:
-            if exc.status_code == 402:
-                raise ModelConfigurationError(
-                    "OpenAI 사용 가능 잔액이 부족하거나 결제가 중지됐습니다."
-                ) from exc
-            raise ModelUnavailableError(
-                "OpenAI 생성 서비스를 사용할 수 없습니다."
-            ) from exc
+        except (APIStatusError, APIConnectionError, TimeoutError, ConnectionError) as exc:
+            raise self._provider_error(exc) from exc
         except Exception as exc:
             raise ModelUnavailableError(
-                "OpenAI 생성 서비스를 사용할 수 없습니다."
+                "Claude 생성 서비스를 사용할 수 없습니다."
             ) from exc
 
     @staticmethod
@@ -271,8 +243,8 @@ class OpenAIGoalGenerationClient:
         status: ClarityStatus,
         on_partial: Callable[[str], None] | None = None,
     ) -> ClarificationQuestion:
-        if self._llm is None:
-            raise ModelConfigurationError("OpenAI API 설정을 사용할 수 없습니다.")
+        if self._client is None:
+            raise ModelConfigurationError("Claude API Key 설정을 확인해 주세요.")
 
         prompt = question_prompt(request, status)
         previous_questions = {

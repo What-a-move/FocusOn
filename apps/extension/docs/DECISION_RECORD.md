@@ -324,3 +324,13 @@ Worker 유휴 종료는 30초 뒤라 15초 타이머는 대부분 그대로 실�
 - 개발용 Extension ID는 폴더 경로마다 달라 서버 허용 목록에 적을 수 없다. 매니페스트 `key`(공개키)로 `fbhlmioghblalhmcokcpoapjpnjccbde`에 고정한다. 비밀키는 저장소에 두지 않는다(압축 해제 로드에는 필요 없음). 웹스토어 배포본은 `key`를 빼고 스토어 ID를 서버 허용 목록에 추가한다.
 - 계정당 활성 Chrome Extension은 1개다. 다른 설치에서 새로 연결하면 서버가 이전 연결을 해제한다(Notion `인증 · 토큰 · 디바이스 정책` 6.2). 이전 Extension은 `LINK_TOKEN_REVOKED`로 재연결 화면을 보인다(기존 처리).
 - 영향받는 파일: `public/manifest.json`, `features/session/SiteAccessStep.tsx`, `extension/background/index.ts`(권한 해제 알림)
+
+## 결정 018 - 폴더 구조는 가벼운 FSD 3층(app → features → shared)
+
+- 결정일: 2026-11-09 / 상태: 확정 / Issue #183. Desktop 결정 037과 같은 규칙이다.
+- `pairing`과 `session`이 서로 가져다 쓰고, background도 `features/`를 직접 가져다 써서 둘을 공용 계층으로 옮겼다.
+  - `shared/api`: `api-client`, `extension-auth`, `pairing-api`, `session-api`
+  - `shared/lib`: `logger`, `session-model` / `shared/ui`: `LogCopy` / `shared/styles`: `pairing.css`
+- 연결·사이트 허용·세션 화면을 고르는 `Popup`은 두 기능을 조립하므로 `app/page.tsx`로 합쳤다.
+- `shared/`는 팝업 화면 공통, `extension/shared/`는 background·content 공통으로 나눈다.
+- ESLint `no-restricted-imports`로 `features/` 사이, `shared`·`extension` → `features` import를 막는다.

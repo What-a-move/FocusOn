@@ -1,0 +1,27 @@
+/* 사이드바 화면 공용 설정 틀 — .fo-settings 토큰·애니메이션·제목·뒤로 링크·토스트. 설정·기록·노트가 같이 쓴다. */
+.fo-settings {
+  --fo-success: #2f8f5b; --fo-success-soft: #eefaf3; --fo-dim: #cfcfcf; --fo-scrim: rgba(23, 23, 23, .35);
+  --fo-danger-strong: #d92d20; --fo-pop: cubic-bezier(.22, 1, .36, 1);
+  min-width: 0; overflow-y: auto;
+}
+@media (prefers-color-scheme: dark) {
+  .fo-settings { --fo-success: #5fcf94; --fo-success-soft: #142a1e; --fo-dim: #404046; --fo-scrim: rgba(0, 0, 0, .6); --fo-danger-strong: #e5484d; }
+}
+@keyframes fo-settings-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fo-settings-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes fo-settings-fade { from { opacity: 0; } to { opacity: 1; } }
+.fo-settings h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
+.fo-back-link:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+
+/* 분석 제외 목록 */
+
+.fo-back-link { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; color: var(--fo-muted); font-size: 15px; font-weight: 600; text-decoration: none; }
+.fo-back-link:hover { color: var(--fo-ink); }
+.fo-toast { position: fixed; bottom: 40px; left: calc(50% + 116px); display: inline-flex; align-items: center; gap: 14px; width: max-content; max-width: min(520px, calc(100vw - 280px)); padding: 10px 18px; border-radius: 12px; background: var(--fo-ink); color: var(--fo-surface); font-size: 14px; font-weight: 600; opacity: 0; transform: translate(-50%, 20px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+.fo-toast.is-visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.fo-toast:has(button) { padding-right: 10px; }
+.fo-toast button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--fo-surface) 16%, transparent); color: var(--fo-surface); font-size: 13px; font-weight: 700; cursor: pointer; }
+@media (max-width: 900px) { .fo-toast { left: calc(50% + 38px); } }
+@media (prefers-reduced-motion: reduce) {
+  .fo-settings *, .fo-settings *::before, .fo-settings *::after { animation: none !important; transition: none !important; }
+}

@@ -1,10 +1,10 @@
 // Service Worker 진입점: Chrome 이벤트를 TabAnalyzer에 잇는다 (화면 분석 3단계, 결정 014).
 // [주의] Listener는 최상위에서 바로 등록한다. Worker는 언제든 꺼졌다 다시 켜질 수 있다.
-import { resolveApiBase } from '../../features/pairing/pairing-api'
-import { chromeTokenStore, getDeviceId } from '../../features/pairing/extension-auth'
-import { createApiClient } from '../../features/session/api-client'
-import { chromeLogStore, createLogger } from '../../features/session/logger'
-import { getActiveSession } from '../../features/session/session-api'
+import { resolveApiBase } from '../../shared/api/pairing-api'
+import { chromeTokenStore, getDeviceId } from '../../shared/api/extension-auth'
+import { createApiClient } from '../../shared/api/api-client'
+import { chromeLogStore, createLogger } from '../../shared/lib/logger'
+import { getActiveSession } from '../../shared/api/session-api'
 import { inspectPage } from '../content/inspect-page'
 import { SITE_ORIGINS } from '../shared/site-access'
 import { TabAnalyzer, type Tracking } from './tab-analyzer'

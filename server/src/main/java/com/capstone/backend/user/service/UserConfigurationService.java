@@ -5,6 +5,7 @@ import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.intervention.service.RequiredConsentWithdrawal;
 import com.capstone.backend.user.dto.UserConfigurationDtos.ConsentResponse;
 import com.capstone.backend.user.dto.UserConfigurationDtos.ConsentsResponse;
 import com.capstone.backend.user.dto.UserConfigurationDtos.ExcludedDomainsResponse;
@@ -29,6 +30,7 @@ import java.util.Locale;
 import java.util.Set;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,22 +46,25 @@ public class UserConfigurationService {
   private final UserFocusSettingsRepository focusSettings;
   private final AnalysisExcludedDomainRepository excludedDomains;
   private final Clock clock;
+  private final ApplicationEventPublisher events;
 
   /** 사용자 설정 저장소를 연결한다. */
   @Autowired
   public UserConfigurationService(UserRepository users, UserConsentRepository consents,
-      UserFocusSettingsRepository focusSettings, AnalysisExcludedDomainRepository excludedDomains) {
-    this(users, consents, focusSettings, excludedDomains, Clock.systemUTC());
+      UserFocusSettingsRepository focusSettings, AnalysisExcludedDomainRepository excludedDomains,
+      ApplicationEventPublisher events) {
+    this(users, consents, focusSettings, excludedDomains, Clock.systemUTC(), events);
   }
 
   UserConfigurationService(UserRepository users, UserConsentRepository consents,
       UserFocusSettingsRepository focusSettings, AnalysisExcludedDomainRepository excludedDomains,
-      Clock clock) {
+      Clock clock, ApplicationEventPublisher events) {
     this.users = users;
     this.consents = consents;
     this.focusSettings = focusSettings;
     this.excludedDomains = excludedDomains;
     this.clock = clock;
+    this.events = events;
   }
 
   /** 현재 인증 사용자의 최소 공개 정보를 반환한다. */
@@ -128,6 +133,11 @@ public class UserConfigurationService {
       consent.apply(request.isGranted(), request.consentVersion(), request.consentSource(), now);
     }
     UserConsentEntity saved = consents.save(consent);
+    if (!request.isGranted() && (type == UserConsentEntity.ConsentType.TERMS_OF_SERVICE
+        || type == UserConsentEntity.ConsentType.PRIVACY_POLICY
+        || type == UserConsentEntity.ConsentType.SCREEN_ANALYSIS)) {
+      events.publishEvent(new RequiredConsentWithdrawal(user.getId(), now));
+    }
     return new ConsentResponse(saved.getConsentType(), saved.isGranted(), saved.getConsentVersion(),
         saved.getGrantedAt(), saved.getWithdrawnAt());
   }

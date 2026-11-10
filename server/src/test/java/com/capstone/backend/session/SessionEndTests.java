@@ -96,7 +96,7 @@ class SessionEndTests {
   }
 
   @org.junit.jupiter.params.ParameterizedTest
-  @org.junit.jupiter.params.provider.ValueSource(strings = {"ENDED", "ABANDONED", "ENDING"})
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"ENDED", "ENDING"})
   void terminalAndInProgressEndStatesCannotBeChanged(String state) throws Exception {
     var fixture = started();
     jdbc.update("UPDATE learning_sessions SET status = ? WHERE id = ?",
@@ -106,6 +106,63 @@ class SessionEndTests {
         .andExpect(jsonPath("$.code").value("SESSION_STATE_INVALID"));
     org.junit.jupiter.api.Assertions.assertEquals(state,
         sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getStatus().name());
+  }
+
+  /** 서버가 이미 무신호로 끝낸 세션은 heartbeat와 같은 코드로 알리고 되살리지 않는다. */
+  @Test
+  void endingAbandonedSessionReturnsAbandonedAndKeepsServerState() throws Exception {
+    var fixture = started();
+    jdbc.update("UPDATE learning_sessions SET status='ABANDONED',end_reason='HEARTBEAT_TIMEOUT',"
+        + "ended_at=now(),accumulated_active_ms=4321,last_resumed_at=NULL WHERE id=?",
+        Long.valueOf(fixture.id()));
+    long version = sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getVersion();
+    // 오래된 version으로 누른 종료도 같은 안내를 받는다.
+    for (long sent : new long[] {version, fixture.version() + 7}) {
+      end(fixture, UUID.randomUUID().toString(), sent).andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("SESSION_ABANDONED"))
+          .andExpect(jsonPath("$.retryable").value(false))
+          .andExpect(jsonPath("$.details.currentStatus").value("ABANDONED"))
+          .andExpect(jsonPath("$.details.endReason").value("HEARTBEAT_TIMEOUT"));
+    }
+    var stored = sessions.findById(Long.valueOf(fixture.id())).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals("ABANDONED", stored.getStatus().name());
+    org.junit.jupiter.api.Assertions.assertEquals("HEARTBEAT_TIMEOUT", stored.getEndReason());
+    org.junit.jupiter.api.Assertions.assertEquals(4321, stored.getAccumulatedActiveMs());
+    org.junit.jupiter.api.Assertions.assertEquals(version, stored.getVersion());
+  }
+
+  /** heartbeat가 저장한 누적값 이상으로만 종료할 수 있고 정상 값은 그 위로 확정된다. */
+  @Test
+  void endAfterHeartbeatKeepsSavedProgressAndAcceptsLaterFinalValue() throws Exception {
+    var fixture = started();
+    java.time.Instant resumed = java.time.Instant.now().minusSeconds(60);
+    jdbc.update("UPDATE learning_sessions SET started_at=?,last_resumed_at=? WHERE id=?",
+        java.sql.Timestamp.from(resumed), java.sql.Timestamp.from(resumed),
+        Long.valueOf(fixture.id()));
+    mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/heartbeats")
+            .header("Authorization", fixture.token()).header("X-Device-Id", fixture.deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"clientObservedAt\":\"" + java.time.Instant.now()
+                + "\",\"accumulatedActiveMs\":30000}"))
+        .andExpect(status().isOk());
+    var saved = sessions.findById(Long.valueOf(fixture.id())).orElseThrow();
+    org.junit.jupiter.api.Assertions.assertEquals(30000, saved.getAccumulatedActiveMs());
+    long version = saved.getVersion();
+    // heartbeat가 이미 저장한 값보다 작은 최종값은 상태를 바꾸지 않고 거절한다.
+    mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
+            .header("Authorization", fixture.token())
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"accumulatedActiveMs\":29999}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    org.junit.jupiter.api.Assertions.assertEquals("RUNNING",
+        sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getStatus().name());
+    mvc.perform(post("/api/v1/sessions/" + fixture.id() + "/end")
+            .header("Authorization", fixture.token())
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"accumulatedActiveMs\":58000}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("ENDED"))
+        .andExpect(jsonPath("$.data.accumulatedActiveMs").value(58000));
   }
 
   @Test
@@ -296,10 +353,11 @@ class SessionEndTests {
             .contentType(MediaType.APPLICATION_JSON).content(request(goalId, 1800000)))
         .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
     var data = json.readTree(response).path("data");
-    return new Fixture(data.path("sessionId").asText(), data.path("version").asLong(), token);
+    return new Fixture(data.path("sessionId").asText(), data.path("version").asLong(), token,
+        owner.device().deviceId());
   }
 
-  private record Fixture(String id, long version, String token) {}
+  private record Fixture(String id, long version, String token, String deviceId) {}
 
   private String request(String goalId, long duration) {
     return "{\"goalId\":\"" + goalId + "\",\"targetDurationMs\":" + duration

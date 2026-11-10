@@ -722,3 +722,32 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
   - 창 폭은 720px이고, 소제목은 왼쪽·내용은 오른쪽에 둔다. 버전은 표시하지 않는다(결정 034의 버전 불일치 문제는 표시를 없애 정리).
   - 내용은 Notion `개인정보 · 동의 · 데이터 보관 정책`(REVIEW)에 맞춰 저장하지 않는 것, 보지 않는 화면, 기기 연결·백업 보관 기간을 채웠다. 출시 전 법률 검토로 바뀔 수 있다.
 - 영향받는 파일: `electron/main/google-oauth.cts`, `oauth-page.cts`, `oauth-page-poki.cts`, `features/onboarding/consent-docs.ts`, `ConsentDocument.tsx`, `consent-doc.css`, `PermissionsStep.tsx`, `features/settings/AccountPanels.tsx`
+
+## 결정 037 - 폴더 구조는 가벼운 FSD 3층(app → features → shared)
+
+- 결정일: 2026-11-09 / 상태: 확정 / Issue #183.
+- 기능 폴더끼리 서로 가져다 쓰던 16곳을 없애려고 FSD의 의존 방향 규칙만 가져왔다. 6층 전체는 쓰지 않는다.
+  - 기능 폴더 파일이 2~12개라 층을 더 나누면 층마다 파일이 한두 개뿐이다.
+  - Next는 맨 위 `pages/`를 Pages Router로 읽어 FSD `pages` 층과 이름이 겹친다.
+  - `electron/`·`native/`는 화면 코드가 아니라 FSD 밖에 둔다.
+- 여러 화면이 쓰는 것만 `shared/{api,ui,lib,styles}`로 옮긴다. 한 화면만 쓰는 코드는 기능 폴더에 둔다.
+- ESLint `no-restricted-imports`로 `features/` 사이, `shared`·`electron` → `features` import를 막는다.
+- CSS 3개(`dashboard`·`settings`·`onboarding`)는 화면이 바뀌지 않게 파일째 `shared/styles/`로 옮겼다. 공용·전용 규칙 분리는 후속.
+- 영향받는 파일: `apps/docs/FOLDER_STRUCTURE.md`, `eslint.config.mjs`, `shared/**`, 공용 파일을 쓰던 `features/**`·`app/page.tsx`, `tests/electron/auth-view.test.cjs`
+
+## 결정 038 - 시연 모드: 서버에 없는 API만 Main에서 가짜 응답으로 채운다
+
+- 결정일: 2026-11-09 / 상태: 확정 / Issue #189.
+- 시연 영상(로그인 → 온보딩 → 목표 → 포키 알림 → 집중 리포트)을 찍어야 하는데 서버에 알림(#182)·세션 종료(#164 미병합)·리포트·기록 API가 아직 없다.
+- `pnpm dev:demo`(`FOCUSON_DEMO=1`)로 실행할 때만 `demo-mode.cts`가 `authorizedRequest`를 감싼다. `app.isPackaged`면 환경 변수가 있어도 켜지 않는다.
+  - 화면은 빌드한 결과(`FOCUSON_RENDERER_MODE=production`)를 써서 Next 개발 표시가 영상에 나오지 않게 한다.
+- 단축키 ⌘⇧D를 누르면 진행 중 세션에 이탈 알림(OFF_TASK) 하나가 생기고, 10초 조회를 기다리지 않고 바로 포키가 뜬다.
+- 세션 종료·결과 요약·집중 달력·하루 기록은 실제 서버를 먼저 부르고, 실패할 때만 이 실행에서 기록한 세션으로 답한다. 결과 요약의 다른 활동 시간은 알림 1회당 2분(최대 20%)으로 그린 시연용 값이다.
+- 학습 정리는 가짜로 만들지 않는다. 서버에 없으면 리포트에 "학습 정리 상태를 확인하지 못했어요"로 보인다.
+- 서버 주소는 바꾸지 않는다. 로그인·온보딩·목표·세션 시작·일시정지·화면 분석은 실제 서버로 간다.
+- 한계: #164 병합 전에는 종료가 앱 안에서만 처리돼 서버 세션이 잠시 진행 중으로 남는다.
+  - 끝내면 앱은 heartbeat를 보내지 않는다. 서버(#178)는 신호가 180초 끊긴 세션을 `ABANDONED`로 닫으므로, **약 3분 뒤** 다시 찍을 수 있다.
+  - 그 3분 안에 새 집중을 시작하면 서버가 막을 수 있고, 앱을 다시 켜면 그 세션이 진행 중으로 복구될 수 있다(실제 재촬영으로는 아직 확인하지 않음).
+- 서버 API가 모두 생기면 `demo-mode.cts`와 `dev:demo`를 지운다.
+- 영향받는 파일: `electron/main/demo-mode.cts`, `electron/main/index.cts`, `package.json`, `tests/electron/demo-mode.test.cjs`
+

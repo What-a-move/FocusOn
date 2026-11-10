@@ -3,18 +3,21 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CHANNELS, LEVELS, PREVIEW } from '../session/SessionSetup'
-import { sessionApi, type NotificationChannel } from '../session/session-api'
-import { onboardingApi } from '../onboarding/onboarding-api'
+// Pretendard 웹 글꼴(@font-face)이 여기 있다. 예전엔 온보딩·집중 준비 코드를 거쳐 함께 불려 왔다(#183).
+import '../../shared/styles/onboarding-window.css'
+import { CHANNELS, LEVELS, PREVIEW } from '../../shared/lib/intervention-options'
+import { sessionApi, type NotificationChannel } from '../../shared/api/session-api'
+import { onboardingApi } from '../../shared/api/onboarding-api'
 import { AccountPanel, DevicesPanel } from './AccountPanels'
-import { LoadError, SettingsShell, ToastView, failText, useToast } from './SettingsShell'
+import { LoadError, SettingsShell, ToastView, failText, useToast } from '../../shared/ui/SettingsShell'
+import './settings.css'
 import { settingsApi, type FocusSettings, type ThemeSource } from './settings-api'
 
 const TABS = [
-  { id: 'account', label: '계정', poki: 'poki-floating-cheer-v7.png' },
+  { id: 'account', label: '계정', poki: 'poki-celebrate.png' },
   { id: 'focus', label: '집중', poki: 'poki-floating-master-v3.png' },
-  { id: 'analysis', label: '분석·권한', poki: 'poki-floating-curious-v8.png' },
-  { id: 'devices', label: '기기 연결', poki: 'poki-floating-logo-base-v1.png' },
+  { id: 'analysis', label: '분석·권한', poki: 'poki-key.png' },
+  { id: 'devices', label: '기기 연결', poki: 'poki-plug.png' },
   { id: 'general', label: '화면', poki: 'poki-floating-sleepy-v7.png' },
 ] as const
 type TabId = (typeof TABS)[number]['id']
@@ -162,7 +165,7 @@ const OFF = <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWid
  */
 function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
   const [screen, setScreen] = useState<boolean | null>(null)
-  const [screenStep, setScreenStep] = useState<'idle' | 'opened' | 'stuck'>('idle')
+  const [screenStep, setScreenStep] = useState<'idle' | 'opened'>('idle')
   const [notification, setNotification] = useState<boolean | null>(null)
   const [notificationSent, setNotificationSent] = useState(false)
 
@@ -187,16 +190,20 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
       setScreenStep('opened')
       return
     }
-    const granted = await check()
-    setScreenStep(granted ? 'idle' : 'stuck')
-    if (granted) showToast({ text: '화면 기록 권한을 확인했어요' })
+    // macOS는 화면 기록을 켜도 앱을 다시 켜야 허용으로 알려 준다. 이미 반영됐으면 다시 켜지 않는다.
+    if (await check()) {
+      setScreenStep('idle')
+      return showToast({ text: '화면 기록 권한을 확인했어요' })
+    }
+    const result = await onboardingApi.relaunchApp()
+    if (!result.success) showToast({ text: '앱을 다시 열지 못했어요. 직접 종료한 뒤 다시 열어 주세요.' })
   }
 
   async function notificationAction() {
     if (!notificationSent) {
       const result = await sessionApi.sendTestNotification()
-      if (!result.success) return showToast({ text: failText(result.error.code, '시험 알림을 보내지') })
-      if (!result.data.shown) return showToast({ text: '시험 알림을 보내지 못했어요. 시스템 설정 › 알림에서 FocusOn을 켜 주세요.' })
+      if (!result.success) return showToast({ text: '시험 알림을 보내지 못했어요. 앱을 다시 열어 주세요.' })
+      if (!result.data.shown) return showToast({ text: '알림이 꺼져 있어요. 시스템 설정 › 알림에서 FocusOn을 켜 주세요.' })
       setNotificationSent(true)
       return
     }
@@ -215,11 +222,11 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
         <strong>필수 권한</strong>
         {!unknown && <span className={`fo-badge ${off ? 'bad' : 'ok'}`}>{off ? `${off}개 꺼져 있음` : '모두 허용됨'}</span>}
       </div>
-      {off > 0 && <div className="fo-notice is-info fo-perm-alert" role="status"><strong>필수 권한을 켜야 집중을 시작할 수 있어요.</strong><span>아래에서 꺼진 권한의 버튼을 눌러 주세요.</span></div>}
+      {off > 0 && <p className="fo-perm-alert" role="alert">필수 권한을 켜야 집중을 시작할 수 있어요.</p>}
       <div className="fo-perm-list">
         <PermissionRow name="화면 기록" desc="필요할 때만 화면 글자 읽기" granted={screen}
-          error={screenStep === 'stuck' ? '아직 꺼져 있어요. 켰다면 앱을 다시 열어 주세요.' : null}
-          action={screen === false ? { label: screenStep === 'idle' ? '시스템 설정 열기' : '다시 확인', run: screenAction } : null} />
+          error={screenStep === 'opened' ? '켠 뒤 ‘다시 열기’를 눌러 주세요.' : null}
+          action={screen === false ? { label: screenStep === 'idle' ? '시스템 설정 열기' : '다시 열기', run: screenAction } : null} />
         <PermissionRow name="알림" desc="흐트러졌을 때 알려 주기" granted={notification}
           error={notificationSent ? '알림이 보였다면 ‘보였어요’를 눌러 주세요.' : null}
           action={notification === false ? { label: notificationSent ? '보였어요' : '시험 알림 보내기', run: notificationAction } : null} />

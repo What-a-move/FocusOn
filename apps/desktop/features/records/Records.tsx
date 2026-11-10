@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { dashboardApi, dayKey, monthKey, type DailySession } from '../dashboard/dashboard-api'
+import { dashboardApi, dayKey, monthKey, type DailySession } from '../../shared/api/dashboard-api'
 import type { DailyReport } from '../../electron/shared/report-contract.cjs'
-import { LoadError, SettingsShell } from '../settings/SettingsShell'
+import { LoadError, SettingsShell } from '../../shared/ui/SettingsShell'
 import './records.css'
 
 // 디자인 원본: FocusOn-design/records.html. 시안의 `기록 시안 보기`·`예시` 태그, 하루 흐름 막대, 회차 `n회 연장`은
@@ -152,7 +152,7 @@ function DayRecords({ date, today, report }: { date: string; today: string; repo
       <span className="fo-day-count">{sessions.filter((item) => item.endedAt).length}회</span>
     </div>
     {sessions.length === 0 ? <div className="fo-records-empty">
-      <Image src="/design/poki-floating-sleepy-v7.png" alt="졸고 있는 포키" width={240} height={240} />
+      <Image src="/design/poki-looking.png" alt="두리번거리는 포키" width={240} height={240} />
       <h2>이날은 기록이 없어요</h2>
       <Link className="fo-button fo-button-primary" href="/goal/">집중 시작하기</Link>
     </div> : <ol className="fo-timeline" aria-label="이날의 집중 회차">

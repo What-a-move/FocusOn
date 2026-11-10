@@ -28,13 +28,14 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("TYPESAFE_MODEL", "TYPESAFE_DEFAULT_MODEL"),
     )
     typesafe_log_level: str = "warning"
-    openai_api_key: SecretStr | None = None
-    openai_model: str = "gpt-5-mini"
-    openai_reasoning_effort: str = "minimal"
-    openai_verbosity: str = "low"
-    openai_max_completion_tokens: int = Field(default=600, ge=100, le=2_000)
-    openai_question_parallelism: int = Field(default=2, ge=1, le=2)
-    openai_question_deadline_seconds: float = Field(default=10.0, ge=10)
+    anthropic_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("ANTHROPIC_API_KEY", "CLAUDE_API_KEY", "anthropic_api_key"),
+    )
+    claude_model: str = "claude-haiku-4-5-20251001"
+    claude_max_tokens: int = Field(default=1_200, ge=100, le=4_000)
+    claude_question_parallelism: int = Field(default=2, ge=1, le=2)
+    claude_question_deadline_seconds: float = Field(default=10.0, ge=10)
 
     laya_comparison_enabled: bool = True
     laya_comparison_model: str = "convaiinnovations/laya-multilingual"

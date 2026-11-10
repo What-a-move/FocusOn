@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createApiClient } from '../features/session/api-client.ts'
-import { createLogger, MAX_LINES, sanitize } from '../features/session/logger.ts'
+import { createApiClient } from '../shared/api/api-client.ts'
+import { createLogger, MAX_LINES, sanitize } from '../shared/lib/logger.ts'
 
 const NOW = Date.parse('2026-10-29T00:00:00Z')
 type Line = Record<string, unknown>

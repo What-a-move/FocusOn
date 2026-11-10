@@ -5,6 +5,19 @@
 
 ## 담당 영역
 
+### 2026-11-08 베타 화면 판정 현재 상태
+
+- AI 경로는 `POST /internal/v1/analysis-runs` 하나다. 입력 검증 뒤 Kiwi + Qwen Hybrid 판정을 동기 반환하고 과거 `/internal/v1/analysis-runs/analyze`는 제거했다.
+- `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서는 미보정 후보 점수가 0.6 이상일 때 후보를 `decision`으로 반환하고 `promptVersion`에 `-uncalibrated`를 표시한다. 낮거나 없는 점수는 `UNCERTAIN`이다. 이 점수는 보정된 확률이 아니다. `AI/.env.example`은 베타 테스트를 위해 candidate를 명시한다.
+- 앱·탭 메타데이터의 `UNRELATED`는 `UNCERTAIN`으로 유지하고 글자 기반 보완을 요청한다. 모델 실패는 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`; 제외·민감 입력은 모델 호출 전 409 차단이다.
+- Desktop OCR은 `contentPayload.text`만으로 처리하며 `ocr.confidence`·`captureStatus` 누락 시 값을 만들어 넣지 않는다.
+- `/health`는 실제 임베딩 요청과 2560차원 검증 결과를 알린다. 최신 dev의 Java Backend에는 AI API 호출 코드가 있지만 실제 모델·제품 알림 왕복은 미검증이다. 사용자 전달에 따라 AI는 0.6을 사용하며, 현재 dev Backend 코드는 0.75이므로 Backend 담당자의 변경과 통합 검증이 필요하다.
+- 학교 Ollama의 합성 HTTP 40건 p95는 2.32초였고, DOM 20건 p95는 3.76초였다. DOM 경로의 3초 목표는 미달이며 동시 부하 및 제품 전체 성능은 검증되지 않았다. 실측 범위는 [SETUP 보고서](features/school-ollama-embedding-SETUP.md)를 따른다.
+
+- 실제 HTTP FastAPI→Tailscale→Qwen 순차 합성 40건에서 p95 2.32초, 최대 4.04초, 3초 초과 2건이었다. DOM 20건 p95는 3.76초로 목표 미달이다. 측정 범위·제한은 학교 Ollama SETUP의 실측 절을 따른다.
+
+- 2026-11-03 사용자 요청으로 AI용 Docker 배포 구성과 이미지를 제거했다. 배포 백엔드 호스트에서 학교 PC로 Tailscale 연결을 설정하고 실제 FastAPI 실행 위치와 호출 경로를 확인해야 한다.
+
 - 학습 목표와 화면·페이지 정보의 관련성 판단
 - OCR·페이지 텍스트 정제와 입력 품질 판단
 - 페이지 이동·체류 시간을 이용한 목표 이탈 및 학습 흐름 분석
@@ -24,21 +37,26 @@
 
 ### 목표 보조 #12 브랜치 구현 이력
 
+- 2026-11-03 목표 보조 생성 제공자를 Claude로 변경했다(GA-038). 로컬 `CLAUDE_API_KEY`를 그대로 인식하고 Streamlit·FastAPI가 같은 어댑터를 사용한다. 합성 목표의 질문 스트리밍·프로필·추천 실제 호출은 모두 Schema 검증을 통과했다. JEV 판단값·Router·제품 API 계약은 변경하지 않았다. 기존 ChatOpenAI의 자동 생성 trace는 제거됐고 JEV·Laya 비교 trace는 유지한다.
+- Claude 전환 검증: what-a-move에서 `pytest AI/tests -q --ignore=AI/tests/openai_test.py` 87개 통과(6.35초), 기존 Offline Router 15건 오류 0건. tracing을 끄고 실행했다. 미추적 `openai_test.py`는 import 시 외부 호출을 하므로 사용자 파일을 유지한 채 제외했으며 커밋하지 않는다.
+- PR #160 충돌 해소: 최신 dev의 관련성 라우트와 버전 고정 의존성을 유지하고 생성 어댑터 교체 위치를 `src/api/goal_routes.py`로 옮겼다. 학습 정리의 별도 OpenAI 실험과 `demos/requirements.txt`는 변경하지 않았다.
+- dev 동기화 후 최종 회귀: 같은 명령으로 **405 passed, 27 subtests passed(14.70초)**, Offline Router 15건 오류 0건. 처음 확장 실행은 로컬 Kiwi 의존성 미설치로 실패했으며 dev에 명시된 `kiwipiepy==0.23.1` 설치 뒤 전체 통과했다. PR은 [#160](https://github.com/What-a-move/FocusOn/pull/160)이며 dev 대비 수정은 AI 19개 파일로 제한했다.
+
 - 이번 필드 정합성 변경은 `LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false LANGSMITH_TRACE_RAW_GOAL_TEXT=false PYENV_VERSION=what-a-move PYTHONPATH=AI pyenv exec python -m pytest AI/tests -q`로 73개 통과를 확인했다. 모델은 Fake/Mock으로 검증했고 Backend·실제 모델 통합은 미검증이다. 최초 실행에서 로컬 `.env`의 tracing 설정으로 LangSmith 연결 실패 로그가 발생해 이후 검증에서는 tracing을 껐다. `.env` 값은 변경하지 않았다.
 - 2026-10-25 #12 연동 필드: AI 내부 요청이 `goalText`, `conversationTurn`, `clarificationSessionId?`, `previousAnswers[{question,answer}]`를 수신·직렬화하고 정상 응답에 대화 ID를 그대로 반환한다. 추적용 내부 `requestId`와 이행용 이전 입력 별칭은 유지한다. 회차 0~2와 답변 수 일치·최대 2개를 검사하며 두 답변 뒤 직접 질문·Repair fallback 질문 모두 추가 생성하지 않는다. AI HTTP 경로의 SDK 재시도는 0이다. Backend의 공개 경로·ID 발급/소유권·목표 생성 연결·1초→3초 재시도는 미구현이며 해당 담당자의 후속 작업이다. 이번 기준은 사용자가 전달한 팀 메시지이며 Notion 연결 도구는 404로 최신 본문을 재확인하지 못했다.
-- Issue #12에서 JEV 판단, OpenAI 구조화 생성, LangGraph 분기·1회 Repair를 결합한 학습 목표 설정 보조를 구현했다.
+- Issue #12에서 JEV 판단, Claude 구조화 생성, LangGraph 분기·1회 Repair를 결합한 학습 목표 설정 보조를 구현했다.
 - `POST /internal/v1/goals/clarify`와 camelCase Pydantic 계약, 공통 422·502·503 오류 응답을 구현했다.
 - 6개 `clarityStatus`, 후보별 JEV 검수, 전체 재평가, fallback, 로그 개인정보 제외를 Fake 기반 테스트로 검증했다.
 - Offline 평가 Fixture와 명시적으로만 실행되는 JEV Live 평가 경로를 추가했다.
-- 실제 JEV·OpenAI Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 최초 `목표 저장`은 분석만 시작하고 `CLEAR` 결과의 최종 확인 후에만 현재 테스트 세션 메모리에 저장하며, 제품 저장소나 학습 세션은 변경하지 않는다.
-- 로컬 목표 보조는 TypeSafe 공식 API의 `TYPESAFE_API_KEY`로 JEV 판단을 호출하고, OpenAI 공식 API의 `OPENAI_API_KEY`로 구조화 생성을 호출한다. Vercel AI Gateway 설정과 우회 경로는 제거했다.
-- Streamlit은 1차 JEV 판단을 먼저 표시하고, 사용자가 다음 단계 생성 버튼을 누를 때만 OpenAI 질문·추천·GoalProfile 생성과 후속 JEV 검수를 실행한다. 후보별 JEV 검수와 실패 후보 Repair는 최대 3개를 병렬 실행한다. 확인 질문은 OpenAI 생성 요청을 기본 2건 병렬 실행해 먼저 도착한 유효한 질문 하나만 사용하고, 이미 답한 질문은 제외한다.
-- 질문 생성은 Streamlit에 실제 OpenAI 문구 초안을 스트리밍 표시한다. 5초는 성능 목표이며, 유효한 모델 질문은 즉시 사용하고 로컬 기본 질문은 질문 생성 시작 후 10초 이상 지났을 때만 사용한다. 두 호출이 일찍 실패하거나 기존 질문만 반복해도 기본 질문을 조기 표시하지 않는다. 설정·인증 오류는 바로 표시한다. 합성 목표 1회 OpenAI Live 확인에서 첫 초안 1.933초, 최종 질문 2.748초였으나 최초 JEV 판단·화면 렌더링을 포함한 P95 지연과 실제 비용은 검증되지 않았다.
+- 실제 JEV·Claude Workflow를 수동 확인하는 로컬 Streamlit 테스트 화면을 추가했다. 최초 `목표 저장`은 분석만 시작하고 `CLEAR` 결과의 최종 확인 후에만 현재 테스트 세션 메모리에 저장하며, 제품 저장소나 학습 세션은 변경하지 않는다.
+- 로컬 목표 보조는 TypeSafe 공식 API의 `TYPESAFE_API_KEY`로 JEV 판단을 호출하고, Claude 공식 API의 `ANTHROPIC_API_KEY`로 구조화 생성을 호출한다. Vercel AI Gateway 설정과 우회 경로는 제거했다.
+- Streamlit은 1차 JEV 판단을 먼저 표시하고, 사용자가 다음 단계 생성 버튼을 누를 때만 Claude 질문·추천·GoalProfile 생성과 후속 JEV 검수를 실행한다. 후보별 JEV 검수와 실패 후보 Repair는 최대 3개를 병렬 실행한다. 확인 질문은 Claude 생성 요청을 기본 2건 병렬 실행해 먼저 도착한 유효한 질문 하나만 사용하고, 이미 답한 질문은 제외한다.
+- 질문 생성은 Streamlit에 실제 Claude 문구 초안을 스트리밍 표시한다. 5초는 성능 목표이며, 유효한 모델 질문은 즉시 사용하고 로컬 기본 질문은 질문 생성 시작 후 10초 이상 지났을 때만 사용한다. 두 호출이 일찍 실패하거나 기존 질문만 반복해도 기본 질문을 조기 표시하지 않는다. 설정·인증 오류는 바로 표시한다. 이전 OpenAI의 합성 목표 1회 Live 확인에서 첫 초안 1.933초, 최종 질문 2.748초였으나 최초 JEV 판단·화면 렌더링을 포함한 P95 지연과 실제 비용은 검증되지 않았다.
 - Streamlit에서 질문에 답하면 답변 문구가 목표 입력값에 반영되고, 해당 문장으로 다시 판단한다. 목표 입력은 계속 편집할 수 있으며 검증된 `CLEAR` 결과를 사용자가 최종 확인하기 전에는 저장하지 않는다.
 - Streamlit의 JEV 판단 결과는 확률·구체성 수치만 있는 JSON 대신 판단 항목, 값, 한국어 설명이 나란히 표시되는 표로 요약하며 원본 JSON은 펼침 영역에 유지한다. `CLEAR`의 최종 확인 정보가 생성된 뒤에도 같은 판단 표를 계속 표시한다.
 - 목표 명확성 Router는 최초 구현의 4개 JEV 질문과 Score Threshold를 사용한다. 강한 `INVALID`·복수 목표·불명확 용어 판정 후 `is_usable_goal` 0.60, 구체성 신뢰도 0.45, 구체성 점수 2.00/1.00 기준으로 `CLEAR`·추천·질문으로 분기한다.
 - 최초 JEV 판단의 영어 instructions와 criteria, snake_case state(`goal_text`, `selected_goal_text`, `clarification_answers`)를 복원했다. 질문 답변에 주제·활동·범위가 있으면 최종 GoalProfile과 추천 후보에 반영한다.
-- OpenAI 구조화 생성에는 `reasoning_effort=minimal`, `verbosity=low`, 최대 600 출력 토큰을 기본 적용해 질문 생성 대기를 줄인다.
+- Claude 공식 SDK `messages.parse`·`messages.stream`을 사용한다. 기본 모델은 `claude-haiku-4-5-20251001`, 최대 1,200 출력 토큰이며 OpenAI 전용 설정과 생성 의존성을 제거했다. `CLAUDE_API_KEY`도 인식하며 표준 `ANTHROPIC_API_KEY`가 우선이다.
 - Streamlit 목표 입력 시 로컬 `convaiinnovations/laya-multilingual`도 JEV와 동일한 state·네 typed question으로 비교 판단한다. Laya는 비교 표에만 쓰고 실제 상태, Workflow, GoalProfile, 저장에는 연결하지 않는다. 최초 비교는 패키지 설치와 공개 체크포인트 다운로드가 필요하다.
 - LangSmith 로컬 수동 테스트는 `LANGSMITH_TRACE_RAW_GOAL_TEXT=true`일 때 목표 원문·선택 목표·후속 답변을 표시한다. `goal_assessment_comparison` 부모 trace 아래에 JEV와 Laya 판단을 함께 남기며, 각 모델 output에는 현재 Router 상태가 포함된다. 이 설정은 로컬 테스트 외 환경에서는 꺼야 한다.
 - 2026-09-28 로컬 Live 확인에서 Laya 호출·응답 매핑은 정상이나, 단일 목표 `React Query 캐시 무효화 구현하기`와 `Spring Security JWT 인증 구현하기`도 복수 목표 Noul이 각각 86.57%, 97.12%로 나왔다. 현재 기본 모델의 목표 분류 zero-shot 결과는 원시 실험값으로만 표시하며 JEV 확률과 비교하거나 정책에 사용하지 않는다.
@@ -174,13 +192,13 @@ Client별 사전 제외·권한 검사
 
 ### 2026-11-03 dev 통합
 
-- 목표 보조 PR #137의 JEV·OpenAI 실행 경로와 화면 관련성 실험 경로를 보존한다. FastAPI에 두 라우터를 연결하고 공통 스키마와 의존성을 통합했다. 목표 보조 내부 API의 서비스 인증과 공개 응답 변환, Backend 연동은 여전히 후속 검토 대상이다.
+- 목표 보조 PR #137의 실행 흐름과 화면 관련성 실험 경로를 보존한다. 목표 생성은 GA-038에서 Claude로 교체했다. FastAPI에 두 라우터를 연결하고 공통 스키마와 의존성을 통합했다. 목표 보조 내부 API의 서비스 인증과 공개 응답 변환, Backend 연동은 여전히 후속 검토 대상이다.
 - 화면 관련성 UI만 제거했으며 목표 보조 Streamlit 테스트 화면은 유지한다. 실제 모델·Backend 왕복은 이번 통합 검증에 포함하지 않는다.
 - 별도 임시 Python 환경에서 두 기능의 전체 회귀 363 passed, 16 subtests passed. 합성 입력·Mock 기반이며 실제 외부 모델 호출은 하지 않았다.
 
 ### 2026-11-03 FastAPI 실험 분석
 
-- `POST /internal/v1/analysis-runs/analyze`에서 기존 입력 검증 뒤 Kiwi + Qwen Hybrid를 실행한다. 응답 candidateDecision은 미보정 내부 후보이고 기존 공개 기준의 decision은 confidence 미보정으로 UNCERTAIN이다. 기존 수신 경로는 유지한다. [상세](features/fastapi-relevance-analysis-REPORT.md).
+- `POST /internal/v1/analysis-runs/analyze`에서 기존 입력 검증 뒤 Kiwi + Qwen Hybrid를 실행한다. `FOCUSON_ANALYSIS_DECISION_MODE=candidate`이면 후보를 decision으로 반환하고 promptVersion에 `-uncalibrated`를 붙인다. 메타데이터 무관 후보는 UNCERTAIN, 분석 실패는 UNCERTAIN/ANALYSIS_UNAVAILABLE이다. 미보정 confidence는 본문 RELATED에 `0.7 * decisionScore + 0.3 * relatedCoverage`, 본문 UNRELATED에 `unrelatedCoverage * (1 - relatedCoverage)`, 메타데이터 RELATED에 decisionScore를 쓴다. 점수 누락 시 null이며 베타 후보를 강등하지 않는다. 기본 safe 모드는 보정 confidence 누락 시 UNCERTAIN이다. 정식 수신 경로와 서버 소비 방식의 연동은 후속 작업이다. [상세](features/fastapi-relevance-analysis-REPORT.md).
 - 합성 벡터 기반 전체 회귀 289 passed, 16 subtests passed. 실제 학교 Qwen은 Tailscale 호스트 DNS 실패로 호출하지 못했다. Backend 연동·confidence 보정은 남았다.
 
 ### 2026-11-03 Streamlit 화면 제거

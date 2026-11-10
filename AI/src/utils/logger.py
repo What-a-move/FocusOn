@@ -20,8 +20,8 @@ def configure_logging(level: int = logging.INFO) -> None:
     logging.basicConfig(level=level, format="%(message)s")
 
 
-def log_event(logger: logging.Logger, event: str, **metadata: Any) -> None:
+def log_event(logger: logging.Logger, event: str, *, level: int = logging.INFO, **metadata: Any) -> None:
     """Log allowlisted operational metadata; user/model text is dropped by design."""
 
     safe = {key: value for key, value in metadata.items() if key in ALLOWED_METADATA}
-    logger.info(json.dumps({"event": event, **safe}, ensure_ascii=False, default=str))
+    logger.log(level, json.dumps({"event": event, **safe}, ensure_ascii=False, default=str))

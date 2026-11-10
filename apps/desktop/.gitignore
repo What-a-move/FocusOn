@@ -24,3 +24,6 @@ dist-ssr
 *.sln
 *.sw?
 build/native
+
+# 베타 설치 파일
+release

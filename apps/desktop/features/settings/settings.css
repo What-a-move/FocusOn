@@ -1,23 +1,10 @@
-/* 설정 — FocusOn-design/settings.html·exclusions.html을 옮겼다. 사이드바와 창 틀은 dashboard.css(.fo-home-window)를 쓰고,
-   색은 globals.css의 --fo-* 토큰에 설정 화면에만 필요한 값을 덧붙인다. */
-.fo-settings {
-  --fo-success: #2f8f5b; --fo-success-soft: #eefaf3; --fo-dim: #cfcfcf; --fo-scrim: rgba(23, 23, 23, .35);
-  --fo-danger-strong: #d92d20; --fo-pop: cubic-bezier(.22, 1, .36, 1);
-  min-width: 0; overflow-y: auto;
-}
-@media (prefers-color-scheme: dark) {
-  .fo-settings { --fo-success: #5fcf94; --fo-success-soft: #142a1e; --fo-dim: #404046; --fo-scrim: rgba(0, 0, 0, .6); --fo-danger-strong: #e5484d; }
-}
-@keyframes fo-settings-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes fo-settings-pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-@keyframes fo-settings-fade { from { opacity: 0; } to { opacity: 1; } }
-
+/* 설정 — FocusOn-design/settings.html·exclusions.html을 옮겼다. 사이드바와 창 틀은 shared/styles/app-shell.css(.fo-home-window),
+   설정 틀 토큰·토스트는 shared/styles/settings-shell.css를 쓴다. */
 /* 세로 간격은 창 높이에 맞춰 늘고 줄어든다 */
 /* 사이드바 화면 공통: 내용 시작은 창 높이에 맞춰 32~64px. 세로로 꽉 채워, 짧은 상태(오류·빈 화면)를 남은 공간 가운데에 둘 수 있게 한다. */
 .fo-settings-page { display: flex; flex-direction: column; min-height: 100%; width: min(820px, calc(100% - 80px)); margin: 0 auto; padding: clamp(32px, 6vh, 64px) 0 40px; }
 .fo-settings-page > .fo-settings-panel { flex: 1; display: flex; flex-direction: column; }
 .fo-settings-panel > .fo-error-state:only-child { margin: auto; }
-.fo-settings h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
 
 /* 머리: 제목·탭 왼쪽, 탭마다 다른 포키 오른쪽 */
 .fo-settings-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 24px; }
@@ -68,8 +55,7 @@
 .fo-chip:not(:disabled):active { transform: translateY(2px); }
 .fo-chip[aria-checked="true"] { border-color: var(--fo-brand); }
 .fo-chip::before { width: 18px; height: 18px; border: 1.5px solid var(--fo-dim); border-radius: 6px; background: var(--fo-surface); content: ""; }
-.fo-chip[aria-checked="true"]::before { border-color: var(--fo-brand); background: var(--fo-brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat; animation: fo-settings-pop .55s var(--fo-pop); }
-.fo-switch:focus-visible, .fo-segmented button:focus-visible, .fo-small-btn:focus-visible, .fo-chip:focus-visible, .fo-theme-tile:focus-visible, .fo-remove:focus-visible, .fo-back-link:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
+.fo-chip[aria-checked="true"]::before { border-color: var(--fo-brand); background: var(--fo-brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat; animation: fo-settings-pop .55s var(--fo-pop); }.fo-switch:focus-visible, .fo-segmented button:focus-visible, .fo-small-btn:focus-visible, .fo-chip:focus-visible, .fo-theme-tile:focus-visible, .fo-remove:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 
 /* 권한 */
 .fo-perm-head { display: flex; align-items: center; gap: 16px; }
@@ -80,7 +66,7 @@
 .fo-badge.ok::before { background: var(--fo-success); }
 .fo-badge.bad { color: var(--fo-ink); }
 .fo-badge.bad::before { background: var(--fo-faint); }
-.fo-perm-alert { margin-top: 12px; }
+.fo-perm-alert { margin-top: 10px; color: var(--fo-danger); font-size: 15px; font-weight: 700; }
 .fo-perm-list { margin-top: 12px; }
 .fo-perm { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: clamp(38px, 6.6vh, 58px); }
 .fo-perm-icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--fo-success-soft); color: var(--fo-success); }
@@ -114,11 +100,6 @@
 .fo-shot-half.dark .bar1, .fo-shot-half.dark .bar2 { background: #f4f2ee; }
 .fo-shot-half.dark .btn-mini { background: #cda577; }
 .fo-shot.system .fo-shot-half.dark { clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
-
-/* 분석 제외 목록 */
-
-.fo-back-link { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; color: var(--fo-muted); font-size: 15px; font-weight: 600; text-decoration: none; }
-.fo-back-link:hover { color: var(--fo-ink); }
 .fo-exclusions h1 { margin-top: 12px; }
 .fo-intro { margin: 6px 0 0; color: var(--fo-muted); font-size: 15px; }
 .fo-ex-tabs { position: relative; display: flex; gap: 28px; margin-top: 24px; border-bottom: 1px solid var(--fo-line); }
@@ -182,10 +163,6 @@
 .fo-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
 .fo-dialog-actions.single { grid-template-columns: 1fr; }
 .fo-dialog-actions .fo-button { min-width: 0; }
-.fo-toast { position: fixed; bottom: 40px; left: calc(50% + 116px); display: inline-flex; align-items: center; gap: 14px; width: max-content; max-width: min(520px, calc(100vw - 280px)); padding: 10px 18px; border-radius: 12px; background: var(--fo-ink); color: var(--fo-surface); font-size: 14px; font-weight: 600; opacity: 0; transform: translate(-50%, 20px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
-.fo-toast.is-visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-.fo-toast:has(button) { padding-right: 10px; }
-.fo-toast button { height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--fo-surface) 16%, transparent); color: var(--fo-surface); font-size: 13px; font-weight: 700; cursor: pointer; }
 
 @media (max-height: 760px) { .fo-settings-poki { height: 92px; } }
 @media (max-height: 640px) {
@@ -196,16 +173,12 @@
   .fo-settings-poki { height: 76px; }
   .fo-segmented button, .fo-chip { height: 40px; }
 }
-@media (max-width: 900px) { .fo-toast { left: calc(50% + 38px); } }
 @media (max-width: 760px) {
   .fo-settings-page { width: calc(100% - 40px); }
   .fo-settings-poki { height: 80px; }
   .fo-theme-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fo-add-row { flex-wrap: wrap; }
   .fo-add-row .fo-button { width: 100%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fo-settings *, .fo-settings *::before, .fo-settings *::after { animation: none !important; transition: none !important; }
 }
 
 /* 계정(D25) · 기기 연결(D24). 철회·해제·삭제는 오류가 아니라 기본 버튼색이다(결정 031). */

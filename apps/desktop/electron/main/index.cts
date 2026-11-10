@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -33,16 +34,24 @@ import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
 import { SettingsService, ThemePreference, registerSettingsIpc } from './settings-ipc.cjs'
 import { InterventionWatcher } from './intervention-watcher.cjs'
+import { installDemoMode } from './demo-mode.cjs'
 import { DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
+// 패키지 앱에는 .env가 없어 빌드할 때 넣은 값을 쓴다(scripts/write-build-config.cjs). 개발 실행은 환경 변수가 우선한다.
+const buildConfig: { apiBaseUrl?: string; googleClientId?: string } = (() => {
+  try { return JSON.parse(readFileSync(path.join(__dirname, '../build-config.json'), 'utf8')) } catch { return {} }
+})()
 
 // [주의] Scheme 권한은 app.whenReady() 전에 등록해야 한다.
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true } },
 ])
 
+// 설치한 앱은 `FocusOn` 폴더에 데이터를 둔다. 개발 실행(@focuson/desktop)과 섞이지 않고 함께 띄울 수 있다.
+// [주의] 단일 실행 잠금과 userData를 쓰기 전에 정해야 한다.
+if (app.isPackaged) app.setPath('userData', path.join(app.getPath('appData'), 'FocusOn'))
 const hasSingleInstanceLock = app.requestSingleInstanceLock()
 
 if (!hasSingleInstanceLock) {
@@ -59,7 +68,7 @@ if (!hasSingleInstanceLock) {
     }
   })
   let authService: AuthService | null = null
-  const googleClientId = process.env.FOCUSON_GOOGLE_CLIENT_ID?.trim()
+  const googleClientId = process.env.FOCUSON_GOOGLE_CLIENT_ID?.trim() || buildConfig.googleClientId
   const oauthFlow = googleClientId ? new GoogleOAuthFlow({
     clientId: googleClientId,
     openBrowser: (url) => shell.openExternal(url),
@@ -139,8 +148,9 @@ if (!hasSingleInstanceLock) {
     window.webContents.on('will-attach-webview', (event) => event.preventDefault())
 
     // [주의] 기능별 권한 UX가 구현되기 전에는 화면·카메라 등 권한을 자동 승인하지 않는다.
-    window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
-    window.webContents.session.setPermissionCheckHandler(() => false)
+    // 클립보드 쓰기(연결 코드 복사)만 허용한다. 읽기는 막는다.
+    window.webContents.session.setPermissionRequestHandler((_contents, permission, callback) => callback(permission === 'clipboard-sanitized-write'))
+    window.webContents.session.setPermissionCheckHandler((_contents, permission) => permission === 'clipboard-sanitized-write')
 
     // [유지보수] 개발 실행에서만 FOCUSON_DEV_START_PATH(예: /onboarding/permissions/)로 첫 화면을 바로 열 수 있다.
     // 같은 앱 출처의 경로만 허용하고, 패키징된 앱에서는 무시한다.
@@ -189,12 +199,13 @@ if (!hasSingleInstanceLock) {
       log('INFO', 'power.resume', { component: 'power', heldMono, heldWall, sleepSuspected: heldMono !== null && heldWall !== null && heldWall - heldMono > 5_000 })
       suspendedAt = null
     })
-    const apiBaseUrl = resolveAuthApiBaseUrl(process.env.FOCUSON_API_BASE_URL)
+    const apiBaseUrl = resolveAuthApiBaseUrl(process.env.FOCUSON_API_BASE_URL || buildConfig.apiBaseUrl)
     if (apiBaseUrl && process.platform === 'darwin') {
       authService = new AuthService(
         authStore,
         new AuthApiClient(apiBaseUrl),
-        new MacKeychainRefreshTokenVault(apiBaseUrl),
+        // [주의] 같은 Mac에서 설치 앱과 개발 실행이 같은 서버를 써도 로그인이 서로 풀리지 않게 Keychain 항목을 나눈다. 개발 실행 항목은 그대로 둔다.
+        new MacKeychainRefreshTokenVault(app.isPackaged ? `${apiBaseUrl}#installed` : apiBaseUrl),
         async () => ({
           installationId: await getInstallationId(app.getPath('userData')),
           deviceName: getDesktopDeviceName(),
@@ -260,18 +271,20 @@ if (!hasSingleInstanceLock) {
     // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
     let pendingShow: FloatingShow | null = null
-    const FLOATING_SIZE = { width: 580, height: 400 }
+    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기. Dock을 피하지 않고 화면 오른쪽 아래 모서리에 바로 붙인다(2026-11-09 사용자 확정).
+    const FLOATING_SIZE = { width: 720, height: 300 }
     function showFloating(payload: FloatingShow): void {
       if (!floatingWindow || floatingWindow.isDestroyed()) {
-        const area = screen.getPrimaryDisplay().workArea
+        const area = screen.getPrimaryDisplay().bounds
         const window = new BrowserWindow({
-          ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width - 48, y: area.y + area.height - FLOATING_SIZE.height,
+          ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width, y: area.y + area.height - FLOATING_SIZE.height,
           // macOS panel: 다른 앱을 쓰는 중에도 클릭할 수 있고 FocusOn을 앞으로 가져오지 않는다.
           type: 'panel', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false,
           minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, show: false,
           webPreferences: { preload: path.join(__dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
         })
-        window.setAlwaysOnTop(true, 'floating')
+        // Dock보다 위에 그려야 모서리에 붙인 포키가 Dock에 가리지 않는다.
+        window.setAlwaysOnTop(true, 'pop-up-menu')
         window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
         window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
         window.webContents.on('will-navigate', (event) => event.preventDefault())
@@ -310,6 +323,16 @@ if (!hasSingleInstanceLock) {
       pause: () => runtime.pause('USER'),
       isCurrent: (sessionId) => { const current = runtime.snapshot(); return current?.status === 'RUNNING' && current.sessionId === sessionId },
     }) : null
+    // 시연 모드(#189): `pnpm dev:demo`로 실행할 때만 켠다(빌드한 화면을 써서 Next 개발 표시가 영상에 안 나온다). 배포 앱은 환경 변수가 있어도 켜지 않는다.
+    if (authService && runtime && process.env.FOCUSON_DEMO === '1' && !app.isPackaged) {
+      const demo = installDemoMode(authService, () => runtime.snapshot())
+      // ⌘⇧D: 진행 중 세션에 이탈 알림을 만들고 10초 조회를 기다리지 않고 바로 보여 준다.
+      globalShortcut.register('CommandOrControl+Shift+D', () => {
+        const current = runtime.snapshot()
+        if (current && demo.triggerAlert()) void watcher?.poll(current.sessionId, current.goalText, runtime.sessionOptions())
+      })
+      app.on('will-quit', () => globalShortcut.unregisterAll())
+    }
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
       const { interventionId, action } = args[0]
@@ -321,7 +344,7 @@ if (!hasSingleInstanceLock) {
         return { success: true, data: { done: true } }
       }
       const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
-      // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 조금 더 보기는 같은 창에서 목표 안내로 이어진다.
+      // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 확인했어는 같은 창에서 목표 안내로 이어진다.
       if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }
       if (action !== 'RECENTER') hideFloating()
       return { success: true, data: { done: true } }

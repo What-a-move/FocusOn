@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
-import { describeError, onboardingApi, type Notice } from './onboarding-api'
+import { describeError, onboardingApi, type Notice } from '../../shared/api/onboarding-api'
 
 // field: false면 입력값 문제가 아니라 서버·연결 문제라 입력칸은 빨갛게 하지 않는다
 type Hint = { kind: '' | 'error' | 'success'; text: string; field?: boolean }

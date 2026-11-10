@@ -1,5 +1,5 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
-import { desktopCapturer, ipcMain, Notification, shell, systemPreferences } from 'electron'
+import { app, desktopCapturer, ipcMain, Notification, shell, systemPreferences } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
 import {
   NOTIFICATION_TEXT,
@@ -9,10 +9,11 @@ import {
 } from '../shared/permission-contract.cjs'
 import type { PermissionStatus } from '../shared/permission-contract.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
+import { log } from './logger.cjs'
 import type { NotificationReadiness } from './notification-readiness.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
-const SERVICE_UNAVAILABLE = { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } } as const
+const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 // macOS 시스템 설정 › 개인정보 보호 및 보안 › 화면 기록
 const SCREEN_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
 // macOS 시스템 설정 › 알림
@@ -41,7 +42,7 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
         return { success: true, data: await run() }
       } catch {
         // [주의] macOS·Electron 내부 오류 메시지는 Renderer로 보내지 않는다.
-        return SERVICE_UNAVAILABLE
+        return LOCAL_APP_ERROR
       }
     })
   }
@@ -64,6 +65,14 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
     return { opened: true }
   })
 
+  // [주의] macOS는 화면 기록을 켜도 실행 중인 앱에는 계속 꺼짐으로 알려 준다. 앱을 다시 켜야 반영된다.
+  // 응답을 먼저 돌려준 뒤 종료한다. before-quit에서 창 닫기 막음이 풀린다.
+  handleVoid(PERMISSION_CHANNELS.relaunch, () => {
+    app.relaunch()
+    setImmediate(() => app.quit())
+    return { relaunching: true }
+  })
+
   handleVoid(PERMISSION_CHANNELS.notificationStatus, () => ({ confirmed: notificationReadiness.isConfirmed() }))
 
   ipcMain.handle(PERMISSION_CHANNELS.notificationConfirm, async (event, ...args: unknown[]): Promise<IpcResult<{ confirmed: boolean }>> => {
@@ -73,7 +82,7 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
       notificationReadiness.set(input.seen)
       return { success: true, data: { confirmed: input.seen } }
     } catch {
-      return SERVICE_UNAVAILABLE
+      return LOCAL_APP_ERROR
     }
   })
 
@@ -90,8 +99,15 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
     if (!Notification.isSupported()) return { success: true, data: { shown: false } }
     const { titleCode, bodyCode } = args[0]
     // macOS는 앱이 처음 알림을 보낼 때 허용 여부를 묻는다. 알림 상태를 직접 조회하는 API는 없다.
-    const shown = await showAndWait(new Notification({ title: NOTIFICATION_TEXT[titleCode].title, body: NOTIFICATION_TEXT[bodyCode].body, silent: true }))
-    return { success: true, data: { shown } }
+    // [주의] 거절(UNErrorDomain 1)이든 예외든 화면에는 '알림이 꺼져 있음'으로 알리고, 어느 쪽인지는 로그로 구분한다.
+    try {
+      const shown = await showAndWait(new Notification({ title: NOTIFICATION_TEXT[titleCode].title, body: NOTIFICATION_TEXT[bodyCode].body, silent: true }))
+      if (!shown) log('WARN', 'notify.fire', { component: 'permission', code: 'LOCAL_NOTIFICATION_BLOCKED' })
+      return { success: true, data: { shown } }
+    } catch {
+      log('WARN', 'notify.fire', { component: 'permission', code: 'LOCAL_NOTIFICATION_FAILED', errorClass: 'unknown' })
+      return { success: true, data: { shown: false } }
+    }
   })
 }
 

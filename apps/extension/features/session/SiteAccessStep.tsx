@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { requestSiteAccess } from '../../extension/shared/site-access'
-import { getActiveSession } from './session-api'
-import { formatClock, type ActiveSession } from './session-model'
-import '../pairing/pairing.css'
+import { getActiveSession } from '../../shared/api/session-api'
+import { formatClock, type ActiveSession } from '../../shared/lib/session-model'
+import '../../shared/styles/pairing.css'
 import './session-popup.css'
 
 /**
@@ -37,7 +37,7 @@ export function SiteAccessStep({ onGranted }: { onGranted: () => void }) {
       </header>
       <div className="p-body session-body">
         {revoked ? <>
-          <div className="notice is-error" role="alert"><strong>사이트 접근 권한이 꺼져 있어요</strong>{paused
+          <div className="notice is-error" role="alert"><strong>사이트 접근 권한이 꺼져 있어요.</strong>{paused
             ? <><span>세션은 멈춰 있어요.</span><span>다시 허용한 뒤 직접 재개해 주세요.</span></>
             : <span>지금은 Chrome 탭을 확인하지 못해요. 다시 허용해 주세요.</span>}</div>
           <div>
@@ -52,7 +52,7 @@ export function SiteAccessStep({ onGranted }: { onGranted: () => void }) {
         </> : <>
           <h1>사이트 접근을 허용해 주세요</h1>
           {denied
-            ? <div className="notice is-error" role="alert"><strong>사이트 접근을 허용하지 않았어요</strong><span>기기 연결은 그대로예요.</span><span>허용하기 전에는 집중을 시작할 수 없어요.</span></div>
+            ? <div className="notice is-error" role="alert"><strong>사이트 접근을 허용하지 않았어요.</strong><span>기기 연결은 그대로예요.</span><span>허용하기 전에는 집중을 시작할 수 없어요.</span></div>
             : <p className="muted">보고 있는 페이지가 목표와 맞는지 확인할 때 필요해요.</p>}
           {denied ? <p className="small muted">집중 중에만 지금 보는 탭 하나를 확인해요.</p> : <>
             <ul className="facts">

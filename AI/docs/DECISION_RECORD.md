@@ -1,7 +1,67 @@
 # AI 결정 기록
 
+## 2026-11-09 사용자 요청 — 모델 호출 timeout 4초
+
+- 실제 관련성 분석 모델 호출의 기본 HTTP timeout을 2.5초에서 4초로 변경하고 재시도 0회는 유지한다. 기존 환경 변수 값이 있으면 설정값이 우선한다. `/health`는 별도 3초 probe를 유지한다.
+- HTTP timeout은 전체 분석의 마감 시간이 아니다. 최신 dev Backend는 전체 AI 응답에 5초 제한을 적용하며 실제 모델과 Backend를 연결한 성능 재측정은 남았다.
+
+## 2026-11-09 사용자 전달 — AI 기준 0.6으로 재조정
+
+- 사용자에 따르면 Backend가 AI 기준에 맞추기로 했다. 이에 따라 직전 0.75 결정에 우선하여 AI는 0.6 이상 후보를 반환한다. 기존 Backend 코드의 0.75는 아직 변경 확인 전이며 통합 검증이 필요하다.
+
+## 2026-11-09 사용자 요청 — 베타 기준 0.75 및 readiness 검증
+
+- 기존 0.6 결정을 대체하여 베타 후보 및 공개 응답의 기준을 0.75로 적용한다. 점수는 미보정 값이다.
+- `/health`는 분석 설정도 검증한 뒤 실제 모델 임베딩을 확인한다. 실제 통합 환경과 판정 정확도 검증은 남는다.
+
+## 2026-11-09 사용자 요청 — 베타 기준 0.6
+
+- 이전 0.75 결정에 우선하여 AI 베타 후보 점수가 0.6 이상이면 후보 판정을 반환하고, 낮거나 없으면 `UNCERTAIN`으로 처리한다. 미보정 점수의 정확도는 평가가 필요하다.
+- 루트 API 계약은 아직 0.75이므로 실제 Server 정책과 정합성은 Backend 담당자가 확인해야 한다.
+
+## 2026-11-09 베타 응답과 Server 기준 맞춤
+
+- 사용자 요청에 따라 AI가 베타 후보 점수를 루트 `docs/API_CONTRACT.md`의 0.75 기준에 맞춰 반환한다. 점수가 0.75 미만이거나 없으면 `UNCERTAIN`으로 처리한다. 이 점수는 미보정 값이며 정확도를 뜻하지 않는다.
+- 기존에 적은 Server 측 미보정 예외 제안은 대체한다. `server/docs/DEVELOPMENT_RULES.md` 작업본의 0.6과 루트 계약의 0.75는 서로 달라 담당자 확인이 필요하다. Server 호출 연결과 전체 알림 검증은 별개로 남는다.
+
+## 2026-11-03 모델 readiness 및 백엔드 Tailscale 연결
+
+- 사용자 요청으로 AI Docker 구성은 제거한다. 배포 백엔드 호스트에서 학교 PC 모델에 Tailscale로 연결하는 방식으로 진행한다. 실제 FastAPI 실행 위치와 백엔드 호출 코드 연결은 확인이 필요하다.
+- `/health`는 실제 임베딩과 기존 벡터 검증을 수행해 성공 200, 실패 503을 반환한다. 실패 로그는 공용 로거의 request.fail/WARN에 코드만 기록한다. 모델 프로브는 3초 timeout·재시도 0회이다.
+- 학교 모델 프록시가 허용하는 keep_alive=10m을 사용한다. 전체 요청 timeout 및 UNCERTAIN fallback은 백엔드에서 확인한다.
+
+## 2026-11-03 사용자 요청 — 베타 후보 판정 반환
+
+- 당시 별도 분석 경로 `/internal/v1/analysis-runs/analyze`에서 `FOCUSON_ANALYSIS_DECISION_MODE=candidate`일 때 미보정 후보를 decision으로 반환하고 promptVersion에 `-uncalibrated`를 붙였다. 이 경로 분리는 2026-11-08 결정으로 폐기했다.
+- 사용자와 정한 미보정 점수식을 사용하며 점수 누락 시 null로 반환한다. candidate 모드에서는 confidence 기준으로 후보를 강등하지 않는다. 기본 safe 모드의 confidence 통과 기준은 사용자 요청으로 0.6이다.
+- 실제 작업본 반영과 서버 배포·정식 경로 연결은 별개다. Backend의 confidence 처리와 OCR 품질 정보 누락 처리는 확인 및 후속 구현이 필요하다.
+
+## 2026-11-08 사용자 요청 — 베타 단일 판정 경로
+
+- `POST /internal/v1/analysis-runs`가 검증 후 Hybrid 판정을 동기 반환한다. 과거 `/internal/v1/analysis-runs/analyze` 실험 경로는 제거한다.
+- 베타 설정 `FOCUSON_ANALYSIS_DECISION_MODE=candidate`에서 보정되지 않은 후보 라벨을 `decision`에 반환하고 `promptVersion`에 `-uncalibrated`를 붙인다. 이 점수는 확률 보정 confidence가 아니며 이후 보정 전까지 베타 표시를 유지한다.
+- 앱·탭 메타데이터만으로 낸 `UNRELATED`는 `UNCERTAIN`으로 유지한다. 모델·임베딩 실패는 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`이다. 분석 제외·민감 입력은 모델 호출 전 기존 409 차단을 유지한다.
+- Desktop OCR의 `contentPayload.text`만으로 분석 가능하며 `ocr.confidence`와 `captureStatus`는 선택 입력이다. 존재하지 않는 품질값을 만들어 넣지 않는다.
+- 모델 준비성은 `/health`가 실제 임베딩 호출·벡터 규격 검증으로 판정한다. Backend Java 호출부는 현재 저장소에 없어 실제 Server 왕복은 미연결이다.
+- Qwen 요청 제한 기본값은 2.5초·재시도 0회다. 기존 합성 HTTP 표본에서 전체 40건 p95=2.32초였지만 DOM 20건 p95=3.76초로 3초 목표를 달성하지 못했다. 측정 범위는 학교 Ollama SETUP 리포트에 고정한다.
+
 > AI 분석 기준·모델·프롬프트·데이터 처리 결정을 기록한다.
 > 기존 결정을 삭제하지 않고 새로운 번호로 추가한다.
+
+## 결정 GA-038 - 목표 보조 생성 제공자를 Claude로 교체
+
+- 결정일: 2026-11-03
+- 상태: 사용자 요청에 따른 #12 생성 어댑터 변경; 제품 외부 전송 정책 승인과 모델 품질 전체 평가는 별도
+- 이유: OpenAI 키 폐기로 질문·추천·GoalProfile 생성이 중단되어 Claude 키로 실행하도록 교체한다.
+- JEV 판단·검수, Router·임계값, Prompt와 Pydantic Schema, 사용자 최종 확인 조건은 유지한다. Laya는 계속 비교 전용이다.
+- 공식 `anthropic` SDK의 `AsyncAnthropic.messages.parse(output_format=...)`와 `messages.stream(output_format=...)`을 사용한다. 기본 모델은 속도를 고려한 `claude-haiku-4-5-20251001`, 기본 최대 출력은 1,200 토큰이다. 모델은 `CLAUDE_MODEL`로 변경할 수 있다.
+- 표준 키는 `ANTHROPIC_API_KEY`이며 기존 로컬 `CLAUDE_API_KEY`도 허용한다. 둘 다 있으면 표준 이름이 우선이다. `OPENAI_*` 환경변수, ChatOpenAI·Responses 호출과 langchain-openai 의존성은 제거한다.
+- 2건 병렬 질문·첫 유효 결과 사용·중복 질문 제외·10초 이후 로컬 fallback·취소 및 연결 정리를 유지한다. AI HTTP 경로의 SDK 재시도 0도 유지한다.
+- 잘린 출력·refusal·Schema 위반을 정상 초안으로 사용하지 않는다. Schema Repair는 최대 1회다. 400/401/402/403/404는 설정 오류, 429/5xx·연결 실패는 일시 장애로 구분하고 제공자 원문은 사용자 오류에 넣지 않는다.
+- JEV·Laya LangSmith trace는 유지한다. 생성은 공식 SDK를 직접 사용하므로 기존 ChatOpenAI의 자동 LangChain trace는 생성하지 않는다. 원문 자동 추적 wrapper는 추가하지 않는다.
+- 공식 자료: [구조화 출력](https://platform.claude.com/docs/en/build-with-claude/structured-outputs), [Python SDK](https://github.com/anthropics/anthropic-sdk-python). 로컬 SDK 0.125.0의 parse·stream 시그니처와 실제 호출을 확인했다.
+- 합성 목표로 Claude 스트리밍 질문 5.58초(초안 갱신 13회), GoalProfile 6.12초, 추천 묶음 5.79초를 각 1회 확인했다. 세 Schema 모두 검증 통과했으며 원문과 응답 전문은 기록하지 않았다. JEV 포함 전체 Workflow·P95·의미 정확도 비교 결과가 아니다.
+- Notion AI 분석 계약은 이번 조회도 404였으며 외부 API·DB·상태 계약을 새로 확정하지 않았다. 다른 기능 브랜치의 OpenAI 생성은 변경하지 않는다.
 
 ## 결정 001 - AI 분석 범위
 
@@ -702,7 +762,7 @@ PR #15의 최신 문서 계약을 유지하면서 Notion 제품·API 정합성�
 - 사용자 제공 최신 허재원 화면 분석/AI 계약과 이번 구현 요청을 기준으로 기존 #11 작업에 적용한다. 첨부 문서 자체는 REVIEW 상태이며 Notion 실시간 갱신을 확인했다고 주장하지 않는다.
 - 메타데이터는 RELATED만 확정한다. 낮은 코사인의 무관 후보도 UNCERTAIN이며 사유 코드 종류와 관계없이 정상 현재 관측은 Chrome DOM 또는 Desktop OCR로 재확인한다. 차단·stale·실행 실패는 추가 캡처로 우회하지 않는다. DOM 뒤 Chrome OCR 요청은 제거하고 enum만 유지한다. 현재 입력으로 Chrome OCR을 직접 요청해도 모델을 호출하지 않는다.
 - 공개 중첩 JSON과 내부 실행 문맥은 `relevance_contract`에서 변환한다. Server 문맥과 식별자·시각·목표가 다르면 거부한다. 원문 text는 최대 2,000자, 초과는 거부하며 기존 민감정보 검사를 유지한다. Client 캡처/PII 제거와 Backend 상태·이탈 정책은 별도 담당 범위다.
-- 내부 진단 사유와 공개 5종 reasonCode를 분리한다. 공개 response confidence는 별도의 검증된 값을 명시적으로 받아야 하며 누락/0.75 미만이면 UNCERTAIN이다. cosine·Hybrid·OCR confidence를 판정 confidence로 전용하거나 임의 상수로 채우지 않는다. confidence 보정 및 Server 실행 연결은 후속 검증이 필요하다.
+- 내부 진단 사유와 공개 5종 reasonCode를 분리한다. 공개 response confidence는 별도의 검증된 값을 명시적으로 받아야 하며 누락/0.6 미만이면 UNCERTAIN이다. cosine·Hybrid·OCR confidence를 판정 confidence로 전용하거나 임의 상수로 채우지 않는다. confidence 보정 및 Server 실행 연결은 후속 검증이 필요하다.
 - 본문 점수 임계값·산식·정답 fixture와 과거 실측 결과는 유지했다. 메타데이터 정책 버전은 title-hybrid-v3-mvp, 내부 graph 분석기는 school-hybrid-v7-mvp다. 세션에 고정된 기존 정책을 자동 마이그레이션하는 구현이 아니다.
 
 - 검증: 모델 없는 관련 회귀 310 passed·16 subtests passed, Streamlit 초기/입력/판정 UI 검증과 8501 health HTTP 200. 실제 Qwen/OpenAI 평가 및 Client/Server 통합은 실행하지 않았다.
@@ -1152,7 +1212,7 @@ Streamlit의 병렬 비교는 `goal_assessment_comparison` 부모 trace로 기�
 ### MVP 문서 기준
 
 - 목표 문장 확인·수정과 화면 관련성 판정 수정·삭제는 별개다. AI 명확화 질문은 대화 전체 최대 2회이고, 여러 목표가 입력되면 최종적으로 하나를 선택한다.
-- 화면 관련성 confidence `0.75` 미만은 `UNCERTAIN`으로 처리한다. 15초 미만 화면 전환은 이탈 누적에서 제외한다. 약하게 120초 연속, 보통 최근 10분 안에 30초 이상 이탈 2회, 적극적으로 30초 연속을 적용한다.
+- 화면 관련성 confidence `0.6` 미만은 `UNCERTAIN`으로 처리한다. 15초 미만 화면 전환은 이탈 누적에서 제외한다. 약하게 120초 연속, 보통 최근 10분 안에 30초 이상 이탈 2회, 적극적으로 30초 연속을 적용한다.
 - `RELATED`는 현재 이탈 구간과 카메라 알림 후보를 초기화하고, `UNCERTAIN`은 이탈 시간에 누적하지 않는다.
 - 카메라 `AWAY` 60초에 후보를 만들고 90초 지속 시 최종 조건을 확인한다. 최신 화면이 `RELATED`면 알림 후보를 억제한다.
 - `EXCLUDED`는 화면 분석을 중단하되 유효한 사용자 동의 아래 카메라 분석은 계속할 수 있다. `PRIVACY_BLOCKED`에서는 화면·카메라 분석을 모두 중단한다.
