@@ -1,5 +1,13 @@
 # Backend 다음 작업
 
+## Issue #208 일간·달력 리포트 재개 (2026-11-10)
+
+- 최신 dev b3d680d(#207/V20)에서 feat/208-daily-calendar-reports를 생성했다. 사용자 승인 기준 Desktop 전용·월 전체 날짜/0채움·일간 시작시각/ID 내림차순으로 두 GET을 구현했다. Notion 두 정본은404이며 로컬 계약/소비자 파서 기준 진행을 별도로 승인받았다.
+- 고정 studyDate·ENDED/ABANDONED·검증 누적시간·목표 스냅샷을 재사용한다. 새 AI 호출이나 세션 명령 변경은 없다. V21은 사용자/학습일 조회 인덱스만 추가한다.
+- 상세는 features/daily-calendar-reports-PLAN.md 및 QA/REPORT를 따른다. 전체 build/Checkstyle 검증 및 PostgreSQL 업그레이드 보존 결과는 해당 문서에 기록한다.
+- 다음: 별도 컨텍스트 리뷰, 실제 Desktop QA와 Notion 접근 복구 후 정본 대조. 이 대화는 sub-agent 사용 금지 조건이 있어 별도 에이전트 리뷰를 수행하지 않았다. PR 생성·병합·이슈 종료는 별도 승인이다. 사용자 IDE 변경과 기존 stash·5432·8080은 보존했다.
+
+
 ## 현재 작업 — PR #207 코드리뷰 피드백 반영 (2026-11-10)
 
 - 로컬 변경은 커밋까지만 했다. push와 PR 댓글·리뷰 resolve는 사용자 승인 뒤 진행한다.
