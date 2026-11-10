@@ -7,6 +7,7 @@ import { chromeLogStore, createLogger } from '../../shared/lib/logger'
 import { getActiveSession } from '../../shared/api/session-api'
 import { inspectPage } from '../content/inspect-page'
 import { SITE_ORIGINS } from '../shared/site-access'
+import { pickContextId } from '../shared/observation-context'
 import { TabAnalyzer, type Tracking } from './tab-analyzer'
 
 const KEYS = { tracking: 'focuson.analysis.tracking', sequences: 'focuson.analysis.sequences', excluded: 'focuson.analysis.excludedDomains' } as const
@@ -61,11 +62,15 @@ const analyzer = new TabAnalyzer({
     }
   },
   async post(sessionId, body) {
+    // 보내기 직전에 Desktop이 정한 전경 context를 확인해, 이 기기가 맡은 화면일 때만 ID를 붙인다(#182).
+    const headers = await deviceHeaders()
+    const context = await client.authorized(`/api/v1/sessions/${sessionId}/observation-context`, 'GET', 200, (data) => ({ data }), { headers })
+    const observationContextId = context.success ? pickContextId(context.data.data, headers['X-Device-Id'] ?? null) : null
     const result = await client.authorized(`/api/v1/sessions/${sessionId}/analysis-runs`, 'POST', 200, (data) => {
       const relation = (data as { relation?: unknown } | null)?.relation
       return typeof relation === 'string' ? { relation } : null
     }, {
-      body, headers: await deviceHeaders(),
+      body: observationContextId ? { ...body, observationContextId } : body, headers,
       // 로그를 서버 판정 기록과 잇도록 traceId는 clientRunId를 그대로 쓴다. 제목·본문은 로거가 글자 수로만 남긴다.
       traceId: body.clientRunId,
       logFields: { sessionId, contentSource: body.contentSource, guardStatus: body.guardStatus, domain: body.metadata?.urlHost, title: body.metadata?.pageTitle, text: body.contentPayload?.text },

@@ -24,12 +24,12 @@ type Played = {
 }
 
 const SESSION_PATH = /^\/api\/v1\/sessions\/([^/?]+)\/(interventions|end|summary|pause)$/
-const DEMO_ACK = /^\/api\/v1\/interventions\/demo-[^/]+\/acknowledgements$/
+const DEMO_ACK = /^\/api\/v1\/interventions\/demo-[^/]+\/(acknowledgements|deliveries)$/
 
 /** 로컬 날짜(YYYY-MM-DD). 리포트 날짜는 사용자 기기 시간대를 따른다. */
 const localDay = (iso: string) => new Date(iso).toLocaleDateString('sv-SE')
 
-export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapshot | null): { triggerAlert(): boolean } {
+export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapshot | null, currentContext: () => string | null = () => null): { triggerAlert(): boolean } {
   const real = auth.authorizedRequest.bind(auth)
   const sessions = new Map<string, Played>()
   const pending = new Map<string, string[]>()
@@ -83,7 +83,8 @@ export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapsh
       if (action === 'interventions' && request.method === 'GET') {
         const ids = pending.get(sessionId) ?? []
         pending.delete(sessionId)
-        return parsed(request, ids.map((interventionId) => ({ interventionId, type: 'OFF_TASK', status: 'PENDING', channels: [] })))
+        // 가짜 알림도 지금 전경 context에 붙여 실제와 같은 표시 확인(context·남은 시간)을 거친다.
+        return parsed(request, ids.map((interventionId) => ({ interventionId, type: 'OFF_TASK', status: 'PENDING', channels: [], observationContextId: currentContext(), remainingTtlMs: 30_000 })))
       }
       if (action === 'pause' && request.method === 'POST') {
         const result = await real(request)

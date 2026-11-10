@@ -30,7 +30,7 @@ test('단축키 알림은 진행 중 세션에만 한 번 만들어지고 확인
   setSnap(running)
   assert.equal(demo.triggerAlert(), true)
   const list = await auth.authorizedRequest({ path: '/api/v1/sessions/s1/interventions', method: 'GET', parse: parsePending })
-  assert.deepEqual(list, { success: true, data: [{ interventionId: 'demo-1', type: 'OFF_TASK', channels: [] }] })
+  assert.deepEqual(list, { success: true, data: [{ interventionId: 'demo-1', type: 'OFF_TASK', channels: [], observationContextId: null, remainingTtlMs: 30000 }] })
   assert.deepEqual(await auth.authorizedRequest({ path: '/api/v1/sessions/s1/interventions', method: 'GET', parse: parsePending }), { success: true, data: [] })
   assert.equal((await auth.authorizedRequest({ path: '/api/v1/interventions/demo-1/acknowledgements', method: 'POST', parse: () => true })).success, true)
   assert.deepEqual(calls, [])

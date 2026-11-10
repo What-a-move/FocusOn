@@ -28,7 +28,8 @@ import { SessionRuntime } from './session-runtime.cjs'
 import { SESSION_CHANNELS, type SessionSnapshot } from '../shared/session-contract.cjs'
 import { ExcludedApps } from './excluded-apps.cjs'
 import { ObserverHelper } from './observer-helper.cjs'
-import { ScreenObserver, parseFrontmost } from './screen-observer.cjs'
+import { CHROME, ScreenObserver, parseFrontmost } from './screen-observer.cjs'
+import { ObservationContext } from './observation-context.cjs'
 import { AnalysisSender } from './analysis-sender.cjs'
 import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
@@ -267,6 +268,8 @@ if (!hasSingleInstanceLock) {
     const observer = new ScreenObserver({ selfPid: process.pid, isExcluded: (bundleId) => excludedApps.has(bundleId), now: () => performance.now(), wallClock: () => new Date() })
     // 관측은 바로 서버로 보내고 Desktop에 쌓아 두지 않는다(결정 024). 창 제목은 로그에 남기지 않는다.
     const sender = authService ? new AnalysisSender(authService, path.join(app.getPath('userData'), 'analysis-sequence.json')) : null
+    // 지금 앞에 떠 있는 화면(전경 context)을 서버에 알린다(#182). 알림은 이 context 기준으로만 만들어지고 표시된다.
+    const context = authService ? new ObservationContext(authService, path.join(app.getPath('userData'), 'observation-context.json')) : null
     let observing = false
     // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
@@ -318,14 +321,20 @@ if (!hasSingleInstanceLock) {
     }
     const watcher = authService && runtime ? new InterventionWatcher({
       auth: authService,
-      show: showFloating,
-      notify: (payload, sound) => { if (Notification.isSupported()) new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show() },
+      show: (payload) => { showFloating(payload); return true },
+      notify: (payload, sound) => {
+        if (!Notification.isSupported()) return false
+        new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show()
+        return true
+      },
       pause: () => runtime.pause('USER'),
       isCurrent: (sessionId) => { const current = runtime.snapshot(); return current?.status === 'RUNNING' && current.sessionId === sessionId },
+      currentContext: () => context?.currentId() ?? null,
+      journalFile: path.join(app.getPath('userData'), 'intervention-receipts.json'),
     }) : null
     // 시연 모드(#189): `pnpm dev:demo`로 실행할 때만 켠다(빌드한 화면을 써서 Next 개발 표시가 영상에 안 나온다). 배포 앱은 환경 변수가 있어도 켜지 않는다.
     if (authService && runtime && process.env.FOCUSON_DEMO === '1' && !app.isPackaged) {
-      const demo = installDemoMode(authService, () => runtime.snapshot())
+      const demo = installDemoMode(authService, () => runtime.snapshot(), () => context?.currentId() ?? null)
       // ⌘⇧D: 진행 중 세션에 이탈 알림을 만들고 10초 조회를 기다리지 않고 바로 보여 준다.
       globalShortcut.register('CommandOrControl+Shift+D', () => {
         const current = runtime.snapshot()
@@ -357,7 +366,7 @@ if (!hasSingleInstanceLock) {
         runtime.tick()
         // 세션이 RUNNING일 때만 맨 앞 앱을 본다(결정 024). 멈추면 15초 계산을 처음부터 다시 한다.
         const session = runtime.snapshot()
-        if (session?.status !== 'RUNNING') { observer.reset(); return }
+        if (session?.status !== 'RUNNING') { observer.reset(); context?.reset(); return }
         if (!helper || observing) return
         observing = true
         void helper.request('frontmost')
@@ -365,10 +374,16 @@ if (!hasSingleInstanceLock) {
             // [주의] 확인하는 사이 세션이 멈췄거나 바뀌었으면 그 결과는 버린다. 멈춘 동안의 앱 정보를 보내지 않는다.
             const current = runtime.snapshot()
             if (current?.status !== 'RUNNING' || current.sessionId !== session.sessionId) return
-            const observation = observer.observe(parseFrontmost(reply))
+            const front = parseFrontmost(reply)
+            // 맨 앞 앱이 바뀌면 15초를 기다리지 않고 바로 전경 context를 바꾼다. Chrome은 Extension이 관측을 맡는다.
+            const foreground = front?.bundleId ? `${front.bundleId}\n${front.windowTitle ?? ''}` : null
+            void context?.update(session.sessionId, foreground, !foreground ? 'NONE' : CHROME.has(front?.bundleId ?? '') ? 'EXTENSION' : 'DESKTOP')
+            const observation = observer.observe(front)
             if (!observation || !sender) return
+            // 관측한 시점의 context를 분석 요청에 붙인다. 화면이 바뀌는 중이면 붙이지 않는다(서버가 정책에 쓰지 않음).
+            const observedContext = context?.currentId() ?? null
             void analyzeObservation({
-              send: (sessionId, next) => sender.send(sessionId, next),
+              send: (sessionId, next) => sender.send(sessionId, next, observedContext),
               // 창 캡처·Vision OCR은 몇 초 걸릴 수 있다. 글자만 받고 이미지는 도우미 안에서 버린다.
               ocr: async (windowId) => {
                 const result = await helper.request('ocr', { windowId, timeoutMs: 5000 })
@@ -386,7 +401,9 @@ if (!hasSingleInstanceLock) {
       setInterval(() => {
         // 세션 중 화면 기록 권한이 꺼지면 바로 멈춘다(Notion 화면 분석 7.2).
         if (runtime.snapshot()?.status === 'RUNNING' && mediaStatus('screen') !== 'granted') runtime.screenPermissionLost()
-        void runtime.heartbeat()
+        // 확정된 전경 context가 있을 때만 heartbeat에 붙여 lease(30초)를 이어 간다.
+        const heartbeatContext = context?.currentId() ?? null
+        void runtime.heartbeat(heartbeatContext).then((ok) => { if (ok && heartbeatContext) context?.renewed(heartbeatContext) })
         // 이탈 알림은 heartbeat와 같은 10초 주기로 조회한다(Notion interventions 비고). 진행 중이 아니면 포키를 숨긴다.
         const current = runtime.snapshot()
         // 세션이 바뀌면 이전 세션의 포키를 닫는다. 그 알림으로 새 세션을 멈추지 않게 한다.

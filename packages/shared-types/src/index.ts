@@ -31,6 +31,8 @@ export type AnalysisRunRequest = {
   metadata?: AnalysisMetadata
   /** 일회성 최소 텍스트. 저장·로그·큐에 남기지 않는다. */
   contentPayload?: { text: string }
+  /** 관측한 시점의 전경 context(#182). 이 관측을 맡은 기기일 때만 붙인다. 없으면 서버는 예전 이력으로만 기록한다. */
+  observationContextId?: string
 }
 
 /** `analysis-runs` 응답 중 클라이언트가 읽는 값. reasonCode는 ReasonCode 값이 오지만, 모르는 값이 와도 응답 자체는 받는다. */

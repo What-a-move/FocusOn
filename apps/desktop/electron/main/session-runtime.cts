@@ -138,28 +138,31 @@ export class SessionRuntime {
   }
 
   /** 10초마다 불린다. 서버가 세션을 살아 있다고 보도록 Desktop이 확정한 누적 시간을 보낸다. */
-  async heartbeat(): Promise<void> {
+  /** 생존 신호. observationContextId는 지금 전경을 확인한 context일 때만 넘긴다(#182). 서버가 받았으면 true. */
+  async heartbeat(observationContextId: string | null = null): Promise<boolean> {
     void this.flushLocalEvents()
     const s = this.state
-    if (!s || !isActive(s.status) || s.busy) return
+    if (!s || !isActive(s.status) || s.busy) return false
     const result = await this.auth.authorizedRequest({
       path: `/api/v1/sessions/${s.sessionId}/heartbeats`, method: 'POST', expectedStatus: 200, parse: parseHeartbeat, withDeviceId: true,
-      body: { clientObservedAt: this.wallClock().toISOString(), accumulatedActiveMs: this.activeMs() },
+      body: { clientObservedAt: this.wallClock().toISOString(), accumulatedActiveMs: this.activeMs(), ...(observationContextId ? { observationContextId } : {}) },
     })
-    if (this.state !== s) return
+    if (this.state !== s) return false
     // 서버가 Desktop 밖의 이유(확장 연결 끊김·Chrome 사이트 접근 꺼짐)로 멈췄으면 서버 시간으로 같이 멈춘다(Notion 권한 정책 2.4).
     // [주의] 명령 처리 중이거나 로컬에서 이미 멈췄으면 건드리지 않는다. 화면 기록 권한은 Desktop이 먼저 멈춘다.
     if (result.success && s.status === 'RUNNING' && !s.busy && (result.data.status === 'AUTO_PAUSED' || result.data.status === 'PAUSED')) {
       this.settle(result.data.status, result.data.accumulatedActiveMs)
       s.pauseReason = result.data.pauseReason
       this.publish('server-paused')
-      return
+      return false
     }
     if (!result.success && result.error.code === 'SESSION_ABANDONED') {
       // 서버가 응답 없음으로 이미 끝낸 세션은 되살리지 않는다. 서버가 확정한 시간만 남는다.
       this.settle('ABANDONED')
       this.publish('server-abandoned')
     }
+    // 서버가 진행 중으로 받은 신호만 전경 lease를 잇는다(목표 도달·멈춤·오류는 아님).
+    return result.success && result.data.status === 'RUNNING'
   }
 
   pause(reason: 'USER' | 'APP_RESTART' = 'USER'): Promise<ApiResult<SessionSnapshot>> {

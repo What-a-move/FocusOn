@@ -308,3 +308,13 @@ test('서버가 이미 무신호로 끝낸 세션이면 끝내기 실패를 ABAN
   assert.equal((await runtime.end()).success, false)
   assert.equal(runtime.snapshot().status, 'ABANDONED')
 })
+
+test('heartbeat는 전경 context가 있을 때만 붙이고, 서버가 진행 중으로 받았을 때만 true다', async () => {
+  const replies = [{ success: true, data: { status: 'RUNNING', accumulatedActiveMs: 1000 } }, { success: true, data: { status: 'AWAITING_END_CONFIRMATION', accumulatedActiveMs: 600000 } }]
+  const { runtime, calls } = setup({ 'POST /api/v1/sessions/901/heartbeats': () => replies.shift() })
+  runtime.begin(started, '미적분 풀기')
+  assert.equal(await runtime.heartbeat('ctx-1'), true)
+  assert.equal(calls[0].body.observationContextId, 'ctx-1')
+  assert.equal(await runtime.heartbeat(null), false, '목표 도달 신호는 lease를 잇지 않음')
+  assert.equal('observationContextId' in calls[1].body, false)
+})
