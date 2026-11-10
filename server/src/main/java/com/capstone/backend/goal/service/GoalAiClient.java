@@ -29,7 +29,9 @@ public class GoalAiClient {
   public GoalAiClient(ObjectMapper mapper, @Value("${focuson.goal-ai.base-url:}") String baseUrl) {
     this.mapper = mapper;
     this.baseUrl = baseUrl;
-    this.client = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
+    // 기본 HTTP/2 업그레이드(Upgrade: h2c)를 보내면 uvicorn이 본문을 버리고 422로 응답한다.
+    this.client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
+        .connectTimeout(CONNECT_TIMEOUT).build();
   }
 
   /** 내부 계약의 요청을 전송하고 결과를 파싱한다. 재시도는 호출 서비스가 담당한다. */
