@@ -19,3 +19,7 @@ MockMvc는 실제 네트워크 소켓 및 Electron 테스트가 아니다. 실�
 ## 최종 전체 검증
 
 `./server/gradlew -p server build` 성공. JUnit XML 합계315개 중 실패0·오류0·조건부생략17(일반298개 통과). PostgreSQL 전용 업그레이드 테스트는 H2에서는 생략되고 격리 PostgreSQL에서는 통과했다. Main/Test Checkstyle도 통과했다. XML 합계는 Gradle 콘솔의 container 생략 표시와 다를 수 있다.
+
+## PR 전 최신 dev 통합 검증
+
+세션 종료 PR164가 병합된 dev `2d21a3b`를 통합했다. 문서2개 충돌은 양쪽 기록을 보존해 해소했다. 통합 뒤 전체 build/Checkstyle: 339개 실패0·오류0·생략17. 로그 `server/build/report208-pr-build.log`. PostgreSQL10개 결과는 이 통합 전 b3d680d 기반 검증이며 이번 통합에 schema 변경은 없다. 기존 원격 PostgreSQL job에 리포트10개를 추가했으며 원격 실행 결과는 PR에서 별도 확인한다.
