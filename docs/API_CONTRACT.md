@@ -300,7 +300,7 @@ POST /api/v1/sessions/{sessionId}/local-events
 - `POST /api/v1/sessions/{sessionId}/end`: Desktop 실행 기기만. 필수 헤더 `Authorization`, `Idempotency-Key`, `If-Match-Version`(`X-Device-Id` 불필요). 본문은 필수 `{ "accumulatedActiveMs": 정수ms }`이며 종료 버튼 시점의 Desktop monotonic 전체 누적값이다. 재시도에는 최초 본문·키·버전을 유지한다.
 - 허용 상태는 `RUNNING`, `PAUSED`, `AUTO_PAUSED`, `AWAITING_END_CONFIRMATION`이다. `RUNNING`은 저장 누적값 이상이고 현재 실행 구간 시작 누적값 + 서버 경과시간 + 30초 이내여야 한다(pause와 같은 검증). 멈춘 상태는 저장 누적값과 같아야 한다. 어긋나면 `400 VALIDATION_ERROR`이며 상태·누적값·종료 시각·버전을 바꾸지 않는다.
 - 성공 `200 data`: `status(ENDED)`, `version`, `accumulatedActiveMs`, `targetDurationMs`, `endedAt`. `endReason`은 `USER_ACTION`이다. 같은 키·같은 본문은 최초 응답을 재생하고, 같은 키에 다른 최종값은 `409 IDEMPOTENCY_CONFLICT`다.
-- 서버가 이미 무신호로 끝낸 `ABANDONED` 세션은 `409 SESSION_ABANDONED`(details `currentStatus`, `endReason: HEARTBEAT_TIMEOUT`)로 응답한다. 버전 비교보다 먼저 판단하며 세션을 되살리지 않는다. 클라이언트는 최신 세션을 조회한다(heartbeat·local-events와 같은 규칙, 2026-11-10 정함). `ENDED`·`ENDING`은 `409 SESSION_STATE_INVALID`다.
+- 서버가 이미 무신호로 끝낸 `ABANDONED` 세션은 `409 SESSION_ABANDONED`(details `currentStatus`, `endReason: HEARTBEAT_TIMEOUT`)로 응답한다. 버전 비교보다 먼저 판단하며 세션을 되살리지 않는다. 클라이언트는 최신 세션을 조회한다(heartbeat·local-events와 같은 규칙, 2026-11-10 정함). `ENDED`·`ENDING`은 `If-Match-Version`이 맞으면 `409 SESSION_STATE_INVALID`, 오래된 버전이면 `409 SESSION_VERSION_CONFLICT`다(버전 검사가 상태 검사보다 먼저이며 `ABANDONED`만 예외로 그보다 앞선다).
 - heartbeat가 저장 누적값을 갱신하므로 본문 없는 종료도 가능하지만, 마지막 heartbeat 이후 구간을 잃지 않도록 최종값 본문을 필수로 유지한다(2026-11-05 사용자 승인). **현재 Desktop `session-runtime.cts`의 `end()`는 본문 없이 호출하므로 반영 전에는 400이다.** 전달 문서는 `server/docs/features/session-end-frontend-handoff.md`.
 
 ### 분석 관측 순서 (2026-11-08 보완)
