@@ -1,6 +1,14 @@
 # Backend 다음 작업
 
-## 현재 작업 — PR #205 코드리뷰 피드백 반영 (2026-11-09)
+## 현재 작업 — PR #207 코드리뷰 피드백 반영 (2026-11-10)
+
+- 로컬 변경은 커밋까지만 했다. push와 PR 댓글·리뷰 resolve는 사용자 승인 뒤 진행한다.
+- 다음: push 뒤 원격 CI(PostgreSQL job 포함)와 CodeRabbit/Codex 재리뷰 결과를 확인한다. 로컬 통과를 원격 결과로 취급하지 않는다.
+- Notion 공통 Error Code 정책에 `SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(409, retryable=false)를 먼저 추가해야 한다. 정본 수정은 PM 확인이 필요하다.
+- Desktop·Extension 담당: 한도 오류를 재시도하지 말고, 재시도 시 최초 `occurredAt`을 유지한다. Extension 사이트 권한 유실은 `REQUIRED_PERMISSION` 안내를 쓴다. 실제 권한 철회 QA는 미완료다.
+- 개발 DB 5432·8080·`.idea`·로컬 `.gitignore` 변경은 보존한다.
+
+## 이전 작업 — PR #205 코드리뷰 피드백 반영 (2026-11-09, 병합 완료)
 
 - PR은 이미 생성·push했다. 생성 승인을 다시 요청하지 않는다. PR205 병합은 사용자 승인을 받았다. 추가2건 보완/독립 리뷰/로컬282개·격리PG155개 검증을 마쳤고 최종 원격CI 후 병합한다. Issue #182 종료는 별도다.
 - 기준7ab8f6e의 Backend CI2개는 SUCCESS이고 CodeRabbit 리뷰가 완료돼 actionable9건·테스트 제안1건을 받았다. 후속 보완 로컬 검증은 전체279개 실패0·생략14 및 격리PG152개 전부 통과다. 최종 수정분 자동 재리뷰가 완료됐다는 뜻은 아니다.
@@ -213,3 +221,7 @@ PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionabl
 ## Issue #201 세션 결과 요약 (2026-11-09)
 
 - feat/201-session-summary에서 종료 세션 요약과 실제 연장 통계를 구현했다. 실계정HTTP200·PostgreSQL27개 결과는 features/session-summary-REPORT.md를 따른다. 다음 리포트 범위는 일간/달력이며 학습 정리는 별도다. Notion 원문·실제Desktop QA는 미완료다.
+
+## Issue #206 로컬 이벤트·학습 정리 조회 (2026-11-09)
+
+- feat/206-session-events-learning: 권한유실2종 저장/자동정지/재전송 중복제거와 저장된학습정리5상태 조회를 구현했다. 실계정HTTP·PG34개·V19보존 검증은 features/session-events-learning-REPORT.md를 따른다. 생성자/AI/근거수집은 기존#29 선행작업이며 전체자동정리완료가 아니다. 실제앱/Notion원문 대조는 남았다.

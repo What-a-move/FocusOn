@@ -1,5 +1,13 @@
 # Backend 결정 기록
 
+## 2026-11-10 PR #207 리뷰 보완 — 로컬 권한 이벤트·학습 정리 조회
+
+- 이벤트 저장은 세션당 256건으로 제한한다. 한도 뒤에도 필수 정지는 같은 트랜잭션에서 반영하고, 새 이벤트만 `409 SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(재시도 불가)로 거절한다. 이미 저장된 이벤트의 재전송은 200을 유지한다. 새 오류 코드이므로 Notion 공통 Error Code 정책에 먼저 정의해야 한다(BE-002). 현재 Notion 복제본은 읽기만 했고 수정하지 않았다.
+- 180초 생존 기준을 지난 RUNNING 세션에 이벤트가 오면 `AUTO_PAUSED`로 되돌릴 수 없는 정리 우회를 막기 위해 `ABANDONED`를 먼저 확정·커밋한 뒤 `409 SESSION_ABANDONED`를 반환한다. 기준 시각은 현재 `lastResumedAt`과 마지막 유효 heartbeat 중 최신값이다.
+- 위 만료 선확정은 **새 이벤트에만** 적용한다. 이미 저장된 재전송은 만료 뒤에도 상태 변경 없이 200이다(PR 본문의 "이미 처리된 재전송은 200" 계약 유지, CodeRabbit 2차 리뷰 반영). 만료 세션의 최종 정리는 heartbeat cleanup이 맡는다.
+- Extension 사이트 접근 권한 유실(`LOCAL_EXTENSION_HOST_PERMISSION_MISSING`)은 연결이 유지된 상태이므로 `pauseReason: REQUIRED_PERMISSION`이다. `EXTENSION_UNLINKED`는 실제 연결 해제에만 남긴다(Desktop 복구 안내가 다름). Codex 리뷰 P2 반영이다.
+- V19 checksum을 바꾸지 않고 V20에서 READY 필수 문구의 공백뿐인 값을 새 쓰기에서 거절한다. 기존 행은 보존해야 하므로 CHECK는 `NOT VALID`이며, 조회 시 불량 READY는 `503 SERVICE_UNAVAILABLE`로 막고 저장 값은 바꾸지 않는다.
+
 ## PR205 리뷰 보완 — 기존 정책의 경계 보장 (2026-11-09)
 
 공개 API/확정 사용자 동작은 유지한다. 정책 현재성은 명시적 context 안에서 선택하며, 일반 재분석은 후보를 보존하고 표시만 동결한다. NOT_SENT 후보가 TTL 안 남아 있으면 같은 후보만 재시도한다. 필수 동의 철회는 동의 저장 transaction의 사용자→세션 잠금 안에서 구간을 즉시 종료해 재동의가 중단을 숨기지 못하게 한다. 선택 CAMERA_ANALYSIS 철회는 화면 정책을 끊지 않는다. cooldown 중 표시를 차단하며 '새 관측'은 완료 시각이 아닌 실제 서버 receivedAt으로 검증한다. heartbeat 정책 평가는 원래 transaction의 connection cleanup 뒤에 시작해 작은 pool에서도 새 transaction이 연결을 얻을 수 있게 한다.
@@ -439,3 +447,7 @@ PostgreSQL 17을 Docker Compose로 실행하고 Flyway로 스키마를 관리한
 ## #201 세션 결과 요약 조회 기준 (2026-11-09)
 
 사용자 위임에 따라 결과 요약은 Desktop 본인의 ENDED/ABANDONED만 제공하며 진행 상태는 기존 SESSION_STATE_INVALID409로 처리한다. 정확한 집계 근거 없는 선택 통계는 생략하고 실제 연장 이력만 집계한다. 기존 상세 조회와 역할을 구분하며 알 수 없는 값을0으로 반환하지 않기 위한 기준이다. Notion 최신 원문은 접근 불가이고 로컬 확정 필드 및 Desktop 파서를 대조했다. 이슈 댓글로 공유한다.
+
+## #206 공개2API의 처리 기준 (2026-11-09)
+
+사용자 요청으로 로컬이벤트와 학습정리조회만 묶는다. 요청에 최종누적값이 없어 서버확정값을 유지하며 RUNNING만 자동정지한다. 같은이벤트는 occurredAt을 유지한 코드/시각해시로 재전송을 구분한다. 재개후같은이벤트로 재정지하지 않되 실행세대없는 새지연신호 구분의한계는 남는다. 학습정리행없음404, 저장된5상태200이며 자동생성은 #29 선행범위다. 기준/이유를 #206 댓글에 공유했다.
