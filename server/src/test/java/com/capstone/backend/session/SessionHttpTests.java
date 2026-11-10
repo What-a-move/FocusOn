@@ -70,11 +70,28 @@ class SessionHttpTests {
         .header("Authorization", token).GET().build(), HttpResponse.BodyHandlers.ofString());
     assertEquals(200, active.statusCode());
     assertEquals(sessionId, json.readTree(active.body()).path("data").path("sessionId").asText());
+    long version = json.readTree(started.body()).path("data").path("version").asLong();
+    var ended = client.send(HttpRequest.newBuilder(URI.create(root + "/api/v1/sessions/"
+        + sessionId + "/end")).header("Authorization", token)
+        .header("Idempotency-Key", UUID.randomUUID().toString())
+        .header("If-Match-Version", Long.toString(version))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString("{\"accumulatedActiveMs\":1000}"))
+        .build(), HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, ended.statusCode());
+    assertEquals("ENDED", json.readTree(ended.body()).path("data").path("status").asText());
+    assertEquals(1000, json.readTree(ended.body()).path("data")
+        .path("accumulatedActiveMs").asLong());
+    var noActive = client.send(HttpRequest.newBuilder(URI.create(root + "/api/v1/sessions/active"))
+        .header("Authorization", token).GET().build(), HttpResponse.BodyHandlers.ofString());
+    assertEquals(204, noActive.statusCode());
     var spec = client.send(HttpRequest.newBuilder(URI.create(root + "/v3/api-docs"))
         .GET().build(), HttpResponse.BodyHandlers.ofString());
     assertEquals(200, spec.statusCode());
     assertTrue(json.readTree(spec.body()).path("paths").has("/api/v1/sessions"));
     assertTrue(json.readTree(spec.body()).path("paths").has("/api/v1/sessions/active"));
+    assertTrue(json.readTree(spec.body()).path("paths")
+        .has("/api/v1/sessions/{sessionId}/end"));
     var swagger = client.send(HttpRequest.newBuilder(URI.create(root + "/swagger-ui/index.html"))
         .GET().build(), HttpResponse.BodyHandlers.ofString());
     assertEquals(200, swagger.statusCode());
