@@ -1,0 +1,1828 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 18,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 18,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 18,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/controller/AnalysisController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 38,
+      "nonEmptyLines": 35,
+      "functions": [
+        {
+          "name": "analyze",
+          "startLine": 29,
+          "endLine": 37,
+          "params": [
+            "principal",
+            "sessionId",
+            "deviceId",
+            "request"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AnalysisController",
+          "startLine": 21,
+          "endLine": 38,
+          "methods": [
+            "analyze"
+          ],
+          "properties": [
+            "analyses"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "analyze",
+          "line": 29,
+          "isDefault": false
+        },
+        {
+          "name": "AnalysisController",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "analyze",
+          "callee": "ApiResponse.of",
+          "lineNumber": 36
+        },
+        {
+          "caller": "analyze",
+          "callee": "analyses.analyze",
+          "lineNumber": 36
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 57,
+      "nonEmptyLines": 53,
+      "functions": [
+        {
+          "name": "analyze",
+          "startLine": 21,
+          "endLine": 43,
+          "params": [
+            "principal",
+            "deviceId",
+            "sessionId",
+            "request"
+          ]
+        },
+        {
+          "name": "parseId",
+          "startLine": 46,
+          "endLine": 56,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AnalysisService",
+          "startLine": 14,
+          "endLine": 57,
+          "methods": [
+            "analyze",
+            "parseId"
+          ],
+          "properties": [
+            "store",
+            "ai"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "analyze",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "AnalysisService",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "analyze",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 23
+        },
+        {
+          "caller": "analyze",
+          "callee": "AnalysisPrivacy.validate",
+          "lineNumber": 24
+        },
+        {
+          "caller": "analyze",
+          "callee": "System.nanoTime",
+          "lineNumber": 25
+        },
+        {
+          "caller": "analyze",
+          "callee": "store.prepare",
+          "lineNumber": 27
+        },
+        {
+          "caller": "analyze",
+          "callee": "parseId",
+          "lineNumber": 27
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 28
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 29
+        },
+        {
+          "caller": "analyze",
+          "callee": "prepared.guard",
+          "lineNumber": 29
+        },
+        {
+          "caller": "analyze",
+          "callee": "prepared.guard",
+          "lineNumber": 31
+        },
+        {
+          "caller": "analyze",
+          "callee": "prepared.initialResponse",
+          "lineNumber": 32
+        },
+        {
+          "caller": "analyze",
+          "callee": "prepared.latest",
+          "lineNumber": 34
+        },
+        {
+          "caller": "analyze",
+          "callee": "ai.analyze",
+          "lineNumber": 34
+        },
+        {
+          "caller": "analyze",
+          "callee": "principal.userId",
+          "lineNumber": 34
+        },
+        {
+          "caller": "analyze",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 35
+        },
+        {
+          "caller": "analyze",
+          "callee": "store.complete",
+          "lineNumber": 36
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 37
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 40
+        },
+        {
+          "caller": "parseId",
+          "callee": "Long.parseLong",
+          "lineNumber": 48
+        },
+        {
+          "caller": "parseId",
+          "callee": "new NumberFormatException",
+          "lineNumber": 50
+        },
+        {
+          "caller": "parseId",
+          "callee": "new ApiException",
+          "lineNumber": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/AuthController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 56,
+      "nonEmptyLines": 51,
+      "functions": [
+        {
+          "name": "AuthController",
+          "startLine": 32,
+          "endLine": 35,
+          "params": [
+            "login",
+            "limits"
+          ]
+        },
+        {
+          "name": "exchange",
+          "startLine": 38,
+          "endLine": 48,
+          "params": [
+            "body",
+            "request"
+          ]
+        },
+        {
+          "name": "me",
+          "startLine": 51,
+          "endLine": 55,
+          "params": [
+            "principal"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AuthController",
+          "startLine": 25,
+          "endLine": 56,
+          "methods": [
+            "AuthController",
+            "exchange",
+            "me"
+          ],
+          "properties": [
+            "login",
+            "limits"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AuthController",
+          "line": 32,
+          "isDefault": false
+        },
+        {
+          "name": "exchange",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "me",
+          "line": 51,
+          "isDefault": false
+        },
+        {
+          "name": "AuthController",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "exchange",
+          "callee": "RedirectUriValidator.validate",
+          "lineNumber": 45
+        },
+        {
+          "caller": "exchange",
+          "callee": "body.redirectUri",
+          "lineNumber": 45
+        },
+        {
+          "caller": "exchange",
+          "callee": "limits.checkGoogleLogin",
+          "lineNumber": 46
+        },
+        {
+          "caller": "exchange",
+          "callee": "request.getRemoteAddr",
+          "lineNumber": 46
+        },
+        {
+          "caller": "exchange",
+          "callee": "body.device().installationId",
+          "lineNumber": 46
+        },
+        {
+          "caller": "exchange",
+          "callee": "body.device",
+          "lineNumber": 46
+        },
+        {
+          "caller": "exchange",
+          "callee": "ApiResponse.of",
+          "lineNumber": 47
+        },
+        {
+          "caller": "exchange",
+          "callee": "login.exchange",
+          "lineNumber": 47
+        },
+        {
+          "caller": "me",
+          "callee": "ApiResponse.of",
+          "lineNumber": 54
+        },
+        {
+          "caller": "me",
+          "callee": "login.me",
+          "lineNumber": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/DeviceController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 50,
+      "nonEmptyLines": 44,
+      "functions": [
+        {
+          "name": "DeviceController",
+          "startLine": 24,
+          "endLine": 26,
+          "params": [
+            "devices"
+          ]
+        },
+        {
+          "name": "list",
+          "startLine": 36,
+          "endLine": 49,
+          "params": [
+            "principal"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "DeviceController",
+          "startLine": 18,
+          "endLine": 50,
+          "methods": [
+            "DeviceController",
+            "list"
+          ],
+          "properties": [
+            "devices"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DeviceController",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "list",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "DeviceController",
+          "line": 18,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "list",
+          "callee": "principal.deviceType",
+          "lineNumber": 39
+        },
+        {
+          "caller": "list",
+          "callee": "new ApiException",
+          "lineNumber": 40
+        },
+        {
+          "caller": "list",
+          "callee": "devices.findByUserIdAndStatus(principal.userId(), UserDeviceEntity.Status.ACTIVE)\n        .stream().map(device -> new Device(device.getId().toString(),\n            device.getDeviceType() == UserDeviceEntity.DeviceType.CHROME_EXTENSION\n                ? \"EXTENSION\" : \"DESKTOP\", device.getDisplayName(), device.getLastUsedAt(),\n            device.getLinkedDesktopDevice() == null ? null\n                : device.getLinkedDesktopDevice().getId().toString())).toList",
+          "lineNumber": 42
+        },
+        {
+          "caller": "list",
+          "callee": "devices.findByUserIdAndStatus(principal.userId(), UserDeviceEntity.Status.ACTIVE)\n        .stream().map",
+          "lineNumber": 42
+        },
+        {
+          "caller": "list",
+          "callee": "devices.findByUserIdAndStatus(principal.userId(), UserDeviceEntity.Status.ACTIVE).stream",
+          "lineNumber": 42
+        },
+        {
+          "caller": "list",
+          "callee": "devices.findByUserIdAndStatus",
+          "lineNumber": 42
+        },
+        {
+          "caller": "list",
+          "callee": "principal.userId",
+          "lineNumber": 42
+        },
+        {
+          "caller": "list",
+          "callee": "new Device",
+          "lineNumber": 43
+        },
+        {
+          "caller": "list",
+          "callee": "device.getId().toString",
+          "lineNumber": 43
+        },
+        {
+          "caller": "list",
+          "callee": "device.getId",
+          "lineNumber": 43
+        },
+        {
+          "caller": "list",
+          "callee": "device.getDeviceType",
+          "lineNumber": 44
+        },
+        {
+          "caller": "list",
+          "callee": "device.getDisplayName",
+          "lineNumber": 45
+        },
+        {
+          "caller": "list",
+          "callee": "device.getLastUsedAt",
+          "lineNumber": 45
+        },
+        {
+          "caller": "list",
+          "callee": "device.getLinkedDesktopDevice",
+          "lineNumber": 46
+        },
+        {
+          "caller": "list",
+          "callee": "device.getLinkedDesktopDevice().getId().toString",
+          "lineNumber": 47
+        },
+        {
+          "caller": "list",
+          "callee": "device.getLinkedDesktopDevice().getId",
+          "lineNumber": 47
+        },
+        {
+          "caller": "list",
+          "callee": "device.getLinkedDesktopDevice",
+          "lineNumber": 47
+        },
+        {
+          "caller": "list",
+          "callee": "ApiResponse.of",
+          "lineNumber": 48
+        },
+        {
+          "caller": "list",
+          "callee": "new DeviceList",
+          "lineNumber": 48
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/PairingController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 69,
+      "nonEmptyLines": 62,
+      "functions": [
+        {
+          "name": "PairingController",
+          "startLine": 30,
+          "endLine": 32,
+          "params": [
+            "pairing"
+          ]
+        },
+        {
+          "name": "issue",
+          "startLine": 35,
+          "endLine": 40,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "claim",
+          "startLine": 43,
+          "endLine": 50,
+          "params": [
+            "body",
+            "request"
+          ]
+        },
+        {
+          "name": "cancel",
+          "startLine": 53,
+          "endLine": 59,
+          "params": [
+            "principal",
+            "pairingCodeId"
+          ]
+        },
+        {
+          "name": "unlink",
+          "startLine": 62,
+          "endLine": 68,
+          "params": [
+            "principal",
+            "extensionDeviceId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "PairingController",
+          "startLine": 24,
+          "endLine": 69,
+          "methods": [
+            "PairingController",
+            "issue",
+            "claim",
+            "cancel",
+            "unlink"
+          ],
+          "properties": [
+            "pairing"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PairingController",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "issue",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "claim",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "cancel",
+          "line": 53,
+          "isDefault": false
+        },
+        {
+          "name": "unlink",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "PairingController",
+          "line": 24,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "issue",
+          "callee": "ApiResponse.of",
+          "lineNumber": 39
+        },
+        {
+          "caller": "issue",
+          "callee": "pairing.issue",
+          "lineNumber": 39
+        },
+        {
+          "caller": "claim",
+          "callee": "ApiResponse.of",
+          "lineNumber": 49
+        },
+        {
+          "caller": "claim",
+          "callee": "pairing.claim",
+          "lineNumber": 49
+        },
+        {
+          "caller": "claim",
+          "callee": "request.getRemoteAddr",
+          "lineNumber": 49
+        },
+        {
+          "caller": "cancel",
+          "callee": "pairing.cancel",
+          "lineNumber": 58
+        },
+        {
+          "caller": "unlink",
+          "callee": "pairing.unlink",
+          "lineNumber": 67
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 6,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/TokenLifecycleController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 47,
+      "nonEmptyLines": 42,
+      "functions": [
+        {
+          "name": "TokenLifecycleController",
+          "startLine": 26,
+          "endLine": 28,
+          "params": [
+            "lifecycle"
+          ]
+        },
+        {
+          "name": "refresh",
+          "startLine": 31,
+          "endLine": 37,
+          "params": [
+            "body"
+          ]
+        },
+        {
+          "name": "logout",
+          "startLine": 40,
+          "endLine": 46,
+          "params": [
+            "principal"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "TokenLifecycleController",
+          "startLine": 20,
+          "endLine": 47,
+          "methods": [
+            "TokenLifecycleController",
+            "refresh",
+            "logout"
+          ],
+          "properties": [
+            "lifecycle"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "TokenLifecycleController",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "refresh",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "logout",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "TokenLifecycleController",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "refresh",
+          "callee": "ApiResponse.of",
+          "lineNumber": 36
+        },
+        {
+          "caller": "refresh",
+          "callee": "lifecycle.refresh",
+          "lineNumber": 36
+        },
+        {
+          "caller": "refresh",
+          "callee": "body.refreshToken",
+          "lineNumber": 36
+        },
+        {
+          "caller": "logout",
+          "callee": "lifecycle.logout",
+          "lineNumber": 45
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 7,
+      "nonEmptyLines": 5,
+      "classes": [
+        {
+          "name": "FocusOnPrincipal",
+          "startLine": 6,
+          "endLine": 7,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "FocusOnPrincipal",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 29,
+      "nonEmptyLines": 25,
+      "functions": [
+        {
+          "name": "of",
+          "startLine": 24,
+          "endLine": 28,
+          "params": [
+            "code",
+            "retryAfterSeconds",
+            "requestId",
+            "details"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ApiErrorResponse",
+          "startLine": 6,
+          "endLine": 29,
+          "methods": [
+            "of"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "of",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "ApiErrorResponse",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "of",
+          "callee": "new ApiErrorResponse",
+          "lineNumber": 26
+        },
+        {
+          "caller": "of",
+          "callee": "code.name",
+          "lineNumber": 26
+        },
+        {
+          "caller": "of",
+          "callee": "code.defaultMessage",
+          "lineNumber": 26
+        },
+        {
+          "caller": "of",
+          "callee": "code.retryable",
+          "lineNumber": 26
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiResponse.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 9,
+      "nonEmptyLines": 8,
+      "functions": [
+        {
+          "name": "of",
+          "startLine": 6,
+          "endLine": 8,
+          "params": [
+            "data"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ApiResponse",
+          "startLine": 4,
+          "endLine": 9,
+          "methods": [
+            "of"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "of",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "ApiResponse",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "of",
+          "callee": "new ApiResponse<>",
+          "lineNumber": 7
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/controller/ObservationContextController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 52,
+      "nonEmptyLines": 48,
+      "functions": [
+        {
+          "name": "put",
+          "startLine": 33,
+          "endLine": 40,
+          "params": [
+            "principal",
+            "sessionId",
+            "deviceId",
+            "request"
+          ]
+        },
+        {
+          "name": "get",
+          "startLine": 43,
+          "endLine": 51,
+          "params": [
+            "principal",
+            "sessionId",
+            "deviceId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ObservationContextController",
+          "startLine": 24,
+          "endLine": 52,
+          "methods": [
+            "put",
+            "get"
+          ],
+          "properties": [
+            "contexts"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "put",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "get",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "ObservationContextController",
+          "line": 24,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "put",
+          "callee": "ApiResponse.of",
+          "lineNumber": 39
+        },
+        {
+          "caller": "put",
+          "callee": "contexts.put",
+          "lineNumber": 39
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.get(principal, deviceId, sessionId)\n        .map(value -> ResponseEntity.ok(ApiResponse.of(value))).orElseGet",
+          "lineNumber": 48
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.get(principal, deviceId, sessionId).map",
+          "lineNumber": 48
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.get",
+          "lineNumber": 48
+        },
+        {
+          "caller": "get",
+          "callee": "ResponseEntity.ok",
+          "lineNumber": 49
+        },
+        {
+          "caller": "get",
+          "callee": "ApiResponse.of",
+          "lineNumber": 49
+        },
+        {
+          "caller": "get",
+          "callee": "ResponseEntity.noContent().build",
+          "lineNumber": 50
+        },
+        {
+          "caller": "get",
+          "callee": "ResponseEntity.noContent",
+          "lineNumber": 50
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/controller/LearningSummaryController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 52,
+      "nonEmptyLines": 48,
+      "functions": [
+        {
+          "name": "get",
+          "startLine": 42,
+          "endLine": 51,
+          "params": [
+            "principal",
+            "sessionId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LearningSummaryController",
+          "startLine": 24,
+          "endLine": 52,
+          "methods": [
+            "get"
+          ],
+          "properties": [
+            "summaries"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "get",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "LearningSummaryController",
+          "line": 24,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "get",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 50
+        },
+        {
+          "caller": "get",
+          "callee": "summaries.get",
+          "lineNumber": 50
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/dto/LearningSummaryResponse.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 10,
+      "classes": [
+        {
+          "name": "LearningSummaryResponse",
+          "startLine": 6,
+          "endLine": 13,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "LearningSummaryResponse",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/persistence/LearningSummaryRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 6,
+      "nonEmptyLines": 4,
+      "classes": [
+        {
+          "name": "LearningSummaryRepository",
+          "startLine": 6,
+          "endLine": 6,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "LearningSummaryRepository",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/service/LearningSummaryService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 38,
+      "functions": [
+        {
+          "name": "get",
+          "startLine": 22,
+          "endLine": 40,
+          "params": [
+            "principal",
+            "sessionId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LearningSummaryService",
+          "startLine": 15,
+          "endLine": 41,
+          "methods": [
+            "get"
+          ],
+          "properties": [
+            "sessions",
+            "summaries"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "get",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "LearningSummaryService",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "get",
+          "callee": "principal.deviceType",
+          "lineNumber": 24
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 25
+        },
+        {
+          "caller": "get",
+          "callee": "Long.parseLong",
+          "lineNumber": 29
+        },
+        {
+          "caller": "get",
+          "callee": "new NumberFormatException",
+          "lineNumber": 31
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 34
+        },
+        {
+          "caller": "get",
+          "callee": "sessions.findByIdAndUserId(id, principal.userId()).orElseThrow",
+          "lineNumber": 36
+        },
+        {
+          "caller": "get",
+          "callee": "sessions.findByIdAndUserId",
+          "lineNumber": 36
+        },
+        {
+          "caller": "get",
+          "callee": "principal.userId",
+          "lineNumber": 36
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 37
+        },
+        {
+          "caller": "get",
+          "callee": "summaries.findById(id).orElseThrow(() -> new ApiException(ApiErrorCode.NOT_FOUND)).response",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "summaries.findById(id).orElseThrow",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "summaries.findById",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 38
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/controller/LocalEventController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 62,
+      "nonEmptyLines": 58,
+      "functions": [
+        {
+          "name": "receive",
+          "startLine": 47,
+          "endLine": 61,
+          "params": [
+            "principal",
+            "sessionId",
+            "deviceId",
+            "request"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LocalEventController",
+          "startLine": 29,
+          "endLine": 62,
+          "methods": [
+            "receive"
+          ],
+          "properties": [
+            "events"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "receive",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "LocalEventController",
+          "line": 29,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "receive",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 59
+        },
+        {
+          "caller": "receive",
+          "callee": "events.receive",
+          "lineNumber": 60
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/controller/SessionQueryController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 68,
+      "nonEmptyLines": 64,
+      "functions": [
+        {
+          "name": "detail",
+          "startLine": 41,
+          "endLine": 49,
+          "params": [
+            "principal",
+            "sessionId"
+          ]
+        },
+        {
+          "name": "history",
+          "startLine": 52,
+          "endLine": 67,
+          "params": [
+            "principal",
+            "from",
+            "to",
+            "timeZone",
+            "cursor",
+            "limit"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionQueryController",
+          "startLine": 26,
+          "endLine": 68,
+          "methods": [
+            "detail",
+            "history"
+          ],
+          "properties": [
+            "queries"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "detail",
+          "line": 41,
+          "isDefault": false
+        },
+        {
+          "name": "history",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "SessionQueryController",
+          "line": 26,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "detail",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 48
+        },
+        {
+          "caller": "detail",
+          "callee": "queries.detail",
+          "lineNumber": 48
+        },
+        {
+          "caller": "history",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 65
+        },
+        {
+          "caller": "history",
+          "callee": "queries.history",
+          "lineNumber": 66
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/controller/OnboardingReadinessController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 36,
+      "functions": [
+        {
+          "name": "OnboardingReadinessController",
+          "startLine": 23,
+          "endLine": 25,
+          "params": [
+            "readiness"
+          ]
+        },
+        {
+          "name": "get",
+          "startLine": 28,
+          "endLine": 32,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "put",
+          "startLine": 35,
+          "endLine": 40,
+          "params": [
+            "principal",
+            "update"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "OnboardingReadinessController",
+          "startLine": 17,
+          "endLine": 41,
+          "methods": [
+            "OnboardingReadinessController",
+            "get",
+            "put"
+          ],
+          "properties": [
+            "readiness"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "OnboardingReadinessController",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "get",
+          "line": 28,
+          "isDefault": false
+        },
+        {
+          "name": "put",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "OnboardingReadinessController",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "get",
+          "callee": "ApiResponse.of",
+          "lineNumber": 31
+        },
+        {
+          "caller": "get",
+          "callee": "readiness.get",
+          "lineNumber": 31
+        },
+        {
+          "caller": "put",
+          "callee": "ApiResponse.of",
+          "lineNumber": 39
+        },
+        {
+          "caller": "put",
+          "callee": "readiness.get",
+          "lineNumber": 39
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/controller/UserConfigurationController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 241,
+      "nonEmptyLines": 231,
+      "functions": [
+        {
+          "name": "me",
+          "startLine": 51,
+          "endLine": 68,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "updateProfile",
+          "startLine": 71,
+          "endLine": 96,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "consents",
+          "startLine": 99,
+          "endLine": 114,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "updateConsent",
+          "startLine": 117,
+          "endLine": 138,
+          "params": [
+            "principal",
+            "consentType",
+            "request"
+          ]
+        },
+        {
+          "name": "focusSettings",
+          "startLine": 141,
+          "endLine": 155,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "updateFocusSettings",
+          "startLine": 158,
+          "endLine": 184,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "excludedDomains",
+          "startLine": 187,
+          "endLine": 210,
+          "params": [
+            "principal",
+            "deviceId"
+          ]
+        },
+        {
+          "name": "replaceExcludedDomains",
+          "startLine": 213,
+          "endLine": 240,
+          "params": [
+            "principal",
+            "deviceId",
+            "request"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "UserConfigurationController",
+          "startLine": 41,
+          "endLine": 241,
+          "methods": [
+            "me",
+            "updateProfile",
+            "consents",
+            "updateConsent",
+            "focusSettings",
+            "updateFocusSettings",
+            "excludedDomains",
+            "replaceExcludedDomains"
+          ],
+          "properties": [
+            "configuration",
+            "readiness"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "me",
+          "line": 51,
+          "isDefault": false
+        },
+        {
+          "name": "updateProfile",
+          "line": 71,
+          "isDefault": false
+        },
+        {
+          "name": "consents",
+          "line": 99,
+          "isDefault": false
+        },
+        {
+          "name": "updateConsent",
+          "line": 117,
+          "isDefault": false
+        },
+        {
+          "name": "focusSettings",
+          "line": 141,
+          "isDefault": false
+        },
+        {
+          "name": "updateFocusSettings",
+          "line": 158,
+          "isDefault": false
+        },
+        {
+          "name": "excludedDomains",
+          "line": 187,
+          "isDefault": false
+        },
+        {
+          "name": "replaceExcludedDomains",
+          "line": 213,
+          "isDefault": false
+        },
+        {
+          "name": "UserConfigurationController",
+          "line": 41,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "me",
+          "callee": "configuration.me",
+          "lineNumber": 65
+        },
+        {
+          "caller": "me",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 66
+        },
+        {
+          "caller": "me",
+          "callee": "new MeResponse",
+          "lineNumber": 66
+        },
+        {
+          "caller": "me",
+          "callee": "user.userId",
+          "lineNumber": 66
+        },
+        {
+          "caller": "me",
+          "callee": "user.nickname",
+          "lineNumber": 67
+        },
+        {
+          "caller": "me",
+          "callee": "readiness.forPrincipal(principal).onboardingStatus",
+          "lineNumber": 67
+        },
+        {
+          "caller": "me",
+          "callee": "readiness.forPrincipal",
+          "lineNumber": 67
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "configuration.updateProfile",
+          "lineNumber": 93
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 94
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "new MeResponse",
+          "lineNumber": 94
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "user.userId",
+          "lineNumber": 94
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "user.nickname",
+          "lineNumber": 95
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "readiness.forPrincipal(principal).onboardingStatus",
+          "lineNumber": 95
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "readiness.forPrincipal",
+          "lineNumber": 95
+        },
+        {
+          "caller": "consents",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 113
+        },
+        {
+          "caller": "consents",
+          "callee": "configuration.consents",
+          "lineNumber": 113
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 136
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "configuration.updateConsent",
+          "lineNumber": 137
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 154
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "configuration.focusSettings",
+          "lineNumber": 154
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 182
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "configuration.updateFocusSettings",
+          "lineNumber": 183
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 208
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 209
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "configuration.excludedDomains",
+          "lineNumber": 209
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 237
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 238
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "configuration.replaceExcludedDomains",
+          "lineNumber": 239
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 9,
+        "functionCount": 8,
+        "classCount": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,3785 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 16,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 16,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 16,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 55,
+      "nonEmptyLines": 46,
+      "classes": [
+        {
+          "name": "UserEntity",
+          "startLine": 19,
+          "endLine": 55,
+          "methods": [],
+          "properties": [
+            "id",
+            "nickname",
+            "onboardingStatus",
+            "userTimeZone",
+            "createdAt",
+            "updatedAt",
+            "deletedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "UserEntity",
+          "line": 19,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 142,
+      "nonEmptyLines": 135,
+      "functions": [
+        {
+          "name": "clarify",
+          "startLine": 44,
+          "endLine": 66,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 69,
+          "endLine": 86,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "get",
+          "startLine": 89,
+          "endLine": 102,
+          "params": [
+            "principal",
+            "goalId"
+          ]
+        },
+        {
+          "name": "update",
+          "startLine": 105,
+          "endLine": 123,
+          "params": [
+            "principal",
+            "goalId",
+            "request"
+          ]
+        },
+        {
+          "name": "delete",
+          "startLine": 126,
+          "endLine": 141,
+          "params": [
+            "principal",
+            "goalId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GoalController",
+          "startLine": 34,
+          "endLine": 142,
+          "methods": [
+            "clarify",
+            "create",
+            "get",
+            "update",
+            "delete"
+          ],
+          "properties": [
+            "goals",
+            "clarification"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "clarify",
+          "line": 44,
+          "isDefault": false
+        },
+        {
+          "name": "create",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "get",
+          "line": 89,
+          "isDefault": false
+        },
+        {
+          "name": "update",
+          "line": 105,
+          "isDefault": false
+        },
+        {
+          "name": "delete",
+          "line": 126,
+          "isDefault": false
+        },
+        {
+          "name": "GoalController",
+          "line": 34,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "clarify",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 64
+        },
+        {
+          "caller": "clarify",
+          "callee": "clarification.clarify",
+          "lineNumber": 65
+        },
+        {
+          "caller": "create",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 85
+        },
+        {
+          "caller": "create",
+          "callee": "goals.create",
+          "lineNumber": 85
+        },
+        {
+          "caller": "get",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 101
+        },
+        {
+          "caller": "get",
+          "callee": "goals.get",
+          "lineNumber": 101
+        },
+        {
+          "caller": "update",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 122
+        },
+        {
+          "caller": "update",
+          "callee": "goals.update",
+          "lineNumber": 122
+        },
+        {
+          "caller": "delete",
+          "callee": "goals.delete",
+          "lineNumber": 140
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 6,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 15,
+      "classes": [
+        {
+          "name": "GoalClarificationRepository",
+          "startLine": 11,
+          "endLine": 17,
+          "methods": [
+            "findOwnedForUpdate"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "GoalClarificationRepository",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 106,
+      "nonEmptyLines": 89,
+      "functions": [
+        {
+          "name": "create",
+          "startLine": 69,
+          "endLine": 79,
+          "params": [
+            "user",
+            "text",
+            "now"
+          ]
+        },
+        {
+          "name": "begin",
+          "startLine": 82,
+          "endLine": 85,
+          "params": [
+            "now"
+          ]
+        },
+        {
+          "name": "complete",
+          "startLine": 88,
+          "endLine": 93,
+          "params": [
+            "state",
+            "turn",
+            "now"
+          ]
+        },
+        {
+          "name": "release",
+          "startLine": 96,
+          "endLine": 99,
+          "params": [
+            "now"
+          ]
+        },
+        {
+          "name": "confirm",
+          "startLine": 102,
+          "endLine": 105,
+          "params": [
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GoalClarificationSession",
+          "startLine": 25,
+          "endLine": 106,
+          "methods": [
+            "create",
+            "begin",
+            "complete",
+            "release",
+            "confirm"
+          ],
+          "properties": [
+            "id",
+            "user",
+            "goalText",
+            "conversationTurn",
+            "stateJson",
+            "status",
+            "version",
+            "expiresAt",
+            "createdAt",
+            "updatedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "begin",
+          "line": 82,
+          "isDefault": false
+        },
+        {
+          "name": "complete",
+          "line": 88,
+          "isDefault": false
+        },
+        {
+          "name": "release",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "confirm",
+          "line": 102,
+          "isDefault": false
+        },
+        {
+          "name": "GoalClarificationSession",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new GoalClarificationSession",
+          "lineNumber": 70
+        },
+        {
+          "caller": "create",
+          "callee": "now.plus",
+          "lineNumber": 75
+        },
+        {
+          "caller": "create",
+          "callee": "Duration.ofHours",
+          "lineNumber": 75
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 6,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 100,
+      "nonEmptyLines": 82,
+      "functions": [
+        {
+          "name": "GoalEntity",
+          "startLine": 66,
+          "endLine": 74,
+          "params": [
+            "user",
+            "goalText",
+            "confirmationSource",
+            "now"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 77,
+          "endLine": 80,
+          "params": [
+            "user",
+            "goalText",
+            "confirmationSource",
+            "now"
+          ]
+        },
+        {
+          "name": "linkClarification",
+          "startLine": 83,
+          "endLine": 85,
+          "params": [
+            "session"
+          ]
+        },
+        {
+          "name": "updateText",
+          "startLine": 88,
+          "endLine": 92,
+          "params": [
+            "text",
+            "now"
+          ]
+        },
+        {
+          "name": "delete",
+          "startLine": 95,
+          "endLine": 99,
+          "params": [
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GoalEntity",
+          "startLine": 20,
+          "endLine": 100,
+          "methods": [
+            "GoalEntity",
+            "create",
+            "linkClarification",
+            "updateText",
+            "delete"
+          ],
+          "properties": [
+            "id",
+            "user",
+            "clarificationSession",
+            "goalText",
+            "normalizedGoalText",
+            "confirmationSource",
+            "status",
+            "deletedAt",
+            "createdAt",
+            "updatedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 77,
+          "isDefault": false
+        },
+        {
+          "name": "linkClarification",
+          "line": 83,
+          "isDefault": false
+        },
+        {
+          "name": "updateText",
+          "line": 88,
+          "isDefault": false
+        },
+        {
+          "name": "delete",
+          "line": 95,
+          "isDefault": false
+        },
+        {
+          "name": "GoalEntity",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new GoalEntity",
+          "lineNumber": 79
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 5,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 10,
+      "nonEmptyLines": 8,
+      "classes": [
+        {
+          "name": "GoalRepository",
+          "startLine": 7,
+          "endLine": 10,
+          "methods": [
+            "findByIdAndUserIdAndDeletedAtIsNull"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "GoalRepository",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 200,
+      "nonEmptyLines": 188,
+      "functions": [
+        {
+          "name": "clarify",
+          "startLine": 40,
+          "endLine": 75,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "validate",
+          "startLine": 77,
+          "endLine": 90,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "claim",
+          "startLine": 92,
+          "endLine": 119,
+          "params": [
+            "userId",
+            "request"
+          ]
+        },
+        {
+          "name": "validateContinuation",
+          "startLine": 121,
+          "endLine": 139,
+          "params": [
+            "session",
+            "state",
+            "request"
+          ]
+        },
+        {
+          "name": "finish",
+          "startLine": 141,
+          "endLine": 151,
+          "params": [
+            "userId",
+            "claim",
+            "request",
+            "response"
+          ]
+        },
+        {
+          "name": "release",
+          "startLine": 153,
+          "endLine": 163,
+          "params": [
+            "userId",
+            "claim"
+          ]
+        },
+        {
+          "name": "findOwned",
+          "startLine": 165,
+          "endLine": 176,
+          "params": [
+            "userId",
+            "rawId"
+          ]
+        },
+        {
+          "name": "callWithRetry",
+          "startLine": 178,
+          "endLine": 194,
+          "params": [
+            "body"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GoalClarificationService",
+          "startLine": 27,
+          "endLine": 200,
+          "methods": [
+            "clarify",
+            "validate",
+            "claim",
+            "validateContinuation",
+            "finish",
+            "release",
+            "findOwned",
+            "callWithRetry"
+          ],
+          "properties": [
+            "PROCESSING_LEASE",
+            "RETRY_DELAYS_MS",
+            "sessions",
+            "users",
+            "client",
+            "mapper",
+            "json",
+            "transactions"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "clarify",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "GoalClarificationService",
+          "line": 27,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "clarify",
+          "callee": "validate",
+          "lineNumber": 41
+        },
+        {
+          "caller": "clarify",
+          "callee": "transactions.execute",
+          "lineNumber": 42
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim",
+          "lineNumber": 42
+        },
+        {
+          "caller": "clarify",
+          "callee": "principal.userId",
+          "lineNumber": 42
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.cached",
+          "lineNumber": 43
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.cached",
+          "lineNumber": 44
+        },
+        {
+          "caller": "clarify",
+          "callee": "new HashMap<>",
+          "lineNumber": 47
+        },
+        {
+          "caller": "clarify",
+          "callee": "body.put",
+          "lineNumber": 48
+        },
+        {
+          "caller": "clarify",
+          "callee": "UUID.randomUUID().toString",
+          "lineNumber": 48
+        },
+        {
+          "caller": "clarify",
+          "callee": "UUID.randomUUID",
+          "lineNumber": 48
+        },
+        {
+          "caller": "clarify",
+          "callee": "body.put",
+          "lineNumber": 49
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.originalText",
+          "lineNumber": 49
+        },
+        {
+          "caller": "clarify",
+          "callee": "body.put",
+          "lineNumber": 50
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.conversationTurn",
+          "lineNumber": 50
+        },
+        {
+          "caller": "clarify",
+          "callee": "body.put",
+          "lineNumber": 51
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.previousAnswers",
+          "lineNumber": 51
+        },
+        {
+          "caller": "clarify",
+          "callee": "body.put",
+          "lineNumber": 52
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.id().toString",
+          "lineNumber": 52
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.id",
+          "lineNumber": 52
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.originalText().equals",
+          "lineNumber": 53
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.originalText",
+          "lineNumber": 53
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.goalText().strip",
+          "lineNumber": 53
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.goalText",
+          "lineNumber": 53
+        },
+        {
+          "caller": "clarify",
+          "callee": "body.put",
+          "lineNumber": 54
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.goalText().strip",
+          "lineNumber": 54
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.goalText",
+          "lineNumber": 54
+        },
+        {
+          "caller": "clarify",
+          "callee": "mapper.map",
+          "lineNumber": 56
+        },
+        {
+          "caller": "clarify",
+          "callee": "callWithRetry",
+          "lineNumber": 56
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.conversationTurn",
+          "lineNumber": 56
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.id().toString",
+          "lineNumber": 57
+        },
+        {
+          "caller": "clarify",
+          "callee": "claim.id",
+          "lineNumber": 57
+        },
+        {
+          "caller": "clarify",
+          "callee": "request.conversationTurn",
+          "lineNumber": 58
+        },
+        {
+          "caller": "clarify",
+          "callee": "result.question",
+          "lineNumber": 58
+        },
+        {
+          "caller": "clarify",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 59
+        },
+        {
+          "caller": "clarify",
+          "callee": "transactions.executeWithoutResult",
+          "lineNumber": 61
+        },
+        {
+          "caller": "clarify",
+          "callee": "finish",
+          "lineNumber": 62
+        },
+        {
+          "caller": "clarify",
+          "callee": "principal.userId",
+          "lineNumber": 62
+        },
+        {
+          "caller": "clarify",
+          "callee": "transactions.executeWithoutResult",
+          "lineNumber": 65
+        },
+        {
+          "caller": "clarify",
+          "callee": "release",
+          "lineNumber": 65
+        },
+        {
+          "caller": "clarify",
+          "callee": "principal.userId",
+          "lineNumber": 65
+        },
+        {
+          "caller": "clarify",
+          "callee": "new ApiException",
+          "lineNumber": 67
+        },
+        {
+          "caller": "clarify",
+          "callee": "failure.failure",
+          "lineNumber": 67
+        },
+        {
+          "caller": "clarify",
+          "callee": "new ApiException",
+          "lineNumber": 71
+        },
+        {
+          "caller": "validate",
+          "callee": "request.goalText().strip",
+          "lineNumber": 78
+        },
+        {
+          "caller": "validate",
+          "callee": "request.goalText",
+          "lineNumber": 78
+        },
+        {
+          "caller": "validate",
+          "callee": "text.codePointCount",
+          "lineNumber": 79
+        },
+        {
+          "caller": "validate",
+          "callee": "text.length",
+          "lineNumber": 79
+        },
+        {
+          "caller": "validate",
+          "callee": "request.conversationTurn",
+          "lineNumber": 80
+        },
+        {
+          "caller": "validate",
+          "callee": "request.conversationTurn",
+          "lineNumber": 81
+        },
+        {
+          "caller": "validate",
+          "callee": "request.conversationTurn",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validate",
+          "callee": "request.previousAnswers().size",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validate",
+          "callee": "request.previousAnswers",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 83
+        },
+        {
+          "caller": "validate",
+          "callee": "request.previousAnswers",
+          "lineNumber": 85
+        },
+        {
+          "caller": "validate",
+          "callee": "answer.question().length",
+          "lineNumber": 86
+        },
+        {
+          "caller": "validate",
+          "callee": "answer.question",
+          "lineNumber": 86
+        },
+        {
+          "caller": "validate",
+          "callee": "answer.answer().length",
+          "lineNumber": 86
+        },
+        {
+          "caller": "validate",
+          "callee": "answer.answer",
+          "lineNumber": 86
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 87
+        },
+        {
+          "caller": "claim",
+          "callee": "Instant.now().truncatedTo",
+          "lineNumber": 93
+        },
+        {
+          "caller": "claim",
+          "callee": "Instant.now",
+          "lineNumber": 93
+        },
+        {
+          "caller": "claim",
+          "callee": "request.clarificationSessionId",
+          "lineNumber": 94
+        },
+        {
+          "caller": "claim",
+          "callee": "request.conversationTurn",
+          "lineNumber": 95
+        },
+        {
+          "caller": "claim",
+          "callee": "new ApiException",
+          "lineNumber": 96
+        },
+        {
+          "caller": "claim",
+          "callee": "users.findById(userId).orElseThrow",
+          "lineNumber": 98
+        },
+        {
+          "caller": "claim",
+          "callee": "users.findById",
+          "lineNumber": 98
+        },
+        {
+          "caller": "claim",
+          "callee": "new ApiException",
+          "lineNumber": 99
+        },
+        {
+          "caller": "claim",
+          "callee": "sessions.saveAndFlush",
+          "lineNumber": 100
+        },
+        {
+          "caller": "claim",
+          "callee": "GoalClarificationSession.create",
+          "lineNumber": 101
+        },
+        {
+          "caller": "claim",
+          "callee": "request.goalText().strip",
+          "lineNumber": 101
+        },
+        {
+          "caller": "claim",
+          "callee": "request.goalText",
+          "lineNumber": 101
+        },
+        {
+          "caller": "claim",
+          "callee": "new Claim",
+          "lineNumber": 102
+        },
+        {
+          "caller": "claim",
+          "callee": "created.getId",
+          "lineNumber": 102
+        },
+        {
+          "caller": "claim",
+          "callee": "created.getGoalText",
+          "lineNumber": 102
+        },
+        {
+          "caller": "claim",
+          "callee": "findOwned",
+          "lineNumber": 104
+        },
+        {
+          "caller": "claim",
+          "callee": "request.clarificationSessionId",
+          "lineNumber": 104
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getExpiresAt().isAfter",
+          "lineNumber": 105
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getExpiresAt",
+          "lineNumber": 105
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getStatus",
+          "lineNumber": 105
+        },
+        {
+          "caller": "claim",
+          "callee": "new ApiException",
+          "lineNumber": 106
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getStatus",
+          "lineNumber": 108
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getUpdatedAt().plus(PROCESSING_LEASE).isAfter",
+          "lineNumber": 109
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getUpdatedAt().plus",
+          "lineNumber": 109
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getUpdatedAt",
+          "lineNumber": 109
+        },
+        {
+          "caller": "claim",
+          "callee": "new ApiException",
+          "lineNumber": 110
+        },
+        {
+          "caller": "claim",
+          "callee": "json.readValue",
+          "lineNumber": 112
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getStateJson",
+          "lineNumber": 112
+        },
+        {
+          "caller": "claim",
+          "callee": "previous.response",
+          "lineNumber": 113
+        },
+        {
+          "caller": "claim",
+          "callee": "previous.request().equals",
+          "lineNumber": 113
+        },
+        {
+          "caller": "claim",
+          "callee": "previous.request",
+          "lineNumber": 113
+        },
+        {
+          "caller": "claim",
+          "callee": "new Claim",
+          "lineNumber": 114
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getId",
+          "lineNumber": 114
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getGoalText",
+          "lineNumber": 114
+        },
+        {
+          "caller": "claim",
+          "callee": "previous.response",
+          "lineNumber": 114
+        },
+        {
+          "caller": "claim",
+          "callee": "validateContinuation",
+          "lineNumber": 116
+        },
+        {
+          "caller": "claim",
+          "callee": "session.begin",
+          "lineNumber": 117
+        },
+        {
+          "caller": "claim",
+          "callee": "new Claim",
+          "lineNumber": 118
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getId",
+          "lineNumber": 118
+        },
+        {
+          "caller": "claim",
+          "callee": "session.getGoalText",
+          "lineNumber": 118
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response",
+          "lineNumber": 123
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.request",
+          "lineNumber": 123
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "new ApiException",
+          "lineNumber": 124
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.request().previousAnswers",
+          "lineNumber": 126
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.request",
+          "lineNumber": 126
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.previousAnswers",
+          "lineNumber": 127
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.size",
+          "lineNumber": 128
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "oldAnswers.size",
+          "lineNumber": 128
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.subList(0, oldAnswers.size()).equals",
+          "lineNumber": 129
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.subList",
+          "lineNumber": 129
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "oldAnswers.size",
+          "lineNumber": 129
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().question",
+          "lineNumber": 130
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response",
+          "lineNumber": 130
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().question().equals",
+          "lineNumber": 131
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().question",
+          "lineNumber": 131
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response",
+          "lineNumber": 131
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.get(answers.size() - 1).question",
+          "lineNumber": 131
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.get",
+          "lineNumber": 131
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.size",
+          "lineNumber": 131
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "answers.equals",
+          "lineNumber": 132
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().suggestions().contains",
+          "lineNumber": 133
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().suggestions",
+          "lineNumber": 133
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response",
+          "lineNumber": 133
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText().strip",
+          "lineNumber": 133
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText",
+          "lineNumber": 133
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().goalCandidates().contains",
+          "lineNumber": 134
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response().goalCandidates",
+          "lineNumber": 134
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.response",
+          "lineNumber": 134
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText().strip",
+          "lineNumber": 134
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText",
+          "lineNumber": 134
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText().strip().equals",
+          "lineNumber": 136
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText().strip",
+          "lineNumber": 136
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "request.goalText",
+          "lineNumber": 136
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.request().goalText().strip",
+          "lineNumber": 136
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.request().goalText",
+          "lineNumber": 136
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "state.request",
+          "lineNumber": 136
+        },
+        {
+          "caller": "validateContinuation",
+          "callee": "new ApiException",
+          "lineNumber": 137
+        },
+        {
+          "caller": "finish",
+          "callee": "findOwned",
+          "lineNumber": 143
+        },
+        {
+          "caller": "finish",
+          "callee": "claim.id().toString",
+          "lineNumber": 143
+        },
+        {
+          "caller": "finish",
+          "callee": "claim.id",
+          "lineNumber": 143
+        },
+        {
+          "caller": "finish",
+          "callee": "session.getStatus",
+          "lineNumber": 144
+        },
+        {
+          "caller": "finish",
+          "callee": "session.getUpdatedAt().equals",
+          "lineNumber": 145
+        },
+        {
+          "caller": "finish",
+          "callee": "session.getUpdatedAt",
+          "lineNumber": 145
+        },
+        {
+          "caller": "finish",
+          "callee": "claim.claimedAt",
+          "lineNumber": 145
+        },
+        {
+          "caller": "finish",
+          "callee": "session.getExpiresAt().isAfter",
+          "lineNumber": 146
+        },
+        {
+          "caller": "finish",
+          "callee": "session.getExpiresAt",
+          "lineNumber": 146
+        },
+        {
+          "caller": "finish",
+          "callee": "Instant.now",
+          "lineNumber": 146
+        },
+        {
+          "caller": "finish",
+          "callee": "new ApiException",
+          "lineNumber": 147
+        },
+        {
+          "caller": "finish",
+          "callee": "session.complete",
+          "lineNumber": 149
+        },
+        {
+          "caller": "finish",
+          "callee": "json.writeValueAsString",
+          "lineNumber": 149
+        },
+        {
+          "caller": "finish",
+          "callee": "new ConversationState",
+          "lineNumber": 149
+        },
+        {
+          "caller": "finish",
+          "callee": "request.conversationTurn",
+          "lineNumber": 150
+        },
+        {
+          "caller": "finish",
+          "callee": "Instant.now",
+          "lineNumber": 150
+        },
+        {
+          "caller": "release",
+          "callee": "findOwned",
+          "lineNumber": 154
+        },
+        {
+          "caller": "release",
+          "callee": "claim.id().toString",
+          "lineNumber": 154
+        },
+        {
+          "caller": "release",
+          "callee": "claim.id",
+          "lineNumber": 154
+        },
+        {
+          "caller": "release",
+          "callee": "session.getStatus",
+          "lineNumber": 155
+        },
+        {
+          "caller": "release",
+          "callee": "session.getUpdatedAt().equals",
+          "lineNumber": 156
+        },
+        {
+          "caller": "release",
+          "callee": "session.getUpdatedAt",
+          "lineNumber": 156
+        },
+        {
+          "caller": "release",
+          "callee": "claim.claimedAt",
+          "lineNumber": 156
+        },
+        {
+          "caller": "release",
+          "callee": "claim.newSession",
+          "lineNumber": 157
+        },
+        {
+          "caller": "release",
+          "callee": "sessions.delete",
+          "lineNumber": 158
+        },
+        {
+          "caller": "release",
+          "callee": "session.release",
+          "lineNumber": 160
+        },
+        {
+          "caller": "release",
+          "callee": "Instant.now",
+          "lineNumber": 160
+        },
+        {
+          "caller": "findOwned",
+          "callee": "Long.parseLong",
+          "lineNumber": 167
+        },
+        {
+          "caller": "findOwned",
+          "callee": "new NumberFormatException",
+          "lineNumber": 169
+        },
+        {
+          "caller": "findOwned",
+          "callee": "sessions.findOwnedForUpdate(id, userId).orElseThrow",
+          "lineNumber": 171
+        },
+        {
+          "caller": "findOwned",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 171
+        },
+        {
+          "caller": "findOwned",
+          "callee": "new ApiException",
+          "lineNumber": 172
+        },
+        {
+          "caller": "findOwned",
+          "callee": "new ApiException",
+          "lineNumber": 174
+        },
+        {
+          "caller": "callWithRetry",
+          "callee": "client.clarify",
+          "lineNumber": 181
+        },
+        {
+          "caller": "callWithRetry",
+          "callee": "exception.retryable",
+          "lineNumber": 183
+        },
+        {
+          "caller": "callWithRetry",
+          "callee": "Thread.sleep",
+          "lineNumber": 187
+        },
+        {
+          "caller": "callWithRetry",
+          "callee": "Thread.currentThread().interrupt",
+          "lineNumber": 189
+        },
+        {
+          "caller": "callWithRetry",
+          "callee": "Thread.currentThread",
+          "lineNumber": 189
+        },
+        {
+          "caller": "callWithRetry",
+          "callee": "new ApiException",
+          "lineNumber": 190
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 2,
+        "functionCount": 8,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 164,
+      "nonEmptyLines": 150,
+      "functions": [
+        {
+          "name": "create",
+          "startLine": 36,
+          "endLine": 56,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "findClarification",
+          "startLine": 58,
+          "endLine": 83,
+          "params": [
+            "userId",
+            "request",
+            "now"
+          ]
+        },
+        {
+          "name": "get",
+          "startLine": 86,
+          "endLine": 88,
+          "params": [
+            "principal",
+            "goalId"
+          ]
+        },
+        {
+          "name": "update",
+          "startLine": 91,
+          "endLine": 105,
+          "params": [
+            "principal",
+            "goalId",
+            "request"
+          ]
+        },
+        {
+          "name": "delete",
+          "startLine": 108,
+          "endLine": 114,
+          "params": [
+            "principal",
+            "goalId"
+          ]
+        },
+        {
+          "name": "lockUser",
+          "startLine": 116,
+          "endLine": 119,
+          "params": [
+            "userId"
+          ]
+        },
+        {
+          "name": "requireNotInActiveSession",
+          "startLine": 121,
+          "endLine": 126,
+          "params": [
+            "userId",
+            "goalId"
+          ]
+        },
+        {
+          "name": "findGoal",
+          "startLine": 128,
+          "endLine": 141,
+          "params": [
+            "userId",
+            "goalId"
+          ]
+        },
+        {
+          "name": "validatedText",
+          "startLine": 143,
+          "endLine": 149,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "normalizeText",
+          "startLine": 151,
+          "endLine": 153,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isValidText",
+          "startLine": 155,
+          "endLine": 158,
+          "params": [
+            "text"
+          ]
+        },
+        {
+          "name": "response",
+          "startLine": 160,
+          "endLine": 163,
+          "params": [
+            "goal"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GoalService",
+          "startLine": 25,
+          "endLine": 164,
+          "methods": [
+            "create",
+            "findClarification",
+            "get",
+            "update",
+            "delete",
+            "lockUser",
+            "requireNotInActiveSession",
+            "findGoal",
+            "validatedText",
+            "normalizeText",
+            "isValidText",
+            "response"
+          ],
+          "properties": [
+            "goals",
+            "users",
+            "sessions",
+            "clarifications",
+            "json"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "get",
+          "line": 86,
+          "isDefault": false
+        },
+        {
+          "name": "update",
+          "line": 91,
+          "isDefault": false
+        },
+        {
+          "name": "delete",
+          "line": 108,
+          "isDefault": false
+        },
+        {
+          "name": "GoalService",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "validatedText",
+          "lineNumber": 38
+        },
+        {
+          "caller": "create",
+          "callee": "request.goalText",
+          "lineNumber": 38
+        },
+        {
+          "caller": "create",
+          "callee": "users.findById(principal.userId()).orElseThrow",
+          "lineNumber": 39
+        },
+        {
+          "caller": "create",
+          "callee": "users.findById",
+          "lineNumber": 39
+        },
+        {
+          "caller": "create",
+          "callee": "principal.userId",
+          "lineNumber": 39
+        },
+        {
+          "caller": "create",
+          "callee": "new ApiException",
+          "lineNumber": 40
+        },
+        {
+          "caller": "create",
+          "callee": "Instant.now",
+          "lineNumber": 41
+        },
+        {
+          "caller": "create",
+          "callee": "findClarification",
+          "lineNumber": 42
+        },
+        {
+          "caller": "create",
+          "callee": "principal.userId",
+          "lineNumber": 42
+        },
+        {
+          "caller": "create",
+          "callee": "GoalEntity.create",
+          "lineNumber": 43
+        },
+        {
+          "caller": "create",
+          "callee": "request.confirmationSource",
+          "lineNumber": 43
+        },
+        {
+          "caller": "create",
+          "callee": "request.confirmationSource",
+          "lineNumber": 45
+        },
+        {
+          "caller": "create",
+          "callee": "json.readTree(clarification.getStateJson()).path",
+          "lineNumber": 46
+        },
+        {
+          "caller": "create",
+          "callee": "json.readTree",
+          "lineNumber": 46
+        },
+        {
+          "caller": "create",
+          "callee": "clarification.getStateJson",
+          "lineNumber": 46
+        },
+        {
+          "caller": "create",
+          "callee": "\"CLEAR\".equals",
+          "lineNumber": 47
+        },
+        {
+          "caller": "create",
+          "callee": "result.path(\"clarityStatus\").asText",
+          "lineNumber": 47
+        },
+        {
+          "caller": "create",
+          "callee": "result.path",
+          "lineNumber": 47
+        },
+        {
+          "caller": "create",
+          "callee": "text.equals",
+          "lineNumber": 48
+        },
+        {
+          "caller": "create",
+          "callee": "result.path(\"normalizedGoalText\").asText",
+          "lineNumber": 48
+        },
+        {
+          "caller": "create",
+          "callee": "result.path",
+          "lineNumber": 48
+        },
+        {
+          "caller": "create",
+          "callee": "new ApiException",
+          "lineNumber": 49
+        },
+        {
+          "caller": "create",
+          "callee": "goal.linkClarification",
+          "lineNumber": 52
+        },
+        {
+          "caller": "create",
+          "callee": "clarification.confirm",
+          "lineNumber": 53
+        },
+        {
+          "caller": "create",
+          "callee": "response",
+          "lineNumber": 55
+        },
+        {
+          "caller": "create",
+          "callee": "goals.save",
+          "lineNumber": 55
+        },
+        {
+          "caller": "findClarification",
+          "callee": "request.clarificationSessionId",
+          "lineNumber": 60
+        },
+        {
+          "caller": "findClarification",
+          "callee": "request.confirmationSource",
+          "lineNumber": 62
+        },
+        {
+          "caller": "findClarification",
+          "callee": "new ApiException",
+          "lineNumber": 63
+        },
+        {
+          "caller": "findClarification",
+          "callee": "Long.parseLong",
+          "lineNumber": 69
+        },
+        {
+          "caller": "findClarification",
+          "callee": "new NumberFormatException",
+          "lineNumber": 71
+        },
+        {
+          "caller": "findClarification",
+          "callee": "new ApiException",
+          "lineNumber": 74
+        },
+        {
+          "caller": "findClarification",
+          "callee": "clarifications.findOwnedForUpdate(id, userId).orElseThrow",
+          "lineNumber": 76
+        },
+        {
+          "caller": "findClarification",
+          "callee": "clarifications.findOwnedForUpdate",
+          "lineNumber": 76
+        },
+        {
+          "caller": "findClarification",
+          "callee": "new ApiException",
+          "lineNumber": 77
+        },
+        {
+          "caller": "findClarification",
+          "callee": "session.getStatus",
+          "lineNumber": 78
+        },
+        {
+          "caller": "findClarification",
+          "callee": "session.getExpiresAt().isAfter",
+          "lineNumber": 79
+        },
+        {
+          "caller": "findClarification",
+          "callee": "session.getExpiresAt",
+          "lineNumber": 79
+        },
+        {
+          "caller": "findClarification",
+          "callee": "new ApiException",
+          "lineNumber": 80
+        },
+        {
+          "caller": "get",
+          "callee": "response",
+          "lineNumber": 87
+        },
+        {
+          "caller": "get",
+          "callee": "findGoal",
+          "lineNumber": 87
+        },
+        {
+          "caller": "get",
+          "callee": "principal.userId",
+          "lineNumber": 87
+        },
+        {
+          "caller": "update",
+          "callee": "normalizeText",
+          "lineNumber": 93
+        },
+        {
+          "caller": "update",
+          "callee": "request.goalText",
+          "lineNumber": 93
+        },
+        {
+          "caller": "update",
+          "callee": "isValidText",
+          "lineNumber": 94
+        },
+        {
+          "caller": "update",
+          "callee": "findGoal",
+          "lineNumber": 96
+        },
+        {
+          "caller": "update",
+          "callee": "principal.userId",
+          "lineNumber": 96
+        },
+        {
+          "caller": "update",
+          "callee": "requireNotInActiveSession",
+          "lineNumber": 97
+        },
+        {
+          "caller": "update",
+          "callee": "principal.userId",
+          "lineNumber": 97
+        },
+        {
+          "caller": "update",
+          "callee": "goal.getId",
+          "lineNumber": 97
+        },
+        {
+          "caller": "update",
+          "callee": "new ApiException",
+          "lineNumber": 98
+        },
+        {
+          "caller": "update",
+          "callee": "lockUser",
+          "lineNumber": 100
+        },
+        {
+          "caller": "update",
+          "callee": "principal.userId",
+          "lineNumber": 100
+        },
+        {
+          "caller": "update",
+          "callee": "findGoal",
+          "lineNumber": 101
+        },
+        {
+          "caller": "update",
+          "callee": "principal.userId",
+          "lineNumber": 101
+        },
+        {
+          "caller": "update",
+          "callee": "requireNotInActiveSession",
+          "lineNumber": 102
+        },
+        {
+          "caller": "update",
+          "callee": "principal.userId",
+          "lineNumber": 102
+        },
+        {
+          "caller": "update",
+          "callee": "goal.getId",
+          "lineNumber": 102
+        },
+        {
+          "caller": "update",
+          "callee": "goal.updateText",
+          "lineNumber": 103
+        },
+        {
+          "caller": "update",
+          "callee": "Instant.now",
+          "lineNumber": 103
+        },
+        {
+          "caller": "update",
+          "callee": "response",
+          "lineNumber": 104
+        },
+        {
+          "caller": "delete",
+          "callee": "lockUser",
+          "lineNumber": 110
+        },
+        {
+          "caller": "delete",
+          "callee": "principal.userId",
+          "lineNumber": 110
+        },
+        {
+          "caller": "delete",
+          "callee": "findGoal",
+          "lineNumber": 111
+        },
+        {
+          "caller": "delete",
+          "callee": "principal.userId",
+          "lineNumber": 111
+        },
+        {
+          "caller": "delete",
+          "callee": "requireNotInActiveSession",
+          "lineNumber": 112
+        },
+        {
+          "caller": "delete",
+          "callee": "principal.userId",
+          "lineNumber": 112
+        },
+        {
+          "caller": "delete",
+          "callee": "goal.getId",
+          "lineNumber": 112
+        },
+        {
+          "caller": "delete",
+          "callee": "goal.delete",
+          "lineNumber": 113
+        },
+        {
+          "caller": "delete",
+          "callee": "Instant.now",
+          "lineNumber": 113
+        },
+        {
+          "caller": "lockUser",
+          "callee": "users.findByIdForUpdate(userId).orElseThrow",
+          "lineNumber": 117
+        },
+        {
+          "caller": "lockUser",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 117
+        },
+        {
+          "caller": "lockUser",
+          "callee": "new ApiException",
+          "lineNumber": 118
+        },
+        {
+          "caller": "requireNotInActiveSession",
+          "callee": "sessions.existsByUserIdAndGoalIdAndStatusIn",
+          "lineNumber": 122
+        },
+        {
+          "caller": "requireNotInActiveSession",
+          "callee": "SessionStatus.activeStatuses",
+          "lineNumber": 123
+        },
+        {
+          "caller": "requireNotInActiveSession",
+          "callee": "new ApiException",
+          "lineNumber": 124
+        },
+        {
+          "caller": "findGoal",
+          "callee": "Long.parseLong",
+          "lineNumber": 131
+        },
+        {
+          "caller": "findGoal",
+          "callee": "new NumberFormatException",
+          "lineNumber": 133
+        },
+        {
+          "caller": "findGoal",
+          "callee": "new ApiException",
+          "lineNumber": 136
+        },
+        {
+          "caller": "findGoal",
+          "callee": "goals.findByIdAndUserIdAndDeletedAtIsNull(id, userId)\n        .filter(goal -> goal.getStatus() != GoalEntity.Status.DELETED).orElseThrow",
+          "lineNumber": 138
+        },
+        {
+          "caller": "findGoal",
+          "callee": "goals.findByIdAndUserIdAndDeletedAtIsNull(id, userId).filter",
+          "lineNumber": 138
+        },
+        {
+          "caller": "findGoal",
+          "callee": "goals.findByIdAndUserIdAndDeletedAtIsNull",
+          "lineNumber": 138
+        },
+        {
+          "caller": "findGoal",
+          "callee": "goal.getStatus",
+          "lineNumber": 139
+        },
+        {
+          "caller": "findGoal",
+          "callee": "new ApiException",
+          "lineNumber": 140
+        },
+        {
+          "caller": "validatedText",
+          "callee": "normalizeText",
+          "lineNumber": 144
+        },
+        {
+          "caller": "validatedText",
+          "callee": "isValidText",
+          "lineNumber": 145
+        },
+        {
+          "caller": "validatedText",
+          "callee": "new ApiException",
+          "lineNumber": 146
+        },
+        {
+          "caller": "normalizeText",
+          "callee": "value.strip",
+          "lineNumber": 152
+        },
+        {
+          "caller": "isValidText",
+          "callee": "text.codePointCount",
+          "lineNumber": 156
+        },
+        {
+          "caller": "isValidText",
+          "callee": "text.length",
+          "lineNumber": 156
+        },
+        {
+          "caller": "response",
+          "callee": "new GoalResponse",
+          "lineNumber": 161
+        },
+        {
+          "caller": "response",
+          "callee": "goal.getId().toString",
+          "lineNumber": 161
+        },
+        {
+          "caller": "response",
+          "callee": "goal.getId",
+          "lineNumber": 161
+        },
+        {
+          "caller": "response",
+          "callee": "goal.getGoalText",
+          "lineNumber": 161
+        },
+        {
+          "caller": "response",
+          "callee": "goal.getConfirmationSource",
+          "lineNumber": 162
+        }
+      ],
+      "metrics": {
+        "importCount": 11,
+        "exportCount": 5,
+        "functionCount": 12,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 6,
+      "nonEmptyLines": 4,
+      "classes": [
+        {
+          "name": "RequiredConsentWithdrawal",
+          "startLine": 6,
+          "endLine": 6,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RequiredConsentWithdrawal",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 172,
+      "nonEmptyLines": 142,
+      "functions": [
+        {
+          "name": "LearningSessionEntity",
+          "startLine": 105,
+          "endLine": 121,
+          "params": [
+            "user",
+            "goal",
+            "runnerDevice",
+            "targetDurationMs",
+            "userTimeZoneSnapshot",
+            "studyDate",
+            "sessionOptionsSnapshotJson",
+            "interventionPolicyVersion",
+            "startedAt"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 124,
+          "endLine": 131,
+          "params": [
+            "user",
+            "goal",
+            "runnerDevice",
+            "targetDurationMs",
+            "userTimeZoneSnapshot",
+            "studyDate",
+            "sessionOptionsSnapshotJson",
+            "interventionPolicyVersion",
+            "startedAt"
+          ]
+        },
+        {
+          "name": "pause",
+          "startLine": 134,
+          "endLine": 139,
+          "params": [
+            "pausedStatus",
+            "reason",
+            "activeMs"
+          ]
+        },
+        {
+          "name": "end",
+          "startLine": 142,
+          "endLine": 148,
+          "params": [
+            "endedAt",
+            "finalActiveMs"
+          ]
+        },
+        {
+          "name": "resume",
+          "startLine": 151,
+          "endLine": 156,
+          "params": [
+            "resumedAt"
+          ]
+        },
+        {
+          "name": "extend",
+          "startLine": 159,
+          "endLine": 164,
+          "params": [
+            "newTargetDurationMs",
+            "now"
+          ]
+        },
+        {
+          "name": "abandon",
+          "startLine": 167,
+          "endLine": 171,
+          "params": [
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LearningSessionEntity",
+          "startLine": 27,
+          "endLine": 172,
+          "methods": [
+            "LearningSessionEntity",
+            "create",
+            "pause",
+            "end",
+            "resume",
+            "extend",
+            "abandon"
+          ],
+          "properties": [
+            "id",
+            "user",
+            "goal",
+            "runnerDevice",
+            "goalTextSnapshot",
+            "status",
+            "version",
+            "targetDurationMs",
+            "accumulatedActiveMs",
+            "accumulatedAtResumeMs",
+            "lastResumedAt",
+            "lastHeartbeatAt",
+            "lastHeartbeatObservedAt",
+            "pauseReason",
+            "endReason",
+            "userTimeZoneSnapshot",
+            "studyDate",
+            "sessionOptionsSnapshotJson",
+            "interventionPolicyVersion",
+            "startedAt",
+            "endedAt",
+            "createdAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 124,
+          "isDefault": false
+        },
+        {
+          "name": "pause",
+          "line": 134,
+          "isDefault": false
+        },
+        {
+          "name": "end",
+          "line": 142,
+          "isDefault": false
+        },
+        {
+          "name": "resume",
+          "line": 151,
+          "isDefault": false
+        },
+        {
+          "name": "extend",
+          "line": 159,
+          "isDefault": false
+        },
+        {
+          "name": "abandon",
+          "line": 167,
+          "isDefault": false
+        },
+        {
+          "name": "LearningSessionEntity",
+          "line": 27,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LearningSessionEntity",
+          "callee": "goal.getGoalText",
+          "lineNumber": 111
+        },
+        {
+          "caller": "create",
+          "callee": "new LearningSessionEntity",
+          "lineNumber": 128
+        },
+        {
+          "caller": "extend",
+          "callee": "resume",
+          "lineNumber": 162
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 7,
+        "functionCount": 7,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 48,
+      "nonEmptyLines": 41,
+      "functions": [
+        {
+          "name": "AnalysisExcludedDomainEntity",
+          "startLine": 37,
+          "endLine": 41,
+          "params": [
+            "user",
+            "host",
+            "createdAt"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 44,
+          "endLine": 47,
+          "params": [
+            "user",
+            "host",
+            "createdAt"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AnalysisExcludedDomainEntity",
+          "startLine": 18,
+          "endLine": 48,
+          "methods": [
+            "AnalysisExcludedDomainEntity",
+            "create"
+          ],
+          "properties": [
+            "id",
+            "user",
+            "host",
+            "createdAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 44,
+          "isDefault": false
+        },
+        {
+          "name": "AnalysisExcludedDomainEntity",
+          "line": 18,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new AnalysisExcludedDomainEntity",
+          "lineNumber": 46
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 11,
+      "classes": [
+        {
+          "name": "AnalysisExcludedDomainRepository",
+          "startLine": 7,
+          "endLine": 14,
+          "methods": [
+            "findAllByUserIdOrderByHost",
+            "deleteByUserId"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AnalysisExcludedDomainRepository",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 69,
+      "functions": [
+        {
+          "name": "UserConsentEntity",
+          "startLine": 60,
+          "endLine": 65,
+          "params": [
+            "user",
+            "consentType",
+            "granted",
+            "consentVersion",
+            "consentSource",
+            "now"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 68,
+          "endLine": 71,
+          "params": [
+            "user",
+            "consentType",
+            "granted",
+            "consentVersion",
+            "consentSource",
+            "now"
+          ]
+        },
+        {
+          "name": "apply",
+          "startLine": 74,
+          "endLine": 82,
+          "params": [
+            "newGranted",
+            "newConsentVersion",
+            "newConsentSource",
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "UserConsentEntity",
+          "startLine": 20,
+          "endLine": 83,
+          "methods": [
+            "UserConsentEntity",
+            "create",
+            "apply"
+          ],
+          "properties": [
+            "id",
+            "user",
+            "consentType",
+            "granted",
+            "consentVersion",
+            "consentSource",
+            "grantedAt",
+            "withdrawnAt",
+            "updatedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "apply",
+          "line": 74,
+          "isDefault": false
+        },
+        {
+          "name": "UserConsentEntity",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "UserConsentEntity",
+          "callee": "apply",
+          "lineNumber": 64
+        },
+        {
+          "caller": "create",
+          "callee": "new UserConsentEntity",
+          "lineNumber": 70
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 68,
+      "nonEmptyLines": 57,
+      "functions": [
+        {
+          "name": "UserFocusSettingsEntity",
+          "startLine": 43,
+          "endLine": 49,
+          "params": [
+            "userId",
+            "interventionLevel",
+            "notificationChannels",
+            "breakSuggestionEnabled",
+            "cameraAnalysisEnabled",
+            "now"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 52,
+          "endLine": 57,
+          "params": [
+            "userId",
+            "interventionLevel",
+            "notificationChannels",
+            "breakSuggestionEnabled",
+            "cameraAnalysisEnabled",
+            "now"
+          ]
+        },
+        {
+          "name": "apply",
+          "startLine": 60,
+          "endLine": 67,
+          "params": [
+            "newInterventionLevel",
+            "newNotificationChannels",
+            "newBreakSuggestionEnabled",
+            "newCameraAnalysisEnabled",
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "UserFocusSettingsEntity",
+          "startLine": 15,
+          "endLine": 68,
+          "methods": [
+            "UserFocusSettingsEntity",
+            "create",
+            "apply"
+          ],
+          "properties": [
+            "userId",
+            "interventionLevel",
+            "notificationChannels",
+            "breakSuggestionEnabled",
+            "cameraAnalysisEnabled",
+            "updatedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "apply",
+          "line": 60,
+          "isDefault": false
+        },
+        {
+          "name": "UserFocusSettingsEntity",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "UserFocusSettingsEntity",
+          "callee": "apply",
+          "lineNumber": 47
+        },
+        {
+          "caller": "create",
+          "callee": "new UserFocusSettingsEntity",
+          "lineNumber": 55
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 3,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 6,
+      "nonEmptyLines": 4,
+      "classes": [
+        {
+          "name": "UserFocusSettingsRepository",
+          "startLine": 6,
+          "endLine": 6,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "UserFocusSettingsRepository",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 254,
+      "nonEmptyLines": 235,
+      "functions": [
+        {
+          "name": "UserConfigurationService",
+          "startLine": 52,
+          "endLine": 57,
+          "params": [
+            "users",
+            "consents",
+            "focusSettings",
+            "excludedDomains",
+            "events"
+          ]
+        },
+        {
+          "name": "UserConfigurationService",
+          "startLine": 59,
+          "endLine": 68,
+          "params": [
+            "users",
+            "consents",
+            "focusSettings",
+            "excludedDomains",
+            "clock",
+            "events"
+          ]
+        },
+        {
+          "name": "me",
+          "startLine": 71,
+          "endLine": 74,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "updateProfile",
+          "startLine": 77,
+          "endLine": 99,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "isNicknameConflict",
+          "startLine": 101,
+          "endLine": 109,
+          "params": [
+            "exception"
+          ]
+        },
+        {
+          "name": "consents",
+          "startLine": 112,
+          "endLine": 117,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "updateConsent",
+          "startLine": 120,
+          "endLine": 143,
+          "params": [
+            "principal",
+            "type",
+            "request"
+          ]
+        },
+        {
+          "name": "focusSettings",
+          "startLine": 146,
+          "endLine": 150,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "updateFocusSettings",
+          "startLine": 153,
+          "endLine": 169,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "excludedDomains",
+          "startLine": 172,
+          "endLine": 176,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "replaceExcludedDomains",
+          "startLine": 179,
+          "endLine": 196,
+          "params": [
+            "principal",
+            "request"
+          ]
+        },
+        {
+          "name": "currentUser",
+          "startLine": 198,
+          "endLine": 201,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "lockedUser",
+          "startLine": 203,
+          "endLine": 206,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "meResponse",
+          "startLine": 208,
+          "endLine": 211,
+          "params": [
+            "user"
+          ]
+        },
+        {
+          "name": "toFocusResponse",
+          "startLine": 213,
+          "endLine": 217,
+          "params": [
+            "settings"
+          ]
+        },
+        {
+          "name": "normalizedChannels",
+          "startLine": 219,
+          "endLine": 231,
+          "params": [
+            "channels"
+          ]
+        },
+        {
+          "name": "normalizeHost",
+          "startLine": 233,
+          "endLine": 253,
+          "params": [
+            "input"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "UserConfigurationService",
+          "startLine": 39,
+          "endLine": 254,
+          "methods": [
+            "UserConfigurationService",
+            "UserConfigurationService",
+            "me",
+            "updateProfile",
+            "isNicknameConflict",
+            "consents",
+            "updateConsent",
+            "focusSettings",
+            "updateFocusSettings",
+            "excludedDomains",
+            "replaceExcludedDomains",
+            "currentUser",
+            "lockedUser",
+            "meResponse",
+            "toFocusResponse",
+            "normalizedChannels",
+            "normalizeHost"
+          ],
+          "properties": [
+            "CURRENT_CONSENT_VERSION",
+            "NICKNAME_UNIQUE_CONSTRAINT",
+            "users",
+            "consents",
+            "focusSettings",
+            "excludedDomains",
+            "clock",
+            "events"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "UserConfigurationService",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "me",
+          "line": 71,
+          "isDefault": false
+        },
+        {
+          "name": "updateProfile",
+          "line": 77,
+          "isDefault": false
+        },
+        {
+          "name": "consents",
+          "line": 112,
+          "isDefault": false
+        },
+        {
+          "name": "updateConsent",
+          "line": 120,
+          "isDefault": false
+        },
+        {
+          "name": "focusSettings",
+          "line": 146,
+          "isDefault": false
+        },
+        {
+          "name": "updateFocusSettings",
+          "line": 153,
+          "isDefault": false
+        },
+        {
+          "name": "excludedDomains",
+          "line": 172,
+          "isDefault": false
+        },
+        {
+          "name": "replaceExcludedDomains",
+          "line": 179,
+          "isDefault": false
+        },
+        {
+          "name": "UserConfigurationService",
+          "line": 39,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "UserConfigurationService",
+          "callee": "Clock.systemUTC",
+          "lineNumber": 56
+        },
+        {
+          "caller": "me",
+          "callee": "currentUser",
+          "lineNumber": 72
+        },
+        {
+          "caller": "me",
+          "callee": "meResponse",
+          "lineNumber": 73
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "lockedUser",
+          "lineNumber": 79
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "request.nickname",
+          "lineNumber": 80
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "nickname.matches",
+          "lineNumber": 81
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "new ApiException",
+          "lineNumber": 82
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "users.findByNickname(nickname)\n        .filter(other -> !other.getId().equals(user.getId())).isPresent",
+          "lineNumber": 84
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "users.findByNickname(nickname).filter",
+          "lineNumber": 84
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "users.findByNickname",
+          "lineNumber": 84
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "other.getId().equals",
+          "lineNumber": 85
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "other.getId",
+          "lineNumber": 85
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "user.getId",
+          "lineNumber": 85
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "new ApiException",
+          "lineNumber": 87
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "user.setNickname",
+          "lineNumber": 89
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "users.saveAndFlush",
+          "lineNumber": 91
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "isNicknameConflict",
+          "lineNumber": 93
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "new ApiException",
+          "lineNumber": 94
+        },
+        {
+          "caller": "updateProfile",
+          "callee": "meResponse",
+          "lineNumber": 98
+        },
+        {
+          "caller": "isNicknameConflict",
+          "callee": "cause.getCause",
+          "lineNumber": 102
+        },
+        {
+          "caller": "isNicknameConflict",
+          "callee": "NICKNAME_UNIQUE_CONSTRAINT.equalsIgnoreCase",
+          "lineNumber": 104
+        },
+        {
+          "caller": "isNicknameConflict",
+          "callee": "violation.getConstraintName",
+          "lineNumber": 104
+        },
+        {
+          "caller": "consents",
+          "callee": "consents.findAllByUserIdOrderByConsentType(principal.userId())\n        .stream().map(item -> new ConsentResponse(item.getConsentType(), item.isGranted(),\n            item.getConsentVersion(), item.getGrantedAt(), item.getWithdrawnAt())).toList",
+          "lineNumber": 113
+        },
+        {
+          "caller": "consents",
+          "callee": "consents.findAllByUserIdOrderByConsentType(principal.userId())\n        .stream().map",
+          "lineNumber": 113
+        },
+        {
+          "caller": "consents",
+          "callee": "consents.findAllByUserIdOrderByConsentType(principal.userId()).stream",
+          "lineNumber": 113
+        },
+        {
+          "caller": "consents",
+          "callee": "consents.findAllByUserIdOrderByConsentType",
+          "lineNumber": 113
+        },
+        {
+          "caller": "consents",
+          "callee": "principal.userId",
+          "lineNumber": 113
+        },
+        {
+          "caller": "consents",
+          "callee": "new ConsentResponse",
+          "lineNumber": 114
+        },
+        {
+          "caller": "consents",
+          "callee": "item.getConsentType",
+          "lineNumber": 114
+        },
+        {
+          "caller": "consents",
+          "callee": "item.isGranted",
+          "lineNumber": 114
+        },
+        {
+          "caller": "consents",
+          "callee": "item.getConsentVersion",
+          "lineNumber": 115
+        },
+        {
+          "caller": "consents",
+          "callee": "item.getGrantedAt",
+          "lineNumber": 115
+        },
+        {
+          "caller": "consents",
+          "callee": "item.getWithdrawnAt",
+          "lineNumber": 115
+        },
+        {
+          "caller": "consents",
+          "callee": "new ConsentsResponse",
+          "lineNumber": 116
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "CURRENT_CONSENT_VERSION.equals",
+          "lineNumber": 124
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.consentVersion",
+          "lineNumber": 124
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "new ApiException",
+          "lineNumber": 125
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "lockedUser",
+          "lineNumber": 127
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "clock.instant",
+          "lineNumber": 128
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "consents.findByUserIdAndConsentType(user.getId(), type).orElseGet",
+          "lineNumber": 129
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "consents.findByUserIdAndConsentType",
+          "lineNumber": 129
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "user.getId",
+          "lineNumber": 129
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "UserConsentEntity.create",
+          "lineNumber": 130
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.isGranted",
+          "lineNumber": 130
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.consentVersion",
+          "lineNumber": 131
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.consentSource",
+          "lineNumber": 131
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "consent.getId",
+          "lineNumber": 132
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "consent.apply",
+          "lineNumber": 133
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.isGranted",
+          "lineNumber": 133
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.consentVersion",
+          "lineNumber": 133
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.consentSource",
+          "lineNumber": 133
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "consents.save",
+          "lineNumber": 135
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "request.isGranted",
+          "lineNumber": 136
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "events.publishEvent",
+          "lineNumber": 139
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "new RequiredConsentWithdrawal",
+          "lineNumber": 139
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "user.getId",
+          "lineNumber": 139
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "new ConsentResponse",
+          "lineNumber": 141
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "saved.getConsentType",
+          "lineNumber": 141
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "saved.isGranted",
+          "lineNumber": 141
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "saved.getConsentVersion",
+          "lineNumber": 141
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "saved.getGrantedAt",
+          "lineNumber": 142
+        },
+        {
+          "caller": "updateConsent",
+          "callee": "saved.getWithdrawnAt",
+          "lineNumber": 142
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "focusSettings.findById(principal.userId()).map(this::toFocusResponse).orElseGet",
+          "lineNumber": 147
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "focusSettings.findById(principal.userId()).map",
+          "lineNumber": 147
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "focusSettings.findById",
+          "lineNumber": 147
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "principal.userId",
+          "lineNumber": 147
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "new FocusSettingsResponse",
+          "lineNumber": 148
+        },
+        {
+          "caller": "focusSettings",
+          "callee": "List.of",
+          "lineNumber": 149
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "normalizedChannels",
+          "lineNumber": 156
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.notificationChannels",
+          "lineNumber": 156
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "lockedUser",
+          "lineNumber": 157
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "String.join",
+          "lineNumber": 158
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "clock.instant",
+          "lineNumber": 159
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "focusSettings.findById(user.getId()).orElse",
+          "lineNumber": 160
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "focusSettings.findById",
+          "lineNumber": 160
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "user.getId",
+          "lineNumber": 160
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "UserFocusSettingsEntity.create",
+          "lineNumber": 162
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "user.getId",
+          "lineNumber": 162
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.interventionLevel",
+          "lineNumber": 162
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.breakSuggestionEnabled",
+          "lineNumber": 163
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.cameraAnalysisEnabled",
+          "lineNumber": 163
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "settings.apply",
+          "lineNumber": 165
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.interventionLevel",
+          "lineNumber": 165
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.breakSuggestionEnabled",
+          "lineNumber": 165
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "request.cameraAnalysisEnabled",
+          "lineNumber": 166
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "toFocusResponse",
+          "lineNumber": 168
+        },
+        {
+          "caller": "updateFocusSettings",
+          "callee": "focusSettings.save",
+          "lineNumber": 168
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "new ExcludedDomainsResponse",
+          "lineNumber": 173
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "excludedDomains\n        .findAllByUserIdOrderByHost(principal.userId())\n        .stream().map(AnalysisExcludedDomainEntity::getHost).toList",
+          "lineNumber": 173
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "excludedDomains\n        .findAllByUserIdOrderByHost(principal.userId())\n        .stream().map",
+          "lineNumber": 173
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "excludedDomains\n        .findAllByUserIdOrderByHost(principal.userId()).stream",
+          "lineNumber": 173
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "excludedDomains.findAllByUserIdOrderByHost",
+          "lineNumber": 173
+        },
+        {
+          "caller": "excludedDomains",
+          "callee": "principal.userId",
+          "lineNumber": 174
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "new LinkedHashSet<>",
+          "lineNumber": 182
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "request.domains",
+          "lineNumber": 183
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.add",
+          "lineNumber": 184
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "normalizeHost",
+          "lineNumber": 184
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.size",
+          "lineNumber": 186
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "new ApiException",
+          "lineNumber": 187
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "lockedUser",
+          "lineNumber": 189
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "excludedDomains.deleteByUserId",
+          "lineNumber": 190
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "user.getId",
+          "lineNumber": 190
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "excludedDomains.flush",
+          "lineNumber": 191
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "clock.instant",
+          "lineNumber": 192
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "excludedDomains.saveAll",
+          "lineNumber": 193
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.stream()\n        .map(host -> AnalysisExcludedDomainEntity.create(user, host, now)).toList",
+          "lineNumber": 193
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.stream().map",
+          "lineNumber": 193
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.stream",
+          "lineNumber": 193
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "AnalysisExcludedDomainEntity.create",
+          "lineNumber": 194
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "new ExcludedDomainsResponse",
+          "lineNumber": 195
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.stream().sorted().toList",
+          "lineNumber": 195
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.stream().sorted",
+          "lineNumber": 195
+        },
+        {
+          "caller": "replaceExcludedDomains",
+          "callee": "hosts.stream",
+          "lineNumber": 195
+        },
+        {
+          "caller": "currentUser",
+          "callee": "users.findById(principal.userId()).orElseThrow",
+          "lineNumber": 199
+        },
+        {
+          "caller": "currentUser",
+          "callee": "users.findById",
+          "lineNumber": 199
+        },
+        {
+          "caller": "currentUser",
+          "callee": "principal.userId",
+          "lineNumber": 199
+        },
+        {
+          "caller": "currentUser",
+          "callee": "new ApiException",
+          "lineNumber": 200
+        },
+        {
+          "caller": "lockedUser",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 204
+        },
+        {
+          "caller": "lockedUser",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 204
+        },
+        {
+          "caller": "lockedUser",
+          "callee": "principal.userId",
+          "lineNumber": 204
+        },
+        {
+          "caller": "lockedUser",
+          "callee": "new ApiException",
+          "lineNumber": 205
+        },
+        {
+          "caller": "meResponse",
+          "callee": "new MeResponse",
+          "lineNumber": 209
+        },
+        {
+          "caller": "meResponse",
+          "callee": "Long.toString",
+          "lineNumber": 209
+        },
+        {
+          "caller": "meResponse",
+          "callee": "user.getId",
+          "lineNumber": 209
+        },
+        {
+          "caller": "meResponse",
+          "callee": "user.getNickname",
+          "lineNumber": 209
+        },
+        {
+          "caller": "meResponse",
+          "callee": "user.getOnboardingStatus",
+          "lineNumber": 210
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "new FocusSettingsResponse",
+          "lineNumber": 214
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "settings.getInterventionLevel",
+          "lineNumber": 214
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "List.of",
+          "lineNumber": 215
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "settings.getNotificationChannels().split",
+          "lineNumber": 215
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "settings.getNotificationChannels",
+          "lineNumber": 215
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "settings.isBreakSuggestionEnabled",
+          "lineNumber": 215
+        },
+        {
+          "caller": "toFocusResponse",
+          "callee": "settings.isCameraAnalysisEnabled",
+          "lineNumber": 216
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "new LinkedHashSet<>",
+          "lineNumber": 220
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "channel.trim",
+          "lineNumber": 222
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "Set.of(\"MOLE_UI\", \"MACOS_NOTIFICATION\", \"SOUND\").contains",
+          "lineNumber": 223
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "Set.of",
+          "lineNumber": 223
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "new ApiException",
+          "lineNumber": 224
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "normalized.add",
+          "lineNumber": 226
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "new ApiException",
+          "lineNumber": 227
+        },
+        {
+          "caller": "normalizedChannels",
+          "callee": "List.copyOf",
+          "lineNumber": 230
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "input.trim().toLowerCase",
+          "lineNumber": 234
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "input.trim",
+          "lineNumber": 234
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.endsWith",
+          "lineNumber": 235
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.substring",
+          "lineNumber": 236
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.length",
+          "lineNumber": 236
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.contains",
+          "lineNumber": 238
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.contains",
+          "lineNumber": 238
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.contains",
+          "lineNumber": 238
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "value.contains",
+          "lineNumber": 238
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "new ApiException",
+          "lineNumber": 239
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "IDN.toASCII(value, IDN.USE_STD3_ASCII_RULES).toLowerCase",
+          "lineNumber": 242
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "IDN.toASCII",
+          "lineNumber": 242
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "host.isBlank",
+          "lineNumber": 243
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "host.length",
+          "lineNumber": 243
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "host.matches",
+          "lineNumber": 244
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "new ApiException",
+          "lineNumber": 247
+        },
+        {
+          "caller": "normalizeHost",
+          "callee": "new ApiException",
+          "lineNumber": 251
+        }
+      ],
+      "metrics": {
+        "importCount": 12,
+        "exportCount": 10,
+        "functionCount": 17,
+        "classCount": 1
+      }
+    }
+  ]
+}

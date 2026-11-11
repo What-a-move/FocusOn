@@ -1,0 +1,1594 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "file",
+   "name": "LearningSessionRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "summary": "학습 세션의 이력 커서 조회, 활성 세션 조회, 비관적 잠금 소유 조회, native heartbeat 갱신, 만료 후보 조회와 조건부 ABANDONED 전환 쿼리를 제공하는 핵심 Repository다.",
+   "tags": [
+    "repository",
+    "session",
+    "data-access",
+    "native-query",
+    "pessimistic-lock"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java:LearningSessionRepository",
+   "type": "class",
+   "name": "LearningSessionRepository",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "lineRange": [
+    15,
+    67
+   ],
+   "summary": "학습 세션의 이력 커서 조회, 활성 세션 조회, 비관적 잠금 소유 조회, native heartbeat 갱신, 만료 후보 조회와 조건부 ABANDONED 전환 쿼리를 제공하는 핵심 Repository다.",
+   "tags": [
+    "repository",
+    "session",
+    "data-access",
+    "native-query",
+    "pessimistic-lock"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "type": "file",
+   "name": "LocalEventEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "summary": "동일 로컬 이벤트 재전송이 새 실행 구간을 멈추지 않도록 세션·기기·이벤트 해시 기반 수신 이력을 보존하는 JPA Entity다.",
+   "tags": [
+    "entity",
+    "data-model",
+    "deduplication",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:LocalEventEntity",
+   "type": "class",
+   "name": "LocalEventEntity",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "lineRange": [
+    17,
+    50
+   ],
+   "summary": "동일 로컬 이벤트 재전송이 새 실행 구간을 멈추지 않도록 세션·기기·이벤트 해시 기반 수신 이력을 보존하는 JPA Entity다.",
+   "tags": [
+    "entity",
+    "data-model",
+    "deduplication",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "lineRange": [
+    39,
+    49
+   ],
+   "summary": "정규화된 이벤트 해시를 포함한 로컬 이벤트 수신 이력을 생성한다.",
+   "tags": [
+    "entity",
+    "method",
+    "deduplication"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+   "type": "file",
+   "name": "LocalEventRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+   "summary": "로컬 이벤트 중복 여부(세션·기기·해시)와 세션별 이벤트 수를 조회하는 Spring Data JPA Repository다.",
+   "tags": [
+    "repository",
+    "deduplication",
+    "data-access",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java:LocalEventRepository",
+   "type": "class",
+   "name": "LocalEventRepository",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+   "lineRange": [
+    6,
+    12
+   ],
+   "summary": "로컬 이벤트 중복 여부(세션·기기·해시)와 세션별 이벤트 수를 조회하는 Spring Data JPA Repository다.",
+   "tags": [
+    "repository",
+    "deduplication",
+    "data-access",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "type": "file",
+   "name": "SessionExtensionEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "summary": "세션에서 실제로 확정된 목표 시간 연장 이력(추가 시간 등)을 저장하는 JPA Entity다.",
+   "tags": [
+    "entity",
+    "data-model",
+    "session",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:SessionExtensionEntity",
+   "type": "class",
+   "name": "SessionExtensionEntity",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "lineRange": [
+    17,
+    52
+   ],
+   "summary": "세션에서 실제로 확정된 목표 시간 연장 이력(추가 시간 등)을 저장하는 JPA Entity다.",
+   "tags": [
+    "entity",
+    "data-model",
+    "session",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "lineRange": [
+    42,
+    51
+   ],
+   "summary": "검증된 세션 연장 이력 Entity를 생성하는 팩토리다.",
+   "tags": [
+    "entity",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "type": "file",
+   "name": "SessionExtensionRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "summary": "세션별 연장 횟수와 총 연장 시간을 JPQL 집계 projection(ExtensionTotals)으로 반환하는 Repository다.",
+   "tags": [
+    "repository",
+    "aggregation",
+    "projection",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java:SessionExtensionRepository",
+   "type": "class",
+   "name": "SessionExtensionRepository",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "lineRange": [
+    8,
+    20
+   ],
+   "summary": "세션별 연장 횟수와 총 연장 시간을 JPQL 집계 projection(ExtensionTotals)으로 반환하는 Repository다.",
+   "tags": [
+    "repository",
+    "aggregation",
+    "projection",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "file",
+   "name": "SessionStatus.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "summary": "RUNNING·PAUSED·AUTO_PAUSED·ENDED·ABANDONED 등 학습 세션 상태 enum과 활성 상태 집합을 정의한다.",
+   "tags": [
+    "enum",
+    "type-definition",
+    "session",
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java:SessionStatus",
+   "type": "class",
+   "name": "SessionStatus",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "lineRange": [
+    6,
+    13
+   ],
+   "summary": "RUNNING·PAUSED·AUTO_PAUSED·ENDED·ABANDONED 등 학습 세션 상태 enum과 활성 상태 집합을 정의한다.",
+   "tags": [
+    "enum",
+    "type-definition",
+    "session",
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java:activeStatuses",
+   "type": "function",
+   "name": "activeStatuses",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "lineRange": [
+    10,
+    12
+   ],
+   "summary": "활성으로 간주되는 세션 상태 목록을 반환한다.",
+   "tags": [
+    "enum",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "type": "file",
+   "name": "LocalEventService.java",
+   "filePath": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "summary": "사용자 잠금 아래에서 기기·토큰 패밀리 연결을 재확인하고 최초 로컬 권한 유실 이벤트만 반영해 세션을 자동 정지하거나 만료 처리하는 서비스다.",
+   "tags": [
+    "service",
+    "session",
+    "event-processing",
+    "transaction",
+    "deduplication"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/service/LocalEventService.java:LocalEventService",
+   "type": "class",
+   "name": "LocalEventService",
+   "filePath": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "lineRange": [
+    32,
+    166
+   ],
+   "summary": "사용자 잠금 아래에서 기기·토큰 패밀리 연결을 재확인하고 최초 로컬 권한 유실 이벤트만 반영해 세션을 자동 정지하거나 만료 처리하는 서비스다.",
+   "tags": [
+    "service",
+    "session",
+    "event-processing",
+    "transaction",
+    "deduplication"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:receive",
+   "type": "function",
+   "name": "receive",
+   "filePath": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "lineRange": [
+    47,
+    65
+   ],
+   "summary": "로컬 이벤트 수신 진입점으로 트랜잭션 처리 후 상태 변경을 오류 응답보다 먼저 커밋한다.",
+   "tags": [
+    "service",
+    "method",
+    "event-processing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:process",
+   "type": "function",
+   "name": "process",
+   "filePath": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "lineRange": [
+    68,
+    121
+   ],
+   "summary": "사용자 잠금 아래 인증·연결·세션 상태를 재검증하고 최초 이벤트만 저장해 자동 정지를 반영한다.",
+   "tags": [
+    "service",
+    "method",
+    "event-processing"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:expired",
+   "type": "function",
+   "name": "expired",
+   "filePath": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "lineRange": [
+    124,
+    133
+   ],
+   "summary": "현재 실행 구간과 마지막 신호 중 최신 시각으로 세션 만료 여부를 판단한다.",
+   "tags": [
+    "service",
+    "method",
+    "event-processing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:parseId",
+   "type": "function",
+   "name": "parseId",
+   "filePath": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "lineRange": [
+    144,
+    154
+   ],
+   "summary": "세션 ID 문자열을 파싱하고 잘못된 값은 404로 처리한다.",
+   "tags": [
+    "service",
+    "method",
+    "event-processing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "type": "file",
+   "name": "SessionCommandService.java",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "summary": "세션 연장·일시정지·재개·종료 명령의 상태 전이, If-Match 버전 검증, 누적 시간 검증, 멱등 응답 저장을 사용자 행 잠금 안에서 원자적으로 처리한다.",
+   "tags": [
+    "service",
+    "session",
+    "state-machine",
+    "idempotency",
+    "optimistic-concurrency"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:SessionCommandService",
+   "type": "class",
+   "name": "SessionCommandService",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    35,
+    315
+   ],
+   "summary": "세션 연장·일시정지·재개·종료 명령의 상태 전이, If-Match 버전 검증, 누적 시간 검증, 멱등 응답 저장을 사용자 행 잠금 안에서 원자적으로 처리한다.",
+   "tags": [
+    "service",
+    "session",
+    "state-machine",
+    "idempotency",
+    "optimistic-concurrency"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "type": "function",
+   "name": "extend",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    55,
+    108
+   ],
+   "summary": "사용자 잠금 안에서 목표 시간 연장·이력 저장·멱등 응답을 원자적으로 확정한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:pause",
+   "type": "function",
+   "name": "pause",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    111,
+    149
+   ],
+   "summary": "실행 구간 누적 시간을 검증·저장하고 세션을 일시정지한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:end",
+   "type": "function",
+   "name": "end",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    152,
+    206
+   ],
+   "summary": "최종 누적값 검증 후 사용자 종료를 확정하고 동일 명령 응답을 보존한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:validatedActiveTime",
+   "type": "function",
+   "name": "validatedActiveTime",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    217,
+    227
+   ],
+   "summary": "pause/end 시 누적값 감소나 과다 증가를 거절한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:resume",
+   "type": "function",
+   "name": "resume",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    230,
+    271
+   ],
+   "summary": "인증된 실행 기기의 명시 요청과 준비 상태 확인 후 세션을 재개한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:findOwnedSession",
+   "type": "function",
+   "name": "findOwnedSession",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    279,
+    295
+   ],
+   "summary": "사용자 잠금 후 소유 세션을 비관적 잠금으로 조회한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:parseVersion",
+   "type": "function",
+   "name": "parseVersion",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "lineRange": [
+    297,
+    307
+   ],
+   "summary": "If-Match 버전 헤더를 파싱해 숫자 버전으로 변환한다.",
+   "tags": [
+    "service",
+    "method",
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "type": "file",
+   "name": "SessionHeartbeatCleanup.java",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "summary": "180초 이상 heartbeat가 없는 RUNNING 세션을 배치로 찾아 사용자 SKIP LOCKED 잠금과 조건부 갱신으로 ABANDONED 처리하는 스케줄 작업이다.",
+   "tags": [
+    "scheduler",
+    "session",
+    "cleanup",
+    "batch-processing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:SessionHeartbeatCleanup",
+   "type": "class",
+   "name": "SessionHeartbeatCleanup",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "lineRange": [
+    16,
+    53
+   ],
+   "summary": "180초 이상 heartbeat가 없는 RUNNING 세션을 배치로 찾아 사용자 SKIP LOCKED 잠금과 조건부 갱신으로 ABANDONED 처리하는 스케줄 작업이다.",
+   "tags": [
+    "scheduler",
+    "session",
+    "cleanup",
+    "batch-processing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:cleanup",
+   "type": "function",
+   "name": "cleanup",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "lineRange": [
+    27,
+    52
+   ],
+   "summary": "만료 후보를 배치 조회해 사용자 SKIP LOCKED 잠금 후 조건부로 ABANDONED 처리한다.",
+   "tags": [
+    "scheduler",
+    "method",
+    "cleanup"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "type": "file",
+   "name": "SessionHeartbeatService.java",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "summary": "실행 Desktop 기기의 heartbeat를 검증·기록하고 만료를 별도 트랜잭션으로 커밋하며, 유효 heartbeat 뒤 HeartbeatPolicyTrigger 이벤트를 발행한다.",
+   "tags": [
+    "service",
+    "session",
+    "heartbeat",
+    "event-publisher",
+    "transaction"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:SessionHeartbeatService",
+   "type": "class",
+   "name": "SessionHeartbeatService",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "lineRange": [
+    25,
+    140
+   ],
+   "summary": "실행 Desktop 기기의 heartbeat를 검증·기록하고 만료를 별도 트랜잭션으로 커밋하며, 유효 heartbeat 뒤 HeartbeatPolicyTrigger 이벤트를 발행한다.",
+   "tags": [
+    "service",
+    "session",
+    "heartbeat",
+    "event-publisher",
+    "transaction"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:heartbeat",
+   "type": "function",
+   "name": "heartbeat",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "lineRange": [
+    37,
+    55
+   ],
+   "summary": "heartbeat 처리 후 유효 RUNNING이면 HeartbeatPolicyTrigger를 발행한다.",
+   "tags": [
+    "service",
+    "method",
+    "heartbeat"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:process",
+   "type": "function",
+   "name": "process",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "lineRange": [
+    57,
+    116
+   ],
+   "summary": "기기·세션 상태를 검증하고 heartbeat 갱신 또는 만료 확정을 수행한다.",
+   "tags": [
+    "service",
+    "method",
+    "heartbeat"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:parseSessionId",
+   "type": "function",
+   "name": "parseSessionId",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "lineRange": [
+    123,
+    133
+   ],
+   "summary": "세션 ID 문자열을 양수 long으로 파싱한다.",
+   "tags": [
+    "service",
+    "method",
+    "heartbeat"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "type": "file",
+   "name": "SessionService.java",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "summary": "Desktop 세션 시작(목표·동의·온보딩 준비 검증, 멱등 키·요청 해시 처리)과 사용자별 활성 세션 조회를 담당하는 서비스다.",
+   "tags": [
+    "service",
+    "session",
+    "idempotency",
+    "validation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/service/SessionService.java:SessionService",
+   "type": "class",
+   "name": "SessionService",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "lineRange": [
+    40,
+    194
+   ],
+   "summary": "Desktop 세션 시작(목표·동의·온보딩 준비 검증, 멱등 키·요청 해시 처리)과 사용자별 활성 세션 조회를 담당하는 서비스다.",
+   "tags": [
+    "service",
+    "session",
+    "idempotency",
+    "validation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:start",
+   "type": "function",
+   "name": "start",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "lineRange": [
+    60,
+    128
+   ],
+   "summary": "사용자 잠금으로 시작 요청을 직렬화하고 목표·동의·준비 상태 검증 후 세션과 멱등 응답을 저장한다.",
+   "tags": [
+    "service",
+    "method",
+    "idempotency"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:active",
+   "type": "function",
+   "name": "active",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "lineRange": [
+    131,
+    136
+   ],
+   "summary": "인증 사용자의 활성 세션만 조회해 반환한다.",
+   "tags": [
+    "service",
+    "method",
+    "idempotency"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:parseKey",
+   "type": "function",
+   "name": "parseKey",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "lineRange": [
+    150,
+    162
+   ],
+   "summary": "멱등 키가 표준 UUID 문자열인지 검증한다.",
+   "tags": [
+    "service",
+    "method",
+    "idempotency"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:parseGoalId",
+   "type": "function",
+   "name": "parseGoalId",
+   "filePath": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "lineRange": [
+    165,
+    176
+   ],
+   "summary": "목표 ID 문자열을 양수로 변환하고 잘못되면 목표 없음으로 처리한다.",
+   "tags": [
+    "service",
+    "method",
+    "idempotency"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java:LearningSessionRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java:LearningSessionRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:LocalEventEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:LocalEventEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:create",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java:LocalEventRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java:LocalEventRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:SessionExtensionEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:SessionExtensionEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:create",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java:SessionExtensionRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java:SessionExtensionRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java:SessionStatus",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java:SessionStatus",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java:activeStatuses",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java:activeStatuses",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/LocalEventService.java:LocalEventService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/LocalEventService.java:LocalEventService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:receive",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:receive",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:process",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:expired",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:parseId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:SessionCommandService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:SessionCommandService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:pause",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:pause",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:end",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:end",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:validatedActiveTime",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:resume",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:resume",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:findOwnedSession",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:parseVersion",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/SafeApiLog.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:SessionHeartbeatCleanup",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:SessionHeartbeatCleanup",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:cleanup",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:cleanup",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:SessionHeartbeatService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:SessionHeartbeatService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:heartbeat",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:heartbeat",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:process",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:parseSessionId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionService.java:SessionService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "class:src/main/java/com/capstone/backend/session/service/SessionService.java:SessionService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:start",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:start",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:active",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:active",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:parseKey",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:parseGoalId",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/LocalEventService.java:process",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:start",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:start",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:pause",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:pause",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:end",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:end",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:resume",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:resume",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:extend",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:resume",
+   "target": "function:src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java:forPrincipal",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java:cleanup",
+   "target": "function:src/main/java/com/capstone/backend/common/api/SafeApiLog.java:sessionCleanupFailure",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}

@@ -1,0 +1,3136 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 13,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 13,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 13,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 16,
+      "functions": [
+        {
+          "name": "DeviceHeaderValidator",
+          "startLine": 8,
+          "endLine": 8,
+          "params": []
+        },
+        {
+          "name": "require",
+          "startLine": 11,
+          "endLine": 18,
+          "params": [
+            "deviceId",
+            "principal"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "DeviceHeaderValidator",
+          "startLine": 7,
+          "endLine": 19,
+          "methods": [
+            "DeviceHeaderValidator",
+            "require"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "require",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "DeviceHeaderValidator",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "require",
+          "callee": "deviceId.isBlank",
+          "lineNumber": 12
+        },
+        {
+          "caller": "require",
+          "callee": "new ApiException",
+          "lineNumber": 13
+        },
+        {
+          "caller": "require",
+          "callee": "Long.toString(principal.deviceId()).equals",
+          "lineNumber": 15
+        },
+        {
+          "caller": "require",
+          "callee": "Long.toString",
+          "lineNumber": 15
+        },
+        {
+          "caller": "require",
+          "callee": "principal.deviceId",
+          "lineNumber": 15
+        },
+        {
+          "caller": "require",
+          "callee": "new ApiException",
+          "lineNumber": 16
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 63,
+      "nonEmptyLines": 57,
+      "functions": [
+        {
+          "name": "list",
+          "startLine": 36,
+          "endLine": 41,
+          "params": [
+            "principal",
+            "sessionId"
+          ]
+        },
+        {
+          "name": "acknowledge",
+          "startLine": 44,
+          "endLine": 51,
+          "params": [
+            "principal",
+            "interventionId",
+            "deviceId",
+            "request"
+          ]
+        },
+        {
+          "name": "delivery",
+          "startLine": 54,
+          "endLine": 61,
+          "params": [
+            "principal",
+            "interventionId",
+            "deviceId",
+            "request"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionController",
+          "startLine": 27,
+          "endLine": 63,
+          "methods": [
+            "list",
+            "acknowledge",
+            "delivery"
+          ],
+          "properties": [
+            "interventions",
+            "deliveries"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "list",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "acknowledge",
+          "line": 44,
+          "isDefault": false
+        },
+        {
+          "name": "delivery",
+          "line": 54,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionController",
+          "line": 27,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "list",
+          "callee": "ApiResponse.of",
+          "lineNumber": 40
+        },
+        {
+          "caller": "list",
+          "callee": "interventions.list",
+          "lineNumber": 40
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "ApiResponse.of",
+          "lineNumber": 50
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "interventions.acknowledge",
+          "lineNumber": 50
+        },
+        {
+          "caller": "delivery",
+          "callee": "ApiResponse.of",
+          "lineNumber": 60
+        },
+        {
+          "caller": "delivery",
+          "callee": "deliveries.receive",
+          "lineNumber": 60
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 58,
+      "nonEmptyLines": 55,
+      "functions": [
+        {
+          "name": "create",
+          "startLine": 47,
+          "endLine": 57,
+          "params": [
+            "eventId",
+            "nonce",
+            "status",
+            "channels",
+            "now",
+            "cooldown"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionDeliveryEntity",
+          "startLine": 22,
+          "endLine": 58,
+          "methods": [
+            "create"
+          ],
+          "properties": [
+            "id",
+            "interventionId",
+            "clientDeliveryId",
+            "dispatchStatus",
+            "channelsJson",
+            "acceptedAt",
+            "cooldownUntil"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionDeliveryEntity",
+          "line": 22,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new InterventionDeliveryEntity",
+          "lineNumber": 49
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 14,
+      "classes": [
+        {
+          "name": "InterventionDeliveryRepository",
+          "startLine": 9,
+          "endLine": 17,
+          "methods": [
+            "findByInterventionIdAndClientDeliveryId",
+            "findByInterventionIdOrderByIdAsc"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "InterventionDeliveryRepository",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 112,
+      "nonEmptyLines": 105,
+      "functions": [
+        {
+          "name": "offTask",
+          "startLine": 67,
+          "endLine": 81,
+          "params": [
+            "sessionId",
+            "revision",
+            "channels",
+            "policyVersion",
+            "runningSince",
+            "now"
+          ]
+        },
+        {
+          "name": "bindContext",
+          "startLine": 84,
+          "endLine": 86,
+          "params": [
+            "contextId"
+          ]
+        },
+        {
+          "name": "confirmDelivery",
+          "startLine": 89,
+          "endLine": 94,
+          "params": [
+            "now"
+          ]
+        },
+        {
+          "name": "expire",
+          "startLine": 97,
+          "endLine": 102,
+          "params": []
+        },
+        {
+          "name": "acknowledge",
+          "startLine": 105,
+          "endLine": 111,
+          "params": [
+            "action",
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionEventEntity",
+          "startLine": 23,
+          "endLine": 112,
+          "methods": [
+            "offTask",
+            "bindContext",
+            "confirmDelivery",
+            "expire",
+            "acknowledge"
+          ],
+          "properties": [
+            "id",
+            "sessionId",
+            "type",
+            "status",
+            "cause",
+            "pendingSlot",
+            "channelsJson",
+            "policyVersion",
+            "createdAt",
+            "expiresAt",
+            "runningSince",
+            "deliveryConfirmedAt",
+            "observationContextId",
+            "actedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "offTask",
+          "line": 67,
+          "isDefault": false
+        },
+        {
+          "name": "bindContext",
+          "line": 84,
+          "isDefault": false
+        },
+        {
+          "name": "confirmDelivery",
+          "line": 89,
+          "isDefault": false
+        },
+        {
+          "name": "expire",
+          "line": 97,
+          "isDefault": false
+        },
+        {
+          "name": "acknowledge",
+          "line": 105,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionEventEntity",
+          "line": 23,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "offTask",
+          "callee": "new InterventionEventEntity",
+          "lineNumber": 69
+        },
+        {
+          "caller": "offTask",
+          "callee": "now.plusSeconds",
+          "lineNumber": 79
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "Status.valueOf",
+          "lineNumber": 107
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "action.name",
+          "lineNumber": 107
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 6,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 10,
+      "nonEmptyLines": 8,
+      "classes": [
+        {
+          "name": "InterventionEventRepository",
+          "startLine": 7,
+          "endLine": 10,
+          "methods": [
+            "findBySessionIdOrderByCreatedAtAscIdAsc"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "InterventionEventRepository",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 7,
+      "nonEmptyLines": 5,
+      "classes": [
+        {
+          "name": "InterventionPolicyRepository",
+          "startLine": 6,
+          "endLine": 7,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "InterventionPolicyRepository",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 73,
+      "nonEmptyLines": 69,
+      "functions": [
+        {
+          "name": "create",
+          "startLine": 52,
+          "endLine": 65,
+          "params": [
+            "sessionId",
+            "runnerId",
+            "observerId",
+            "observer",
+            "nonce",
+            "sequence",
+            "runningSince",
+            "now"
+          ]
+        },
+        {
+          "name": "renew",
+          "startLine": 68,
+          "endLine": 72,
+          "params": [
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ObservationContextEntity",
+          "startLine": 20,
+          "endLine": 73,
+          "methods": [
+            "create",
+            "renew"
+          ],
+          "properties": [
+            "id",
+            "sessionId",
+            "runnerDeviceId",
+            "observerDeviceId",
+            "observer",
+            "clientContextId",
+            "foregroundSequence",
+            "runningSince",
+            "createdAt",
+            "validUntil"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "renew",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "ObservationContextEntity",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new ObservationContextEntity",
+          "lineNumber": 54
+        },
+        {
+          "caller": "create",
+          "callee": "now.plusSeconds",
+          "lineNumber": 63
+        },
+        {
+          "caller": "renew",
+          "callee": "validUntil.isAfter",
+          "lineNumber": 69
+        },
+        {
+          "caller": "renew",
+          "callee": "now.plusSeconds",
+          "lineNumber": 70
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 16,
+      "nonEmptyLines": 13,
+      "classes": [
+        {
+          "name": "ObservationContextRepository",
+          "startLine": 8,
+          "endLine": 16,
+          "methods": [
+            "findFirstBySessionIdOrderByForegroundSequenceDesc",
+            "findBySessionIdAndClientContextId"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "ObservationContextRepository",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 120,
+      "nonEmptyLines": 110,
+      "functions": [
+        {
+          "name": "resolve",
+          "startLine": 31,
+          "endLine": 49,
+          "params": [
+            "sessionId"
+          ]
+        },
+        {
+          "name": "contains",
+          "startLine": 52,
+          "endLine": 56,
+          "params": [
+            "sessionId",
+            "runId",
+            "context"
+          ]
+        },
+        {
+          "name": "requireForRun",
+          "startLine": 59,
+          "endLine": 71,
+          "params": [
+            "session",
+            "deviceId",
+            "raw",
+            "now"
+          ]
+        },
+        {
+          "name": "renew",
+          "startLine": 74,
+          "endLine": 81,
+          "params": [
+            "session",
+            "raw",
+            "now"
+          ]
+        },
+        {
+          "name": "expiry",
+          "startLine": 84,
+          "endLine": 90,
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "definitelyNotSent",
+          "startLine": 93,
+          "endLine": 97,
+          "params": [
+            "interventionId"
+          ]
+        },
+        {
+          "name": "current",
+          "startLine": 100,
+          "endLine": 107,
+          "params": [
+            "session",
+            "context",
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ForegroundPolicyContext",
+          "startLine": 21,
+          "endLine": 120,
+          "methods": [
+            "resolve",
+            "contains",
+            "requireForRun",
+            "renew",
+            "expiry",
+            "definitelyNotSent",
+            "current"
+          ],
+          "properties": [
+            "contexts",
+            "sessions",
+            "runs",
+            "events",
+            "deliveries"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "resolve",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "contains",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "requireForRun",
+          "line": 59,
+          "isDefault": false
+        },
+        {
+          "name": "renew",
+          "line": 74,
+          "isDefault": false
+        },
+        {
+          "name": "expiry",
+          "line": 84,
+          "isDefault": false
+        },
+        {
+          "name": "definitelyNotSent",
+          "line": 93,
+          "isDefault": false
+        },
+        {
+          "name": "current",
+          "line": 100,
+          "isDefault": false
+        },
+        {
+          "name": "ForegroundPolicyContext",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "resolve",
+          "callee": "sessions.findById(sessionId).orElse",
+          "lineNumber": 32
+        },
+        {
+          "caller": "resolve",
+          "callee": "sessions.findById",
+          "lineNumber": 32
+        },
+        {
+          "caller": "resolve",
+          "callee": "Optional.empty",
+          "lineNumber": 34
+        },
+        {
+          "caller": "resolve",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(sessionId)\n        .filter(value -> value.getObserver() != Observer.NONE\n            && Objects.equals(value.getRunningSince(), session.getLastResumedAt())).map",
+          "lineNumber": 36
+        },
+        {
+          "caller": "resolve",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(sessionId).filter",
+          "lineNumber": 36
+        },
+        {
+          "caller": "resolve",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc",
+          "lineNumber": 36
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getObserver",
+          "lineNumber": 37
+        },
+        {
+          "caller": "resolve",
+          "callee": "Objects.equals",
+          "lineNumber": 38
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getRunningSince",
+          "lineNumber": 38
+        },
+        {
+          "caller": "resolve",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 38
+        },
+        {
+          "caller": "resolve",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc",
+          "lineNumber": 40
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream().map(event -> event.getDeliveryConfirmedAt())\n              .filter(Objects::nonNull).max(Instant::compareTo)\n              .map(at -> at.plusSeconds(300)).orElse",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream().map(event -> event.getDeliveryConfirmedAt())\n              .filter(Objects::nonNull).max(Instant::compareTo).map",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream().map(event -> event.getDeliveryConfirmedAt())\n              .filter(Objects::nonNull).max",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream().map(event -> event.getDeliveryConfirmedAt()).filter",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream().map",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 41
+        },
+        {
+          "caller": "resolve",
+          "callee": "at.plusSeconds",
+          "lineNumber": 43
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream().anyMatch",
+          "lineNumber": 44
+        },
+        {
+          "caller": "resolve",
+          "callee": "history.stream",
+          "lineNumber": 44
+        },
+        {
+          "caller": "resolve",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 45
+        },
+        {
+          "caller": "resolve",
+          "callee": "definitelyNotSent",
+          "lineNumber": 45
+        },
+        {
+          "caller": "resolve",
+          "callee": "event.getId",
+          "lineNumber": 45
+        },
+        {
+          "caller": "resolve",
+          "callee": "new Binding",
+          "lineNumber": 46
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getObserverDeviceId",
+          "lineNumber": 46
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getId().toString",
+          "lineNumber": 46
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getId",
+          "lineNumber": 46
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getCreatedAt",
+          "lineNumber": 47
+        },
+        {
+          "caller": "resolve",
+          "callee": "value.getValidUntil",
+          "lineNumber": 47
+        },
+        {
+          "caller": "contains",
+          "callee": "runs.findById(runId).filter(run -> run.getSession().getId().equals(sessionId)\n        && run.getObservationContextId() != null\n        && run.getObservationContextId().toString().equals(context)).isPresent",
+          "lineNumber": 53
+        },
+        {
+          "caller": "contains",
+          "callee": "runs.findById(runId).filter",
+          "lineNumber": 53
+        },
+        {
+          "caller": "contains",
+          "callee": "runs.findById",
+          "lineNumber": 53
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getSession().getId().equals",
+          "lineNumber": 53
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getSession().getId",
+          "lineNumber": 53
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getSession",
+          "lineNumber": 53
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getObservationContextId",
+          "lineNumber": 54
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getObservationContextId().toString().equals",
+          "lineNumber": 55
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getObservationContextId().toString",
+          "lineNumber": 55
+        },
+        {
+          "caller": "contains",
+          "callee": "run.getObservationContextId",
+          "lineNumber": 55
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "InterventionAccess.id",
+          "lineNumber": 64
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId())\n        .filter(item -> item.getId() == id && item.getObserver() != Observer.NONE\n            && Objects.equals(item.getObserverDeviceId(), deviceId)\n            && current(session, item, now)).orElseThrow",
+          "lineNumber": 65
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId()).filter",
+          "lineNumber": 65
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc",
+          "lineNumber": 65
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "session.getId",
+          "lineNumber": 65
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "item.getId",
+          "lineNumber": 66
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "item.getObserver",
+          "lineNumber": 66
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "Objects.equals",
+          "lineNumber": 67
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "item.getObserverDeviceId",
+          "lineNumber": 67
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "current",
+          "lineNumber": 68
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "new ApiException",
+          "lineNumber": 69
+        },
+        {
+          "caller": "requireForRun",
+          "callee": "value.getId",
+          "lineNumber": 70
+        },
+        {
+          "caller": "renew",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId())\n        .filter(value -> value.getId().toString().equals(raw) && current(session, value, now)).ifPresent",
+          "lineNumber": 78
+        },
+        {
+          "caller": "renew",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId()).filter",
+          "lineNumber": 78
+        },
+        {
+          "caller": "renew",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc",
+          "lineNumber": 78
+        },
+        {
+          "caller": "renew",
+          "callee": "session.getId",
+          "lineNumber": 78
+        },
+        {
+          "caller": "renew",
+          "callee": "value.getId().toString().equals",
+          "lineNumber": 79
+        },
+        {
+          "caller": "renew",
+          "callee": "value.getId().toString",
+          "lineNumber": 79
+        },
+        {
+          "caller": "renew",
+          "callee": "value.getId",
+          "lineNumber": 79
+        },
+        {
+          "caller": "renew",
+          "callee": "current",
+          "lineNumber": 79
+        },
+        {
+          "caller": "renew",
+          "callee": "value.renew",
+          "lineNumber": 80
+        },
+        {
+          "caller": "expiry",
+          "callee": "contexts.findById(Long.parseLong(context)).map",
+          "lineNumber": 86
+        },
+        {
+          "caller": "expiry",
+          "callee": "contexts.findById",
+          "lineNumber": 86
+        },
+        {
+          "caller": "expiry",
+          "callee": "Long.parseLong",
+          "lineNumber": 86
+        },
+        {
+          "caller": "expiry",
+          "callee": "value.getValidUntil",
+          "lineNumber": 86
+        },
+        {
+          "caller": "expiry",
+          "callee": "Optional.empty",
+          "lineNumber": 88
+        },
+        {
+          "caller": "definitelyNotSent",
+          "callee": "deliveries.findByInterventionIdOrderByIdAsc",
+          "lineNumber": 94
+        },
+        {
+          "caller": "definitelyNotSent",
+          "callee": "history.isEmpty",
+          "lineNumber": 95
+        },
+        {
+          "caller": "definitelyNotSent",
+          "callee": "history.stream().allMatch",
+          "lineNumber": 95
+        },
+        {
+          "caller": "definitelyNotSent",
+          "callee": "history.stream",
+          "lineNumber": 95
+        },
+        {
+          "caller": "definitelyNotSent",
+          "callee": "value.getDispatchStatus",
+          "lineNumber": 96
+        },
+        {
+          "caller": "current",
+          "callee": "session.getStatus",
+          "lineNumber": 102
+        },
+        {
+          "caller": "current",
+          "callee": "context.getRunnerDeviceId().equals",
+          "lineNumber": 104
+        },
+        {
+          "caller": "current",
+          "callee": "context.getRunnerDeviceId",
+          "lineNumber": 104
+        },
+        {
+          "caller": "current",
+          "callee": "session.getRunnerDevice().getId",
+          "lineNumber": 104
+        },
+        {
+          "caller": "current",
+          "callee": "session.getRunnerDevice",
+          "lineNumber": 104
+        },
+        {
+          "caller": "current",
+          "callee": "Objects.equals",
+          "lineNumber": 105
+        },
+        {
+          "caller": "current",
+          "callee": "context.getRunningSince",
+          "lineNumber": 105
+        },
+        {
+          "caller": "current",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 105
+        },
+        {
+          "caller": "current",
+          "callee": "context.getValidUntil().isAfter",
+          "lineNumber": 106
+        },
+        {
+          "caller": "current",
+          "callee": "context.getValidUntil",
+          "lineNumber": 106
+        },
+        {
+          "caller": "current",
+          "callee": "context.getCreatedAt().isAfter",
+          "lineNumber": 106
+        },
+        {
+          "caller": "current",
+          "callee": "context.getCreatedAt",
+          "lineNumber": 106
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 8,
+        "functionCount": 7,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 84,
+      "nonEmptyLines": 80,
+      "functions": [
+        {
+          "name": "receive",
+          "startLine": 36,
+          "endLine": 78,
+          "params": [
+            "principal",
+            "deviceId",
+            "rawId",
+            "request"
+          ]
+        },
+        {
+          "name": "receipt",
+          "startLine": 80,
+          "endLine": 83,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionDeliveryService",
+          "startLine": 25,
+          "endLine": 84,
+          "methods": [
+            "receive",
+            "receipt"
+          ],
+          "properties": [
+            "access",
+            "interventions",
+            "sessions",
+            "events",
+            "deliveries",
+            "json"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "receive",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionDeliveryService",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "receive",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 39
+        },
+        {
+          "caller": "receive",
+          "callee": "access.authenticate",
+          "lineNumber": 40
+        },
+        {
+          "caller": "receive",
+          "callee": "events.findById(InterventionAccess.id(rawId, ApiErrorCode.NOT_FOUND)).orElseThrow",
+          "lineNumber": 41
+        },
+        {
+          "caller": "receive",
+          "callee": "events.findById",
+          "lineNumber": 41
+        },
+        {
+          "caller": "receive",
+          "callee": "InterventionAccess.id",
+          "lineNumber": 41
+        },
+        {
+          "caller": "receive",
+          "callee": "new ApiException",
+          "lineNumber": 42
+        },
+        {
+          "caller": "receive",
+          "callee": "sessions.findOwnedForUpdate(event.getSessionId(), principal.userId())\n        .filter(value -> value.getRunnerDevice().getId().equals(principal.deviceId())).orElseThrow",
+          "lineNumber": 43
+        },
+        {
+          "caller": "receive",
+          "callee": "sessions.findOwnedForUpdate(event.getSessionId(), principal.userId()).filter",
+          "lineNumber": 43
+        },
+        {
+          "caller": "receive",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 43
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getSessionId",
+          "lineNumber": 43
+        },
+        {
+          "caller": "receive",
+          "callee": "principal.userId",
+          "lineNumber": 43
+        },
+        {
+          "caller": "receive",
+          "callee": "value.getRunnerDevice().getId().equals",
+          "lineNumber": 44
+        },
+        {
+          "caller": "receive",
+          "callee": "value.getRunnerDevice().getId",
+          "lineNumber": 44
+        },
+        {
+          "caller": "receive",
+          "callee": "value.getRunnerDevice",
+          "lineNumber": 44
+        },
+        {
+          "caller": "receive",
+          "callee": "principal.deviceId",
+          "lineNumber": 44
+        },
+        {
+          "caller": "receive",
+          "callee": "new ApiException",
+          "lineNumber": 45
+        },
+        {
+          "caller": "receive",
+          "callee": "request.channels().stream().sorted().toList",
+          "lineNumber": 46
+        },
+        {
+          "caller": "receive",
+          "callee": "request.channels().stream().sorted",
+          "lineNumber": 46
+        },
+        {
+          "caller": "receive",
+          "callee": "request.channels().stream",
+          "lineNumber": 46
+        },
+        {
+          "caller": "receive",
+          "callee": "request.channels",
+          "lineNumber": 46
+        },
+        {
+          "caller": "receive",
+          "callee": "Arrays.asList",
+          "lineNumber": 47
+        },
+        {
+          "caller": "receive",
+          "callee": "json.readValue",
+          "lineNumber": 47
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getChannelsJson",
+          "lineNumber": 47
+        },
+        {
+          "caller": "receive",
+          "callee": "new HashSet<>(channels).size",
+          "lineNumber": 49
+        },
+        {
+          "caller": "receive",
+          "callee": "new HashSet<>",
+          "lineNumber": 49
+        },
+        {
+          "caller": "receive",
+          "callee": "channels.size",
+          "lineNumber": 49
+        },
+        {
+          "caller": "receive",
+          "callee": "allowed.containsAll",
+          "lineNumber": 49
+        },
+        {
+          "caller": "receive",
+          "callee": "request.dispatchStatus",
+          "lineNumber": 50
+        },
+        {
+          "caller": "receive",
+          "callee": "channels.isEmpty",
+          "lineNumber": 50
+        },
+        {
+          "caller": "receive",
+          "callee": "new ApiException",
+          "lineNumber": 51
+        },
+        {
+          "caller": "receive",
+          "callee": "UUID.fromString",
+          "lineNumber": 53
+        },
+        {
+          "caller": "receive",
+          "callee": "request.clientDeliveryId",
+          "lineNumber": 53
+        },
+        {
+          "caller": "receive",
+          "callee": "deliveries.findByInterventionIdAndClientDeliveryId(event.getId(), nonce).orElse",
+          "lineNumber": 54
+        },
+        {
+          "caller": "receive",
+          "callee": "deliveries.findByInterventionIdAndClientDeliveryId",
+          "lineNumber": 54
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getId",
+          "lineNumber": 54
+        },
+        {
+          "caller": "receive",
+          "callee": "previous.getDispatchStatus",
+          "lineNumber": 57
+        },
+        {
+          "caller": "receive",
+          "callee": "request.dispatchStatus",
+          "lineNumber": 57
+        },
+        {
+          "caller": "receive",
+          "callee": "Arrays.asList(json.readValue(previous.getChannelsJson(), NotificationChannel[].class)).equals",
+          "lineNumber": 58
+        },
+        {
+          "caller": "receive",
+          "callee": "Arrays.asList",
+          "lineNumber": 58
+        },
+        {
+          "caller": "receive",
+          "callee": "json.readValue",
+          "lineNumber": 58
+        },
+        {
+          "caller": "receive",
+          "callee": "previous.getChannelsJson",
+          "lineNumber": 58
+        },
+        {
+          "caller": "receive",
+          "callee": "new ApiException",
+          "lineNumber": 60
+        },
+        {
+          "caller": "receive",
+          "callee": "receipt",
+          "lineNumber": 62
+        },
+        {
+          "caller": "receive",
+          "callee": "Instant.now().truncatedTo",
+          "lineNumber": 64
+        },
+        {
+          "caller": "receive",
+          "callee": "Instant.now",
+          "lineNumber": 64
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 65
+        },
+        {
+          "caller": "receive",
+          "callee": "now.isBefore",
+          "lineNumber": 66
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getExpiresAt",
+          "lineNumber": 66
+        },
+        {
+          "caller": "receive",
+          "callee": "interventions.validCandidate",
+          "lineNumber": 67
+        },
+        {
+          "caller": "receive",
+          "callee": "event.expire",
+          "lineNumber": 68
+        },
+        {
+          "caller": "receive",
+          "callee": "request.dispatchStatus",
+          "lineNumber": 70
+        },
+        {
+          "caller": "receive",
+          "callee": "event.confirmDelivery",
+          "lineNumber": 71
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 73
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getDeliveryConfirmedAt().plusSeconds",
+          "lineNumber": 74
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 74
+        },
+        {
+          "caller": "receive",
+          "callee": "deliveries.saveAndFlush",
+          "lineNumber": 75
+        },
+        {
+          "caller": "receive",
+          "callee": "InterventionDeliveryEntity.create",
+          "lineNumber": 75
+        },
+        {
+          "caller": "receive",
+          "callee": "event.getId",
+          "lineNumber": 75
+        },
+        {
+          "caller": "receive",
+          "callee": "request.dispatchStatus",
+          "lineNumber": 76
+        },
+        {
+          "caller": "receive",
+          "callee": "json.writeValueAsString",
+          "lineNumber": 76
+        },
+        {
+          "caller": "receive",
+          "callee": "receipt",
+          "lineNumber": 77
+        },
+        {
+          "caller": "receipt",
+          "callee": "new DeliveryReceipt",
+          "lineNumber": 81
+        },
+        {
+          "caller": "receipt",
+          "callee": "value.getDispatchStatus",
+          "lineNumber": 81
+        },
+        {
+          "caller": "receipt",
+          "callee": "value.getAcceptedAt",
+          "lineNumber": 81
+        },
+        {
+          "caller": "receipt",
+          "callee": "value.getCooldownUntil",
+          "lineNumber": 82
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 155,
+      "nonEmptyLines": 144,
+      "functions": [
+        {
+          "name": "list",
+          "startLine": 48,
+          "endLine": 60,
+          "params": [
+            "principal",
+            "rawSessionId"
+          ]
+        },
+        {
+          "name": "acknowledge",
+          "startLine": 63,
+          "endLine": 82,
+          "params": [
+            "principal",
+            "deviceId",
+            "rawId",
+            "request"
+          ]
+        },
+        {
+          "name": "presentable",
+          "startLine": 84,
+          "endLine": 88,
+          "params": [
+            "session",
+            "event",
+            "now"
+          ]
+        },
+        {
+          "name": "validCandidate",
+          "startLine": 90,
+          "endLine": 93,
+          "params": [
+            "session",
+            "event",
+            "now"
+          ]
+        },
+        {
+          "name": "candidateState",
+          "startLine": 95,
+          "endLine": 111,
+          "params": [
+            "session",
+            "event",
+            "now"
+          ]
+        },
+        {
+          "name": "item",
+          "startLine": 113,
+          "endLine": 122,
+          "params": [
+            "event",
+            "now"
+          ]
+        },
+        {
+          "name": "authenticate",
+          "startLine": 124,
+          "endLine": 136,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "owned",
+          "startLine": 138,
+          "endLine": 142,
+          "params": [
+            "principal",
+            "id"
+          ]
+        },
+        {
+          "name": "id",
+          "startLine": 144,
+          "endLine": 154,
+          "params": [
+            "value",
+            "error"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionService",
+          "startLine": 34,
+          "endLine": 155,
+          "methods": [
+            "list",
+            "acknowledge",
+            "presentable",
+            "validCandidate",
+            "candidateState",
+            "item",
+            "authenticate",
+            "owned",
+            "id"
+          ],
+          "properties": [
+            "entityManager",
+            "users",
+            "families",
+            "guard",
+            "sessions",
+            "events",
+            "states",
+            "policy",
+            "json"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "list",
+          "line": 48,
+          "isDefault": false
+        },
+        {
+          "name": "acknowledge",
+          "line": 63,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionService",
+          "line": 34,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "list",
+          "callee": "entityManager.clear",
+          "lineNumber": 50
+        },
+        {
+          "caller": "list",
+          "callee": "authenticate",
+          "lineNumber": 51
+        },
+        {
+          "caller": "list",
+          "callee": "owned",
+          "lineNumber": 52
+        },
+        {
+          "caller": "list",
+          "callee": "id",
+          "lineNumber": 52
+        },
+        {
+          "caller": "list",
+          "callee": "Instant.now",
+          "lineNumber": 53
+        },
+        {
+          "caller": "list",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).stream()\n        .filter(event -> event.getStatus() != Status.PENDING\n            || event.getDeliveryConfirmedAt() == null)\n        .filter(event -> event.getStatus() != Status.PENDING || !now.isBefore(event.getExpiresAt())\n            || presentable(session, event, now))\n        .map(event -> item(event, now)).toList",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).stream()\n        .filter(event -> event.getStatus() != Status.PENDING\n            || event.getDeliveryConfirmedAt() == null)\n        .filter(event -> event.getStatus() != Status.PENDING || !now.isBefore(event.getExpiresAt())\n            || presentable(session, event, now)).map",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).stream()\n        .filter(event -> event.getStatus() != Status.PENDING\n            || event.getDeliveryConfirmedAt() == null).filter",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).stream().filter",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).stream",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "session.getId",
+          "lineNumber": 54
+        },
+        {
+          "caller": "list",
+          "callee": "event.getStatus",
+          "lineNumber": 55
+        },
+        {
+          "caller": "list",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 56
+        },
+        {
+          "caller": "list",
+          "callee": "event.getStatus",
+          "lineNumber": 57
+        },
+        {
+          "caller": "list",
+          "callee": "now.isBefore",
+          "lineNumber": 57
+        },
+        {
+          "caller": "list",
+          "callee": "event.getExpiresAt",
+          "lineNumber": 57
+        },
+        {
+          "caller": "list",
+          "callee": "presentable",
+          "lineNumber": 58
+        },
+        {
+          "caller": "list",
+          "callee": "item",
+          "lineNumber": 59
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 66
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "entityManager.clear",
+          "lineNumber": 67
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "authenticate",
+          "lineNumber": 68
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "events.findById(id(rawId, ApiErrorCode.NOT_FOUND)).orElseThrow",
+          "lineNumber": 70
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "events.findById",
+          "lineNumber": 70
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "id",
+          "lineNumber": 70
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "new ApiException",
+          "lineNumber": 71
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "sessions.findOwnedForUpdate(event.getSessionId(), principal.userId())\n        .filter(value -> value.getRunnerDevice().getId().equals(principal.deviceId())).orElseThrow",
+          "lineNumber": 72
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "sessions.findOwnedForUpdate(event.getSessionId(), principal.userId()).filter",
+          "lineNumber": 72
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 72
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.getSessionId",
+          "lineNumber": 72
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "principal.userId",
+          "lineNumber": 72
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "value.getRunnerDevice().getId().equals",
+          "lineNumber": 73
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "value.getRunnerDevice().getId",
+          "lineNumber": 73
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "value.getRunnerDevice",
+          "lineNumber": 73
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "principal.deviceId",
+          "lineNumber": 73
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "new ApiException",
+          "lineNumber": 74
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "Instant.now().truncatedTo",
+          "lineNumber": 75
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "Instant.now",
+          "lineNumber": 75
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 76
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "now.isBefore",
+          "lineNumber": 77
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.getExpiresAt",
+          "lineNumber": 77
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "validCandidate",
+          "lineNumber": 77
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.expire",
+          "lineNumber": 78
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.acknowledge",
+          "lineNumber": 80
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "request.action",
+          "lineNumber": 80
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "new Acknowledgement",
+          "lineNumber": 81
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.getStatus",
+          "lineNumber": 81
+        },
+        {
+          "caller": "acknowledge",
+          "callee": "event.getActedAt",
+          "lineNumber": 81
+        },
+        {
+          "caller": "presentable",
+          "callee": "candidateState(session, event, now)\n        .map(value -> value.pendingRun() == null).orElse",
+          "lineNumber": 86
+        },
+        {
+          "caller": "presentable",
+          "callee": "candidateState(session, event, now).map",
+          "lineNumber": 86
+        },
+        {
+          "caller": "presentable",
+          "callee": "candidateState",
+          "lineNumber": 86
+        },
+        {
+          "caller": "presentable",
+          "callee": "value.pendingRun",
+          "lineNumber": 87
+        },
+        {
+          "caller": "validCandidate",
+          "callee": "candidateState(session, event, now).isPresent",
+          "lineNumber": 92
+        },
+        {
+          "caller": "validCandidate",
+          "callee": "candidateState",
+          "lineNumber": 92
+        },
+        {
+          "caller": "candidateState",
+          "callee": "Objects.equals",
+          "lineNumber": 97
+        },
+        {
+          "caller": "candidateState",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 97
+        },
+        {
+          "caller": "candidateState",
+          "callee": "event.getRunningSince",
+          "lineNumber": 97
+        },
+        {
+          "caller": "candidateState",
+          "callee": "Optional.empty",
+          "lineNumber": 98
+        },
+        {
+          "caller": "candidateState",
+          "callee": "policy.binding(session, now).orElse",
+          "lineNumber": 100
+        },
+        {
+          "caller": "candidateState",
+          "callee": "policy.binding",
+          "lineNumber": 100
+        },
+        {
+          "caller": "candidateState",
+          "callee": "states.findById(session.getId()).orElse",
+          "lineNumber": 101
+        },
+        {
+          "caller": "candidateState",
+          "callee": "states.findById",
+          "lineNumber": 101
+        },
+        {
+          "caller": "candidateState",
+          "callee": "session.getId",
+          "lineNumber": 101
+        },
+        {
+          "caller": "candidateState",
+          "callee": "context.deliveryContractReady",
+          "lineNumber": 102
+        },
+        {
+          "caller": "candidateState",
+          "callee": "context.cooldownUntil",
+          "lineNumber": 103
+        },
+        {
+          "caller": "candidateState",
+          "callee": "now.isBefore",
+          "lineNumber": 103
+        },
+        {
+          "caller": "candidateState",
+          "callee": "context.cooldownUntil",
+          "lineNumber": 103
+        },
+        {
+          "caller": "candidateState",
+          "callee": "Optional.empty",
+          "lineNumber": 104
+        },
+        {
+          "caller": "candidateState",
+          "callee": "json.readValue",
+          "lineNumber": 106
+        },
+        {
+          "caller": "candidateState",
+          "callee": "state.getTimelineJson",
+          "lineNumber": 106
+        },
+        {
+          "caller": "candidateState",
+          "callee": "event.getObservationContextId",
+          "lineNumber": 107
+        },
+        {
+          "caller": "candidateState",
+          "callee": "event.getObservationContextId().toString().equals",
+          "lineNumber": 108
+        },
+        {
+          "caller": "candidateState",
+          "callee": "event.getObservationContextId().toString",
+          "lineNumber": 108
+        },
+        {
+          "caller": "candidateState",
+          "callee": "event.getObservationContextId",
+          "lineNumber": 108
+        },
+        {
+          "caller": "candidateState",
+          "callee": "context.context",
+          "lineNumber": 108
+        },
+        {
+          "caller": "candidateState",
+          "callee": "timeline.openEpisode",
+          "lineNumber": 109
+        },
+        {
+          "caller": "candidateState",
+          "callee": "timeline.context().equals",
+          "lineNumber": 109
+        },
+        {
+          "caller": "candidateState",
+          "callee": "timeline.context",
+          "lineNumber": 109
+        },
+        {
+          "caller": "candidateState",
+          "callee": "context.context",
+          "lineNumber": 109
+        },
+        {
+          "caller": "candidateState",
+          "callee": "Optional.of",
+          "lineNumber": 110
+        },
+        {
+          "caller": "candidateState",
+          "callee": "Optional.empty",
+          "lineNumber": 110
+        },
+        {
+          "caller": "item",
+          "callee": "event.getStatus",
+          "lineNumber": 114
+        },
+        {
+          "caller": "item",
+          "callee": "now.isBefore",
+          "lineNumber": 114
+        },
+        {
+          "caller": "item",
+          "callee": "event.getExpiresAt",
+          "lineNumber": 114
+        },
+        {
+          "caller": "item",
+          "callee": "event.getStatus",
+          "lineNumber": 115
+        },
+        {
+          "caller": "item",
+          "callee": "new Item",
+          "lineNumber": 116
+        },
+        {
+          "caller": "item",
+          "callee": "event.getId().toString",
+          "lineNumber": 116
+        },
+        {
+          "caller": "item",
+          "callee": "event.getId",
+          "lineNumber": 116
+        },
+        {
+          "caller": "item",
+          "callee": "event.getType",
+          "lineNumber": 116
+        },
+        {
+          "caller": "item",
+          "callee": "Arrays.asList",
+          "lineNumber": 117
+        },
+        {
+          "caller": "item",
+          "callee": "json.readValue",
+          "lineNumber": 117
+        },
+        {
+          "caller": "item",
+          "callee": "event.getChannelsJson",
+          "lineNumber": 117
+        },
+        {
+          "caller": "item",
+          "callee": "event.getCreatedAt",
+          "lineNumber": 118
+        },
+        {
+          "caller": "item",
+          "callee": "event.getPolicyVersion",
+          "lineNumber": 118
+        },
+        {
+          "caller": "item",
+          "callee": "event.getObservationContextId",
+          "lineNumber": 119
+        },
+        {
+          "caller": "item",
+          "callee": "event.getObservationContextId().toString",
+          "lineNumber": 119
+        },
+        {
+          "caller": "item",
+          "callee": "event.getObservationContextId",
+          "lineNumber": 119
+        },
+        {
+          "caller": "item",
+          "callee": "event.getDeliveryConfirmedAt",
+          "lineNumber": 120
+        },
+        {
+          "caller": "item",
+          "callee": "Math.max",
+          "lineNumber": 121
+        },
+        {
+          "caller": "item",
+          "callee": "Duration.between(now, event.getExpiresAt()).toMillis",
+          "lineNumber": 121
+        },
+        {
+          "caller": "item",
+          "callee": "Duration.between",
+          "lineNumber": 121
+        },
+        {
+          "caller": "item",
+          "callee": "event.getExpiresAt",
+          "lineNumber": 121
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.deviceType",
+          "lineNumber": 125
+        },
+        {
+          "caller": "authenticate",
+          "callee": "new ApiException",
+          "lineNumber": 126
+        },
+        {
+          "caller": "authenticate",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 128
+        },
+        {
+          "caller": "authenticate",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 128
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.userId",
+          "lineNumber": 128
+        },
+        {
+          "caller": "authenticate",
+          "callee": "new ApiException",
+          "lineNumber": 129
+        },
+        {
+          "caller": "authenticate",
+          "callee": "families.findById(principal.tokenFamilyId()).filter(family ->\n        family.getUser().getId().equals(principal.userId())\n            && family.getDevice().getId().equals(principal.deviceId())\n            && family.getDevice().getDeviceType() == DeviceType.DESKTOP\n            && guard.isActive(family, Instant.now())).orElseThrow",
+          "lineNumber": 130
+        },
+        {
+          "caller": "authenticate",
+          "callee": "families.findById(principal.tokenFamilyId()).filter",
+          "lineNumber": 130
+        },
+        {
+          "caller": "authenticate",
+          "callee": "families.findById",
+          "lineNumber": 130
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.tokenFamilyId",
+          "lineNumber": 130
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getUser().getId().equals",
+          "lineNumber": 131
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getUser().getId",
+          "lineNumber": 131
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getUser",
+          "lineNumber": 131
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.userId",
+          "lineNumber": 131
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getDevice().getId().equals",
+          "lineNumber": 132
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getDevice().getId",
+          "lineNumber": 132
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getDevice",
+          "lineNumber": 132
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.deviceId",
+          "lineNumber": 132
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getDevice().getDeviceType",
+          "lineNumber": 133
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getDevice",
+          "lineNumber": 133
+        },
+        {
+          "caller": "authenticate",
+          "callee": "guard.isActive",
+          "lineNumber": 134
+        },
+        {
+          "caller": "authenticate",
+          "callee": "Instant.now",
+          "lineNumber": 134
+        },
+        {
+          "caller": "authenticate",
+          "callee": "new ApiException",
+          "lineNumber": 135
+        },
+        {
+          "caller": "owned",
+          "callee": "sessions.findOwnedForUpdate(id, principal.userId())\n        .filter(session -> session.getRunnerDevice().getId().equals(principal.deviceId())).orElseThrow",
+          "lineNumber": 139
+        },
+        {
+          "caller": "owned",
+          "callee": "sessions.findOwnedForUpdate(id, principal.userId()).filter",
+          "lineNumber": 139
+        },
+        {
+          "caller": "owned",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 139
+        },
+        {
+          "caller": "owned",
+          "callee": "principal.userId",
+          "lineNumber": 139
+        },
+        {
+          "caller": "owned",
+          "callee": "session.getRunnerDevice().getId().equals",
+          "lineNumber": 140
+        },
+        {
+          "caller": "owned",
+          "callee": "session.getRunnerDevice().getId",
+          "lineNumber": 140
+        },
+        {
+          "caller": "owned",
+          "callee": "session.getRunnerDevice",
+          "lineNumber": 140
+        },
+        {
+          "caller": "owned",
+          "callee": "principal.deviceId",
+          "lineNumber": 140
+        },
+        {
+          "caller": "owned",
+          "callee": "new ApiException",
+          "lineNumber": 141
+        },
+        {
+          "caller": "id",
+          "callee": "Long.parseLong",
+          "lineNumber": 146
+        },
+        {
+          "caller": "id",
+          "callee": "new ApiException",
+          "lineNumber": 153
+        }
+      ],
+      "metrics": {
+        "importCount": 12,
+        "exportCount": 3,
+        "functionCount": 9,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 133,
+      "nonEmptyLines": 126,
+      "functions": [
+        {
+          "name": "put",
+          "startLine": 47,
+          "endLine": 93,
+          "params": [
+            "principal",
+            "deviceId",
+            "rawSession",
+            "request"
+          ]
+        },
+        {
+          "name": "get",
+          "startLine": 96,
+          "endLine": 108,
+          "params": [
+            "principal",
+            "deviceId",
+            "rawSession"
+          ]
+        },
+        {
+          "name": "linkedExtension",
+          "startLine": 110,
+          "endLine": 118,
+          "params": [
+            "principal",
+            "runnerId",
+            "now"
+          ]
+        },
+        {
+          "name": "available",
+          "startLine": 120,
+          "endLine": 124,
+          "params": [
+            "id",
+            "userId",
+            "now"
+          ]
+        },
+        {
+          "name": "item",
+          "startLine": 126,
+          "endLine": 132,
+          "params": [
+            "value",
+            "session",
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ObservationContextService",
+          "startLine": 33,
+          "endLine": 133,
+          "methods": [
+            "put",
+            "get",
+            "linkedExtension",
+            "available",
+            "item"
+          ],
+          "properties": [
+            "access",
+            "contexts",
+            "foreground",
+            "devices",
+            "families",
+            "guard",
+            "states",
+            "events",
+            "json"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "put",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "get",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "ObservationContextService",
+          "line": 33,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "put",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 49
+        },
+        {
+          "caller": "put",
+          "callee": "access.authenticate",
+          "lineNumber": 50
+        },
+        {
+          "caller": "put",
+          "callee": "access.owned",
+          "lineNumber": 51
+        },
+        {
+          "caller": "put",
+          "callee": "InterventionAccess.id",
+          "lineNumber": 52
+        },
+        {
+          "caller": "put",
+          "callee": "session.getStatus",
+          "lineNumber": 53
+        },
+        {
+          "caller": "put",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 53
+        },
+        {
+          "caller": "put",
+          "callee": "new ApiException",
+          "lineNumber": 54
+        },
+        {
+          "caller": "put",
+          "callee": "Instant.now().truncatedTo",
+          "lineNumber": 56
+        },
+        {
+          "caller": "put",
+          "callee": "Instant.now",
+          "lineNumber": 56
+        },
+        {
+          "caller": "put",
+          "callee": "UUID.fromString",
+          "lineNumber": 57
+        },
+        {
+          "caller": "put",
+          "callee": "request.clientContextId",
+          "lineNumber": 57
+        },
+        {
+          "caller": "put",
+          "callee": "contexts.findBySessionIdAndClientContextId(session.getId(), nonce).orElse",
+          "lineNumber": 58
+        },
+        {
+          "caller": "put",
+          "callee": "contexts.findBySessionIdAndClientContextId",
+          "lineNumber": 58
+        },
+        {
+          "caller": "put",
+          "callee": "session.getId",
+          "lineNumber": 58
+        },
+        {
+          "caller": "put",
+          "callee": "previous.getForegroundSequence",
+          "lineNumber": 61
+        },
+        {
+          "caller": "put",
+          "callee": "request.foregroundSequence().longValueExact",
+          "lineNumber": 61
+        },
+        {
+          "caller": "put",
+          "callee": "request.foregroundSequence",
+          "lineNumber": 61
+        },
+        {
+          "caller": "put",
+          "callee": "previous.getObserver",
+          "lineNumber": 62
+        },
+        {
+          "caller": "put",
+          "callee": "request.observer",
+          "lineNumber": 62
+        },
+        {
+          "caller": "put",
+          "callee": "new ApiException",
+          "lineNumber": 63
+        },
+        {
+          "caller": "put",
+          "callee": "item",
+          "lineNumber": 65
+        },
+        {
+          "caller": "put",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc",
+          "lineNumber": 67
+        },
+        {
+          "caller": "put",
+          "callee": "session.getId",
+          "lineNumber": 67
+        },
+        {
+          "caller": "put",
+          "callee": "latest.filter(value -> value.getForegroundSequence()\n        >= request.foregroundSequence().longValueExact()).isPresent",
+          "lineNumber": 68
+        },
+        {
+          "caller": "put",
+          "callee": "latest.filter",
+          "lineNumber": 68
+        },
+        {
+          "caller": "put",
+          "callee": "value.getForegroundSequence",
+          "lineNumber": 68
+        },
+        {
+          "caller": "put",
+          "callee": "request.foregroundSequence().longValueExact",
+          "lineNumber": 69
+        },
+        {
+          "caller": "put",
+          "callee": "request.foregroundSequence",
+          "lineNumber": 69
+        },
+        {
+          "caller": "put",
+          "callee": "new ApiException",
+          "lineNumber": 71
+        },
+        {
+          "caller": "put",
+          "callee": "request.observer",
+          "lineNumber": 73
+        },
+        {
+          "caller": "put",
+          "callee": "device.getId",
+          "lineNumber": 74
+        },
+        {
+          "caller": "put",
+          "callee": "linkedExtension",
+          "lineNumber": 76
+        },
+        {
+          "caller": "put",
+          "callee": "device.getId",
+          "lineNumber": 76
+        },
+        {
+          "caller": "put",
+          "callee": "contexts.saveAndFlush",
+          "lineNumber": 78
+        },
+        {
+          "caller": "put",
+          "callee": "ObservationContextEntity.create",
+          "lineNumber": 78
+        },
+        {
+          "caller": "put",
+          "callee": "session.getId",
+          "lineNumber": 78
+        },
+        {
+          "caller": "put",
+          "callee": "device.getId",
+          "lineNumber": 79
+        },
+        {
+          "caller": "put",
+          "callee": "request.observer",
+          "lineNumber": 79
+        },
+        {
+          "caller": "put",
+          "callee": "request.foregroundSequence().longValueExact",
+          "lineNumber": 80
+        },
+        {
+          "caller": "put",
+          "callee": "request.foregroundSequence",
+          "lineNumber": 80
+        },
+        {
+          "caller": "put",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 81
+        },
+        {
+          "caller": "put",
+          "callee": "states.findById(session.getId()).ifPresent",
+          "lineNumber": 82
+        },
+        {
+          "caller": "put",
+          "callee": "states.findById",
+          "lineNumber": 82
+        },
+        {
+          "caller": "put",
+          "callee": "session.getId",
+          "lineNumber": 82
+        },
+        {
+          "caller": "put",
+          "callee": "new OffTaskTimeline",
+          "lineNumber": 83
+        },
+        {
+          "caller": "put",
+          "callee": "json.readValue",
+          "lineNumber": 84
+        },
+        {
+          "caller": "put",
+          "callee": "state.getTimelineJson",
+          "lineNumber": 84
+        },
+        {
+          "caller": "put",
+          "callee": "foreground.expiry(timeline.snapshot().context())\n          .filter(at -> at.isBefore(now)).orElse",
+          "lineNumber": 85
+        },
+        {
+          "caller": "put",
+          "callee": "foreground.expiry(timeline.snapshot().context()).filter",
+          "lineNumber": 85
+        },
+        {
+          "caller": "put",
+          "callee": "foreground.expiry",
+          "lineNumber": 85
+        },
+        {
+          "caller": "put",
+          "callee": "timeline.snapshot().context",
+          "lineNumber": 85
+        },
+        {
+          "caller": "put",
+          "callee": "timeline.snapshot",
+          "lineNumber": 85
+        },
+        {
+          "caller": "put",
+          "callee": "at.isBefore",
+          "lineNumber": 86
+        },
+        {
+          "caller": "put",
+          "callee": "state.transition",
+          "lineNumber": 87
+        },
+        {
+          "caller": "put",
+          "callee": "json.writeValueAsString",
+          "lineNumber": 87
+        },
+        {
+          "caller": "put",
+          "callee": "timeline.interrupt(cutoff)\n          .switchContext(saved.getId().toString(), now).snapshot",
+          "lineNumber": 87
+        },
+        {
+          "caller": "put",
+          "callee": "timeline.interrupt(cutoff).switchContext",
+          "lineNumber": 87
+        },
+        {
+          "caller": "put",
+          "callee": "timeline.interrupt",
+          "lineNumber": 87
+        },
+        {
+          "caller": "put",
+          "callee": "saved.getId().toString",
+          "lineNumber": 88
+        },
+        {
+          "caller": "put",
+          "callee": "saved.getId",
+          "lineNumber": 88
+        },
+        {
+          "caller": "put",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId()).forEach",
+          "lineNumber": 90
+        },
+        {
+          "caller": "put",
+          "callee": "events.findBySessionIdOrderByCreatedAtAscIdAsc",
+          "lineNumber": 90
+        },
+        {
+          "caller": "put",
+          "callee": "session.getId",
+          "lineNumber": 90
+        },
+        {
+          "caller": "put",
+          "callee": "item",
+          "lineNumber": 92
+        },
+        {
+          "caller": "get",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 98
+        },
+        {
+          "caller": "get",
+          "callee": "access.authenticate",
+          "lineNumber": 99
+        },
+        {
+          "caller": "get",
+          "callee": "access.owned",
+          "lineNumber": 100
+        },
+        {
+          "caller": "get",
+          "callee": "InterventionAccess.id",
+          "lineNumber": 101
+        },
+        {
+          "caller": "get",
+          "callee": "Instant.now().truncatedTo",
+          "lineNumber": 102
+        },
+        {
+          "caller": "get",
+          "callee": "Instant.now",
+          "lineNumber": 102
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId())\n        .filter(value -> foreground.current(session, value, now))\n        .filter(value -> value.getObserver() == Observer.NONE\n            || available(value.getObserverDeviceId(), principal.userId(), now)).map",
+          "lineNumber": 103
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId())\n        .filter(value -> foreground.current(session, value, now)).filter",
+          "lineNumber": 103
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc(session.getId()).filter",
+          "lineNumber": 103
+        },
+        {
+          "caller": "get",
+          "callee": "contexts.findFirstBySessionIdOrderByForegroundSequenceDesc",
+          "lineNumber": 103
+        },
+        {
+          "caller": "get",
+          "callee": "session.getId",
+          "lineNumber": 103
+        },
+        {
+          "caller": "get",
+          "callee": "foreground.current",
+          "lineNumber": 104
+        },
+        {
+          "caller": "get",
+          "callee": "value.getObserver",
+          "lineNumber": 105
+        },
+        {
+          "caller": "get",
+          "callee": "available",
+          "lineNumber": 106
+        },
+        {
+          "caller": "get",
+          "callee": "value.getObserverDeviceId",
+          "lineNumber": 106
+        },
+        {
+          "caller": "get",
+          "callee": "principal.userId",
+          "lineNumber": 106
+        },
+        {
+          "caller": "get",
+          "callee": "item",
+          "lineNumber": 107
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "devices.findByUserIdAndLinkedDesktopDeviceIdAndDeviceType(principal.userId(),\n        runnerId, UserDeviceEntity.DeviceType.CHROME_EXTENSION).stream()\n        .filter(value -> available(value.getId(), principal.userId(), now)).toList",
+          "lineNumber": 111
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "devices.findByUserIdAndLinkedDesktopDeviceIdAndDeviceType(principal.userId(),\n        runnerId, UserDeviceEntity.DeviceType.CHROME_EXTENSION).stream().filter",
+          "lineNumber": 111
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "devices.findByUserIdAndLinkedDesktopDeviceIdAndDeviceType(principal.userId(),\n        runnerId, UserDeviceEntity.DeviceType.CHROME_EXTENSION).stream",
+          "lineNumber": 111
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "devices.findByUserIdAndLinkedDesktopDeviceIdAndDeviceType",
+          "lineNumber": 111
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "principal.userId",
+          "lineNumber": 111
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "available",
+          "lineNumber": 113
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "value.getId",
+          "lineNumber": 113
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "principal.userId",
+          "lineNumber": 113
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "linked.size",
+          "lineNumber": 114
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "new ApiException",
+          "lineNumber": 115
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "linked.getFirst().getId",
+          "lineNumber": 117
+        },
+        {
+          "caller": "linkedExtension",
+          "callee": "linked.getFirst",
+          "lineNumber": 117
+        },
+        {
+          "caller": "available",
+          "callee": "families.findByDeviceAndStatus(id, TokenFamilyEntity.Status.ACTIVE)\n        .filter(value -> value.getUser().getId().equals(userId) && guard.isActive(value, now)\n            && guard.hasActiveLinkedDesktop(value.getDevice(), userId, now)).isPresent",
+          "lineNumber": 121
+        },
+        {
+          "caller": "available",
+          "callee": "families.findByDeviceAndStatus(id, TokenFamilyEntity.Status.ACTIVE).filter",
+          "lineNumber": 121
+        },
+        {
+          "caller": "available",
+          "callee": "families.findByDeviceAndStatus",
+          "lineNumber": 121
+        },
+        {
+          "caller": "available",
+          "callee": "value.getUser().getId().equals",
+          "lineNumber": 122
+        },
+        {
+          "caller": "available",
+          "callee": "value.getUser().getId",
+          "lineNumber": 122
+        },
+        {
+          "caller": "available",
+          "callee": "value.getUser",
+          "lineNumber": 122
+        },
+        {
+          "caller": "available",
+          "callee": "guard.isActive",
+          "lineNumber": 122
+        },
+        {
+          "caller": "available",
+          "callee": "guard.hasActiveLinkedDesktop",
+          "lineNumber": 123
+        },
+        {
+          "caller": "available",
+          "callee": "value.getDevice",
+          "lineNumber": 123
+        },
+        {
+          "caller": "item",
+          "callee": "Objects.equals",
+          "lineNumber": 127
+        },
+        {
+          "caller": "item",
+          "callee": "value.getRunningSince",
+          "lineNumber": 127
+        },
+        {
+          "caller": "item",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 127
+        },
+        {
+          "caller": "item",
+          "callee": "Math.max",
+          "lineNumber": 128
+        },
+        {
+          "caller": "item",
+          "callee": "Duration.between(now, value.getValidUntil()).toMillis",
+          "lineNumber": 128
+        },
+        {
+          "caller": "item",
+          "callee": "Duration.between",
+          "lineNumber": 128
+        },
+        {
+          "caller": "item",
+          "callee": "value.getValidUntil",
+          "lineNumber": 128
+        },
+        {
+          "caller": "item",
+          "callee": "new Item",
+          "lineNumber": 129
+        },
+        {
+          "caller": "item",
+          "callee": "value.getId().toString",
+          "lineNumber": 129
+        },
+        {
+          "caller": "item",
+          "callee": "value.getId",
+          "lineNumber": 129
+        },
+        {
+          "caller": "item",
+          "callee": "value.getObserver",
+          "lineNumber": 129
+        },
+        {
+          "caller": "item",
+          "callee": "value.getObserverDeviceId",
+          "lineNumber": 130
+        },
+        {
+          "caller": "item",
+          "callee": "value.getObserverDeviceId().toString",
+          "lineNumber": 130
+        },
+        {
+          "caller": "item",
+          "callee": "value.getObserverDeviceId",
+          "lineNumber": 130
+        },
+        {
+          "caller": "item",
+          "callee": "value.getForegroundSequence",
+          "lineNumber": 131
+        },
+        {
+          "caller": "item",
+          "callee": "value.getCreatedAt",
+          "lineNumber": 131
+        }
+      ],
+      "metrics": {
+        "importCount": 16,
+        "exportCount": 3,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    }
+  ]
+}

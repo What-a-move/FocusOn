@@ -1,0 +1,1647 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "file",
+   "name": "UserEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "summary": "users 테이블에 매핑되는 사용자 JPA 엔티티로 닉네임·온보딩 상태 등 계정 기본 정보를 보관한다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "user",
+    "persistence"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java:UserEntity",
+   "type": "class",
+   "name": "UserEntity",
+   "filePath": "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "lineRange": [
+    19,
+    55
+   ],
+   "summary": "사용자 계정 정보와 온보딩 상태(OnboardingStatus)를 표현하는 JPA 엔티티.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "user"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "type": "file",
+   "name": "GoalController.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "summary": "/api/v1/goals 경로의 REST 컨트롤러로 목표 AI 명확화와 목표 생성·조회·수정·삭제 API를 노출하고 OpenAPI 문서 어노테이션을 제공한다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "goal",
+    "rest-api"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/controller/GoalController.java:GoalController",
+   "type": "class",
+   "name": "GoalController",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "lineRange": [
+    34,
+    142
+   ],
+   "summary": "목표 명확화 및 CRUD 요청을 GoalClarificationService와 GoalService로 위임하는 Spring REST 컨트롤러.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:clarify",
+   "type": "function",
+   "name": "clarify",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "lineRange": [
+    44,
+    66
+   ],
+   "summary": "인증 사용자의 목표 명확화 요청을 받아 AI 결과를 ApiResponse로 감싸 반환하는 POST /clarify 핸들러.",
+   "tags": [
+    "method",
+    "api-handler",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "lineRange": [
+    69,
+    86
+   ],
+   "summary": "목표 생성 요청을 GoalService에 위임하고 201을 반환하는 핸들러.",
+   "tags": [
+    "method",
+    "api-handler",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:get",
+   "type": "function",
+   "name": "get",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "lineRange": [
+    89,
+    102
+   ],
+   "summary": "목표 ID로 본인 목표를 조회하는 GET 핸들러.",
+   "tags": [
+    "method",
+    "api-handler",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:update",
+   "type": "function",
+   "name": "update",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "lineRange": [
+    105,
+    123
+   ],
+   "summary": "본인 목표 문구를 수정하는 PATCH 핸들러.",
+   "tags": [
+    "method",
+    "api-handler",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:delete",
+   "type": "function",
+   "name": "delete",
+   "filePath": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "lineRange": [
+    126,
+    141
+   ],
+   "summary": "본인 목표를 논리 삭제하는 DELETE 핸들러.",
+   "tags": [
+    "method",
+    "api-handler",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "type": "file",
+   "name": "GoalClarificationRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "summary": "목표 명확화 이력을 소유자 기준으로 비관적 잠금 조회하는 Spring Data JPA 저장소.",
+   "tags": [
+    "repository",
+    "persistence",
+    "goal",
+    "locking"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java:GoalClarificationRepository",
+   "type": "class",
+   "name": "GoalClarificationRepository",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "lineRange": [
+    11,
+    17
+   ],
+   "summary": "findOwnedForUpdate로 사용자 소유 명확화 세션을 잠금 조회하는 JPA 저장소 인터페이스.",
+   "tags": [
+    "repository",
+    "persistence",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "type": "file",
+   "name": "GoalClarificationSession.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "summary": "goal_clarification_sessions 테이블 엔티티로 AI 목표 명확화 대화의 상태(PROCESSING/READY/CONFIRMED), jsonb 대화 상태, 24시간 만료를 관리한다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "goal",
+    "state-machine",
+    "ai-clarification"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java:GoalClarificationSession",
+   "type": "class",
+   "name": "GoalClarificationSession",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "lineRange": [
+    25,
+    106
+   ],
+   "summary": "명확화 대화의 생성·처리 시작·완료·해제·확정 상태 전환을 캡슐화한 낙관적 버전 관리 엔티티.",
+   "tags": [
+    "data-model",
+    "state-machine",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "lineRange": [
+    69,
+    79
+   ],
+   "summary": "최초 명확화 요청으로 PROCESSING 상태와 24시간 만료를 가진 세션을 생성하는 정적 팩토리.",
+   "tags": [
+    "method",
+    "factory",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "type": "file",
+   "name": "GoalEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "summary": "학습 목표 JPA 엔티티로 목표 문구, 확정 출처, 명확화 이력 연결, 논리 삭제를 표현한다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "goal",
+    "soft-delete"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java:GoalEntity",
+   "type": "class",
+   "name": "GoalEntity",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "lineRange": [
+    20,
+    100
+   ],
+   "summary": "목표 생성·문구 수정·명확화 연결·논리 삭제 메서드를 가진 사용자 소유 학습 목표 엔티티.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "type": "file",
+   "name": "GoalRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "summary": "삭제되지 않은 사용자 소유 목표를 조회하는 Spring Data JPA 저장소.",
+   "tags": [
+    "repository",
+    "persistence",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java:GoalRepository",
+   "type": "class",
+   "name": "GoalRepository",
+   "filePath": "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "lineRange": [
+    7,
+    10
+   ],
+   "summary": "findByIdAndUserIdAndDeletedAtIsNull 쿼리 메서드를 제공하는 목표 저장소 인터페이스.",
+   "tags": [
+    "repository",
+    "persistence",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "type": "file",
+   "name": "GoalClarificationService.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "summary": "AI 목표 명확화 호출을 조정하는 서비스로, 요청 검증·대화 이력 선점(claim)·재시도 포함 AI 호출·결과 저장/해제를 트랜잭션 단위로 분리해 처리한다.",
+   "tags": [
+    "service",
+    "ai-integration",
+    "goal",
+    "retry",
+    "transaction"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:GoalClarificationService",
+   "type": "class",
+   "name": "GoalClarificationService",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    27,
+    200
+   ],
+   "summary": "처리 리스(5분)와 재시도(1s/3s)로 중복·실패를 제어하며 명확화 대화 상태를 전환하는 Spring 서비스.",
+   "tags": [
+    "service",
+    "ai-integration",
+    "goal"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:clarify",
+   "type": "function",
+   "name": "clarify",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    40,
+    75
+   ],
+   "summary": "요청 검증→이력 선점→AI 호출→결과 저장 흐름을 수행하고 실패 시 선점을 해제하며 AI 오류를 API 오류 코드로 변환한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:validate",
+   "type": "function",
+   "name": "validate",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    77,
+    90
+   ],
+   "summary": "목표 문구 길이(2~40자), 대화 턴(0~2)과 이전 답변 수·길이를 검증한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:claim",
+   "type": "function",
+   "name": "claim",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    92,
+    119
+   ],
+   "summary": "신규 세션을 만들거나 기존 세션을 잠금 조회해 만료·처리 리스·캐시 응답을 확인한 뒤 처리 상태로 선점한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:validateContinuation",
+   "type": "function",
+   "name": "validateContinuation",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    121,
+    139
+   ],
+   "summary": "이전 대화 상태 대비 답변 추가 또는 제안 후보 선택인지 확인해 대화 연속성을 검증한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:finish",
+   "type": "function",
+   "name": "finish",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    141,
+    151
+   ],
+   "summary": "선점 시각이 일치하는 처리 중 세션에 요청·응답 대화 상태를 저장하고 READY로 완료한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:release",
+   "type": "function",
+   "name": "release",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    153,
+    163
+   ],
+   "summary": "실패 시 선점한 세션을 해제하거나 신규 세션이면 삭제한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:findOwned",
+   "type": "function",
+   "name": "findOwned",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    165,
+    176
+   ],
+   "summary": "문자열 ID를 파싱해 사용자 소유 명확화 세션을 잠금 조회하고 없으면 NOT_FOUND를 던진다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:callWithRetry",
+   "type": "function",
+   "name": "callWithRetry",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "lineRange": [
+    178,
+    194
+   ],
+   "summary": "재시도 가능한 GoalAiException에 대해 1초·3초 지연으로 AI 클라이언트 호출을 재시도한다.",
+   "tags": [
+    "method",
+    "service",
+    "goal"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "type": "file",
+   "name": "GoalService.java",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "summary": "학습 목표 생성·조회·수정·삭제 비즈니스 로직으로, AI 확정 목표 검증·명확화 이력 확정·활성 세션 충돌 방지·사용자 행 잠금을 처리한다.",
+   "tags": [
+    "service",
+    "goal",
+    "business-logic",
+    "validation",
+    "transaction"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/goal/service/GoalService.java:GoalService",
+   "type": "class",
+   "name": "GoalService",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "lineRange": [
+    25,
+    164
+   ],
+   "summary": "목표 CRUD와 명확화 결과 정합성 검증, 활성 세션 참조 목표 수정 차단을 수행하는 서비스.",
+   "tags": [
+    "service",
+    "goal",
+    "validation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "lineRange": [
+    36,
+    56
+   ],
+   "summary": "목표 문구 검증 후 목표를 저장하고, 명확화 이력이 있으면 AI 확정 결과와 일치하는지 확인해 연결·확정한다.",
+   "tags": [
+    "method",
+    "service",
+    "business-logic"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:findClarification",
+   "type": "function",
+   "name": "findClarification",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "lineRange": [
+    58,
+    83
+   ],
+   "summary": "요청의 명확화 세션 ID를 파싱해 READY 상태이며 만료되지 않은 본인 세션을 잠금 조회한다.",
+   "tags": [
+    "method",
+    "service",
+    "business-logic"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:update",
+   "type": "function",
+   "name": "update",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "lineRange": [
+    91,
+    105
+   ],
+   "summary": "사용자 잠금과 활성 세션 충돌 검사 후 목표 문구를 수정한다.",
+   "tags": [
+    "method",
+    "service",
+    "business-logic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:findGoal",
+   "type": "function",
+   "name": "findGoal",
+   "filePath": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "lineRange": [
+    128,
+    141
+   ],
+   "summary": "목표 ID를 파싱해 삭제되지 않은 본인 목표를 찾고 없으면 NOT_FOUND를 던진다.",
+   "tags": [
+    "method",
+    "service",
+    "business-logic"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+   "type": "file",
+   "name": "RequiredConsentWithdrawal.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+   "summary": "필수 동의 철회 시점(userId, withdrawnAt)만 전달하는 트랜잭션 내부 이벤트 record.",
+   "tags": [
+    "event",
+    "record",
+    "consent",
+    "intervention"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java:RequiredConsentWithdrawal",
+   "type": "class",
+   "name": "RequiredConsentWithdrawal",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+   "lineRange": [
+    6,
+    6
+   ],
+   "summary": "사용자 설정 서비스가 발행하고 개입 정책이 수신하는 필수 동의 철회 이벤트 record.",
+   "tags": [
+    "event",
+    "record",
+    "consent"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "file",
+   "name": "LearningSessionEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "summary": "학습 세션 JPA 엔티티로 목표 스냅샷, 실행 기기, 누적 활성 시간, heartbeat, 일시정지/종료 사유, 개입 정책 버전 등 세션 상태를 관리한다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "session",
+    "state-machine"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:LearningSessionEntity",
+   "type": "class",
+   "name": "LearningSessionEntity",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "lineRange": [
+    27,
+    172
+   ],
+   "summary": "세션 생성·일시정지·재개·연장·종료·포기 상태 전환과 활성 시간 누적을 담당하는 엔티티.",
+   "tags": [
+    "data-model",
+    "session",
+    "state-machine"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:LearningSessionEntity",
+   "type": "function",
+   "name": "LearningSessionEntity",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "lineRange": [
+    105,
+    121
+   ],
+   "summary": "사용자·목표·실행 기기·목표 시간·정책 버전 등 초기 세션 상태를 설정하는 생성자.",
+   "tags": [
+    "method",
+    "factory",
+    "session"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "type": "file",
+   "name": "AnalysisExcludedDomainEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "summary": "사용자별 분석 제외 host를 저장하는 JPA 엔티티.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "privacy",
+    "user-settings"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java:AnalysisExcludedDomainEntity",
+   "type": "class",
+   "name": "AnalysisExcludedDomainEntity",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "lineRange": [
+    18,
+    48
+   ],
+   "summary": "사용자와 제외 host 쌍을 표현하는 분석 제외 도메인 엔티티.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "privacy"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+   "type": "file",
+   "name": "AnalysisExcludedDomainRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+   "summary": "분석 제외 도메인을 host 순 조회하고 사용자 단위로 일괄 삭제하는 JPA 저장소.",
+   "tags": [
+    "repository",
+    "persistence",
+    "privacy"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java:AnalysisExcludedDomainRepository",
+   "type": "class",
+   "name": "AnalysisExcludedDomainRepository",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+   "lineRange": [
+    7,
+    14
+   ],
+   "summary": "findAllByUserIdOrderByHost와 deleteByUserId를 제공하는 저장소 인터페이스.",
+   "tags": [
+    "repository",
+    "persistence",
+    "privacy"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "type": "file",
+   "name": "UserConsentEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "summary": "user_consents 테이블 엔티티로 약관·개인정보·화면/카메라 분석 동의 여부와 문서 버전, 동의·철회 시각을 기록한다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "consent",
+    "privacy"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java:UserConsentEntity",
+   "type": "class",
+   "name": "UserConsentEntity",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "lineRange": [
+    20,
+    83
+   ],
+   "summary": "동의 종류(ConsentType)별 부여·철회 상태를 apply로 갱신하는 동의 엔티티.",
+   "tags": [
+    "data-model",
+    "consent",
+    "privacy"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+   "type": "file",
+   "name": "UserFocusSettingsEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+   "summary": "user_focus_settings 테이블 엔티티로 개입 강도, 알림 채널, 휴식 제안, 카메라 분석 사용 여부 등 집중 설정을 저장한다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "user-settings",
+    "intervention"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java:UserFocusSettingsEntity",
+   "type": "class",
+   "name": "UserFocusSettingsEntity",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+   "lineRange": [
+    15,
+    68
+   ],
+   "summary": "InterventionLevel과 알림·휴식·카메라 옵션을 apply로 일괄 갱신하는 집중 설정 엔티티.",
+   "tags": [
+    "data-model",
+    "user-settings"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+   "type": "file",
+   "name": "UserFocusSettingsRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+   "summary": "사용자 ID를 키로 하는 집중 설정 Spring Data JPA 저장소.",
+   "tags": [
+    "repository",
+    "persistence",
+    "user-settings"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java:UserFocusSettingsRepository",
+   "type": "class",
+   "name": "UserFocusSettingsRepository",
+   "filePath": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+   "lineRange": [
+    6,
+    6
+   ],
+   "summary": "UserFocusSettingsEntity용 기본 JpaRepository 인터페이스.",
+   "tags": [
+    "repository",
+    "persistence"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "type": "file",
+   "name": "UserConfigurationService.java",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "summary": "사용자 프로필(닉네임)·동의·집중 설정·분석 제외 도메인을 조회·변경하는 서비스로, 필수 동의 철회 시 RequiredConsentWithdrawal 이벤트를 발행한다.",
+   "tags": [
+    "service",
+    "user-settings",
+    "consent",
+    "validation",
+    "event-publisher"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:UserConfigurationService",
+   "type": "class",
+   "name": "UserConfigurationService",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    39,
+    254
+   ],
+   "summary": "닉네임 충돌 검사, 동의 버전 저장, 알림 채널·host 정규화를 수행하는 사용자 설정 서비스.",
+   "tags": [
+    "service",
+    "user-settings",
+    "consent"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:updateProfile",
+   "type": "function",
+   "name": "updateProfile",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    77,
+    99
+   ],
+   "summary": "닉네임을 검증하고 충돌을 검사한 뒤 사용자 프로필을 갱신한다.",
+   "tags": [
+    "method",
+    "service",
+    "consent"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:updateConsent",
+   "type": "function",
+   "name": "updateConsent",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    120,
+    143
+   ],
+   "summary": "동의 항목을 현재 문서 버전으로 저장하고 필수 동의 철회 시 RequiredConsentWithdrawal 이벤트를 발행한다.",
+   "tags": [
+    "method",
+    "service",
+    "consent"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:updateFocusSettings",
+   "type": "function",
+   "name": "updateFocusSettings",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    153,
+    169
+   ],
+   "summary": "알림 채널을 정규화해 집중 설정 전체를 생성 또는 갱신한다.",
+   "tags": [
+    "method",
+    "service",
+    "consent"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:replaceExcludedDomains",
+   "type": "function",
+   "name": "replaceExcludedDomains",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    179,
+    196
+   ],
+   "summary": "사용자의 분석 제외 host 목록을 정규화 후 원자적으로 전체 교체한다.",
+   "tags": [
+    "method",
+    "service",
+    "consent"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:normalizedChannels",
+   "type": "function",
+   "name": "normalizedChannels",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    219,
+    231
+   ],
+   "summary": "알림 채널 목록의 중복·유효성을 검사해 정규화된 채널 문자열을 만든다.",
+   "tags": [
+    "method",
+    "service",
+    "consent"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:normalizeHost",
+   "type": "function",
+   "name": "normalizeHost",
+   "filePath": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "lineRange": [
+    233,
+    253
+   ],
+   "summary": "입력 host를 소문자·형식 검증으로 정규화하고 잘못된 값은 검증 오류로 처리한다.",
+   "tags": [
+    "method",
+    "service",
+    "consent"
+   ],
+   "complexity": "moderate"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java:UserEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java:UserEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/controller/GoalController.java:GoalController",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/controller/GoalController.java:GoalController",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:clarify",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:get",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:update",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:delete",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java:GoalClarificationRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java:GoalClarificationRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java:GoalClarificationSession",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java:GoalClarificationSession",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java:GoalEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java:GoalEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java:GoalRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java:GoalRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:GoalClarificationService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:GoalClarificationService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:clarify",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:validate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:claim",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:validateContinuation",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:finish",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:release",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:findOwned",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:callWithRetry",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/service/GoalService.java:GoalService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "class:src/main/java/com/capstone/backend/goal/service/GoalService.java:GoalService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:findClarification",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:update",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:findGoal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/goal/service/GoalService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java:RequiredConsentWithdrawal",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java:RequiredConsentWithdrawal",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:LearningSessionEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:LearningSessionEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java:LearningSessionEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java:AnalysisExcludedDomainEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java:AnalysisExcludedDomainEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java:AnalysisExcludedDomainRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java:AnalysisExcludedDomainRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java:UserConsentEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java:UserConsentEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java:UserFocusSettingsEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java:UserFocusSettingsEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java:UserFocusSettingsRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java:UserFocusSettingsRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "class:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:UserConfigurationService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "class:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:UserConfigurationService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:updateProfile",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:updateConsent",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:updateFocusSettings",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:replaceExcludedDomains",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:normalizedChannels",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "function:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java:normalizeHost",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1.0
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:clarify",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:clarify",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:create",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/goal/controller/GoalController.java:update",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalService.java:update",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:claim",
+   "target": "function:src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:clarify",
+   "target": "function:src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java:callWithRetry",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+   "target": "file:src/main/java/com/capstone/backend/user/controller/UserConfigurationController.java",
+   "type": "related",
+   "direction": "forward",
+   "weight": 0.5
+  }
+ ]
+}

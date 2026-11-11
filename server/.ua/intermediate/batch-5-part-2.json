@@ -1,0 +1,1145 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "type": "file",
+   "name": "ObservationContextEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "summary": "Desktop이 위임한 전경 관찰 context(관찰자 기기·유형, 전경 순번, 실행 세대, lease 유효기간)를 저장하는 JPA 엔티티입니다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "lease",
+    "관찰-context"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:ObservationContextEntity",
+   "type": "class",
+   "name": "ObservationContextEntity",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "lineRange": [
+    20,
+    73
+   ],
+   "summary": "세션·실행 기기·관찰자(DESKTOP/EXTENSION/NONE)·clientContextId nonce·foregroundSequence·validUntil lease를 가진 관찰 context 엔티티입니다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "lease"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "lineRange": [
+    52,
+    65
+   ],
+   "summary": "세션·기기·관찰자·nonce·전경 순번·실행 세대로 새 관찰 context와 lease를 생성하는 정적 팩토리입니다.",
+   "tags": [
+    "factory",
+    "lease"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "type": "file",
+   "name": "ObservationContextRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "summary": "세션의 최신 전경 관찰 context와 클라이언트 nonce 기반 context를 조회하는 Spring Data JPA 저장소입니다.",
+   "tags": [
+    "repository",
+    "persistence",
+    "spring-data-jpa",
+    "멱등성"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java:ObservationContextRepository",
+   "type": "class",
+   "name": "ObservationContextRepository",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "lineRange": [
+    8,
+    16
+   ],
+   "summary": "findFirstBySessionIdOrderByForegroundSequenceDesc, findBySessionIdAndClientContextId 파생 쿼리를 정의합니다.",
+   "tags": [
+    "repository",
+    "spring-data-jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "type": "file",
+   "name": "ForegroundPolicyContext.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "summary": "Desktop의 명시적 전경 위임 context만을 근거로 개입 정책 입력(Binding: 관찰 기기, lease, cooldown, 전송 미확인 여부)을 구성하고 분석 run·heartbeat의 context 유효성을 서버 시각으로 판정하는 컴포넌트입니다.",
+   "tags": [
+    "service",
+    "policy",
+    "lease",
+    "개입",
+    "validation"
+   ],
+   "complexity": "moderate",
+   "languageNotes": "내부 전용 record Binding과 보조 생성자로 테스트용 무제한 lease(Instant.MAX)를 표현합니다."
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:ForegroundPolicyContext",
+   "type": "class",
+   "name": "ForegroundPolicyContext",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "lineRange": [
+    21,
+    120
+   ],
+   "summary": "관찰 context·세션·분석 run·개입·전송 저장소를 조합해 전경 context 해석, run 검증, lease 갱신·만료, 전송 확인 여부를 판단하는 Spring Component입니다.",
+   "tags": [
+    "service",
+    "policy",
+    "lease"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:resolve",
+   "type": "function",
+   "name": "resolve",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "lineRange": [
+    31,
+    49
+   ],
+   "summary": "세션의 최신 유효 관찰 context를 찾아 마지막 전송 확인 후 5분 cooldown과 전송 미확인 여부를 포함한 Binding을 반환합니다.",
+   "tags": [
+    "policy",
+    "cooldown",
+    "lease"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:requireForRun",
+   "type": "function",
+   "name": "requireForRun",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "lineRange": [
+    59,
+    71
+   ],
+   "summary": "분석 요청의 context 참조가 현재 세션의 최신·유효 lease이며 같은 관찰 기기인지 검증하고, 아니면 SESSION_STATE_INVALID를 던집니다.",
+   "tags": [
+    "validation",
+    "lease"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:current",
+   "type": "function",
+   "name": "current",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "lineRange": [
+    100,
+    107
+   ],
+   "summary": "세션이 RUNNING이고 실행 기기·실행 세대가 일치하며 lease가 서버 시각 기준 유효한지 판정합니다.",
+   "tags": [
+    "validation",
+    "lease"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "type": "file",
+   "name": "InterventionDeliveryService.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "summary": "Desktop이 보고한 개입 알림 전송 결과를 멱등하게 기록하고, 만료 판정·전송 확인·5분 cooldown을 계산해 영수증을 반환하는 서비스입니다.",
+   "tags": [
+    "service",
+    "멱등성",
+    "transaction",
+    "개입"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:InterventionDeliveryService",
+   "type": "class",
+   "name": "InterventionDeliveryService",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "lineRange": [
+    25,
+    84
+   ],
+   "summary": "기기 헤더·인증·세션 소유권을 검증한 뒤 채널/상태 일관성과 nonce 멱등성을 확인하고 전송 영수증을 저장하는 트랜잭션 서비스입니다.",
+   "tags": [
+    "service",
+    "transaction",
+    "멱등성"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "type": "function",
+   "name": "receive",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "lineRange": [
+    36,
+    78
+   ],
+   "summary": "전송 결과 요청을 검증해 같은 nonce 재전송은 기존 영수증을 반환(불일치 시 IDEMPOTENCY_CONFLICT)하고, 늦은 receipt는 저장하되 기존 만료/사용자 결정을 되돌리지 않습니다.",
+   "tags": [
+    "service",
+    "멱등성",
+    "validation"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "type": "file",
+   "name": "InterventionService.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "summary": "Desktop용 개입 목록 조회와 사용자 확인 처리를 담당하며, 실행 세대·정책 binding·cooldown·off-task 타임라인으로 개입의 유효성/표시 가능성을 판정하는 서비스입니다.",
+   "tags": [
+    "service",
+    "transaction",
+    "개입",
+    "policy"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:InterventionService",
+   "type": "class",
+   "name": "InterventionService",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    34,
+    155
+   ],
+   "summary": "Desktop 토큰 패밀리 인증, 세션 소유권 잠금, 개입 후보 상태 판정, 응답 Item 변환을 수행하는 트랜잭션 서비스입니다.",
+   "tags": [
+    "service",
+    "transaction",
+    "개입"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:list",
+   "type": "function",
+   "name": "list",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    48,
+    60
+   ],
+   "summary": "세션의 개입 이벤트 중 전송 확인 전 PENDING이거나 이미 처리된 항목을 필터링해 남은 표시 시간과 함께 반환하며, 조회로 cooldown을 시작하지 않습니다.",
+   "tags": [
+    "service",
+    "query"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "type": "function",
+   "name": "acknowledge",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    63,
+    82
+   ],
+   "summary": "기기 헤더·인증·세션 잠금 후 만료 여부를 판정하고 사용자 반응을 최초 결정 유지 방식으로 기록합니다.",
+   "tags": [
+    "service",
+    "멱등성"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:candidateState",
+   "type": "function",
+   "name": "candidateState",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    95,
+    111
+   ],
+   "summary": "실행 세대 일치, 정책 binding의 전송 계약 준비·cooldown, 타임라인 열린 episode·context 일치를 확인해 유효 후보의 타임라인 스냅샷을 반환합니다.",
+   "tags": [
+    "policy",
+    "validation"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:item",
+   "type": "function",
+   "name": "item",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    113,
+    122
+   ],
+   "summary": "개입 엔티티를 만료 반영 상태·채널·남은 표시 시간(ms)을 가진 응답 Item으로 변환합니다.",
+   "tags": [
+    "serialization",
+    "dto"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:authenticate",
+   "type": "function",
+   "name": "authenticate",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    124,
+    136
+   ],
+   "summary": "principal이 DESKTOP이고 사용자 잠금과 활성 토큰 패밀리가 일치하는지 확인해 아니면 재로그인 오류를 던집니다.",
+   "tags": [
+    "security",
+    "authentication"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:id",
+   "type": "function",
+   "name": "id",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "lineRange": [
+    144,
+    154
+   ],
+   "summary": "공개 BIGINT 식별자 문자열을 양수 long으로 파싱하고 실패 시 지정 오류를 던집니다.",
+   "tags": [
+    "validation",
+    "parsing"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "type": "file",
+   "name": "ObservationContextService.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "summary": "Desktop의 전경 관찰 context 등록(PUT)과 조회(GET)를 처리하며, nonce 멱등성·전경 순번 단조 증가·연결된 Chrome 확장 확인·타임라인 context 전환·기존 개입 만료를 수행하는 서비스입니다.",
+   "tags": [
+    "service",
+    "transaction",
+    "lease",
+    "관찰-context",
+    "멱등성"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:ObservationContextService",
+   "type": "class",
+   "name": "ObservationContextService",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "lineRange": [
+    33,
+    133
+   ],
+   "summary": "관찰 context 저장소·기기/토큰 패밀리 저장소·정책 상태를 조합해 관찰자 위임을 관리하는 트랜잭션 서비스입니다.",
+   "tags": [
+    "service",
+    "transaction",
+    "관찰-context"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "type": "function",
+   "name": "put",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "lineRange": [
+    47,
+    93
+   ],
+   "summary": "RUNNING 세션에 새 관찰 context를 등록하고, 이전 lease 만료 시점으로 off-task 타임라인을 끊어 context를 전환하며 세션의 기존 개입을 모두 만료시킵니다.",
+   "tags": [
+    "service",
+    "멱등성",
+    "state-transition"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:get",
+   "type": "function",
+   "name": "get",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "lineRange": [
+    96,
+    108
+   ],
+   "summary": "현재 유효한 최신 관찰 context를 관찰자 기기 가용성 확인 후 반환하며 조회가 lease를 연장하지 않습니다.",
+   "tags": [
+    "service",
+    "query",
+    "lease"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:available",
+   "type": "function",
+   "name": "available",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "lineRange": [
+    120,
+    124
+   ],
+   "summary": "기기의 활성 토큰 패밀리가 사용자 소유이고 활성이며 연결된 Desktop이 활성인지 확인합니다.",
+   "tags": [
+    "security",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:linkedExtension",
+   "type": "function",
+   "name": "linkedExtension",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "lineRange": [
+    110,
+    118
+   ],
+   "summary": "실행 Desktop에 연결된 사용 가능한 Chrome 확장이 정확히 하나인지 확인해 그 기기 ID를 반환합니다.",
+   "tags": [
+    "validation",
+    "device-linking"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:ObservationContextEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:ObservationContextEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:create",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java:ObservationContextRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java:ObservationContextRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:ForegroundPolicyContext",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:ForegroundPolicyContext",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:resolve",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:resolve",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:requireForRun",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:requireForRun",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:current",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:current",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:requireForRun",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:current",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:InterventionDeliveryService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:InterventionDeliveryService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:InterventionService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:InterventionService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:list",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:list",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:candidateState",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:item",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:authenticate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:id",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:list",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:authenticate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:authenticate",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:list",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:item",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:id",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "target": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "target": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:InterventionService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:InterventionService",
+   "target": "class:src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java:TokenFamilyGuard",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:candidateState",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java:InterventionPolicyService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:ObservationContextService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:ObservationContextService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:get",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:get",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:available",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:linkedExtension",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "target": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:get",
+   "target": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:get",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java:current",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:expire",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:put",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:linkedExtension",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java:ObservationContextService",
+   "target": "class:src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java:TokenFamilyGuard",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:create",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:receive",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:expire",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:acknowledge",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:acknowledge",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

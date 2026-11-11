@@ -8,7 +8,7 @@
 - 증상: `/api/v1/goals/clarify`가 AI 호출 전에 `GOAL_ANALYSIS_UNAVAILABLE`(503)을 반환했다.
 - 원인 1: Java `HttpClient`의 기본 `Upgrade: h2c` 헤더 때문에 uvicorn이 본문을 버리고 422를 반환했다. → `GoalAiClient`를 HTTP/1.1로 고정하고 `GoalAiClientTests`를 추가했다.
 - 원인 2: `.env`로 읽은 `FOCUSON_GOAL_AI_BASE_URL`이 `@Value("${focuson.goal-ai.base-url}")`와 연결되지 않아 빈 값이었다. → `application.properties`에서 명시적으로 연결하고 `.env.example`에 키를 추가했다.
-- 마이그레이션: dev의 `V11__single_active_extension.sql`과 번호가 겹쳐 `V21`로 변경했다.
+- 마이그레이션: dev의 `V11__single_active_extension.sql`과 번호가 겹쳐 `V22`로 변경(dev의 V21 보고서 인덱스와 중복)했다.
 
 ## 2. 남은 문제 (AI 담당자 수정 대기)
 
