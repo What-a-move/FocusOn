@@ -98,7 +98,7 @@ function RecentGoals({ view, onRetry }: { view: RecentView; onRetry: () => void 
         return <li key={item.sessionId}><Link className="fo-recent-item" href={item.endedAt ? `/session-result/?session=${encodeURIComponent(item.sessionId)}` : '/session/'}>
           <span className="fo-recent-day" aria-hidden="true"><b>{ended.getDate()}</b><small>{ended.getMonth() + 1}월</small></span>
           <div><span className="fo-recent-goal">{item.goal}</span><small className="fo-recent-date">{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(ended)}</small></div>
-          <span className="fo-recent-time">{Math.round(item.activeMs / 60000)}분</span>
+          <span className="fo-recent-time">{Math.floor(item.activeMs / 60000)}분</span>
         </Link></li>
       })}
     </ul>}
@@ -172,7 +172,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   }, [today, month, loadMonth])
 
   const todayMinutes = today && current && current !== 'error'
-    ? Math.round((current.days.find((day) => day.date === dayKey(today))?.totalActiveMs ?? 0) / 60000)
+    ? Math.floor((current.days.find((day) => day.date === dayKey(today))?.totalActiveMs ?? 0) / 60000)
     : null
   const monthDays = current && current !== 'error' ? current.studyDayCount : null
 

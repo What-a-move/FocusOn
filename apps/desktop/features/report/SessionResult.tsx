@@ -18,6 +18,8 @@ const REVIEW = {
   INSUFFICIENT_DATA: { kind: 'neutral', icon: '–', heading: '이번에는 학습 기록만 남겼어요', copy: '정리할 내용이 부족했어요.' },
   // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
   FAILED: { kind: 'neutral', icon: '–', heading: '학습 정리를 만들지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
+  // 서버 404(NOT_FOUND)는 이 회차에 정리 기록이 없다는 뜻이다(학습 정리 API 계약).
+  NONE: { kind: 'neutral', icon: '–', heading: '이번에는 학습 정리가 없어요', copy: '집중 기록은 그대로 남아 있어요.' },
   UNKNOWN: { kind: 'neutral', icon: '–', heading: '학습 정리 상태를 확인하지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
 } as const
 
@@ -25,7 +27,7 @@ type View =
   | { kind: 'loading' }
   | { kind: 'missing' }
   | { kind: 'error'; code: string }
-  | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary | null; retryLearning: boolean }
+  | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary | null; retryLearning: boolean; noLearning: boolean }
 
 const minutes = (ms: number) => Math.round(ms / 60000)
 
@@ -55,7 +57,7 @@ export function SessionResult() {
   const load = useCallback(async (id: string) => {
     const [summary, learning] = await Promise.all([sessionResultApi.getSummary(id), sessionResultApi.getLearningSummary(id)])
     if (!summary.success) { setView(summary.error.code === 'SESSION_NOT_FOUND' ? { kind: 'missing' } : { kind: 'error', code: summary.error.code }); return }
-    setView({ kind: 'ready', summary: summary.data, learning: learning.success ? learning.data : null, retryLearning: !learning.success && learning.error.retryable })
+    setView({ kind: 'ready', summary: summary.data, learning: learning.success ? learning.data : null, retryLearning: !learning.success && learning.error.retryable, noLearning: !learning.success && learning.error.code === 'NOT_FOUND' })
   }, [])
 
   // 다시 조회할 때는 학습 정리만 바꾼다. 일시 실패면 화면을 그대로 두고 다음에 다시 묻고, 다시 해도 안 되는 실패면 멈춘다.
@@ -100,7 +102,7 @@ export function SessionResult() {
               <p className="hero-sub" role={view.kind === 'error' ? 'alert' : undefined}>{view.kind === 'error' ? errorText(view) : '홈에서 집중 기록을 다시 열어 주세요.'}</p>
             </div>
           </header>
-        </> : <ResultBody summary={view.summary} learning={view.learning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
+        </> : <ResultBody summary={view.summary} learning={view.learning} noLearning={view.noLearning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
 
         <div className="actions">
           {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
@@ -111,13 +113,13 @@ export function SessionResult() {
   </main>
 }
 
-function ResultBody({ summary, learning, shownMinutes, shownSeconds }: { summary: SessionSummary; learning: LearningSummary | null; shownMinutes: number; shownSeconds: number }) {
+function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds }: { summary: SessionSummary; learning: LearningSummary | null; noLearning: boolean; shownMinutes: number; shownSeconds: number }) {
   const abandoned = summary.status === 'ABANDONED'
   const flow = flowOf(summary)
   const started = summary.startedAt ? new Date(summary.startedAt) : null
   const today = started !== null && started.toDateString() === new Date().toDateString()
   const extended = summary.extensionCount && summary.extendedDurationMs ? ` · ${minutes(summary.extendedDurationMs)}분 연장` : ''
-  const review = REVIEW[learning?.status ?? 'UNKNOWN']
+  const review = REVIEW[learning?.status ?? (noLearning ? 'NONE' : 'UNKNOWN')]
   const autoPause = summary.autoPauseCount === null ? null
     : summary.autoPauseCount === 0 ? '없음'
       : `${summary.autoPauseCount}회${summary.autoPauseReasons.length ? ` · ${[...new Set(summary.autoPauseReasons.map((reason) => AUTO_PAUSE_LABEL[reason] ?? '시스템'))].join(', ')}` : ''}`
