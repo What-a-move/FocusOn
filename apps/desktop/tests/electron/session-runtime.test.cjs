@@ -281,3 +281,30 @@ test('heartbeat가 실행 중이라고 답하거나 로컬에서 이미 멈췄�
   assert.equal(runtime.snapshot().status, 'RUNNING')
   assert.equal(runtime.snapshot().accumulatedActiveMs, 30000, '실행 중이면 Desktop 시간을 그대로 쓴다')
 })
+
+test('집중 끝내기는 누른 시점의 전체 누적값을 보내고, 실패 뒤 다시 누르면 같은 값·키를 쓴다', async () => {
+  let attempt = 0
+  const { runtime, calls, advance } = setup({
+    'POST /api/v1/sessions/901/end': () => (++attempt === 1
+      ? { success: false, error: { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true } }
+      : { success: true, data: { status: 'ENDED', version: 2, accumulatedActiveMs: 180000, targetDurationMs: 600000, endedAt: '2026-10-25T01:03:00Z' } }),
+  })
+  runtime.begin(started, '미적분 풀기')
+  advance(180000)
+  assert.equal((await runtime.end()).success, false)
+  advance(30000)
+  assert.equal((await runtime.end()).success, true)
+  const [first, second] = calls
+  assert.deepEqual(first.body, { accumulatedActiveMs: 180000 })
+  assert.deepEqual(second.body, first.body, '시간이 지나도 처음 값')
+  assert.equal(second.headers['Idempotency-Key'], first.headers['Idempotency-Key'])
+  assert.equal(runtime.snapshot().status, 'ENDED')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 180000)
+})
+
+test('서버가 이미 무신호로 끝낸 세션이면 끝내기 실패를 ABANDONED로 정리한다', async () => {
+  const { runtime } = setup({ 'POST /api/v1/sessions/901/end': { success: false, error: { code: 'SESSION_ABANDONED', retryable: false } } })
+  runtime.begin(started, '미적분 풀기')
+  assert.equal((await runtime.end()).success, false)
+  assert.equal(runtime.snapshot().status, 'ABANDONED')
+})

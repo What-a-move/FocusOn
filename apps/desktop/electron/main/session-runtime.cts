@@ -204,8 +204,9 @@ export class SessionRuntime {
     })
   }
 
+  /** 종료 버튼 시점의 전체 누적값을 보낸다(server session-end-frontend-handoff). 재시도에는 command가 처음 값·키를 그대로 쓴다. */
   end(): Promise<ApiResult<SessionSnapshot>> {
-    return this.command('end', 'end', ACTIVE.filter((status) => status !== 'ENDING'), (s) => ({ path: `/api/v1/sessions/${s.sessionId}/end` }), (s, data) => {
+    return this.command('end', 'end', ACTIVE.filter((status) => status !== 'ENDING'), (s) => ({ path: `/api/v1/sessions/${s.sessionId}/end`, body: { accumulatedActiveMs: this.activeMs() } }), (s, data) => {
       this.settle('ENDED', data.accumulatedActiveMs)
     })
   }
@@ -261,6 +262,8 @@ export class SessionRuntime {
     s.busy = false
     if (!result.success) {
       if (result.error.code === 'SESSION_VERSION_CONFLICT') { await this.refresh(s); this.publish('version-conflict') }
+      // 서버가 무신호로 이미 끝낸 세션은 명령으로 되살리지 않는다(heartbeat와 같은 규칙, API_CONTRACT 세션 종료).
+      if (result.error.code === 'SESSION_ABANDONED') { this.pending.clear(); this.settle('ABANDONED'); this.publish('server-abandoned') }
       return this.fail(result.error.code)
     }
     this.pending.delete(name)

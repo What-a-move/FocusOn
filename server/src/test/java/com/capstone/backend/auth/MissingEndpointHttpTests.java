@@ -38,7 +38,7 @@ class MissingEndpointHttpTests {
   void authenticatedMissingEndpointIsNotRelogin() throws Exception {
     when(authentication.authenticate("valid"))
         .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
-    var response = send("/api/v1/reports/calendar?month=2026-10", "Bearer valid");
+    var response = send("/api/v1/missing-endpoint-fixture", "Bearer valid");
     assertEquals(404, response.statusCode());
     assertFalse(response.body().contains("AUTH_RELOGIN_REQUIRED"));
     var body = JsonMapper.builder().build().readTree(response.body());
