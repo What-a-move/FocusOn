@@ -1,0 +1,3763 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 12,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 12,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 12,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisPrivacy.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 92,
+      "nonEmptyLines": 85,
+      "functions": [
+        {
+          "name": "AnalysisPrivacy",
+          "startLine": 26,
+          "endLine": 26,
+          "params": []
+        },
+        {
+          "name": "validate",
+          "startLine": 29,
+          "endLine": 52,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "host",
+          "startLine": 55,
+          "endLine": 72,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "containsSensitive",
+          "startLine": 75,
+          "endLine": 81,
+          "params": [
+            "request",
+            "goal"
+          ]
+        },
+        {
+          "name": "sensitive",
+          "startLine": 84,
+          "endLine": 91,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AnalysisPrivacy",
+          "startLine": 14,
+          "endLine": 92,
+          "methods": [
+            "AnalysisPrivacy",
+            "validate",
+            "host",
+            "containsSensitive",
+            "sensitive"
+          ],
+          "properties": [
+            "FIRST_TIMESTAMP",
+            "END_TIMESTAMP",
+            "SENSITIVE"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "validate",
+          "callee": "request.observedAt().isBefore",
+          "lineNumber": 31
+        },
+        {
+          "caller": "validate",
+          "callee": "request.observedAt",
+          "lineNumber": 31
+        },
+        {
+          "caller": "validate",
+          "callee": "request.observedAt().isBefore",
+          "lineNumber": 32
+        },
+        {
+          "caller": "validate",
+          "callee": "request.observedAt",
+          "lineNumber": 32
+        },
+        {
+          "caller": "validate",
+          "callee": "END_TIMESTAMP.minusNanos",
+          "lineNumber": 32
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 33
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentSource",
+          "lineNumber": 35
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentSource",
+          "lineNumber": 36
+        },
+        {
+          "caller": "validate",
+          "callee": "request.guardStatus",
+          "lineNumber": 37
+        },
+        {
+          "caller": "validate",
+          "callee": "request.metadata",
+          "lineNumber": 38
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentPayload",
+          "lineNumber": 38
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 39
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentPayload",
+          "lineNumber": 41
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 42
+        },
+        {
+          "caller": "validate",
+          "callee": "host",
+          "lineNumber": 44
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentSource",
+          "lineNumber": 46
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentSource",
+          "lineNumber": 47
+        },
+        {
+          "caller": "validate",
+          "callee": "request.metadata",
+          "lineNumber": 48
+        },
+        {
+          "caller": "validate",
+          "callee": "request.contentPayload",
+          "lineNumber": 48
+        },
+        {
+          "caller": "validate",
+          "callee": "request.guardStatus",
+          "lineNumber": 49
+        },
+        {
+          "caller": "validate",
+          "callee": "host.isEmpty",
+          "lineNumber": 49
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 50
+        },
+        {
+          "caller": "host",
+          "callee": "request.metadata",
+          "lineNumber": 56
+        },
+        {
+          "caller": "host",
+          "callee": "request.metadata().urlHost",
+          "lineNumber": 56
+        },
+        {
+          "caller": "host",
+          "callee": "request.metadata",
+          "lineNumber": 56
+        },
+        {
+          "caller": "host",
+          "callee": "input.isEmpty",
+          "lineNumber": 57
+        },
+        {
+          "caller": "host",
+          "callee": "input.endsWith",
+          "lineNumber": 62
+        },
+        {
+          "caller": "host",
+          "callee": "input.substring",
+          "lineNumber": 62
+        },
+        {
+          "caller": "host",
+          "callee": "input.length",
+          "lineNumber": 62
+        },
+        {
+          "caller": "host",
+          "callee": "IDN.toASCII(host, IDN.USE_STD3_ASCII_RULES).toLowerCase",
+          "lineNumber": 63
+        },
+        {
+          "caller": "host",
+          "callee": "IDN.toASCII",
+          "lineNumber": 63
+        },
+        {
+          "caller": "host",
+          "callee": "host.length",
+          "lineNumber": 64
+        },
+        {
+          "caller": "host",
+          "callee": "host.matches",
+          "lineNumber": 64
+        },
+        {
+          "caller": "host",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 66
+        },
+        {
+          "caller": "host",
+          "callee": "new ApiException",
+          "lineNumber": 70
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "request.metadata",
+          "lineNumber": 76
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "sensitive",
+          "lineNumber": 77
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "request.contentPayload",
+          "lineNumber": 77
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "sensitive",
+          "lineNumber": 78
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "request.contentPayload().text",
+          "lineNumber": 78
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "request.contentPayload",
+          "lineNumber": 78
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "sensitive",
+          "lineNumber": 79
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "metadata.appName",
+          "lineNumber": 79
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "sensitive",
+          "lineNumber": 79
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "metadata.windowTitle",
+          "lineNumber": 79
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "sensitive",
+          "lineNumber": 80
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "metadata.pageTitle",
+          "lineNumber": 80
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "sensitive",
+          "lineNumber": 80
+        },
+        {
+          "caller": "containsSensitive",
+          "callee": "metadata.urlHost",
+          "lineNumber": 80
+        },
+        {
+          "caller": "sensitive",
+          "callee": "Normalizer.normalize(value, Normalizer.Form.NFKC).replaceAll",
+          "lineNumber": 88
+        },
+        {
+          "caller": "sensitive",
+          "callee": "Normalizer.normalize",
+          "lineNumber": 88
+        },
+        {
+          "caller": "sensitive",
+          "callee": "SENSITIVE.matcher(normalized).find",
+          "lineNumber": 90
+        },
+        {
+          "caller": "sensitive",
+          "callee": "SENSITIVE.matcher",
+          "lineNumber": 90
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/ApiSecurityConfiguration.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 144,
+      "nonEmptyLines": 136,
+      "functions": [
+        {
+          "name": "securityFilterChain",
+          "startLine": 32,
+          "endLine": 58,
+          "params": [
+            "http",
+            "authentication",
+            "limits",
+            "json",
+            "corsConfigurationSource"
+          ]
+        },
+        {
+          "name": "writeError",
+          "startLine": 60,
+          "endLine": 72,
+          "params": [
+            "request",
+            "response",
+            "json",
+            "exception"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ApiSecurityConfiguration",
+          "startLine": 30,
+          "endLine": 144,
+          "methods": [
+            "securityFilterChain",
+            "writeError"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "ApiSecurityConfiguration",
+          "line": 30,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())\n        .logout(logout -> logout.disable())\n        .sessionManagement(session -> session\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n        .requestCache(cache -> cache.disable())\n        .authorizeHttpRequests(auth -> auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll()\n            .requestMatchers(\"/api/v1/**\").authenticated().anyRequest().denyAll())\n        .exceptionHandling(errors -> errors\n            .authenticationEntryPoint((request, response, exception) -> writeError(\n                request, response, json, new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED)))\n            .accessDeniedHandler((request, response, exception) -> writeError(\n                request, response, json, new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED)))).addFilterBefore",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())\n        .logout(logout -> logout.disable())\n        .sessionManagement(session -> session\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n        .requestCache(cache -> cache.disable())\n        .authorizeHttpRequests(auth -> auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll()\n            .requestMatchers(\"/api/v1/**\").authenticated().anyRequest().denyAll()).exceptionHandling",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())\n        .logout(logout -> logout.disable())\n        .sessionManagement(session -> session\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n        .requestCache(cache -> cache.disable()).authorizeHttpRequests",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())\n        .logout(logout -> logout.disable())\n        .sessionManagement(session -> session\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)).requestCache",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())\n        .logout(logout -> logout.disable()).sessionManagement",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic(basic -> basic.disable()).logout",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable())\n        .formLogin(form -> form.disable()).httpBasic",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource))\n        .csrf(csrf -> csrf.disable()).formLogin",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors(cors -> cors.configurationSource(corsConfigurationSource)).csrf",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.cors",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "cors.configurationSource",
+          "lineNumber": 37
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "csrf.disable",
+          "lineNumber": 38
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "form.disable",
+          "lineNumber": 39
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "basic.disable",
+          "lineNumber": 39
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "logout.disable",
+          "lineNumber": 40
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "session.sessionCreationPolicy",
+          "lineNumber": 41
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "cache.disable",
+          "lineNumber": 43
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll()\n            .requestMatchers(\"/api/v1/**\").authenticated().anyRequest().denyAll",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll()\n            .requestMatchers(\"/api/v1/**\").authenticated().anyRequest",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll()\n            .requestMatchers(\"/api/v1/**\").authenticated",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll().requestMatchers",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/actuator/health\", \"/actuator/health/**\").permitAll",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll().requestMatchers",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()\n            .requestMatchers(HttpMethod.POST, \"/api/v1/auth/google/exchange\",\n                \"/api/v1/auth/refresh\", \"/api/v1/extension-pairings\").permitAll",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll().requestMatchers",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth\n            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "auth.dispatcherTypeMatchers",
+          "lineNumber": 44
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "errors\n            .authenticationEntryPoint((request, response, exception) -> writeError(\n                request, response, json, new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED))).accessDeniedHandler",
+          "lineNumber": 50
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "errors.authenticationEntryPoint",
+          "lineNumber": 50
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "writeError",
+          "lineNumber": 51
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "new ApiException",
+          "lineNumber": 52
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "writeError",
+          "lineNumber": 53
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "new ApiException",
+          "lineNumber": 54
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "new AuthenticationFilter",
+          "lineNumber": 55
+        },
+        {
+          "caller": "securityFilterChain",
+          "callee": "http.build",
+          "lineNumber": 57
+        },
+        {
+          "caller": "writeError",
+          "callee": "request.setAttribute",
+          "lineNumber": 62
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.code",
+          "lineNumber": 62
+        },
+        {
+          "caller": "writeError",
+          "callee": "request.setAttribute",
+          "lineNumber": 63
+        },
+        {
+          "caller": "writeError",
+          "callee": "response.setStatus",
+          "lineNumber": 64
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.code().status().value",
+          "lineNumber": 64
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.code().status",
+          "lineNumber": 64
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.code",
+          "lineNumber": 64
+        },
+        {
+          "caller": "writeError",
+          "callee": "response.setContentType",
+          "lineNumber": 65
+        },
+        {
+          "caller": "writeError",
+          "callee": "response.setCharacterEncoding",
+          "lineNumber": 66
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.retryAfterSeconds",
+          "lineNumber": 67
+        },
+        {
+          "caller": "writeError",
+          "callee": "response.setHeader",
+          "lineNumber": 68
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.retryAfterSeconds().toString",
+          "lineNumber": 68
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.retryAfterSeconds",
+          "lineNumber": 68
+        },
+        {
+          "caller": "writeError",
+          "callee": "json.writeValue",
+          "lineNumber": 70
+        },
+        {
+          "caller": "writeError",
+          "callee": "response.getOutputStream",
+          "lineNumber": 70
+        },
+        {
+          "caller": "writeError",
+          "callee": "ApiErrorResponse.of",
+          "lineNumber": 70
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.code",
+          "lineNumber": 70
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.retryAfterSeconds",
+          "lineNumber": 71
+        },
+        {
+          "caller": "writeError",
+          "callee": "RequestIdFilter.from",
+          "lineNumber": 71
+        },
+        {
+          "caller": "writeError",
+          "callee": "exception.details",
+          "lineNumber": 71
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "request.getRequestURI().substring",
+          "lineNumber": 89
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "request.getRequestURI",
+          "lineNumber": 89
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "request.getContextPath().length",
+          "lineNumber": 89
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "request.getContextPath",
+          "lineNumber": 89
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "path.startsWith",
+          "lineNumber": 90
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "\"POST\".equals",
+          "lineNumber": 91
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "request.getMethod",
+          "lineNumber": 91
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "\"/api/v1/auth/google/exchange\".equals",
+          "lineNumber": 92
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getRequestURI().substring",
+          "lineNumber": 99
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getRequestURI",
+          "lineNumber": 99
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getContextPath().length",
+          "lineNumber": 99
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getContextPath",
+          "lineNumber": 99
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "\"POST\".equals",
+          "lineNumber": 100
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getMethod",
+          "lineNumber": 100
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "\"/api/v1/auth/refresh\".equals",
+          "lineNumber": 100
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "limits.checkRefreshIp",
+          "lineNumber": 102
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getRemoteAddr",
+          "lineNumber": 102
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "\"POST\".equals",
+          "lineNumber": 103
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getMethod",
+          "lineNumber": 103
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "\"/api/v1/extension-pairings\".equals",
+          "lineNumber": 104
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "limits.checkPairingIp",
+          "lineNumber": 105
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getRemoteAddr",
+          "lineNumber": 105
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "authenticateBearer",
+          "lineNumber": 107
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "SecurityContextHolder.clearContext",
+          "lineNumber": 110
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "writeError",
+          "lineNumber": 111
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "SecurityContextHolder.clearContext",
+          "lineNumber": 114
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "writeError",
+          "lineNumber": 115
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "new ApiException",
+          "lineNumber": 115
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "chain.doFilter",
+          "lineNumber": 119
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "SecurityContextHolder.clearContext",
+          "lineNumber": 121
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "request.getHeader",
+          "lineNumber": 127
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "header.startsWith",
+          "lineNumber": 128
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "header.length",
+          "lineNumber": 128
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "java.util.Collections.list(request.getHeaders(\"Authorization\")).size",
+          "lineNumber": 129
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "java.util.Collections.list",
+          "lineNumber": 129
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "request.getHeaders",
+          "lineNumber": 129
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "new ApiException",
+          "lineNumber": 130
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "authentication.authenticate",
+          "lineNumber": 132
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "header.substring",
+          "lineNumber": 132
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "request.getHeader",
+          "lineNumber": 133
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 134
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "request.getHeader",
+          "lineNumber": 134
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "limits.check",
+          "lineNumber": 136
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "principal.userId",
+          "lineNumber": 136
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "principal.deviceId",
+          "lineNumber": 136
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 137
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "new UsernamePasswordAuthenticationToken",
+          "lineNumber": 138
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "List.of",
+          "lineNumber": 138
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "SecurityContextHolder.createEmptyContext",
+          "lineNumber": 139
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "context.setAuthentication",
+          "lineNumber": 140
+        },
+        {
+          "caller": "authenticateBearer",
+          "callee": "SecurityContextHolder.setContext",
+          "lineNumber": 141
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 134,
+      "nonEmptyLines": 122,
+      "functions": [
+        {
+          "name": "AuthRateLimiter",
+          "startLine": 24,
+          "endLine": 27,
+          "params": []
+        },
+        {
+          "name": "AuthRateLimiter",
+          "startLine": 30,
+          "endLine": 32,
+          "params": [
+            "milliseconds"
+          ]
+        },
+        {
+          "name": "checkGoogleLogin",
+          "startLine": 38,
+          "endLine": 42,
+          "params": [
+            "remoteAddress",
+            "installationId"
+          ]
+        },
+        {
+          "name": "checkRefreshIp",
+          "startLine": 45,
+          "endLine": 47,
+          "params": [
+            "remoteAddress"
+          ]
+        },
+        {
+          "name": "checkPairingIp",
+          "startLine": 50,
+          "endLine": 52,
+          "params": [
+            "remoteAddress"
+          ]
+        },
+        {
+          "name": "checkPairingInstallation",
+          "startLine": 55,
+          "endLine": 59,
+          "params": [
+            "remoteAddress",
+            "installationId"
+          ]
+        },
+        {
+          "name": "checkPairingInstallationLocked",
+          "startLine": 61,
+          "endLine": 95,
+          "params": [
+            "remoteAddress",
+            "installationId"
+          ]
+        },
+        {
+          "name": "check",
+          "startLine": 98,
+          "endLine": 124,
+          "params": [
+            "key",
+            "limit",
+            "window"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AuthRateLimiter",
+          "startLine": 12,
+          "endLine": 134,
+          "methods": [
+            "AuthRateLimiter",
+            "AuthRateLimiter",
+            "checkGoogleLogin",
+            "checkRefreshIp",
+            "checkPairingIp",
+            "checkPairingInstallation",
+            "checkPairingInstallationLocked",
+            "check"
+          ],
+          "properties": [
+            "MAX_KEYS",
+            "MAX_PAIRING_INSTALLATIONS_PER_IP",
+            "loginBuckets",
+            "refreshBuckets",
+            "pairingBuckets",
+            "pairingInstallationBuckets",
+            "authenticatedBuckets",
+            "milliseconds"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AuthRateLimiter",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "checkGoogleLogin",
+          "line": 38,
+          "isDefault": false
+        },
+        {
+          "name": "checkRefreshIp",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "checkPairingIp",
+          "line": 50,
+          "isDefault": false
+        },
+        {
+          "name": "checkPairingInstallation",
+          "line": 55,
+          "isDefault": false
+        },
+        {
+          "name": "check",
+          "line": 98,
+          "isDefault": false
+        },
+        {
+          "name": "AuthRateLimiter",
+          "line": 12,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "checkGoogleLogin",
+          "callee": "check",
+          "lineNumber": 39
+        },
+        {
+          "caller": "checkGoogleLogin",
+          "callee": "TokenSecrets.hash",
+          "lineNumber": 39
+        },
+        {
+          "caller": "checkGoogleLogin",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 39
+        },
+        {
+          "caller": "checkGoogleLogin",
+          "callee": "check",
+          "lineNumber": 40
+        },
+        {
+          "caller": "checkGoogleLogin",
+          "callee": "TokenSecrets.hash",
+          "lineNumber": 40
+        },
+        {
+          "caller": "checkGoogleLogin",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 41
+        },
+        {
+          "caller": "checkRefreshIp",
+          "callee": "check",
+          "lineNumber": 46
+        },
+        {
+          "caller": "checkRefreshIp",
+          "callee": "TokenSecrets.hash",
+          "lineNumber": 46
+        },
+        {
+          "caller": "checkRefreshIp",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 46
+        },
+        {
+          "caller": "checkPairingIp",
+          "callee": "check",
+          "lineNumber": 51
+        },
+        {
+          "caller": "checkPairingIp",
+          "callee": "TokenSecrets.hash",
+          "lineNumber": 51
+        },
+        {
+          "caller": "checkPairingIp",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 51
+        },
+        {
+          "caller": "checkPairingInstallation",
+          "callee": "checkPairingInstallationLocked",
+          "lineNumber": 57
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "TokenSecrets.hash",
+          "lineNumber": 62
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "TokenSecrets.hash",
+          "lineNumber": 63
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "milliseconds.getAsLong",
+          "lineNumber": 64
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.get",
+          "lineNumber": 65
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.size",
+          "lineNumber": 67
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.values().forEach",
+          "lineNumber": 68
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.values",
+          "lineNumber": 68
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "bucketMap.entrySet().removeIf",
+          "lineNumber": 69
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "bucketMap.entrySet",
+          "lineNumber": 69
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "entry.getValue",
+          "lineNumber": 69
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.values().removeIf",
+          "lineNumber": 70
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.values",
+          "lineNumber": 70
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.size",
+          "lineNumber": 71
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "ApiException.tooManyRequests",
+          "lineNumber": 72
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "new HashMap<>",
+          "lineNumber": 75
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "pairingInstallationBuckets.put",
+          "lineNumber": 76
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.get",
+          "lineNumber": 78
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.size",
+          "lineNumber": 80
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.entrySet().removeIf",
+          "lineNumber": 81
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.entrySet",
+          "lineNumber": 81
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "entry.getValue",
+          "lineNumber": 81
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.size",
+          "lineNumber": 82
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.values().stream().mapToLong(value -> value.expiresAt).min().orElse",
+          "lineNumber": 83
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.values().stream().mapToLong(value -> value.expiresAt).min",
+          "lineNumber": 83
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.values().stream().mapToLong",
+          "lineNumber": 83
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.values().stream",
+          "lineNumber": 83
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.values",
+          "lineNumber": 83
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "ApiException.tooManyRequests",
+          "lineNumber": 85
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "Math.max",
+          "lineNumber": 85
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "new Bucket",
+          "lineNumber": 88
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "Duration.ofMinutes(10).toMillis",
+          "lineNumber": 88
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 88
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "group.put",
+          "lineNumber": 89
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "ApiException.tooManyRequests",
+          "lineNumber": 92
+        },
+        {
+          "caller": "checkPairingInstallationLocked",
+          "callee": "Math.max",
+          "lineNumber": 92
+        },
+        {
+          "caller": "check",
+          "callee": "key.startsWith",
+          "lineNumber": 101
+        },
+        {
+          "caller": "check",
+          "callee": "key.startsWith",
+          "lineNumber": 103
+        },
+        {
+          "caller": "check",
+          "callee": "key.startsWith",
+          "lineNumber": 105
+        },
+        {
+          "caller": "check",
+          "callee": "milliseconds.getAsLong",
+          "lineNumber": 108
+        },
+        {
+          "caller": "check",
+          "callee": "buckets.get",
+          "lineNumber": 109
+        },
+        {
+          "caller": "check",
+          "callee": "buckets.size",
+          "lineNumber": 111
+        },
+        {
+          "caller": "check",
+          "callee": "buckets.entrySet().removeIf",
+          "lineNumber": 112
+        },
+        {
+          "caller": "check",
+          "callee": "buckets.entrySet",
+          "lineNumber": 112
+        },
+        {
+          "caller": "check",
+          "callee": "entry.getValue",
+          "lineNumber": 112
+        },
+        {
+          "caller": "check",
+          "callee": "buckets.size",
+          "lineNumber": 113
+        },
+        {
+          "caller": "check",
+          "callee": "ApiException.tooManyRequests",
+          "lineNumber": 114
+        },
+        {
+          "caller": "check",
+          "callee": "new Bucket",
+          "lineNumber": 117
+        },
+        {
+          "caller": "check",
+          "callee": "window.toMillis",
+          "lineNumber": 117
+        },
+        {
+          "caller": "check",
+          "callee": "buckets.put",
+          "lineNumber": 118
+        },
+        {
+          "caller": "check",
+          "callee": "ApiException.tooManyRequests",
+          "lineNumber": 121
+        },
+        {
+          "caller": "check",
+          "callee": "Math.max",
+          "lineNumber": 121
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 7,
+        "functionCount": 8,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/GoogleOauthClient.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 174,
+      "nonEmptyLines": 165,
+      "functions": [
+        {
+          "name": "GoogleOauthClient",
+          "startLine": 45,
+          "endLine": 52,
+          "params": [
+            "clientId",
+            "clientSecret"
+          ]
+        },
+        {
+          "name": "GoogleOauthClient",
+          "startLine": 54,
+          "endLine": 57,
+          "params": [
+            "clientId",
+            "clientSecret",
+            "http",
+            "decoder"
+          ]
+        },
+        {
+          "name": "GoogleOauthClient",
+          "startLine": 59,
+          "endLine": 78,
+          "params": [
+            "clientId",
+            "clientSecret",
+            "http",
+            "decoder",
+            "clock"
+          ]
+        },
+        {
+          "name": "exchange",
+          "startLine": 81,
+          "endLine": 126,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "verifyIdentity",
+          "startLine": 128,
+          "endLine": 161,
+          "params": [
+            "token"
+          ]
+        },
+        {
+          "name": "googleDecoder",
+          "startLine": 163,
+          "endLine": 169,
+          "params": []
+        },
+        {
+          "name": "encode",
+          "startLine": 171,
+          "endLine": 173,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "GoogleOauthClient",
+          "startLine": 33,
+          "endLine": 174,
+          "methods": [
+            "GoogleOauthClient",
+            "GoogleOauthClient",
+            "GoogleOauthClient",
+            "exchange",
+            "verifyIdentity",
+            "googleDecoder",
+            "encode"
+          ],
+          "properties": [
+            "TOKEN_ENDPOINT",
+            "ISSUED_AT_CLOCK_SKEW",
+            "clientId",
+            "clientSecret",
+            "http",
+            "decoder",
+            "clock",
+            "json"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GoogleOauthClient",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "exchange",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "GoogleOauthClient",
+          "line": 33,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5))\n            .followRedirects(HttpClient.Redirect.NEVER).build",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "HttpClient.newBuilder().connectTimeout",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "HttpClient.newBuilder",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "Duration.ofSeconds",
+          "lineNumber": 50
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "googleDecoder",
+          "lineNumber": 51
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "Clock.systemUTC",
+          "lineNumber": 56
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "jwt.getClaimAsString",
+          "lineNumber": 67
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "\"accounts.google.com\".equals",
+          "lineNumber": 68
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "\"https://accounts.google.com\".equals",
+          "lineNumber": 68
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "OAuth2TokenValidatorResult.success",
+          "lineNumber": 69
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "OAuth2TokenValidatorResult.failure",
+          "lineNumber": 70
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "new OAuth2Error",
+          "lineNumber": 70
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "new JwtTimestampValidator",
+          "lineNumber": 72
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "timestamps.setClock",
+          "lineNumber": 73
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "this.decoder.setJwtValidator",
+          "lineNumber": 74
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "new DelegatingOAuth2TokenValidator<>",
+          "lineNumber": 74
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "new JwtAudienceValidator",
+          "lineNumber": 76
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "clientId.isBlank",
+          "lineNumber": 76
+        },
+        {
+          "caller": "GoogleOauthClient",
+          "callee": "new GoogleAuthorizedPartyValidator",
+          "lineNumber": 77
+        },
+        {
+          "caller": "exchange",
+          "callee": "clientId.isBlank",
+          "lineNumber": 82
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 83
+        },
+        {
+          "caller": "exchange",
+          "callee": "new java.util.LinkedHashMap<>",
+          "lineNumber": 85
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.put",
+          "lineNumber": 86
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.put",
+          "lineNumber": 87
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.put",
+          "lineNumber": 88
+        },
+        {
+          "caller": "exchange",
+          "callee": "request.authorizationCode",
+          "lineNumber": 88
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.put",
+          "lineNumber": 89
+        },
+        {
+          "caller": "exchange",
+          "callee": "request.codeVerifier",
+          "lineNumber": 89
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.put",
+          "lineNumber": 90
+        },
+        {
+          "caller": "exchange",
+          "callee": "request.redirectUri",
+          "lineNumber": 90
+        },
+        {
+          "caller": "exchange",
+          "callee": "clientSecret.isBlank",
+          "lineNumber": 91
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.put",
+          "lineNumber": 92
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.entrySet().stream().map(entry -> encode(entry.getKey())\n        + \"=\" + encode(entry.getValue())).collect",
+          "lineNumber": 94
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.entrySet().stream().map",
+          "lineNumber": 94
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.entrySet().stream",
+          "lineNumber": 94
+        },
+        {
+          "caller": "exchange",
+          "callee": "fields.entrySet",
+          "lineNumber": 94
+        },
+        {
+          "caller": "exchange",
+          "callee": "encode",
+          "lineNumber": 94
+        },
+        {
+          "caller": "exchange",
+          "callee": "entry.getKey",
+          "lineNumber": 94
+        },
+        {
+          "caller": "exchange",
+          "callee": "encode",
+          "lineNumber": 95
+        },
+        {
+          "caller": "exchange",
+          "callee": "entry.getValue",
+          "lineNumber": 95
+        },
+        {
+          "caller": "exchange",
+          "callee": "java.util.stream.Collectors.joining",
+          "lineNumber": 95
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpRequest.newBuilder(TOKEN_ENDPOINT).timeout(Duration.ofSeconds(10))\n        .header(\"Content-Type\", \"application/x-www-form-urlencoded\")\n        .POST(HttpRequest.BodyPublishers.ofString(form)).build",
+          "lineNumber": 96
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpRequest.newBuilder(TOKEN_ENDPOINT).timeout(Duration.ofSeconds(10))\n        .header(\"Content-Type\", \"application/x-www-form-urlencoded\").POST",
+          "lineNumber": 96
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpRequest.newBuilder(TOKEN_ENDPOINT).timeout(Duration.ofSeconds(10)).header",
+          "lineNumber": 96
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpRequest.newBuilder(TOKEN_ENDPOINT).timeout",
+          "lineNumber": 96
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpRequest.newBuilder",
+          "lineNumber": 96
+        },
+        {
+          "caller": "exchange",
+          "callee": "Duration.ofSeconds",
+          "lineNumber": 96
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpRequest.BodyPublishers.ofString",
+          "lineNumber": 98
+        },
+        {
+          "caller": "exchange",
+          "callee": "http.send",
+          "lineNumber": 100
+        },
+        {
+          "caller": "exchange",
+          "callee": "HttpResponse.BodyHandlers.ofString",
+          "lineNumber": 100
+        },
+        {
+          "caller": "exchange",
+          "callee": "response.statusCode",
+          "lineNumber": 101
+        },
+        {
+          "caller": "exchange",
+          "callee": "response.statusCode",
+          "lineNumber": 101
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 102
+        },
+        {
+          "caller": "exchange",
+          "callee": "response.statusCode",
+          "lineNumber": 104
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 105
+        },
+        {
+          "caller": "exchange",
+          "callee": "json.readTree",
+          "lineNumber": 107
+        },
+        {
+          "caller": "exchange",
+          "callee": "response.body",
+          "lineNumber": 107
+        },
+        {
+          "caller": "exchange",
+          "callee": "payload.isObject",
+          "lineNumber": 108
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 109
+        },
+        {
+          "caller": "exchange",
+          "callee": "payload.path(\"id_token\").asText",
+          "lineNumber": 111
+        },
+        {
+          "caller": "exchange",
+          "callee": "payload.path",
+          "lineNumber": 111
+        },
+        {
+          "caller": "exchange",
+          "callee": "idToken.isBlank",
+          "lineNumber": 112
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 113
+        },
+        {
+          "caller": "exchange",
+          "callee": "verifyIdentity",
+          "lineNumber": 115
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 117
+        },
+        {
+          "caller": "exchange",
+          "callee": "Thread.currentThread().interrupt",
+          "lineNumber": 119
+        },
+        {
+          "caller": "exchange",
+          "callee": "Thread.currentThread",
+          "lineNumber": 119
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 120
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 122
+        },
+        {
+          "caller": "exchange",
+          "callee": "new ApiException",
+          "lineNumber": 124
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "decoder.decode",
+          "lineNumber": 130
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getSubject",
+          "lineNumber": 131
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "clock.instant",
+          "lineNumber": 132
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "subject.isBlank",
+          "lineNumber": 133
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "subject.length",
+          "lineNumber": 133
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getExpiresAt",
+          "lineNumber": 134
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getExpiresAt().isAfter",
+          "lineNumber": 134
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getExpiresAt",
+          "lineNumber": 134
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getIssuedAt",
+          "lineNumber": 135
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getIssuedAt().isAfter",
+          "lineNumber": 136
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "jwt.getIssuedAt",
+          "lineNumber": 136
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "now.plus",
+          "lineNumber": 136
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "new ApiException",
+          "lineNumber": 137
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "cause.getCause",
+          "lineNumber": 144
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "new ApiException",
+          "lineNumber": 147
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "new ApiException",
+          "lineNumber": 155
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "new ApiException",
+          "lineNumber": 157
+        },
+        {
+          "caller": "verifyIdentity",
+          "callee": "new ApiException",
+          "lineNumber": 159
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "new org.springframework.http.client.SimpleClientHttpRequestFactory",
+          "lineNumber": 164
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "factory.setConnectTimeout",
+          "lineNumber": 165
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "Duration.ofSeconds",
+          "lineNumber": 165
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "factory.setReadTimeout",
+          "lineNumber": 166
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "Duration.ofSeconds",
+          "lineNumber": 166
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "NimbusJwtDecoder.withJwkSetUri(\"https://www.googleapis.com/oauth2/v3/certs\")\n        .restOperations(new org.springframework.web.client.RestTemplate(factory)).build",
+          "lineNumber": 167
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "NimbusJwtDecoder.withJwkSetUri(\"https://www.googleapis.com/oauth2/v3/certs\").restOperations",
+          "lineNumber": 167
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "NimbusJwtDecoder.withJwkSetUri",
+          "lineNumber": 167
+        },
+        {
+          "caller": "googleDecoder",
+          "callee": "new org.springframework.web.client.RestTemplate",
+          "lineNumber": 168
+        },
+        {
+          "caller": "encode",
+          "callee": "URLEncoder.encode",
+          "lineNumber": 172
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 3,
+        "functionCount": 7,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/PairingSecrets.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 66,
+      "nonEmptyLines": 60,
+      "functions": [
+        {
+          "name": "PairingSecrets",
+          "startLine": 24,
+          "endLine": 33,
+          "params": [
+            "secret"
+          ]
+        },
+        {
+          "name": "generate",
+          "startLine": 36,
+          "endLine": 42,
+          "params": []
+        },
+        {
+          "name": "normalize",
+          "startLine": 45,
+          "endLine": 54,
+          "params": [
+            "raw"
+          ]
+        },
+        {
+          "name": "hash",
+          "startLine": 57,
+          "endLine": 65,
+          "params": [
+            "code"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "PairingSecrets",
+          "startLine": 17,
+          "endLine": 66,
+          "methods": [
+            "PairingSecrets",
+            "generate",
+            "normalize",
+            "hash"
+          ],
+          "properties": [
+            "ALPHABET",
+            "random",
+            "key"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PairingSecrets",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "generate",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "normalize",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "hash",
+          "line": 57,
+          "isDefault": false
+        },
+        {
+          "name": "PairingSecrets",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PairingSecrets",
+          "callee": "Base64.getDecoder().decode",
+          "lineNumber": 26
+        },
+        {
+          "caller": "PairingSecrets",
+          "callee": "Base64.getDecoder",
+          "lineNumber": 26
+        },
+        {
+          "caller": "PairingSecrets",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 28
+        },
+        {
+          "caller": "PairingSecrets",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 31
+        },
+        {
+          "caller": "generate",
+          "callee": "new StringBuilder",
+          "lineNumber": 37
+        },
+        {
+          "caller": "generate",
+          "callee": "value.append",
+          "lineNumber": 39
+        },
+        {
+          "caller": "generate",
+          "callee": "ALPHABET.charAt",
+          "lineNumber": 39
+        },
+        {
+          "caller": "generate",
+          "callee": "random.nextInt",
+          "lineNumber": 39
+        },
+        {
+          "caller": "generate",
+          "callee": "ALPHABET.length",
+          "lineNumber": 39
+        },
+        {
+          "caller": "generate",
+          "callee": "value.toString",
+          "lineNumber": 41
+        },
+        {
+          "caller": "normalize",
+          "callee": "raw.length",
+          "lineNumber": 46
+        },
+        {
+          "caller": "normalize",
+          "callee": "new ApiException",
+          "lineNumber": 47
+        },
+        {
+          "caller": "normalize",
+          "callee": "raw.trim().toUpperCase",
+          "lineNumber": 49
+        },
+        {
+          "caller": "normalize",
+          "callee": "raw.trim",
+          "lineNumber": 49
+        },
+        {
+          "caller": "normalize",
+          "callee": "code.matches",
+          "lineNumber": 50
+        },
+        {
+          "caller": "normalize",
+          "callee": "new ApiException",
+          "lineNumber": 51
+        },
+        {
+          "caller": "normalize",
+          "callee": "code.replace",
+          "lineNumber": 53
+        },
+        {
+          "caller": "hash",
+          "callee": "Mac.getInstance",
+          "lineNumber": 59
+        },
+        {
+          "caller": "hash",
+          "callee": "mac.init",
+          "lineNumber": 60
+        },
+        {
+          "caller": "hash",
+          "callee": "new SecretKeySpec",
+          "lineNumber": 60
+        },
+        {
+          "caller": "hash",
+          "callee": "HexFormat.of().formatHex",
+          "lineNumber": 61
+        },
+        {
+          "caller": "hash",
+          "callee": "HexFormat.of",
+          "lineNumber": 61
+        },
+        {
+          "caller": "hash",
+          "callee": "mac.doFinal",
+          "lineNumber": 61
+        },
+        {
+          "caller": "hash",
+          "callee": "code.getBytes",
+          "lineNumber": 61
+        },
+        {
+          "caller": "hash",
+          "callee": "new IllegalStateException",
+          "lineNumber": 63
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 5,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/RedirectUriValidator.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 27,
+      "nonEmptyLines": 24,
+      "functions": [
+        {
+          "name": "RedirectUriValidator",
+          "startLine": 10,
+          "endLine": 10,
+          "params": []
+        },
+        {
+          "name": "validate",
+          "startLine": 13,
+          "endLine": 26,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "RedirectUriValidator",
+          "startLine": 9,
+          "endLine": 27,
+          "methods": [
+            "RedirectUriValidator",
+            "validate"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "validate",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "RedirectUriValidator",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "validate",
+          "callee": "new URI",
+          "lineNumber": 15
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getRawPath",
+          "lineNumber": 16
+        },
+        {
+          "caller": "validate",
+          "callee": "\"http\".equals",
+          "lineNumber": 17
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getScheme",
+          "lineNumber": 17
+        },
+        {
+          "caller": "validate",
+          "callee": "\"127.0.0.1\".equals",
+          "lineNumber": 17
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getHost",
+          "lineNumber": 17
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getPort",
+          "lineNumber": 18
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getPort",
+          "lineNumber": 18
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getRawUserInfo",
+          "lineNumber": 18
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getRawQuery",
+          "lineNumber": 19
+        },
+        {
+          "caller": "validate",
+          "callee": "uri.getRawFragment",
+          "lineNumber": 19
+        },
+        {
+          "caller": "validate",
+          "callee": "path.isEmpty",
+          "lineNumber": 20
+        },
+        {
+          "caller": "validate",
+          "callee": "\"/\".equals",
+          "lineNumber": 20
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 21
+        },
+        {
+          "caller": "validate",
+          "callee": "new ApiException",
+          "lineNumber": 24
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 71,
+      "nonEmptyLines": 64,
+      "functions": [
+        {
+          "name": "ApiErrorCode",
+          "startLine": 51,
+          "endLine": 55,
+          "params": [
+            "status",
+            "message",
+            "retryable"
+          ]
+        },
+        {
+          "name": "status",
+          "startLine": 58,
+          "endLine": 60,
+          "params": []
+        },
+        {
+          "name": "defaultMessage",
+          "startLine": 63,
+          "endLine": 65,
+          "params": []
+        },
+        {
+          "name": "retryable",
+          "startLine": 68,
+          "endLine": 70,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "ApiErrorCode",
+          "startLine": 6,
+          "endLine": 71,
+          "methods": [
+            "ApiErrorCode",
+            "status",
+            "defaultMessage",
+            "retryable"
+          ],
+          "properties": [
+            "status",
+            "message",
+            "retryable"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "status",
+          "line": 58,
+          "isDefault": false
+        },
+        {
+          "name": "defaultMessage",
+          "line": 63,
+          "isDefault": false
+        },
+        {
+          "name": "retryable",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "ApiErrorCode",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 70,
+      "functions": [
+        {
+          "name": "ApiException",
+          "startLine": 14,
+          "endLine": 16,
+          "params": [
+            "code"
+          ]
+        },
+        {
+          "name": "ApiException",
+          "startLine": 18,
+          "endLine": 21,
+          "params": [
+            "code",
+            "retryAfterSeconds",
+            "details"
+          ]
+        },
+        {
+          "name": "ApiException",
+          "startLine": 23,
+          "endLine": 34,
+          "params": [
+            "code",
+            "retryAfterSeconds",
+            "details",
+            "status"
+          ]
+        },
+        {
+          "name": "resumeRequirementMissing",
+          "startLine": 37,
+          "endLine": 40,
+          "params": []
+        },
+        {
+          "name": "status",
+          "startLine": 43,
+          "endLine": 45,
+          "params": []
+        },
+        {
+          "name": "withDetails",
+          "startLine": 48,
+          "endLine": 50,
+          "params": [
+            "code",
+            "details"
+          ]
+        },
+        {
+          "name": "tooManyRequests",
+          "startLine": 53,
+          "endLine": 58,
+          "params": [
+            "retryAfterSeconds"
+          ]
+        },
+        {
+          "name": "pairingLocked",
+          "startLine": 61,
+          "endLine": 67,
+          "params": [
+            "retryAfterSeconds"
+          ]
+        },
+        {
+          "name": "code",
+          "startLine": 70,
+          "endLine": 72,
+          "params": []
+        },
+        {
+          "name": "details",
+          "startLine": 75,
+          "endLine": 77,
+          "params": []
+        },
+        {
+          "name": "retryAfterSeconds",
+          "startLine": 80,
+          "endLine": 82,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "ApiException",
+          "startLine": 7,
+          "endLine": 83,
+          "methods": [
+            "ApiException",
+            "ApiException",
+            "ApiException",
+            "resumeRequirementMissing",
+            "status",
+            "withDetails",
+            "tooManyRequests",
+            "pairingLocked",
+            "code",
+            "details",
+            "retryAfterSeconds"
+          ],
+          "properties": [
+            "code",
+            "details",
+            "retryAfterSeconds",
+            "status"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "ApiException",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "resumeRequirementMissing",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "status",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "withDetails",
+          "line": 48,
+          "isDefault": false
+        },
+        {
+          "name": "tooManyRequests",
+          "line": 53,
+          "isDefault": false
+        },
+        {
+          "name": "pairingLocked",
+          "line": 61,
+          "isDefault": false
+        },
+        {
+          "name": "code",
+          "line": 70,
+          "isDefault": false
+        },
+        {
+          "name": "details",
+          "line": 75,
+          "isDefault": false
+        },
+        {
+          "name": "retryAfterSeconds",
+          "line": 80,
+          "isDefault": false
+        },
+        {
+          "name": "ApiException",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ApiException",
+          "callee": "Map.of",
+          "lineNumber": 15
+        },
+        {
+          "caller": "ApiException",
+          "callee": "code.status",
+          "lineNumber": 20
+        },
+        {
+          "caller": "ApiException",
+          "callee": "code.defaultMessage",
+          "lineNumber": 25
+        },
+        {
+          "caller": "ApiException",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 28
+        },
+        {
+          "caller": "ApiException",
+          "callee": "Map.copyOf",
+          "lineNumber": 32
+        },
+        {
+          "caller": "resumeRequirementMissing",
+          "callee": "new ApiException",
+          "lineNumber": 38
+        },
+        {
+          "caller": "resumeRequirementMissing",
+          "callee": "Map.of",
+          "lineNumber": 38
+        },
+        {
+          "caller": "withDetails",
+          "callee": "new ApiException",
+          "lineNumber": 49
+        },
+        {
+          "caller": "tooManyRequests",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 55
+        },
+        {
+          "caller": "tooManyRequests",
+          "callee": "new ApiException",
+          "lineNumber": 57
+        },
+        {
+          "caller": "tooManyRequests",
+          "callee": "Map.of",
+          "lineNumber": 57
+        },
+        {
+          "caller": "pairingLocked",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 63
+        },
+        {
+          "caller": "pairingLocked",
+          "callee": "new ApiException",
+          "lineNumber": 65
+        },
+        {
+          "caller": "pairingLocked",
+          "callee": "Map.of",
+          "lineNumber": 66
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 10,
+        "functionCount": 11,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/RequestIdFilter.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 93,
+      "nonEmptyLines": 85,
+      "functions": [
+        {
+          "name": "shouldNotFilter",
+          "startLine": 29,
+          "endLine": 33,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "doFilterInternal",
+          "startLine": 35,
+          "endLine": 73,
+          "params": [
+            "request",
+            "response",
+            "chain"
+          ]
+        },
+        {
+          "name": "restoreMdc",
+          "startLine": 75,
+          "endLine": 81,
+          "params": [
+            "key",
+            "previous"
+          ]
+        },
+        {
+          "name": "from",
+          "startLine": 85,
+          "endLine": 88,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "newRequestId",
+          "startLine": 90,
+          "endLine": 92,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "RequestIdFilter",
+          "startLine": 18,
+          "endLine": 93,
+          "methods": [
+            "shouldNotFilter",
+            "doFilterInternal",
+            "restoreMdc",
+            "from",
+            "newRequestId"
+          ],
+          "properties": [
+            "REQUEST_ID_ATTRIBUTE",
+            "ERROR_CODE_ATTRIBUTE",
+            "ERROR_STAGE_ATTRIBUTE",
+            "MDC_KEY",
+            "TRACE_HEADER",
+            "TRACE_PATTERN"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "REQUEST_ID_ATTRIBUTE",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "ERROR_CODE_ATTRIBUTE",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "ERROR_STAGE_ATTRIBUTE",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "from",
+          "line": 85,
+          "isDefault": false
+        },
+        {
+          "name": "RequestIdFilter",
+          "line": 18,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "shouldNotFilter",
+          "callee": "request.getServletPath",
+          "lineNumber": 31
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "path.equals",
+          "lineNumber": 32
+        },
+        {
+          "caller": "shouldNotFilter",
+          "callee": "path.startsWith",
+          "lineNumber": 32
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "newRequestId",
+          "lineNumber": 39
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "Collections.list",
+          "lineNumber": 40
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getHeaders",
+          "lineNumber": 40
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "traces.size",
+          "lineNumber": 41
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "TRACE_PATTERN.matcher(traces.getFirst()).matches",
+          "lineNumber": 41
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "TRACE_PATTERN.matcher",
+          "lineNumber": 41
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "traces.getFirst",
+          "lineNumber": 41
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "traces.getFirst",
+          "lineNumber": 42
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "UUID.randomUUID().toString",
+          "lineNumber": 42
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "UUID.randomUUID",
+          "lineNumber": 42
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "MDC.get",
+          "lineNumber": 43
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "MDC.get",
+          "lineNumber": 44
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.setAttribute",
+          "lineNumber": 45
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "MDC.put",
+          "lineNumber": 46
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "MDC.put",
+          "lineNumber": 47
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "response.setHeader",
+          "lineNumber": 48
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "System.nanoTime",
+          "lineNumber": 49
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getMethod",
+          "lineNumber": 50
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getServletPath",
+          "lineNumber": 51
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "SafeApiLog.httpIn",
+          "lineNumber": 54
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "chain.doFilter",
+          "lineNumber": 55
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "response.getStatus",
+          "lineNumber": 60
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "response.getStatus",
+          "lineNumber": 60
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getAttribute",
+          "lineNumber": 62
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "request.getAttribute",
+          "lineNumber": 63
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "SafeApiLog.httpOut",
+          "lineNumber": 64
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "System.nanoTime",
+          "lineNumber": 64
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "restoreMdc",
+          "lineNumber": 69
+        },
+        {
+          "caller": "doFilterInternal",
+          "callee": "restoreMdc",
+          "lineNumber": 70
+        },
+        {
+          "caller": "restoreMdc",
+          "callee": "MDC.remove",
+          "lineNumber": 77
+        },
+        {
+          "caller": "restoreMdc",
+          "callee": "MDC.put",
+          "lineNumber": 79
+        },
+        {
+          "caller": "from",
+          "callee": "request.getAttribute",
+          "lineNumber": 86
+        },
+        {
+          "caller": "from",
+          "callee": "newRequestId",
+          "lineNumber": 87
+        },
+        {
+          "caller": "newRequestId",
+          "callee": "UUID.randomUUID().toString().replace",
+          "lineNumber": 91
+        },
+        {
+          "caller": "newRequestId",
+          "callee": "UUID.randomUUID().toString",
+          "lineNumber": 91
+        },
+        {
+          "caller": "newRequestId",
+          "callee": "UUID.randomUUID",
+          "lineNumber": 91
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 5,
+        "functionCount": 5,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionAccess.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 73,
+      "nonEmptyLines": 68,
+      "functions": [
+        {
+          "name": "authenticate",
+          "startLine": 31,
+          "endLine": 49,
+          "params": [
+            "principal",
+            "extensionAllowed"
+          ]
+        },
+        {
+          "name": "owned",
+          "startLine": 52,
+          "endLine": 59,
+          "params": [
+            "principal",
+            "device",
+            "sessionId"
+          ]
+        },
+        {
+          "name": "id",
+          "startLine": 62,
+          "endLine": 72,
+          "params": [
+            "raw",
+            "code"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionAccess",
+          "startLine": 20,
+          "endLine": 73,
+          "methods": [
+            "authenticate",
+            "owned",
+            "id"
+          ],
+          "properties": [
+            "entityManager",
+            "users",
+            "families",
+            "guard",
+            "sessions",
+            "limits"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "authenticate",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "owned",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "id",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionAccess",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "authenticate",
+          "callee": "entityManager.clear",
+          "lineNumber": 32
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.deviceType",
+          "lineNumber": 33
+        },
+        {
+          "caller": "authenticate",
+          "callee": "new ApiException",
+          "lineNumber": 34
+        },
+        {
+          "caller": "authenticate",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 36
+        },
+        {
+          "caller": "authenticate",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 36
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.userId",
+          "lineNumber": 36
+        },
+        {
+          "caller": "authenticate",
+          "callee": "new ApiException",
+          "lineNumber": 37
+        },
+        {
+          "caller": "authenticate",
+          "callee": "Instant.now",
+          "lineNumber": 38
+        },
+        {
+          "caller": "authenticate",
+          "callee": "families.findById(principal.tokenFamilyId()).filter(value ->\n        value.getUser().getId().equals(principal.userId())\n            && value.getDevice().getId().equals(principal.deviceId())\n            && value.getDevice().getDeviceType() == principal.deviceType()\n            && guard.isActive(value, now)\n            && guard.hasActiveLinkedDesktop(value.getDevice(), principal.userId(), now)).orElseThrow",
+          "lineNumber": 39
+        },
+        {
+          "caller": "authenticate",
+          "callee": "families.findById(principal.tokenFamilyId()).filter",
+          "lineNumber": 39
+        },
+        {
+          "caller": "authenticate",
+          "callee": "families.findById",
+          "lineNumber": 39
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.tokenFamilyId",
+          "lineNumber": 39
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getUser().getId().equals",
+          "lineNumber": 40
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getUser().getId",
+          "lineNumber": 40
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getUser",
+          "lineNumber": 40
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.userId",
+          "lineNumber": 40
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getDevice().getId().equals",
+          "lineNumber": 41
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getDevice().getId",
+          "lineNumber": 41
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getDevice",
+          "lineNumber": 41
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.deviceId",
+          "lineNumber": 41
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getDevice().getDeviceType",
+          "lineNumber": 42
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getDevice",
+          "lineNumber": 42
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.deviceType",
+          "lineNumber": 42
+        },
+        {
+          "caller": "authenticate",
+          "callee": "guard.isActive",
+          "lineNumber": 43
+        },
+        {
+          "caller": "authenticate",
+          "callee": "guard.hasActiveLinkedDesktop",
+          "lineNumber": 44
+        },
+        {
+          "caller": "authenticate",
+          "callee": "value.getDevice",
+          "lineNumber": 44
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.userId",
+          "lineNumber": 44
+        },
+        {
+          "caller": "authenticate",
+          "callee": "new ApiException",
+          "lineNumber": 45
+        },
+        {
+          "caller": "authenticate",
+          "callee": "limits.check",
+          "lineNumber": 46
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.userId",
+          "lineNumber": 46
+        },
+        {
+          "caller": "authenticate",
+          "callee": "principal.deviceId",
+          "lineNumber": 46
+        },
+        {
+          "caller": "authenticate",
+          "callee": "Duration.ofMinutes",
+          "lineNumber": 47
+        },
+        {
+          "caller": "authenticate",
+          "callee": "family.getDevice",
+          "lineNumber": 48
+        },
+        {
+          "caller": "owned",
+          "callee": "device.getDeviceType",
+          "lineNumber": 54
+        },
+        {
+          "caller": "owned",
+          "callee": "device.getId",
+          "lineNumber": 55
+        },
+        {
+          "caller": "owned",
+          "callee": "device.getLinkedDesktopDevice().getId",
+          "lineNumber": 55
+        },
+        {
+          "caller": "owned",
+          "callee": "device.getLinkedDesktopDevice",
+          "lineNumber": 55
+        },
+        {
+          "caller": "owned",
+          "callee": "sessions.findOwnedForUpdate(sessionId, principal.userId())\n        .filter(value -> value.getRunnerDevice().getId().equals(runnerId)).orElseThrow",
+          "lineNumber": 56
+        },
+        {
+          "caller": "owned",
+          "callee": "sessions.findOwnedForUpdate(sessionId, principal.userId()).filter",
+          "lineNumber": 56
+        },
+        {
+          "caller": "owned",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 56
+        },
+        {
+          "caller": "owned",
+          "callee": "principal.userId",
+          "lineNumber": 56
+        },
+        {
+          "caller": "owned",
+          "callee": "value.getRunnerDevice().getId().equals",
+          "lineNumber": 57
+        },
+        {
+          "caller": "owned",
+          "callee": "value.getRunnerDevice().getId",
+          "lineNumber": 57
+        },
+        {
+          "caller": "owned",
+          "callee": "value.getRunnerDevice",
+          "lineNumber": 57
+        },
+        {
+          "caller": "owned",
+          "callee": "new ApiException",
+          "lineNumber": 58
+        },
+        {
+          "caller": "id",
+          "callee": "Long.parseLong",
+          "lineNumber": 64
+        },
+        {
+          "caller": "id",
+          "callee": "new ApiException",
+          "lineNumber": 71
+        }
+      ],
+      "metrics": {
+        "importCount": 10,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/persistence/LearningSummaryEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 58,
+      "nonEmptyLines": 54,
+      "functions": [
+        {
+          "name": "response",
+          "startLine": 40,
+          "endLine": 50,
+          "params": []
+        },
+        {
+          "name": "nonBlank",
+          "startLine": 53,
+          "endLine": 57,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LearningSummaryEntity",
+          "startLine": 21,
+          "endLine": 58,
+          "methods": [
+            "response",
+            "nonBlank"
+          ],
+          "properties": [
+            "sessionId",
+            "status",
+            "overview",
+            "keyConcepts",
+            "nextStartPrompt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "response",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "LearningSummaryEntity",
+          "line": 21,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "response",
+          "callee": "nonBlank",
+          "lineNumber": 41
+        },
+        {
+          "caller": "response",
+          "callee": "nonBlank",
+          "lineNumber": 41
+        },
+        {
+          "caller": "response",
+          "callee": "keyConcepts.stream().anyMatch",
+          "lineNumber": 42
+        },
+        {
+          "caller": "response",
+          "callee": "keyConcepts.stream",
+          "lineNumber": 42
+        },
+        {
+          "caller": "response",
+          "callee": "nonBlank",
+          "lineNumber": 43
+        },
+        {
+          "caller": "response",
+          "callee": "concept.name",
+          "lineNumber": 43
+        },
+        {
+          "caller": "response",
+          "callee": "nonBlank",
+          "lineNumber": 43
+        },
+        {
+          "caller": "response",
+          "callee": "concept.briefExplanation",
+          "lineNumber": 43
+        },
+        {
+          "caller": "response",
+          "callee": "new ApiException",
+          "lineNumber": 45
+        },
+        {
+          "caller": "response",
+          "callee": "new LearningSummaryResponse",
+          "lineNumber": 48
+        },
+        {
+          "caller": "response",
+          "callee": "List.copyOf",
+          "lineNumber": 48
+        },
+        {
+          "caller": "response",
+          "callee": "new LearningSummaryResponse",
+          "lineNumber": 49
+        },
+        {
+          "caller": "response",
+          "callee": "List.of",
+          "lineNumber": 49
+        },
+        {
+          "caller": "nonBlank",
+          "callee": "value.codePoints().anyMatch",
+          "lineNumber": 54
+        },
+        {
+          "caller": "nonBlank",
+          "callee": "value.codePoints",
+          "lineNumber": 54
+        },
+        {
+          "caller": "nonBlank",
+          "callee": "Character.isWhitespace",
+          "lineNumber": 55
+        },
+        {
+          "caller": "nonBlank",
+          "callee": "Character.isSpaceChar",
+          "lineNumber": 55
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionQueryService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 87,
+      "nonEmptyLines": 80,
+      "functions": [
+        {
+          "name": "detail",
+          "startLine": 29,
+          "endLine": 41,
+          "params": [
+            "principal",
+            "id"
+          ]
+        },
+        {
+          "name": "history",
+          "startLine": 44,
+          "endLine": 72,
+          "params": [
+            "principal",
+            "from",
+            "to",
+            "timeZone",
+            "cursor",
+            "requestedLimit"
+          ]
+        },
+        {
+          "name": "toDetail",
+          "startLine": 74,
+          "endLine": 78,
+          "params": [
+            "session"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionQueryService",
+          "startLine": 20,
+          "endLine": 87,
+          "methods": [
+            "detail",
+            "history",
+            "toDetail"
+          ],
+          "properties": [
+            "DEFAULT_LIMIT",
+            "MAX_LIMIT",
+            "sessions"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "detail",
+          "line": 29,
+          "isDefault": false
+        },
+        {
+          "name": "history",
+          "line": 44,
+          "isDefault": false
+        },
+        {
+          "name": "SessionQueryService",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "detail",
+          "callee": "Long.parseLong",
+          "lineNumber": 32
+        },
+        {
+          "caller": "detail",
+          "callee": "new NumberFormatException",
+          "lineNumber": 34
+        },
+        {
+          "caller": "detail",
+          "callee": "new ApiException",
+          "lineNumber": 37
+        },
+        {
+          "caller": "detail",
+          "callee": "toDetail",
+          "lineNumber": 39
+        },
+        {
+          "caller": "detail",
+          "callee": "sessions.findByIdAndUserId(numericId, principal.userId()).orElseThrow",
+          "lineNumber": 39
+        },
+        {
+          "caller": "detail",
+          "callee": "sessions.findByIdAndUserId",
+          "lineNumber": 39
+        },
+        {
+          "caller": "detail",
+          "callee": "principal.userId",
+          "lineNumber": 39
+        },
+        {
+          "caller": "detail",
+          "callee": "new ApiException",
+          "lineNumber": 40
+        },
+        {
+          "caller": "history",
+          "callee": "principal.deviceType",
+          "lineNumber": 46
+        },
+        {
+          "caller": "history",
+          "callee": "new ApiException",
+          "lineNumber": 47
+        },
+        {
+          "caller": "history",
+          "callee": "LocalDate.parse",
+          "lineNumber": 54
+        },
+        {
+          "caller": "history",
+          "callee": "LocalDate.parse",
+          "lineNumber": 55
+        },
+        {
+          "caller": "history",
+          "callee": "ZoneId.of",
+          "lineNumber": 57
+        },
+        {
+          "caller": "history",
+          "callee": "Long.parseLong",
+          "lineNumber": 59
+        },
+        {
+          "caller": "history",
+          "callee": "first.isAfter",
+          "lineNumber": 60
+        },
+        {
+          "caller": "history",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 61
+        },
+        {
+          "caller": "history",
+          "callee": "new ApiException",
+          "lineNumber": 64
+        },
+        {
+          "caller": "history",
+          "callee": "sessions.findHistory",
+          "lineNumber": 66
+        },
+        {
+          "caller": "history",
+          "callee": "principal.userId",
+          "lineNumber": 66
+        },
+        {
+          "caller": "history",
+          "callee": "PageRequest.of",
+          "lineNumber": 67
+        },
+        {
+          "caller": "history",
+          "callee": "rows.size",
+          "lineNumber": 68
+        },
+        {
+          "caller": "history",
+          "callee": "rows.subList",
+          "lineNumber": 69
+        },
+        {
+          "caller": "history",
+          "callee": "Math.min",
+          "lineNumber": 69
+        },
+        {
+          "caller": "history",
+          "callee": "rows.size",
+          "lineNumber": 69
+        },
+        {
+          "caller": "history",
+          "callee": "page.getLast().getId().toString",
+          "lineNumber": 70
+        },
+        {
+          "caller": "history",
+          "callee": "page.getLast().getId",
+          "lineNumber": 70
+        },
+        {
+          "caller": "history",
+          "callee": "page.getLast",
+          "lineNumber": 70
+        },
+        {
+          "caller": "history",
+          "callee": "new History",
+          "lineNumber": 71
+        },
+        {
+          "caller": "history",
+          "callee": "page.stream().map(this::toDetail).toList",
+          "lineNumber": 71
+        },
+        {
+          "caller": "history",
+          "callee": "page.stream().map",
+          "lineNumber": 71
+        },
+        {
+          "caller": "history",
+          "callee": "page.stream",
+          "lineNumber": 71
+        },
+        {
+          "caller": "toDetail",
+          "callee": "new Detail",
+          "lineNumber": 75
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getId().toString",
+          "lineNumber": 75
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getId",
+          "lineNumber": 75
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getStatus",
+          "lineNumber": 75
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getVersion",
+          "lineNumber": 75
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getGoalTextSnapshot",
+          "lineNumber": 76
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 76
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 77
+        },
+        {
+          "caller": "toDetail",
+          "callee": "session.getInterventionPolicyVersion",
+          "lineNumber": 77
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 3,
+        "functionCount": 3,
+        "classCount": 1
+      }
+    }
+  ]
+}

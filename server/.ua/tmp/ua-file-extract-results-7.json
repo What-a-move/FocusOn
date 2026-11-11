@@ -1,0 +1,1588 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 3,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 3,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 3,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisAiClient.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 205,
+      "nonEmptyLines": 197,
+      "functions": [
+        {
+          "name": "AnalysisAiClient",
+          "startLine": 36,
+          "endLine": 44,
+          "params": [
+            "mapper",
+            "baseUrl",
+            "key"
+          ]
+        },
+        {
+          "name": "analyze",
+          "startLine": 47,
+          "endLine": 88,
+          "params": [
+            "prepared",
+            "request",
+            "userId"
+          ]
+        },
+        {
+          "name": "endpoint",
+          "startLine": 91,
+          "endLine": 103,
+          "params": [
+            "baseUrl"
+          ]
+        },
+        {
+          "name": "envelope",
+          "startLine": 106,
+          "endLine": 152,
+          "params": [
+            "p",
+            "request",
+            "userId"
+          ]
+        },
+        {
+          "name": "normalize",
+          "startLine": 155,
+          "endLine": 199,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "version",
+          "startLine": 202,
+          "endLine": 204,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "AnalysisAiClient",
+          "startLine": 28,
+          "endLine": 205,
+          "methods": [
+            "AnalysisAiClient",
+            "analyze",
+            "endpoint",
+            "envelope",
+            "normalize",
+            "version"
+          ],
+          "properties": [
+            "mapper",
+            "endpoint",
+            "key",
+            "http"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AnalysisAiClient",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "analyze",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "AnalysisAiClient",
+          "line": 28,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AnalysisAiClient",
+          "callee": "endpoint",
+          "lineNumber": 41
+        },
+        {
+          "caller": "AnalysisAiClient",
+          "callee": "HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2))\n        .followRedirects(HttpClient.Redirect.NEVER).build",
+          "lineNumber": 42
+        },
+        {
+          "caller": "AnalysisAiClient",
+          "callee": "HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).followRedirects",
+          "lineNumber": 42
+        },
+        {
+          "caller": "AnalysisAiClient",
+          "callee": "HttpClient.newBuilder().connectTimeout",
+          "lineNumber": 42
+        },
+        {
+          "caller": "AnalysisAiClient",
+          "callee": "HttpClient.newBuilder",
+          "lineNumber": 42
+        },
+        {
+          "caller": "AnalysisAiClient",
+          "callee": "Duration.ofSeconds",
+          "lineNumber": 42
+        },
+        {
+          "caller": "analyze",
+          "callee": "System.nanoTime",
+          "lineNumber": 48
+        },
+        {
+          "caller": "analyze",
+          "callee": "key.isBlank",
+          "lineNumber": 49
+        },
+        {
+          "caller": "analyze",
+          "callee": "prepared.latest",
+          "lineNumber": 49
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 50
+        },
+        {
+          "caller": "analyze",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 51
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 53
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(5))\n          .header(\"Authorization\", \"Bearer \" + key).header(\"Content-Type\", \"application/json\").POST",
+          "lineNumber": 56
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(5))\n          .header(\"Authorization\", \"Bearer \" + key).header",
+          "lineNumber": 56
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(5)).header",
+          "lineNumber": 56
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpRequest.newBuilder(endpoint).timeout",
+          "lineNumber": 56
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpRequest.newBuilder",
+          "lineNumber": 56
+        },
+        {
+          "caller": "analyze",
+          "callee": "Duration.ofSeconds",
+          "lineNumber": 56
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpRequest.BodyPublishers.ofString",
+          "lineNumber": 58
+        },
+        {
+          "caller": "analyze",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 58
+        },
+        {
+          "caller": "analyze",
+          "callee": "envelope",
+          "lineNumber": 59
+        },
+        {
+          "caller": "analyze",
+          "callee": "MDC.get",
+          "lineNumber": 60
+        },
+        {
+          "caller": "analyze",
+          "callee": "trace.matches",
+          "lineNumber": 61
+        },
+        {
+          "caller": "analyze",
+          "callee": "builder.header",
+          "lineNumber": 62
+        },
+        {
+          "caller": "analyze",
+          "callee": "http.sendAsync",
+          "lineNumber": 65
+        },
+        {
+          "caller": "analyze",
+          "callee": "builder.build",
+          "lineNumber": 65
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpResponse.BodySubscribers.mapping",
+          "lineNumber": 66
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpResponse.BodySubscribers.limiting",
+          "lineNumber": 67
+        },
+        {
+          "caller": "analyze",
+          "callee": "HttpResponse.BodySubscribers.ofByteArray",
+          "lineNumber": 67
+        },
+        {
+          "caller": "analyze",
+          "callee": "pending.get",
+          "lineNumber": 69
+        },
+        {
+          "caller": "analyze",
+          "callee": "response.statusCode",
+          "lineNumber": 70
+        },
+        {
+          "caller": "analyze",
+          "callee": "new IllegalStateException",
+          "lineNumber": 71
+        },
+        {
+          "caller": "analyze",
+          "callee": "normalize",
+          "lineNumber": 73
+        },
+        {
+          "caller": "analyze",
+          "callee": "mapper.readTree",
+          "lineNumber": 73
+        },
+        {
+          "caller": "analyze",
+          "callee": "response.body",
+          "lineNumber": 73
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 74
+        },
+        {
+          "caller": "analyze",
+          "callee": "decision.status",
+          "lineNumber": 74
+        },
+        {
+          "caller": "analyze",
+          "callee": "Thread.currentThread().interrupt",
+          "lineNumber": 78
+        },
+        {
+          "caller": "analyze",
+          "callee": "Thread.currentThread",
+          "lineNumber": 78
+        },
+        {
+          "caller": "analyze",
+          "callee": "pending.isDone",
+          "lineNumber": 82
+        },
+        {
+          "caller": "analyze",
+          "callee": "pending.cancel",
+          "lineNumber": 83
+        },
+        {
+          "caller": "analyze",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 86
+        },
+        {
+          "caller": "analyze",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 87
+        },
+        {
+          "caller": "endpoint",
+          "callee": "baseUrl.isBlank",
+          "lineNumber": 92
+        },
+        {
+          "caller": "endpoint",
+          "callee": "URI.create",
+          "lineNumber": 95
+        },
+        {
+          "caller": "endpoint",
+          "callee": "\"http\".equals",
+          "lineNumber": 96
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getScheme",
+          "lineNumber": 96
+        },
+        {
+          "caller": "endpoint",
+          "callee": "\"https\".equals",
+          "lineNumber": 96
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getScheme",
+          "lineNumber": 96
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getHost",
+          "lineNumber": 97
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getUserInfo",
+          "lineNumber": 97
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getQuery",
+          "lineNumber": 97
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getFragment",
+          "lineNumber": 98
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getPath().isEmpty",
+          "lineNumber": 99
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getPath",
+          "lineNumber": 99
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getPath().equals",
+          "lineNumber": 99
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.getPath",
+          "lineNumber": 99
+        },
+        {
+          "caller": "endpoint",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 100
+        },
+        {
+          "caller": "endpoint",
+          "callee": "base.resolve",
+          "lineNumber": 102
+        },
+        {
+          "caller": "envelope",
+          "callee": "new LinkedHashMap<String, Object>",
+          "lineNumber": 107
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 108
+        },
+        {
+          "caller": "envelope",
+          "callee": "Long.toString",
+          "lineNumber": 108
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.sessionId",
+          "lineNumber": 108
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 109
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.clientRunId",
+          "lineNumber": 109
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 110
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentSource().name",
+          "lineNumber": 110
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentSource",
+          "lineNumber": 110
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 111
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.observedAt().toString",
+          "lineNumber": 111
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.observedAt",
+          "lineNumber": 111
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 112
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.sequence",
+          "lineNumber": 112
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 113
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.goalSnapshot",
+          "lineNumber": 113
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 114
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.metadata",
+          "lineNumber": 115
+        },
+        {
+          "caller": "envelope",
+          "callee": "new LinkedHashMap<String, Object>",
+          "lineNumber": 116
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.metadata",
+          "lineNumber": 117
+        },
+        {
+          "caller": "envelope",
+          "callee": "meta.put",
+          "lineNumber": 118
+        },
+        {
+          "caller": "envelope",
+          "callee": "source.appName",
+          "lineNumber": 118
+        },
+        {
+          "caller": "envelope",
+          "callee": "source.appName",
+          "lineNumber": 118
+        },
+        {
+          "caller": "envelope",
+          "callee": "meta.put",
+          "lineNumber": 119
+        },
+        {
+          "caller": "envelope",
+          "callee": "source.windowTitle",
+          "lineNumber": 119
+        },
+        {
+          "caller": "envelope",
+          "callee": "meta.put",
+          "lineNumber": 120
+        },
+        {
+          "caller": "envelope",
+          "callee": "source.pageTitle",
+          "lineNumber": 120
+        },
+        {
+          "caller": "envelope",
+          "callee": "source.pageTitle",
+          "lineNumber": 120
+        },
+        {
+          "caller": "envelope",
+          "callee": "meta.put",
+          "lineNumber": 121
+        },
+        {
+          "caller": "envelope",
+          "callee": "AnalysisPrivacy.host",
+          "lineNumber": 121
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 122
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload",
+          "lineNumber": 124
+        },
+        {
+          "caller": "envelope",
+          "callee": "input.put",
+          "lineNumber": 125
+        },
+        {
+          "caller": "envelope",
+          "callee": "Map.of",
+          "lineNumber": 125
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload().text",
+          "lineNumber": 125
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload",
+          "lineNumber": 125
+        },
+        {
+          "caller": "envelope",
+          "callee": "new LinkedHashMap<String, Object>",
+          "lineNumber": 127
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 128
+        },
+        {
+          "caller": "envelope",
+          "callee": "Long.toString",
+          "lineNumber": 128
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 129
+        },
+        {
+          "caller": "envelope",
+          "callee": "Long.toString",
+          "lineNumber": 129
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.sessionId",
+          "lineNumber": 129
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 130
+        },
+        {
+          "caller": "envelope",
+          "callee": "Long.toString",
+          "lineNumber": 130
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.runId",
+          "lineNumber": 130
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 131
+        },
+        {
+          "caller": "envelope",
+          "callee": "Long.toString",
+          "lineNumber": 131
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.goalId",
+          "lineNumber": 131
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 132
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 133
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.clientRunId",
+          "lineNumber": 133
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 134
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.sequence",
+          "lineNumber": 134
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 135
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.runId",
+          "lineNumber": 135
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 136
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.observedAt().toString",
+          "lineNumber": 136
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.observedAt",
+          "lineNumber": 136
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 137
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentSource().name",
+          "lineNumber": 137
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentSource",
+          "lineNumber": 137
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 138
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.latest",
+          "lineNumber": 138
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 139
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 140
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 141
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 142
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.policyVersion",
+          "lineNumber": 142
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 143
+        },
+        {
+          "caller": "envelope",
+          "callee": "context.put",
+          "lineNumber": 144
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.sessionVersion",
+          "lineNumber": 144
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentSource",
+          "lineNumber": 145
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentSource",
+          "lineNumber": 146
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload",
+          "lineNumber": 147
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload().text().isBlank",
+          "lineNumber": 148
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload().text",
+          "lineNumber": 148
+        },
+        {
+          "caller": "envelope",
+          "callee": "request.contentPayload",
+          "lineNumber": 148
+        },
+        {
+          "caller": "envelope",
+          "callee": "Map.of",
+          "lineNumber": 149
+        },
+        {
+          "caller": "envelope",
+          "callee": "Map.of",
+          "lineNumber": 149
+        },
+        {
+          "caller": "envelope",
+          "callee": "Long.toString",
+          "lineNumber": 149
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.goalId",
+          "lineNumber": 149
+        },
+        {
+          "caller": "envelope",
+          "callee": "p.goalSnapshot",
+          "lineNumber": 150
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.isObject",
+          "lineNumber": 157
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path(\"decision\").isString",
+          "lineNumber": 157
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 157
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.has",
+          "lineNumber": 158
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path(\"reasonCode\").isString",
+          "lineNumber": 158
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 158
+        },
+        {
+          "caller": "normalize",
+          "callee": "version",
+          "lineNumber": 159
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 159
+        },
+        {
+          "caller": "normalize",
+          "callee": "version",
+          "lineNumber": 159
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 159
+        },
+        {
+          "caller": "normalize",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 160
+        },
+        {
+          "caller": "normalize",
+          "callee": "Relation.valueOf",
+          "lineNumber": 162
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path(\"decision\").asString",
+          "lineNumber": 162
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 162
+        },
+        {
+          "caller": "normalize",
+          "callee": "ReasonCode.valueOf",
+          "lineNumber": 163
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path(\"reasonCode\").asString",
+          "lineNumber": 163
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 163
+        },
+        {
+          "caller": "normalize",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 165
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 167
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.isNull",
+          "lineNumber": 168
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.isNumber",
+          "lineNumber": 168
+        },
+        {
+          "caller": "normalize",
+          "callee": "Double.isFinite",
+          "lineNumber": 168
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.asDouble",
+          "lineNumber": 168
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.asDouble",
+          "lineNumber": 169
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.asDouble",
+          "lineNumber": 169
+        },
+        {
+          "caller": "normalize",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 170
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.isNull",
+          "lineNumber": 172
+        },
+        {
+          "caller": "normalize",
+          "callee": "score.asDouble",
+          "lineNumber": 172
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path(\"modelVersion\").asString",
+          "lineNumber": 173
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 173
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path(\"promptVersion\").asString",
+          "lineNumber": 174
+        },
+        {
+          "caller": "normalize",
+          "callee": "value.path",
+          "lineNumber": 174
+        },
+        {
+          "caller": "normalize",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 178
+        },
+        {
+          "caller": "normalize",
+          "callee": "new AnalysisDecision",
+          "lineNumber": 180
+        },
+        {
+          "caller": "normalize",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 186
+        },
+        {
+          "caller": "normalize",
+          "callee": "prompt.endsWith",
+          "lineNumber": 189
+        },
+        {
+          "caller": "normalize",
+          "callee": "new AnalysisDecision",
+          "lineNumber": 191
+        },
+        {
+          "caller": "normalize",
+          "callee": "new AnalysisDecision",
+          "lineNumber": 194
+        },
+        {
+          "caller": "normalize",
+          "callee": "AnalysisDecision.unavailable",
+          "lineNumber": 197
+        },
+        {
+          "caller": "version",
+          "callee": "value.isString",
+          "lineNumber": 203
+        },
+        {
+          "caller": "version",
+          "callee": "value.asString().matches",
+          "lineNumber": 203
+        },
+        {
+          "caller": "version",
+          "callee": "value.asString",
+          "lineNumber": 203
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 6,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/SafeApiLog.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 117,
+      "nonEmptyLines": 102,
+      "functions": [
+        {
+          "name": "SafeApiLog",
+          "startLine": 20,
+          "endLine": 20,
+          "params": []
+        },
+        {
+          "name": "analysisEvent",
+          "startLine": 23,
+          "endLine": 29,
+          "params": [
+            "event",
+            "startedNanos"
+          ]
+        },
+        {
+          "name": "sessionCleanupFailure",
+          "startLine": 45,
+          "endLine": 49,
+          "params": [
+            "exception"
+          ]
+        },
+        {
+          "name": "httpIn",
+          "startLine": 52,
+          "endLine": 56,
+          "params": [
+            "method",
+            "path"
+          ]
+        },
+        {
+          "name": "httpOut",
+          "startLine": 59,
+          "endLine": 78,
+          "params": [
+            "method",
+            "path",
+            "status",
+            "durationMs",
+            "stage",
+            "code"
+          ]
+        },
+        {
+          "name": "validationFailure",
+          "startLine": 81,
+          "endLine": 88,
+          "params": [
+            "field",
+            "type"
+          ]
+        },
+        {
+          "name": "safeType",
+          "startLine": 90,
+          "endLine": 96,
+          "params": [
+            "type"
+          ]
+        },
+        {
+          "name": "safeMethod",
+          "startLine": 98,
+          "endLine": 100,
+          "params": [
+            "method"
+          ]
+        },
+        {
+          "name": "safePath",
+          "startLine": 102,
+          "endLine": 113,
+          "params": [
+            "path"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SafeApiLog",
+          "startLine": 8,
+          "endLine": 117,
+          "methods": [
+            "SafeApiLog",
+            "analysisEvent",
+            "sessionCleanupFailure",
+            "httpIn",
+            "httpOut",
+            "validationFailure",
+            "safeType",
+            "safeMethod",
+            "safePath"
+          ],
+          "properties": [
+            "LOGGER",
+            "SAFE_SEGMENTS",
+            "SAFE_METHODS"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "analysisEvent",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "sessionCleanupFailure",
+          "line": 45,
+          "isDefault": false
+        },
+        {
+          "name": "httpIn",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "httpOut",
+          "line": 59,
+          "isDefault": false
+        },
+        {
+          "name": "validationFailure",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "SafeApiLog",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "analysisEvent",
+          "callee": "LOGGER.atWarn",
+          "lineNumber": 25
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "LOGGER.atInfo",
+          "lineNumber": 25
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "output.addKeyValue(\"component\", \"analysis-orchestrator\").addKeyValue(\"event\", event.value)\n        .addKeyValue(\"durMs\", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000)).log",
+          "lineNumber": 26
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "output.addKeyValue(\"component\", \"analysis-orchestrator\").addKeyValue(\"event\", event.value).addKeyValue",
+          "lineNumber": 26
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "output.addKeyValue(\"component\", \"analysis-orchestrator\").addKeyValue",
+          "lineNumber": 26
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "output.addKeyValue",
+          "lineNumber": 26
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "Math.max",
+          "lineNumber": 27
+        },
+        {
+          "caller": "analysisEvent",
+          "callee": "System.nanoTime",
+          "lineNumber": 27
+        },
+        {
+          "caller": "sessionCleanupFailure",
+          "callee": "LOGGER.atWarn().addKeyValue(\"component\", \"session-heartbeat-cleanup\")\n        .addKeyValue(\"errorClass\", exception.getClass().getSimpleName()).log",
+          "lineNumber": 46
+        },
+        {
+          "caller": "sessionCleanupFailure",
+          "callee": "LOGGER.atWarn().addKeyValue(\"component\", \"session-heartbeat-cleanup\").addKeyValue",
+          "lineNumber": 46
+        },
+        {
+          "caller": "sessionCleanupFailure",
+          "callee": "LOGGER.atWarn().addKeyValue",
+          "lineNumber": 46
+        },
+        {
+          "caller": "sessionCleanupFailure",
+          "callee": "LOGGER.atWarn",
+          "lineNumber": 46
+        },
+        {
+          "caller": "sessionCleanupFailure",
+          "callee": "exception.getClass().getSimpleName",
+          "lineNumber": 47
+        },
+        {
+          "caller": "sessionCleanupFailure",
+          "callee": "exception.getClass",
+          "lineNumber": 47
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo().addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.in\")\n        .addKeyValue(\"method\", safeMethod(method)).addKeyValue(\"path\", safePath(path))\n        .addKeyValue(\"durMs\", 0).log",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo().addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.in\")\n        .addKeyValue(\"method\", safeMethod(method)).addKeyValue(\"path\", safePath(path)).addKeyValue",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo().addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.in\")\n        .addKeyValue(\"method\", safeMethod(method)).addKeyValue",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo().addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.in\").addKeyValue",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo().addKeyValue(\"component\", \"request-filter\").addKeyValue",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo().addKeyValue",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "LOGGER.atInfo",
+          "lineNumber": 53
+        },
+        {
+          "caller": "httpIn",
+          "callee": "safeMethod",
+          "lineNumber": 54
+        },
+        {
+          "caller": "httpIn",
+          "callee": "safePath",
+          "lineNumber": 54
+        },
+        {
+          "caller": "httpOut",
+          "callee": "LOGGER.atError",
+          "lineNumber": 61
+        },
+        {
+          "caller": "httpOut",
+          "callee": "LOGGER.atWarn",
+          "lineNumber": 62
+        },
+        {
+          "caller": "httpOut",
+          "callee": "LOGGER.atInfo",
+          "lineNumber": 62
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.out\")\n        .addKeyValue(\"method\", safeMethod(method)).addKeyValue(\"path\", safePath(path))\n        .addKeyValue(\"status\", status).addKeyValue",
+          "lineNumber": 63
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.out\")\n        .addKeyValue(\"method\", safeMethod(method)).addKeyValue(\"path\", safePath(path)).addKeyValue",
+          "lineNumber": 63
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.out\")\n        .addKeyValue(\"method\", safeMethod(method)).addKeyValue",
+          "lineNumber": 63
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue(\"component\", \"request-filter\").addKeyValue(\"event\", \"http.out\").addKeyValue",
+          "lineNumber": 63
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue(\"component\", \"request-filter\").addKeyValue",
+          "lineNumber": 63
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue",
+          "lineNumber": 63
+        },
+        {
+          "caller": "httpOut",
+          "callee": "safeMethod",
+          "lineNumber": 64
+        },
+        {
+          "caller": "httpOut",
+          "callee": "safePath",
+          "lineNumber": 64
+        },
+        {
+          "caller": "httpOut",
+          "callee": "Math.max",
+          "lineNumber": 65
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue",
+          "lineNumber": 67
+        },
+        {
+          "caller": "httpOut",
+          "callee": "stage.name().toLowerCase",
+          "lineNumber": 67
+        },
+        {
+          "caller": "httpOut",
+          "callee": "stage.name",
+          "lineNumber": 67
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue",
+          "lineNumber": 68
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue",
+          "lineNumber": 71
+        },
+        {
+          "caller": "httpOut",
+          "callee": "code.name",
+          "lineNumber": 71
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.addKeyValue",
+          "lineNumber": 74
+        },
+        {
+          "caller": "httpOut",
+          "callee": "output.log",
+          "lineNumber": 77
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "LOGGER.atWarn().addKeyValue(\"component\", \"validation\").addKeyValue(\"durMs\", 0)\n        .addKeyValue(\"event\", \"validate.fail\").addKeyValue",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "LOGGER.atWarn().addKeyValue(\"component\", \"validation\").addKeyValue(\"durMs\", 0).addKeyValue",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "LOGGER.atWarn().addKeyValue(\"component\", \"validation\").addKeyValue",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "LOGGER.atWarn().addKeyValue",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "LOGGER.atWarn",
+          "lineNumber": 82
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "field.matches",
+          "lineNumber": 84
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "event.addKeyValue(\"field\", field).addKeyValue",
+          "lineNumber": 85
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "event.addKeyValue",
+          "lineNumber": 85
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "safeType",
+          "lineNumber": 85
+        },
+        {
+          "caller": "validationFailure",
+          "callee": "event.log",
+          "lineNumber": 87
+        },
+        {
+          "caller": "safeType",
+          "callee": "type.getSimpleName",
+          "lineNumber": 93
+        },
+        {
+          "caller": "safeMethod",
+          "callee": "SAFE_METHODS.contains",
+          "lineNumber": 99
+        },
+        {
+          "caller": "safePath",
+          "callee": "path.length",
+          "lineNumber": 103
+        },
+        {
+          "caller": "safePath",
+          "callee": "new StringBuilder",
+          "lineNumber": 106
+        },
+        {
+          "caller": "safePath",
+          "callee": "path.split",
+          "lineNumber": 107
+        },
+        {
+          "caller": "safePath",
+          "callee": "segment.isEmpty",
+          "lineNumber": 108
+        },
+        {
+          "caller": "safePath",
+          "callee": "safe.append('/').append",
+          "lineNumber": 109
+        },
+        {
+          "caller": "safePath",
+          "callee": "safe.append",
+          "lineNumber": 109
+        },
+        {
+          "caller": "safePath",
+          "callee": "SAFE_SEGMENTS.contains",
+          "lineNumber": 109
+        },
+        {
+          "caller": "safePath",
+          "callee": "safe.isEmpty",
+          "lineNumber": 112
+        },
+        {
+          "caller": "safePath",
+          "callee": "safe.toString",
+          "lineNumber": 112
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 6,
+        "functionCount": 9,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyListener.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 24,
+      "nonEmptyLines": 21,
+      "functions": [
+        {
+          "name": "committed",
+          "startLine": 15,
+          "endLine": 23,
+          "params": [
+            "event"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "HeartbeatPolicyListener",
+          "startLine": 9,
+          "endLine": 24,
+          "methods": [
+            "committed"
+          ],
+          "properties": [
+            "evaluator"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "committed",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "HeartbeatPolicyListener",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "committed",
+          "callee": "System.nanoTime",
+          "lineNumber": 17
+        },
+        {
+          "caller": "committed",
+          "callee": "evaluator.evaluate",
+          "lineNumber": 19
+        },
+        {
+          "caller": "committed",
+          "callee": "event.userId",
+          "lineNumber": 19
+        },
+        {
+          "caller": "committed",
+          "callee": "event.sessionId",
+          "lineNumber": 19
+        },
+        {
+          "caller": "committed",
+          "callee": "SafeApiLog.analysisEvent",
+          "lineNumber": 21
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    }
+  ]
+}

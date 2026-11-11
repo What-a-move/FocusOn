@@ -1,0 +1,4603 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 23,
+  "filesSkipped": [],
+  "filesUnreadable": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 23,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 23,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 24,
+      "nonEmptyLines": 20,
+      "classes": [
+        {
+          "name": "UserRepository",
+          "startLine": 11,
+          "endLine": 24,
+          "methods": [
+            "findByNickname",
+            "findByIdForUpdate",
+            "findByIdForUpdateSkipLocked"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "UserRepository",
+          "line": 11,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 31,
+      "nonEmptyLines": 28,
+      "functions": [
+        {
+          "name": "evaluate",
+          "startLine": 22,
+          "endLine": 30,
+          "params": [
+            "userId",
+            "sessionId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "HeartbeatPolicyEvaluator",
+          "startLine": 13,
+          "endLine": 31,
+          "methods": [
+            "evaluate"
+          ],
+          "properties": [
+            "entityManager",
+            "users",
+            "sessions",
+            "policy"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "evaluate",
+          "line": 22,
+          "isDefault": false
+        },
+        {
+          "name": "HeartbeatPolicyEvaluator",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "evaluate",
+          "callee": "entityManager.clear",
+          "lineNumber": 24
+        },
+        {
+          "caller": "evaluate",
+          "callee": "users.findByIdForUpdate(userId).isEmpty",
+          "lineNumber": 25
+        },
+        {
+          "caller": "evaluate",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 25
+        },
+        {
+          "caller": "evaluate",
+          "callee": "sessions.findOwnedForUpdate(sessionId, userId).ifPresent",
+          "lineNumber": 28
+        },
+        {
+          "caller": "evaluate",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 28
+        },
+        {
+          "caller": "evaluate",
+          "callee": "policy.heartbeat",
+          "lineNumber": 29
+        },
+        {
+          "caller": "evaluate",
+          "callee": "Instant.now",
+          "lineNumber": 29
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 4,
+      "nonEmptyLines": 3,
+      "classes": [
+        {
+          "name": "HeartbeatPolicyTrigger",
+          "startLine": 4,
+          "endLine": 4,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "HeartbeatPolicyTrigger",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 29,
+      "nonEmptyLines": 26,
+      "functions": [
+        {
+          "name": "withdrawn",
+          "startLine": 20,
+          "endLine": 28,
+          "params": [
+            "event"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterventionConsentListener",
+          "startLine": 13,
+          "endLine": 29,
+          "methods": [
+            "withdrawn"
+          ],
+          "properties": [
+            "sessions",
+            "policy"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "withdrawn",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "InterventionConsentListener",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "withdrawn",
+          "callee": "sessions.findByUserIdAndStatusIn(event.userId(), List.of(SessionStatus.RUNNING,\n        SessionStatus.PAUSED, SessionStatus.AUTO_PAUSED, SessionStatus.AWAITING_END_CONFIRMATION,\n        SessionStatus.ENDING)).flatMap(value ->\n            sessions.findOwnedForUpdate(value.getId(), event.userId())).ifPresent",
+          "lineNumber": 23
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "sessions.findByUserIdAndStatusIn(event.userId(), List.of(SessionStatus.RUNNING,\n        SessionStatus.PAUSED, SessionStatus.AUTO_PAUSED, SessionStatus.AWAITING_END_CONFIRMATION,\n        SessionStatus.ENDING)).flatMap",
+          "lineNumber": 23
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "sessions.findByUserIdAndStatusIn",
+          "lineNumber": 23
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "event.userId",
+          "lineNumber": 23
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "List.of",
+          "lineNumber": 23
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 26
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "value.getId",
+          "lineNumber": 26
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "event.userId",
+          "lineNumber": 26
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "policy.consentWithdrawn",
+          "lineNumber": 27
+        },
+        {
+          "caller": "withdrawn",
+          "callee": "event.withdrawnAt",
+          "lineNumber": 27
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 56,
+      "nonEmptyLines": 53,
+      "functions": [
+        {
+          "name": "get",
+          "startLine": 31,
+          "endLine": 55,
+          "params": [
+            "principal",
+            "sessionId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionSummaryController",
+          "startLine": 23,
+          "endLine": 56,
+          "methods": [
+            "get"
+          ],
+          "properties": [
+            "summaries"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "get",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "SessionSummaryController",
+          "line": 23,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "get",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 54
+        },
+        {
+          "caller": "get",
+          "callee": "summaries.get",
+          "lineNumber": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 9,
+      "nonEmptyLines": 7,
+      "classes": [
+        {
+          "name": "SessionSummaryResponse",
+          "startLine": 7,
+          "endLine": 9,
+          "methods": [],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "SessionSummaryResponse",
+          "line": 7,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 49,
+      "nonEmptyLines": 46,
+      "functions": [
+        {
+          "name": "get",
+          "startLine": 23,
+          "endLine": 48,
+          "params": [
+            "principal",
+            "sessionId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionSummaryService",
+          "startLine": 16,
+          "endLine": 49,
+          "methods": [
+            "get"
+          ],
+          "properties": [
+            "sessions",
+            "extensions"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "get",
+          "line": 23,
+          "isDefault": false
+        },
+        {
+          "name": "SessionSummaryService",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "get",
+          "callee": "principal.deviceType",
+          "lineNumber": 25
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 26
+        },
+        {
+          "caller": "get",
+          "callee": "Long.parseLong",
+          "lineNumber": 30
+        },
+        {
+          "caller": "get",
+          "callee": "new NumberFormatException",
+          "lineNumber": 32
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 35
+        },
+        {
+          "caller": "get",
+          "callee": "sessions.findByIdAndUserId(id, principal.userId()).orElseThrow",
+          "lineNumber": 37
+        },
+        {
+          "caller": "get",
+          "callee": "sessions.findByIdAndUserId",
+          "lineNumber": 37
+        },
+        {
+          "caller": "get",
+          "callee": "principal.userId",
+          "lineNumber": 37
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "session.getStatus",
+          "lineNumber": 39
+        },
+        {
+          "caller": "get",
+          "callee": "session.getStatus",
+          "lineNumber": 40
+        },
+        {
+          "caller": "get",
+          "callee": "new ApiException",
+          "lineNumber": 41
+        },
+        {
+          "caller": "get",
+          "callee": "extensions.summarize",
+          "lineNumber": 43
+        },
+        {
+          "caller": "get",
+          "callee": "new SessionSummaryResponse",
+          "lineNumber": 44
+        },
+        {
+          "caller": "get",
+          "callee": "session.getId().toString",
+          "lineNumber": 44
+        },
+        {
+          "caller": "get",
+          "callee": "session.getId",
+          "lineNumber": 44
+        },
+        {
+          "caller": "get",
+          "callee": "session.getGoalTextSnapshot",
+          "lineNumber": 44
+        },
+        {
+          "caller": "get",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 45
+        },
+        {
+          "caller": "get",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 45
+        },
+        {
+          "caller": "get",
+          "callee": "session.getStatus",
+          "lineNumber": 45
+        },
+        {
+          "caller": "get",
+          "callee": "session.getStartedAt",
+          "lineNumber": 46
+        },
+        {
+          "caller": "get",
+          "callee": "session.getEndedAt",
+          "lineNumber": 46
+        },
+        {
+          "caller": "get",
+          "callee": "totals.getExtensionCount",
+          "lineNumber": 46
+        },
+        {
+          "caller": "get",
+          "callee": "totals.getExtendedDurationMs",
+          "lineNumber": 47
+        }
+      ],
+      "metrics": {
+        "importCount": 7,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 225,
+      "nonEmptyLines": 216,
+      "functions": [
+        {
+          "name": "heartbeat",
+          "startLine": 55,
+          "endLine": 79,
+          "params": [
+            "principal",
+            "sessionId",
+            "deviceId",
+            "request"
+          ]
+        },
+        {
+          "name": "extend",
+          "startLine": 82,
+          "endLine": 105,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "version",
+            "request"
+          ]
+        },
+        {
+          "name": "end",
+          "startLine": 108,
+          "endLine": 126,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "version",
+            "request"
+          ]
+        },
+        {
+          "name": "pause",
+          "startLine": 129,
+          "endLine": 152,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "version",
+            "request"
+          ]
+        },
+        {
+          "name": "resume",
+          "startLine": 155,
+          "endLine": 180,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "version",
+            "request"
+          ]
+        },
+        {
+          "name": "start",
+          "startLine": 183,
+          "endLine": 208,
+          "params": [
+            "principal",
+            "deviceId",
+            "key",
+            "request"
+          ]
+        },
+        {
+          "name": "active",
+          "startLine": 211,
+          "endLine": 224,
+          "params": [
+            "principal"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionController",
+          "startLine": 44,
+          "endLine": 225,
+          "methods": [
+            "heartbeat",
+            "extend",
+            "end",
+            "pause",
+            "resume",
+            "start",
+            "active"
+          ],
+          "properties": [
+            "sessions",
+            "commands",
+            "heartbeats"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "heartbeat",
+          "line": 55,
+          "isDefault": false
+        },
+        {
+          "name": "extend",
+          "line": 82,
+          "isDefault": false
+        },
+        {
+          "name": "end",
+          "line": 108,
+          "isDefault": false
+        },
+        {
+          "name": "pause",
+          "line": 129,
+          "isDefault": false
+        },
+        {
+          "name": "resume",
+          "line": 155,
+          "isDefault": false
+        },
+        {
+          "name": "start",
+          "line": 183,
+          "isDefault": false
+        },
+        {
+          "name": "active",
+          "line": 211,
+          "isDefault": false
+        },
+        {
+          "name": "SessionController",
+          "line": 44,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "heartbeat",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 77
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "heartbeats.heartbeat",
+          "lineNumber": 78
+        },
+        {
+          "caller": "extend",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 103
+        },
+        {
+          "caller": "extend",
+          "callee": "commands.extend",
+          "lineNumber": 104
+        },
+        {
+          "caller": "end",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 124
+        },
+        {
+          "caller": "end",
+          "callee": "commands.end",
+          "lineNumber": 125
+        },
+        {
+          "caller": "pause",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 150
+        },
+        {
+          "caller": "pause",
+          "callee": "commands.pause",
+          "lineNumber": 151
+        },
+        {
+          "caller": "resume",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 178
+        },
+        {
+          "caller": "resume",
+          "callee": "commands.resume",
+          "lineNumber": 179
+        },
+        {
+          "caller": "start",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 206
+        },
+        {
+          "caller": "start",
+          "callee": "sessions.start",
+          "lineNumber": 207
+        },
+        {
+          "caller": "active",
+          "callee": "sessions.active(principal)\n        .map(value -> ResponseEntity.ok(com.capstone.backend.common.api.ApiResponse.of(value))).orElseGet",
+          "lineNumber": 221
+        },
+        {
+          "caller": "active",
+          "callee": "sessions.active(principal).map",
+          "lineNumber": 221
+        },
+        {
+          "caller": "active",
+          "callee": "sessions.active",
+          "lineNumber": 221
+        },
+        {
+          "caller": "active",
+          "callee": "ResponseEntity.ok",
+          "lineNumber": 222
+        },
+        {
+          "caller": "active",
+          "callee": "com.capstone.backend.common.api.ApiResponse.of",
+          "lineNumber": 222
+        },
+        {
+          "caller": "active",
+          "callee": "ResponseEntity.noContent().build",
+          "lineNumber": 223
+        },
+        {
+          "caller": "active",
+          "callee": "ResponseEntity.noContent",
+          "lineNumber": 223
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 8,
+        "functionCount": 7,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 23,
+      "nonEmptyLines": 18,
+      "functions": [
+        {
+          "name": "LocalEventDtos",
+          "startLine": 10,
+          "endLine": 10,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "LocalEventDtos",
+          "startLine": 9,
+          "endLine": 23,
+          "methods": [
+            "LocalEventDtos"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "LocalEventDtos",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 106,
+      "nonEmptyLines": 87,
+      "functions": [
+        {
+          "name": "SessionDtos",
+          "startLine": 18,
+          "endLine": 18,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionDtos",
+          "startLine": 17,
+          "endLine": 106,
+          "methods": [
+            "SessionDtos"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "SessionDtos",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 77,
+      "nonEmptyLines": 65,
+      "functions": [
+        {
+          "name": "IdempotencyRecordEntity",
+          "startLine": 58,
+          "endLine": 69,
+          "params": [
+            "user",
+            "scope",
+            "idempotencyKey",
+            "requestHash",
+            "responseStatus",
+            "responseBodyJson",
+            "createdAt",
+            "expiresAt"
+          ]
+        },
+        {
+          "name": "create",
+          "startLine": 72,
+          "endLine": 76,
+          "params": [
+            "user",
+            "scope",
+            "key",
+            "requestHash",
+            "status",
+            "body",
+            "createdAt",
+            "expiresAt"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "IdempotencyRecordEntity",
+          "startLine": 22,
+          "endLine": 77,
+          "methods": [
+            "IdempotencyRecordEntity",
+            "create"
+          ],
+          "properties": [
+            "id",
+            "user",
+            "scope",
+            "idempotencyKey",
+            "requestHash",
+            "responseStatus",
+            "responseBodyJson",
+            "expiresAt",
+            "createdAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 72,
+          "isDefault": false
+        },
+        {
+          "name": "IdempotencyRecordEntity",
+          "line": 22,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new IdempotencyRecordEntity",
+          "lineNumber": 74
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 12,
+      "nonEmptyLines": 10,
+      "classes": [
+        {
+          "name": "IdempotencyRecordRepository",
+          "startLine": 8,
+          "endLine": 12,
+          "methods": [
+            "findByUserIdAndScopeAndIdempotencyKey"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "IdempotencyRecordRepository",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 67,
+      "nonEmptyLines": 58,
+      "classes": [
+        {
+          "name": "LearningSessionRepository",
+          "startLine": 15,
+          "endLine": 67,
+          "methods": [
+            "findHistory",
+            "findByUserIdAndStatusIn",
+            "existsByUserIdAndGoalIdAndStatusIn",
+            "findByIdAndUserId",
+            "findOwnedForUpdate",
+            "recordHeartbeat",
+            "findExpiredCandidates",
+            "abandonIfExpired"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "LearningSessionRepository",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 50,
+      "nonEmptyLines": 47,
+      "functions": [
+        {
+          "name": "create",
+          "startLine": 39,
+          "endLine": 49,
+          "params": [
+            "sessionId",
+            "deviceId",
+            "code",
+            "hash",
+            "occurred",
+            "received"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LocalEventEntity",
+          "startLine": 17,
+          "endLine": 50,
+          "methods": [
+            "create"
+          ],
+          "properties": [
+            "id",
+            "sessionId",
+            "deviceId",
+            "code",
+            "eventHash",
+            "occurredAt",
+            "receivedAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 39,
+          "isDefault": false
+        },
+        {
+          "name": "LocalEventEntity",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new LocalEventEntity",
+          "lineNumber": 41
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 12,
+      "nonEmptyLines": 9,
+      "classes": [
+        {
+          "name": "LocalEventRepository",
+          "startLine": 6,
+          "endLine": 12,
+          "methods": [
+            "existsBySessionIdAndDeviceIdAndEventHash",
+            "countBySessionId"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "LocalEventRepository",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 52,
+      "nonEmptyLines": 44,
+      "functions": [
+        {
+          "name": "create",
+          "startLine": 42,
+          "endLine": 51,
+          "params": [
+            "session",
+            "additional",
+            "previousTarget",
+            "now"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionExtensionEntity",
+          "startLine": 17,
+          "endLine": 52,
+          "methods": [
+            "create"
+          ],
+          "properties": [
+            "id",
+            "session",
+            "additionalDurationMs",
+            "previousTargetDurationMs",
+            "targetDurationMs",
+            "createdAt"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "create",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "SessionExtensionEntity",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "create",
+          "callee": "new SessionExtensionEntity",
+          "lineNumber": 44
+        },
+        {
+          "caller": "create",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 48
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 20,
+      "nonEmptyLines": 16,
+      "classes": [
+        {
+          "name": "SessionExtensionRepository",
+          "startLine": 8,
+          "endLine": 20,
+          "methods": [
+            "summarize"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "SessionExtensionRepository",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 10,
+      "functions": [
+        {
+          "name": "activeStatuses",
+          "startLine": 10,
+          "endLine": 12,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionStatus",
+          "startLine": 6,
+          "endLine": 13,
+          "methods": [
+            "activeStatuses"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "activeStatuses",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "SessionStatus",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "activeStatuses",
+          "callee": "List.of",
+          "lineNumber": 11
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 166,
+      "nonEmptyLines": 157,
+      "functions": [
+        {
+          "name": "receive",
+          "startLine": 47,
+          "endLine": 65,
+          "params": [
+            "principal",
+            "deviceId",
+            "sessionId",
+            "request"
+          ]
+        },
+        {
+          "name": "process",
+          "startLine": 68,
+          "endLine": 121,
+          "params": [
+            "principal",
+            "sessionId",
+            "request"
+          ]
+        },
+        {
+          "name": "expired",
+          "startLine": 124,
+          "endLine": 133,
+          "params": [
+            "session",
+            "now"
+          ]
+        },
+        {
+          "name": "response",
+          "startLine": 136,
+          "endLine": 139,
+          "params": [
+            "session"
+          ]
+        },
+        {
+          "name": "parseId",
+          "startLine": 144,
+          "endLine": 154,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "hash",
+          "startLine": 157,
+          "endLine": 165,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LocalEventService",
+          "startLine": 32,
+          "endLine": 166,
+          "methods": [
+            "receive",
+            "process",
+            "expired",
+            "response",
+            "parseId",
+            "hash"
+          ],
+          "properties": [
+            "MIN_OCCURRED_AT",
+            "MAX_OCCURRED_AT",
+            "MAX_EVENTS_PER_SESSION",
+            "ABANDONED_AFTER",
+            "transactions",
+            "users",
+            "families",
+            "familyGuard",
+            "sessions",
+            "events"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "receive",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "LocalEventService",
+          "line": 32,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "receive",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 49
+        },
+        {
+          "caller": "receive",
+          "callee": "principal.deviceType",
+          "lineNumber": 50
+        },
+        {
+          "caller": "receive",
+          "callee": "request.localEventCode",
+          "lineNumber": 51
+        },
+        {
+          "caller": "receive",
+          "callee": "request.occurredAt().isBefore",
+          "lineNumber": 52
+        },
+        {
+          "caller": "receive",
+          "callee": "request.occurredAt",
+          "lineNumber": 52
+        },
+        {
+          "caller": "receive",
+          "callee": "request.occurredAt().isAfter",
+          "lineNumber": 53
+        },
+        {
+          "caller": "receive",
+          "callee": "request.occurredAt",
+          "lineNumber": 53
+        },
+        {
+          "caller": "receive",
+          "callee": "new ApiException",
+          "lineNumber": 54
+        },
+        {
+          "caller": "receive",
+          "callee": "transactions.execute",
+          "lineNumber": 56
+        },
+        {
+          "caller": "receive",
+          "callee": "process",
+          "lineNumber": 56
+        },
+        {
+          "caller": "receive",
+          "callee": "result.error",
+          "lineNumber": 57
+        },
+        {
+          "caller": "receive",
+          "callee": "result.error",
+          "lineNumber": 58
+        },
+        {
+          "caller": "receive",
+          "callee": "Map.of",
+          "lineNumber": 59
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response().status",
+          "lineNumber": 59
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response",
+          "lineNumber": 59
+        },
+        {
+          "caller": "receive",
+          "callee": "Map.of",
+          "lineNumber": 60
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response().status",
+          "lineNumber": 60
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response",
+          "lineNumber": 60
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response().version",
+          "lineNumber": 61
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response",
+          "lineNumber": 61
+        },
+        {
+          "caller": "receive",
+          "callee": "ApiException.withDetails",
+          "lineNumber": 62
+        },
+        {
+          "caller": "receive",
+          "callee": "result.error",
+          "lineNumber": 62
+        },
+        {
+          "caller": "receive",
+          "callee": "result.response",
+          "lineNumber": 64
+        },
+        {
+          "caller": "process",
+          "callee": "principal.deviceType",
+          "lineNumber": 69
+        },
+        {
+          "caller": "process",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 70
+        },
+        {
+          "caller": "process",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 70
+        },
+        {
+          "caller": "process",
+          "callee": "principal.userId",
+          "lineNumber": 70
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 71
+        },
+        {
+          "caller": "process",
+          "callee": "Instant.now",
+          "lineNumber": 72
+        },
+        {
+          "caller": "process",
+          "callee": "families.findById(principal.tokenFamilyId())\n        .filter(f -> f.getUser().getId().equals(principal.userId())\n            && f.getDevice().getId().equals(principal.deviceId())\n            && f.getDevice().getDeviceType() == principal.deviceType()\n            && familyGuard.isActive(f, now)\n            && familyGuard.hasActiveLinkedDesktop(f.getDevice(), principal.userId(), now)).orElseThrow",
+          "lineNumber": 73
+        },
+        {
+          "caller": "process",
+          "callee": "families.findById(principal.tokenFamilyId()).filter",
+          "lineNumber": 73
+        },
+        {
+          "caller": "process",
+          "callee": "families.findById",
+          "lineNumber": 73
+        },
+        {
+          "caller": "process",
+          "callee": "principal.tokenFamilyId",
+          "lineNumber": 73
+        },
+        {
+          "caller": "process",
+          "callee": "f.getUser().getId().equals",
+          "lineNumber": 74
+        },
+        {
+          "caller": "process",
+          "callee": "f.getUser().getId",
+          "lineNumber": 74
+        },
+        {
+          "caller": "process",
+          "callee": "f.getUser",
+          "lineNumber": 74
+        },
+        {
+          "caller": "process",
+          "callee": "principal.userId",
+          "lineNumber": 74
+        },
+        {
+          "caller": "process",
+          "callee": "f.getDevice().getId().equals",
+          "lineNumber": 75
+        },
+        {
+          "caller": "process",
+          "callee": "f.getDevice().getId",
+          "lineNumber": 75
+        },
+        {
+          "caller": "process",
+          "callee": "f.getDevice",
+          "lineNumber": 75
+        },
+        {
+          "caller": "process",
+          "callee": "principal.deviceId",
+          "lineNumber": 75
+        },
+        {
+          "caller": "process",
+          "callee": "f.getDevice().getDeviceType",
+          "lineNumber": 76
+        },
+        {
+          "caller": "process",
+          "callee": "f.getDevice",
+          "lineNumber": 76
+        },
+        {
+          "caller": "process",
+          "callee": "principal.deviceType",
+          "lineNumber": 76
+        },
+        {
+          "caller": "process",
+          "callee": "familyGuard.isActive",
+          "lineNumber": 77
+        },
+        {
+          "caller": "process",
+          "callee": "familyGuard.hasActiveLinkedDesktop",
+          "lineNumber": 78
+        },
+        {
+          "caller": "process",
+          "callee": "f.getDevice",
+          "lineNumber": 78
+        },
+        {
+          "caller": "process",
+          "callee": "principal.userId",
+          "lineNumber": 78
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 79
+        },
+        {
+          "caller": "process",
+          "callee": "family.getDevice",
+          "lineNumber": 81
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.findOwnedForUpdate(parseId(sessionId), principal.userId()).orElseThrow",
+          "lineNumber": 82
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 82
+        },
+        {
+          "caller": "process",
+          "callee": "parseId",
+          "lineNumber": 82
+        },
+        {
+          "caller": "process",
+          "callee": "principal.userId",
+          "lineNumber": 82
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 83
+        },
+        {
+          "caller": "process",
+          "callee": "device.getId",
+          "lineNumber": 84
+        },
+        {
+          "caller": "process",
+          "callee": "device.getLinkedDesktopDevice().getId",
+          "lineNumber": 84
+        },
+        {
+          "caller": "process",
+          "callee": "device.getLinkedDesktopDevice",
+          "lineNumber": 84
+        },
+        {
+          "caller": "process",
+          "callee": "session.getRunnerDevice().getId().equals",
+          "lineNumber": 85
+        },
+        {
+          "caller": "process",
+          "callee": "session.getRunnerDevice().getId",
+          "lineNumber": 85
+        },
+        {
+          "caller": "process",
+          "callee": "session.getRunnerDevice",
+          "lineNumber": 85
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 86
+        },
+        {
+          "caller": "process",
+          "callee": "hash",
+          "lineNumber": 88
+        },
+        {
+          "caller": "process",
+          "callee": "events.existsBySessionIdAndDeviceIdAndEventHash",
+          "lineNumber": 89
+        },
+        {
+          "caller": "process",
+          "callee": "session.getId",
+          "lineNumber": 90
+        },
+        {
+          "caller": "process",
+          "callee": "device.getId",
+          "lineNumber": 90
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 93
+        },
+        {
+          "caller": "process",
+          "callee": "expired",
+          "lineNumber": 93
+        },
+        {
+          "caller": "process",
+          "callee": "session.abandon",
+          "lineNumber": 94
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.flush",
+          "lineNumber": 95
+        },
+        {
+          "caller": "process",
+          "callee": "new Result",
+          "lineNumber": 96
+        },
+        {
+          "caller": "process",
+          "callee": "response",
+          "lineNumber": 96
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 99
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 100
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 101
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 102
+        },
+        {
+          "caller": "process",
+          "callee": "events.countBySessionId",
+          "lineNumber": 104
+        },
+        {
+          "caller": "process",
+          "callee": "session.getId",
+          "lineNumber": 104
+        },
+        {
+          "caller": "process",
+          "callee": "events.save",
+          "lineNumber": 106
+        },
+        {
+          "caller": "process",
+          "callee": "LocalEventEntity.create",
+          "lineNumber": 106
+        },
+        {
+          "caller": "process",
+          "callee": "session.getId",
+          "lineNumber": 106
+        },
+        {
+          "caller": "process",
+          "callee": "device.getId",
+          "lineNumber": 106
+        },
+        {
+          "caller": "process",
+          "callee": "request.localEventCode",
+          "lineNumber": 107
+        },
+        {
+          "caller": "process",
+          "callee": "request.occurredAt",
+          "lineNumber": 107
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 109
+        },
+        {
+          "caller": "process",
+          "callee": "session.pause",
+          "lineNumber": 112
+        },
+        {
+          "caller": "process",
+          "callee": "PauseReason.REQUIRED_PERMISSION.name",
+          "lineNumber": 112
+        },
+        {
+          "caller": "process",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 113
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.flush",
+          "lineNumber": 114
+        },
+        {
+          "caller": "process",
+          "callee": "new Result",
+          "lineNumber": 117
+        },
+        {
+          "caller": "process",
+          "callee": "response",
+          "lineNumber": 117
+        },
+        {
+          "caller": "process",
+          "callee": "new Result",
+          "lineNumber": 120
+        },
+        {
+          "caller": "process",
+          "callee": "response",
+          "lineNumber": 120
+        },
+        {
+          "caller": "expired",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 125
+        },
+        {
+          "caller": "expired",
+          "callee": "new ApiException",
+          "lineNumber": 127
+        },
+        {
+          "caller": "expired",
+          "callee": "session.getLastHeartbeatAt",
+          "lineNumber": 129
+        },
+        {
+          "caller": "expired",
+          "callee": "session.getLastHeartbeatAt().isAfter",
+          "lineNumber": 129
+        },
+        {
+          "caller": "expired",
+          "callee": "session.getLastHeartbeatAt",
+          "lineNumber": 129
+        },
+        {
+          "caller": "expired",
+          "callee": "session.getLastHeartbeatAt",
+          "lineNumber": 130
+        },
+        {
+          "caller": "expired",
+          "callee": "baseline.plus(ABANDONED_AFTER).isAfter",
+          "lineNumber": 132
+        },
+        {
+          "caller": "expired",
+          "callee": "baseline.plus",
+          "lineNumber": 132
+        },
+        {
+          "caller": "response",
+          "callee": "new Response",
+          "lineNumber": 137
+        },
+        {
+          "caller": "response",
+          "callee": "session.getStatus",
+          "lineNumber": 137
+        },
+        {
+          "caller": "response",
+          "callee": "session.getVersion",
+          "lineNumber": 137
+        },
+        {
+          "caller": "response",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 138
+        },
+        {
+          "caller": "response",
+          "callee": "session.getPauseReason",
+          "lineNumber": 138
+        },
+        {
+          "caller": "parseId",
+          "callee": "Long.parseLong",
+          "lineNumber": 146
+        },
+        {
+          "caller": "parseId",
+          "callee": "new NumberFormatException",
+          "lineNumber": 148
+        },
+        {
+          "caller": "parseId",
+          "callee": "new ApiException",
+          "lineNumber": 152
+        },
+        {
+          "caller": "hash",
+          "callee": "(request.localEventCode() + \":\" + request.occurredAt()).getBytes",
+          "lineNumber": 159
+        },
+        {
+          "caller": "hash",
+          "callee": "request.localEventCode",
+          "lineNumber": 159
+        },
+        {
+          "caller": "hash",
+          "callee": "request.occurredAt",
+          "lineNumber": 159
+        },
+        {
+          "caller": "hash",
+          "callee": "HexFormat.of().formatHex",
+          "lineNumber": 161
+        },
+        {
+          "caller": "hash",
+          "callee": "HexFormat.of",
+          "lineNumber": 161
+        },
+        {
+          "caller": "hash",
+          "callee": "MessageDigest.getInstance(\"SHA-256\").digest",
+          "lineNumber": 161
+        },
+        {
+          "caller": "hash",
+          "callee": "MessageDigest.getInstance",
+          "lineNumber": 161
+        },
+        {
+          "caller": "hash",
+          "callee": "new IllegalStateException",
+          "lineNumber": 163
+        }
+      ],
+      "metrics": {
+        "importCount": 12,
+        "exportCount": 2,
+        "functionCount": 6,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 315,
+      "nonEmptyLines": 302,
+      "functions": [
+        {
+          "name": "extend",
+          "startLine": 55,
+          "endLine": 108,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "versionHeader",
+            "request"
+          ]
+        },
+        {
+          "name": "pause",
+          "startLine": 111,
+          "endLine": 149,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "versionHeader",
+            "request"
+          ]
+        },
+        {
+          "name": "end",
+          "startLine": 152,
+          "endLine": 206,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "versionHeader",
+            "request"
+          ]
+        },
+        {
+          "name": "validatedPauseTime",
+          "startLine": 208,
+          "endLine": 214,
+          "params": [
+            "session",
+            "request",
+            "now"
+          ]
+        },
+        {
+          "name": "validatedActiveTime",
+          "startLine": 217,
+          "endLine": 227,
+          "params": [
+            "session",
+            "activeMs",
+            "now"
+          ]
+        },
+        {
+          "name": "resume",
+          "startLine": 230,
+          "endLine": 271,
+          "params": [
+            "principal",
+            "sessionId",
+            "key",
+            "versionHeader",
+            "request"
+          ]
+        },
+        {
+          "name": "requireDesktop",
+          "startLine": 273,
+          "endLine": 277,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "findOwnedSession",
+          "startLine": 279,
+          "endLine": 295,
+          "params": [
+            "principal",
+            "id"
+          ]
+        },
+        {
+          "name": "parseVersion",
+          "startLine": 297,
+          "endLine": 307,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "requireVersion",
+          "startLine": 309,
+          "endLine": 314,
+          "params": [
+            "session",
+            "version"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionCommandService",
+          "startLine": 35,
+          "endLine": 315,
+          "methods": [
+            "extend",
+            "pause",
+            "end",
+            "validatedPauseTime",
+            "validatedActiveTime",
+            "resume",
+            "requireDesktop",
+            "findOwnedSession",
+            "parseVersion",
+            "requireVersion"
+          ],
+          "properties": [
+            "RESUME_SCOPE",
+            "PAUSE_SCOPE",
+            "EXTEND_SCOPE",
+            "MIN_EXTENSION_MS",
+            "MAX_EXTENSION_MS",
+            "MINUTE_MS",
+            "IDEMPOTENCY_RETENTION",
+            "CLOCK_TOLERANCE_MS",
+            "users",
+            "sessions",
+            "records",
+            "extensions",
+            "onboarding",
+            "mapper"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "extend",
+          "line": 55,
+          "isDefault": false
+        },
+        {
+          "name": "pause",
+          "line": 111,
+          "isDefault": false
+        },
+        {
+          "name": "end",
+          "line": 152,
+          "isDefault": false
+        },
+        {
+          "name": "resume",
+          "line": 230,
+          "isDefault": false
+        },
+        {
+          "name": "SessionCommandService",
+          "line": 35,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "extend",
+          "callee": "requireDesktop",
+          "lineNumber": 58
+        },
+        {
+          "caller": "extend",
+          "callee": "SessionService.parseKey",
+          "lineNumber": 59
+        },
+        {
+          "caller": "extend",
+          "callee": "parseVersion",
+          "lineNumber": 60
+        },
+        {
+          "caller": "extend",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 61
+        },
+        {
+          "caller": "extend",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 61
+        },
+        {
+          "caller": "extend",
+          "callee": "principal.userId",
+          "lineNumber": 61
+        },
+        {
+          "caller": "extend",
+          "callee": "new ApiException",
+          "lineNumber": 62
+        },
+        {
+          "caller": "extend",
+          "callee": "findOwnedSession",
+          "lineNumber": 63
+        },
+        {
+          "caller": "extend",
+          "callee": "SessionService.requestHash",
+          "lineNumber": 64
+        },
+        {
+          "caller": "extend",
+          "callee": "principal.deviceId",
+          "lineNumber": 64
+        },
+        {
+          "caller": "extend",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 65
+        },
+        {
+          "caller": "extend",
+          "callee": "Instant.now",
+          "lineNumber": 66
+        },
+        {
+          "caller": "extend",
+          "callee": "records.findByUserIdAndScopeAndIdempotencyKey",
+          "lineNumber": 67
+        },
+        {
+          "caller": "extend",
+          "callee": "user.getId",
+          "lineNumber": 67
+        },
+        {
+          "caller": "extend",
+          "callee": "previous.isPresent",
+          "lineNumber": 69
+        },
+        {
+          "caller": "extend",
+          "callee": "previous.get",
+          "lineNumber": 70
+        },
+        {
+          "caller": "extend",
+          "callee": "record.getExpiresAt().isAfter",
+          "lineNumber": 71
+        },
+        {
+          "caller": "extend",
+          "callee": "record.getExpiresAt",
+          "lineNumber": 71
+        },
+        {
+          "caller": "extend",
+          "callee": "record.getRequestHash().equals",
+          "lineNumber": 72
+        },
+        {
+          "caller": "extend",
+          "callee": "record.getRequestHash",
+          "lineNumber": 72
+        },
+        {
+          "caller": "extend",
+          "callee": "new ApiException",
+          "lineNumber": 73
+        },
+        {
+          "caller": "extend",
+          "callee": "mapper.readValue",
+          "lineNumber": 75
+        },
+        {
+          "caller": "extend",
+          "callee": "record.getResponseBodyJson",
+          "lineNumber": 75
+        },
+        {
+          "caller": "extend",
+          "callee": "records.delete",
+          "lineNumber": 77
+        },
+        {
+          "caller": "extend",
+          "callee": "records.flush",
+          "lineNumber": 78
+        },
+        {
+          "caller": "extend",
+          "callee": "requireVersion",
+          "lineNumber": 80
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getStatus",
+          "lineNumber": 81
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getStatus",
+          "lineNumber": 82
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getStatus",
+          "lineNumber": 83
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getStatus",
+          "lineNumber": 84
+        },
+        {
+          "caller": "extend",
+          "callee": "new ApiException",
+          "lineNumber": 85
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 89
+        },
+        {
+          "caller": "extend",
+          "callee": "request.additionalDurationMs().longValueExact",
+          "lineNumber": 91
+        },
+        {
+          "caller": "extend",
+          "callee": "request.additionalDurationMs",
+          "lineNumber": 91
+        },
+        {
+          "caller": "extend",
+          "callee": "new ArithmeticException",
+          "lineNumber": 94
+        },
+        {
+          "caller": "extend",
+          "callee": "Math.addExact",
+          "lineNumber": 96
+        },
+        {
+          "caller": "extend",
+          "callee": "new ApiException",
+          "lineNumber": 98
+        },
+        {
+          "caller": "extend",
+          "callee": "session.extend",
+          "lineNumber": 100
+        },
+        {
+          "caller": "extend",
+          "callee": "sessions.flush",
+          "lineNumber": 101
+        },
+        {
+          "caller": "extend",
+          "callee": "extensions.save",
+          "lineNumber": 102
+        },
+        {
+          "caller": "extend",
+          "callee": "SessionExtensionEntity.create",
+          "lineNumber": 102
+        },
+        {
+          "caller": "extend",
+          "callee": "new ExtendResponse",
+          "lineNumber": 103
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getStatus",
+          "lineNumber": 103
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getVersion",
+          "lineNumber": 103
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 104
+        },
+        {
+          "caller": "extend",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 104
+        },
+        {
+          "caller": "extend",
+          "callee": "records.save",
+          "lineNumber": 105
+        },
+        {
+          "caller": "extend",
+          "callee": "IdempotencyRecordEntity.create",
+          "lineNumber": 105
+        },
+        {
+          "caller": "extend",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 106
+        },
+        {
+          "caller": "extend",
+          "callee": "now.plus",
+          "lineNumber": 106
+        },
+        {
+          "caller": "pause",
+          "callee": "requireDesktop",
+          "lineNumber": 114
+        },
+        {
+          "caller": "pause",
+          "callee": "SessionService.parseKey",
+          "lineNumber": 115
+        },
+        {
+          "caller": "pause",
+          "callee": "parseVersion",
+          "lineNumber": 116
+        },
+        {
+          "caller": "pause",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 117
+        },
+        {
+          "caller": "pause",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 117
+        },
+        {
+          "caller": "pause",
+          "callee": "principal.userId",
+          "lineNumber": 117
+        },
+        {
+          "caller": "pause",
+          "callee": "new ApiException",
+          "lineNumber": 118
+        },
+        {
+          "caller": "pause",
+          "callee": "findOwnedSession",
+          "lineNumber": 119
+        },
+        {
+          "caller": "pause",
+          "callee": "SessionService.requestHash",
+          "lineNumber": 120
+        },
+        {
+          "caller": "pause",
+          "callee": "principal.deviceId",
+          "lineNumber": 120
+        },
+        {
+          "caller": "pause",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 121
+        },
+        {
+          "caller": "pause",
+          "callee": "Instant.now",
+          "lineNumber": 122
+        },
+        {
+          "caller": "pause",
+          "callee": "records.findByUserIdAndScopeAndIdempotencyKey",
+          "lineNumber": 123
+        },
+        {
+          "caller": "pause",
+          "callee": "user.getId",
+          "lineNumber": 123
+        },
+        {
+          "caller": "pause",
+          "callee": "previous.isPresent",
+          "lineNumber": 125
+        },
+        {
+          "caller": "pause",
+          "callee": "previous.get",
+          "lineNumber": 126
+        },
+        {
+          "caller": "pause",
+          "callee": "record.getExpiresAt().isAfter",
+          "lineNumber": 127
+        },
+        {
+          "caller": "pause",
+          "callee": "record.getExpiresAt",
+          "lineNumber": 127
+        },
+        {
+          "caller": "pause",
+          "callee": "record.getRequestHash().equals",
+          "lineNumber": 128
+        },
+        {
+          "caller": "pause",
+          "callee": "record.getRequestHash",
+          "lineNumber": 128
+        },
+        {
+          "caller": "pause",
+          "callee": "new ApiException",
+          "lineNumber": 129
+        },
+        {
+          "caller": "pause",
+          "callee": "mapper.readValue",
+          "lineNumber": 131
+        },
+        {
+          "caller": "pause",
+          "callee": "record.getResponseBodyJson",
+          "lineNumber": 131
+        },
+        {
+          "caller": "pause",
+          "callee": "records.delete",
+          "lineNumber": 133
+        },
+        {
+          "caller": "pause",
+          "callee": "records.flush",
+          "lineNumber": 134
+        },
+        {
+          "caller": "pause",
+          "callee": "requireVersion",
+          "lineNumber": 136
+        },
+        {
+          "caller": "pause",
+          "callee": "session.getStatus",
+          "lineNumber": 137
+        },
+        {
+          "caller": "pause",
+          "callee": "new ApiException",
+          "lineNumber": 138
+        },
+        {
+          "caller": "pause",
+          "callee": "validatedPauseTime",
+          "lineNumber": 140
+        },
+        {
+          "caller": "pause",
+          "callee": "request.pauseReason",
+          "lineNumber": 141
+        },
+        {
+          "caller": "pause",
+          "callee": "session.pause",
+          "lineNumber": 143
+        },
+        {
+          "caller": "pause",
+          "callee": "request.pauseReason().name",
+          "lineNumber": 143
+        },
+        {
+          "caller": "pause",
+          "callee": "request.pauseReason",
+          "lineNumber": 143
+        },
+        {
+          "caller": "pause",
+          "callee": "sessions.flush",
+          "lineNumber": 144
+        },
+        {
+          "caller": "pause",
+          "callee": "new PauseResponse",
+          "lineNumber": 145
+        },
+        {
+          "caller": "pause",
+          "callee": "session.getStatus",
+          "lineNumber": 145
+        },
+        {
+          "caller": "pause",
+          "callee": "session.getVersion",
+          "lineNumber": 145
+        },
+        {
+          "caller": "pause",
+          "callee": "records.save",
+          "lineNumber": 146
+        },
+        {
+          "caller": "pause",
+          "callee": "IdempotencyRecordEntity.create",
+          "lineNumber": 146
+        },
+        {
+          "caller": "pause",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 147
+        },
+        {
+          "caller": "pause",
+          "callee": "now.plus",
+          "lineNumber": 147
+        },
+        {
+          "caller": "end",
+          "callee": "requireDesktop",
+          "lineNumber": 155
+        },
+        {
+          "caller": "end",
+          "callee": "SessionService.parseKey",
+          "lineNumber": 156
+        },
+        {
+          "caller": "end",
+          "callee": "parseVersion",
+          "lineNumber": 157
+        },
+        {
+          "caller": "end",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 158
+        },
+        {
+          "caller": "end",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 158
+        },
+        {
+          "caller": "end",
+          "callee": "principal.userId",
+          "lineNumber": 158
+        },
+        {
+          "caller": "end",
+          "callee": "new ApiException",
+          "lineNumber": 159
+        },
+        {
+          "caller": "end",
+          "callee": "findOwnedSession",
+          "lineNumber": 160
+        },
+        {
+          "caller": "end",
+          "callee": "request.accumulatedActiveMs().longValueExact",
+          "lineNumber": 161
+        },
+        {
+          "caller": "end",
+          "callee": "request.accumulatedActiveMs",
+          "lineNumber": 161
+        },
+        {
+          "caller": "end",
+          "callee": "SessionService.requestHash",
+          "lineNumber": 163
+        },
+        {
+          "caller": "end",
+          "callee": "principal.deviceId",
+          "lineNumber": 163
+        },
+        {
+          "caller": "end",
+          "callee": "Instant.now",
+          "lineNumber": 165
+        },
+        {
+          "caller": "end",
+          "callee": "records.findByUserIdAndScopeAndIdempotencyKey",
+          "lineNumber": 166
+        },
+        {
+          "caller": "end",
+          "callee": "user.getId",
+          "lineNumber": 166
+        },
+        {
+          "caller": "end",
+          "callee": "previous.isPresent",
+          "lineNumber": 168
+        },
+        {
+          "caller": "end",
+          "callee": "previous.get",
+          "lineNumber": 169
+        },
+        {
+          "caller": "end",
+          "callee": "record.getExpiresAt().isAfter",
+          "lineNumber": 170
+        },
+        {
+          "caller": "end",
+          "callee": "record.getExpiresAt",
+          "lineNumber": 170
+        },
+        {
+          "caller": "end",
+          "callee": "record.getRequestHash().equals",
+          "lineNumber": 171
+        },
+        {
+          "caller": "end",
+          "callee": "record.getRequestHash",
+          "lineNumber": 171
+        },
+        {
+          "caller": "end",
+          "callee": "new ApiException",
+          "lineNumber": 172
+        },
+        {
+          "caller": "end",
+          "callee": "mapper.readValue",
+          "lineNumber": 174
+        },
+        {
+          "caller": "end",
+          "callee": "record.getResponseBodyJson",
+          "lineNumber": 174
+        },
+        {
+          "caller": "end",
+          "callee": "records.delete",
+          "lineNumber": 176
+        },
+        {
+          "caller": "end",
+          "callee": "records.flush",
+          "lineNumber": 177
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 179
+        },
+        {
+          "caller": "end",
+          "callee": "ApiException.withDetails",
+          "lineNumber": 183
+        },
+        {
+          "caller": "end",
+          "callee": "Map.of",
+          "lineNumber": 184
+        },
+        {
+          "caller": "end",
+          "callee": "requireVersion",
+          "lineNumber": 186
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 187
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 188
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 189
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 190
+        },
+        {
+          "caller": "end",
+          "callee": "new ApiException",
+          "lineNumber": 191
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 193
+        },
+        {
+          "caller": "end",
+          "callee": "validatedActiveTime",
+          "lineNumber": 194
+        },
+        {
+          "caller": "end",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 195
+        },
+        {
+          "caller": "end",
+          "callee": "new ApiException",
+          "lineNumber": 197
+        },
+        {
+          "caller": "end",
+          "callee": "session.end",
+          "lineNumber": 199
+        },
+        {
+          "caller": "end",
+          "callee": "sessions.flush",
+          "lineNumber": 200
+        },
+        {
+          "caller": "end",
+          "callee": "new EndResponse",
+          "lineNumber": 201
+        },
+        {
+          "caller": "end",
+          "callee": "session.getStatus",
+          "lineNumber": 201
+        },
+        {
+          "caller": "end",
+          "callee": "session.getVersion",
+          "lineNumber": 201
+        },
+        {
+          "caller": "end",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 202
+        },
+        {
+          "caller": "end",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 202
+        },
+        {
+          "caller": "end",
+          "callee": "session.getEndedAt",
+          "lineNumber": 202
+        },
+        {
+          "caller": "end",
+          "callee": "records.save",
+          "lineNumber": 203
+        },
+        {
+          "caller": "end",
+          "callee": "IdempotencyRecordEntity.create",
+          "lineNumber": 203
+        },
+        {
+          "caller": "end",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 204
+        },
+        {
+          "caller": "end",
+          "callee": "now.plus",
+          "lineNumber": 204
+        },
+        {
+          "caller": "validatedPauseTime",
+          "callee": "request.pauseReason",
+          "lineNumber": 210
+        },
+        {
+          "caller": "validatedPauseTime",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 211
+        },
+        {
+          "caller": "validatedPauseTime",
+          "callee": "validatedActiveTime",
+          "lineNumber": 213
+        },
+        {
+          "caller": "validatedPauseTime",
+          "callee": "request.accumulatedActiveMs",
+          "lineNumber": 213
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 218
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 218
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "new ApiException",
+          "lineNumber": 219
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "Math.max",
+          "lineNumber": 221
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "Duration.between(session.getLastResumedAt(), now).toMillis",
+          "lineNumber": 221
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "Duration.between",
+          "lineNumber": 221
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 221
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "session.getAccumulatedAtResumeMs",
+          "lineNumber": 222
+        },
+        {
+          "caller": "validatedActiveTime",
+          "callee": "new ApiException",
+          "lineNumber": 224
+        },
+        {
+          "caller": "resume",
+          "callee": "requireDesktop",
+          "lineNumber": 233
+        },
+        {
+          "caller": "resume",
+          "callee": "SessionService.parseKey",
+          "lineNumber": 234
+        },
+        {
+          "caller": "resume",
+          "callee": "parseVersion",
+          "lineNumber": 235
+        },
+        {
+          "caller": "resume",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 236
+        },
+        {
+          "caller": "resume",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 236
+        },
+        {
+          "caller": "resume",
+          "callee": "principal.userId",
+          "lineNumber": 236
+        },
+        {
+          "caller": "resume",
+          "callee": "new ApiException",
+          "lineNumber": 237
+        },
+        {
+          "caller": "resume",
+          "callee": "findOwnedSession",
+          "lineNumber": 238
+        },
+        {
+          "caller": "resume",
+          "callee": "SessionService.requestHash",
+          "lineNumber": 239
+        },
+        {
+          "caller": "resume",
+          "callee": "principal.deviceId",
+          "lineNumber": 239
+        },
+        {
+          "caller": "resume",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 240
+        },
+        {
+          "caller": "resume",
+          "callee": "Instant.now",
+          "lineNumber": 241
+        },
+        {
+          "caller": "resume",
+          "callee": "records.findByUserIdAndScopeAndIdempotencyKey",
+          "lineNumber": 242
+        },
+        {
+          "caller": "resume",
+          "callee": "user.getId",
+          "lineNumber": 242
+        },
+        {
+          "caller": "resume",
+          "callee": "previous.isPresent",
+          "lineNumber": 244
+        },
+        {
+          "caller": "resume",
+          "callee": "previous.get",
+          "lineNumber": 245
+        },
+        {
+          "caller": "resume",
+          "callee": "record.getExpiresAt().isAfter",
+          "lineNumber": 246
+        },
+        {
+          "caller": "resume",
+          "callee": "record.getExpiresAt",
+          "lineNumber": 246
+        },
+        {
+          "caller": "resume",
+          "callee": "record.getRequestHash().equals",
+          "lineNumber": 247
+        },
+        {
+          "caller": "resume",
+          "callee": "record.getRequestHash",
+          "lineNumber": 247
+        },
+        {
+          "caller": "resume",
+          "callee": "new ApiException",
+          "lineNumber": 248
+        },
+        {
+          "caller": "resume",
+          "callee": "mapper.readValue",
+          "lineNumber": 250
+        },
+        {
+          "caller": "resume",
+          "callee": "record.getResponseBodyJson",
+          "lineNumber": 250
+        },
+        {
+          "caller": "resume",
+          "callee": "records.delete",
+          "lineNumber": 252
+        },
+        {
+          "caller": "resume",
+          "callee": "records.flush",
+          "lineNumber": 253
+        },
+        {
+          "caller": "resume",
+          "callee": "requireVersion",
+          "lineNumber": 255
+        },
+        {
+          "caller": "resume",
+          "callee": "session.getStatus",
+          "lineNumber": 256
+        },
+        {
+          "caller": "resume",
+          "callee": "session.getStatus",
+          "lineNumber": 257
+        },
+        {
+          "caller": "resume",
+          "callee": "new ApiException",
+          "lineNumber": 258
+        },
+        {
+          "caller": "resume",
+          "callee": "onboarding.get(principal, null).steps",
+          "lineNumber": 260
+        },
+        {
+          "caller": "resume",
+          "callee": "onboarding.get",
+          "lineNumber": 260
+        },
+        {
+          "caller": "resume",
+          "callee": "steps.extensionLinked",
+          "lineNumber": 261
+        },
+        {
+          "caller": "resume",
+          "callee": "steps.requiredConsentsCompleted",
+          "lineNumber": 261
+        },
+        {
+          "caller": "resume",
+          "callee": "request.readiness().screenAnalysisReady",
+          "lineNumber": 262
+        },
+        {
+          "caller": "resume",
+          "callee": "request.readiness",
+          "lineNumber": 262
+        },
+        {
+          "caller": "resume",
+          "callee": "ApiException.resumeRequirementMissing",
+          "lineNumber": 263
+        },
+        {
+          "caller": "resume",
+          "callee": "session.resume",
+          "lineNumber": 265
+        },
+        {
+          "caller": "resume",
+          "callee": "sessions.flush",
+          "lineNumber": 266
+        },
+        {
+          "caller": "resume",
+          "callee": "new ResumeResponse",
+          "lineNumber": 267
+        },
+        {
+          "caller": "resume",
+          "callee": "session.getStatus",
+          "lineNumber": 267
+        },
+        {
+          "caller": "resume",
+          "callee": "session.getVersion",
+          "lineNumber": 267
+        },
+        {
+          "caller": "resume",
+          "callee": "records.save",
+          "lineNumber": 268
+        },
+        {
+          "caller": "resume",
+          "callee": "IdempotencyRecordEntity.create",
+          "lineNumber": 268
+        },
+        {
+          "caller": "resume",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 269
+        },
+        {
+          "caller": "resume",
+          "callee": "now.plus",
+          "lineNumber": 269
+        },
+        {
+          "caller": "requireDesktop",
+          "callee": "principal.deviceType",
+          "lineNumber": 274
+        },
+        {
+          "caller": "requireDesktop",
+          "callee": "new ApiException",
+          "lineNumber": 275
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "Long.parseLong",
+          "lineNumber": 282
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "new NumberFormatException",
+          "lineNumber": 284
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "new ApiException",
+          "lineNumber": 287
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "sessions.findByIdAndUserId(sessionId, principal.userId()).orElseThrow",
+          "lineNumber": 289
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "sessions.findByIdAndUserId",
+          "lineNumber": 289
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "principal.userId",
+          "lineNumber": 289
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "new ApiException",
+          "lineNumber": 290
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "session.getRunnerDevice().getId().equals",
+          "lineNumber": 291
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "session.getRunnerDevice().getId",
+          "lineNumber": 291
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "session.getRunnerDevice",
+          "lineNumber": 291
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "principal.deviceId",
+          "lineNumber": 291
+        },
+        {
+          "caller": "findOwnedSession",
+          "callee": "new ApiException",
+          "lineNumber": 292
+        },
+        {
+          "caller": "parseVersion",
+          "callee": "Long.parseLong",
+          "lineNumber": 299
+        },
+        {
+          "caller": "parseVersion",
+          "callee": "new NumberFormatException",
+          "lineNumber": 301
+        },
+        {
+          "caller": "parseVersion",
+          "callee": "new ApiException",
+          "lineNumber": 305
+        },
+        {
+          "caller": "requireVersion",
+          "callee": "session.getVersion",
+          "lineNumber": 310
+        },
+        {
+          "caller": "requireVersion",
+          "callee": "ApiException.withDetails",
+          "lineNumber": 311
+        },
+        {
+          "caller": "requireVersion",
+          "callee": "Map.of",
+          "lineNumber": 312
+        },
+        {
+          "caller": "requireVersion",
+          "callee": "session.getStatus",
+          "lineNumber": 312
+        },
+        {
+          "caller": "requireVersion",
+          "callee": "session.getVersion",
+          "lineNumber": 312
+        }
+      ],
+      "metrics": {
+        "importCount": 12,
+        "exportCount": 5,
+        "functionCount": 10,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 53,
+      "nonEmptyLines": 50,
+      "functions": [
+        {
+          "name": "cleanup",
+          "startLine": 27,
+          "endLine": 52,
+          "params": []
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionHeartbeatCleanup",
+          "startLine": 16,
+          "endLine": 53,
+          "methods": [
+            "cleanup"
+          ],
+          "properties": [
+            "ABANDONED_AFTER",
+            "BATCH_SIZE",
+            "sessions",
+            "users",
+            "transactions"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "cleanup",
+          "line": 27,
+          "isDefault": false
+        },
+        {
+          "name": "SessionHeartbeatCleanup",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "cleanup",
+          "callee": "Instant.now().minus",
+          "lineNumber": 29
+        },
+        {
+          "caller": "cleanup",
+          "callee": "Instant.now",
+          "lineNumber": 29
+        },
+        {
+          "caller": "cleanup",
+          "callee": "sessions.findExpiredCandidates",
+          "lineNumber": 32
+        },
+        {
+          "caller": "cleanup",
+          "callee": "PageRequest.of",
+          "lineNumber": 33
+        },
+        {
+          "caller": "cleanup",
+          "callee": "candidates.isEmpty",
+          "lineNumber": 34
+        },
+        {
+          "caller": "cleanup",
+          "callee": "transactions.executeWithoutResult",
+          "lineNumber": 39
+        },
+        {
+          "caller": "cleanup",
+          "callee": "sessions.findById(id).ifPresent",
+          "lineNumber": 39
+        },
+        {
+          "caller": "cleanup",
+          "callee": "sessions.findById",
+          "lineNumber": 39
+        },
+        {
+          "caller": "cleanup",
+          "callee": "users.findByIdForUpdateSkipLocked(session.getUser().getId()).isEmpty",
+          "lineNumber": 40
+        },
+        {
+          "caller": "cleanup",
+          "callee": "users.findByIdForUpdateSkipLocked",
+          "lineNumber": 40
+        },
+        {
+          "caller": "cleanup",
+          "callee": "session.getUser().getId",
+          "lineNumber": 40
+        },
+        {
+          "caller": "cleanup",
+          "callee": "session.getUser",
+          "lineNumber": 40
+        },
+        {
+          "caller": "cleanup",
+          "callee": "Instant.now",
+          "lineNumber": 43
+        },
+        {
+          "caller": "cleanup",
+          "callee": "sessions.abandonIfExpired",
+          "lineNumber": 44
+        },
+        {
+          "caller": "cleanup",
+          "callee": "now.minus",
+          "lineNumber": 44
+        },
+        {
+          "caller": "cleanup",
+          "callee": "SafeApiLog.sessionCleanupFailure",
+          "lineNumber": 47
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 140,
+      "nonEmptyLines": 133,
+      "functions": [
+        {
+          "name": "heartbeat",
+          "startLine": 37,
+          "endLine": 55,
+          "params": [
+            "principal",
+            "deviceId",
+            "rawSessionId",
+            "request"
+          ]
+        },
+        {
+          "name": "process",
+          "startLine": 57,
+          "endLine": 116,
+          "params": [
+            "principal",
+            "sessionId",
+            "request"
+          ]
+        },
+        {
+          "name": "response",
+          "startLine": 118,
+          "endLine": 121,
+          "params": [
+            "session"
+          ]
+        },
+        {
+          "name": "parseSessionId",
+          "startLine": 123,
+          "endLine": 133,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionHeartbeatService",
+          "startLine": 25,
+          "endLine": 140,
+          "methods": [
+            "heartbeat",
+            "process",
+            "response",
+            "parseSessionId"
+          ],
+          "properties": [
+            "ABANDONED_AFTER",
+            "CLOCK_TOLERANCE",
+            "users",
+            "sessions",
+            "transactions",
+            "events",
+            "foreground"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "heartbeat",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "SessionHeartbeatService",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "heartbeat",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 39
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "principal.deviceType",
+          "lineNumber": 40
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "new ApiException",
+          "lineNumber": 41
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "parseSessionId",
+          "lineNumber": 43
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "transactions.execute",
+          "lineNumber": 44
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "process",
+          "lineNumber": 45
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "outcome.abandoned",
+          "lineNumber": 46
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "ApiException.withDetails",
+          "lineNumber": 47
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "Map.of",
+          "lineNumber": 48
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "outcome.evaluate",
+          "lineNumber": 51
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "events.publishEvent",
+          "lineNumber": 52
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "new HeartbeatPolicyTrigger",
+          "lineNumber": 52
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "principal.userId",
+          "lineNumber": 52
+        },
+        {
+          "caller": "heartbeat",
+          "callee": "outcome.response",
+          "lineNumber": 54
+        },
+        {
+          "caller": "process",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 59
+        },
+        {
+          "caller": "process",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 59
+        },
+        {
+          "caller": "process",
+          "callee": "principal.userId",
+          "lineNumber": 59
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 60
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.findOwnedForUpdate(sessionId, principal.userId()).orElseThrow",
+          "lineNumber": 61
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.findOwnedForUpdate",
+          "lineNumber": 61
+        },
+        {
+          "caller": "process",
+          "callee": "principal.userId",
+          "lineNumber": 61
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 62
+        },
+        {
+          "caller": "process",
+          "callee": "session.getRunnerDevice().getId().equals",
+          "lineNumber": 63
+        },
+        {
+          "caller": "process",
+          "callee": "session.getRunnerDevice().getId",
+          "lineNumber": 63
+        },
+        {
+          "caller": "process",
+          "callee": "session.getRunnerDevice",
+          "lineNumber": 63
+        },
+        {
+          "caller": "process",
+          "callee": "principal.deviceId",
+          "lineNumber": 63
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 64
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 66
+        },
+        {
+          "caller": "process",
+          "callee": "new HeartbeatOutcome",
+          "lineNumber": 67
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 69
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 70
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 71
+        },
+        {
+          "caller": "process",
+          "callee": "session.getStatus",
+          "lineNumber": 72
+        },
+        {
+          "caller": "process",
+          "callee": "new HeartbeatOutcome",
+          "lineNumber": 73
+        },
+        {
+          "caller": "process",
+          "callee": "response",
+          "lineNumber": 73
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 75
+        },
+        {
+          "caller": "process",
+          "callee": "Instant.now",
+          "lineNumber": 77
+        },
+        {
+          "caller": "process",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 78
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 80
+        },
+        {
+          "caller": "process",
+          "callee": "session.getLastHeartbeatAt",
+          "lineNumber": 82
+        },
+        {
+          "caller": "process",
+          "callee": "lastReceived.isAfter",
+          "lineNumber": 83
+        },
+        {
+          "caller": "process",
+          "callee": "baseline.plus(ABANDONED_AFTER).isAfter",
+          "lineNumber": 86
+        },
+        {
+          "caller": "process",
+          "callee": "baseline.plus",
+          "lineNumber": 86
+        },
+        {
+          "caller": "process",
+          "callee": "session.abandon",
+          "lineNumber": 87
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.flush",
+          "lineNumber": 88
+        },
+        {
+          "caller": "process",
+          "callee": "new HeartbeatOutcome",
+          "lineNumber": 89
+        },
+        {
+          "caller": "process",
+          "callee": "request.clientObservedAt().truncatedTo",
+          "lineNumber": 92
+        },
+        {
+          "caller": "process",
+          "callee": "request.clientObservedAt",
+          "lineNumber": 92
+        },
+        {
+          "caller": "process",
+          "callee": "observed.isAfter",
+          "lineNumber": 93
+        },
+        {
+          "caller": "process",
+          "callee": "now.plus",
+          "lineNumber": 93
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 94
+        },
+        {
+          "caller": "process",
+          "callee": "session.getLastHeartbeatObservedAt",
+          "lineNumber": 96
+        },
+        {
+          "caller": "process",
+          "callee": "request.accumulatedActiveMs",
+          "lineNumber": 97
+        },
+        {
+          "caller": "process",
+          "callee": "observed.equals",
+          "lineNumber": 99
+        },
+        {
+          "caller": "process",
+          "callee": "observed.isBefore",
+          "lineNumber": 100
+        },
+        {
+          "caller": "process",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 100
+        },
+        {
+          "caller": "process",
+          "callee": "new HeartbeatOutcome",
+          "lineNumber": 101
+        },
+        {
+          "caller": "process",
+          "callee": "response",
+          "lineNumber": 101
+        },
+        {
+          "caller": "process",
+          "callee": "Math.max",
+          "lineNumber": 103
+        },
+        {
+          "caller": "process",
+          "callee": "Duration.between(session.getLastResumedAt(), now).toMillis",
+          "lineNumber": 103
+        },
+        {
+          "caller": "process",
+          "callee": "Duration.between",
+          "lineNumber": 103
+        },
+        {
+          "caller": "process",
+          "callee": "session.getLastResumedAt",
+          "lineNumber": 103
+        },
+        {
+          "caller": "process",
+          "callee": "session.getAccumulatedAtResumeMs",
+          "lineNumber": 104
+        },
+        {
+          "caller": "process",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 105
+        },
+        {
+          "caller": "process",
+          "callee": "CLOCK_TOLERANCE.toMillis",
+          "lineNumber": 105
+        },
+        {
+          "caller": "process",
+          "callee": "new ApiException",
+          "lineNumber": 106
+        },
+        {
+          "caller": "process",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 108
+        },
+        {
+          "caller": "process",
+          "callee": "sessions.recordHeartbeat",
+          "lineNumber": 109
+        },
+        {
+          "caller": "process",
+          "callee": "foreground.renew",
+          "lineNumber": 111
+        },
+        {
+          "caller": "process",
+          "callee": "request.observationContextId",
+          "lineNumber": 111
+        },
+        {
+          "caller": "process",
+          "callee": "new HeartbeatOutcome",
+          "lineNumber": 113
+        },
+        {
+          "caller": "process",
+          "callee": "new HeartbeatResponse",
+          "lineNumber": 113
+        },
+        {
+          "caller": "response",
+          "callee": "new HeartbeatResponse",
+          "lineNumber": 119
+        },
+        {
+          "caller": "response",
+          "callee": "session.getStatus",
+          "lineNumber": 119
+        },
+        {
+          "caller": "response",
+          "callee": "session.getLastHeartbeatAt",
+          "lineNumber": 119
+        },
+        {
+          "caller": "response",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 120
+        },
+        {
+          "caller": "response",
+          "callee": "session.getPauseReason",
+          "lineNumber": 120
+        },
+        {
+          "caller": "parseSessionId",
+          "callee": "Long.parseLong",
+          "lineNumber": 125
+        },
+        {
+          "caller": "parseSessionId",
+          "callee": "new NumberFormatException",
+          "lineNumber": 127
+        },
+        {
+          "caller": "parseSessionId",
+          "callee": "new ApiException",
+          "lineNumber": 131
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 2,
+        "functionCount": 4,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+      "language": "java",
+      "fileCategory": "code",
+      "totalLines": 194,
+      "nonEmptyLines": 184,
+      "functions": [
+        {
+          "name": "start",
+          "startLine": 60,
+          "endLine": 128,
+          "params": [
+            "principal",
+            "deviceId",
+            "key",
+            "request"
+          ]
+        },
+        {
+          "name": "active",
+          "startLine": 131,
+          "endLine": 136,
+          "params": [
+            "principal"
+          ]
+        },
+        {
+          "name": "validateRequest",
+          "startLine": 139,
+          "endLine": 147,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "parseKey",
+          "startLine": 150,
+          "endLine": 162,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "parseGoalId",
+          "startLine": 165,
+          "endLine": 176,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "zone",
+          "startLine": 179,
+          "endLine": 182,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "requestHash",
+          "startLine": 185,
+          "endLine": 193,
+          "params": [
+            "value"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "SessionService",
+          "startLine": 40,
+          "endLine": 194,
+          "methods": [
+            "start",
+            "active",
+            "validateRequest",
+            "parseKey",
+            "parseGoalId",
+            "zone",
+            "requestHash"
+          ],
+          "properties": [
+            "MIN_DURATION_MS",
+            "MAX_DURATION_MS",
+            "MINUTE_MS",
+            "START_SCOPE",
+            "POLICY_VERSION",
+            "DEFAULT_ZONE",
+            "users",
+            "devices",
+            "goals",
+            "sessions",
+            "records",
+            "onboarding",
+            "consents",
+            "mapper"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "start",
+          "line": 60,
+          "isDefault": false
+        },
+        {
+          "name": "active",
+          "line": 131,
+          "isDefault": false
+        },
+        {
+          "name": "SessionService",
+          "line": 40,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "start",
+          "callee": "DeviceHeaderValidator.require",
+          "lineNumber": 64
+        },
+        {
+          "caller": "start",
+          "callee": "principal.deviceType",
+          "lineNumber": 66
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 67
+        },
+        {
+          "caller": "start",
+          "callee": "parseKey",
+          "lineNumber": 69
+        },
+        {
+          "caller": "start",
+          "callee": "users.findByIdForUpdate(principal.userId()).orElseThrow",
+          "lineNumber": 71
+        },
+        {
+          "caller": "start",
+          "callee": "users.findByIdForUpdate",
+          "lineNumber": 71
+        },
+        {
+          "caller": "start",
+          "callee": "principal.userId",
+          "lineNumber": 71
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 72
+        },
+        {
+          "caller": "start",
+          "callee": "requestHash",
+          "lineNumber": 74
+        },
+        {
+          "caller": "start",
+          "callee": "principal.deviceId",
+          "lineNumber": 74
+        },
+        {
+          "caller": "start",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 74
+        },
+        {
+          "caller": "start",
+          "callee": "Instant.now",
+          "lineNumber": 75
+        },
+        {
+          "caller": "start",
+          "callee": "records.findByUserIdAndScopeAndIdempotencyKey",
+          "lineNumber": 76
+        },
+        {
+          "caller": "start",
+          "callee": "user.getId",
+          "lineNumber": 76
+        },
+        {
+          "caller": "start",
+          "callee": "previous.isPresent",
+          "lineNumber": 78
+        },
+        {
+          "caller": "start",
+          "callee": "previous.get",
+          "lineNumber": 79
+        },
+        {
+          "caller": "start",
+          "callee": "record.getExpiresAt().isAfter",
+          "lineNumber": 80
+        },
+        {
+          "caller": "start",
+          "callee": "record.getExpiresAt",
+          "lineNumber": 80
+        },
+        {
+          "caller": "start",
+          "callee": "record.getRequestHash().equals",
+          "lineNumber": 82
+        },
+        {
+          "caller": "start",
+          "callee": "record.getRequestHash",
+          "lineNumber": 82
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 83
+        },
+        {
+          "caller": "start",
+          "callee": "mapper.readValue",
+          "lineNumber": 85
+        },
+        {
+          "caller": "start",
+          "callee": "record.getResponseBodyJson",
+          "lineNumber": 85
+        },
+        {
+          "caller": "start",
+          "callee": "records.delete",
+          "lineNumber": 88
+        },
+        {
+          "caller": "start",
+          "callee": "records.flush",
+          "lineNumber": 89
+        },
+        {
+          "caller": "start",
+          "callee": "validateRequest",
+          "lineNumber": 91
+        },
+        {
+          "caller": "start",
+          "callee": "sessions.findByUserIdAndStatusIn(user.getId(), SessionStatus.activeStatuses()).isPresent",
+          "lineNumber": 93
+        },
+        {
+          "caller": "start",
+          "callee": "sessions.findByUserIdAndStatusIn",
+          "lineNumber": 93
+        },
+        {
+          "caller": "start",
+          "callee": "user.getId",
+          "lineNumber": 93
+        },
+        {
+          "caller": "start",
+          "callee": "SessionStatus.activeStatuses",
+          "lineNumber": 93
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 95
+        },
+        {
+          "caller": "start",
+          "callee": "onboarding.get(principal, null).steps",
+          "lineNumber": 97
+        },
+        {
+          "caller": "start",
+          "callee": "onboarding.get",
+          "lineNumber": 97
+        },
+        {
+          "caller": "start",
+          "callee": "request.sessionOptions().cameraAnalysisEnabled",
+          "lineNumber": 98
+        },
+        {
+          "caller": "start",
+          "callee": "request.sessionOptions",
+          "lineNumber": 98
+        },
+        {
+          "caller": "start",
+          "callee": "consents.findByUserIdAndConsentType(user.getId(), ConsentType.CAMERA_ANALYSIS)\n            .map(UserConsentEntity::isGranted).orElse",
+          "lineNumber": 99
+        },
+        {
+          "caller": "start",
+          "callee": "consents.findByUserIdAndConsentType(user.getId(), ConsentType.CAMERA_ANALYSIS).map",
+          "lineNumber": 99
+        },
+        {
+          "caller": "start",
+          "callee": "consents.findByUserIdAndConsentType",
+          "lineNumber": 99
+        },
+        {
+          "caller": "start",
+          "callee": "user.getId",
+          "lineNumber": 99
+        },
+        {
+          "caller": "start",
+          "callee": "steps.profileCompleted",
+          "lineNumber": 102
+        },
+        {
+          "caller": "start",
+          "callee": "steps.extensionLinked",
+          "lineNumber": 102
+        },
+        {
+          "caller": "start",
+          "callee": "steps.requiredConsentsCompleted",
+          "lineNumber": 102
+        },
+        {
+          "caller": "start",
+          "callee": "steps.analysisExcludedDomainsStepCompleted",
+          "lineNumber": 103
+        },
+        {
+          "caller": "start",
+          "callee": "request.startReadiness().screenAnalysisReady",
+          "lineNumber": 104
+        },
+        {
+          "caller": "start",
+          "callee": "request.startReadiness",
+          "lineNumber": 104
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 105
+        },
+        {
+          "caller": "start",
+          "callee": "goals.findByIdAndUserIdAndDeletedAtIsNull(parseGoalId(request.goalId()),\n        user.getId()).filter(g -> g.getStatus() == GoalEntity.Status.ACTIVE).orElseThrow",
+          "lineNumber": 108
+        },
+        {
+          "caller": "start",
+          "callee": "goals.findByIdAndUserIdAndDeletedAtIsNull(parseGoalId(request.goalId()),\n        user.getId()).filter",
+          "lineNumber": 108
+        },
+        {
+          "caller": "start",
+          "callee": "goals.findByIdAndUserIdAndDeletedAtIsNull",
+          "lineNumber": 108
+        },
+        {
+          "caller": "start",
+          "callee": "parseGoalId",
+          "lineNumber": 108
+        },
+        {
+          "caller": "start",
+          "callee": "request.goalId",
+          "lineNumber": 108
+        },
+        {
+          "caller": "start",
+          "callee": "user.getId",
+          "lineNumber": 109
+        },
+        {
+          "caller": "start",
+          "callee": "g.getStatus",
+          "lineNumber": 109
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 110
+        },
+        {
+          "caller": "start",
+          "callee": "devices.findById(principal.deviceId()).orElseThrow",
+          "lineNumber": 111
+        },
+        {
+          "caller": "start",
+          "callee": "devices.findById",
+          "lineNumber": 111
+        },
+        {
+          "caller": "start",
+          "callee": "principal.deviceId",
+          "lineNumber": 111
+        },
+        {
+          "caller": "start",
+          "callee": "new ApiException",
+          "lineNumber": 112
+        },
+        {
+          "caller": "start",
+          "callee": "zone",
+          "lineNumber": 113
+        },
+        {
+          "caller": "start",
+          "callee": "request.timeZone",
+          "lineNumber": 113
+        },
+        {
+          "caller": "start",
+          "callee": "Instant.now",
+          "lineNumber": 114
+        },
+        {
+          "caller": "start",
+          "callee": "sessions.save",
+          "lineNumber": 116
+        },
+        {
+          "caller": "start",
+          "callee": "LearningSessionEntity.create",
+          "lineNumber": 116
+        },
+        {
+          "caller": "start",
+          "callee": "request.targetDurationMs().longValueExact",
+          "lineNumber": 117
+        },
+        {
+          "caller": "start",
+          "callee": "request.targetDurationMs",
+          "lineNumber": 117
+        },
+        {
+          "caller": "start",
+          "callee": "zone.getId",
+          "lineNumber": 117
+        },
+        {
+          "caller": "start",
+          "callee": "startedAt.atZone(zone).toLocalDate",
+          "lineNumber": 118
+        },
+        {
+          "caller": "start",
+          "callee": "startedAt.atZone",
+          "lineNumber": 118
+        },
+        {
+          "caller": "start",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 118
+        },
+        {
+          "caller": "start",
+          "callee": "request.sessionOptions",
+          "lineNumber": 118
+        },
+        {
+          "caller": "start",
+          "callee": "new StartResponse",
+          "lineNumber": 120
+        },
+        {
+          "caller": "start",
+          "callee": "session.getId().toString",
+          "lineNumber": 120
+        },
+        {
+          "caller": "start",
+          "callee": "session.getId",
+          "lineNumber": 120
+        },
+        {
+          "caller": "start",
+          "callee": "session.getStatus",
+          "lineNumber": 120
+        },
+        {
+          "caller": "start",
+          "callee": "session.getVersion",
+          "lineNumber": 121
+        },
+        {
+          "caller": "start",
+          "callee": "session.getTargetDurationMs",
+          "lineNumber": 121
+        },
+        {
+          "caller": "start",
+          "callee": "session.getAccumulatedActiveMs",
+          "lineNumber": 121
+        },
+        {
+          "caller": "start",
+          "callee": "session.getStartedAt",
+          "lineNumber": 122
+        },
+        {
+          "caller": "start",
+          "callee": "session.getInterventionPolicyVersion",
+          "lineNumber": 122
+        },
+        {
+          "caller": "start",
+          "callee": "records.save",
+          "lineNumber": 124
+        },
+        {
+          "caller": "start",
+          "callee": "IdempotencyRecordEntity.create",
+          "lineNumber": 124
+        },
+        {
+          "caller": "start",
+          "callee": "mapper.writeValueAsString",
+          "lineNumber": 125
+        },
+        {
+          "caller": "start",
+          "callee": "startedAt.plus",
+          "lineNumber": 126
+        },
+        {
+          "caller": "start",
+          "callee": "Duration.ofHours",
+          "lineNumber": 126
+        },
+        {
+          "caller": "active",
+          "callee": "sessions.findByUserIdAndStatusIn(principal.userId(), SessionStatus.activeStatuses()).map",
+          "lineNumber": 133
+        },
+        {
+          "caller": "active",
+          "callee": "sessions.findByUserIdAndStatusIn",
+          "lineNumber": 133
+        },
+        {
+          "caller": "active",
+          "callee": "principal.userId",
+          "lineNumber": 133
+        },
+        {
+          "caller": "active",
+          "callee": "SessionStatus.activeStatuses",
+          "lineNumber": 133
+        },
+        {
+          "caller": "active",
+          "callee": "new ActiveResponse",
+          "lineNumber": 134
+        },
+        {
+          "caller": "active",
+          "callee": "s.getId().toString",
+          "lineNumber": 134
+        },
+        {
+          "caller": "active",
+          "callee": "s.getId",
+          "lineNumber": 134
+        },
+        {
+          "caller": "active",
+          "callee": "s.getStatus",
+          "lineNumber": 134
+        },
+        {
+          "caller": "active",
+          "callee": "s.getVersion",
+          "lineNumber": 134
+        },
+        {
+          "caller": "active",
+          "callee": "s.getGoalTextSnapshot",
+          "lineNumber": 135
+        },
+        {
+          "caller": "active",
+          "callee": "s.getTargetDurationMs",
+          "lineNumber": 135
+        },
+        {
+          "caller": "active",
+          "callee": "s.getAccumulatedActiveMs",
+          "lineNumber": 135
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "request.targetDurationMs().longValueExact",
+          "lineNumber": 140
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "request.targetDurationMs",
+          "lineNumber": 140
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "request.sessionOptions().notificationChannels",
+          "lineNumber": 141
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "request.sessionOptions",
+          "lineNumber": 141
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "Set.copyOf(channels).size",
+          "lineNumber": 143
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "Set.copyOf",
+          "lineNumber": 143
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "channels.size",
+          "lineNumber": 143
+        },
+        {
+          "caller": "validateRequest",
+          "callee": "new ApiException",
+          "lineNumber": 145
+        },
+        {
+          "caller": "parseKey",
+          "callee": "UUID.fromString",
+          "lineNumber": 152
+        },
+        {
+          "caller": "parseKey",
+          "callee": "key.toString().equalsIgnoreCase",
+          "lineNumber": 154
+        },
+        {
+          "caller": "parseKey",
+          "callee": "key.toString",
+          "lineNumber": 154
+        },
+        {
+          "caller": "parseKey",
+          "callee": "new IllegalArgumentException",
+          "lineNumber": 155
+        },
+        {
+          "caller": "parseKey",
+          "callee": "new ApiException",
+          "lineNumber": 160
+        },
+        {
+          "caller": "parseGoalId",
+          "callee": "Long.parseLong",
+          "lineNumber": 167
+        },
+        {
+          "caller": "parseGoalId",
+          "callee": "new NumberFormatException",
+          "lineNumber": 169
+        },
+        {
+          "caller": "parseGoalId",
+          "callee": "new ApiException",
+          "lineNumber": 174
+        },
+        {
+          "caller": "zone",
+          "callee": "ZoneId.getAvailableZoneIds().contains",
+          "lineNumber": 180
+        },
+        {
+          "caller": "zone",
+          "callee": "ZoneId.getAvailableZoneIds",
+          "lineNumber": 180
+        },
+        {
+          "caller": "zone",
+          "callee": "ZoneId.of",
+          "lineNumber": 181
+        },
+        {
+          "caller": "requestHash",
+          "callee": "HexFormat.of().formatHex",
+          "lineNumber": 187
+        },
+        {
+          "caller": "requestHash",
+          "callee": "HexFormat.of",
+          "lineNumber": 187
+        },
+        {
+          "caller": "requestHash",
+          "callee": "MessageDigest.getInstance(\"SHA-256\").digest",
+          "lineNumber": 187
+        },
+        {
+          "caller": "requestHash",
+          "callee": "MessageDigest.getInstance",
+          "lineNumber": 187
+        },
+        {
+          "caller": "requestHash",
+          "callee": "value.getBytes",
+          "lineNumber": 188
+        },
+        {
+          "caller": "requestHash",
+          "callee": "new IllegalStateException",
+          "lineNumber": 191
+        }
+      ],
+      "metrics": {
+        "importCount": 17,
+        "exportCount": 3,
+        "functionCount": 7,
+        "classCount": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,1638 @@
+{
+  "name": "backend",
+  "description": "FocusOn 모노레포의 Spring Boot 백엔드로, 학습 목표를 기준으로 macOS 앱과 Chrome 브라우저의 학습 흐름을 기록하고 집중 상태를 확인하도록 돕는 데스크톱 기반 학습 보조 서비스의 API 서버입니다. Note: this project has over 100 source files; consider scoping analysis to a subdirectory for faster results.",
+  "languages": [
+    "batch",
+    "config",
+    "dockerfile",
+    "gradle",
+    "jar",
+    "java",
+    "markdown",
+    "properties",
+    "python",
+    "sql",
+    "yaml"
+  ],
+  "frameworks": [
+    "Spring Boot",
+    "Spring Security",
+    "Spring Data JPA",
+    "Flyway",
+    "springdoc-openapi",
+    "Lombok",
+    "PostgreSQL",
+    "JUnit",
+    "Docker",
+    "Docker Compose"
+  ],
+  "files": [
+    {
+      "path": ".dockerignore",
+      "language": "unknown",
+      "sizeLines": 12,
+      "fileCategory": "infra"
+    },
+    {
+      "path": ".env.example",
+      "language": "config",
+      "sizeLines": 29,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".gitattributes",
+      "language": "unknown",
+      "sizeLines": 3,
+      "fileCategory": "code"
+    },
+    {
+      "path": "Dockerfile",
+      "language": "dockerfile",
+      "sizeLines": 45,
+      "fileCategory": "infra"
+    },
+    {
+      "path": "build.gradle",
+      "language": "gradle",
+      "sizeLines": 68,
+      "fileCategory": "config"
+    },
+    {
+      "path": "docker-compose.yml",
+      "language": "yaml",
+      "sizeLines": 72,
+      "fileCategory": "infra"
+    },
+    {
+      "path": "gradle/wrapper/gradle-wrapper.jar",
+      "language": "jar",
+      "sizeLines": 163,
+      "fileCategory": "code"
+    },
+    {
+      "path": "gradle/wrapper/gradle-wrapper.properties",
+      "language": "properties",
+      "sizeLines": 9,
+      "fileCategory": "config"
+    },
+    {
+      "path": "gradlew",
+      "language": "unknown",
+      "sizeLines": 248,
+      "fileCategory": "code"
+    },
+    {
+      "path": "gradlew.bat",
+      "language": "batch",
+      "sizeLines": 82,
+      "fileCategory": "script"
+    },
+    {
+      "path": "scripts/google_pkce_request.py",
+      "language": "python",
+      "sizeLines": 182,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/verify_analysis_ai.py",
+      "language": "python",
+      "sizeLines": 202,
+      "fileCategory": "code"
+    },
+    {
+      "path": "settings.gradle",
+      "language": "gradle",
+      "sizeLines": 1,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/BackendApplication.java",
+      "language": "java",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/controller/AnalysisController.java",
+      "language": "java",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/dto/AnalysisDtos.java",
+      "language": "java",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunEntity.java",
+      "language": "java",
+      "sizeLines": 168,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunRepository.java",
+      "language": "java",
+      "sizeLines": 95,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisAiClient.java",
+      "language": "java",
+      "sizeLines": 205,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisDecision.java",
+      "language": "java",
+      "sizeLines": 22,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisObservationOrder.java",
+      "language": "java",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisPrivacy.java",
+      "language": "java",
+      "sizeLines": 92,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisRunStore.java",
+      "language": "java",
+      "sizeLines": 185,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/analysis/service/AnalysisService.java",
+      "language": "java",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/AccessJwtService.java",
+      "language": "java",
+      "sizeLines": 187,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/AuthController.java",
+      "language": "java",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/DeviceController.java",
+      "language": "java",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/PairingController.java",
+      "language": "java",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/controller/TokenLifecycleController.java",
+      "language": "java",
+      "sizeLines": 47,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/dto/AuthDtos.java",
+      "language": "java",
+      "sizeLines": 67,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/dto/PairingDtos.java",
+      "language": "java",
+      "sizeLines": 38,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/dto/TokenLifecycleDtos.java",
+      "language": "java",
+      "sizeLines": 32,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/OauthIdentityEntity.java",
+      "language": "java",
+      "sizeLines": 55,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/OauthIdentityRepository.java",
+      "language": "java",
+      "sizeLines": 11,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/PairingCodeEntity.java",
+      "language": "java",
+      "sizeLines": 61,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/PairingCodeRepository.java",
+      "language": "java",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/PairingInstallationAttemptEntity.java",
+      "language": "java",
+      "sizeLines": 31,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/PairingInstallationAttemptRepository.java",
+      "language": "java",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordEntity.java",
+      "language": "java",
+      "sizeLines": 70,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordRepository.java",
+      "language": "java",
+      "sizeLines": 40,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "language": "java",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "language": "java",
+      "sizeLines": 22,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "language": "java",
+      "sizeLines": 85,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "language": "java",
+      "sizeLines": 42,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "language": "java",
+      "sizeLines": 55,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "language": "java",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/ApiSecurityConfiguration.java",
+      "language": "java",
+      "sizeLines": 144,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "language": "java",
+      "sizeLines": 19,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/ExtensionCorsConfiguration.java",
+      "language": "java",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "language": "java",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/RequestAuthenticationService.java",
+      "language": "java",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "language": "java",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java",
+      "language": "java",
+      "sizeLines": 134,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/GoogleAuthorizedPartyValidator.java",
+      "language": "java",
+      "sizeLines": 34,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/GoogleOauthClient.java",
+      "language": "java",
+      "sizeLines": 174,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/LoginService.java",
+      "language": "java",
+      "sizeLines": 170,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/PairingConfiguration.java",
+      "language": "java",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/PairingSecrets.java",
+      "language": "java",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/PairingService.java",
+      "language": "java",
+      "sizeLines": 406,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/RedirectUriValidator.java",
+      "language": "java",
+      "sizeLines": 27,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/TokenLifecycleService.java",
+      "language": "java",
+      "sizeLines": 165,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/auth/service/TokenSecrets.java",
+      "language": "java",
+      "sizeLines": 32,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiErrorAttributes.java",
+      "language": "java",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "language": "java",
+      "sizeLines": 71,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "language": "java",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "language": "java",
+      "sizeLines": 83,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiExceptionHandler.java",
+      "language": "java",
+      "sizeLines": 85,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/ApiResponse.java",
+      "language": "java",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/RequestIdFilter.java",
+      "language": "java",
+      "sizeLines": 93,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/api/SafeApiLog.java",
+      "language": "java",
+      "sizeLines": 117,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/common/openapi/SwaggerConfiguration.java",
+      "language": "java",
+      "sizeLines": 47,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/controller/GoalController.java",
+      "language": "java",
+      "sizeLines": 142,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/dto/GoalDtos.java",
+      "language": "java",
+      "sizeLines": 51,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+      "language": "java",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+      "language": "java",
+      "sizeLines": 106,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+      "language": "java",
+      "sizeLines": 100,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+      "language": "java",
+      "sizeLines": 10,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/service/GoalAiClient.java",
+      "language": "java",
+      "sizeLines": 123,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/service/GoalAiResponseMapper.java",
+      "language": "java",
+      "sizeLines": 60,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+      "language": "java",
+      "sizeLines": 200,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/goal/service/GoalService.java",
+      "language": "java",
+      "sizeLines": 164,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+      "language": "java",
+      "sizeLines": 63,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/controller/ObservationContextController.java",
+      "language": "java",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/dto/InterventionDtos.java",
+      "language": "java",
+      "sizeLines": 46,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/dto/ObservationContextDtos.java",
+      "language": "java",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+      "language": "java",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+      "language": "java",
+      "sizeLines": 17,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+      "language": "java",
+      "sizeLines": 112,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "language": "java",
+      "sizeLines": 10,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+      "language": "java",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyState.java",
+      "language": "java",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+      "language": "java",
+      "sizeLines": 73,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+      "language": "java",
+      "sizeLines": 16,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java",
+      "language": "java",
+      "sizeLines": 120,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+      "language": "java",
+      "sizeLines": 31,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyListener.java",
+      "language": "java",
+      "sizeLines": 24,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+      "language": "java",
+      "sizeLines": 4,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionAccess.java",
+      "language": "java",
+      "sizeLines": 73,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+      "language": "java",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+      "language": "java",
+      "sizeLines": 84,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java",
+      "language": "java",
+      "sizeLines": 245,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+      "language": "java",
+      "sizeLines": 155,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java",
+      "language": "java",
+      "sizeLines": 133,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/OffTaskTimeline.java",
+      "language": "java",
+      "sizeLines": 160,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+      "language": "java",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/controller/LearningSummaryController.java",
+      "language": "java",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+      "language": "java",
+      "sizeLines": 56,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/dto/LearningSummaryResponse.java",
+      "language": "java",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+      "language": "java",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/persistence/LearningSummaryEntity.java",
+      "language": "java",
+      "sizeLines": 58,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/persistence/LearningSummaryRepository.java",
+      "language": "java",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/service/LearningSummaryService.java",
+      "language": "java",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+      "language": "java",
+      "sizeLines": 49,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/controller/LocalEventController.java",
+      "language": "java",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+      "language": "java",
+      "sizeLines": 225,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/controller/SessionQueryController.java",
+      "language": "java",
+      "sizeLines": 68,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+      "language": "java",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+      "language": "java",
+      "sizeLines": 106,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+      "language": "java",
+      "sizeLines": 77,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+      "language": "java",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "language": "java",
+      "sizeLines": 172,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "language": "java",
+      "sizeLines": 67,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+      "language": "java",
+      "sizeLines": 50,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+      "language": "java",
+      "sizeLines": 12,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+      "language": "java",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+      "language": "java",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+      "language": "java",
+      "sizeLines": 13,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/LocalEventService.java",
+      "language": "java",
+      "sizeLines": 166,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+      "language": "java",
+      "sizeLines": 315,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java",
+      "language": "java",
+      "sizeLines": 53,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+      "language": "java",
+      "sizeLines": 140,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionQueryService.java",
+      "language": "java",
+      "sizeLines": 87,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/session/service/SessionService.java",
+      "language": "java",
+      "sizeLines": 194,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/controller/OnboardingReadinessController.java",
+      "language": "java",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/controller/UserConfigurationController.java",
+      "language": "java",
+      "sizeLines": 241,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/dto/UserConfigurationDtos.java",
+      "language": "java",
+      "sizeLines": 66,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+      "language": "java",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+      "language": "java",
+      "sizeLines": 14,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+      "language": "java",
+      "sizeLines": 83,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java",
+      "language": "java",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+      "language": "java",
+      "sizeLines": 68,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java",
+      "language": "java",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java",
+      "language": "java",
+      "sizeLines": 117,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java",
+      "language": "java",
+      "sizeLines": 254,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/main/resources/application-docker.properties",
+      "language": "properties",
+      "sizeLines": 3,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/main/resources/application-local.properties",
+      "language": "properties",
+      "sizeLines": 19,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/main/resources/application.properties",
+      "language": "properties",
+      "sizeLines": 50,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/main/resources/db/migration/README.md",
+      "language": "markdown",
+      "sizeLines": 19,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "src/main/resources/db/migration/V10__add_session_resume_baseline.sql",
+      "language": "sql",
+      "sizeLines": 5,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V11__single_active_extension.sql",
+      "language": "sql",
+      "sizeLines": 41,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V12__validate_token_family_revocation_reason.sql",
+      "language": "sql",
+      "sizeLines": 3,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V13__add_heartbeat_observed_at.sql",
+      "language": "sql",
+      "sizeLines": 2,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V14__create_analysis_runs.sql",
+      "language": "sql",
+      "sizeLines": 37,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V15__add_analysis_observation_order.sql",
+      "language": "sql",
+      "sizeLines": 19,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V16__create_session_extensions.sql",
+      "language": "sql",
+      "sizeLines": 12,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V17__create_intervention_policy.sql",
+      "language": "sql",
+      "sizeLines": 32,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V18__connect_intervention_context_delivery.sql",
+      "language": "sql",
+      "sizeLines": 42,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V19__create_local_events_learning_summaries.sql",
+      "language": "sql",
+      "sizeLines": 50,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V1__create_initial_schema.sql",
+      "language": "sql",
+      "sizeLines": 112,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V20__reject_blank_learning_summaries.sql",
+      "language": "sql",
+      "sizeLines": 24,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V21__create_goal_clarification_sessions.sql",
+      "language": "sql",
+      "sizeLines": 23,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V2__enforce_auth_ownership.sql",
+      "language": "sql",
+      "sizeLines": 12,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V3__create_user_configuration.sql",
+      "language": "sql",
+      "sizeLines": 34,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V4__add_consent_source.sql",
+      "language": "sql",
+      "sizeLines": 3,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V5__add_device_pairing.sql",
+      "language": "sql",
+      "sizeLines": 60,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V6__add_onboarding_readiness.sql",
+      "language": "sql",
+      "sizeLines": 2,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V7__create_goals.sql",
+      "language": "sql",
+      "sizeLines": 16,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V8__create_learning_sessions.sql",
+      "language": "sql",
+      "sizeLines": 47,
+      "fileCategory": "data"
+    },
+    {
+      "path": "src/main/resources/db/migration/V9__enforce_session_ownership.sql",
+      "language": "sql",
+      "sizeLines": 13,
+      "fileCategory": "data"
+    }
+  ],
+  "totalFiles": 169,
+  "filteredByIgnore": 184,
+  "estimatedComplexity": "large",
+  "importMap": {
+    ".dockerignore": [],
+    ".env.example": [],
+    ".gitattributes": [],
+    "Dockerfile": [],
+    "build.gradle": [],
+    "docker-compose.yml": [],
+    "gradle/wrapper/gradle-wrapper.jar": [],
+    "gradle/wrapper/gradle-wrapper.properties": [],
+    "gradlew": [],
+    "gradlew.bat": [],
+    "scripts/google_pkce_request.py": [],
+    "scripts/verify_analysis_ai.py": [],
+    "settings.gradle": [],
+    "src/main/java/com/capstone/backend/BackendApplication.java": [],
+    "src/main/java/com/capstone/backend/analysis/controller/AnalysisController.java": [
+      "src/main/java/com/capstone/backend/analysis/service/AnalysisService.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java"
+    ],
+    "src/main/java/com/capstone/backend/analysis/dto/AnalysisDtos.java": [],
+    "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunEntity.java": [
+      "src/main/java/com/capstone/backend/analysis/service/AnalysisDecision.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunRepository.java": [],
+    "src/main/java/com/capstone/backend/analysis/service/AnalysisAiClient.java": [
+      "src/main/java/com/capstone/backend/common/api/SafeApiLog.java"
+    ],
+    "src/main/java/com/capstone/backend/analysis/service/AnalysisDecision.java": [],
+    "src/main/java/com/capstone/backend/analysis/service/AnalysisObservationOrder.java": [
+      "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/analysis/service/AnalysisPrivacy.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/analysis/service/AnalysisRunStore.java": [
+      "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunEntity.java",
+      "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+      "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/analysis/service/AnalysisService.java": [
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/common/api/SafeApiLog.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/AccessJwtService.java": [],
+    "src/main/java/com/capstone/backend/auth/controller/AuthController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java",
+      "src/main/java/com/capstone/backend/auth/service/LoginService.java",
+      "src/main/java/com/capstone/backend/auth/service/RedirectUriValidator.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/controller/DeviceController.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/controller/PairingController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/service/PairingService.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/controller/TokenLifecycleController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/service/TokenLifecycleService.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/dto/AuthDtos.java": [],
+    "src/main/java/com/capstone/backend/auth/dto/PairingDtos.java": [],
+    "src/main/java/com/capstone/backend/auth/dto/TokenLifecycleDtos.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/OauthIdentityEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/OauthIdentityRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/PairingCodeEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/PairingCodeRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/PairingInstallationAttemptEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/PairingInstallationAttemptRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java": [],
+    "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java": [],
+    "src/main/java/com/capstone/backend/auth/security/ApiSecurityConfiguration.java": [
+      "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/common/api/RequestIdFilter.java",
+      "src/main/java/com/capstone/backend/common/api/SafeApiLog.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/security/ExtensionCorsConfiguration.java": [],
+    "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java": [],
+    "src/main/java/com/capstone/backend/auth/security/RequestAuthenticationService.java": [
+      "src/main/java/com/capstone/backend/auth/AccessJwtService.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/GoogleAuthorizedPartyValidator.java": [],
+    "src/main/java/com/capstone/backend/auth/service/GoogleOauthClient.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/LoginService.java": [
+      "src/main/java/com/capstone/backend/auth/AccessJwtService.java",
+      "src/main/java/com/capstone/backend/auth/persistence/OauthIdentityEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/OauthIdentityRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/PairingCodeRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/PairingConfiguration.java": [],
+    "src/main/java/com/capstone/backend/auth/service/PairingSecrets.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/PairingService.java": [
+      "src/main/java/com/capstone/backend/auth/AccessJwtService.java",
+      "src/main/java/com/capstone/backend/auth/persistence/PairingCodeEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/PairingCodeRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/PairingInstallationAttemptEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/PairingInstallationAttemptRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/RedirectUriValidator.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/TokenLifecycleService.java": [
+      "src/main/java/com/capstone/backend/auth/AccessJwtService.java",
+      "src/main/java/com/capstone/backend/auth/persistence/PairingCodeRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/RefreshTokenRecordRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java"
+    ],
+    "src/main/java/com/capstone/backend/auth/service/TokenSecrets.java": [],
+    "src/main/java/com/capstone/backend/common/api/ApiErrorAttributes.java": [],
+    "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java": [],
+    "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java": [],
+    "src/main/java/com/capstone/backend/common/api/ApiException.java": [],
+    "src/main/java/com/capstone/backend/common/api/ApiExceptionHandler.java": [],
+    "src/main/java/com/capstone/backend/common/api/ApiResponse.java": [],
+    "src/main/java/com/capstone/backend/common/api/RequestIdFilter.java": [],
+    "src/main/java/com/capstone/backend/common/api/SafeApiLog.java": [],
+    "src/main/java/com/capstone/backend/common/openapi/SwaggerConfiguration.java": [],
+    "src/main/java/com/capstone/backend/goal/controller/GoalController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java",
+      "src/main/java/com/capstone/backend/goal/service/GoalService.java"
+    ],
+    "src/main/java/com/capstone/backend/goal/dto/GoalDtos.java": [],
+    "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java": [],
+    "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java": [],
+    "src/main/java/com/capstone/backend/goal/service/GoalAiClient.java": [],
+    "src/main/java/com/capstone/backend/goal/service/GoalAiResponseMapper.java": [],
+    "src/main/java/com/capstone/backend/goal/service/GoalClarificationService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java"
+    ],
+    "src/main/java/com/capstone/backend/goal/service/GoalService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationRepository.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalClarificationSession.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/controller/InterventionController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java",
+      "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+      "src/main/java/com/capstone/backend/intervention/service/InterventionService.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/controller/ObservationContextController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java",
+      "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/dto/InterventionDtos.java": [],
+    "src/main/java/com/capstone/backend/intervention/dto/ObservationContextDtos.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyState.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java": [],
+    "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java": [],
+    "src/main/java/com/capstone/backend/intervention/service/ForegroundPolicyContext.java": [
+      "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunRepository.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyListener.java": [
+      "src/main/java/com/capstone/backend/common/api/SafeApiLog.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java": [],
+    "src/main/java/com/capstone/backend/intervention/service/InterventionAccess.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/auth/service/AuthRateLimiter.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java": [
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java": [
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java": [
+      "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunEntity.java",
+      "src/main/java/com/capstone/backend/analysis/persistence/AnalysisRunRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyState.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/InterventionService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/ObservationContextService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextEntity.java",
+      "src/main/java/com/capstone/backend/intervention/persistence/ObservationContextRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/intervention/service/OffTaskTimeline.java": [],
+    "src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java": [],
+    "src/main/java/com/capstone/backend/report/controller/LearningSummaryController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/report/dto/LearningSummaryResponse.java",
+      "src/main/java/com/capstone/backend/report/service/LearningSummaryService.java"
+    ],
+    "src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+      "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java"
+    ],
+    "src/main/java/com/capstone/backend/report/dto/LearningSummaryResponse.java": [],
+    "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java": [
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/report/persistence/LearningSummaryEntity.java": [
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/report/dto/LearningSummaryResponse.java"
+    ],
+    "src/main/java/com/capstone/backend/report/persistence/LearningSummaryRepository.java": [],
+    "src/main/java/com/capstone/backend/report/service/LearningSummaryService.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/report/dto/LearningSummaryResponse.java",
+      "src/main/java/com/capstone/backend/report/persistence/LearningSummaryRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/session/controller/LocalEventController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/session/service/LocalEventService.java"
+    ],
+    "src/main/java/com/capstone/backend/session/controller/SessionController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+      "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+      "src/main/java/com/capstone/backend/session/service/SessionService.java"
+    ],
+    "src/main/java/com/capstone/backend/session/controller/SessionQueryController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/session/service/SessionQueryService.java"
+    ],
+    "src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java": [
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/session/dto/SessionDtos.java": [
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java": [],
+    "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java": [],
+    "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java": [],
+    "src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java": [],
+    "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java": [],
+    "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java": [],
+    "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java": [],
+    "src/main/java/com/capstone/backend/session/service/LocalEventService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LocalEventEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LocalEventRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/session/service/SessionCommandService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionExtensionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+      "src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java"
+    ],
+    "src/main/java/com/capstone/backend/session/service/SessionHeartbeatCleanup.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/common/api/SafeApiLog.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/session/service/SessionQueryService.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java"
+    ],
+    "src/main/java/com/capstone/backend/session/service/SessionService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalEntity.java",
+      "src/main/java/com/capstone/backend/goal/persistence/GoalRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionEntity.java",
+      "src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+      "src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java",
+      "src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java"
+    ],
+    "src/main/java/com/capstone/backend/user/controller/OnboardingReadinessController.java": [
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiResponse.java",
+      "src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java"
+    ],
+    "src/main/java/com/capstone/backend/user/controller/UserConfigurationController.java": [
+      "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+      "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java"
+    ],
+    "src/main/java/com/capstone/backend/user/dto/UserConfigurationDtos.java": [],
+    "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java": [],
+    "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java"
+    ],
+    "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java": [],
+    "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java": [],
+    "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java": [],
+    "src/main/java/com/capstone/backend/user/service/OnboardingReadinessService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/TokenFamilyRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserDeviceRepository.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/auth/security/TokenFamilyGuard.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java"
+    ],
+    "src/main/java/com/capstone/backend/user/service/UserConfigurationService.java": [
+      "src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+      "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+      "src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+      "src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+      "src/main/java/com/capstone/backend/common/api/ApiException.java",
+      "src/main/java/com/capstone/backend/intervention/service/RequiredConsentWithdrawal.java",
+      "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainEntity.java",
+      "src/main/java/com/capstone/backend/user/persistence/AnalysisExcludedDomainRepository.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentEntity.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserConsentRepository.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsEntity.java",
+      "src/main/java/com/capstone/backend/user/persistence/UserFocusSettingsRepository.java"
+    ],
+    "src/main/resources/application-docker.properties": [],
+    "src/main/resources/application-local.properties": [],
+    "src/main/resources/application.properties": [],
+    "src/main/resources/db/migration/README.md": [],
+    "src/main/resources/db/migration/V10__add_session_resume_baseline.sql": [],
+    "src/main/resources/db/migration/V11__single_active_extension.sql": [],
+    "src/main/resources/db/migration/V12__validate_token_family_revocation_reason.sql": [],
+    "src/main/resources/db/migration/V13__add_heartbeat_observed_at.sql": [],
+    "src/main/resources/db/migration/V14__create_analysis_runs.sql": [],
+    "src/main/resources/db/migration/V15__add_analysis_observation_order.sql": [],
+    "src/main/resources/db/migration/V16__create_session_extensions.sql": [],
+    "src/main/resources/db/migration/V17__create_intervention_policy.sql": [],
+    "src/main/resources/db/migration/V18__connect_intervention_context_delivery.sql": [],
+    "src/main/resources/db/migration/V19__create_local_events_learning_summaries.sql": [],
+    "src/main/resources/db/migration/V1__create_initial_schema.sql": [],
+    "src/main/resources/db/migration/V20__reject_blank_learning_summaries.sql": [],
+    "src/main/resources/db/migration/V21__create_goal_clarification_sessions.sql": [],
+    "src/main/resources/db/migration/V2__enforce_auth_ownership.sql": [],
+    "src/main/resources/db/migration/V3__create_user_configuration.sql": [],
+    "src/main/resources/db/migration/V4__add_consent_source.sql": [],
+    "src/main/resources/db/migration/V5__add_device_pairing.sql": [],
+    "src/main/resources/db/migration/V6__add_onboarding_readiness.sql": [],
+    "src/main/resources/db/migration/V7__create_goals.sql": [],
+    "src/main/resources/db/migration/V8__create_learning_sessions.sql": [],
+    "src/main/resources/db/migration/V9__enforce_session_ownership.sql": []
+  }
+}

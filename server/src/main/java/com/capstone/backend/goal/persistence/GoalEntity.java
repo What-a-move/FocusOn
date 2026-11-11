@@ -36,6 +36,10 @@ public class GoalEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private UserEntity user;
 
+  @ManyToOne
+  @JoinColumn(name = "clarification_session_id")
+  private GoalClarificationSession clarificationSession;
+
   @Column(name = "goal_text", nullable = false, length = 40)
   private String goalText;
 
@@ -73,6 +77,11 @@ public class GoalEntity {
   public static GoalEntity create(UserEntity user, String goalText,
       ConfirmationSource confirmationSource, Instant now) {
     return new GoalEntity(user, goalText, confirmationSource, now);
+  }
+
+  /** 검증을 마친 명확화 이력을 목표와 연결한다. */
+  public void linkClarification(GoalClarificationSession session) {
+    this.clarificationSession = session;
   }
 
   /** 수정된 목표 문구와 변경 시각을 반영한다. */

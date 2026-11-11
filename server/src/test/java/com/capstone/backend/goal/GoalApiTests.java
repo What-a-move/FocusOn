@@ -105,12 +105,16 @@ class GoalApiTests {
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"goalText\":\"AI 목표\",\"confirmationSource\":\"AI_CONFIRMED\","
                 + "\"clarificationSessionId\":\"123\"}"))
-        .andExpect(status().isServiceUnavailable());
-    String manualResponse = mvc.perform(post("/api/v1/goals")
-            .header("Authorization", "Bearer " + owner.accessToken())
+        .andExpect(status().isNotFound());
+    mvc.perform(post("/api/v1/goals").header("Authorization", "Bearer " + owner.accessToken())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"goalText\":\"수동 목표\",\"confirmationSource\":\"MANUAL_CONFIRMED\","
                 + "\"clarificationSessionId\":\"123\"}"))
+        .andExpect(status().isNotFound());
+    String manualResponse = mvc.perform(post("/api/v1/goals")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"수동 목표\",\"confirmationSource\":\"MANUAL_CONFIRMED\"}"))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.data.confirmationSource").value("MANUAL_CONFIRMED"))
         .andReturn().getResponse().getContentAsString();

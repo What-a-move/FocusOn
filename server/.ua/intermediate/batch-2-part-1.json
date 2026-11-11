@@ -1,0 +1,1184 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "file",
+   "name": "UserRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "summary": "사용자 Entity용 Spring Data JPA Repository로, 닉네임 조회와 비관적 잠금(FOR UPDATE / SKIP LOCKED) 사용자 행 조회를 제공해 사용자 단위 명령 직렬화의 기반이 된다.",
+   "tags": [
+    "repository",
+    "data-access",
+    "pessimistic-lock",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java:UserRepository",
+   "type": "class",
+   "name": "UserRepository",
+   "filePath": "src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "lineRange": [
+    11,
+    24
+   ],
+   "summary": "사용자 Entity용 Spring Data JPA Repository로, 닉네임 조회와 비관적 잠금(FOR UPDATE / SKIP LOCKED) 사용자 행 조회를 제공해 사용자 단위 명령 직렬화의 기반이 된다.",
+   "tags": [
+    "repository",
+    "data-access",
+    "pessimistic-lock",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "type": "file",
+   "name": "HeartbeatPolicyEvaluator.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "summary": "유효 heartbeat 이후 REQUIRES_NEW 트랜잭션에서 영속성 컨텍스트를 비우고 사용자→세션 잠금을 다시 얻어 개입 정책(InterventionPolicyService.heartbeat)을 평가한다.",
+   "tags": [
+    "service",
+    "intervention",
+    "transaction",
+    "policy-evaluation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:HeartbeatPolicyEvaluator",
+   "type": "class",
+   "name": "HeartbeatPolicyEvaluator",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "lineRange": [
+    13,
+    31
+   ],
+   "summary": "유효 heartbeat 이후 REQUIRES_NEW 트랜잭션에서 영속성 컨텍스트를 비우고 사용자→세션 잠금을 다시 얻어 개입 정책(InterventionPolicyService.heartbeat)을 평가한다.",
+   "tags": [
+    "service",
+    "intervention",
+    "transaction",
+    "policy-evaluation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:evaluate",
+   "type": "function",
+   "name": "evaluate",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "lineRange": [
+    22,
+    30
+   ],
+   "summary": "사용자·세션을 다시 잠그고 최신 세션으로 heartbeat 개입 정책을 평가한다.",
+   "tags": [
+    "service",
+    "method",
+    "transaction"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+   "type": "file",
+   "name": "HeartbeatPolicyTrigger.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+   "summary": "유효한 RUNNING heartbeat가 커밋된 뒤 개입 정책 평가를 유도하기 위해 발행되는 사용자·세션 식별자 전용 내부 이벤트 record다.",
+   "tags": [
+    "event",
+    "type-definition",
+    "intervention",
+    "record"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java:HeartbeatPolicyTrigger",
+   "type": "class",
+   "name": "HeartbeatPolicyTrigger",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+   "lineRange": [
+    4,
+    4
+   ],
+   "summary": "유효한 RUNNING heartbeat가 커밋된 뒤 개입 정책 평가를 유도하기 위해 발행되는 사용자·세션 식별자 전용 내부 이벤트 record다.",
+   "tags": [
+    "event",
+    "type-definition",
+    "intervention",
+    "record"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "type": "file",
+   "name": "InterventionConsentListener.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "summary": "필수 동의 철회 이벤트를 같은 트랜잭션(MANDATORY)에서 수신해 활성 세션을 잠근 뒤 개입 정책의 동의 철회 경계를 영속화한다.",
+   "tags": [
+    "event-handler",
+    "intervention",
+    "consent",
+    "transaction"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:InterventionConsentListener",
+   "type": "class",
+   "name": "InterventionConsentListener",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "lineRange": [
+    13,
+    29
+   ],
+   "summary": "필수 동의 철회 이벤트를 같은 트랜잭션(MANDATORY)에서 수신해 활성 세션을 잠근 뒤 개입 정책의 동의 철회 경계를 영속화한다.",
+   "tags": [
+    "event-handler",
+    "intervention",
+    "consent",
+    "transaction"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:withdrawn",
+   "type": "function",
+   "name": "withdrawn",
+   "filePath": "src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "lineRange": [
+    20,
+    28
+   ],
+   "summary": "동의 철회 이벤트 수신 시 활성 세션을 잠그고 정책의 동의 철회 처리를 호출한다.",
+   "tags": [
+    "event-handler",
+    "method",
+    "consent"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "type": "file",
+   "name": "SessionSummaryController.java",
+   "filePath": "src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "summary": "GET /api/v1/sessions/{sessionId}/summary 엔드포인트로 Desktop 종료 결과 화면에 확정된 세션 요약을 제공하는 REST 컨트롤러다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "report",
+    "rest-api"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:SessionSummaryController",
+   "type": "class",
+   "name": "SessionSummaryController",
+   "filePath": "src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "lineRange": [
+    23,
+    56
+   ],
+   "summary": "GET /api/v1/sessions/{sessionId}/summary 엔드포인트로 Desktop 종료 결과 화면에 확정된 세션 요약을 제공하는 REST 컨트롤러다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "report",
+    "rest-api"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:get",
+   "type": "function",
+   "name": "get",
+   "filePath": "src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "lineRange": [
+    31,
+    55
+   ],
+   "summary": "세션 요약 조회 요청을 받아 SessionSummaryService에 위임하고 응답을 반환한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "report"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "type": "file",
+   "name": "SessionSummaryResponse.java",
+   "filePath": "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "summary": "종료된 세션의 목표 스냅샷, 목표·누적 시간, 상태, 시작·종료 시각, 연장 횟수·시간을 담는 요약 응답 record다.",
+   "tags": [
+    "dto",
+    "data-model",
+    "report",
+    "record"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java:SessionSummaryResponse",
+   "type": "class",
+   "name": "SessionSummaryResponse",
+   "filePath": "src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "lineRange": [
+    7,
+    9
+   ],
+   "summary": "종료된 세션의 목표 스냅샷, 목표·누적 시간, 상태, 시작·종료 시각, 연장 횟수·시간을 담는 요약 응답 record다.",
+   "tags": [
+    "dto",
+    "data-model",
+    "report",
+    "record"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "type": "file",
+   "name": "SessionSummaryService.java",
+   "filePath": "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "summary": "Desktop 기기 권한과 세션 소유권·종료 상태(ENDED/ABANDONED)를 검증한 뒤 저장된 값과 연장 합계로 세션 요약을 만드는 읽기 전용 서비스다.",
+   "tags": [
+    "service",
+    "report",
+    "read-only",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:SessionSummaryService",
+   "type": "class",
+   "name": "SessionSummaryService",
+   "filePath": "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "lineRange": [
+    16,
+    49
+   ],
+   "summary": "Desktop 기기 권한과 세션 소유권·종료 상태(ENDED/ABANDONED)를 검증한 뒤 저장된 값과 연장 합계로 세션 요약을 만드는 읽기 전용 서비스다.",
+   "tags": [
+    "service",
+    "report",
+    "read-only",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:get",
+   "type": "function",
+   "name": "get",
+   "filePath": "src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "lineRange": [
+    23,
+    48
+   ],
+   "summary": "Desktop·소유권·종료 상태를 검증하고 연장 합계를 포함한 세션 요약을 생성한다.",
+   "tags": [
+    "service",
+    "method",
+    "read-only"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "type": "file",
+   "name": "SessionController.java",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "summary": "/api/v1/sessions 하위 시작·활성 조회·heartbeat·연장·일시정지·재개·종료 API를 노출하는 REST 컨트롤러로, Idempotency-Key·If-Match 버전 헤더를 서비스로 전달한다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "session",
+    "rest-api"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/controller/SessionController.java:SessionController",
+   "type": "class",
+   "name": "SessionController",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    44,
+    225
+   ],
+   "summary": "/api/v1/sessions 하위 시작·활성 조회·heartbeat·연장·일시정지·재개·종료 API를 노출하는 REST 컨트롤러로, Idempotency-Key·If-Match 버전 헤더를 서비스로 전달한다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "session",
+    "rest-api"
+   ],
+   "complexity": "complex"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:heartbeat",
+   "type": "function",
+   "name": "heartbeat",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    55,
+    79
+   ],
+   "summary": "POST /{sessionId}/heartbeats 요청을 SessionHeartbeatService로 위임한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:extend",
+   "type": "function",
+   "name": "extend",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    82,
+    105
+   ],
+   "summary": "POST /{sessionId}/extend 요청을 멱등 키·버전과 함께 연장 명령으로 위임한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:end",
+   "type": "function",
+   "name": "end",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    108,
+    126
+   ],
+   "summary": "POST /{sessionId}/end 요청으로 최종 누적 시간을 전달해 세션 종료를 확정한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:pause",
+   "type": "function",
+   "name": "pause",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    129,
+    152
+   ],
+   "summary": "POST /{sessionId}/pause 요청으로 실행 중 세션을 일시정지한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:resume",
+   "type": "function",
+   "name": "resume",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    155,
+    180
+   ],
+   "summary": "POST /{sessionId}/resume 요청으로 일시정지된 세션을 재개한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:start",
+   "type": "function",
+   "name": "start",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    183,
+    208
+   ],
+   "summary": "POST /api/v1/sessions로 멱등 키와 함께 Desktop 세션을 시작한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:active",
+   "type": "function",
+   "name": "active",
+   "filePath": "src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "lineRange": [
+    211,
+    224
+   ],
+   "summary": "GET /active로 활성 세션을 조회하고 없으면 204를 반환한다.",
+   "tags": [
+    "api-handler",
+    "method",
+    "session"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+   "type": "file",
+   "name": "LocalEventDtos.java",
+   "filePath": "src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+   "summary": "로컬 권한 유실 이벤트(화면 권한 철회, 확장 호스트 권한 누락) 요청 코드와 세션 상태 응답을 정의하는 DTO 모음이다.",
+   "tags": [
+    "dto",
+    "type-definition",
+    "session",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java:LocalEventDtos",
+   "type": "class",
+   "name": "LocalEventDtos",
+   "filePath": "src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+   "lineRange": [
+    9,
+    23
+   ],
+   "summary": "로컬 권한 유실 이벤트(화면 권한 철회, 확장 호스트 권한 누락) 요청 코드와 세션 상태 응답을 정의하는 DTO 모음이다.",
+   "tags": [
+    "dto",
+    "type-definition",
+    "session",
+    "validation"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+   "type": "file",
+   "name": "SessionDtos.java",
+   "filePath": "src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+   "summary": "세션 시작·활성 조회·일시정지·재개·종료·연장·heartbeat의 요청/응답 record와 알림 채널·일시정지 사유 enum을 Bean Validation·OpenAPI 스키마와 함께 정의한다.",
+   "tags": [
+    "dto",
+    "type-definition",
+    "session",
+    "validation",
+    "openapi"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/dto/SessionDtos.java:SessionDtos",
+   "type": "class",
+   "name": "SessionDtos",
+   "filePath": "src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+   "lineRange": [
+    17,
+    106
+   ],
+   "summary": "세션 시작·활성 조회·일시정지·재개·종료·연장·heartbeat의 요청/응답 record와 알림 채널·일시정지 사유 enum을 Bean Validation·OpenAPI 스키마와 함께 정의한다.",
+   "tags": [
+    "dto",
+    "type-definition",
+    "session",
+    "validation",
+    "openapi"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "type": "file",
+   "name": "IdempotencyRecordEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "summary": "사용자·범위·멱등 키별로 요청 해시와 확정된 응답을 저장해 세션 명령 재시도 시 동일 응답을 재사용하게 하는 JPA Entity다.",
+   "tags": [
+    "entity",
+    "data-model",
+    "idempotency",
+    "jpa"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:IdempotencyRecordEntity",
+   "type": "class",
+   "name": "IdempotencyRecordEntity",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "lineRange": [
+    22,
+    77
+   ],
+   "summary": "사용자·범위·멱등 키별로 요청 해시와 확정된 응답을 저장해 세션 명령 재시도 시 동일 응답을 재사용하게 하는 JPA Entity다.",
+   "tags": [
+    "entity",
+    "data-model",
+    "idempotency",
+    "jpa"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "lineRange": [
+    72,
+    76
+   ],
+   "summary": "확정된 응답과 요청 해시로 멱등 기록 Entity를 생성하는 팩토리다.",
+   "tags": [
+    "entity",
+    "method",
+    "idempotency"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "type": "file",
+   "name": "IdempotencyRecordRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "summary": "사용자·범위·멱등 키로 기존 멱등 기록을 조회하는 Spring Data JPA Repository다.",
+   "tags": [
+    "repository",
+    "idempotency",
+    "data-access",
+    "jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java:IdempotencyRecordRepository",
+   "type": "class",
+   "name": "IdempotencyRecordRepository",
+   "filePath": "src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "lineRange": [
+    8,
+    12
+   ],
+   "summary": "사용자·범위·멱등 키로 기존 멱등 기록을 조회하는 Spring Data JPA Repository다.",
+   "tags": [
+    "repository",
+    "idempotency",
+    "data-access",
+    "jpa"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java:UserRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java:UserRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:HeartbeatPolicyEvaluator",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:HeartbeatPolicyEvaluator",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:evaluate",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:evaluate",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java:HeartbeatPolicyTrigger",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyTrigger.java:HeartbeatPolicyTrigger",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:InterventionConsentListener",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:InterventionConsentListener",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:withdrawn",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:withdrawn",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "file:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "class:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:SessionSummaryController",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "class:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:SessionSummaryController",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "function:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:get",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java",
+   "target": "function:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:get",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "target": "class:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java:SessionSummaryResponse",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "target": "class:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java:SessionSummaryResponse",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/report/dto/SessionSummaryResponse.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/LearningSessionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionExtensionRepository.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "class:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:SessionSummaryService",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "class:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:SessionSummaryService",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "function:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:get",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java",
+   "target": "function:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:get",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorResponse.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "file:src/main/java/com/capstone/backend/session/service/SessionCommandService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "file:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "file:src/main/java/com/capstone/backend/session/service/SessionService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "class:src/main/java/com/capstone/backend/session/controller/SessionController.java:SessionController",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "class:src/main/java/com/capstone/backend/session/controller/SessionController.java:SessionController",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:heartbeat",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:heartbeat",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:extend",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:extend",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:end",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:end",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:pause",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:pause",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:resume",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:resume",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:start",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:start",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:active",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/controller/SessionController.java",
+   "target": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:active",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+   "target": "class:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java:LocalEventDtos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java",
+   "target": "class:src/main/java/com/capstone/backend/session/dto/LocalEventDtos.java:LocalEventDtos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+   "target": "file:src/main/java/com/capstone/backend/session/persistence/SessionStatus.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+   "target": "class:src/main/java/com/capstone/backend/session/dto/SessionDtos.java:SessionDtos",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/dto/SessionDtos.java",
+   "target": "class:src/main/java/com/capstone/backend/session/dto/SessionDtos.java:SessionDtos",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/persistence/UserEntity.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:IdempotencyRecordEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:IdempotencyRecordEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordEntity.java:create",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java:IdempotencyRecordRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/session/persistence/IdempotencyRecordRepository.java:IdempotencyRecordRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/report/controller/SessionSummaryController.java:get",
+   "target": "function:src/main/java/com/capstone/backend/report/service/SessionSummaryService.java:get",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:heartbeat",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionHeartbeatService.java:heartbeat",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:extend",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:extend",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:end",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:end",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:pause",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:pause",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:resume",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionCommandService.java:resume",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:start",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:start",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/session/controller/SessionController.java:active",
+   "target": "function:src/main/java/com/capstone/backend/session/service/SessionService.java:active",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java:evaluate",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java:heartbeat",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "function:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java:withdrawn",
+   "target": "function:src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java:consentWithdrawn",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/HeartbeatPolicyEvaluator.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/service/InterventionConsentListener.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/InterventionPolicyService.java",
+   "type": "depends_on",
+   "direction": "forward",
+   "weight": 0.6
+  }
+ ]
+}
