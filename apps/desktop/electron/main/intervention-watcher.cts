@@ -4,7 +4,7 @@ import type { FloatingShow, InterventionAction } from '../shared/intervention-co
 import type { SessionOptions } from '../shared/session-contract.cjs'
 
 // 포키 코칭 문구는 친근한 반말이다(Notion UX 문구·알림 문구 정책 2.1, floating-poki.html). 구체 활동은 추측해 말하지 않는다.
-const COPY = {
+export const COPY = {
   GENTLE: { say: '어, 잠깐 샜네?', sub: '아까 하던 거 마저 할까?' },
   NORMAL: { say: '어? 또 딴 데 보고 있네 👀', sub: '목표로 돌아가자!' },
   ACTIVE: { say: '어 얘 봐라? 또 놀고 있네 😏', sub: '이러다 오늘 목표 다 날아간다?' },

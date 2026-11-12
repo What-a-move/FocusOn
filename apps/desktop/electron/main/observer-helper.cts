@@ -15,8 +15,8 @@ export class ObserverHelper {
 
   constructor(private readonly binary: string) {}
 
-  /** ocr은 windowId가 필요하다. 창 캡처·OCR은 1초보다 오래 걸릴 수 있어 timeoutMs를 늘려 부른다. */
-  request(cmd: 'frontmost' | 'apps' | 'ocr', { timeoutMs = TIMEOUT_MS, windowId }: { timeoutMs?: number; windowId?: number } = {}): Promise<Record<string, unknown> | null> {
+  /** ocr은 windowId가 필요하다. camera는 기본 카메라를 켜 두고 최근 프레임의 추상 신호만 받는다(cameraStop으로 해제). 창 캡처·OCR은 1초보다 오래 걸릴 수 있어 timeoutMs를 늘려 부른다. */
+  request(cmd: 'frontmost' | 'apps' | 'ocr' | 'camera' | 'cameraStop', { timeoutMs = TIMEOUT_MS, windowId }: { timeoutMs?: number; windowId?: number } = {}): Promise<Record<string, unknown> | null> {
     const child = this.ensure()
     if (!child) return Promise.resolve(null)
     const id = this.nextId++
