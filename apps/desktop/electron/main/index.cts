@@ -336,7 +336,10 @@ if (!hasSingleInstanceLock) {
       if (!helper || placing) return
       placing = true
       try {
-        const fullScreen = parseFrontmost(await helper.request('frontmost', { timeoutMs: 500 }))?.fullScreen === true
+        // 도우미가 답하지 못하면(null) 전체 화면 여부를 모르는 것이라 지금 자리를 그대로 둔다.
+        const front = parseFrontmost(await helper.request('frontmost', { timeoutMs: 500 }))
+        if (!front) return
+        const fullScreen = front.fullScreen === true
         if (fullScreen === frontFullScreen) return
         frontFullScreen = fullScreen
         if (pendingShow && floatingWindow && !floatingWindow.isDestroyed()) sendLift(floatingWindow)
@@ -424,7 +427,7 @@ if (!hasSingleInstanceLock) {
             if (current?.status !== 'RUNNING' || current.sessionId !== session.sessionId) return
             const front = parseFrontmost(reply)
             const fullScreen = front?.fullScreen === true
-            if (fullScreen !== frontFullScreen) {
+            if (front && fullScreen !== frontFullScreen) {
               frontFullScreen = fullScreen
               if (pendingShow && floatingWindow && !floatingWindow.isDestroyed()) sendLift(floatingWindow)
             }
