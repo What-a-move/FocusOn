@@ -1,8 +1,9 @@
 // FocusOn 화면 관측 도우미 (Desktop 결정 024, screen-observation-PLAN.md).
-// Main이 한 번 띄워 두고 표준 입출력으로 JSON 한 줄씩 주고받는다. 요청: {"id":1,"cmd":"frontmost"|"apps"|"ocr","windowId":123}
+// Main이 한 번 띄워 두고 표준 입출력으로 JSON 한 줄씩 주고받는다. 요청: {"id":1,"cmd":"frontmost"|"apps"|"ocr"|"camera"|"cameraStop","windowId":123}
 // 창 제목은 화면 기록 권한이 없으면 null이다.
 // [주의] ocr은 지정한 창 하나만 캡처해 글자만 돌려준다. 이미지는 이 프로세스 밖으로 내보내지 않고 OCR 직후 버린다(결정 024).
 import AppKit
+import AVFoundation
 import CoreGraphics
 import ScreenCaptureKit
 import Vision
@@ -87,6 +88,89 @@ func ocr(_ id: Int, windowId: Int) {
   }
 }
 
+// 카메라 분석 (Notion 카메라 분석, #222). 기본 카메라 프레임을 이 프로세스 안에서만 Vision으로 보고 추상 신호만 돌려준다.
+// [주의] 프레임·얼굴 좌표·랜드마크는 밖으로 내보내지 않고 저장하지 않는다. 가장 최근 프레임 하나만 메모리에 두고 다음 프레임이 오면 버린다.
+// 머리가 이 각도(라디안, 약 25도)보다 돌아가면 화면을 보지 않는 것으로 본다. 실제 사용자 테스트로 조정한다.
+let HEAD_AWAY_RAD = 0.44
+// 얼굴 너비가 프레임의 이 비율보다 작으면 너무 멀어서 판단하지 않는다.
+let MIN_FACE_WIDTH = 0.08
+// 밝기 평균(0~255)이 이보다 낮으면 어두워서 얼굴이 없다고 단정하지 않는다.
+let MIN_LUMA = 40.0
+
+final class CameraSampler: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+  private var session: AVCaptureSession?
+  private let queue = DispatchQueue(label: "focuson.camera")
+  private var latest: CVPixelBuffer?
+  private let lock = NSLock()
+
+  func sample(_ id: Int) {
+    guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { reply(["id": id, "ok": false, "error": "CAMERA_DENIED"]); return }
+    if session == nil {
+      guard let device = AVCaptureDevice.default(for: .video), let input = try? AVCaptureDeviceInput(device: device) else { reply(["id": id, "ok": false, "error": "CAMERA_UNAVAILABLE"]); return }
+      let next = AVCaptureSession()
+      next.sessionPreset = .vga640x480
+      let output = AVCaptureVideoDataOutput()
+      output.alwaysDiscardsLateVideoFrames = true
+      output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange]
+      output.setSampleBufferDelegate(self, queue: queue)
+      guard next.canAddInput(input), next.canAddOutput(output) else { reply(["id": id, "ok": false, "error": "CAMERA_UNAVAILABLE"]); return }
+      next.addInput(input)
+      next.addOutput(output)
+      session = next
+      queue.async { next.startRunning() }
+    }
+    lock.lock(); let frame = latest; lock.unlock()
+    // 켜는 중이라 아직 프레임이 없으면 알림 근거로 쓰지 않는다.
+    guard let frame else { reply(["id": id, "ok": true, "state": "STARTING"]); return }
+    queue.async { reply(["id": id, "ok": true, "state": "SAMPLE"].merging(Self.analyze(frame)) { $1 }) }
+  }
+
+  func stop(_ id: Int) {
+    let current = session
+    session = nil
+    lock.lock(); latest = nil; lock.unlock()
+    queue.async { current?.stopRunning() }
+    reply(["id": id, "ok": true])
+  }
+
+  func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+    lock.lock(); latest = buffer; lock.unlock()
+  }
+
+  private static func analyze(_ frame: CVPixelBuffer) -> [String: Any] {
+    if averageLuma(frame) < MIN_LUMA { return ["faceCount": 0, "eyesVisible": false, "gaze": "UNKNOWN", "quality": "UNUSABLE"] }
+    let request = VNDetectFaceLandmarksRequest()
+    try? VNImageRequestHandler(cvPixelBuffer: frame, options: [:]).perform([request])
+    let faces = request.results ?? []
+    // 밝은데 얼굴이 없으면 자리를 비운 것으로 본다(설계서 5.2 얼굴 부재).
+    guard let face = faces.first else { return ["faceCount": 0, "eyesVisible": false, "gaze": "AWAY", "quality": "GOOD"] }
+    // 여러 얼굴이면 누구를 볼지 알 수 없어 판단하지 않는다(설계서 7.2).
+    if faces.count > 1 { return ["faceCount": faces.count, "eyesVisible": false, "gaze": "UNKNOWN", "quality": "UNUSABLE"] }
+    let eyesVisible = face.landmarks?.leftEye != nil && face.landmarks?.rightEye != nil
+    if face.boundingBox.width < MIN_FACE_WIDTH || face.confidence < 0.5 { return ["faceCount": 1, "eyesVisible": eyesVisible, "gaze": "UNKNOWN", "quality": "LOW"] }
+    let yaw = abs(face.yaw?.doubleValue ?? 0)
+    let pitch = abs(face.pitch?.doubleValue ?? 0)
+    let away = yaw > HEAD_AWAY_RAD || pitch > HEAD_AWAY_RAD
+    // 정면인데 눈이 안 보이면(가림·반사) 시선을 모른다. 고개를 크게 돌린 것은 눈이 없어도 AWAY다.
+    let gaze = away ? "AWAY" : eyesVisible ? "SCREEN" : "UNKNOWN"
+    return ["faceCount": 1, "eyesVisible": eyesVisible, "gaze": gaze, "quality": gaze == "UNKNOWN" ? "LOW" : "GOOD"]
+  }
+
+  // 밝기 평면(Y)을 16칸마다 하나씩만 읽어 평균을 낸다.
+  private static func averageLuma(_ frame: CVPixelBuffer) -> Double {
+    CVPixelBufferLockBaseAddress(frame, .readOnly)
+    defer { CVPixelBufferUnlockBaseAddress(frame, .readOnly) }
+    guard let base = CVPixelBufferGetBaseAddressOfPlane(frame, 0) else { return 0 }
+    let width = CVPixelBufferGetWidthOfPlane(frame, 0), height = CVPixelBufferGetHeightOfPlane(frame, 0), stride = CVPixelBufferGetBytesPerRowOfPlane(frame, 0)
+    let bytes = base.assumingMemoryBound(to: UInt8.self)
+    var sum = 0, count = 0
+    for y in Swift.stride(from: 0, to: height, by: 16) { for x in Swift.stride(from: 0, to: width, by: 16) { sum += Int(bytes[y * stride + x]); count += 1 } }
+    return count == 0 ? 0 : Double(sum) / Double(count)
+  }
+}
+let camera = CameraSampler()
+
 // [주의] 창 캡처(ScreenCaptureKit)는 화면 서버 연결이 초기화된 프로세스에서만 동작한다. 없으면 CGS_REQUIRE_INIT로 죽는다.
 // NSApplication으로 연결만 만들고 Dock·메뉴에는 나타나지 않게 한다.
 NSApplication.shared.setActivationPolicy(.prohibited)
@@ -110,6 +194,8 @@ FileHandle.standardInput.readabilityHandler = { handle in
       case "ocr":
         if let windowId = request["windowId"] as? Int { ocr(id, windowId: windowId) } else { reply(["id": id, "ok": false, "error": "INVALID_REQUEST"]) }
       case "apps": installedApps(id)
+      case "camera": camera.sample(id)
+      case "cameraStop": camera.stop(id)
       default: reply(["id": id, "ok": false, "error": "UNKNOWN_COMMAND"])
       }
     }

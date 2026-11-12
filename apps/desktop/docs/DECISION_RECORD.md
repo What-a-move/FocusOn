@@ -751,3 +751,12 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 서버 API가 모두 생기면 `demo-mode.cts`와 `dev:demo`를 지운다.
 - 영향받는 파일: `electron/main/demo-mode.cts`, `electron/main/index.cts`, `package.json`, `tests/electron/demo-mode.test.cjs`
 
+
+## 결정 039 - 카메라 분석: Swift 도우미에서 Apple Vision, 알림은 Desktop이 직접
+
+- 결정일: 2026-11-12 / 상태: 확정 / Issue #222.
+- 카메라는 화면 OCR과 같은 Swift 도우미 프로세스에서 AVFoundation + Apple Vision으로 본다. 프레임은 도우미 밖으로 나가지 않고, Main은 `faceCount`·`eyesVisible`·`gaze`·`quality`만 받는다.
+- 시선은 눈동자 추적이 아니라 머리 yaw·pitch(약 25도)와 얼굴 유무로 보수적으로 추정한다. 어둡거나 얼굴이 여러 개거나 불확실하면 AWAY로 세지 않는다.
+- 서버에 카메라 알림 API가 없어서, 90초 확정 뒤 최종 게이트를 통과하면 Desktop이 직접 포키(`local-camera`)를 띄운다. 확인 기록은 보내지 않고 5분 cooldown은 Desktop이 지킨다.
+- 서버 카메라 이벤트(설계서 8.1)가 생기면 확정 시점을 서버에 기록하고 서버 알림 cooldown과 합친다.
+- 영향받는 파일: `native/observer/main.swift`, `electron/main/camera-monitor.cts`, `electron/main/index.cts`, `electron/main/observer-helper.cts`, `electron/shared/intervention-contract.cts`
