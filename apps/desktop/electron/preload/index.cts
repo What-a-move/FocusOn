@@ -18,6 +18,13 @@ ipcRenderer.on(INTERVENTION_CHANNELS.show, (_event, payload: unknown) => {
   lastShow = payload
   showListeners.forEach((listener) => listener(payload))
 })
+let lastLift = 0
+const liftListeners = new Set<(px: number) => void>()
+ipcRenderer.on(INTERVENTION_CHANNELS.lift, (_event, px: unknown) => {
+  if (typeof px !== 'number' || !Number.isFinite(px) || px < 0 || px > 400) return
+  lastLift = px
+  liftListeners.forEach((listener) => listener(px))
+})
 
 // [주의] 채널 문자열이나 ipcRenderer 자체를 Renderer에 넘기면 허용하지 않은 기능도 호출할 수 있다.
 const focusOnApi: FocusOnApi = {
@@ -133,6 +140,14 @@ const focusOnApi: FocusOnApi = {
       // 창을 닫는 동작이 끝나면 보관한 알림을 지워 다시 보이지 않게 한다.
       if (result?.success && input.action !== 'RECENTER') lastShow = null
       return result
+    },
+    onLift(callback) {
+      liftListeners.add(callback)
+      callback(lastLift)
+      return () => { liftListeners.delete(callback) }
+    },
+    setInteractive(interactive) {
+      ipcRenderer.send(INTERVENTION_CHANNELS.interactive, interactive === true)
     },
   },
 }

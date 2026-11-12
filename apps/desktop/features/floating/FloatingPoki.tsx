@@ -13,8 +13,13 @@ type View = { show: FloatingShow; step: 'say' | 'recenter'; failed?: boolean }
 /** 화면 위 포키 F04·F05·F07 (FocusOn-design/floating-poki.html). 문구는 Main이 정해 보낸다. 판정·타이머는 바꾸지 않는다. */
 export function FloatingPoki() {
   const [view, setView] = useState<View | null>(null)
+  const [lift, setLift] = useState(0)
 
   useEffect(() => window.focusOn?.interventions.onShow((show) => setView({ show, step: 'say' })), [])
+  useEffect(() => window.focusOn?.interventions.onLift(setLift), [])
+  // 카드·포키 위에서만 클릭을 받고, 나머지 투명한 곳은 아래 앱으로 통과시킨다(#225). 닫히면 다시 통과.
+  useEffect(() => { if (!view) window.focusOn?.interventions.setInteractive(false) }, [view])
+  const hover = { onPointerEnter: () => window.focusOn?.interventions.setInteractive(true), onPointerLeave: () => window.focusOn?.interventions.setInteractive(false) }
 
   if (!view) return <main className="floating-root" />
   const { show, step } = view
@@ -38,10 +43,10 @@ export function FloatingPoki() {
   return <main className="floating-root">
     {/* 포키가 먼저 화면 아래에서 고개를 내밀어 표정으로 알리고, 카드는 그 뒤에 포키 옆에 뜬다(2026-11-08 사용자 확정).
         새 알림이면 둘 다 다시 나오고, 목표 안내로 넘어갈 때는 카드 내용과 표정만 바뀐다. */}
-    <div className="stack" key={show.interventionId}>
+    <div className="stack" key={show.interventionId} style={{ '--lift': `${lift}px` } as React.CSSProperties}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="poki" src={`/design/poki-peek-${poki}.png`} alt="" />
-      <div className={`card${disconnected ? ' is-error' : ''}`} role={disconnected ? 'alert' : 'status'} aria-live={disconnected ? 'assertive' : 'polite'}>
+      <img className="poki" {...hover} src={`/design/poki-peek-${poki}.png`} alt="" />
+      <div {...hover} className={`card${disconnected ? ' is-error' : ''}`} role={disconnected ? 'alert' : 'status'} aria-live={disconnected ? 'assertive' : 'polite'}>
         <div key={step} className="card-body">
           <em className="who">{disconnected ? 'FocusOn' : '포키'}</em>
           <span>{recenter ? '지금 목표는 이거야.' : show.say}</span>

@@ -760,3 +760,14 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 서버에 카메라 알림 API가 없어서, 90초 확정 뒤 최종 게이트를 통과하면 Desktop이 직접 포키(`local-camera`)를 띄운다. 확인 기록은 보내지 않고 5분 cooldown은 Desktop이 지킨다.
 - 서버 카메라 이벤트(설계서 8.1)가 생기면 확정 시점을 서버에 기록하고 서버 알림 cooldown과 합친다.
 - 영향받는 파일: `native/observer/main.swift`, `electron/main/camera-monitor.cts`, `electron/main/index.cts`, `electron/main/observer-helper.cts`, `electron/shared/intervention-contract.cts`
+
+## 결정 040 - 포키 알림 창: 화면 맨 아래 고정, 빈 곳 클릭 통과, Dock 높이만큼 '또잉' 올림
+
+- 결정일: 2026-11-13 / 상태: 확정(사용자 화면 확인) / Issue #225.
+- 720×300 투명 창 전체가 클릭을 가로채 아래 앱을 누를 수 없었다. 창은 기본 `setIgnoreMouseEvents(true, { forward: true })`이고, 포인터가 포키·카드 위에 있을 때만 포키 창 IPC(`floating:interactive`)로 클릭을 받는다.
+- 처음 만든 창 위치는 macOS가 Dock을 피해 작업 영역 안으로 밀어 올린다. 그래서 Dock이 숨겨진 전체 화면에서 포키 몸통이 바닥에서 63px 떠서 잘려 보였다. 띄운 뒤 위치를 다시 줘서 창을 늘 화면 진짜 맨 아래에 둔다.
+- 창 레벨은 Dock보다 아래(`modal-panel`)다. Dock이 보이면 창 안에서 포키·카드를 Dock 높이만큼 올리고(`floating:lift`), 전체 화면이면 0으로 내린다. 전체 화면에서 Dock을 불러오면 Dock이 포키를 덮는다.
+- 전체 화면은 맨 앞 창이 화면 너비를 채우고 아래 끝이 화면 맨 아래까지 닿는지로 판단한다. 노치 있는 MacBook의 전체 화면 창은 메뉴 막대만큼 짧아(1512×949) 화면 크기와 같지 않다. 포키가 떠 있는 동안에만 0.25초마다 다시 본다.
+- 올리고 내릴 때는 CSS 스프링(`cubic-bezier(.34, 1.56, .64, 1)`, 0.6초)으로 살짝 지나쳤다 돌아온다. macOS 창 이동 애니메이션은 직선이라 쓰지 않는다. 동작 줄이기 설정이면 바로 옮긴다.
+- 포키는 오른쪽으로 28px 넘겨 살짝 잘리게 붙이고, 몸 아래에 옅은 갈색 바닥 그림자를 깐다. 흙더미 바닥(A안)은 에셋이 생기면 다시 검토한다.
+- 영향받는 파일: `electron/main/index.cts`, `electron/preload/index.cts`, `electron/shared/intervention-contract.cts`, `electron/main/screen-observer.cts`, `native/observer/main.swift`, `features/floating/FloatingPoki.tsx`, `features/floating/floating.css`

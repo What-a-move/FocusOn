@@ -272,6 +272,8 @@ if (!hasSingleInstanceLock) {
     // 지금 앞에 떠 있는 화면(전경 context)을 서버에 알린다(#182). 알림은 이 context 기준으로만 만들어지고 표시된다.
     const context = authService ? new ObservationContext(authService, path.join(app.getPath('userData'), 'observation-context.json')) : null
     let observing = false
+    // 맨 앞 창이 전체 화면인지. 바뀌면 떠 있는 포키도 바닥 위치를 다시 맞춘다(#225).
+    let frontFullScreen = false
     // 카메라 분석(#222). 화면 판정은 같은 화면(key)일 때만 최신으로 본다. 화면이 바뀌면 이전 판정은 쓰지 않는다.
     let latestScreen: { key: string; relation: string } | null = null
     const cameraMonitor = new CameraMonitor(() => performance.now())
@@ -280,8 +282,8 @@ if (!hasSingleInstanceLock) {
     // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
     let pendingShow: FloatingShow | null = null
-    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기. Dock을 피하지 않고 화면 오른쪽 아래 모서리에 바로 붙인다(2026-11-09 사용자 확정).
-    const FLOATING_SIZE = { width: 720, height: 300 }
+    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기에, Dock 위로 올릴 여유(80px)를 더했다. 화면 오른쪽 아래 모서리에 붙인다(#225).
+    const FLOATING_SIZE = { width: 720, height: 380 }
     function showFloating(payload: FloatingShow): void {
       if (!floatingWindow || floatingWindow.isDestroyed()) {
         const area = screen.getPrimaryDisplay().bounds
@@ -292,13 +294,15 @@ if (!hasSingleInstanceLock) {
           minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, show: false,
           webPreferences: { preload: path.join(__dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
         })
-        // Dock보다 위에 그려야 모서리에 붙인 포키가 Dock에 가리지 않는다.
-        window.setAlwaysOnTop(true, 'pop-up-menu')
+        // [주의] Dock보다 한 층 아래(modal-panel)에 둔다. 보통은 Dock 위에 앉고, 전체 화면에서 Dock이 잠깐 올라오면 Dock이 포키를 덮는다(#225).
+        window.setAlwaysOnTop(true, 'modal-panel')
         window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+        // 투명한 빈 곳은 아래 앱이 클릭되게 통과시킨다. 포인터 이동은 계속 받아서, 카드·포키 위에 오면 창이 클릭을 받게 바꾼다(#225).
+        window.setIgnoreMouseEvents(true, { forward: true })
         window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
         window.webContents.on('will-navigate', (event) => event.preventDefault())
         window.webContents.on('did-finish-load', () => {
-          if (pendingShow) { window.webContents.send(INTERVENTION_CHANNELS.show, pendingShow); window.showInactive() }
+          if (pendingShow) { window.webContents.send(INTERVENTION_CHANNELS.show, pendingShow); window.showInactive(); pinFloating(window) }
         })
         window.on('closed', () => { if (floatingWindow === window) floatingWindow = null })
         floatingWindow = window
@@ -309,6 +313,36 @@ if (!hasSingleInstanceLock) {
       pendingShow = payload
       floatingWindow.webContents.send(INTERVENTION_CHANNELS.show, payload)
       floatingWindow.showInactive()
+      pinFloating(floatingWindow)
+    }
+    /**
+     * 포키 창은 늘 화면 진짜 맨 아래 오른쪽에 둔다. [주의] 처음 만들 때 준 위치는 macOS가 Dock을 피해 작업 영역 안으로 밀어 올리므로 띄운 뒤 다시 준다.
+     * 창은 Dock보다 아래 레벨이고 빈 곳은 클릭이 통과해서 Dock을 가리지 않는다. 포키를 Dock 위로 올리는 건 창 안 CSS가 한다(lift, #225).
+     */
+    function pinFloating(window: BrowserWindow): void {
+      const area = screen.getPrimaryDisplay().bounds
+      window.setBounds({ ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width, y: area.y + area.height - FLOATING_SIZE.height })
+      sendLift(window)
+    }
+    /** Dock이 보이면 Dock 높이만큼, 전체 화면 앱이라 Dock이 숨겨지면 0만큼 포키를 올린다. Dock 자동 숨기기면 둘 다 0이다. */
+    function sendLift(window: BrowserWindow): void {
+      const display = screen.getPrimaryDisplay()
+      const dock = display.bounds.y + display.bounds.height - (display.workArea.y + display.workArea.height)
+      window.webContents.send(INTERVENTION_CHANNELS.lift, frontFullScreen ? 0 : Math.max(0, dock))
+    }
+    /** 맨 앞 창의 전체 화면 여부를 다시 보고, 바뀌었으면 떠 있는 포키 자리를 옮긴다. */
+    let placing = false
+    async function refreshPlacement(): Promise<void> {
+      if (!helper || placing) return
+      placing = true
+      try {
+        const fullScreen = parseFrontmost(await helper.request('frontmost', { timeoutMs: 500 }))?.fullScreen === true
+        if (fullScreen === frontFullScreen) return
+        frontFullScreen = fullScreen
+        if (pendingShow && floatingWindow && !floatingWindow.isDestroyed()) sendLift(floatingWindow)
+      } finally {
+        placing = false
+      }
     }
     /**
      * F07: 실행 중이던 세션을 서버가 Chrome 쪽 이유로 멈췄을 때만 포키로 알린다(floating-poki.html disconnected).
@@ -323,7 +357,7 @@ if (!hasSingleInstanceLock) {
     }
     function hideFloating(): void {
       pendingShow = null
-      if (floatingWindow && !floatingWindow.isDestroyed()) floatingWindow.hide()
+      if (floatingWindow && !floatingWindow.isDestroyed()) { floatingWindow.setIgnoreMouseEvents(true, { forward: true }); floatingWindow.hide() }
     }
     const watcher = authService && runtime ? new InterventionWatcher({
       auth: authService,
@@ -348,6 +382,11 @@ if (!hasSingleInstanceLock) {
       })
       app.on('will-quit', () => globalShortcut.unregisterAll())
     }
+    ipcMain.on(INTERVENTION_CHANNELS.interactive, (event, interactive: unknown) => {
+      // 포키 창이 보낸 boolean만 받는다. 다른 창이 클릭 통과를 바꾸지 못하게 한다.
+      if (!floatingWindow || floatingWindow.isDestroyed() || event.sender !== floatingWindow.webContents || typeof interactive !== 'boolean') return
+      floatingWindow.setIgnoreMouseEvents(!interactive, { forward: true })
+    })
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
       const { interventionId, action } = args[0]
@@ -384,6 +423,11 @@ if (!hasSingleInstanceLock) {
             const current = runtime.snapshot()
             if (current?.status !== 'RUNNING' || current.sessionId !== session.sessionId) return
             const front = parseFrontmost(reply)
+            const fullScreen = front?.fullScreen === true
+            if (fullScreen !== frontFullScreen) {
+              frontFullScreen = fullScreen
+              if (pendingShow && floatingWindow && !floatingWindow.isDestroyed()) sendLift(floatingWindow)
+            }
             // 맨 앞 앱이 바뀌면 15초를 기다리지 않고 바로 전경 context를 바꾼다. Chrome은 Extension이 관측을 맡는다.
             const foreground = front?.bundleId ? `${front.bundleId}\n${front.windowTitle ?? ''}` : null
             void context?.update(session.sessionId, foreground, !foreground ? 'NONE' : CHROME.has(front?.bundleId ?? '') ? 'EXTENSION' : 'DESKTOP')
@@ -414,6 +458,8 @@ if (!hasSingleInstanceLock) {
           })
           .finally(() => { observing = false })
       }, 1000)
+      // 포키가 떠 있는 동안에만 0.25초마다 전체 화면 여부를 본다. 화면을 바꾼 직후 자리를 빨리 맞춘다(#225).
+      setInterval(() => { if (pendingShow && floatingWindow?.isVisible()) void refreshPlacement() }, 250)
       // 카메라는 2초마다 한 번 본다(설계서 7.3 샘플링). RUNNING·카메라 켬·권한 허용·보호 화면 아님일 때만 켜고, 아니면 바로 해제한다.
       setInterval(() => {
         const session = runtime.snapshot()

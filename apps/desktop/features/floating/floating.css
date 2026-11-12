@@ -2,10 +2,14 @@
    0.6초 뒤 흰 카드가 포키 바로 왼쪽에 떠서 말과 버튼을 보여 준다. 움직임은 튀지 않게. 세기는 포키 표정과 말투로 구분한다. */
 html:has(.floating-root), html:has(.floating-root) body { min-width: 0; background: transparent; overflow: hidden; }
 .floating-root { position: fixed; inset: 0; }
-.floating-root .stack { position: absolute; inset: 0; }
-.floating-root .poki { position: absolute; right: 0; bottom: -3px; width: 360px; height: auto; z-index: 1; animation: floating-peek .55s cubic-bezier(.22, 1, .36, 1) both; }
+.floating-root .stack { position: absolute; inset: 0; transform: translateY(calc(var(--lift, 0px) * -1)); transition: transform .6s cubic-bezier(.34, 1.56, .64, 1); }
+/* Dock 위 ↔ 화면 맨 아래로 옮길 때 살짝 지나쳤다 돌아오는 '또잉' 움직임(사용자 요청 2026-11-13). */
+/* Dock이 숨겨져 있어도 포키가 떠 보이지 않게 몸 아래에 옅은 갈색 바닥 그림자를 깐다(B안, #225 후속 검토). 클릭은 통과한다. */
+.floating-root .stack::before { content: ''; position: absolute; right: -88px; bottom: -70px; width: 480px; height: 150px; border-radius: 50%; background: radial-gradient(closest-side, rgba(89, 56, 40, .38), rgba(89, 56, 40, .16) 55%, rgba(89, 56, 40, 0)); pointer-events: none; z-index: 0; animation: floating-ground .55s ease-out both; }
+@keyframes floating-ground { from { opacity: 0; } to { opacity: 1; } }
+.floating-root .poki { position: absolute; right: -28px; bottom: -3px; width: 360px; height: auto; z-index: 1; animation: floating-peek .55s cubic-bezier(.22, 1, .36, 1) both; }
 @keyframes floating-peek { from { transform: translateY(100%); } to { transform: none; } }
-.floating-root .card { position: absolute; right: 316px; bottom: 24px; width: max-content; min-width: 300px; max-width: 360px; padding: 24px 26px 22px; border: 1.5px solid #ece6dd; border-radius: 24px; background: var(--fo-surface); box-shadow: 0 12px 32px rgba(89, 56, 40, .10); color: var(--fo-ink); animation: floating-card .4s .6s cubic-bezier(.22, 1, .36, 1) both; transform-origin: right bottom; }
+.floating-root .card { position: absolute; right: 288px; bottom: 24px; width: max-content; min-width: 300px; max-width: 360px; padding: 24px 26px 22px; border: 1.5px solid #ece6dd; border-radius: 24px; background: var(--fo-surface); box-shadow: 0 12px 32px rgba(89, 56, 40, .10); color: var(--fo-ink); animation: floating-card .4s .6s cubic-bezier(.22, 1, .36, 1) both; transform-origin: right bottom; }
 @keyframes floating-card { from { opacity: 0; transform: translateX(16px) scale(.97); } to { opacity: 1; transform: none; } }
 .floating-root .card-body { animation: floating-fade .3s ease-out both; }
 @keyframes floating-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -25,4 +29,4 @@ html:has(.floating-root), html:has(.floating-root) body { min-width: 0; backgrou
 .floating-root .card.is-error { border-color: var(--fo-danger-line); color: var(--fo-danger); }
 .floating-root .card.is-error small { color: var(--fo-danger); }
 .floating-root .card.is-error .who { background: var(--fo-danger-soft); color: var(--fo-danger); }
-@media (prefers-reduced-motion: reduce) { .floating-root .poki, .floating-root .card, .floating-root .card-body { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .floating-root .stack { transition: none; } .floating-root .stack::before, .floating-root .poki, .floating-root .card, .floating-root .card-body { animation: none; } }
