@@ -31,7 +31,7 @@
 ## 사용자 흐름 테스트
 
 - [x] 앱 실행 (로컬 Docker 서버 dev, 2026-11-13)
-- [x] 정상 흐름: 세션 6·7에서 Desktop 분석 21건 모두 DESKTOP context, Extension 분석(TAB_META)에 EXTENSION·기기 3 context
+- [x] 정상 흐름: 세션 6·7에서 Desktop 분석 27건(세션 6 15건, 세션 7 12건) 모두 DESKTOP context, Extension 분석(TAB_META)에 EXTENSION·기기 3 context
 - [x] 전경 전환: 앱·창이 바뀔 때마다 순번이 1씩 올라 등록(세션 7 순번 1~26), Chrome이면 EXTENSION
 - [x] 일시정지·재개·종료: RUNNING이 아니면 context 비움(단위 테스트)
 - [ ] 권한 거부: 해당 없음
