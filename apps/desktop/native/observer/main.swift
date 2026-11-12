@@ -28,12 +28,23 @@ func frontmost(_ id: Int) {
   }
   let title = (window?[kCGWindowName as String] as? String).flatMap { $0.isEmpty ? nil : $0 }
   let windowId = window?[kCGWindowNumber as String] as? Int
+  // 맨 앞 창이 화면 너비를 꽉 채우고 아래 끝이 화면 맨 아래(Dock 자리)까지 내려오면 전체 화면으로 본다(Dock이 숨겨짐).
+  // [주의] 노치 있는 MacBook의 전체 화면 창은 위쪽 메뉴 막대 높이만큼 짧아서(1512×949) 화면 크기와 같지 않다.
+  // 최대화한 일반 창은 아래 끝이 Dock 위에서 멈춘다. 포키 창을 화면 맨 아래에 붙일지 정하는 데만 쓴다(#225).
+  let frame = (window?[kCGWindowBounds as String] as? [String: Any]).map { CGRect(x: $0["X"] as? Double ?? 0, y: $0["Y"] as? Double ?? 0, width: $0["Width"] as? Double ?? 0, height: $0["Height"] as? Double ?? 0) }
+  let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
+  let fullScreen = frame.map { f in NSScreen.screens.contains { screen in
+    // CG 창 좌표는 주 화면 왼쪽 위가 0이고 아래로 커진다. AppKit 화면 좌표(왼쪽 아래 0)를 맞춰 비교한다.
+    let top = primaryHeight - screen.frame.maxY
+    return abs(f.minX - screen.frame.minX) < 1 && abs(f.width - screen.frame.width) < 1 && abs(f.maxY - (top + screen.frame.height)) < 1
+  } } ?? false
   reply(["id": id, "ok": true, "app": [
     "windowId": windowId ?? NSNull(),
     "bundleId": app.bundleIdentifier ?? NSNull(),
     "appName": app.localizedName ?? NSNull(),
     "pid": Int(pid),
     "windowTitle": title ?? NSNull(),
+    "fullScreen": fullScreen,
   ] as [String: Any]])
 }
 

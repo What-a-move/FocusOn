@@ -74,7 +74,9 @@ test('reset 뒤에는 같은 화면이어도 15초를 다시 센다', () => {
 
 test('도우미 응답은 허용 필드만 읽고 형식이 다르면 확인 불가로 본다', () => {
   assert.deepEqual(parseFrontmost({ ok: true, app: { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null, windowId: 204271, extra: 'x' } }),
-    { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null, windowId: 204271 })
+    { bundleId: 'com.apple.dt.Xcode', appName: 'Xcode', pid: 50, windowTitle: null, windowId: 204271, fullScreen: false })
+  assert.equal(parseFrontmost({ ok: true, app: { pid: 1, fullScreen: true } }).fullScreen, true, '전체 화면은 true일 때만')
+  assert.equal(parseFrontmost({ ok: true, app: { pid: 1, fullScreen: 'yes' } }).fullScreen, false)
   assert.equal(parseFrontmost({ ok: true, app: null }), null)
   assert.equal(parseFrontmost({ ok: true, app: { bundleId: 'a' } }), null)
   assert.equal(parseFrontmost(null), null)

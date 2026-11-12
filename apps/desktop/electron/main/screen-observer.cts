@@ -1,7 +1,7 @@
 // 세션 중 맨 앞 앱 관측 규칙 (결정 024, Notion 화면 분석 3.1·6.1.1·6.2).
 // 이 파일은 순수 로직이다. 1초마다 맨 앞 앱을 넣으면, 같은 화면이 15초 유지됐을 때 관측 1건을 돌려준다.
 
-export type Frontmost = { bundleId: string | null; appName: string | null; pid: number; windowTitle: string | null; windowId?: number | null }
+export type Frontmost = { bundleId: string | null; appName: string | null; pid: number; windowTitle: string | null; windowId?: number | null; fullScreen?: boolean }
 import type { GuardStatus } from '@focuson/shared-types'
 
 export type { GuardStatus }
@@ -25,7 +25,7 @@ export function parseFrontmost(reply: Record<string, unknown> | null): Frontmost
   if (typeof pid !== 'number') return null
   const text = (value: unknown) => typeof value === 'string' && value ? value : null
   const { windowId } = app as Record<string, unknown>
-  return { bundleId: text(bundleId), appName: text(appName), pid, windowTitle: text(windowTitle), windowId: Number.isSafeInteger(windowId) ? windowId as number : null }
+  return { bundleId: text(bundleId), appName: text(appName), pid, windowTitle: text(windowTitle), windowId: Number.isSafeInteger(windowId) ? windowId as number : null, fullScreen: (app as Record<string, unknown>).fullScreen === true }
 }
 
 // Chrome 탭은 Extension이 맡는다. Desktop은 현재 URL을 몰라 제외·민감 페이지를 거를 수 없다.

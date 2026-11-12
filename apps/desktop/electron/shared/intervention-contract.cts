@@ -5,6 +5,10 @@ import type { InterventionLevel } from './session-contract.cjs'
 export const INTERVENTION_CHANNELS = {
   show: 'floating:show',
   act: 'intervention:act',
+  // 포키 창에서만 보낸다. 포인터가 카드·포키 위면 true(클릭 받음), 아니면 false(아래 앱으로 통과).
+  interactive: 'floating:interactive',
+  // Main → 포키 창. 화면 맨 아래에서 포키를 얼마나 올릴지(px). Dock이 보이면 Dock 높이, 전체 화면이면 0.
+  lift: 'floating:lift',
 } as const
 
 /**
@@ -21,6 +25,8 @@ export type InterventionAction = 'RECENTER' | 'ACK' | 'REST' | 'CLOSE' | 'OPEN_A
 export type InterventionsApi = {
   onShow(callback: (show: FloatingShow) => void): () => void
   act(input: { interventionId: string; action: InterventionAction }): Promise<IpcResult<{ done: true }>>
+  setInteractive(interactive: boolean): void
+  onLift(callback: (px: number) => void): () => void
 }
 
 const ACTIONS: readonly InterventionAction[] = ['RECENTER', 'ACK', 'REST', 'CLOSE', 'OPEN_APP']

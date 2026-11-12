@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 포키 알림 창 클릭 통과·Dock 대응 (Issue #225, `fix/225-desktop-floating-click-through`)
+- 상태: 빈 곳 클릭 통과, 화면 맨 아래 고정·Dock 높이만큼 스프링 올림, 전체 화면 감지, 오른쪽 붙임·바닥 그림자(2026-11-13, 결정 040). 사용자 화면 확인 완료. 남은 일: 흙더미 바닥 에셋이 생기면 그림자 대신 적용 검토, 보조 모니터(주 화면 외)는 확인 안 함.
+
 - 작업명: 포키 알림 새 방식 연결 (Issue #218, `feat/218-intervention-context`)
 - 상태: 전경 context·receipt 구현, 실제 서버로 Desktop·Extension 분석 모두 context 부착 확인(2026-11-13, `intervention-context-REPORT.md`). 남은 일: AI 분석 연결 뒤 실제 서버 알림 포키 표시·deliveries·cooldown QA.
 
