@@ -95,3 +95,11 @@ test('응답은 필드가 빠지거나 형식이 틀리면 받지 않는다', ()
   assert.equal(parseAnalysisRun({ ...run, reasonCode: 3 }), null, 'reasonCode 형식')
   assert.equal(parseAnalysisRun({ ...run, confidence: undefined }), null, 'confidence 빠짐')
 })
+
+test('관측한 시점의 전경 context가 있으면 observationContextId를 붙이고, 없으면 넣지 않는다', async () => {
+  const { sender, calls } = setup([])
+  await sender.send('901', meta, 'ctx-7')
+  await sender.send('901', meta)
+  assert.equal(calls[0].body.observationContextId, 'ctx-7')
+  assert.equal('observationContextId' in calls[1].body, false)
+})

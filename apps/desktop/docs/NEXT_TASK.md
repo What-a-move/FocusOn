@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 포키 알림 새 방식 연결 (Issue #218, `feat/218-intervention-context`)
+- 상태: 전경 context·receipt 구현, 실제 서버로 Desktop·Extension 분석 모두 context 부착 확인(2026-11-13, `intervention-context-REPORT.md`). 남은 일: AI 분석 연결 뒤 실제 서버 알림 포키 표시·deliveries·cooldown QA.
+
 - 작업명: 카메라 분석 (Issue #222, `feat/222-desktop-camera-analysis`)
 - 상태: Swift 도우미 Apple Vision 로컬 분석·60/90초 상태 기계·포키 알림 구현, 실제 앱에서 자리 비움 90초 알림·일시정지 해제 확인(2026-11-12, `camera-analysis-PLAN.md`, 결정 039). 남은 일: 고개 숙임 오탐 각도 조정(사용자 테스트), 카메라 오류 사유 설정 화면 표시, 서버 카메라 이벤트 API 제안.
 

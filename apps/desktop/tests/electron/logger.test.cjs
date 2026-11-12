@@ -136,8 +136,11 @@ test('모르는 알림 채널만 오면 알림도 notify.fire도 남기지 않�
   const lines = capture()
   const { InterventionWatcher } = require('../../dist-electron/main/intervention-watcher.cjs')
   const shown = []
-  const auth = { authorizedRequest: async (request) => ({ success: true, data: request.parse([{ interventionId: 'i-1', type: 'OFF_TASK', status: 'PENDING', channels: ['<script>'] }]) }) }
-  const watcher = new InterventionWatcher({ auth, show: (p) => shown.push(p), notify: (p) => shown.push(p), pause: async () => ({ success: true }), isCurrent: () => true })
+  const auth = { authorizedRequest: async (request) => request.method === 'GET'
+    ? { success: true, data: request.parse([{ interventionId: 'i-1', type: 'OFF_TASK', status: 'PENDING', channels: ['<script>'], observationContextId: 'c-1', remainingTtlMs: 30000 }]) }
+    : { success: true, data: true } }
+  const journalFile = require('node:path').join(require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'fo-log-')), 'r.json')
+  const watcher = new InterventionWatcher({ auth, show: (p) => { shown.push(p); return true }, notify: (p) => { shown.push(p); return true }, pause: async () => ({ success: true }), isCurrent: () => true, currentContext: () => 'c-1', journalFile })
   await watcher.poll('901', '목표', { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false })
   assert.deepEqual(shown, [])
   assert.equal(lines.some((line) => line.event === 'notify.fire'), false)

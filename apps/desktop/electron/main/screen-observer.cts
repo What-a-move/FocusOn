@@ -29,7 +29,7 @@ export function parseFrontmost(reply: Record<string, unknown> | null): Frontmost
 }
 
 // Chrome 탭은 Extension이 맡는다. Desktop은 현재 URL을 몰라 제외·민감 페이지를 거를 수 없다.
-const CHROME = new Set(['com.google.Chrome', 'com.google.Chrome.beta', 'com.google.Chrome.dev', 'com.google.Chrome.canary'])
+export const CHROME = new Set(['com.google.Chrome', 'com.google.Chrome.beta', 'com.google.Chrome.dev', 'com.google.Chrome.canary'])
 
 // MVP는 macOS + Chrome만 지원한다. 다른 브라우저는 URL을 몰라 제외·민감 페이지를 거를 수 없어 내용을 보지 않고 EXCLUDED로만 알린다.
 // [주의] 아무것도 보내지 않으면 서버는 직전 판정(예: UNRELATED)이 계속된다고 보고 이탈 시간을 쌓는다.

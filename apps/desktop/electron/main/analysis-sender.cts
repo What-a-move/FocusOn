@@ -39,14 +39,15 @@ export class AnalysisSender {
     private readonly now: () => number = () => performance.now(),
   ) {}
 
-  async send(sessionId: string, observation: Observation): Promise<AnalysisRun | null> {
+  /** observationContextId: 관측한 시점의 전경 context(#182). 없으면 붙이지 않는다(서버는 예전 이력으로만 기록). */
+  async send(sessionId: string, observation: Observation, observationContextId: string | null = null): Promise<AnalysisRun | null> {
     if (this.now() < this.pausedUntil) return null
     if (this.session?.id !== sessionId) this.session = { id: sessionId, sequences: this.savedSequences(sessionId) }
     const contentSource = observation.contentSource ?? 'APP_META'
     // 순서 번호는 같은 세션·contentSource 안에서 센다(AI 분석 계약 2.2).
     const sequence = ++this.session.sequences[contentSource]
     this.saveSequences(sessionId, this.session.sequences)
-    const base = { clientRunId: randomUUID(), contentSource, observedAt: observation.observedAt, sequence }
+    const base = { clientRunId: randomUUID(), contentSource, observedAt: observation.observedAt, sequence, ...(observationContextId ? { observationContextId } : {}) }
     // [주의] 제외·민감 화면은 상태만 보낸다. 앱 이름·창 제목도 넣지 않는다. key·windowId는 보내지 않는다.
     const body: AnalysisRunRequest = observation.guardStatus
       ? { ...base, guardStatus: observation.guardStatus }
