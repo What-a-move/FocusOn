@@ -1,0 +1,522 @@
+{
+ "nodes": [
+  {
+   "id": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "type": "file",
+   "name": "DeviceHeaderValidator.java",
+   "filePath": "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "summary": "요청의 X-Device-Id 헤더를 인증 principal의 기기 ID와 대조해 헤더 누락은 VALIDATION_ERROR, 다른 기기 위장은 AUTH_RELOGIN_REQUIRED로 거부하는 정적 유틸리티입니다.",
+   "tags": [
+    "유틸리티",
+    "validation",
+    "security",
+    "헤더-검증"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:DeviceHeaderValidator",
+   "type": "class",
+   "name": "DeviceHeaderValidator",
+   "filePath": "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "lineRange": [
+    7,
+    19
+   ],
+   "summary": "인스턴스화가 금지된 final 유틸리티 클래스로, 기기 헤더 필수성과 principal 일치 여부를 검증합니다.",
+   "tags": [
+    "유틸리티",
+    "validation",
+    "security"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "function",
+   "name": "require",
+   "filePath": "src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "lineRange": [
+    11,
+    18
+   ],
+   "summary": "기기 헤더가 비어 있으면 검증 오류를, principal의 deviceId와 다르면 재로그인 필요 오류를 던집니다.",
+   "tags": [
+    "validation",
+    "security",
+    "guard"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "type": "file",
+   "name": "InterventionController.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "summary": "Desktop 앱이 사용하는 개입 REST API로, 세션별 개입 목록 조회·사용자 확인/닫기(acknowledgement)·OS 알림 전송 결과(delivery) 기록 엔드포인트를 노출합니다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "rest-api",
+    "개입"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java:InterventionController",
+   "type": "class",
+   "name": "InterventionController",
+   "filePath": "src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "lineRange": [
+    27,
+    63
+   ],
+   "summary": "/api/v1/sessions/{sessionId}/interventions 조회와 /api/v1/interventions/{id}/acknowledgements, /deliveries 기록을 InterventionService·InterventionDeliveryService에 위임하는 Spring RestController입니다.",
+   "tags": [
+    "api-handler",
+    "controller",
+    "rest-api"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "type": "file",
+   "name": "InterventionDeliveryEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "summary": "개입 알림의 클라이언트 전송 결과(전송 상태, 채널, 수락 시각, cooldown 종료 시각)를 clientDeliveryId nonce와 함께 저장하는 JPA 엔티티입니다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "persistence",
+    "개입"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:InterventionDeliveryEntity",
+   "type": "class",
+   "name": "InterventionDeliveryEntity",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "lineRange": [
+    22,
+    58
+   ],
+   "summary": "개입 ID·클라이언트 전송 nonce·DispatchStatus·채널 JSON·cooldown을 보관하는 전송 영수증 엔티티로, 정적 팩토리 create를 제공합니다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "factory"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:create",
+   "type": "function",
+   "name": "create",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "lineRange": [
+    47,
+    57
+   ],
+   "summary": "개입 전송 결과 레코드를 생성하는 정적 팩토리 메서드입니다.",
+   "tags": [
+    "factory",
+    "data-model"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "type": "file",
+   "name": "InterventionDeliveryRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "summary": "개입 전송 영수증을 개입 ID+클라이언트 nonce로 멱등 조회하거나 개입별 이력을 ID 순으로 조회하는 Spring Data JPA 저장소입니다.",
+   "tags": [
+    "repository",
+    "persistence",
+    "spring-data-jpa",
+    "멱등성"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java:InterventionDeliveryRepository",
+   "type": "class",
+   "name": "InterventionDeliveryRepository",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "lineRange": [
+    9,
+    17
+   ],
+   "summary": "findByInterventionIdAndClientDeliveryId, findByInterventionIdOrderByIdAsc 파생 쿼리를 정의하는 JPA 저장소 인터페이스입니다.",
+   "tags": [
+    "repository",
+    "spring-data-jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "type": "file",
+   "name": "InterventionEventEntity.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "summary": "학습 세션의 off-task 개입 이벤트(유형, 상태, 채널, 관찰 context, 만료·전송 확인·사용자 반응 시각)를 표현하는 JPA 엔티티로, 상태 전이 메서드를 포함합니다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "state-machine",
+    "개입"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:InterventionEventEntity",
+   "type": "class",
+   "name": "InterventionEventEntity",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "lineRange": [
+    23,
+    112
+   ],
+   "summary": "PENDING에서 전송 확인·만료·사용자 확인으로 전이하는 개입 이벤트 엔티티로, offTask 팩토리와 bindContext/confirmDelivery/expire/acknowledge 전이를 제공합니다.",
+   "tags": [
+    "data-model",
+    "jpa-entity",
+    "state-machine"
+   ],
+   "complexity": "moderate"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:offTask",
+   "type": "function",
+   "name": "offTask",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "lineRange": [
+    67,
+    81
+   ],
+   "summary": "세션·실행 세대·관찰 context·정책 버전 정보로 off-task 개입 이벤트를 생성하는 정적 팩토리입니다.",
+   "tags": [
+    "factory",
+    "개입"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:acknowledge",
+   "type": "function",
+   "name": "acknowledge",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "lineRange": [
+    105,
+    111
+   ],
+   "summary": "사용자 확인/닫기 반응을 최초 1회만 기록해 재전송 시에도 최초 결정과 actedAt을 유지합니다.",
+   "tags": [
+    "state-machine",
+    "멱등성"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:expire",
+   "type": "function",
+   "name": "expire",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "lineRange": [
+    97,
+    102
+   ],
+   "summary": "아직 전송 확인되지 않은 PENDING 개입을 EXPIRED로 전이합니다.",
+   "tags": [
+    "state-machine"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "type": "file",
+   "name": "InterventionEventRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "summary": "세션별 개입 이벤트를 생성 시각·ID 순으로 조회하는 Spring Data JPA 저장소입니다.",
+   "tags": [
+    "repository",
+    "persistence",
+    "spring-data-jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java:InterventionEventRepository",
+   "type": "class",
+   "name": "InterventionEventRepository",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "lineRange": [
+    7,
+    10
+   ],
+   "summary": "findBySessionIdOrderByCreatedAtAscIdAsc 파생 쿼리를 정의하는 개입 이벤트 저장소 인터페이스입니다.",
+   "tags": [
+    "repository",
+    "spring-data-jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "type": "file",
+   "name": "InterventionPolicyRepository.java",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "summary": "세션별 개입 정책 상태(off-task 타임라인 JSON)를 세션 ID로 조회·저장하는 기본 JPA 저장소입니다.",
+   "tags": [
+    "repository",
+    "persistence",
+    "spring-data-jpa"
+   ],
+   "complexity": "simple"
+  },
+  {
+   "id": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java:InterventionPolicyRepository",
+   "type": "class",
+   "name": "InterventionPolicyRepository",
+   "filePath": "src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "lineRange": [
+    6,
+    7
+   ],
+   "summary": "추가 쿼리 없이 JpaRepository를 상속하는 개입 정책 상태 저장소 인터페이스입니다.",
+   "tags": [
+    "repository",
+    "spring-data-jpa"
+   ],
+   "complexity": "simple"
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "target": "class:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:DeviceHeaderValidator",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "target": "class:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:DeviceHeaderValidator",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "target": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "target": "function:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java:require",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java:InterventionController",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java:InterventionController",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:InterventionDeliveryEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:InterventionDeliveryEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:create",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryEntity.java:create",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java:InterventionDeliveryRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionDeliveryRepository.java:InterventionDeliveryRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:InterventionEventEntity",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:InterventionEventEntity",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:offTask",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:offTask",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:acknowledge",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:acknowledge",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:expire",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java",
+   "target": "function:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventEntity.java:expire",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java:InterventionEventRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionEventRepository.java:InterventionEventRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java:InterventionPolicyRepository",
+   "type": "contains",
+   "direction": "forward",
+   "weight": 1
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java",
+   "target": "class:src/main/java/com/capstone/backend/intervention/persistence/InterventionPolicyRepository.java:InterventionPolicyRepository",
+   "type": "exports",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java:InterventionController",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionService.java:InterventionService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "class:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java:InterventionController",
+   "target": "class:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java:InterventionDeliveryService",
+   "type": "calls",
+   "direction": "forward",
+   "weight": 0.8
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiErrorCode.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/auth/security/DeviceHeaderValidator.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiException.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "target": "file:src/main/java/com/capstone/backend/auth/security/FocusOnPrincipal.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "target": "file:src/main/java/com/capstone/backend/common/api/ApiResponse.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/InterventionDeliveryService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  },
+  {
+   "source": "file:src/main/java/com/capstone/backend/intervention/controller/InterventionController.java",
+   "target": "file:src/main/java/com/capstone/backend/intervention/service/InterventionService.java",
+   "type": "imports",
+   "direction": "forward",
+   "weight": 0.7
+  }
+ ]
+}

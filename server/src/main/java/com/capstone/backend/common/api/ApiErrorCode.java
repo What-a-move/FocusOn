@@ -25,6 +25,8 @@ public enum ApiErrorCode {
   SESSION_QUERY_FORBIDDEN(HttpStatus.FORBIDDEN, "Desktop에서 조회해 주세요.", false),
   NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 경로를 찾을 수 없습니다.", false),
   GOAL_TEXT_INVALID(HttpStatus.BAD_REQUEST, "목표는 2자 이상 40자 이하여야 합니다.", false),
+  GOAL_ANALYSIS_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "목표 분석을 사용할 수 없습니다.", true),
+  GOAL_ANALYSIS_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "목표 분석 시간이 초과됐습니다.", true),
   GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "목표를 찾을 수 없습니다.", false),
   GOAL_UPDATE_BLOCKED(HttpStatus.CONFLICT, "진행 중인 세션의 목표는 수정하거나 삭제할 수 없습니다.", false),
   SESSION_ACTIVE_EXISTS(HttpStatus.CONFLICT, "진행 중인 세션이 있습니다.", false),

@@ -13,6 +13,7 @@ const POLL_MS = 5000
 type View =
   | { kind: 'loading' }
   | { kind: 'missing' }
+  | { kind: 'none' }
   | { kind: 'list' }
   | { kind: 'error'; code: string }
   | { kind: 'ready'; summary: SessionSummary; learning: LearningSummary }
@@ -57,7 +58,7 @@ export function StudyNote() {
   const load = useCallback(async (id: string) => {
     const [summary, learning] = await Promise.all([sessionResultApi.getSummary(id), sessionResultApi.getLearningSummary(id)])
     if (!summary.success) { setView(summary.error.code === 'SESSION_NOT_FOUND' ? { kind: 'missing' } : { kind: 'error', code: summary.error.code }); return }
-    if (!learning.success) { setView(learning.error.code === 'SESSION_NOT_FOUND' ? { kind: 'missing' } : { kind: 'error', code: learning.error.code }); return }
+    if (!learning.success) { setView(learning.error.code === 'SESSION_NOT_FOUND' ? { kind: 'missing' } : learning.error.code === 'NOT_FOUND' ? { kind: 'none' } : { kind: 'error', code: learning.error.code }); return }
     setView({ kind: 'ready', summary: summary.data, learning: learning.data })
   }, [])
 
@@ -104,6 +105,11 @@ export function StudyNote() {
         <h2>노트를 찾을 수 없어요</h2>
         <p>집중 기록에서 회차를 다시 열어 주세요.</p>
         <Link className="fo-button fo-button-ghost" href="/records/">집중 기록으로</Link>
+      </section>}
+      {view.kind === 'none' && <section className="fo-notebook fo-note-status">
+        <Image src="/design/poki-empty-note.png" alt="" width={240} height={240} />
+        <h2>이번 회차는 학습 정리가 없어요</h2>
+        <p>집중 기록과 흐름은 집중 리포트에서 그대로 볼 수 있어요.</p>
       </section>}
       {view.kind === 'ready' && (view.learning.status === 'READY'
         ? <Notebook summary={view.summary} learning={view.learning} />

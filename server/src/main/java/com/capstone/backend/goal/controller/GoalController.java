@@ -2,9 +2,12 @@ package com.capstone.backend.goal.controller;
 
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
+import com.capstone.backend.goal.dto.GoalDtos.ClarifyGoalRequest;
+import com.capstone.backend.goal.dto.GoalDtos.ClarifyGoalResponse;
 import com.capstone.backend.goal.dto.GoalDtos.CreateGoalRequest;
 import com.capstone.backend.goal.dto.GoalDtos.GoalResponse;
 import com.capstone.backend.goal.dto.GoalDtos.UpdateGoalRequest;
+import com.capstone.backend.goal.service.GoalClarificationService;
 import com.capstone.backend.goal.service.GoalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,20 +38,45 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "focusOnBearer")
 public class GoalController {
   private final GoalService goals;
+  private final GoalClarificationService clarification;
+
+  /** 목표 문구를 AI로 확인하고 사용자별 대화 이력을 관리한다. */
+  @PostMapping("/clarify")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "학습 목표 명확성 확인",
+      description = "대화 ID는 생성 시점부터 24시간 유효하며 질문은 최대 두 번입니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "명확성 확인 결과"),
+      @ApiResponse(responseCode = "400", description = "요청 또는 대화 이력 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "401", description = "인증 필요",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "대화 이력을 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "503", description = "AI 서비스 사용 불가",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "504", description = "AI 요청 시간 초과",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public com.capstone.backend.common.api.ApiResponse<ClarifyGoalResponse> clarify(
+      @AuthenticationPrincipal FocusOnPrincipal principal,
+      @Valid @RequestBody ClarifyGoalRequest request) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        clarification.clarify(principal, request));
+  }
 
   /** 수동으로 확정한 목표를 저장한다. */
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "학습 목표 저장",
-      description = "AI 확인 대화 연동 전에는 수동 확정 목표만 저장하며, "
-          + "수동 확정에 포함된 대화 ID는 검증하거나 저장하지 않습니다.")
+      description = "AI 확정은 유효한 명확화 이력이 필요하며 수동 확정의 대화 ID는 선택입니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "목표 저장 성공"),
       @ApiResponse(responseCode = "400", description = "입력값 오류",
           content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
       @ApiResponse(responseCode = "401", description = "인증 필요",
           content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
-      @ApiResponse(responseCode = "503", description = "AI 확인 대화 연동 대기",
+      @ApiResponse(responseCode = "404", description = "대화 이력을 찾을 수 없음",
           content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
   })
   public com.capstone.backend.common.api.ApiResponse<GoalResponse> create(

@@ -34,9 +34,10 @@ import { AnalysisSender } from './analysis-sender.cjs'
 import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
 import { SettingsService, ThemePreference, registerSettingsIpc } from './settings-ipc.cjs'
-import { InterventionWatcher } from './intervention-watcher.cjs'
+import { COPY, InterventionWatcher } from './intervention-watcher.cjs'
+import { CameraMonitor, parseCameraReply } from './camera-monitor.cjs'
 import { installDemoMode } from './demo-mode.cjs'
-import { DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
+import { CAMERA_ID, DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -271,6 +272,11 @@ if (!hasSingleInstanceLock) {
     // 지금 앞에 떠 있는 화면(전경 context)을 서버에 알린다(#182). 알림은 이 context 기준으로만 만들어지고 표시된다.
     const context = authService ? new ObservationContext(authService, path.join(app.getPath('userData'), 'observation-context.json')) : null
     let observing = false
+    // 카메라 분석(#222). 화면 판정은 같은 화면(key)일 때만 최신으로 본다. 화면이 바뀌면 이전 판정은 쓰지 않는다.
+    let latestScreen: { key: string; relation: string } | null = null
+    const cameraMonitor = new CameraMonitor(() => performance.now())
+    let cameraOn = false
+    let cameraBusy = false
     // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
     let pendingShow: FloatingShow | null = null
@@ -352,7 +358,10 @@ if (!hasSingleInstanceLock) {
         if (action === 'OPEN_APP') { app.focus({ steal: true }); showMainWindow() }
         return { success: true, data: { done: true } }
       }
-      const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
+      // 카메라 알림도 서버 기록이 없다. 잠시 쉬기는 세션만 멈춘다.
+      const done = interventionId === CAMERA_ID
+        ? action !== 'REST' || (await runtime?.pause('USER').catch(() => null))?.success === true
+        : await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
       // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 확인했어는 같은 창에서 목표 안내로 이어진다.
       if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }
       if (action !== 'RECENTER') hideFloating()
@@ -383,7 +392,14 @@ if (!hasSingleInstanceLock) {
             // 관측한 시점의 context를 분석 요청에 붙인다. 화면이 바뀌는 중이면 붙이지 않는다(서버가 정책에 쓰지 않음).
             const observedContext = context?.currentId() ?? null
             void analyzeObservation({
-              send: (sessionId, next) => sender.send(sessionId, next, observedContext),
+              send: async (sessionId, next) => {
+                const run = await sender.send(sessionId, next, observedContext)
+                // 카메라 최종 게이트용으로 지금 화면의 최신 판정만 기억한다(설계서 5.3). 보호 상태는 판정 없이도 PRIVACY_BLOCKED다.
+                const relation = next.guardStatus === 'PRIVACY_BLOCKED' ? 'PRIVACY_BLOCKED' : run?.relation
+                const key = observer.currentKey()
+                if (relation && key) latestScreen = { key, relation }
+                return run
+              },
               // 창 캡처·Vision OCR은 몇 초 걸릴 수 있다. 글자만 받고 이미지는 도우미 안에서 버린다.
               ocr: async (windowId) => {
                 const result = await helper.request('ocr', { windowId, timeoutMs: 5000 })
@@ -398,6 +414,37 @@ if (!hasSingleInstanceLock) {
           })
           .finally(() => { observing = false })
       }, 1000)
+      // 카메라는 2초마다 한 번 본다(설계서 7.3 샘플링). RUNNING·카메라 켬·권한 허용·보호 화면 아님일 때만 켜고, 아니면 바로 해제한다.
+      setInterval(() => {
+        const session = runtime.snapshot()
+        const screenNow = latestScreen && latestScreen.key === observer.currentKey() ? latestScreen.relation : null
+        const wanted = !!helper && session?.status === 'RUNNING' && runtime.sessionOptions().cameraAnalysisEnabled
+          && mediaStatus('camera') === 'granted' && screenNow !== 'PRIVACY_BLOCKED'
+        if (!wanted) {
+          if (cameraOn) {
+            cameraOn = false
+            log('INFO', 'state.transition', { component: 'camera', from: cameraMonitor.current(), to: 'CAMERA_PAUSED' })
+            cameraMonitor.reset()
+            void helper?.request('cameraStop')
+          }
+          return
+        }
+        if (cameraBusy || !helper) return
+        cameraBusy = true
+        cameraOn = true
+        void helper.request('camera', { timeoutMs: 1500 }).then((reply) => {
+          const current = runtime.snapshot()
+          if (current?.status !== 'RUNNING' || current.sessionId !== session?.sessionId || !cameraOn) return
+          const before = cameraMonitor.current()
+          const { state, alert } = cameraMonitor.update(parseCameraReply(reply), { screenRelated: screenNow === 'RELATED', canShow: pendingShow === null })
+          // 상태가 바뀔 때만 남긴다. 얼굴·시선 값은 남기지 않는다.
+          if (state !== before) log('INFO', 'state.transition', { component: 'camera', from: before, to: state })
+          if (!alert) return
+          const level = runtime.sessionOptions().interventionLevel
+          showFloating({ interventionId: CAMERA_ID, kind: 'OFF_TASK', level, goalText: current.goalText, ...COPY[level] })
+          log('INFO', 'notify.fire', { component: 'camera', interventionType: 'CAMERA_AWAY', channels: ['MOLE_UI'] })
+        }).finally(() => { cameraBusy = false })
+      }, 2000)
       setInterval(() => {
         // 세션 중 화면 기록 권한이 꺼지면 바로 멈춘다(Notion 화면 분석 7.2).
         if (runtime.snapshot()?.status === 'RUNNING' && mediaStatus('screen') !== 'granted') runtime.screenPermissionLost()
