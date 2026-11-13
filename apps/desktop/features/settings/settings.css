@@ -197,6 +197,14 @@
 .fo-device { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1.5px solid var(--fo-line); border-radius: 16px; }
 .fo-device-icon { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; background: var(--fo-field); color: var(--fo-ink); }
 .fo-device-icon svg { width: 22px; height: 22px; }
-.fo-link-code { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding: 16px 20px; border-radius: 16px; background: var(--fo-gold-soft); animation: fo-settings-rise .4s var(--fo-pop) both; }
-.fo-link-code b { font-size: 28px; font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.fo-link-code { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'tiles copy actions'; align-items: center; gap: 14px 20px; margin-top: 12px; padding: 16px 20px; border-radius: 16px; background: var(--fo-gold-soft); animation: fo-settings-rise .4s var(--fo-pop) both; }
+.fo-code-tiles { display: flex; flex: none; gap: 6px; }
+.fo-code-tiles span { width: 40px; height: 50px; display: grid; place-items: center; border: 1.5px solid var(--fo-ghost-edge); border-radius: 12px; background: var(--fo-surface); color: var(--fo-ink); font-family: var(--fo-font-display); font-size: 24px; font-weight: 800; }
+.fo-code-tiles span.dash { width: 12px; border: 0; background: none; color: var(--fo-muted); }
+.fo-link-actions { display: flex; flex: none; gap: 8px; }
+.fo-link-code .fo-code-tiles { grid-area: tiles; }
+.fo-link-code .fo-row-copy { grid-area: copy; word-break: keep-all; }
+.fo-link-code .fo-link-actions { grid-area: actions; justify-self: end; }
+/* 좁은 창에서는 안내를 코드 아래 한 줄로 내려 어색한 줄바꿈을 막는다(#257). */
+@media (max-width: 1100px) { .fo-link-code { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'tiles actions' 'copy copy'; } }
 .fo-link-code small + small { margin-top: 2px; font-variant-numeric: tabular-nums; }

@@ -149,7 +149,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--fo-focus); 
 @font-face { font-family: Paperlogy; src: url('/fonts/Paperlogy-8ExtraBold.woff2') format('woff2'); font-weight: 800 900; font-display: swap; }
 :root { --fo-font-display: Paperlogy, Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; }
 h1, h2,
-.fo-link-code b, .fo-week-total strong, .fo-day-time, .fo-nb-title,
+.fo-week-total strong, .fo-day-time, .fo-nb-title,
 .result-window .big-time, .onboarding-window .code-tiles span,
 .onboarding-window.goal-window .bubble, .goal-window .goal-card p,
 .focus-window .clock, .focus-window .goal, .setup-window .duration-readout strong,
