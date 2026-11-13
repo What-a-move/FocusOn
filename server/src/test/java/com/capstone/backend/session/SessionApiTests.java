@@ -343,7 +343,8 @@ class SessionApiTests {
     mvc.perform(post(path).header("Authorization", token)
             .header("X-Device-Id", owner.device().deviceId())
             .contentType(MediaType.APPLICATION_JSON).content(first))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accumulatedActiveMs").value(1000));
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accumulatedActiveMs").value(1000))
+        .andExpect(jsonPath("$.data.version").value(version));
     var stored = sessions.findById(Long.valueOf(sessionId)).orElseThrow();
     var received = stored.getLastHeartbeatAt();
     org.junit.jupiter.api.Assertions.assertEquals(version, stored.getVersion());
@@ -351,7 +352,8 @@ class SessionApiTests {
             .header("X-Device-Id", owner.device().deviceId())
             .contentType(MediaType.APPLICATION_JSON)
             .content(heartbeatBody(observed, 2000)))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accumulatedActiveMs").value(1000));
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accumulatedActiveMs").value(1000))
+        .andExpect(jsonPath("$.data.version").value(version));
     org.junit.jupiter.api.Assertions.assertEquals(received,
         sessions.findById(Long.valueOf(sessionId)).orElseThrow().getLastHeartbeatAt());
     mvc.perform(post(path).header("Authorization", token)
@@ -443,16 +445,25 @@ class SessionApiTests {
     jdbc.update("UPDATE learning_sessions SET last_resumed_at = ?, last_heartbeat_at = ? "
             + "WHERE id = ?", java.sql.Timestamp.from(Instant.now().minusSeconds(300)),
         java.sql.Timestamp.from(Instant.now().minusSeconds(1)), numericId);
-    mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
+    String body = mvc.perform(post("/api/v1/sessions/" + id + "/heartbeats")
             .header("Authorization", "Bearer " + owner.accessToken())
             .header("X-Device-Id", owner.device().deviceId())
             .contentType(MediaType.APPLICATION_JSON)
             .content(heartbeatBody(Instant.now(), 300000)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.status").value("AWAITING_END_CONFIRMATION"));
+        .andExpect(jsonPath("$.data.status").value("AWAITING_END_CONFIRMATION"))
+        .andExpect(jsonPath("$.data.version").value(version + 1))
+        .andReturn().getResponse().getContentAsString();
     var stored = sessions.findById(numericId).orElseThrow();
     org.junit.jupiter.api.Assertions.assertEquals(version + 1, stored.getVersion());
     org.junit.jupiter.api.Assertions.assertEquals(300000, stored.getAccumulatedActiveMs());
+    // 응답의 version을 그대로 If-Match-Version에 써도 409 없이 연장된다.
+    long returned = json.readTree(body).path("data").path("version").asLong();
+    mvc.perform(post("/api/v1/sessions/" + id + "/extend")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", returned)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"additionalDurationMs\":600000}"))
+        .andExpect(status().isOk());
   }
 
   @Test

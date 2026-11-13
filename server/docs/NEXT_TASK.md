@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #261 heartbeat 응답 version (2026-11-13)
+
+- Desktop: 응답의 `version`을 바로 쓰고 PR #260의 `GET /sessions/{id}` 재조회 임시 처리를 제거한다.
+- 문서 오너: Notion API 명세서 DB의 heartbeat 응답에 `version`을 추가한다.
+
 ## Issue #250 활성 세션 조회 서버 시각 필드 (2026-11-13)
 
 - Extension: `RUNNING`일 때 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 센다. `accumulatedAt`이 null이면 증가시키지 않는다.
