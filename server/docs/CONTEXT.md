@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #261 heartbeat 응답 version (2026-11-13)
+
+- `POST /sessions/{id}/heartbeats` 응답 `data`에 `version`을 추가했다. 목표 도달로 `AWAITING_END_CONFIRMATION`이 되면 증가한 값을 돌려주므로 Desktop은 재조회 없이 끝내기·연장에 쓸 수 있다.
+
 ## Issue #250 활성 세션 조회 서버 시각 필드 (2026-11-13)
 
 - `ActiveResponse`에 `accumulatedAt`·`serverNow`를 추가했다. 기준은 `last_heartbeat_at`과 `last_resumed_at` 중 늦은 값이며 RUNNING이 아니면 `accumulatedAt`은 null이다. 근거는 DECISION_RECORD 참고.

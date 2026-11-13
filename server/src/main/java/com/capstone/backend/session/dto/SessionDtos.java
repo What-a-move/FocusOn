@@ -104,7 +104,10 @@ public final class SessionDtos {
     }
   }
 
-  /** 마지막으로 서버가 수신하고 확정한 신호다. */
+  /**
+   * 마지막으로 서버가 수신하고 확정한 신호다. {@code version}은 응답 시점의 세션 명령 버전이며,
+   * 목표 도달로 상태가 바뀌면 증가한 값이라 끝내기·연장 요청의 If-Match-Version에 바로 쓸 수 있다.
+   */
   public record HeartbeatResponse(SessionStatus status, Instant lastHeartbeatAt,
-      long accumulatedActiveMs, String pauseReason) {}
+      long accumulatedActiveMs, String pauseReason, long version) {}
 }

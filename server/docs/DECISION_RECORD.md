@@ -1,5 +1,11 @@
 # Backend 결정 기록
 
+## 2026-11-13 #261 heartbeat 응답의 version 계산
+
+- 결정: 응답 `version`은 응답 시점의 세션 명령 버전이다. 목표 도달 시 `recordHeartbeat`(네이티브 UPDATE)가 올린 값, 즉 조회한 엔티티 버전 + 1을 돌려준다.
+- 이유: 네이티브 UPDATE는 영속성 컨텍스트의 엔티티를 갱신하지 않는다. 세션 행을 `PESSIMISTIC_WRITE`로 잠근 상태라 다른 요청이 끼어들 수 없어 계산값이 저장값과 같다.
+- 일반 heartbeat·중복 재전송·PAUSED 계열 응답은 버전이 변하지 않으므로 현재 엔티티 버전을 그대로 쓴다.
+
 ## 2026-11-13 #250 활성 세션 조회의 서버 시각 기준
 
 - `GET /sessions/active`에 `accumulatedAt`(누적 시간이 확정된 서버 시각)과 `serverNow`를 추가했다. Extension이 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 세어 heartbeat 주기(10초)만큼 뒤처지는 표시를 없앤다.

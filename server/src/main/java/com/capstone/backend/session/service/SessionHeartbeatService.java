@@ -110,14 +110,17 @@ public class SessionHeartbeatService {
     if (!reached) {
       foreground.renew(session, request.observationContextId(), now);
     }
+    // 네이티브 UPDATE는 영속성 컨텍스트의 엔티티를 갱신하지 않는다. 행을 잠근 상태이므로
+    // 목표 도달 시 UPDATE가 올린 버전(+1)을 그대로 계산해 응답한다.
+    long version = session.getVersion() + (reached ? 1 : 0);
     return new HeartbeatOutcome(new HeartbeatResponse(reached
-        ? SessionStatus.AWAITING_END_CONFIRMATION : SessionStatus.RUNNING, now, active, null),
-        false, !reached);
+        ? SessionStatus.AWAITING_END_CONFIRMATION : SessionStatus.RUNNING, now, active, null,
+        version), false, !reached);
   }
 
   private HeartbeatResponse response(LearningSessionEntity session) {
     return new HeartbeatResponse(session.getStatus(), session.getLastHeartbeatAt(),
-        session.getAccumulatedActiveMs(), session.getPauseReason());
+        session.getAccumulatedActiveMs(), session.getPauseReason(), session.getVersion());
   }
 
   private long parseSessionId(String value) {

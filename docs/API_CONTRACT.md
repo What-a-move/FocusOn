@@ -242,6 +242,8 @@ POST /api/v1/sessions/{sessionId}/heartbeats
 
 `GET /api/v1/sessions/active`의 `data`에는 `accumulatedAt`과 `serverNow`(ISO-8601 UTC)가 있다. `accumulatedAt`은 `accumulatedActiveMs`가 확정된 서버 시각(서버가 마지막 heartbeat를 받은 시각과 마지막 재개 시각 중 늦은 값)이고, 상태가 `RUNNING`이 아니면 `null`이다. `serverNow`는 응답을 만든 서버 시각이다. 클라이언트는 `RUNNING`일 때 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 세며 두 값 모두 서버 시계이므로 사용자 시계와 무관하다.
 
+`POST /api/v1/sessions/{sessionId}/heartbeats`의 `data`는 `{ status, lastHeartbeatAt, accumulatedActiveMs, pauseReason, version }`이다. `version`은 응답 시점의 세션 명령 버전으로, 목표 시간에 닿아 `AWAITING_END_CONFIRMATION`으로 바뀐 응답에서는 증가한 값이라 `If-Match-Version`에 바로 쓸 수 있다. 필드 추가만이라 기존 클라이언트에 영향이 없다.
+
 세션 생성의 필수 헤더는 `Authorization`, `X-Device-Id`, `Idempotency-Key`다. 기존 세션이 아직 없으므로 생성에 `If-Match-Version`을 요구하지 않는다.
 
 ```json
