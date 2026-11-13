@@ -780,3 +780,11 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 오류는 권한 꺼짐·카메라 없음 두 가지만 한 줄 + 버튼으로 보여 준다. 시안의 복구 안내 여러 줄과 `다른 앱이 사용 중`(추정)은 넣지 않는다(사용자 결정).
 - 권한이 꺼져도 사용자가 켜 둔 스위치는 그대로 둔다. 권한을 다시 켜면 바로 동작한다.
 - 영향받는 파일: `features/settings/Settings.tsx`, `features/settings/settings.css`, `shared/api/onboarding-api.ts`, `features/settings/settings-api.ts`, `electron/main/{camera-monitor,permission-ipc,settings-ipc,index}.cts`, `electron/shared/{permission,settings}-contract.cts`, `electron/preload/index.cts`, `native/observer/main.swift`
+
+## 결정 042 - 토큰 만료 시각은 서버 Date 헤더 기준 남은 수명으로 바꿔 저장
+
+- 결정일: 2026-11-13 / 상태: 확정 / Issue #229.
+- 서버가 준 `accessTokenExpiresAt`은 서버 시계 기준이다. 로컬 시계와 바로 비교하면 시계가 15분(Access Token 수명) 넘게 어긋날 때 정상 refresh 응답을 버리고, 이미 회전된 refresh token을 잃어 `AUTH_TOKEN_REUSE_DETECTED`로 강제 로그아웃된다.
+- `AuthApiClient.call`이 응답 `Date` 헤더를 파서에 넘기고, `parseTokenPair`는 `만료 시각 − 서버 Date`를 로컬 now에 더해 저장한다. refresh와 Google code 교환 모두 적용된다.
+- `Date` 헤더가 없거나 남은 수명이 0 이하면 응답을 버리지 않고 60초 로컬 만료로 저장한다. 형식이 깨진 응답만 `INVALID_RESPONSE`로 버린다.
+- 영향받는 파일: `electron/main/auth-api.cts`, `tests/electron/auth-service.test.cjs`
