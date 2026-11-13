@@ -2,7 +2,7 @@
 
 ## Issue #233 compose에 목표 AI 주소 전달 (2026-11-13)
 
-- 다음: 컨테이너로 backend를 띄워 `/goals/clarify`가 AI에 도달하는지 확인한다(docker에서는 `http://host.docker.internal:8000`을 쓴다. compose의 `extra_hosts`가 호스트 게이트웨이에 연결하며 `127.0.0.1`은 컨테이너 자신이다).
+- 다음: 실제 AI 서비스로 `/goals/clarify`를 확인한다(컨테이너→호스트 stub 연결은 확인했다. docker에서는 `http://host.docker.internal:8000`을 쓴다. compose의 `extra_hosts`가 호스트 게이트웨이에 연결하며 `127.0.0.1`은 컨테이너 자신이다).
 - AI 담당: TypeSafe 키 401(인증 실패) 해결. 해결 전까지 앱은 "입력한 그대로 시작"으로 넘어간다.
 
 ## Issue #208 일간·달력 리포트 재개 (2026-11-10)

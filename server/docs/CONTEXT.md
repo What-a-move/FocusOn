@@ -3,7 +3,7 @@
 ## Issue #233 compose에 목표 AI 주소 전달 (2026-11-13)
 
 - `docker-compose.yml`의 backend 환경 변수에 `FOCUSON_GOAL_AI_BASE_URL`을 추가했다. 그동안 `.env`에 적어도 컨테이너로 전달되지 않아 목표 명확화 AI 호출이 주소 없이 실행됐다.
-- 검증: `docker compose config`로 값이 있으면 그대로, 없으면 빈 문자열이 나오는 것을 확인했다. 실제 컨테이너 기동과 `/goals/clarify` 호출은 하지 않았다.
+- 검증: `docker compose config`로 값이 있으면 그대로, 없으면 빈 문자열이 나오는 것을 확인했다. 격리 compose 프로젝트(별도 DB·포트)로 backend를 띄우고 호스트의 stub AI(18000)를 `http://host.docker.internal:18000`으로 지정해 `POST /api/v1/goals/clarify`가 200을 반환하고 stub에 `/internal/v1/goals/clarify` 요청이 도달하는 것을 확인했다. 실제 AI(TypeSafe)와는 연결하지 않았다.
 - 리뷰 반영: `GoalAiClient`의 허용 호스트에 `host.docker.internal`을 추가하고 compose에 `extra_hosts: host.docker.internal:host-gateway`를 넣었다. 허용 호스트를 고정 이름으로 제한하는 것은 SSRF 방지 목적이다.
 - 별도 문제: AI의 TypeSafe 키가 401이라 `/goals/clarify`가 503을 반환한다. AI 담당 영역이며 이 Issue 범위가 아니다.
 
