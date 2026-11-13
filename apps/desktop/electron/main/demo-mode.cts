@@ -96,12 +96,14 @@ export function installDemoMode(auth: AuthService, snapshot: () => SessionSnapsh
         const current = snapshot()
         const result = await real(request)
         if (!current || current.sessionId !== sessionId) return result
+        // [주의] 서버가 실제로 거절한 종료(버전 충돌 등)는 그대로 돌려준다. 앱 안에서만 끝내면 서버에 세션이 남아 새 집중을 시작하지 못한다(#256).
+        if (!result.success && result.error.code !== 'NOT_FOUND') return result
         const played = remember(current)
         played.goalText = current.goalText
         played.endedAt = new Date().toISOString()
         played.activeMs = current.accumulatedActiveMs
         if (result.success) return result
-        // #164 병합 전에는 서버에 종료 API가 없다. 앱 안에서만 끝낸다.
+        // 서버에 종료 API가 없을 때(404, #164 병합 전 서버)만 앱 안에서 끝낸다.
         // 서버는 진행 중(RUNNING)인 세션만 무신호 3분 뒤 자동 종료한다. 멈춘 채 끝냈으면 서버에서만 다시 이어 두어 자동 종료되게 한다.
         if (current.status !== 'RUNNING') await resumeOnServer(sessionId)
         return parsed(request, { version: 0, status: 'ENDED', accumulatedActiveMs: current.accumulatedActiveMs })

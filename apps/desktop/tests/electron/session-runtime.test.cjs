@@ -318,3 +318,39 @@ test('heartbeat는 전경 context가 있을 때만 붙이고, 서버가 진행 �
   assert.equal(await runtime.heartbeat(null), false, '목표 도달 신호는 lease를 잇지 않음')
   assert.equal('observationContextId' in calls[1].body, false)
 })
+
+test('목표 시간에 닿아 서버가 확인 대기로 바꾸면 한 번 다시 조회해 version을 맞추고, 첫 끝내기가 충돌 없이 간다 (#256)', async () => {
+  const awaiting = { success: true, data: { status: 'AWAITING_END_CONFIRMATION', accumulatedActiveMs: 600000 } }
+  const { runtime, calls, advance } = setup({
+    'POST /api/v1/sessions/901/heartbeats': awaiting,
+    'GET /api/v1/sessions/901': { success: true, data: { sessionId: '901', status: 'AWAITING_END_CONFIRMATION', version: 2, goalTextSnapshot: '미적분 풀기', targetDurationMs: 600000, accumulatedActiveMs: 600000 } },
+    'POST /api/v1/sessions/901/end': (request) => request.headers['If-Match-Version'] === '2'
+      ? { success: true, data: { status: 'ENDED', version: 3, accumulatedActiveMs: 600000 } }
+      : { success: false, error: { code: 'SESSION_VERSION_CONFLICT', retryable: false } },
+  })
+  runtime.begin(started, '미적분 풀기')
+  advance(10 * 60000)
+  runtime.tick()
+  await runtime.heartbeat()
+  await runtime.heartbeat()
+  assert.equal(calls.filter((c) => c.path === '/api/v1/sessions/901').length, 1, '확인 대기 동안 다시 조회는 한 번만')
+  const ended = await runtime.end()
+  assert.equal(ended.success, true)
+  assert.equal(runtime.snapshot().status, 'ENDED')
+})
+
+test('다시 조회에 실패하면 다음 heartbeat에서 또 맞춘다', async () => {
+  let fail = true
+  const { runtime, calls, advance } = setup({
+    'POST /api/v1/sessions/901/heartbeats': { success: true, data: { status: 'AWAITING_END_CONFIRMATION', accumulatedActiveMs: 600000 } },
+    'GET /api/v1/sessions/901': () => fail ? null : { success: true, data: { sessionId: '901', status: 'AWAITING_END_CONFIRMATION', version: 2, goalTextSnapshot: '미적분 풀기', targetDurationMs: 600000, accumulatedActiveMs: 600000 } },
+  })
+  runtime.begin(started, '미적분 풀기')
+  advance(10 * 60000)
+  runtime.tick()
+  await runtime.heartbeat()
+  fail = false
+  await runtime.heartbeat()
+  await runtime.heartbeat()
+  assert.equal(calls.filter((c) => c.path === '/api/v1/sessions/901').length, 2)
+})
