@@ -24,12 +24,11 @@ html:has(.floating-root), html:has(.floating-root) body { min-width: 0; backgrou
 .floating-root .close { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--fo-faint); cursor: pointer; }
 .floating-root .close:hover { background: var(--fo-field); color: var(--fo-ink); }
 .floating-root .close svg { width: 12px; height: 12px; }
-.floating-root .fail { margin: 10px 0 0; color: var(--fo-danger); font-size: 14px; font-weight: 600; line-height: 1.5; }
 /* F07 연결 끊김은 시스템 오류라 빨간 선·글자(결정 031). 카드 바탕은 흰색으로 같다. */
 .floating-root .card.is-error { border-color: var(--fo-danger-line); color: var(--fo-danger); }
 .floating-root .card.is-error small { color: var(--fo-danger); }
 .floating-root .card.is-error .who { background: var(--fo-danger-soft); color: var(--fo-danger); }
-/* 이탈 알림: 팻말 + 누르면 쏙 (#246). 안내·버튼은 팻말과 같은 나무색, 단색 + 아래 두께 눌림. */
+/* 이탈 알림·휴식 제안: 팻말 + 누르면 쏙 (#246, #253). 안내·버튼은 팻말과 같은 나무색, 단색 + 아래 두께 눌림. */
 .floating-root .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sign-alert .poki-hit { position: absolute; right: -28px; bottom: -14px; width: 360px; padding: 0; border: 0; background: none; cursor: pointer; z-index: 1; animation: floating-peek .55s cubic-bezier(.22, 1, .36, 1) both; transform-origin: 50% 100%; }
 .sign-alert .poki-hit .poki { position: static; width: 100%; animation: none; transition: transform .18s ease-out; }
