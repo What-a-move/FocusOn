@@ -19,6 +19,8 @@ type State = {
   error: string | null
   busy: boolean
   pauseReason: string | null
+  /** 목표 시간 도달 뒤 서버가 올린 version을 다시 받아 왔는지(#256). 연장해 다시 세면 지운다. */
+  awaitSynced?: boolean
 }
 
 // ponytail: 앱을 다시 켜 이어받은 세션은 조회 응답에 옵션이 없어 기본값(포키·보통)으로 알림을 보여 준다.
@@ -156,6 +158,12 @@ export class SessionRuntime {
       this.publish('server-paused')
       return false
     }
+    // [주의] 목표 시간에 닿은 heartbeat로 서버는 AWAITING_END_CONFIRMATION으로 바꾸며 version을 1 올린다.
+    // heartbeat 응답에는 version이 없어, 그대로 두면 첫 끝내기·연장이 SESSION_VERSION_CONFLICT로 실패한다. 한 번 다시 조회해 맞춘다(#256).
+    if (result.success && result.data.status === 'AWAITING_END_CONFIRMATION' && !s.awaitSynced && !s.busy) {
+      if (await this.refresh(s)) { s.awaitSynced = true; this.publish() }
+      return false
+    }
     if (!result.success && result.error.code === 'SESSION_ABANDONED') {
       // 서버가 응답 없음으로 이미 끝낸 세션은 되살리지 않는다. 서버가 확정한 시간만 남는다.
       this.settle('ABANDONED')
@@ -203,7 +211,7 @@ export class SessionRuntime {
     return this.command('extend', String(minutes), ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION'], (s) => ({ path: `/api/v1/sessions/${s.sessionId}/extend`, body: { additionalDurationMs: minutes * 60_000 } }), (s, data) => {
       s.targetDurationMs = data.targetDurationMs ?? s.targetDurationMs + minutes * 60_000
       // 시간이 끝나 기다리던 중이면 연장과 함께 다시 센다.
-      if (s.status === 'AWAITING_END_CONFIRMATION') { s.status = 'RUNNING'; s.resumedAt = this.now() }
+      if (s.status === 'AWAITING_END_CONFIRMATION') { s.status = 'RUNNING'; s.resumedAt = this.now(); s.awaitSynced = false }
     })
   }
 
@@ -277,15 +285,16 @@ export class SessionRuntime {
   }
 
   /** 다른 기기에서 상태가 바뀌었으면 서버 최신값으로 맞춘다. 로컬 값으로 서버를 덮어쓰지 않는다. */
-  private async refresh(s: State): Promise<void> {
+  private async refresh(s: State): Promise<boolean> {
     const latest = await this.auth.authorizedRequest({ path: `/api/v1/sessions/${s.sessionId}`, method: 'GET', expectedStatus: 200, parse: parseRemoteSession })
-    if (!latest.success || this.state !== s) return
+    if (!latest.success || this.state !== s) return false
     this.pending.clear()
     s.version = latest.data.version
     s.targetDurationMs = latest.data.targetDurationMs
     s.baseActiveMs = latest.data.accumulatedActiveMs
     s.status = latest.data.status
     s.resumedAt = latest.data.status === 'RUNNING' ? this.now() : null
+    return true
   }
 
   private async flushLocalEvents(): Promise<void> {

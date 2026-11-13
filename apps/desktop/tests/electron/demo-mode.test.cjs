@@ -93,3 +93,16 @@ test('멈춘 채 끝내면 서버에서만 다시 이어 두어 무신호 자동
   assert.equal(end.success, true)
   assert.deepEqual(calls, ['POST /api/v1/sessions/s1/end', 'GET /api/v1/sessions/active', 'POST /api/v1/sessions/s1/resume 4'])
 })
+
+test('서버가 실제로 거절한 끝내기(버전 충돌)는 그대로 돌려주고 앱 안에서 끝내지 않는다 (#256)', async () => {
+  const conflict = { success: false, error: { code: 'SESSION_VERSION_CONFLICT', retryable: false } }
+  const auth = { authorizedRequest: async (request) => {
+    if (request.path.endsWith('/end')) return conflict
+    if (request.path === '/api/v1/sessions/active') return { success: true, data: request.parse({ sessionId: 's1', status: 'AWAITING_END_CONFIRMATION', version: 2 }) }
+    return missing
+  } }
+  installDemoMode(auth, () => ({ ...running, status: 'AWAITING_END_CONFIRMATION' }))
+  assert.deepEqual(await auth.authorizedRequest({ path: '/api/v1/sessions/s1/end', method: 'POST', parse: parseCommandResult }), conflict)
+  const active = await auth.authorizedRequest({ path: '/api/v1/sessions/active', method: 'GET', parse: (value) => value })
+  assert.equal(active.data.sessionId, 's1', '서버에 남은 세션을 숨기지 않음')
+})
