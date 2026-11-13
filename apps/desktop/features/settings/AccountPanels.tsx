@@ -151,6 +151,7 @@ export function DevicesPanel({ showToast }: { showToast: ShowToast }) {
   const [code, setCode] = useState<{ value: string; expiresAt: number } | null>(null)
   const [issuing, setIssuing] = useState(false)
   const [now, setNow] = useState(0)
+  const [copied, setCopied] = useState(false)
   const [confirm, confirmDialog] = useConfirm()
 
   const load = useCallback(async () => {
@@ -197,6 +198,17 @@ export function DevicesPanel({ showToast }: { showToast: ShowToast }) {
     setCode({ value: result.data.code, expiresAt: Date.parse(result.data.expiresAt) })
   }
 
+  async function copyCode(value: string) {
+    try {
+      // 확장 입력칸은 하이픈이 있어도 받는다. 화면에 보이는 형식 그대로 복사한다(온보딩과 같음).
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      showToast({ text: '복사하지 못했어요. 코드를 보고 직접 입력해 주세요.' })
+    }
+  }
+
   async function unlink(deviceId: string) {
     const result = await settingsApi.unlinkExtension(deviceId)
     if (!result.success) return showToast({ text: failText(result.error.code, '연결을 해제하지') })
@@ -219,9 +231,15 @@ export function DevicesPanel({ showToast }: { showToast: ShowToast }) {
         {view.status === 'ready' && <span className={`fo-badge ${extension ? 'ok' : 'bad'}`}>{extension ? '연결됨' : '연결 안 됨'}</span>}
       </div>
       {code && <div className="fo-link-code" role="status">
-        <b>{code.value}</b>
+        {/* 온보딩 연결 코드와 같은 글자 칸(#257). */}
+        <div className="fo-code-tiles" aria-label={`연결 코드 ${code.value}`}>
+          {[...code.value].map((character, index) => <span key={index} className={character === '-' ? 'dash' : undefined} aria-hidden="true">{character}</span>)}
+        </div>
         <div className="fo-row-copy"><small>Chrome 툴바의 FocusOn 아이콘을 눌러 입력해 주세요</small><small>{Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')} 남음 · 한 번만 쓸 수 있어요</small></div>
-        <button className="fo-small-btn" type="button" onClick={() => setCode(null)}>닫기</button>
+        <div className="fo-link-actions">
+          <button className="fo-small-btn" type="button" onClick={() => { void copyCode(code.value) }} aria-live="polite">{copied ? '복사했어요' : '복사'}</button>
+          <button className="fo-small-btn" type="button" onClick={() => setCode(null)}>닫기</button>
+        </div>
       </div>}
     </div>
     <div>

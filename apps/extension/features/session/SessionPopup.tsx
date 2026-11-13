@@ -32,23 +32,32 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
   const [now, setNow] = useState(0)
   const [busy, setBusy] = useState(false)
   const [unlinkError, setUnlinkError] = useState(false)
+  const [retry, setRetry] = useState<'idle' | 'busy' | 'failed'>('idle')
   const latest = useRef(0)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<boolean> => {
     // [주의] 재시도 중인 이전 조회가 늦게 끝나도 새 결과를 덮지 않게 마지막 조회 결과만 쓴다.
     const id = ++latest.current
     const result = await getActiveSession()
-    if (id !== latest.current) return
+    if (id !== latest.current) return result.success
     const at = Date.now()
     setNow(at)
     if (result.success) {
       setLast(result.data ? { session: result.data, at: new Date(at) } : null)
       setView((current) => current.kind === 'unlink-confirm' ? current : result.data ? { kind: 'session', session: keepForward(current.kind === 'session' ? current : null, result.data, at), fetchedAt: at } : { kind: 'none' })
-      return
+      return true
     }
-    if (result.error.code === 'RELINK_REQUIRED') { onRelink(); return }
+    if (result.error.code === 'RELINK_REQUIRED') { onRelink(); return false }
     setView((current) => current.kind === 'unlink-confirm' ? current : { kind: 'offline', last: null })
+    return false
   }, [onRelink])
+
+  // 다시 연결: 실패가 바로 돌아와도 눌린 것이 보이게 잠깐 '연결하는 중'을 보여 주고, 또 실패하면 그렇다고 알린다(#257).
+  const reconnect = async () => {
+    setRetry('busy')
+    const [ok] = await Promise.all([load(), new Promise((resolve) => setTimeout(resolve, 600))])
+    setRetry(ok ? 'idle' : 'failed')
+  }
 
   useEffect(() => {
     queueMicrotask(() => { void load() })
@@ -108,7 +117,8 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
             <div className="progress is-dim"><i style={{ width: `${Math.min(100, (last.session.accumulatedActiveMs / last.session.targetDurationMs) * 100)}%` }} /></div>
             <p className="small muted">{timeFormat.format(last.at)} 기준이라 지금과 다를 수 있어요.</p>
           </div>}
-          <button className="btn btn-primary" type="button" onClick={() => { void load() }}>다시 연결</button>
+          {retry === 'failed' && <p className="small muted center" role="status">다시 시도했지만 아직 연결되지 않았어요.</p>}
+          <button className="btn btn-primary" type="button" disabled={retry === 'busy'} onClick={() => { void reconnect() }}>{retry === 'busy' ? '연결하는 중…' : '다시 연결'}</button>
         </>}
       </div>
       <LogCopy />

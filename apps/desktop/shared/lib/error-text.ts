@@ -11,7 +11,8 @@ export function errorText(error: { code: string }): string {
     // 서버에 아직 없는 API(404). 기다려도 풀리지 않으니 "잠시 후"를 쓰지 않는다.
     case 'NOT_FOUND': return '아직 준비 중인 기능이에요.'
     case 'INVALID_RESPONSE': return '서버 응답을 읽지 못했어요. 앱을 다시 열어 주세요.'
-    case 'TOO_MANY_REQUESTS': return '요청이 많았어요. 1분 뒤에 다시 시도해 주세요.'
+    // 서버 요청 제한은 모두 10분 단위다(로그인·갱신·연결 코드 등, AuthRateLimiter). 최대 10분을 기다려야 풀린다.
+    case 'TOO_MANY_REQUESTS': return '요청이 많았어요. 10분쯤 뒤에 다시 시도해 주세요.'
     case 'VALIDATION_ERROR': return '입력한 내용을 확인해 주세요.'
     case 'AUTH_RELOGIN_REQUIRED':
     case 'AUTH_TOKEN_REUSE_DETECTED':
