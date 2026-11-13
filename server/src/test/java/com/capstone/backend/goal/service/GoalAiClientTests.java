@@ -2,6 +2,7 @@ package com.capstone.backend.goal.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sun.net.httpserver.HttpServer;
@@ -42,6 +43,19 @@ class GoalAiClientTests {
       assertTrue(body.get().contains("토익 점수 올리기"));
     } finally {
       server.stop(0);
+    }
+  }
+
+  /** Docker 실행용 호스트 게이트웨이 이름은 허용하고 그 밖의 호스트는 요청 전에 거절한다. */
+  @Test
+  void allowsOnlyLoopbackAndDockerHostGatewayNames() {
+    var docker = new GoalAiClient(new ObjectMapper(), "http://host.docker.internal:8000");
+    assertEquals("http://host.docker.internal:8000/internal/v1/goals/clarify",
+        docker.endpoint().toString());
+    for (String blocked : new String[] {"http://example.com:8000", "http://10.0.0.5:8000",
+        "http://host.docker.internal.evil.com:8000", ""}) {
+      var client = new GoalAiClient(new ObjectMapper(), blocked);
+      assertThrows(GoalAiClient.GoalAiException.class, client::endpoint, blocked);
     }
   }
 }

@@ -10,6 +10,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -21,6 +22,8 @@ public class GoalAiClient {
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(60);
   private static final int MAX_RESPONSE_BYTES = 65_536;
+  private static final Set<String> ALLOWED_HOSTS =
+      Set.of("localhost", "127.0.0.1", "host.docker.internal");
   private final ObjectMapper mapper;
   private final HttpClient client;
   private final String baseUrl;
@@ -81,11 +84,15 @@ public class GoalAiClient {
     }
   }
 
-  private URI endpoint() {
+  /**
+   * AI 주소는 SSRF를 막기 위해 고정된 호스트 이름만 허용한다. 로컬 실행은 루프백, Docker 실행은
+   * compose의 {@code extra_hosts}로 호스트 게이트웨이에 연결되는 {@code host.docker.internal}이다.
+   */
+  URI endpoint() {
     try {
       URI base = URI.create(baseUrl);
       if (!"http".equals(base.getScheme()) || base.getUserInfo() != null
-          || !("localhost".equals(base.getHost()) || "127.0.0.1".equals(base.getHost()))
+          || !ALLOWED_HOSTS.contains(base.getHost())
           || base.getQuery() != null || base.getFragment() != null
           || !(base.getPath().isEmpty() || "/".equals(base.getPath()))) {
         throw new IllegalArgumentException();
