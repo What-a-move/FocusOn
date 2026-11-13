@@ -60,11 +60,3 @@ AI는 사용자 요청에 따라 0.6 미만과 점수 누락을 `UNCERTAIN`으�
 
 - 현재 관련 회귀 명령과 결과는 [FastAPI 관련성 분석 베타 결과](fastapi-relevance-analysis-REPORT.md)에 기록한다. 합성 테스트 결과는 실제 Ollama/Backend 왕복을 보장하지 않는다.
 - 실제 Backend 왕복·최종 판정 실행·confidence 보정·중복/역순 처리·공개 배포는 미완료. Git 커밋·푸시·PR은 수행하지 않았다.
-
-## 로컬 AI·Ollama 실행 안내
-
-공용 AI 실행 위치는 아직 확정되지 않았다. 아래는 개발자 개인 Mac의 합성 QA 설정이다. Ollama를 설치·실행하고 `ollama pull qwen3-embedding:4b-fp16`으로 모델을 준비한다. Ollama 기본 주소는 `http://127.0.0.1:11434`이나 FocusOn 임베딩 클라이언트의 기본값은 11435이므로, 로컬 기본 포트를 쓸 때는 AI 실행 프로세스에 `FOCUSON_EMBEDDING_URL=http://127.0.0.1:11434`를 지정한다.
-
-`AI/.env`에는 Backend와 동일한 별도 서비스 인증 키 `FOCUSON_AI_API_KEY`를 설정하고, 목표 보조에는 유효한 `TYPESAFE_API_KEY`와 생성 모델 키도 설정한다. 키는 Git이나 메시지에 남기지 않는다. 저장소 루트에서 `FOCUSON_EMBEDDING_URL=http://127.0.0.1:11434 PYTHONPATH=AI:. python3 -m uvicorn AI.src.main:app --env-file AI/.env --host 127.0.0.1 --port 8001 --no-access-log`으로 실행한다. `GET /health`는 임베딩 성공과 차원을 확인한다. 판정은 합성 입력으로 별도 확인한다. Docker Backend에서 이 Mac에 접근한다면 Docker Desktop의 `host.docker.internal:8001`을 사용한다.
-
-학교 모델은 [학교 Ollama 설정](school-ollama-embedding-SETUP.md)의 접근 주소와 tailnet 연결이 필요하다. 서비스를 다른 호스트에 노출할 때는 접근 권한과 TLS를 먼저 구성한다. 목표 AI URL이 Compose로 전달되는지는 서버 담당자가 확인한다.
