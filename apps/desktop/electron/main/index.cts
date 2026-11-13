@@ -244,7 +244,7 @@ if (!hasSingleInstanceLock) {
     })
     registerAuthIpc(() => mainWindow, rendererUrl, authStore, oauthFlow, authService)
     const notificationReadiness = new NotificationReadiness(path.join(app.getPath('userData'), 'notification-readiness.json'))
-    registerPermissionIpc(() => mainWindow, rendererUrl, notificationReadiness)
+    registerPermissionIpc(() => mainWindow, rendererUrl, notificationReadiness, { issue: () => cameraMonitor.issue(), clear: () => cameraMonitor.clearIssue() })
     // [주의] 화면 기록 준비 상태는 Renderer 주장이 아니라 Main이 macOS에서 직접 확인한 값으로 서버에 보낸다.
     registerOnboardingIpc(() => mainWindow, rendererUrl, authService ? new OnboardingService(authService, () => mediaStatus('screen') === 'granted') : null)
     registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)

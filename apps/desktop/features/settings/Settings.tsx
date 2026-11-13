@@ -232,12 +232,91 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
           action={notification === false ? { label: notificationSent ? '보였어요' : '시험 알림 보내기', run: notificationAction } : null} />
       </div>
     </div>
-    <div className="fo-row" style={{ '--n': 1 } as CSSProperties}>
+    <CameraRow showToast={showToast} n={1} />
+    <div className="fo-row" style={{ '--n': 2 } as CSSProperties}>
       <div className="fo-row-copy"><strong>분석 제외 목록</strong><small>여기 있는 사이트·앱은 분석하지 않아요</small></div>
       <Link className="fo-small-btn" href="/settings/exclusions/">관리</Link>
     </div>
-    <p className="fo-foot-note" style={{ '--n': 2 } as CSSProperties}>화면 원문·캡처·카메라 영상은 저장하지 않아요. 비밀번호·결제·메시지 화면은 분석하지 않아요.</p>
+    <p className="fo-foot-note" style={{ '--n': 3 } as CSSProperties}>화면 원문·캡처·카메라 영상은 저장하지 않아요. 비밀번호·결제·메시지 화면은 분석하지 않아요.</p>
   </>
+}
+
+// 카메라 오류는 macOS가 확실히 알려 주는 두 가지만 한 줄로 보여 준다(사용자 결정 2026-11-13). 시스템 안내라 존댓말이다.
+const CAMERA_PROBLEM = {
+  denied: { error: '카메라 권한이 꺼져 있어요', action: '시스템 설정 열기' },
+  missing: { error: '카메라를 찾을 수 없어요', action: '다시 시도' },
+} as const
+type CameraProblem = keyof typeof CAMERA_PROBLEM
+
+/**
+ * 카메라 분석 스위치 (선택, Notion 카메라 분석 2·7, #228). 켜면 macOS 권한 → 카메라 동의 → focus-settings 순서로 맞춘다.
+ * 끄면 focus-settings만 끈다(동의 철회는 계정 탭). 실패 사유는 macOS 권한이나 집중 중 Main이 본 마지막 사유로 보여 준다.
+ */
+function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
+  const [settings, setSettings] = useState<FocusSettings | null>(null)
+  const [problem, setProblem] = useState<CameraProblem | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const check = useCallback(async () => {
+    const [focus, status, issue] = await Promise.all([sessionApi.getFocusSettings(), onboardingApi.cameraStatus(), onboardingApi.cameraIssue()])
+    if (focus.success) setSettings(focus.data)
+    const denied = status.success && (status.data.status === 'denied' || status.data.status === 'restricted')
+    // 권한이 꺼져 있으면 켜 둔 경우에만 알린다. 다른 사유는 집중 중 실제로 겪은 것이라 그대로 보여 준다.
+    setProblem(denied && focus.success && focus.data.cameraAnalysisEnabled ? 'denied' : issue.success && issue.data.issue === 'missing' ? 'missing' : null)
+  }, [])
+  useEffect(() => {
+    queueMicrotask(() => { void check() })
+    const onFocus = () => { void check() }
+    addEventListener('focus', onFocus)
+    return () => removeEventListener('focus', onFocus)
+  }, [check])
+
+  async function toggle() {
+    if (!settings || busy) return
+    const on = !settings.cameraAnalysisEnabled
+    setBusy(true)
+    try {
+      if (on) {
+        // 처음이면 macOS 허용 창을 띄우고, 이미 거부했으면 다시 묻지 않고 안내만 한다.
+        const permission = await onboardingApi.requestCamera()
+        if (!permission.success) return showToast({ text: failText(permission.error.code) })
+        if (!permission.data.granted) { setProblem('denied'); return }
+        const consent = await settingsApi.grantCameraConsent()
+        if (!consent.success) return showToast({ text: failText(consent.error.code) })
+      }
+      const saved = await settingsApi.saveFocusSettings({ ...settings, cameraAnalysisEnabled: on })
+      if (!saved.success) return showToast({ text: failText(saved.error.code) })
+      setSettings(saved.data)
+      setProblem(null)
+      showToast({ text: on ? '카메라 분석을 켰어요' : '카메라 분석을 껐어요' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function act() {
+    if (problem === 'denied') {
+      const opened = await onboardingApi.openCameraSettings()
+      return showToast({ text: opened.success ? '시스템 설정을 열었어요' : '시스템 설정을 열지 못했어요. 직접 열어 주세요.' })
+    }
+    await onboardingApi.clearCameraIssue()
+    setProblem(null)
+    showToast({ text: '카메라를 다시 확인하고 있어요' })
+  }
+
+  const copy = problem ? CAMERA_PROBLEM[problem] : null
+  return <div className="fo-row" style={{ '--n': n } as CSSProperties}>
+    <div className="fo-row-copy">
+      <strong id="camera-title">카메라 분석<span className="fo-tag">선택</span></strong>
+      <small>기기 안에서만 분석하고 영상은 저장하지 않아요</small>
+      {copy && <span className="fo-error-line" role="alert">{copy.error}</span>}
+    </div>
+    <div className="fo-row-control">
+      {copy && <button className="fo-small-btn" type="button" onClick={() => { void act() }}>{copy.action}</button>}
+      <button className="fo-switch" type="button" role="switch" aria-labelledby="camera-title" aria-checked={settings?.cameraAnalysisEnabled ?? false}
+        disabled={!settings || busy} onClick={() => { void toggle() }} />
+    </div>
+  </div>
 }
 
 function PermissionRow({ name, desc, granted, error, action }: {

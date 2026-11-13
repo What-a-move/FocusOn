@@ -62,6 +62,19 @@ export class SettingsService {
       : { ...item, granted, grantedAt: granted ? now : item.grantedAt, withdrawnAt: granted ? null : now }) } }
   }
 
+  /** 서버는 카메라를 켠 세션을 시작할 때 카메라 동의를 확인한다. 스위치를 켤 때 동의가 없으면 서버 현재 버전으로 저장한다. */
+  async grantCameraConsent(): Promise<ApiResult<{ granted: true }>> {
+    const current = await this.getConsents()
+    if (!current.success) return current
+    if (current.data.items.some((item) => item.type === 'CAMERA_ANALYSIS' && item.granted)) return { success: true, data: { granted: true } }
+    if (!current.data.currentVersion) return { success: false, error: { code: 'INVALID_RESPONSE', retryable: false } }
+    const saved = await this.auth.authorizedRequest({
+      path: '/api/v1/users/me/consents/CAMERA_ANALYSIS', method: 'PUT', expectedStatus: 200, parse: (value) => (isRecord(value) ? {} : null),
+      body: { isGranted: true, consentVersion: current.data.currentVersion, consentSource: 'DESKTOP_SETTINGS' },
+    })
+    return saved.success ? { success: true, data: { granted: true } } : saved
+  }
+
   getDevices(): Promise<ApiResult<DeviceStatus>> {
     return this.auth.authorizedRequest({ path: '/api/v1/devices', method: 'GET', expectedStatus: 200, parse: (value) => parseDeviceStatus(value, this.auth.currentDeviceId()) })
   }
@@ -137,6 +150,7 @@ export function registerSettingsIpc(
     (args) => args.length === 1 && onlyKeys(args[0], ['granted']) && typeof args[0].granted === 'boolean',
     (s, args) => s.setScreenConsent((args[0] as { granted: boolean }).granted),
   )
+  handle(SETTINGS_CHANNELS.cameraConsentGrant, (args) => args.length === 0, (s) => s.grantCameraConsent())
   handle(SETTINGS_CHANNELS.devicesGet, (args) => args.length === 0, (s) => s.getDevices())
   handle(
     SETTINGS_CHANNELS.extensionUnlink,
