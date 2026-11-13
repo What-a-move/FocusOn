@@ -62,11 +62,11 @@ function LoginScreen({ onLogin, onRetry, busy, authenticating, message, action, 
         <p className="fo-auth-sub">목표 하나만 정하면 포키가 곁에서 도와드려요.</p>
         <button className="fo-google-button" type="button" onClick={offline ? onRetry : onLogin} disabled={busy || !available}>
           <Image src="/design/google-mark.svg" alt="" width={22} height={22} />
-          <span>{busy ? '연결하는 중…' : offline ? '연결 다시 확인하기' : authenticating ? 'Google 로그인 다시 열기' : 'Google로 계속하기'}</span>
+          {/* 로그인 중에는 안내 상자 없이 버튼 글자만 바꾼다. 누르면 Google 로그인 창을 다시 연다(브라우저 탭을 닫은 경우). */}
+          <span>{busy || authenticating ? '로그인 중…' : offline ? '연결 다시 확인하기' : 'Google로 계속하기'}</span>
         </button>
         <div className="fo-login-state" aria-live="polite">
           {offline ? <div className="fo-notice" role="alert"><strong>로그인 상태를 확인하지 못했어요.</strong><span>{message ?? errorText({ code: 'LOCAL_NETWORK_UNAVAILABLE' })}</span></div> : <Alert message={message} action={action} />}
-          {(busy || authenticating) && <div className="fo-notice is-info" role="status"><strong>Google 계정을 연결하고 있어요.</strong><span>브라우저에서 인증을 마친 뒤 앱으로 돌아와 주세요.</span></div>}
           {!available && <p className="fo-app-only">Google 로그인은 FocusOn 데스크톱 앱에서 사용할 수 있어요.</p>}
         </div>
         <p className="fo-legal"><span>이용약관 · 개인정보 처리방침</span><span>화면 원본과 카메라 영상은 저장하지 않아요.</span></p>
