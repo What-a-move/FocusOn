@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 팝업 시간 Desktop과 맞추기 (Issue #255, `fix/255-extension-timer-sync`)
+- 상태: `/sessions/active`의 `accumulatedAt`·`serverNow`(서버 #251)로 RUNNING이면 마지막 heartbeat 뒤 경과분을 더해 센다. 실제 서버로 Desktop 타이머와 일치 확인(2026-11-13). 남은 일 없음.
+
 - 작업명: 팝업 상황별 포키 교체 (Issue #236, `chore/236-extension-poki-swap`)
 - 상태: 연결 코드 플러그·연결됨 축하·집중 아님 두리번·목표 시간 끝 알람·사이트 접근 꺼짐/자동 멈춤 걱정으로 교체, Desktop과 같은 기준(2026-11-13). 쓰지 않는 cheer-v7·paused-v2 삭제.
 
