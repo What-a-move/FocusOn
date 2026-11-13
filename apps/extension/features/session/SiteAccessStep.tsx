@@ -45,7 +45,7 @@ export function SiteAccessStep({ onGranted }: { onGranted: () => void }) {
             <div className="timer-row">
               <span className="timer is-dim">{formatClock(session.targetDurationMs - session.accumulatedActiveMs)}</span>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="poki" src="/design/poki-floating-paused-v2.png" alt="쉬고 있는 포키" />
+              <img className="poki" src="/design/poki-worried.png" alt="걱정하는 포키" />
             </div>
           </div>
           <button className="btn btn-primary" type="button" onClick={() => { void request() }}>사이트 접근 다시 허용</button>

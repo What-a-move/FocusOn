@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 팝업 상황별 포키 교체 (Issue #236, `chore/236-extension-poki-swap`)
+- 상태: 연결 코드 플러그·연결됨 축하·집중 아님 두리번·목표 시간 끝 알람·사이트 접근 꺼짐/자동 멈춤 걱정으로 교체, Desktop과 같은 기준(2026-11-13). 쓰지 않는 cheer-v7·paused-v2 삭제.
+
 - 작업명: 팝업 세션 화면 실제 연동 QA (Issue #52, 2026-11-03)
 - 상태: 실제 서버로 연결·E02·E03(진행 중·멈춤)·토큰 갱신(rotation) 확인. 팝업 시간이 뒤로 튀는 오류와 E06 거짓 멈춤 안내를 고쳤고, 개발용 Extension ID를 고정했다(결정 017). 연결 해제 확인과 REPORT 완료(`session-popup-REPORT.md`). 남은 일: Backend CORS 반영 뒤 권한 해제 → E06·`local-events` 재확인.
 

@@ -56,7 +56,7 @@ export function PairingStep({ onLinked, initialNotice = null }: { onLinked?: () 
         {linked ? (
           <div className="p-body" role="status">
             <div className="center">
-              <img className="poki" src="/design/poki-floating-cheer-v7.png" alt="응원하는 포키" />
+              <img className="poki" src="/design/poki-celebrate.png" alt="축하하는 포키" />
               <h1>연결됐어요!</h1>
             </div>
             {/* 팝업에서는 사이트 접근 허용(E01b)으로 이어진다. */}
@@ -68,7 +68,7 @@ export function PairingStep({ onLinked, initialNotice = null }: { onLinked?: () 
         ) : (
           <div className="p-body">
             <div className="center">
-              <img className="poki" src="/design/poki-floating-master-v3.png" alt="포키" />
+              <img className="poki" src="/design/poki-plug.png" alt="플러그를 든 포키" />
               <h1>데스크톱 앱과 연결해요</h1>
             </div>
             <p className="center muted">앱의 온보딩 화면에 표시된 코드를 입력해 주세요.</p>
