@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## Issue #250 활성 세션 조회 서버 시각 필드 (2026-11-13)
+
+- `ActiveResponse`에 `accumulatedAt`·`serverNow`를 추가했다. 기준은 `last_heartbeat_at`과 `last_resumed_at` 중 늦은 값이며 RUNNING이 아니면 `accumulatedAt`은 null이다. 근거는 DECISION_RECORD 참고.
+- 검증: `SessionApiTests` 등 관련 71개 실패 0(PostgreSQL 전용 4개 생략), Checkstyle 통과. 실제 Extension 팝업 표시는 확인하지 않았다.
+
 ## Issue #233 compose에 목표 AI 주소 전달 (2026-11-13)
 
 - `docker-compose.yml`의 backend 환경 변수에 `FOCUSON_GOAL_AI_BASE_URL`을 추가했다. 그동안 `.env`에 적어도 컨테이너로 전달되지 않아 목표 명확화 AI 호출이 주소 없이 실행됐다.

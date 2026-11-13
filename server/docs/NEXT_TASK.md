@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #250 활성 세션 조회 서버 시각 필드 (2026-11-13)
+
+- Extension: `RUNNING`일 때 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 센다. `accumulatedAt`이 null이면 증가시키지 않는다.
+- 문서 오너: Notion API 명세서 DB의 `GET /api/v1/sessions/active` 응답에 두 필드를 추가한다.
+
 ## Issue #233 compose에 목표 AI 주소 전달 (2026-11-13)
 
 - 다음: 실제 AI 서비스로 `/goals/clarify`를 확인한다(컨테이너→호스트 stub 연결은 확인했다. docker에서는 `http://host.docker.internal:8000`을 쓴다. compose의 `extra_hosts`가 호스트 게이트웨이에 연결하며 `127.0.0.1`은 컨테이너 자신이다).
