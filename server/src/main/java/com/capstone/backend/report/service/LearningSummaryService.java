@@ -7,7 +7,11 @@ import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.report.dto.LearningSummaryResponse;
 import com.capstone.backend.report.persistence.LearningSummaryRepository;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionStatus;
+import java.time.Instant;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class LearningSummaryService {
   private final LearningSessionRepository sessions;
   private final LearningSummaryRepository summaries;
+
+  /** 현재 Desktop 사용자의 완료된 학습 정리를 페이지 단위로 반환한다. */
+  @Transactional(readOnly = true)
+  public List<SummaryListItem> list(FocusOnPrincipal principal, int page) {
+    if (principal.deviceType() != DeviceType.DESKTOP) {
+      throw new ApiException(ApiErrorCode.SESSION_QUERY_FORBIDDEN);
+    }
+    if (page < 0 || page > 10000) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    return summaries.findList(principal.userId(), SessionStatus.ENDED,
+        LearningSummaryResponse.Status.READY, PageRequest.of(page, 20)).stream()
+        .map(item -> new SummaryListItem(item.getSessionId().toString(), item.getGoalSnapshot(),
+            item.getEndedAt()))
+        .toList();
+  }
+
+  /** 학습 정리 상세 조회로 연결할 목록 항목이다. */
+  public record SummaryListItem(String sessionId, String goalSnapshot, Instant endedAt) {}
 
   /** 없는 정리는 상태를 추측하지 않고404로 구분한다. */
   @Transactional(readOnly = true)

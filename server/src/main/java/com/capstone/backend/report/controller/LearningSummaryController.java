@@ -4,6 +4,7 @@ import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.report.dto.LearningSummaryResponse;
 import com.capstone.backend.report.service.LearningSummaryService;
+import com.capstone.backend.report.service.LearningSummaryService.SummaryListItem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,11 +12,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,6 +40,15 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class LearningSummaryController {
   private final LearningSummaryService summaries;
+
+  /** 본인 세션의 완료된 정리 목록을 반환한다. */
+  @GetMapping("/api/v1/learning-summaries")
+  @Operation(summary = "완료된 학습 정리 목록 조회")
+  public com.capstone.backend.common.api.ApiResponse<List<SummaryListItem>> list(
+      @AuthenticationPrincipal FocusOnPrincipal principal,
+      @RequestParam(defaultValue = "0") int page) {
+    return com.capstone.backend.common.api.ApiResponse.of(summaries.list(principal, page));
+  }
 
   /** 생성 중·완료·실패를 저장된 상태 그대로 제공한다. */
   @GetMapping("/api/v1/sessions/{sessionId}/learning-summary")

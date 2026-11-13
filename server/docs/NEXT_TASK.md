@@ -245,3 +245,5 @@ PR #60 생성, Backend CI #45 성공, CodeRabbit dd93475 전체 리뷰 actionabl
 ## Issue #206 로컬 이벤트·학습 정리 조회 (2026-11-09)
 
 - feat/206-session-events-learning: 권한유실2종 저장/자동정지/재전송 중복제거와 저장된학습정리5상태 조회를 구현했다. 실계정HTTP·PG34개·V19보존 검증은 features/session-events-learning-REPORT.md를 따른다. 생성자/AI/근거수집은 기존#29 선행작업이며 전체자동정리완료가 아니다. 실제앱/Notion원문 대조는 남았다.
+
+- #29 후속: 목록 응답을 Desktop과 대조하고, 승인된 RELATED 근거 수집과 세션 종료 후 생성 작업을 연결한다.

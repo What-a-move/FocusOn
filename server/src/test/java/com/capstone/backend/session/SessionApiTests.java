@@ -1110,6 +1110,10 @@ class SessionApiTests {
         .andExpect(jsonPath("$.code").value("NOT_FOUND"));
     mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
         .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("SESSION_NOT_FOUND"));
+    String listPath = "/api/v1/learning-summaries";
+    mvc.perform(get(listPath)).andExpect(status().isUnauthorized());
+    jdbc.update("UPDATE learning_sessions SET status='ENDED', ended_at=? WHERE id=?",
+        java.sql.Timestamp.from(Instant.now()), Long.valueOf(id));
     for (var state : LearningSummaryResponse.Status.values()) {
       var entity = BeanUtils.instantiateClass(
           LearningSummaryEntity.class);
@@ -1129,6 +1133,10 @@ class SessionApiTests {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.data.learningSummaryStatus").value(state.name()))
           .andExpect(jsonPath("$.data.keyConcepts.length()").value(ready ? 1 : 0));
+      mvc.perform(get(listPath).header("Authorization", token)).andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.length()").value(ready ? 1 : 0));
+      mvc.perform(get(listPath).header("Authorization", "Bearer " + other.accessToken()))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.length()").value(0));
       if (ready) {
         // 저장된 READY 본문이 바뀌거나 빠지지 않고 그대로 반환되는지 확인한다.
         result.andExpect(jsonPath("$.data.overview").value("확인한 개념 정리"))
