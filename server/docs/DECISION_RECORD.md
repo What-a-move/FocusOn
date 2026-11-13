@@ -1,5 +1,11 @@
 # Backend 결정 기록
 
+## 2026-11-13 #250 활성 세션 조회의 서버 시각 기준
+
+- `GET /sessions/active`에 `accumulatedAt`(누적 시간이 확정된 서버 시각)과 `serverNow`를 추가했다. Extension이 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 세어 heartbeat 주기(10초)만큼 뒤처지는 표시를 없앤다.
+- 요청서는 `accumulatedAt`을 `last_heartbeat_observed_at`으로 정했지만 이 값은 Desktop이 보낸 `clientObservedAt`(기기 시계)이다. 서버 시계와 빼면 기기 시계 오차가 그대로 들어가므로 서버가 heartbeat를 받은 시각 `last_heartbeat_at`을 쓴다. 마지막 재개 시각(`last_resumed_at`)이 더 늦으면 그 값을 쓴다(재개 직후 누적 값은 재개 시점의 값이기 때문).
+- RUNNING이 아닌 상태에서는 시간이 흐르지 않으므로 `accumulatedAt`을 `null`로 내린다. Notion 정본에 없는 결정이며 API 명세서 DB 갱신이 필요하다.
+
 ## 2026-11-10 PR #207 리뷰 보완 — 로컬 권한 이벤트·학습 정리 조회
 
 - 이벤트 저장은 세션당 256건으로 제한한다. 한도 뒤에도 필수 정지는 같은 트랜잭션에서 반영하고, 새 이벤트만 `409 SESSION_LOCAL_EVENT_LIMIT_EXCEEDED`(재시도 불가)로 거절한다. 이미 저장된 이벤트의 재전송은 200을 유지한다. 새 오류 코드이므로 Notion 공통 Error Code 정책에 먼저 정의해야 한다(BE-002). 현재 Notion 복제본은 읽기만 했고 수정하지 않았다.

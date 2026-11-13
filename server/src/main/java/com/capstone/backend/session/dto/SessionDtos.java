@@ -48,9 +48,13 @@ public final class SessionDtos {
       long targetDurationMs, long accumulatedActiveMs, Instant startedAt,
       String interventionPolicyVersion) {}
 
-  /** 사용자의 활성 세션 정보다. */
+  /**
+   * 사용자의 활성 세션 정보다. {@code accumulatedAt}은 누적 시간이 확정된 서버 시각이며
+   * RUNNING이 아니면 null이다. 클라이언트는 {@code serverNow - accumulatedAt}만큼을 더해 센다.
+   */
   public record ActiveResponse(String sessionId, SessionStatus status, long version,
-      String goalTextSnapshot, long targetDurationMs, long accumulatedActiveMs) {}
+      String goalTextSnapshot, long targetDurationMs, long accumulatedActiveMs,
+      Instant accumulatedAt, Instant serverNow) {}
 
   /** 일시정지의 사용자 및 자동 복구 사유다. */
   public enum PauseReason { USER, REQUIRED_PERMISSION, EXTENSION_UNLINKED, APP_RESTART, SYSTEM }

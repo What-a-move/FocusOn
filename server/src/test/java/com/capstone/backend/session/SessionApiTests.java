@@ -712,10 +712,46 @@ class SessionApiTests {
         .andExpect(jsonPath("$.code").value("SESSION_ACTIVE_EXISTS"));
     mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.sessionId").value(id));
+    assertActiveClock(token, id);
     mvc.perform(get("/api/v1/sessions/active")
             .header("Authorization", "Bearer " + other.accessToken()))
         .andExpect(status().isNoContent());
     mvc.perform(get("/api/v1/sessions/active")).andExpect(status().isUnauthorized());
+  }
+
+  /** accumulatedAt은 서버 시각 기준이며 기기 시계나 RUNNING 아닌 상태의 값을 쓰지 않는다. */
+  private void assertActiveClock(String token, String id) throws Exception {
+    long sessionId = Long.parseLong(id);
+    var fresh = sessions.findById(sessionId).orElseThrow();
+    var data = json.readTree(mvc.perform(get("/api/v1/sessions/active")
+            .header("Authorization", token)).andExpect(status().isOk()).andReturn()
+        .getResponse().getContentAsString()).path("data");
+    // heartbeat 전에는 마지막 재개 시각(서버 시각)이 기준이다.
+    java.time.Instant accumulatedAt = java.time.Instant.parse(data.path("accumulatedAt").asText());
+    org.junit.jupiter.api.Assertions.assertEquals(fresh.getLastResumedAt(), accumulatedAt);
+    org.junit.jupiter.api.Assertions.assertFalse(
+        java.time.Instant.parse(data.path("serverNow").asText()).isBefore(accumulatedAt));
+    // heartbeat 뒤에는 서버가 받은 시각이 기준이고, 훨씬 이전인 기기 관측 시각은 무시한다.
+    java.time.Instant received = fresh.getLastResumedAt().plusSeconds(10);
+    jdbc.update("update learning_sessions set last_heartbeat_at = ?, "
+            + "last_heartbeat_observed_at = ? where id = ?",
+        java.sql.Timestamp.from(received),
+        java.sql.Timestamp.from(received.minus(java.time.Duration.ofDays(365))), sessionId);
+    mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
+        .andExpect(jsonPath("$.data.accumulatedAt").value(received.toString()));
+    // 재개가 마지막 heartbeat보다 늦으면 재개 시각이 기준이다.
+    java.time.Instant resumedLater = received.plusSeconds(5);
+    jdbc.update("update learning_sessions set last_resumed_at = ? where id = ?",
+        java.sql.Timestamp.from(resumedLater), sessionId);
+    mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
+        .andExpect(jsonPath("$.data.accumulatedAt").value(resumedLater.toString()));
+    // RUNNING이 아니면 시간이 흐르지 않으므로 기준 시각이 없다.
+    jdbc.update("update learning_sessions set status = 'AUTO_PAUSED', pause_reason = 'SYSTEM', "
+        + "last_resumed_at = null where id = ?", sessionId);
+    mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.accumulatedAt").value(org.hamcrest.Matchers.nullValue()))
+        .andExpect(jsonPath("$.data.serverNow").isNotEmpty());
   }
 
   @Test

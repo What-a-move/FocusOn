@@ -130,9 +130,25 @@ public class SessionService {
   /** 인증한 사용자에게 속한 활성 세션만 반환한다. */
   @Transactional(readOnly = true)
   public Optional<ActiveResponse> active(FocusOnPrincipal principal) {
+    Instant now = Instant.now();
     return sessions.findByUserIdAndStatusIn(principal.userId(), SessionStatus.activeStatuses())
         .map(s -> new ActiveResponse(s.getId().toString(), s.getStatus(), s.getVersion(),
-            s.getGoalTextSnapshot(), s.getTargetDurationMs(), s.getAccumulatedActiveMs()));
+            s.getGoalTextSnapshot(), s.getTargetDurationMs(), s.getAccumulatedActiveMs(),
+            accumulatedAt(s), now));
+  }
+
+  /**
+   * 누적 시간이 확정된 서버 시각이다. 서버가 heartbeat를 받은 시각과 마지막 재개 시각 중 늦은
+   * 값이며, 기기 시계인 clientObservedAt은 쓰지 않는다. RUNNING이 아니면 시간이 흐르지 않는다.
+   */
+  private static Instant accumulatedAt(LearningSessionEntity session) {
+    if (session.getStatus() != SessionStatus.RUNNING) {
+      return null;
+    }
+    Instant resumed = session.getLastResumedAt();
+    Instant heartbeat = session.getLastHeartbeatAt();
+    return heartbeat != null && (resumed == null || heartbeat.isAfter(resumed))
+        ? heartbeat : resumed;
   }
 
   /** 목표 시간을 5~300분의 1분 단위로 제한하고 알림 채널 중복을 거부한다. */
