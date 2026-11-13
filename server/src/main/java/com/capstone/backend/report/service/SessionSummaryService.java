@@ -4,6 +4,8 @@ import com.capstone.backend.auth.persistence.UserDeviceEntity.DeviceType;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.intervention.dto.InterventionDtos.Type;
+import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.report.dto.SessionSummaryResponse;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionExtensionRepository;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SessionSummaryService {
   private final LearningSessionRepository sessions;
   private final SessionExtensionRepository extensions;
+  private final InterventionEventRepository interventions;
 
   /** 종료된 세션은 추가 명령이 불가능하므로 누적 시간을 현재 시각으로 추정하지 않는다. */
   @Transactional(readOnly = true)
@@ -44,6 +47,7 @@ public class SessionSummaryService {
     return new SessionSummaryResponse(session.getId().toString(), session.getGoalTextSnapshot(),
         session.getTargetDurationMs(), session.getAccumulatedActiveMs(), session.getStatus(),
         session.getStartedAt(), session.getEndedAt(), totals.getExtensionCount(),
-        totals.getExtendedDurationMs());
+        totals.getExtendedDurationMs(),
+        interventions.countBySessionIdAndTypeAndDeliveryConfirmedAtIsNotNull(id, Type.OFF_TASK));
   }
 }

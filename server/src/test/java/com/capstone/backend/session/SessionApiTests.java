@@ -970,6 +970,15 @@ class SessionApiTests {
       mvc.perform(get(path).header("Authorization", token)).andExpect(status().isConflict())
           .andExpect(jsonPath("$.code").value("SESSION_STATE_INVALID"));
     }
+    String otherId = startForHeartbeat(other);
+    var now = java.sql.Timestamp.from(Instant.now());
+    String insertEvent = "INSERT INTO intervention_events(session_id,type,status,cause,"
+        + "channels_json,policy_version,running_since,created_at,expires_at,delivery_confirmed_at)"
+        + " VALUES (?,?,'EXPIRED',?,CAST('[]' AS JSONB),'test',?,?,?,?)";
+    jdbc.update(insertEvent, Long.valueOf(id), "OFF_TASK", 1, now, now, now, now);
+    jdbc.update(insertEvent, Long.valueOf(id), "OFF_TASK", 2, now, now, now, null);
+    jdbc.update(insertEvent, Long.valueOf(id), "BREAK_SUGGESTION", 1, now, now, now, now);
+    jdbc.update(insertEvent, Long.valueOf(otherId), "OFF_TASK", 1, now, now, now, now);
     for (String state : new String[] {"ENDED", "ABANDONED"}) {
       jdbc.update("UPDATE learning_sessions SET status = ?, accumulated_active_ms = ?, "
           + "ended_at = ? WHERE id = ?", state, 123000L,
@@ -981,6 +990,7 @@ class SessionApiTests {
           .andExpect(jsonPath("$.data.accumulatedActiveMs").value(123000))
           .andExpect(jsonPath("$.data.extensionCount").value(0))
           .andExpect(jsonPath("$.data.extendedDurationMs").value(0))
+          .andExpect(jsonPath("$.data.interventionCount").value(1))
           .andExpect(jsonPath("$.data.relatedDurationMs").doesNotExist());
     }
   }

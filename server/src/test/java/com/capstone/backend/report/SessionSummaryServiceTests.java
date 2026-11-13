@@ -9,6 +9,7 @@ import com.capstone.backend.auth.persistence.UserDeviceEntity.DeviceType;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.report.service.SessionSummaryService;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionExtensionRepository;
@@ -20,10 +21,11 @@ class SessionSummaryServiceTests {
   void extensionIsRejectedBeforeReadingData() {
     var sessions = mock(LearningSessionRepository.class);
     var extensions = mock(SessionExtensionRepository.class);
-    var service = new SessionSummaryService(sessions, extensions);
+    var interventions = mock(InterventionEventRepository.class);
+    var service = new SessionSummaryService(sessions, extensions, interventions);
     var principal = new FocusOnPrincipal(1, 2, 3, DeviceType.CHROME_EXTENSION);
     assertEquals(ApiErrorCode.SESSION_QUERY_FORBIDDEN,
         assertThrows(ApiException.class, () -> service.get(principal, "1")).code());
-    verifyNoInteractions(sessions, extensions);
+    verifyNoInteractions(sessions, extensions, interventions);
   }
 }
