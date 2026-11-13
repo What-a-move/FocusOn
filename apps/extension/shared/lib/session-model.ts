@@ -16,7 +16,18 @@ export function parseActiveSession(value: unknown): ActiveSession | { none: true
   if (value === null) return { none: true }
   if (!isRecord(value) || typeof value.sessionId !== 'string' || !STATUSES.includes(value.status as SessionStatus)) return null
   if (typeof value.goalTextSnapshot !== 'string' || !isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
-  return { sessionId: value.sessionId, status: value.status as SessionStatus, goalText: value.goalTextSnapshot, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs }
+  return { sessionId: value.sessionId, status: value.status as SessionStatus, goalText: value.goalTextSnapshot, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs + sinceAccumulated(value) }
+}
+
+/**
+ * 서버 누적 시간은 마지막 heartbeat(10초 주기) 때 값이라 그만큼 늦다. RUNNING이면 서버가 함께 주는
+ * `serverNow - accumulatedAt`(두 값 모두 서버 시계라 기기 시계와 무관)만큼 더해 Desktop과 맞춘다(#255, 서버 #251).
+ * 값이 없거나(예전 서버·RUNNING 아님) 읽을 수 없으면 0이다.
+ */
+function sinceAccumulated(value: Record<string, unknown>): number {
+  if (value.status !== 'RUNNING' || typeof value.accumulatedAt !== 'string' || typeof value.serverNow !== 'string') return 0
+  const gap = Date.parse(value.serverNow) - Date.parse(value.accumulatedAt)
+  return Number.isFinite(gap) ? Math.max(0, Math.round(gap)) : 0
 }
 
 /**

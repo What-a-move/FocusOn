@@ -118,3 +118,22 @@ test('실행 중인 같은 세션은 다시 조회해도 화면 시간이 뒤로
   assert.equal(keepForward({ session: running, fetchedAt: 0 }, { ...running, sessionId: '5' }, 23_000).accumulatedActiveMs, 0)
   assert.equal(keepForward(null, running, 23_000).accumulatedActiveMs, 0)
 })
+
+test('RUNNING이면 마지막 heartbeat 뒤 흐른 시간(serverNow − accumulatedAt)을 더해 Desktop과 맞춘다', () => {
+  const at = { accumulatedAt: '2026-11-13T10:00:00.000Z', serverNow: '2026-11-13T10:00:07.400Z' }
+  const parsed = parseActiveSession({ ...session, ...at })
+  assert.ok(parsed && 'sessionId' in parsed)
+  assert.equal(parsed.accumulatedActiveMs, 307_400)
+  const paused = parseActiveSession({ ...session, status: 'PAUSED', accumulatedAt: null, serverNow: at.serverNow })
+  assert.ok(paused && 'sessionId' in paused)
+  assert.equal(paused.accumulatedActiveMs, 300_000, '멈춘 세션은 더하지 않음')
+  const old = parseActiveSession(session)
+  assert.ok(old && 'sessionId' in old)
+  assert.equal(old.accumulatedActiveMs, 300_000, '예전 서버(필드 없음)는 그대로')
+  const broken = parseActiveSession({ ...session, accumulatedAt: 'x', serverNow: at.serverNow })
+  assert.ok(broken && 'sessionId' in broken)
+  assert.equal(broken.accumulatedActiveMs, 300_000, '읽을 수 없는 시각은 무시')
+  const ahead = parseActiveSession({ ...session, accumulatedAt: at.serverNow, serverNow: at.accumulatedAt })
+  assert.ok(ahead && 'sessionId' in ahead)
+  assert.equal(ahead.accumulatedActiveMs, 300_000, '거꾸로 된 시각은 빼지 않음')
+})
