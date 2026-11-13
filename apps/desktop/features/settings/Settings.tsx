@@ -249,16 +249,23 @@ const CAMERA_PROBLEM = {
 type CameraProblem = keyof typeof CAMERA_PROBLEM
 
 /**
- * 카메라 분석 스위치 (선택, Notion 카메라 분석 2·7, #228). 켜면 macOS 권한 → 카메라 동의 → focus-settings 순서로 맞춘다.
- * 끄면 focus-settings만 끈다(동의 철회는 계정 탭). 실패 사유는 macOS 권한이나 집중 중 Main이 본 마지막 사유로 보여 준다.
+ * 카메라 분석 스위치 (선택, Notion 카메라 분석 2·7, #228). 켜면 macOS 권한 → 카메라 동의 → focus-settings 순서로 맞추고,
+ * 끄면 focus-settings를 끈 뒤 카메라 동의도 철회한다. 실패 사유는 macOS 권한이나 집중 중 Main이 본 마지막 사유로 보여 준다.
  */
 function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
   const [settings, setSettings] = useState<FocusSettings | null>(null)
   const [problem, setProblem] = useState<CameraProblem | null>(null)
   const [busy, setBusy] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
+  // [주의] 창 복귀로 시작한 조회가 스위치 저장보다 늦게 끝나면 예전 값으로 덮는다. 스위치를 누르면 진행 중인 조회 결과를 버린다.
+  const generation = useRef(0)
 
   const check = useCallback(async () => {
+    const mine = ++generation.current
     const [focus, status, issue] = await Promise.all([sessionApi.getFocusSettings(), onboardingApi.cameraStatus(), onboardingApi.cameraIssue()])
+    if (mine !== generation.current) return
+    // 읽지 못하면 기본값을 넣지 않고 오류와 다시 시도를 보여 준다.
+    setLoadFailed(!focus.success)
     if (focus.success) setSettings(focus.data)
     const denied = status.success && (status.data.status === 'denied' || status.data.status === 'restricted')
     // 권한이 꺼져 있으면 켜 둔 경우에만 알린다. 다른 사유는 집중 중 실제로 겪은 것이라 그대로 보여 준다.
@@ -274,6 +281,7 @@ function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
   async function toggle() {
     if (!settings || busy) return
     const on = !settings.cameraAnalysisEnabled
+    generation.current += 1
     setBusy(true)
     try {
       if (on) {
@@ -281,12 +289,17 @@ function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
         const permission = await onboardingApi.requestCamera()
         if (!permission.success) return showToast({ text: failText(permission.error.code) })
         if (!permission.data.granted) { setProblem('denied'); return }
-        const consent = await settingsApi.grantCameraConsent()
+        const consent = await settingsApi.setCameraConsent(true)
         if (!consent.success) return showToast({ text: failText(consent.error.code) })
       }
       const saved = await settingsApi.saveFocusSettings({ ...settings, cameraAnalysisEnabled: on })
       if (!saved.success) return showToast({ text: failText(saved.error.code) })
       setSettings(saved.data)
+      // 끄면 동의도 철회한다. 설정은 이미 꺼졌으니 철회만 실패하면 안내만 한다.
+      if (!on) {
+        const withdrawn = await settingsApi.setCameraConsent(false)
+        if (!withdrawn.success) { setProblem(null); return showToast({ text: '카메라 분석은 껐지만 동의를 철회하지 못했어요. 다시 시도해 주세요.' }) }
+      }
       setProblem(null)
       showToast({ text: on ? '카메라 분석을 켰어요' : '카메라 분석을 껐어요' })
     } finally {
@@ -310,9 +323,11 @@ function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
       <strong id="camera-title">카메라 분석<span className="fo-tag">선택</span></strong>
       <small>기기 안에서만 분석하고 영상은 저장하지 않아요</small>
       {copy && <span className="fo-error-line" role="alert">{copy.error}</span>}
+      {!copy && loadFailed && <span className="fo-error-line" role="alert">설정을 불러오지 못했어요</span>}
     </div>
     <div className="fo-row-control">
       {copy && <button className="fo-small-btn" type="button" onClick={() => { void act() }}>{copy.action}</button>}
+      {!copy && loadFailed && <button className="fo-small-btn" type="button" onClick={() => { void check() }}>다시 시도</button>}
       <button className="fo-switch" type="button" role="switch" aria-labelledby="camera-title" aria-checked={settings?.cameraAnalysisEnabled ?? false}
         disabled={!settings || busy} onClick={() => { void toggle() }} />
     </div>

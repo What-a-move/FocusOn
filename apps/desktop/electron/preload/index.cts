@@ -129,7 +129,7 @@ const focusOnApi: FocusOnApi = {
     setTheme: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.themeSet, { theme: input.theme }),
     getConsents: () => ipcRenderer.invoke(SETTINGS_CHANNELS.consentsGet),
     setScreenConsent: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.screenConsentSet, { granted: input.granted }),
-    grantCameraConsent: () => ipcRenderer.invoke(SETTINGS_CHANNELS.cameraConsentGrant),
+    setCameraConsent: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.cameraConsentSet, { granted: input.granted }),
     getDevices: () => ipcRenderer.invoke(SETTINGS_CHANNELS.devicesGet),
     unlinkExtension: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.extensionUnlink, { deviceId: input.deviceId }),
   },

@@ -26,7 +26,7 @@ export const settingsApi = {
   setTheme: (theme: ThemeSource) => viaSettings((api) => api.setTheme({ theme })),
   getConsents: () => viaSettings((api) => api.getConsents()),
   setScreenConsent: (granted: boolean) => viaSettings((api) => api.setScreenConsent({ granted })),
-  grantCameraConsent: () => viaSettings((api) => api.grantCameraConsent()),
+  setCameraConsent: (granted: boolean) => viaSettings((api) => api.setCameraConsent({ granted })),
   getDevices: () => viaSettings((api) => api.getDevices()),
   unlinkExtension: (deviceId: string) => viaSettings((api) => api.unlinkExtension({ deviceId })),
 }

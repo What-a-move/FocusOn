@@ -776,7 +776,7 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 
 - 결정일: 2026-11-13 / 상태: 확정(사용자 확인) / Issue #228.
 - 결정 029대로 카메라 분석 구현(#222) 뒤 설정 › 분석·권한에 스위치를 넣는다.
-- 켜면 macOS 권한(처음이면 허용 창) → 카메라 동의(없으면 서버 현재 버전으로 저장) → focus-settings 순서로 맞춘다. 서버가 카메라 켠 세션 시작 때 동의를 확인하기 때문이다. 끄면 focus-settings만 끈다.
+- 켜면 macOS 권한(처음이면 허용 창) → 카메라 동의(없으면 서버 현재 버전으로 저장) → focus-settings 순서로 맞춘다. 서버가 카메라 켠 세션 시작 때 동의를 확인하기 때문이다. 끄면 focus-settings를 끄고 카메라 동의도 철회한다(계정 탭에 카메라 철회 경로가 없음).
 - 오류는 권한 꺼짐·카메라 없음 두 가지만 한 줄 + 버튼으로 보여 준다. 시안의 복구 안내 여러 줄과 `다른 앱이 사용 중`(추정)은 넣지 않는다(사용자 결정).
 - 권한이 꺼져도 사용자가 켜 둔 스위치는 그대로 둔다. 권한을 다시 켜면 바로 동작한다.
 - 영향받는 파일: `features/settings/Settings.tsx`, `features/settings/settings.css`, `shared/api/onboarding-api.ts`, `features/settings/settings-api.ts`, `electron/main/{camera-monitor,permission-ipc,settings-ipc,index}.cts`, `electron/shared/{permission,settings}-contract.cts`, `electron/preload/index.cts`, `native/observer/main.swift`

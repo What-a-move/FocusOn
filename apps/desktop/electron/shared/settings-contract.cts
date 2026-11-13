@@ -10,7 +10,7 @@ export const SETTINGS_CHANNELS = {
   themeSet: 'app:theme:set',
   consentsGet: 'settings:consents:get',
   screenConsentSet: 'settings:screen-consent:set',
-  cameraConsentGrant: 'settings:camera-consent:grant',
+  cameraConsentSet: 'settings:camera-consent:set',
   devicesGet: 'settings:devices:get',
   extensionUnlink: 'settings:extension:unlink',
 } as const
@@ -27,8 +27,8 @@ export type SettingsApi = {
   setTheme(input: { theme: ThemeSource }): Promise<IpcResult<{ theme: ThemeSource }>>
   getConsents(): Promise<IpcResult<ConsentList>>
   setScreenConsent(input: { granted: boolean }): Promise<IpcResult<ConsentList>>
-  /** 카메라 분석 스위치를 켤 때 카메라 동의가 없으면 함께 저장한다. 이미 있으면 그대로 둔다(#228). */
-  grantCameraConsent(): Promise<IpcResult<{ granted: true }>>
+  /** 카메라 분석 스위치를 켜면 동의를 저장하고, 끄면 철회한다. 이미 같은 상태면 그대로 둔다(#228). */
+  setCameraConsent(input: { granted: boolean }): Promise<IpcResult<{ granted: boolean }>>
   getDevices(): Promise<IpcResult<DeviceStatus>>
   unlinkExtension(input: { deviceId: string }): Promise<IpcResult<DeviceStatus>>
 }
