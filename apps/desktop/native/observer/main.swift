@@ -185,9 +185,23 @@ final class CameraSampler: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
 }
 let camera = CameraSampler()
 
+// 포키 창 커서(#246). macOS는 백그라운드 프로세스의 커서 변경을 무시한다. 도우미 연결에 SetsCursorInBackground를 켜서 허용한다.
+// ponytail: 비공개 CoreGraphics API(Hammerspoon 등이 쓰는 방식). 심볼이 없으면 아무것도 하지 않아 커서만 안 바뀐다. 공개 API가 생기면 바꾼다.
+typealias CGSConnectionID = Int32
+func allowBackgroundCursor() {
+  guard let handle = dlopen(nil, RTLD_NOW),
+        let defaultSym = dlsym(handle, "_CGSDefaultConnection"),
+        let setSym = dlsym(handle, "CGSSetConnectionProperty") else { return }
+  typealias DefaultConnection = @convention(c) () -> CGSConnectionID
+  typealias SetProperty = @convention(c) (CGSConnectionID, CGSConnectionID, CFString, CFTypeRef) -> Int32
+  let cid = unsafeBitCast(defaultSym, to: DefaultConnection.self)()
+  _ = unsafeBitCast(setSym, to: SetProperty.self)(cid, cid, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
+}
+
 // [주의] 창 캡처(ScreenCaptureKit)는 화면 서버 연결이 초기화된 프로세스에서만 동작한다. 없으면 CGS_REQUIRE_INIT로 죽는다.
 // NSApplication으로 연결만 만들고 Dock·메뉴에는 나타나지 않게 한다.
 NSApplication.shared.setActivationPolicy(.prohibited)
+allowBackgroundCursor()
 
 // [주의] frontmostApplication은 메인 run loop가 돌아야 최신 값으로 바뀐다. 입력은 백그라운드에서 읽고 처리는 메인에서 한다.
 var pending = Data()
@@ -210,6 +224,10 @@ FileHandle.standardInput.readabilityHandler = { handle in
       case "apps": installedApps(id)
       case "camera": camera.sample(id)
       case "cameraStop": camera.stop(id)
+      case "cursor":
+        // 포커스를 뺏지 않는 포키 창은 CSS 커서가 macOS에서 무시된다(#246). 포키·버튼 위에서만 손가락 커서로 바꾼다.
+        (request["kind"] as? String == "pointer" ? NSCursor.pointingHand : NSCursor.arrow).set()
+        reply(["id": id, "ok": true])
       default: reply(["id": id, "ok": false, "error": "UNKNOWN_COMMAND"])
       }
     }

@@ -389,6 +389,8 @@ if (!hasSingleInstanceLock) {
       // 포키 창이 보낸 boolean만 받는다. 다른 창이 클릭 통과를 바꾸지 못하게 한다.
       if (!floatingWindow || floatingWindow.isDestroyed() || event.sender !== floatingWindow.webContents || typeof interactive !== 'boolean') return
       floatingWindow.setIgnoreMouseEvents(!interactive, { forward: true })
+      // 비활성 창이라 CSS 커서가 안 먹는다. 포키·버튼 위면 손가락, 벗어나면 기본 화살표로 직접 바꾼다(#246).
+      void helper?.request('cursor', { kind: interactive ? 'pointer' : 'arrow', timeoutMs: 300 })
     })
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }

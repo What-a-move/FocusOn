@@ -788,3 +788,12 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - `AuthApiClient.call`이 응답 `Date` 헤더를 파서에 넘기고, `parseTokenPair`는 `만료 시각 − 서버 Date`를 로컬 now에 더해 저장한다. refresh와 Google code 교환 모두 적용된다.
 - `Date` 헤더가 없거나 남은 수명이 0 이하면 응답을 버리지 않고 60초 로컬 만료로 저장한다. 형식이 깨진 응답만 `INVALID_RESPONSE`로 버린다.
 - 영향받는 파일: `electron/main/auth-api.cts`, `tests/electron/auth-service.test.cjs`
+
+## 결정 042 - 이탈 알림은 카드 대신 팻말 든 포키, 누르면 쏙 들어간다
+
+- 결정일: 2026-11-13 / 상태: 확정(사용자 시안·실제 앱 확인) / Issue #246.
+- 흰 카드·버튼 알림은 일반 알림창처럼 보여 차별점이 약했다. 이탈 알림(OFF_TASK)은 포키가 강도별 팻말을 들고 나오고, 포키를 누르는 것이 '확인했어'다. 휴식 제안·연결 끊김은 카드를 유지한다.
+- 팻말 글자는 코드 글꼴이 아니라 AI 이미지에 그린다. 코드 글자는 팻말 위에 떠 보여 AI 티가 났다. 문구가 강도별로 고정이라 이미지 3장으로 충분하다. 목표처럼 바뀌는 글자는 마우스를 올렸을 때 나무색 안내에만 쓴다.
+- 안내·`잠시 쉬기`는 팻말과 같은 나무색, 단색 + 아래 두께 눌림 버튼으로 맞춘다. 처음 한 번과 마우스를 올렸을 때만 보인다.
+- 포키 창은 포커스를 뺏지 않는 패널이라 macOS가 CSS 커서를 무시한다. Swift 도우미가 `SetsCursorInBackground`(비공개 CoreGraphics 연결 속성)를 켜고 포키·버튼 위에서 손가락 커서를 지정한다. 심볼이 없으면 아무것도 하지 않는다. 포키 창에 포커스를 주는 방법은 사용자가 쓰던 앱의 키보드 입력을 빼앗아 쓰지 않는다.
+- 영향받는 파일: `features/floating/FloatingPoki.tsx`, `features/floating/floating.css`, `public/design/poki-sign-*.webp`, `native/observer/main.swift`, `electron/main/observer-helper.cts`, `electron/main/index.cts`
