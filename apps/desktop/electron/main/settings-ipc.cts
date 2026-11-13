@@ -62,6 +62,23 @@ export class SettingsService {
       : { ...item, granted, grantedAt: granted ? now : item.grantedAt, withdrawnAt: granted ? null : now }) } }
   }
 
+  /**
+   * 카메라 동의를 스위치와 함께 맞춘다. 서버는 카메라를 켠 세션 시작 때 동의를 확인하므로 켤 때 저장하고, 끌 때 철회한다.
+   * 이미 같은 상태면 요청하지 않는다. 화면에 보여 준 문서와 같은 서버 현재 버전으로 저장한다.
+   */
+  async setCameraConsent(granted: boolean): Promise<ApiResult<{ granted: boolean }>> {
+    const current = await this.getConsents()
+    if (!current.success) return current
+    const now = current.data.items.some((item) => item.type === 'CAMERA_ANALYSIS' && item.granted)
+    if (now === granted) return { success: true, data: { granted } }
+    if (!current.data.currentVersion) return { success: false, error: { code: 'INVALID_RESPONSE', retryable: false } }
+    const saved = await this.auth.authorizedRequest({
+      path: '/api/v1/users/me/consents/CAMERA_ANALYSIS', method: 'PUT', expectedStatus: 200, parse: (value) => (isRecord(value) ? {} : null),
+      body: { isGranted: granted, consentVersion: current.data.currentVersion, consentSource: 'DESKTOP_SETTINGS' },
+    })
+    return saved.success ? { success: true, data: { granted } } : saved
+  }
+
   getDevices(): Promise<ApiResult<DeviceStatus>> {
     return this.auth.authorizedRequest({ path: '/api/v1/devices', method: 'GET', expectedStatus: 200, parse: (value) => parseDeviceStatus(value, this.auth.currentDeviceId()) })
   }
@@ -136,6 +153,11 @@ export function registerSettingsIpc(
     SETTINGS_CHANNELS.screenConsentSet,
     (args) => args.length === 1 && onlyKeys(args[0], ['granted']) && typeof args[0].granted === 'boolean',
     (s, args) => s.setScreenConsent((args[0] as { granted: boolean }).granted),
+  )
+  handle(
+    SETTINGS_CHANNELS.cameraConsentSet,
+    (args) => args.length === 1 && onlyKeys(args[0], ['granted']) && typeof args[0].granted === 'boolean',
+    (s, args) => s.setCameraConsent((args[0] as { granted: boolean }).granted),
   )
   handle(SETTINGS_CHANNELS.devicesGet, (args) => args.length === 0, (s) => s.getDevices())
   handle(

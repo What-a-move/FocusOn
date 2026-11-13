@@ -4,7 +4,9 @@
 export type CameraSample = { faceCount: number; eyesVisible: boolean; gaze: 'SCREEN' | 'AWAY' | 'UNKNOWN'; quality: 'GOOD' | 'LOW' | 'UNUSABLE' }
 export type CameraState = 'CAMERA_STARTING' | 'CAMERA_ATTENTION' | 'CAMERA_AWAY_CANDIDATE' | 'CAMERA_ALERT_CANDIDATE' | 'CAMERA_AWAY_CONFIRMED' | 'CAMERA_UNKNOWN' | 'LOCAL_CAMERA_UNAVAILABLE'
 /** 도우미 응답 하나. 켜는 중(STARTING)과 실패(UNAVAILABLE)도 들어온다. */
-export type CameraReading = { kind: 'SAMPLE'; sample: CameraSample } | { kind: 'STARTING' } | { kind: 'UNAVAILABLE' }
+export type CameraReading = { kind: 'SAMPLE'; sample: CameraSample } | { kind: 'STARTING' } | { kind: 'UNAVAILABLE'; reason?: 'DENIED' | 'NO_DEVICE' }
+/** 설정 화면에 보여 줄 카메라 실패 사유(Notion 카메라 분석 7.2·7.3, #228). */
+export type CameraIssue = 'denied' | 'missing'
 
 export const CANDIDATE_MS = 60_000
 export const CONFIRM_MS = 90_000
@@ -18,6 +20,7 @@ const QUALITIES = ['GOOD', 'LOW', 'UNUSABLE'] as const
 export function parseCameraReply(reply: Record<string, unknown> | null): CameraReading {
   if (!reply) return { kind: 'UNAVAILABLE' }
   if (reply.state === 'STARTING') return { kind: 'STARTING' }
+  if (reply.state === 'UNAVAILABLE') return reply.reason === 'DENIED' || reply.reason === 'NO_DEVICE' ? { kind: 'UNAVAILABLE', reason: reply.reason } : { kind: 'UNAVAILABLE' }
   const { faceCount, eyesVisible, gaze, quality } = reply
   if (reply.state !== 'SAMPLE' || !Number.isSafeInteger(faceCount) || typeof eyesVisible !== 'boolean'
     || !GAZES.includes(gaze as CameraSample['gaze']) || !QUALITIES.includes(quality as CameraSample['quality'])) return { kind: 'UNAVAILABLE' }
@@ -35,12 +38,14 @@ export class CameraMonitor {
   private alerted = false
   private lastAlertAt: number | null = null
   private state: CameraState = 'CAMERA_STARTING'
+  private lastIssue: CameraIssue | null = null
 
   constructor(private readonly now: () => number) {}
 
   /** 새 상태와, 이번에 포키를 띄울지(alert)를 돌려준다. canShow는 세션·화면·포키 창 등 바깥 최종 게이트다. */
   update(reading: CameraReading, { screenRelated, canShow }: { screenRelated: boolean; canShow: boolean }): { state: CameraState; alert: boolean } {
     const t = this.now()
+    this.trackIssue(reading)
     const away = reading.kind === 'SAMPLE' && reading.sample.quality === 'GOOD' && reading.sample.gaze === 'AWAY'
     if (!away || screenRelated) {
       this.awaySince = null
@@ -60,6 +65,21 @@ export class CameraMonitor {
     this.alerted = true
     this.lastAlertAt = t
     return { state: this.state, alert: true }
+  }
+
+  /** 마지막으로 본 실패 사유. 세션이 끝나도 남겨 두어 설정 화면에서 볼 수 있게 한다. 다시 시도하면 지운다. */
+  issue(): CameraIssue | null {
+    return this.lastIssue
+  }
+
+  clearIssue(): void {
+    this.lastIssue = null
+  }
+
+  // macOS가 확실히 알려 준 실패만 남긴다. 켜는 중(프레임 없음)은 추정이라 사유로 쓰지 않는다.
+  private trackIssue(reading: CameraReading): void {
+    if (reading.kind === 'SAMPLE') this.lastIssue = null
+    else if (reading.kind === 'UNAVAILABLE' && reading.reason) this.lastIssue = reading.reason === 'DENIED' ? 'denied' : 'missing'
   }
 
   current(): CameraState {

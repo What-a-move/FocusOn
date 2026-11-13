@@ -68,3 +68,22 @@ test('도우미 응답은 정한 값만 받는다', () => {
     { kind: 'SAMPLE', sample: { faceCount: 1, eyesVisible: true, gaze: 'SCREEN', quality: 'GOOD' } }, '정하지 않은 값은 버림')
   assert.deepEqual(parseCameraReply({ ok: true, state: 'SAMPLE', faceCount: 1, eyesVisible: true, gaze: 'LEFT', quality: 'GOOD' }), { kind: 'UNAVAILABLE' })
 })
+
+test('설정에 보여 줄 실패 사유: 권한 거부·카메라 없음만 남기고, 정상 신호나 다시 시도로 지운다', () => {
+  const clock = { t: 0 }
+  const m = new CameraMonitor(() => clock.t)
+  m.update(parseCameraReply({ ok: true, state: 'UNAVAILABLE', reason: 'DENIED' }), OPEN)
+  assert.equal(m.issue(), 'denied')
+  m.update(parseCameraReply({ ok: true, state: 'UNAVAILABLE', reason: 'NO_DEVICE' }), OPEN)
+  assert.equal(m.issue(), 'missing')
+  m.update({ kind: 'STARTING' }, OPEN)
+  assert.equal(m.issue(), 'missing', '켜는 중은 사유를 바꾸지 않음')
+  m.reset()
+  assert.equal(m.issue(), 'missing', '세션이 끝나도 설정에서 볼 수 있게 남김')
+  m.update(sample('SCREEN'), OPEN)
+  assert.equal(m.issue(), null)
+  m.update(parseCameraReply({ ok: true, state: 'UNAVAILABLE', reason: 'DENIED' }), OPEN)
+  m.clearIssue()
+  assert.equal(m.issue(), null)
+  assert.deepEqual(parseCameraReply({ ok: true, state: 'UNAVAILABLE', reason: 'OTHER' }), { kind: 'UNAVAILABLE' })
+})
