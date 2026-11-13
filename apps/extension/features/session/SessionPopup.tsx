@@ -19,9 +19,10 @@ type View =
   | { kind: 'offline'; last: { session: ActiveSession; at: Date } | null }
   | { kind: 'unlink-confirm' }
 
+// 상황별 포키는 Desktop과 같다(#179 poki-swap-PLAN, #236). name은 public/design의 파일 이름이다.
 function Poki({ name, alt }: { name: string; alt: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img className="poki" src={`/design/poki-floating-${name}.png`} alt={alt} />
+  return <img className="poki" src={`/design/${name}.png`} alt={alt} />
 }
 
 /** E02 세션 없음 · E03 세션 진행 중(표시 전용) · E06 서버 연결 불가 (FocusOn-design/extension-popup.html). */
@@ -77,7 +78,7 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
         {view.kind === 'loading' && <p className="center muted" role="status">집중 상태를 확인하고 있어요.</p>}
 
         {view.kind === 'none' && <>
-          <div className="center"><Poki name="master-v3" alt="포키" /><h1>지금은 집중 중이 아니에요</h1></div>
+          <div className="center"><Poki name="poki-looking" alt="두리번거리는 포키" /><h1>지금은 집중 중이 아니에요</h1></div>
           <p className="center muted">데스크톱 앱에서 집중을 시작하면 여기서도 보여요.</p>
           <div className="checks"><span>데스크톱 연결됨</span></div>
           <p className="center"><button className="text-btn" type="button" onClick={() => setView({ kind: 'unlink-confirm' })}>이 브라우저 연결 해제</button></p>
@@ -123,7 +124,7 @@ function SessionView({ session, activeMs }: { session: ActiveSession; activeMs: 
 
   if (session.status === 'AWAITING_END_CONFIRMATION') {
     return <>
-      <div className="center"><Poki name="master-v3" alt="포키" /><h1>목표한 {minutes}분이 지났어요</h1></div>
+      <div className="center"><Poki name="poki-time-up" alt="알람을 든 포키" /><h1>목표한 {minutes}분이 지났어요</h1></div>
       <p className="center muted">데스크톱 앱에서 끝내거나 시간을 늘려 주세요.</p>
     </>
   }
@@ -136,7 +137,7 @@ function SessionView({ session, activeMs }: { session: ActiveSession; activeMs: 
         <span className={`timer${paused ? ' is-dim' : ''}`} role="timer" aria-live="off">{formatClock(remaining)}</span>
         <span className="timer-cap">{paused ? '잠시 멈췄어요 · 분석도 쉬는 중' : `${minutes}분 중`}</span>
       </div>
-      <Poki name={session.status === 'AUTO_PAUSED' ? 'paused-v2' : paused ? 'paused-v3' : 'master-v3'} alt={paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
+      <Poki name={session.status === 'AUTO_PAUSED' ? 'poki-worried' : paused ? 'poki-floating-paused-v3' : 'poki-floating-master-v3'} alt={paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
     </div>
     <div className={`progress${paused ? ' is-dim' : ''}`}><i style={{ width: `${percent}%` }} /></div>
     {/* 멈추기·끝내기는 Desktop에서만 한다. Desktop이 타이머와 서버 신호를 맡기 때문이다(결정 012). */}
