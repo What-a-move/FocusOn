@@ -22,14 +22,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function parseTokenPair(value: unknown): TokenPair | null {
+// 서버 기준으로도 남은 수명이 없어 보이는 토큰은 이 시간만 쓰고 다시 갱신한다. AuthService의 갱신 여유(30초)보다 길어야 한다.
+const STALE_TOKEN_LIFETIME_MS = 60_000
+
+/**
+ * 만료 시각은 서버 시계 기준이라 로컬 시계와 바로 비교하지 않는다. 응답 Date 헤더(serverNow)로 남은 수명을 구해
+ * 로컬 시각으로 옮겨 돌려준다. Date 헤더가 없으면 로컬 시계를 서버 시계로 본다.
+ * [주의] 서버는 응답을 보낼 때 이미 refresh token을 회전했다. 형식이 맞는 응답을 시계 차이로 버리면 다음 갱신이
+ * 예전 token을 보내 AUTH_TOKEN_REUSE_DETECTED로 강제 로그아웃된다 (auth-refresh-clock-skew-ERROR.md).
+ */
+function parseTokenPair(value: unknown, serverNow = Number.NaN): TokenPair | null {
   if (!isRecord(value) || typeof value.accessToken !== 'string' || !value.accessToken
     || typeof value.refreshToken !== 'string' || !value.refreshToken
     || typeof value.accessTokenExpiresAt !== 'string') return null
-  // [주의] 형식이 깨진 시각은 NaN이 되어 만료 비교를 통과해 버리므로 먼저 걸러 낸다.
   const expiresAt = Date.parse(value.accessTokenExpiresAt)
-  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return null
-  return { accessToken: value.accessToken, refreshToken: value.refreshToken, accessTokenExpiresAt: value.accessTokenExpiresAt }
+  if (!Number.isFinite(expiresAt)) return null
+  const now = Date.now()
+  const remaining = expiresAt - (Number.isFinite(serverNow) ? serverNow : now)
+  const localExpiresAt = now + (remaining > 0 ? remaining : STALE_TOKEN_LIFETIME_MS)
+  return { accessToken: value.accessToken, refreshToken: value.refreshToken, accessTokenExpiresAt: new Date(localExpiresAt).toISOString() }
 }
 
 function parseIdentity(value: unknown): AuthIdentity | null {
@@ -45,8 +56,8 @@ function parseIdentity(value: unknown): AuthIdentity | null {
   }
 }
 
-function parseExchange(value: unknown): ExchangeResult | null {
-  const tokens = parseTokenPair(value)
+function parseExchange(value: unknown, serverNow?: number): ExchangeResult | null {
+  const tokens = parseTokenPair(value, serverNow)
   const identity = parseIdentity(value)
   return tokens && identity ? { ...tokens, ...identity } : null
 }
@@ -77,7 +88,7 @@ export class AuthApiClient {
     path: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     expectedStatus: number,
-    parse: (value: unknown) => T | null,
+    parse: (value: unknown, serverNow?: number) => T | null,
     body?: object,
     accessToken?: string,
     extraHeaders: Record<string, string> = {},
@@ -121,7 +132,9 @@ export class AuthApiClient {
     }
     try {
       const payload: unknown = await response.json()
-      const data = isRecord(payload) ? parse(payload.data) : null
+      // 응답 Date 헤더는 서버 시계다. 토큰 파서가 만료 시각을 로컬 시각으로 옮길 때 쓴다.
+      const serverNow = Date.parse(response.headers.get('date') ?? '')
+      const data = isRecord(payload) ? parse(payload.data, serverNow) : null
       return data ? trace.ok({ success: true, data }, response.status) : trace.fail(INVALID_RESPONSE, response.status)
     } catch {
       return trace.fail(INVALID_RESPONSE, response.status)

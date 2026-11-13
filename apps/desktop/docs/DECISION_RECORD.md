@@ -771,3 +771,11 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 올리고 내릴 때는 CSS 스프링(`cubic-bezier(.34, 1.56, .64, 1)`, 0.6초)으로 살짝 지나쳤다 돌아온다. macOS 창 이동 애니메이션은 직선이라 쓰지 않는다. 동작 줄이기 설정이면 바로 옮긴다.
 - 포키는 오른쪽으로 28px 넘겨 살짝 잘리게 붙이고, 몸 아래에 옅은 갈색 바닥 그림자를 깐다. 흙더미 바닥(A안)은 에셋이 생기면 다시 검토한다.
 - 영향받는 파일: `electron/main/index.cts`, `electron/preload/index.cts`, `electron/shared/intervention-contract.cts`, `electron/main/screen-observer.cts`, `native/observer/main.swift`, `features/floating/FloatingPoki.tsx`, `features/floating/floating.css`
+
+## 결정 041 - 토큰 만료 시각은 서버 Date 헤더 기준 남은 수명으로 바꿔 저장
+
+- 결정일: 2026-11-13 / 상태: 확정 / Issue #229.
+- 서버가 준 `accessTokenExpiresAt`은 서버 시계 기준이다. 로컬 시계와 바로 비교하면 시계가 15분(Access Token 수명) 넘게 어긋날 때 정상 refresh 응답을 버리고, 이미 회전된 refresh token을 잃어 `AUTH_TOKEN_REUSE_DETECTED`로 강제 로그아웃된다.
+- `AuthApiClient.call`이 응답 `Date` 헤더를 파서에 넘기고, `parseTokenPair`는 `만료 시각 − 서버 Date`를 로컬 now에 더해 저장한다. refresh와 Google code 교환 모두 적용된다.
+- `Date` 헤더가 없거나 남은 수명이 0 이하면 응답을 버리지 않고 60초 로컬 만료로 저장한다. 형식이 깨진 응답만 `INVALID_RESPONSE`로 버린다.
+- 영향받는 파일: `electron/main/auth-api.cts`, `tests/electron/auth-service.test.cjs`

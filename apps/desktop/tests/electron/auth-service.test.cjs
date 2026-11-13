@@ -324,3 +324,70 @@ test('수명 20초의 Access Token이면 refresh 장애에도 logout 20회가 �
   assert.equal(refreshCalls, 0)
   assert.equal(logoutCalls, 20)
 })
+
+// 2026-11-12 재현: 잠자기 뒤 Docker VM 시계가 17분 뒤처져, 서버 기준 15분 남은 토큰이 로컬 시계로는 이미 만료로 보였다.
+function skewedServer(skewMs, onRefresh = () => {}) {
+  return async (url) => {
+    const serverNow = Date.now() + skewMs
+    const headers = { Date: new Date(serverNow).toUTCString() }
+    const fresh = { ...tokens, accessTokenExpiresAt: new Date(serverNow + 15 * 60_000).toISOString() }
+    if (url.endsWith('/refresh')) { onRefresh(); return new Response(JSON.stringify({ data: fresh }), { status: 200, headers }) }
+    if (url.endsWith('/exchange')) return new Response(JSON.stringify({ data: { ...fresh, ...identity } }), { status: 201, headers })
+    if (url.endsWith('/me')) return new Response(JSON.stringify({ data: identity }), { status: 200, headers })
+    if (url.endsWith('/ping')) return new Response(JSON.stringify({ data: { ok: true } }), { status: 200, headers })
+    throw new Error('unexpected path')
+  }
+}
+const SKEW_BEHIND = -17 * 60_000
+
+function assertLocalLifetime(expiresAt, expectedMs) {
+  const remaining = Date.parse(expiresAt) - Date.now()
+  assert.ok(Math.abs(remaining - expectedMs) < 5_000, `remaining ${remaining}ms`)
+}
+
+test('서버 시계가 15분 넘게 뒤처져도 refresh 응답을 버리지 않고 남은 수명을 로컬 시각으로 환산한다', async () => {
+  const api = new AuthApiClient('http://127.0.0.1:8080', skewedServer(SKEW_BEHIND))
+  const result = await api.refresh('old-refresh')
+  assert.equal(result.success, true)
+  assert.equal(result.data.refreshToken, 'refresh-secret-new')
+  assertLocalLifetime(result.data.accessTokenExpiresAt, 15 * 60_000)
+})
+
+test('서버 시계가 앞서도 남은 수명을 서버 Date 기준으로 계산한다', async () => {
+  const api = new AuthApiClient('http://127.0.0.1:8080', skewedServer(20 * 60_000))
+  const result = await api.refresh('old-refresh')
+  assert.equal(result.success, true)
+  assertLocalLifetime(result.data.accessTokenExpiresAt, 15 * 60_000)
+})
+
+test('서버 시계가 뒤처져도 Google code 교환 응답을 버리지 않는다', async () => {
+  const api = new AuthApiClient('http://127.0.0.1:8080', skewedServer(SKEW_BEHIND))
+  const code = { authorizationCode: 'c', codeVerifier: 'v', state: 's', redirectUri: 'http://127.0.0.1:49152' }
+  const result = await api.exchange(code, { installationId: 'i', deviceName: 'Mac', platform: 'MACOS' })
+  assert.equal(result.success, true)
+  assertLocalLifetime(result.data.accessTokenExpiresAt, 15 * 60_000)
+})
+
+test('Date 헤더 없이 이미 만료로 보이는 토큰도 저장하고 짧은 로컬 수명으로 다룬다', async () => {
+  const stale = { ...tokens, accessTokenExpiresAt: new Date(Date.now() - 60_000).toISOString() }
+  const api = new AuthApiClient('http://127.0.0.1:8080', async () => new Response(JSON.stringify({ data: stale }), { status: 200 }))
+  const result = await api.refresh('old-refresh')
+  assert.equal(result.success, true)
+  assert.equal(result.data.refreshToken, 'refresh-secret-new')
+  assert.ok(Date.parse(result.data.accessTokenExpiresAt) > Date.now() + 30_000)
+})
+
+test('시계가 어긋난 refresh 뒤에도 새 refresh token을 저장하고 다음 요청에서 다시 갱신하지 않는다', async () => {
+  let refreshCalls = 0
+  const store = new AuthSessionStore(() => {})
+  const vault = createVault('old-refresh')
+  const api = new AuthApiClient('http://127.0.0.1:8080', skewedServer(SKEW_BEHIND, () => { refreshCalls += 1 }))
+  const service = new AuthService(store, api, vault, async () => { throw new Error('unused') })
+  await service.restore()
+  assert.equal(store.getSnapshot().status, 'SIGNED_IN')
+  assert.equal(vault.peek(), 'refresh-secret-new')
+
+  const ping = await service.authorizedRequest({ path: '/ping', method: 'GET', expectedStatus: 200, parse: (v) => v })
+  assert.equal(ping.success, true)
+  assert.equal(refreshCalls, 1)
+})
