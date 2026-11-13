@@ -80,3 +80,9 @@
 - [ ] Timeout·재시도·Worker 재시작·늦은 결과·PII 출력이 안전하게 처리된다.
 - [ ] 조회 API와 Desktop의 대기·완료·근거 부족·실패 UI가 연결된다.
 - [ ] 단위·통합·개인정보 테스트와 실제 수동 시나리오를 통과하고 관련 문서·PR을 연결한다.
+
+## 합성 근거 호출 인터페이스 (AI #29)
+
+`generate_synthetic_evidence_summary(goal, evidences, record_consent=...)`는 합성 테스트 전용 Python 함수다. 각 `DemoEvidence`의 concept·observation·label·page_type에서 RELATED 근거만 선별하고 동의, 중복 및 민감정보 검사를 적용한다. 유효 근거가 2개 미만이면 모델 호출 없이 INSUFFICIENT_DATA를 반환한다. 생성 결과는 READY와 overview/keyConcepts/nextStartPrompt, 실패는 FAILED다. 생성 지연 20초 제한, 재시도 0회 및 store=false를 유지한다.
+
+현재 HTTP endpoint·서버 작업 큐·실제 사용자 데이터 연결은 제공하지 않는다. 서버 연동 시 전달할 입력은 서버가 확정한 목표와 RELATED 최소 근거 및 유효한 기록 동의이며, 응답 상태·오류·인증과 실제 데이터 제공자·보존·고지 조건은 관련 담당자와 확정해야 한다. 합성 함수는 실제 데이터의 무해성을 보장하는 보안 경계가 아니다.
