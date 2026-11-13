@@ -29,6 +29,10 @@
 .fo-row-copy { flex: 1; min-width: 0; }
 .fo-row-copy strong { display: block; font-size: 16px; font-weight: 600; }
 .fo-row-copy small { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 13px; line-height: 1.5; }
+/* 카메라 분석 행 (settings.html 카메라 분석, #228). 선택 태그·오류 한 줄·오른쪽 버튼 묶음. */
+.fo-tag { margin-left: 6px; padding: 2px 8px; border-radius: 99px; background: var(--fo-field); color: var(--fo-muted); font-size: 12px; font-weight: 600; vertical-align: 2px; }
+.fo-row-copy .fo-error-line { display: block; margin-top: 4px; color: var(--fo-danger); font-size: 13px; font-weight: 600; line-height: 1.5; }
+.fo-row-control { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .fo-field-title { display: block; font-size: 16px; font-weight: 600; }
 .fo-field-desc { display: block; margin-top: 2px; color: var(--fo-muted); font-size: 13px; }
 .fo-field .fo-segmented, .fo-field .fo-chips, .fo-field .fo-theme-tiles { margin-top: clamp(8px, 2vh, 20px); }

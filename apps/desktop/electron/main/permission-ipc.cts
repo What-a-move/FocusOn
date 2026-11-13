@@ -16,6 +16,7 @@ const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', ret
 const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 // macOS 시스템 설정 › 개인정보 보호 및 보안 › 화면 기록
 const SCREEN_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
+const CAMERA_SETTINGS_URL = 'x-apple.systempreferences:com.apple.preference.security?Privacy_Camera'
 // macOS 시스템 설정 › 알림
 const NOTIFICATION_SETTINGS_URL = 'x-apple.systempreferences:com.apple.Notifications-Settings.extension'
 
@@ -32,7 +33,7 @@ export function isValidNotificationInput(args: unknown[]): args is [{ titleCode:
   return Object.keys(rest).length === 0 && isNotificationCode(titleCode) && isNotificationCode(bodyCode)
 }
 
-export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null, rendererUrl: string, notificationReadiness: NotificationReadiness): void {
+export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null, rendererUrl: string, notificationReadiness: NotificationReadiness, camera?: { issue(): 'denied' | 'missing' | null; clear(): void }): void {
   const trusted = (event: IpcMainInvokeEvent) => isTrustedAuthSender(event, getMainWindow(), rendererUrl)
 
   function handleVoid<T>(channel: string, run: () => Promise<T> | T): void {
@@ -93,6 +94,12 @@ export function registerPermissionIpc(getMainWindow: () => BrowserWindow | null,
     if (mediaStatus('camera') === 'not-determined') await systemPreferences.askForMediaAccess('camera')
     return { status: mediaStatus('camera') }
   })
+  handleVoid(PERMISSION_CHANNELS.cameraOpenSettings, async () => {
+    await shell.openExternal(CAMERA_SETTINGS_URL)
+    return { opened: true }
+  })
+  handleVoid(PERMISSION_CHANNELS.cameraIssue, () => ({ issue: camera?.issue() ?? null }))
+  handleVoid(PERMISSION_CHANNELS.cameraIssueClear, () => { camera?.clear(); return { cleared: true as const } })
 
   ipcMain.handle(PERMISSION_CHANNELS.notificationShow, async (event, ...args: unknown[]): Promise<IpcResult<{ shown: boolean }>> => {
     if (!trusted(event) || !isValidNotificationInput(args)) return INVALID_REQUEST

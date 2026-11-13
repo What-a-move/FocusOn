@@ -6,6 +6,9 @@ export const PERMISSION_CHANNELS = {
   screenOpenSettings: 'permission:screen:open-settings',
   cameraStatus: 'permission:camera:get-status',
   cameraRequest: 'permission:camera:request',
+  cameraOpenSettings: 'permission:camera:open-settings',
+  cameraIssue: 'permission:camera:get-issue',
+  cameraIssueClear: 'permission:camera:clear-issue',
   notificationShow: 'notification:show',
   notificationOpenSettings: 'permission:notification:open-settings',
   notificationStatus: 'permission:notification:get-status',
@@ -27,6 +30,10 @@ export type PermissionsApi = {
   openScreenSettings(): Promise<IpcResult<{ opened: boolean }>>
   getCameraStatus(): Promise<IpcResult<{ status: PermissionStatus }>>
   requestCamera(): Promise<IpcResult<{ status: PermissionStatus }>>
+  openCameraSettings(): Promise<IpcResult<{ opened: boolean }>>
+  /** 집중 중 카메라가 동작하지 못한 마지막 사유(#228). 권한 꺼짐·카메라 없음. */
+  getCameraIssue(): Promise<IpcResult<{ issue: 'denied' | 'missing' | null }>>
+  clearCameraIssue(): Promise<IpcResult<{ cleared: true }>>
   showNotification(input: { titleCode: NotificationCode; bodyCode: NotificationCode }): Promise<IpcResult<{ shown: boolean }>>
   openNotificationSettings(): Promise<IpcResult<{ opened: boolean }>>
   /** 사용자가 시험 알림을 보고 확인한 기록. macOS 허용 상태가 아니라 이 기기의 사용자 확인 결과다. */

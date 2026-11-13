@@ -772,7 +772,16 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 포키는 오른쪽으로 28px 넘겨 살짝 잘리게 붙이고, 몸 아래에 옅은 갈색 바닥 그림자를 깐다. 흙더미 바닥(A안)은 에셋이 생기면 다시 검토한다.
 - 영향받는 파일: `electron/main/index.cts`, `electron/preload/index.cts`, `electron/shared/intervention-contract.cts`, `electron/main/screen-observer.cts`, `native/observer/main.swift`, `features/floating/FloatingPoki.tsx`, `features/floating/floating.css`
 
-## 결정 041 - 토큰 만료 시각은 서버 Date 헤더 기준 남은 수명으로 바꿔 저장
+## 결정 041 - 설정 카메라 스위치: 켤 때 권한·동의를 함께 맞추고, 확실한 오류만 한 줄로 보여 준다
+
+- 결정일: 2026-11-13 / 상태: 확정(사용자 확인) / Issue #228.
+- 결정 029대로 카메라 분석 구현(#222) 뒤 설정 › 분석·권한에 스위치를 넣는다.
+- 켜면 macOS 권한(처음이면 허용 창) → 카메라 동의(없으면 서버 현재 버전으로 저장) → focus-settings 순서로 맞춘다. 서버가 카메라 켠 세션 시작 때 동의를 확인하기 때문이다. 끄면 focus-settings를 끄고 카메라 동의도 철회한다(계정 탭에 카메라 철회 경로가 없음).
+- 오류는 권한 꺼짐·카메라 없음 두 가지만 한 줄 + 버튼으로 보여 준다. 시안의 복구 안내 여러 줄과 `다른 앱이 사용 중`(추정)은 넣지 않는다(사용자 결정).
+- 권한이 꺼져도 사용자가 켜 둔 스위치는 그대로 둔다. 권한을 다시 켜면 바로 동작한다.
+- 영향받는 파일: `features/settings/Settings.tsx`, `features/settings/settings.css`, `shared/api/onboarding-api.ts`, `features/settings/settings-api.ts`, `electron/main/{camera-monitor,permission-ipc,settings-ipc,index}.cts`, `electron/shared/{permission,settings}-contract.cts`, `electron/preload/index.cts`, `native/observer/main.swift`
+
+## 결정 042 - 토큰 만료 시각은 서버 Date 헤더 기준 남은 수명으로 바꿔 저장
 
 - 결정일: 2026-11-13 / 상태: 확정 / Issue #229.
 - 서버가 준 `accessTokenExpiresAt`은 서버 시계 기준이다. 로컬 시계와 바로 비교하면 시계가 15분(Access Token 수명) 넘게 어긋날 때 정상 refresh 응답을 버리고, 이미 회전된 refresh token을 잃어 `AUTH_TOKEN_REUSE_DETECTED`로 강제 로그아웃된다.

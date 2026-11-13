@@ -54,6 +54,11 @@ export const onboardingApi = {
   relaunchApp: () => viaPermissions((api) => api.relaunch(), same),
   checkScreenRecording: () => viaPermissions((api) => api.getScreenStatus(), ({ status }) => ({ granted: status === 'granted' })),
   requestCamera: () => viaPermissions((api) => api.requestCamera(), ({ status }) => ({ granted: status === 'granted' })),
+  /** 카메라 권한 상태. not-determined면 아직 묻지 않은 것이라 켤 때 OS 허용 창을 띄운다. */
+  cameraStatus: () => viaPermissions((api) => api.getCameraStatus(), same),
+  openCameraSettings: () => viaPermissions((api) => api.openCameraSettings(), same),
+  cameraIssue: () => viaPermissions((api) => api.getCameraIssue(), same),
+  clearCameraIssue: () => viaPermissions((api) => api.clearCameraIssue(), same),
   /** macOS는 알림 허용 상태를 조회할 수 없어 시험 알림을 보내 허용 창을 띄운다. */
   requestNotifications: () => viaPermissions(
     (api) => api.showNotification({ titleCode: 'ONBOARDING_TEST', bodyCode: 'ONBOARDING_TEST' }),

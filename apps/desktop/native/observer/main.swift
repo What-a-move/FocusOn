@@ -115,16 +115,19 @@ final class CameraSampler: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
   private let lock = NSLock()
 
   func sample(_ id: Int) {
-    guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { reply(["id": id, "ok": false, "error": "CAMERA_DENIED"]); return }
+    // 실패 사유는 설정 화면에 보여 줄 수 있게 ok로 돌려준다(#228).
+    guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { reply(["id": id, "ok": true, "state": "UNAVAILABLE", "reason": "DENIED"]); return }
     if session == nil {
-      guard let device = AVCaptureDevice.default(for: .video), let input = try? AVCaptureDeviceInput(device: device) else { reply(["id": id, "ok": false, "error": "CAMERA_UNAVAILABLE"]); return }
+      // NO_DEVICE는 기본 카메라를 정말 못 찾았을 때만 쓴다. 준비 실패는 사유 없이 알린다(설정에 '카메라 없음'으로 잘못 보이지 않게).
+      guard let device = AVCaptureDevice.default(for: .video) else { reply(["id": id, "ok": true, "state": "UNAVAILABLE", "reason": "NO_DEVICE"]); return }
+      guard let input = try? AVCaptureDeviceInput(device: device) else { reply(["id": id, "ok": true, "state": "UNAVAILABLE"]); return }
       let next = AVCaptureSession()
       next.sessionPreset = .vga640x480
       let output = AVCaptureVideoDataOutput()
       output.alwaysDiscardsLateVideoFrames = true
       output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange]
       output.setSampleBufferDelegate(self, queue: queue)
-      guard next.canAddInput(input), next.canAddOutput(output) else { reply(["id": id, "ok": false, "error": "CAMERA_UNAVAILABLE"]); return }
+      guard next.canAddInput(input), next.canAddOutput(output) else { reply(["id": id, "ok": true, "state": "UNAVAILABLE"]); return }
       next.addInput(input)
       next.addOutput(output)
       session = next
