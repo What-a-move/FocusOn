@@ -194,3 +194,66 @@ class LearningSummaryOpenAITests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SyntheticEvidenceContractTests(unittest.TestCase):
+    def test_related_evidence_is_deduplicated_and_validated_before_generation(self):
+        from src.learning_summary_openai import generate_synthetic_evidence_summary
+
+        client = Mock()
+        client.responses.parse.return_value = SimpleNamespace(output_parsed=valid_output())
+        evidence = list(FIXTURE_EVIDENCE) + [
+            FIXTURE_EVIDENCE[0],
+            DemoEvidence("secret", "contact person@example.com"),
+            DemoEvidence("other", "unrelated observation", label="UNRELATED"),
+        ]
+        result = generate_synthetic_evidence_summary(SYNTHETIC_GOAL, evidence, client=client)
+        self.assertEqual(result.status, "READY")
+        self.assertEqual(result.accepted_count, 2)
+        self.assertEqual(set(result.summary), {"overview", "keyConcepts", "nextStartPrompt"})
+        sent = client.responses.parse.call_args.kwargs["input"][0]["content"]
+        self.assertNotIn("person@example.com", sent)
+        self.assertNotIn("unrelated observation", sent)
+
+    def test_insufficient_or_denied_consent_never_calls_model(self):
+        from src.learning_summary_openai import generate_synthetic_evidence_summary
+
+        client = Mock()
+        self.assertEqual(generate_synthetic_evidence_summary(
+            SYNTHETIC_GOAL, [FIXTURE_EVIDENCE[0], FIXTURE_EVIDENCE[0]], client=client
+        ).status, "INSUFFICIENT_DATA")
+        self.assertEqual(generate_synthetic_evidence_summary(
+            SYNTHETIC_GOAL, FIXTURE_EVIDENCE, client=client, record_consent=False
+        ).status, "INSUFFICIENT_DATA")
+        client.responses.parse.assert_not_called()
+
+    def test_provider_failure_and_invalid_output_fail_closed(self):
+        from src.learning_summary_openai import generate_synthetic_evidence_summary
+
+        client = Mock()
+        client.responses.parse.side_effect = TimeoutError()
+        self.assertEqual(generate_synthetic_evidence_summary(
+            SYNTHETIC_GOAL, FIXTURE_EVIDENCE, client=client
+        ).status, "FAILED")
+        client.responses.parse.side_effect = None
+        client.responses.parse.return_value = SimpleNamespace(output_parsed={"keyConcepts": []})
+        self.assertEqual(generate_synthetic_evidence_summary(
+            SYNTHETIC_GOAL, FIXTURE_EVIDENCE, client=client
+        ).status, "FAILED")
+
+
+    def test_page_type_sensitive_data_is_dropped_and_text_is_trimmed(self):
+        from src.learning_summary_openai import generate_synthetic_evidence_summary
+
+        client = Mock()
+        client.responses.parse.return_value = SimpleNamespace(output_parsed=valid_output())
+        padded = DemoEvidence(FIXTURE_EVIDENCE[0].concept,
+                              " " * 130 + FIXTURE_EVIDENCE[0].observation + " ")
+        sensitive_page = DemoEvidence("safe", "a safe observation", page_type="person@example.com")
+        result = generate_synthetic_evidence_summary(
+            SYNTHETIC_GOAL, [padded, FIXTURE_EVIDENCE[1], sensitive_page], client=client)
+        self.assertEqual(result.status, "READY")
+        self.assertEqual(result.accepted_count, 2)
+        sent = client.responses.parse.call_args.kwargs["input"][0]["content"]
+        self.assertNotIn("person@example.com", sent)
+        self.assertNotIn(" " * 130, sent)
