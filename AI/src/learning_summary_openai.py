@@ -17,6 +17,7 @@ from .learning_summary_demo import (
     _has_sensitive_value,
     _render_summary,
     evidence_from_dom_pages,
+    eligible_evidence,
     next_start_prompt,
 )
 
@@ -191,6 +192,35 @@ def generate_synthetic_dom_summary(
     evidence = evidence_from_dom_pages(pages, record_consent=record_consent)
     if len(evidence) < 2:
         return DemoOutcome("INSUFFICIENT_DATA", accepted_count=len(evidence))
+    return _generate_synthetic_evidence_summary(goal, evidence, client=client, model=model)
+
+
+def generate_synthetic_evidence_summary(
+    goal: str,
+    evidences: list[DemoEvidence],
+    *,
+    client: Any = None,
+    model: str | None = None,
+    record_consent: bool = True,
+) -> DemoOutcome:
+    """Exercise the future evidence contract using synthetic observations only."""
+    if not 2 <= len(goal.strip()) <= 40 or _has_sensitive_value(goal):
+        return DemoOutcome("FAILED")
+    normalized = [
+        DemoEvidence(item.concept.strip(), item.observation.strip(),
+                     label=item.label, page_type=item.page_type.strip())
+        for item in evidences
+        if item.page_type.strip() and not _has_sensitive_value(item.page_type)
+    ]
+    evidence = eligible_evidence(normalized, record_consent=record_consent)
+    if len(evidence) < 2:
+        return DemoOutcome("INSUFFICIENT_DATA", accepted_count=len(evidence))
+    return _generate_synthetic_evidence_summary(goal, evidence, client=client, model=model)
+
+
+def _generate_synthetic_evidence_summary(
+    goal: str, evidence: list[DemoEvidence], *, client: Any, model: str | None
+) -> DemoOutcome:
     payload = {
         "goalSnapshot": goal.strip(),
         "reviewEvidence": [

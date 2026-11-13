@@ -233,3 +233,5 @@ Client별 사전 제외·권한 검사
 - `contentType`은 공개 요청에 없어서 Adapter가 출처 기반으로 `CHROME_DOM → WEB_PAGE`, 그 외 `UNKNOWN`으로 설정한다. `qualityScore`/`contentHash`는 전처리 산출값이지 Client 입력 컬럼이 아니다.
 - Server 전용 `runId`·목표 버전·탐색/세션 문맥은 `VerifiedContext`로 들어오도록 설계되어 있으나 실제 Server route는 연결되지 않았다. Desktop OCR의 `ocr.confidence`·`captureStatus` 및 `extractionStatus` 전달 위치도 담당자 합의/연동이 남았다.
 - 2026-10-28 회귀: 화면 계약 47 passed; Kiwi 평가 모듈 2개를 제외하면 158 passed, 1 skipped, 16 subtests passed. 전체 실행은 환경에 `kiwipiepy==0.23.1`이 없어 해당 75건이 실패했고, 임시 설치도 네트워크 제한으로 불가했다. 실제 모델/API 왕복은 하지 않았다. 상세는 `features/screen-analysis-contract-v1-REPORT.md`를 따른다.
+
+- #29 합성 근거용 `generate_synthetic_evidence_summary`는 RELATED 선별·동의·중복·민감정보 검사를 거쳐 기존 합성 생성 검증을 재사용한다. 실제 사용자 데이터와 서버 HTTP 연동은 미완료다.
