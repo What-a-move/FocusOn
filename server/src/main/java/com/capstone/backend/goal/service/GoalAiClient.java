@@ -27,11 +27,14 @@ public class GoalAiClient {
   private final ObjectMapper mapper;
   private final HttpClient client;
   private final String baseUrl;
+  private final String key;
 
-  /** 로컬 서버 주소는 환경 설정에서만 읽는다. */
-  public GoalAiClient(ObjectMapper mapper, @Value("${focuson.goal-ai.base-url:}") String baseUrl) {
+  /** 로컬 서버 주소와 분석 AI와 공유하는 서버 전용 키를 환경 설정에서만 읽는다. */
+  public GoalAiClient(ObjectMapper mapper, @Value("${focuson.goal-ai.base-url:}") String baseUrl,
+      @Value("${focuson.goal-ai.api-key:}") String key) {
     this.mapper = mapper;
     this.baseUrl = baseUrl;
+    this.key = key;
     // 기본 HTTP/2 업그레이드(Upgrade: h2c)를 보내면 uvicorn이 본문을 버리고 422로 응답한다.
     this.client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
         .connectTimeout(CONNECT_TIMEOUT).build();
@@ -39,9 +42,12 @@ public class GoalAiClient {
 
   /** 내부 계약의 요청을 전송하고 결과를 파싱한다. 재시도는 호출 서비스가 담당한다. */
   public JsonNode clarify(Map<String, Object> body) {
+    if (key.isBlank()) {
+      throw new GoalAiException(Failure.UNAVAILABLE, false);
+    }
     URI endpoint = endpoint();
     var request = HttpRequest.newBuilder(endpoint).timeout(REQUEST_TIMEOUT)
-        .header("Content-Type", "application/json")
+        .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body),
             StandardCharsets.UTF_8)).build();
     try {
