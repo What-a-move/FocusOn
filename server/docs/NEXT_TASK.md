@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
+
+- AI팀: 목표 다듬기 AI(`/internal/v1/goals/clarify`)에 같은 `FOCUSON_AI_API_KEY` 키 검사를 켜야 한다. 서버 배포와 같은 시점에 맞춘다.
+- 실제 AI 서비스로 키 포함 호출 확인은 후속이다(현재는 로컬 stub으로만 전송 형식을 확인함).
+
 ## Issue #261 heartbeat 응답 version (2026-11-13)
 
 - Desktop: 응답의 `version`을 바로 쓰고 PR #260의 `GET /sessions/{id}` 재조회 임시 처리를 제거한다.

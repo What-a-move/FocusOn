@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
+
+- `GoalAiClient`가 `AnalysisAiClient`와 같은 서버 전용 키(`FOCUSON_AI_API_KEY`)로 `Authorization: Bearer`를 붙여 호출한다. 키가 비어 있으면 요청을 보내지 않고 `UNAVAILABLE`(재시도 불가)로 안전하게 실패한다.
+- AI팀의 키 검사 활성화와 같이 배포해야 한다. 한쪽만 배포되면 목표 명확화가 401로 막힌다.
+
 ## Issue #261 heartbeat 응답 version (2026-11-13)
 
 - `POST /sessions/{id}/heartbeats` 응답 `data`에 `version`을 추가했다. 목표 도달로 `AWAITING_END_CONFIRMATION`이 되면 증가한 값을 돌려주므로 Desktop은 재조회 없이 끝내기·연장에 쓸 수 있다.

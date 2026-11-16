@@ -1,5 +1,11 @@
 # Backend 결정 기록
 
+## 2026-11-16 #265 목표 다듬기 AI 호출의 인증 키
+
+- 결정: `GoalAiClient`는 분석 AI(`AnalysisAiClient`)와 같은 `FOCUSON_AI_API_KEY`를 재사용해 `Authorization: Bearer`로 보낸다. 별도 키를 새로 만들지 않았다.
+- 이유: 목표 다듬기 AI도 같은 내부 서비스가 유료 모델을 쓰고, 분석 호출이 이미 이 키로 서버 전용 호출임을 검증하고 있어 키를 늘리지 않는 쪽을 택했다.
+- 키가 비어 있으면 요청 전에 `UNAVAILABLE`(재시도 불가)로 실패시킨다. 빈 키로 `Authorization: Bearer `를 보내 AI 쪽 로그에 애매한 401을 남기지 않기 위해서다.
+
 ## 2026-11-13 #261 heartbeat 응답의 version 계산
 
 - 결정: 응답 `version`은 응답 시점의 세션 명령 버전이다. 목표 도달 시 `recordHeartbeat`(네이티브 UPDATE)가 올린 값, 즉 조회한 엔티티 버전 + 1을 돌려준다.

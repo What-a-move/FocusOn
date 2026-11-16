@@ -20,11 +20,13 @@ class GoalAiClientTests {
   @Test
   void sendsPlainHttp11JsonBodyWithoutUpgradeHeaders() throws Exception {
     AtomicReference<String> upgrade = new AtomicReference<>("unset");
+    AtomicReference<String> authorization = new AtomicReference<>();
     AtomicReference<String> body = new AtomicReference<>();
     HttpServer server = HttpServer.create(new InetSocketAddress(
         InetAddress.getLoopbackAddress(), 0), 0);
     server.createContext("/internal/v1/goals/clarify", exchange -> {
       upgrade.set(exchange.getRequestHeaders().getFirst("Upgrade"));
+      authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
       body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
       byte[] response = "{\"data\":{\"clarityStatus\":\"CLEAR\"}}"
           .getBytes(StandardCharsets.UTF_8);
@@ -36,25 +38,36 @@ class GoalAiClientTests {
     server.start();
     try {
       var client = new GoalAiClient(new ObjectMapper(),
-          "http://127.0.0.1:" + server.getAddress().getPort());
+          "http://127.0.0.1:" + server.getAddress().getPort(), "server-only-key");
       var result = client.clarify(Map.of("requestId", "r1", "goalText", "토익 점수 올리기"));
       assertEquals("CLEAR", result.path("data").path("clarityStatus").asText());
       assertNull(upgrade.get());
+      assertEquals("Bearer server-only-key", authorization.get());
       assertTrue(body.get().contains("토익 점수 올리기"));
     } finally {
       server.stop(0);
     }
   }
 
+  /** 분석 AI와 공유하는 서버 전용 키가 없으면 요청을 보내지 않고 안전하게 실패한다. */
+  @Test
+  void rejectsBeforeSendingWhenApiKeyIsBlank() {
+    var client = new GoalAiClient(new ObjectMapper(), "http://127.0.0.1:8000", "");
+    var exception = assertThrows(GoalAiClient.GoalAiException.class,
+        () -> client.clarify(Map.of("requestId", "r1", "goalText", "토익 점수 올리기")));
+    assertEquals(GoalAiClient.Failure.UNAVAILABLE, exception.failure());
+    assertTrue(!exception.retryable());
+  }
+
   /** Docker 실행용 호스트 게이트웨이 이름은 허용하고 그 밖의 호스트는 요청 전에 거절한다. */
   @Test
   void allowsOnlyLoopbackAndDockerHostGatewayNames() {
-    var docker = new GoalAiClient(new ObjectMapper(), "http://host.docker.internal:8000");
+    var docker = new GoalAiClient(new ObjectMapper(), "http://host.docker.internal:8000", "key");
     assertEquals("http://host.docker.internal:8000/internal/v1/goals/clarify",
         docker.endpoint().toString());
     for (String blocked : new String[] {"http://example.com:8000", "http://10.0.0.5:8000",
         "http://host.docker.internal.evil.com:8000", ""}) {
-      var client = new GoalAiClient(new ObjectMapper(), blocked);
+      var client = new GoalAiClient(new ObjectMapper(), blocked, "key");
       assertThrows(GoalAiClient.GoalAiException.class, client::endpoint, blocked);
     }
   }
