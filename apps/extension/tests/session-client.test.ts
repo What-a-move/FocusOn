@@ -79,6 +79,30 @@ test('동시에 갱신이 필요해도 refresh는 한 번만 보낸다', async (
   assert.equal(calls.filter((call) => call.url.endsWith('/auth/refresh')).length, 1)
 })
 
+test('팝업과 service worker가 동시에 갱신해도 refresh는 한 번만 보내고 새 토큰을 같이 쓴다', async () => {
+  // client가 화면마다 따로라 single-flight로는 안 묶인다. 공용 잠금 + 저장된 새 토큰 재사용으로 쓴 Refresh Token 재전송(재사용 감지)을 막는다.
+  const { calls, store } = setup([], null)
+  const rotated = { accessToken: 'a-2', refreshToken: 'r-2', accessTokenExpiresAt: new Date(NOW + 900_000).toISOString() }
+  const request = (async (url: string, init: RequestInit) => { calls.push({ url, init }); return json(200, { data: url.endsWith('/auth/refresh') ? rotated : session }) }) as typeof fetch
+  let chain: Promise<unknown> = Promise.resolve()
+  const lock = <T>(run: () => Promise<T>) => { const next = chain.then(run); chain = next.catch(() => {}); return next }
+  const [popup, worker] = [0, 1].map(() => createApiClient({ baseUrl: 'https://api.test', store, request, now: () => NOW, lock }))
+  await Promise.all([popup.authorized('/a', 'GET', 200, parseActiveSession), worker.authorized('/b', 'GET', 200, parseActiveSession)])
+  assert.equal(calls.filter((call) => call.url.endsWith('/auth/refresh')).length, 1)
+  assert.equal((calls.find((call) => call.url.endsWith('/b'))!.init.headers as Record<string, string>).Authorization, 'Bearer a-2')
+})
+
+test('서버가 만료라고 했는데 다른 화면이 이미 갱신했으면 다시 갱신하지 않는다', async () => {
+  const { client, calls, store } = setup([
+    () => { store.access = { accessToken: 'a-2', expiresAt: new Date(NOW + 900_000).toISOString() }; return json(401, { code: 'AUTH_ACCESS_TOKEN_EXPIRED' }) },
+    () => json(200, { data: session }),
+  ])
+  const result = await client.authorized('/a', 'GET', 200, parseActiveSession)
+  assert.equal(result.success, true)
+  assert.equal(calls.some((call) => call.url.endsWith('/auth/refresh')), false)
+  assert.equal((calls[1].init.headers as Record<string, string>).Authorization, 'Bearer a-2')
+})
+
 test('재로그인 필요·연결 해제면 로컬 토큰을 지우고 RELINK_REQUIRED', async () => {
   const revoked = setup([() => json(401, { code: 'LINK_TOKEN_REVOKED' })])
   assert.deepEqual(await revoked.client.authorized('/a', 'GET', 200, parseActiveSession), { success: false, error: { code: 'RELINK_REQUIRED', retryable: false } })
