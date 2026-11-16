@@ -1,6 +1,7 @@
 // Extension 인증 요청 (Desktop AuthService와 같은 규칙, 결정 011).
 // - Access Token이 만료되기 30초 전이면 먼저 갱신한다. 서버가 AUTH_ACCESS_TOKEN_EXPIRED를 주면 한 번만 갱신하고 원 요청을 한 번만 다시 보낸다.
 // - 갱신은 동시에 여러 번 부르지 않는다(single-flight). Refresh Token은 갱신할 때마다 새 값으로 바뀐다(rotation).
+//   팝업과 service worker도 navigator.locks로 한 번에 하나만 갱신한다. 쓴 Refresh Token을 다시 보내면 서버가 재사용으로 보고 연결을 끊는다.
 // - 재로그인이 필요하거나 연결이 해제됐으면 로컬 토큰을 지우고 RELINK_REQUIRED로 알린다(새 연결 코드로만 복구).
 // - GET은 네트워크·503·504에서 1초 → 3초로 두 번까지 다시 보낸다. POST·DELETE 같은 변경 요청은 자동으로 다시 보내지 않는다.
 // [주의] 이 파일은 node --test로 직접 실행하므로 상대 import 없이 필요한 것을 주입받는다.
@@ -23,7 +24,8 @@ type Method = 'GET' | 'POST' | 'DELETE'
  * logFields: 요청 로그에 함께 남길 값. 로거가 허용 필드만 남기고 제목·본문은 글자 수로 바꾼다.
  */
 export type RequestOptions = { body?: object; headers?: Record<string, string>; traceId?: string; logFields?: Record<string, unknown> }
-type Deps = { baseUrl: string | null; store: TokenStore; request?: typeof fetch; sleep?: (ms: number) => Promise<void>; now?: () => number; log?: Logger; uuid?: () => string }
+type Lock = <T>(run: () => Promise<T>) => Promise<T>
+type Deps = { baseUrl: string | null; store: TokenStore; request?: typeof fetch; sleep?: (ms: number) => Promise<void>; now?: () => number; log?: Logger; uuid?: () => string; lock?: Lock }
 type Trace = { traceId: string; fields: Record<string, unknown> }
 
 const EXPIRY_MARGIN_MS = 30_000
@@ -32,8 +34,10 @@ const RELINK_CODES = new Set(['AUTH_RELOGIN_REQUIRED', 'AUTH_TOKEN_REUSE_DETECTE
 const TRANSIENT_CODES = new Set(['LOCAL_NETWORK_UNAVAILABLE', 'SERVICE_UNAVAILABLE', 'REQUEST_TIMEOUT'])
 const fail = (code: string, retryable = false): { success: false; error: ApiError } => ({ success: false, error: { code, retryable } })
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+// 같은 확장 안의 팝업·service worker가 함께 쓰는 잠금. navigator.locks가 없는 곳(node 테스트)에서는 잠금 없이 실행한다.
+const extensionLock: Lock = (run) => globalThis.navigator?.locks ? globalThis.navigator.locks.request('focuson-refresh', run) : run()
 
-export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), now = Date.now, log = () => {}, uuid = () => crypto.randomUUID() }: Deps) {
+export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)), now = Date.now, log = () => {}, uuid = () => crypto.randomUUID(), lock = extensionLock }: Deps) {
   let refreshing: Promise<ApiResult<string>> | null = null
 
   // 요청 한 번의 OUT·IN·fail을 같은 traceId로 남긴다. analysis-runs는 판정 요청이라 decision.*, 나머지는 api.*.
@@ -81,8 +85,13 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
     return fail('RELINK_REQUIRED')
   }
 
-  function refresh(): Promise<ApiResult<string>> {
-    refreshing ??= (async (): Promise<ApiResult<string>> => {
+  const usable = (saved: StoredAccess | null) => saved !== null && Date.parse(saved.expiresAt) - EXPIRY_MARGIN_MS > now()
+
+  /** stale: 만료됐다고 판단한 Access Token. 잠금을 기다리는 동안 다른 화면이 이미 갱신했으면 그 토큰을 쓴다. */
+  function refresh(stale?: string): Promise<ApiResult<string>> {
+    refreshing ??= lock(async (): Promise<ApiResult<string>> => {
+      const saved = await store.getAccess()
+      if (saved && usable(saved) && saved.accessToken !== stale) return { success: true, data: saved.accessToken }
       const refreshToken = await store.getRefreshToken()
       if (!refreshToken) return relink()
       const result = await send('/api/v1/auth/refresh', 'POST', undefined, { refreshToken })
@@ -96,14 +105,13 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
         || !Number.isFinite(Date.parse(data.accessTokenExpiresAt))) return fail('INVALID_RESPONSE')
       await store.saveRotation({ accessToken: data.accessToken, refreshToken: data.refreshToken, accessTokenExpiresAt: data.accessTokenExpiresAt })
       return { success: true, data: data.accessToken }
-    })().finally(() => { refreshing = null })
+    }).finally(() => { refreshing = null })
     return refreshing
   }
 
   async function accessToken(): Promise<ApiResult<string>> {
     const saved = await store.getAccess()
-    if (saved && Date.parse(saved.expiresAt) - EXPIRY_MARGIN_MS > now()) return { success: true, data: saved.accessToken }
-    return refresh()
+    return saved && usable(saved) ? { success: true, data: saved.accessToken } : refresh(saved?.accessToken)
   }
 
   /** 인증이 필요한 요청. parse가 null을 돌려주면 계약 위반(INVALID_RESPONSE)이다. 204면 parse(null)로 '없음'을 판단한다. */
@@ -143,7 +151,7 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
     if (!token.success) return token
     const first = await once(token.data)
     if (!('expired' in first)) return first
-    const renewed = await refresh()
+    const renewed = await refresh(token.data)
     if (!renewed.success) return renewed
     const second = await once(renewed.data)
     return 'expired' in second ? fail('AUTH_ACCESS_TOKEN_EXPIRED', true) : second

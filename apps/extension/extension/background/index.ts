@@ -1,10 +1,8 @@
 // Service Worker 진입점: Chrome 이벤트를 TabAnalyzer에 잇는다 (화면 분석 3단계, 결정 014).
 // [주의] Listener는 최상위에서 바로 등록한다. Worker는 언제든 꺼졌다 다시 켜질 수 있다.
-import { resolveApiBase } from '../../shared/api/pairing-api'
-import { chromeTokenStore, getDeviceId } from '../../shared/api/extension-auth'
-import { createApiClient } from '../../shared/api/api-client'
+import { getDeviceId } from '../../shared/api/extension-auth'
 import { chromeLogStore, createLogger } from '../../shared/lib/logger'
-import { getActiveSession } from '../../shared/api/session-api'
+import { client, getActiveSession } from '../../shared/api/session-api'
 import { inspectPage } from '../content/inspect-page'
 import { SITE_ORIGINS } from '../shared/site-access'
 import { pickContextId } from '../shared/observation-context'
@@ -16,7 +14,6 @@ const DWELL_ALARM = 'focuson-dwell'
 const log = createLogger('service-worker', chromeLogStore, { echo: process.env.NODE_ENV !== 'production' })
 // 이 줄은 Worker가 새로 켜질 때마다 한 번 실행된다. 쉬다가 꺼진 뒤 다시 깨어난 시점을 남긴다.
 log('INFO', 'sw.restart')
-const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore, log })
 
 async function deviceHeaders(): Promise<Record<string, string>> {
   const deviceId = await getDeviceId()

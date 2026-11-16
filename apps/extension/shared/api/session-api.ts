@@ -6,7 +6,8 @@ import { parseActiveSession, type ActiveSession } from '../lib/session-model'
 
 // 팝업과 service worker 둘 다 이 모듈을 쓴다. window가 없으면 service worker다.
 const component = typeof window === 'undefined' ? 'service-worker' : 'popup'
-const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore, log: createLogger(component, chromeLogStore, { echo: process.env.NODE_ENV !== 'production' }) })
+// background도 이 client를 같이 써서 한 화면 안의 갱신이 한 번으로 묶인다.
+export const client = createApiClient({ baseUrl: resolveApiBase(process.env.NEXT_PUBLIC_FOCUSON_API_BASE_URL), store: chromeTokenStore, log: createLogger(component, chromeLogStore, { echo: process.env.NODE_ENV !== 'production' }) })
 
 /** 활성 세션. 없으면 null. */
 export async function getActiveSession(): Promise<ApiResult<ActiveSession | null>> {
