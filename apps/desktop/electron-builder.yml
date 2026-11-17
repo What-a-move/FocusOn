@@ -17,6 +17,8 @@ mac:
     - target: dmg
       arch: arm64
   category: public.app-category.productivity
+  # macOS 26 아이콘 형식(Icon Composer). 옛 .icns만 있으면 Tahoe가 회색 상자에 넣는다. 컴파일에 Xcode 26 actool이 필요하다.
+  icon: resources/icon.icon
   # ponytail: Apple 개발자 인증서 없이 임시 서명(ad-hoc)만 한다. 공증(notarize)은 개발자 계정이 생기면 붙인다.
   identity: "-"
   hardenedRuntime: false

@@ -797,3 +797,12 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 안내·`잠시 쉬기`는 팻말과 같은 나무색, 단색 + 아래 두께 눌림 버튼으로 맞춘다. 처음 한 번과 마우스를 올렸을 때만 보인다.
 - 포키 창은 포커스를 뺏지 않는 패널이라 macOS가 CSS 커서를 무시한다. Swift 도우미가 `SetsCursorInBackground`(비공개 CoreGraphics 연결 속성)를 켜고 포키·버튼 위에서 손가락 커서를 지정한다. 심볼이 없으면 아무것도 하지 않는다. 포키 창에 포커스를 주는 방법은 사용자가 쓰던 앱의 키보드 입력을 빼앗아 쓰지 않는다.
 - 영향받는 파일: `features/floating/FloatingPoki.tsx`, `features/floating/floating.css`, `public/design/poki-sign-*.webp`, `native/observer/main.swift`, `electron/main/observer-helper.cts`, `electron/main/index.cts`
+
+## 결정 043 - 앱 아이콘은 macOS 26 형식(Icon Composer `.icon`)으로 넣는다
+
+- 결정일: 2026-11-17 / 상태: 확정(사용자가 빌드 앱 Dock에서 확인) / Issue #269.
+- macOS 26(Tahoe)은 옛 `.icns`만 가진 앱 아이콘을 회색 상자 안에 작게 넣는다. 그림 여백을 Apple 격자(1024/824)에 맞춰도 빠지지 않았다.
+- `resources/icon.icon`(꽉 찬 정사각형 그림 1장, 유리·그림자·반사 효과 끔)을 만들고 `electron-builder.yml`의 `mac.icon`으로 지정한다. electron-builder가 Xcode `actool`로 `Assets.car`와 `CFBundleIconName`을 만들고, 옛 macOS용 `icon.icns`도 함께 넣는다.
+- 모서리는 macOS가 자르므로 그림 바깥 모서리는 가장자리 색으로 채운다. `resources/icon.png`도 같은 그림(1024 캔버스, 824 몸통)으로 바꿔 둔다.
+- 설치 파일 빌드에는 Xcode 26 이상(`actool` 26)이 필요하다. 개발 실행(`pnpm preview:electron`)은 Electron 기본 아이콘이 보인다.
+- 영향받는 파일: `resources/icon.icon/`, `resources/icon.png`, `electron-builder.yml`
