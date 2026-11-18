@@ -169,6 +169,41 @@ class RecordingClient:
             self.vectors.put(hashlib.sha256(text.encode()).hexdigest(), tuple(vector))
         return vectors
 
+    def comparison_vectors(self, goal_text, passages):
+        query_encoder = getattr(self.client, "embed_query", None)
+        if callable(query_encoder):
+            # A dual encoder may produce different vectors for identical text in each role.
+            query_key = hashlib.sha256(goal_text.encode()).hexdigest()
+            query_key = f"query:{query_key}"
+            query_vector = self.vectors.get(query_key)
+            if query_vector is None:
+                started = perf_counter()
+                try:
+                    vectors = query_encoder((goal_text,))
+                finally:
+                    self.embedding_ms += (perf_counter() - started) * 1000
+                if len(vectors) != 1:
+                    raise ValueError("VECTOR_COUNT_INVALID")
+                query_vector = tuple(vectors[0])
+                self.vectors.put(query_key, query_vector)
+            return query_vector, self._passage_vectors(passages)
+
+        # Existing Ollama clients send the retrieval instruction and passages in one batch.
+        query = f"Instruct: {DEFAULT_INSTRUCTION}\nQuery: {goal_text}"
+        vectors = self._passage_vectors((query, *passages))
+        return vectors[query], vectors
+
+    def _passage_vectors(self, texts):
+        vectors = {text: self.vectors.get(hashlib.sha256(text.encode()).hexdigest())
+                   for text in dict.fromkeys(texts)}
+        missing = tuple(text for text, vector in vectors.items() if vector is None)
+        if missing:
+            embedded = self.embed(missing)
+            if len(embedded) != len(missing):
+                raise ValueError("VECTOR_COUNT_INVALID")
+            vectors.update(zip(missing, embedded))
+        return vectors
+
     def lookup(self, texts):
         vectors = tuple(self.vectors.get(hashlib.sha256(text.encode()).hexdigest()) for text in texts)
         if any(vector is None for vector in vectors):
@@ -194,7 +229,6 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
     calls_start = getattr(client, "calls", 0)
     recorded = session.recorded if session else RecordingClient(client)
     embedding_start = recorded.embedding_ms
-    query_text = f"Instruct: {DEFAULT_INSTRUCTION}\nQuery: {goal.text}"
     # This experiment judges short text by evidence, not a character minimum.
     preprocessing = PreprocessingConfig(min_text_chars=0, penalize_removed_fragments=False,
                                         preserve_extracted_markup=True,
@@ -251,20 +285,8 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                     score_result = score_metadata(goal.text, (), (), ())
                     status = "COMPLETED"
                 else:
-                    inputs = tuple(dict.fromkeys((query_text, *titles)))
-                    vector_by_text, missing = {}, []
-                    for text in inputs:
-                        cached = recorded.vectors.get(hashlib.sha256(text.encode()).hexdigest())
-                        if cached is None:
-                            missing.append(text)
-                        else:
-                            vector_by_text[text] = cached
-                    if missing:
-                        vectors = recorded.embed(tuple(missing))
-                        if len(vectors) != len(missing):
-                            raise ValueError("VECTOR_COUNT_INVALID")
-                        vector_by_text.update(zip(missing, vectors))
-                    score_result = score_metadata(goal.text, titles, vector_by_text[query_text],
+                    query_vector, vector_by_text = recorded.comparison_vectors(goal.text, titles)
+                    score_result = score_metadata(goal.text, titles, query_vector,
                                                   tuple(vector_by_text[text] for text in titles),
                                                   allow_unrelated=content.extraction_status.value == "SUCCESS",
                                                   app_name=content.app_name)
@@ -299,21 +321,9 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                     texts = (tuple(p.text for p in prepared.passages) + tuple(g.passage.text for g in groups)
                              + tuple(g.passage.text for g in screen_contexts)
                              + tuple(g.passage.text for g in followups))
-                    inputs = tuple(dict.fromkeys((query_text, *texts)))
-                    vector_by_text, missing = {}, []
-                    for text in inputs:
-                        cached = recorded.vectors.get(hashlib.sha256(text.encode()).hexdigest())
-                        if cached is None:
-                            missing.append(text)
-                        else:
-                            vector_by_text[text] = cached
-                    if missing:
-                        vectors = recorded.embed(tuple(missing))
-                        if len(vectors) != len(missing):
-                            raise ValueError("VECTOR_COUNT_INVALID")
-                        vector_by_text.update(zip(missing, vectors))
+                    query_vector, vector_by_text = recorded.comparison_vectors(goal.text, texts)
                     score_result = score_passages(
-                        goal.text, prepared.passages, vector_by_text[query_text],
+                        goal.text, prepared.passages, query_vector,
                         tuple(vector_by_text[p.text] for p in prepared.passages), config,
                         context_groups=groups,
                         context_vectors=tuple(vector_by_text[g.passage.text] for g in groups),

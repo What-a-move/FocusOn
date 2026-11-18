@@ -60,3 +60,19 @@ def test_expired_diagnostic_vectors_do_not_trigger_another_model_call():
     with pytest.raises(LookupError, match="DIAGNOSTIC_VECTORS_EXPIRED"):
         recorded.lookup(("synthetic text",))
     assert client.calls == 1
+
+
+def test_dual_encoder_keeps_query_and_passage_vectors_separate_for_identical_text():
+    class DualEncoder(Client):
+        def embed_query(self, texts):
+            self.calls += 1
+            return tuple((0., 1.) for _ in texts)
+
+    client = DualEncoder()
+    recorded = RecordingClient(client)
+    text = "파이썬 반복문"
+    for _ in range(2):
+        query, passages = recorded.comparison_vectors(text, (text, text))
+        assert query == (0., 1.)
+        assert passages[text] == (1., 0.)
+    assert client.calls == 2
