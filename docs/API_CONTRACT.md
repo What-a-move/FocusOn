@@ -91,6 +91,12 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 
 `POST /api/v1/auth/google/exchange` 요청에는 `authorizationCode`, `codeVerifier`, `state`, `redirectUri`, `device`를 포함한다. `redirectUri`는 Desktop Main이 Google 인증 요청에 사용한 `http://127.0.0.1:<임시 포트>` 주소 그대로다. Main이 callback의 `state` 일치를 먼저 확인한다. Backend는 `redirectUri`의 scheme·host·port·경로를 엄격히 검증한 뒤 서버 설정의 Desktop Google Client ID, code, verifier, 동일한 `redirectUri`로 Google token endpoint에 요청하고 Google ID token을 검증한다. Backend가 사전에 `state`를 저장하지 않았다면 요청에 포함된 값만으로 일치 여부를 검증했다고 간주하지 않는다. [Notion API 정본](https://app.notion.com/p/00f3391cae454614bf51bffbe995f0dc)
 
+### 기기 해제 (2026-11-18, #274)
+
+- `DELETE /devices/{deviceId}`는 활성 Desktop Bearer로 호출하고 204 빈 본문이다. 본인 소유 ACTIVE 기기만 폐기한다(기기 `REVOKED`, family 사유 `DEVICE_REVOKED`, 활성 Refresh Token 폐기).
+- Desktop을 해제하면 발급 중인 연결 코드를 취소하고 연결된 Extension도 같은 transaction에서 폐기한다. 자기 자신을 해제할 수도 있으며 결과는 로그아웃과 같다.
+- 없는 기기·남의 기기·이미 해제된 기기·잘못된 ID는 404 `DEVICE_NOT_FOUND`, Extension·무인증 호출은 401 `AUTH_RELOGIN_REQUIRED`다. 클라이언트는 404면 `GET /devices`를 다시 부른다.
+
 ### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
 
 - `POST /auth/refresh`는 Bearer 없이 `{refreshToken}`으로 인증하고 `200 data.{accessToken,refreshToken,accessTokenExpiresAt}`을 반환한다.

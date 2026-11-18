@@ -1,5 +1,12 @@
 # Backend 결정 기록
 
+## 2026-11-18 #274 기기 해제의 대상·응답 기준
+
+- 결정: 이미 `REVOKED`·`LOGGED_OUT`인 기기와 숫자가 아닌 ID는 404 `DEVICE_NOT_FOUND`로 응답한다. 호출한 Desktop 자기 자신도 해제할 수 있다. Extension 호출은 `GET /devices`와 같이 401 `AUTH_RELOGIN_REQUIRED`다.
+- 이유: `GET /devices`가 ACTIVE만 보여 주므로 목록에 없는 기기는 없는 기기와 같게 취급하고, Notion 명세의 "최신 기기 목록을 다시 조회한다" 처리와 맞춘다. 자기 해제를 막을 근거가 명세에 없고 결과가 로그아웃과 같아 위험이 없다.
+- 폐기는 로그아웃·연결 해제와 같은 사용자 → family 잠금 순서로 직렬화해 refresh·재로그인 경쟁에서 살아 있는 token이 남지 않게 한다.
+- 해제된 Desktop의 진행 중 세션은 이 API에서 끝내지 않는다. 세션 종료 계약(버전·멱등 키)을 이 API에 섞지 않기 위해서이며, heartbeat 정리(180초)에 맡긴다.
+
 ## 2026-11-16 #265 목표 다듬기 AI 호출의 인증 키
 
 - 결정: `GoalAiClient`는 분석 AI(`AnalysisAiClient`)와 같은 `FOCUSON_AI_API_KEY`를 재사용해 `Authorization: Bearer`로 보낸다. 별도 키를 새로 만들지 않았다.

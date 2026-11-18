@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #274 기기 해제 API (2026-11-18)
+
+- Desktop: 기기 관리 화면과 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`) 안내에서 호출한다. 성공 뒤 `GET /devices`를 다시 부르고, 자기 자신을 해제했으면 로그인 화면으로 보낸다. 404면 목록을 다시 조회한다.
+- 해제된 Desktop에서 진행 중이던 세션은 바로 끝나지 않고 heartbeat 중단 180초 뒤 `ABANDONED`가 된다. 즉시 종료가 필요하면 별도 Issue로 다룬다.
+- 실제 Desktop 화면 연동 QA는 아직이다.
+
 ## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
 
 - AI팀: 목표 다듬기 AI(`/internal/v1/goals/clarify`)에 같은 `FOCUSON_AI_API_KEY` 키 검사를 켜야 한다. 서버 배포와 같은 시점에 맞춘다.

@@ -144,6 +144,54 @@ public class TokenLifecycleService {
     });
   }
 
+  /**
+   * 활성 Desktop이 본인 소유 기기를 폐기한다. 로그아웃과 같은 사용자 → family 잠금 순서를 따르고,
+   * 대상이 Desktop이면 발급 중인 연결 코드와 연결된 Extension도 같은 transaction에서 폐기한다.
+   */
+  public void revokeDevice(FocusOnPrincipal principal, long deviceId) {
+    if (principal.deviceType() != UserDeviceEntity.DeviceType.DESKTOP) {
+      throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+    }
+    transaction.executeWithoutResult(status -> {
+      var user = users.findByIdForUpdate(principal.userId())
+          .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+      var caller = families.findByIdForUpdate(principal.tokenFamilyId())
+          .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+      Instant now = Instant.now();
+      if (!caller.getUser().getId().equals(user.getId())
+          || !caller.getDevice().getId().equals(principal.deviceId())
+          || caller.getDevice().getDeviceType() != UserDeviceEntity.DeviceType.DESKTOP
+          || !guard.isActive(caller, now)) {
+        throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+      }
+      // 목록(GET /devices)에 보이지 않는 기기는 없는 기기와 같게 404로 응답한다.
+      var target = devices.findById(deviceId)
+          .filter(device -> device.getUser().getId().equals(user.getId()))
+          .filter(device -> device.getStatus() == UserDeviceEntity.Status.ACTIVE)
+          .orElseThrow(() -> new ApiException(ApiErrorCode.DEVICE_NOT_FOUND));
+      revokeDeviceLogin(target, now);
+      if (target.getDeviceType() == UserDeviceEntity.DeviceType.DESKTOP) {
+        pairingCodes.cancelActive(target.getId(), now);
+        for (var extension : devices.findByUserIdAndLinkedDesktopDeviceIdAndDeviceType(
+            user.getId(), target.getId(), UserDeviceEntity.DeviceType.CHROME_EXTENSION)) {
+          if (extension.getStatus() == UserDeviceEntity.Status.ACTIVE) {
+            revokeDeviceLogin(extension, now);
+          }
+        }
+      }
+    });
+  }
+
+  /** 기기의 활성 family와 Refresh Token을 폐기 사유 DEVICE_REVOKED로 끝내고 기기를 폐기한다. */
+  private void revokeDeviceLogin(UserDeviceEntity device, Instant now) {
+    families.findByDeviceAndStatus(device.getId(), TokenFamilyEntity.Status.ACTIVE)
+        .flatMap(family -> families.findByIdForUpdate(family.getId()))
+        .ifPresent(family -> revokeFamily(family, TokenFamilyEntity.RevokedReason.DEVICE_REVOKED,
+            now));
+    device.setStatus(UserDeviceEntity.Status.REVOKED);
+    device.setRevokedAt(now);
+  }
+
   /** 기존 폐기 사유는 보존하고 아직 사용 가능한 Refresh Token만 무효화한다. */
   private void revokeFamily(TokenFamilyEntity family, TokenFamilyEntity.RevokedReason reason,
       Instant now) {
