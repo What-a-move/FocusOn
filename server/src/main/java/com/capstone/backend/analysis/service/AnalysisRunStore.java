@@ -24,6 +24,7 @@ import com.capstone.backend.user.persistence.UserConsentRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -44,6 +45,16 @@ public class AnalysisRunStore {
   private final AuthRateLimiter limits;
   private final InterventionPolicyService interventionPolicy;
   private final com.capstone.backend.intervention.service.ForegroundPolicyContext foreground;
+
+  /** 사용자가 소유한 세션의 모든 관측 결과를 시각순으로 반환한다. */
+  @Transactional(readOnly = true)
+  public List<Response> history(long userId, long sessionId) {
+    sessions.findByIdAndUserId(sessionId, userId)
+        .orElseThrow(() -> new ApiException(ApiErrorCode.SESSION_NOT_FOUND));
+    return runs.findAllBySessionIdOrderByObservedAtAscIdAsc(sessionId).stream()
+        .map(AnalysisRunEntity::response)
+        .toList();
+  }
 
   /** 권한과 상태를 확인한 후 원문 없는 예약 행만 commit한다. */
   @Transactional(propagation = Propagation.REQUIRES_NEW)

@@ -9,6 +9,11 @@
 - 해제된 Desktop에서 진행 중이던 세션은 바로 끝나지 않고 heartbeat 중단 180초 뒤 `ABANDONED`가 된다. 즉시 종료가 필요하면 별도 Issue로 다룬다.
 - 실제 Desktop 화면 연동 QA는 아직이다.
 
+## Issue #272 세션 분석 이력 조회
+
+- `feat/272-server-analysis-history`에서 백엔드 조회를 구현했다. Notion 정본과 예외 처리는 [기획서](features/analysis-history-PLAN.md)를 참고한다.
+- Desktop 사용 시 호출과 표시를 검증한다. 원격 검사와 병합 상태는 연결된 [Issue #272](https://github.com/What-a-move/FocusOn/issues/272)에서 확인한다.
+
 ## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
 
 - AI팀: 목표 다듬기 AI(`/internal/v1/goals/clarify`)에 같은 `FOCUSON_AI_API_KEY` 키 검사를 켜야 한다. 서버 배포와 같은 시점에 맞춘다.
