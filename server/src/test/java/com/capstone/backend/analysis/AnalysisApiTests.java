@@ -164,6 +164,10 @@ class AnalysisApiTests {
             GuardStatus.PRIVACY_BLOCKED))))
         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
     var sameTime = json.readTree(linkedResponse).path("data");
+    // 같은 세션에서도 각 응답이 해당 분석 행에 저장된 정책 버전을 읽는지 검증한다.
+    String storedPolicyVersion = "history-fixture-v2";
+    assertEquals(1, jdbc.update("UPDATE analysis_runs SET policy_version = ? WHERE id = ?",
+        storedPolicyVersion, Long.parseLong(earlier.analysisRunId())));
     tx.executeWithoutResult(ignored -> sessions.findById(f.sessionId()).orElseThrow()
         .end(Instant.now(), 1000));
 
@@ -174,7 +178,7 @@ class AnalysisApiTests {
         .andExpect(jsonPath("$.data[0].analysisRunId").value(earlier.analysisRunId()))
         .andExpect(jsonPath("$.data[0].observedAt").value(observed.toString()))
         .andExpect(jsonPath("$.data[0].relation").value("EXCLUDED"))
-        .andExpect(jsonPath("$.data[0].policyVersion").value("v1"))
+        .andExpect(jsonPath("$.data[0].policyVersion").value(storedPolicyVersion))
         .andExpect(jsonPath("$.data[1].analysisRunId").value(sameTime.path("analysisRunId")
             .asString()))
         .andExpect(jsonPath("$.data[1].observedAt").value(observed.toString()))
