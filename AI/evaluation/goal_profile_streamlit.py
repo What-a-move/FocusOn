@@ -17,6 +17,7 @@ from AI.evaluation.goal_profile_experiment import (
     effective_label, generate_profile, summarize,
 )
 from AI.evaluation.graphless_hybrid import GraphlessConfig
+from AI.evaluation.goal_profile_jev import DEFAULT_MIN_PROBABILITY, JevPageJudge, open_jev_client
 from src.api.schemas import GoalProfile, SafeInputError
 from src.utils.logger import log_event
 
@@ -45,7 +46,8 @@ def diagnostic_rows(report, method):
             "사례 ID": row["caseId"],
             "기대": row["expectedLabel"] or "—",
             "판정": effective_label(row),
-            "사유": row["publicReasonCode"] or row["reasonCode"],
+            "사유": (row["publicReasonCode"] or row["reasonCode"])
+            if row["method"] == "graphless" else row["reasonCode"],
             "출처 유형": row["analysisPath"],
             "다음 확인 출처": row["nextContentSource"],
             "Hybrid 최고점": row["score"],
@@ -53,35 +55,57 @@ def diagnostic_rows(report, method):
             "무관 본문 비율": row["unrelatedCoverage"] if row["coverageApplicable"] else None,
             "처리 시간(ms)": row["elapsedMs"],
             "임베딩 호출 수": row["embeddingCalls"],
-            "관련 최소 유사도": report["config"]["min_related_cosine"],
-            "관련 최소 결합점수": report["config"]["related_passage_threshold"],
-            "무관 최대 유사도": report["config"]["unrelated_cosine_threshold"],
+            "관련 최소 유사도": report["config"]["min_related_cosine"] if row["method"] == "graphless" else None,
+            "관련 최소 결합점수": report["config"]["related_passage_threshold"] if row["method"] == "graphless" else None,
+            "무관 최대 유사도": report["config"]["unrelated_cosine_threshold"] if row["method"] == "graphless" else None,
+            "Jev 선택지 확률": row.get("jevProbability"),
+            "Jev 최소 확률": report.get("jevMinProbability"),
+            "Jev 호출 수": row.get("jevCalls"),
         }
 
 
-def render_results(baseline, expanded, labels):
+def render_results(comparisons, labels):
     st.subheader("비교 결과")
     st.caption("입력한 화면의 후보 판정입니다. 점수는 보정된 신뢰도가 아니며 실제 포키 알림 전송이나 지연은 측정하지 않습니다.")
-    methods = ("기존 · 목표 한 줄", "A-1 · 확장 목표")
+    reports = {
+        f"{name} · {goal_type}": report
+        for name, pair in comparisons.items()
+        for goal_type, report in zip(("목표 한 줄", "확장 목표"), pair)
+    }
     st.dataframe(
         [{"방식": method, **summarize(report["rows"]), "총 처리 시간(ms)": report["totalMs"]}
-         for method, report in zip(methods, (baseline, expanded))],
+         for method, report in reports.items()],
         hide_index=True,
     )
-    pairs = list(zip(baseline["rows"], expanded["rows"]))
+    results_by_case = {
+        row["caseId"]: {"화면": labels[row["caseId"]], "기대": row["expectedLabel"] or "—"}
+        for row in next(iter(reports.values()))["rows"]
+    }
+    for method, report in reports.items():
+        for row in report["rows"]:
+            results_by_case[row["caseId"]][method] = effective_label(row)
     st.dataframe(
-        [{"화면": labels[before["caseId"]], "기대": before["expectedLabel"] or "—",
-          "기존": effective_label(before), "A-1": effective_label(after)}
-         for before, after in pairs],
+        list(results_by_case.values()),
         hide_index=True,
     )
-    rows = [item for method, report in zip(methods, (baseline, expanded))
+    rows = [item for method, report in reports.items()
             for item in diagnostic_rows(report, method)]
     with st.expander("판정 사유 · 본문 근거 비율 · 처리 시간"):
         st.dataframe(rows, hide_index=True)
-    with st.expander("문단별 판정 근거"):
+    if "Hybrid" in comparisons:
+        render_hybrid_evidence(comparisons["Hybrid"], labels)
+    csv_file = io.StringIO()
+    writer = csv.DictWriter(csv_file, fieldnames=list(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+    st.download_button("결과 CSV 다운로드", csv_file.getvalue().encode("utf-8-sig"),
+                       "focuson-goal-profile-comparison.csv", "text/csv")
+
+
+def render_hybrid_evidence(reports, labels):
+    with st.expander("Hybrid 문단별 판정 근거"):
         case_id = st.selectbox("사례", list(labels), format_func=labels.__getitem__)
-        for method, report in zip(methods, (baseline, expanded)):
+        for method, report in zip(("목표 한 줄", "확장 목표"), reports):
             row = next(item for item in report["rows"] if item["caseId"] == case_id)
             st.markdown(f"**{method}**")
             matches = [
@@ -95,12 +119,6 @@ def render_results(baseline, expanded, labels):
                 st.dataframe(matches, hide_index=True)
             else:
                 st.caption(row["publicReasonCode"] or row["reasonCode"])
-    csv_file = io.StringIO()
-    writer = csv.DictWriter(csv_file, fieldnames=list(rows[0]))
-    writer.writeheader()
-    writer.writerows(rows)
-    st.download_button("결과 CSV 다운로드", csv_file.getvalue().encode("utf-8-sig"),
-                       "focuson-goal-profile-comparison.csv", "text/csv")
 
 
 def manual_case():
@@ -139,14 +157,18 @@ def main(*, provider="OpenAI", key_name="OPENAI_API_KEY", embedding_models=EMBED
     env_path = Path(__file__).resolve().parents[1] / ".env"
     if provider == "OpenAI":
         load_dotenv(env_path, override=False)
-    api_key = (os.environ.get(key_name) or dotenv_values(env_path).get(key_name) or "").strip()
+    env = dotenv_values(env_path)
+    api_key = (os.environ.get(key_name) or env.get(key_name) or "").strip()
+    jev_key = (os.environ.get("TYPESAFE_API_KEY") or env.get("TYPESAFE_API_KEY") or "").strip()
+    jev_model = (os.environ.get("TYPESAFE_MODEL") or os.environ.get("TYPESAFE_DEFAULT_MODEL")
+                 or env.get("TYPESAFE_MODEL") or env.get("TYPESAFE_DEFAULT_MODEL") or "jev-latest")
     profile_generator = profile_generator or generate_profile
 
     st.title(f"화면 관련성 비교 · {provider}")
     st.write("같은 화면을 목표 한 줄과 확장된 목표로 각각 판정해 비교합니다.")
     st.caption(f"임베딩 모델 · {embedding_models}　|　화면마다 같은 Hybrid 기준을 적용합니다.")
     if not api_key:
-        st.info(f"실행하려면 AI/.env에 {key_name}를 설정해 주세요.")
+        st.info(f"Hybrid를 실행하려면 AI/.env에 {key_name}를 설정해 주세요.")
     st.subheader("학습 목표")
     goal = st.text_input("목표 한 줄", max_chars=40)
     if st.button("목표 확장 자동 생성", disabled=not api_key):
@@ -178,6 +200,17 @@ def main(*, provider="OpenAI", key_name="OPENAI_API_KEY", embedding_models=EMBED
     st.caption("개인정보가 없는 합성 또는 공개 테스트 텍스트를 입력해 주세요.")
     cases, labels = manual_case()
 
+    use_jev = st.checkbox("Jev로 평가", disabled=not jev_key)
+    if not jev_key:
+        st.caption("Jev를 사용하려면 AI/.env에 TYPESAFE_API_KEY를 설정해 주세요.")
+    run_hybrid = bool(api_key)
+    jev_min_probability = DEFAULT_MIN_PROBABILITY
+    if use_jev:
+        run_hybrid = st.checkbox("Hybrid도 함께 평가", value=bool(api_key), disabled=not api_key) and bool(api_key)
+        jev_min_probability = st.number_input("Jev 최소 선택지 확률", 0.0, 1.0, DEFAULT_MIN_PROBABILITY, step=0.05,
+                                              help="관련·무관 선택 확률이 이 값 아래이면 판단을 보류합니다.")
+        st.caption("비교 실행 시 검사를 통과한 테스트 텍스트와 목표를 TypeSafe로 전송합니다.")
+
     with st.expander("본문 판정 기준 실험"):
         st.caption("기본값으로 먼저 기록해 보세요. 변경한 기준은 두 방식의 본문 분석에 똑같이 적용됩니다.")
         columns = st.columns(3)
@@ -185,23 +218,31 @@ def main(*, provider="OpenAI", key_name="OPENAI_API_KEY", embedding_models=EMBED
         related_hybrid = columns[1].number_input("관련 최소 결합점수", 0.0, 1.0, DEFAULTS.related_passage_threshold, step=0.01)
         unrelated_cosine = columns[2].number_input("무관 최대 유사도", 0.0, 1.0, DEFAULTS.unrelated_cosine_threshold, step=0.01)
 
-    if st.button("기존과 비교 실행", type="primary", disabled=not api_key):
+    if st.button("기존과 비교 실행", type="primary", disabled=not (run_hybrid or use_jev)):
         st.session_state.pop("comparison", None)
         try:
-            if unrelated_cosine >= related_cosine:
+            if run_hybrid and unrelated_cosine >= related_cosine:
                 raise ValueError("무관 최대 유사도는 관련 최소 유사도보다 낮게 설정해 주세요.")
             config = GraphlessConfig(min_related_cosine=related_cosine, related_passage_threshold=related_hybrid,
-                                     unrelated_cosine_threshold=unrelated_cosine)
+                                     unrelated_cosine_threshold=unrelated_cosine) if run_hybrid else DEFAULTS
             profile = GoalProfile.parse_safe({
                 "mainTopic": st.session_state["mainTopic"].strip(),
                 "purpose": st.session_state.get("profile_purpose", "OTHER"),
                 **{field: split_items(st.session_state[field])
                    for field in ("coreTopics", "supportingTopics", "expectedActivities")},
             })
+            comparisons = {}
             with st.spinner("기존과 확장 목표의 화면 판정을 비교하고 있습니다."):
-                with embedding_client(api_key) as client:
-                    baseline, expanded = compare_profile(goal, profile, cases, client, config=config)
-            st.session_state["comparison"] = baseline, expanded, labels
+                if run_hybrid:
+                    with embedding_client(api_key) as client:
+                        comparisons["Hybrid"] = compare_profile(goal, profile, cases, client, config=config)
+                if use_jev:
+                    with open_jev_client(jev_key) as client:
+                        judge = JevPageJudge(client, jev_model, jev_min_probability)
+                        comparisons["Jev"] = compare_profile(goal, profile, cases, None, jev_judge=judge)
+                    for report in comparisons["Jev"]:
+                        report["jevMinProbability"] = jev_min_probability
+            st.session_state["comparison"] = comparisons, labels
         except SafeInputError:
             st.error("핵심 주제를 한 가지 이상 입력하고 중복 항목이나 테스트 화면 입력을 확인해 주세요.")
         except ValueError as exc:
