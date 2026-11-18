@@ -1,5 +1,11 @@
 # Backend 작업 컨텍스트
 
+## Issue #274 기기 해제 API (2026-11-18)
+
+- `DELETE /api/v1/devices/{deviceId}`를 구현했다. 폐기 로직은 `TokenLifecycleService.revokeDevice`에 두고 로그아웃과 같은 사용자 → family 잠금 순서를 따른다.
+- Desktop 해제 시 연결 코드 취소와 연결 Extension 폐기를 같은 transaction에서 한다. 마이그레이션은 없다(`DEVICE_REVOKED`는 기존 CHECK에 포함).
+- 계획: `features/device-revoke-PLAN.md`.
+
 ## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
 
 - `GoalAiClient`가 `AnalysisAiClient`와 같은 서버 전용 키(`FOCUSON_AI_API_KEY`)로 `Authorization: Bearer`를 붙여 호출한다. 키가 비어 있으면 요청을 보내지 않고 `UNAVAILABLE`(재시도 불가)로 안전하게 실패한다.
