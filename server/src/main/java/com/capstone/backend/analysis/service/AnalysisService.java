@@ -25,10 +25,10 @@ public class AnalysisService {
     long start = System.nanoTime();
     try {
       var prepared = store.prepare(principal, parseId(sessionId), request);
-      SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.STORE_OK, start);
       SafeApiLog.analysisEvent(prepared.guard() == null ? SafeApiLog.AnalysisEvent.GATE_PASS
           : SafeApiLog.AnalysisEvent.GATE_BLOCK, start);
       if (prepared.guard() != null) {
+        SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.STORE_OK, start);
         return prepared.initialResponse();
       }
       var decision = prepared.latest() ? ai.analyze(prepared, request, principal.userId())

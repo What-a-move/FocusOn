@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## #182 분석 요청 추적 보완 (2026-11-18)
+
+- 기존 #116의 `requestId`·`traceId` 분리, JSON 로그, 단일 HTTP 필터를 기준으로 서버 로깅을 보완했다. 입력 검증 실패 분류와 전경·전송 경로 마스킹을 보강하고 AI 결과는 정규화된 판정·신뢰도·사유 및 수신 상태코드만 기록한다.
+- 테스트용 루프백 AI가 `RELATED / 0.9`를 반환하는 공개 HTTP 요청으로 같은 traceId의 수신·게이트·AI 호출·저장·응답을 검증했다. 상세는 [QA](features/server-tracing-QA.md)와 [코드 리뷰](features/intervention-policy-code-review.md)에 있다.
+
 ## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
 
 - `GoalAiClient`가 `AnalysisAiClient`와 같은 서버 전용 키(`FOCUSON_AI_API_KEY`)로 `Authorization: Bearer`를 붙여 호출한다. 키가 비어 있으면 요청을 보내지 않고 `UNAVAILABLE`(재시도 불가)로 안전하게 실패한다.

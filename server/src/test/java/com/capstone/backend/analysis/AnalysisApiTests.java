@@ -2,6 +2,7 @@ package com.capstone.backend.analysis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,6 +16,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentPayload;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
@@ -42,6 +46,7 @@ import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.auth.service.PairingService;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.common.api.SafeApiLog;
 import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
@@ -52,22 +57,28 @@ import com.capstone.backend.user.persistence.AnalysisExcludedDomainRepository;
 import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
+import com.sun.net.httpserver.HttpServer;
 import java.math.BigDecimal;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -115,27 +126,95 @@ class AnalysisApiTests {
     when(ai.analyze(any(), any(), anyLong())).thenReturn(related());
   }
 
-  @Test
-  void actualHttpReturnsPublicShapeAndServerPolicy() throws Exception {
+  @ParameterizedTest
+  @ValueSource(ints = {200, 503})
+  void actualHttpTracesAnalysisThroughFakeAi(int aiStatus) throws Exception {
     Fixture f = fixture();
-    String trace = UUID.randomUUID().toString();
-    var response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(
-        "http://127.0.0.1:" + port + path(f.sessionId())))
-        .header("Authorization",
-            "Bearer " + f.login().accessToken())
-        .header("X-Device-Id", f.login().device().deviceId()).header("X-Trace-Id", trace)
-        .header("Content-Type", "application/json")
-        .POST(HttpRequest.BodyPublishers.ofString(
-              json.writeValueAsString(request(null)))).build(),
-        HttpResponse.BodyHandlers.ofString());
-    assertEquals(200, response.statusCode());
-    assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
-    var result = json.readTree(response.body()).path("data");
-    assertEquals("RELATED", result.path("relation").asString());
-    assertEquals("COMPLETED", result.path("analysisStatus").asString());
-    assertEquals("v1", result.path("policyVersion").asString());
-    assertEquals("SEMANTIC_GOAL_MATCH", result.path("reasonCode").asString());
-    assertFalse(response.body().contains("private synthetic body"));
+    var input = request(null);
+    final String trace = input.clientRunId();
+    var aiTrace = new AtomicReference<String>();
+    var fake = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    fake.createContext("/internal/v1/analysis-runs", exchange -> {
+      aiTrace.set(exchange.getRequestHeaders().getFirst("X-Trace-Id"));
+      byte[] body = """
+          {"decision":"RELATED","confidence":0.9,"reasonCode":"SEMANTIC_GOAL_MATCH",
+           "modelVersion":"test-model","promptVersion":"test-prompt",
+           "privateExtra":"private synthetic AI response"}
+          """.getBytes(StandardCharsets.UTF_8);
+      try (exchange) {
+        exchange.sendResponseHeaders(aiStatus, body.length);
+        exchange.getResponseBody().write(body);
+      }
+    });
+    fake.start();
+    var client = new AnalysisAiClient(json, "http://127.0.0.1:" + fake.getAddress().getPort(),
+        "private-test-service-key");
+    when(ai.analyze(any(), any(), anyLong())).thenAnswer(invocation -> client.analyze(
+        invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+    var logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
+    var requestLogged = new CountDownLatch(1);
+    var logs = new ListAppender<ILoggingEvent>() {
+      @Override
+      protected void append(ILoggingEvent event) {
+        event.prepareForDeferredProcessing();
+        if (trace.equals(event.getMDCPropertyMap().get("traceId"))) {
+          super.append(event);
+          if ("http.out".equals(event.getMessage())) {
+            requestLogged.countDown();
+          }
+        }
+      }
+    };
+    logs.start();
+    logger.addAppender(logs);
+    try {
+      var response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(
+          "http://127.0.0.1:" + port + path(f.sessionId()) + "?debug=private-query-value"))
+          .header("Authorization", "Bearer " + f.login().accessToken())
+          .header("X-Device-Id", f.login().device().deviceId()).header("X-Trace-Id", trace)
+          .header("Content-Type", "application/json")
+          .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(input))).build(),
+          HttpResponse.BodyHandlers.ofString());
+      assertEquals(200, response.statusCode());
+      assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
+      assertEquals(trace, aiTrace.get());
+      var result = json.readTree(response.body()).path("data");
+      boolean aiSucceeded = aiStatus == 200;
+      if (aiSucceeded) {
+        assertEquals("RELATED", result.path("relation").asString());
+        assertEquals(0.9, result.path("confidence").asDouble());
+        assertEquals("COMPLETED", result.path("analysisStatus").asString());
+        assertEquals("SEMANTIC_GOAL_MATCH", result.path("reasonCode").asString());
+      } else {
+        assertEquals("UNCERTAIN", result.path("relation").asString());
+        assertEquals("ERROR", result.path("analysisStatus").asString());
+        assertEquals("ANALYSIS_UNAVAILABLE", result.path("reasonCode").asString());
+      }
+      assertEquals("v1", result.path("policyVersion").asString());
+      assertFalse(response.body().contains("private synthetic body"));
+      assertTrue(requestLogged.await(5, TimeUnit.SECONDS));
+      assertEquals(List.of("http.in", "gate.rule.pass", "ai.call.start",
+          aiSucceeded ? "ai.call.ok" : "ai.call.fail",
+          "store.write.ok", "http.out"), logs.list.stream().map(ILoggingEvent::getMessage)
+          .toList());
+      assertTrue(logs.list.get(3).getKeyValuePairs().stream()
+          .anyMatch(field -> field.key.equals("upstreamStatus") && field.value.equals(aiStatus)));
+      for (var event : logs.list) {
+        var logged = event.getFormattedMessage() + event.getKeyValuePairs()
+            + event.getMDCPropertyMap();
+        assertFalse(logged.contains("private synthetic body"));
+        assertFalse(logged.contains("synthetic title"));
+        assertFalse(logged.contains("private synthetic AI response"));
+        assertFalse(logged.contains("private-test-service-key"));
+        assertFalse(logged.contains("private-query-value"));
+        assertFalse(logged.contains(f.login().accessToken()));
+        assertNull(event.getThrowableProxy());
+      }
+    } finally {
+      logger.detachAppender(logs);
+      logs.stop();
+      fake.stop(0);
+    }
   }
 
   @Test

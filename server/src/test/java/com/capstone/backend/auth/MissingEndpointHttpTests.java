@@ -14,6 +14,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -98,6 +100,38 @@ class MissingEndpointHttpTests {
     assertFalse(output.getOut().contains("private-path-secret"));
     assertFalse(output.getOut().contains("private-query-secret"));
     assertFalse(output.getOut().contains("Bearer valid"));
+  }
+
+  @Test
+  void analysisValidationLogsNumericFieldTypeAndTrace(CapturedOutput output) throws Exception {
+    when(authentication.authenticate("valid"))
+        .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
+    var trace = UUID.randomUUID().toString();
+    var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+        + "/api/v1/sessions/3/analysis-runs"))
+        .header("Authorization", "Bearer valid").header("X-Trace-Id", trace)
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString("""
+            {"clientRunId":"%s","contentSource":"APP_META",
+             "observedAt":"2026-11-18T01:00:00Z","sequence":-7654321}
+            """.formatted(trace))).build();
+    var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    assertEquals(400, response.statusCode());
+    assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
+    awaitCompletion(output, trace);
+    assertFalse(output.toString().contains("-7654321"));
+    var json = JsonMapper.builder().build();
+    var lines = output.getOut().lines().filter(line -> line.contains(trace)).toList();
+    var events = lines.stream().map(json::readTree).toList();
+    assertEquals(List.of("http.in", "validate.fail", "http.out"),
+        events.stream().map(event -> event.path("event").asString()).toList());
+    for (var event : events) {
+      assertEquals(trace, event.path("traceId").asString());
+    }
+    assertEquals("sequence", events.get(1).path("field").asString());
+    assertEquals("BigDecimal", events.get(1).path("expectedType").asString());
+    assertEquals("validation", events.getLast().path("stage").asString());
+    assertEquals(400, events.getLast().path("status").asInt());
   }
 
   @Test
