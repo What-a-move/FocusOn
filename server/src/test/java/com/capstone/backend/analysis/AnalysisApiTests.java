@@ -137,7 +137,7 @@ class AnalysisApiTests {
       Relation relation, AnalysisStatus status, ReasonCode reasonCode) throws Exception {
     Fixture f = fixture();
     var input = request(null);
-    final String trace = input.clientRunId();
+    final String trace = UUID.randomUUID().toString();
     var aiTrace = new AtomicReference<String>();
     var fake = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     fake.createContext("/internal/v1/analysis-runs", exchange -> {
@@ -194,10 +194,12 @@ class AnalysisApiTests {
       assertEquals(status.name(), result.path("analysisStatus").asString());
       assertEquals(reasonCode == null ? null : reasonCode.name(),
           result.path("reasonCode").asString(null));
+      var confidence = result.path("confidence");
       if (relation == Relation.RELATED) {
-        assertEquals(0.9, result.path("confidence").asDouble());
+        assertTrue(confidence.isNumber());
+        assertEquals(0.9, confidence.asDouble());
       } else {
-        assertFalse(result.path("confidence").isNumber());
+        assertTrue(confidence.isNull() || confidence.isMissingNode());
       }
       assertEquals("v1", result.path("policyVersion").asString());
       assertFalse(response.body().contains("private synthetic body"));

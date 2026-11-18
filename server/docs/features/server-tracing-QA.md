@@ -6,6 +6,7 @@
 - 격리 PostgreSQL 17에서 Flyway와 스키마 검증을 켜고 분석·개입·기타 Backend CI 회귀 및 실제 경로 검증 217개를 실행했다. 실패·오류·생략 0개.
 - AI 응답 대기 중 화면 분석 동의를 철회했다. 같은 traceId에서 `ai.call.ok`는 `RELATED`, `store.write.ok`는 `PRIVACY_BLOCKED`를 기록했다. 응답과 DB 재조회에서도 최종 판정이 일치했다.
 - 연결 해제 경로에 잘못된 기기 식별자를 전송해 400, `field=extensionDeviceId`, `expectedType=long`을 확인했다. 콘솔에는 제출한 경로 값이 남지 않았다.
+- CodeRabbit 보완 후 전체 빌드·Checkstyle을 다시 실행했다. 결과는 340개 통과, 실패·오류 0개, 17개 생략이다. 본문 관측 ID와 헤더 추적 ID의 구분, 비어 있는 신뢰도, AI 로그의 메시지·필드·MDC·예외 첨부를 검증했다.
 
 ## #182 분석 추적 보완 (2026-11-18)
 

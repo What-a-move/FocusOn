@@ -142,9 +142,7 @@ class AnalysisAiClientTests {
       assertTrue(fields.contains("confidence=\"0.91\""));
       assertTrue(fields.contains("reasonCode=\"SEMANTIC_GOAL_MATCH\""));
       assertTrue(fields.contains("upstreamStatus=\"200\""));
-      assertFalse(fields.contains("synthetic body"));
-      assertFalse(fields.contains("synthetic title"));
-      assertFalse(fields.contains("service-test-only"));
+      assertSafeResultLog(event, "synthetic body", "synthetic title", "service-test-only", "서버 목표");
     } finally {
       logger.detachAppender(logs);
       logs.stop();
@@ -185,12 +183,20 @@ class AnalysisAiClientTests {
       assertTrue(fields.contains("stage=\"ai\""));
       assertTrue(fields.contains("upstreamStatus=\"503\""));
       assertTrue(fields.contains("reasonCode=\"ANALYSIS_UNAVAILABLE\""));
-      assertFalse(fields.contains("private AI error body"));
+      assertSafeResultLog(event, "private AI error body", "service-test-only", "목표");
     } finally {
       logger.detachAppender(logs);
       logs.stop();
       server.stop(0);
     }
+  }
+
+  private static void assertSafeResultLog(ILoggingEvent event, String... privateValues) {
+    var logged = event.getFormattedMessage() + event.getKeyValuePairs() + event.getMDCPropertyMap();
+    for (String value : privateValues) {
+      assertFalse(logged.contains(value));
+    }
+    assertNull(event.getThrowableProxy());
   }
 
   @Test
