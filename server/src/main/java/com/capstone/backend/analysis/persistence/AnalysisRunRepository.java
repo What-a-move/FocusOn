@@ -15,6 +15,9 @@ public interface AnalysisRunRepository extends JpaRepository<AnalysisRunEntity, 
   /** clientRunId는 session 안에서 유일하다. */
   boolean existsBySessionIdAndClientRunId(Long sessionId, UUID clientRunId);
 
+  /** 이력 조회에서 관측 시각이 같으면 저장 ID로 순서를 고정한다. */
+  List<AnalysisRunEntity> findAllBySessionIdOrderByObservedAtAscIdAsc(Long sessionId);
+
   /** 번호 모드가 최우선이며 기존 요청은 번호 모드나 순서 불명 상태를 되돌리지 못한다. */
   default Optional<AnalysisRunEntity> findCurrent(Long sessionId, Long deviceId) {
     var first = PageRequest.of(0, 1);

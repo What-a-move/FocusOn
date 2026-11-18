@@ -277,6 +277,8 @@ POST /api/v1/interventions/{interventionId}/deliveries
 POST /api/v1/sessions/{sessionId}/local-events
 ```
 
+`GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`을 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
+
 `GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
 
 ### 실제 알림 연결 (#182, 2026-11-09 사용자 승인)

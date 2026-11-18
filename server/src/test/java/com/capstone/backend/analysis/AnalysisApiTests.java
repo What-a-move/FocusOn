@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -136,6 +137,86 @@ class AnalysisApiTests {
     assertEquals("v1", result.path("policyVersion").asString());
     assertEquals("SEMANTIC_GOAL_MATCH", result.path("reasonCode").asString());
     assertFalse(response.body().contains("private synthetic body"));
+
+    var history = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(
+        "http://127.0.0.1:" + port + path(f.sessionId())))
+        .header("Authorization", "Bearer " + f.login().accessToken()).GET().build(),
+        HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, history.statusCode());
+    var items = json.readTree(history.body()).path("data");
+    assertEquals(1, items.size());
+    assertEquals(result, items.path(0));
+  }
+
+  @Test
+  void historyOrdersAllSessionDevicesByObservedAtAndIdAfterEnd() throws Exception {
+    Fixture f = fixture();
+    var observed = Instant.parse("2026-10-23T01:00:00Z");
+    var later = analyze(f, ordered(ContentSource.APP_META, 1, 1L, observed.plusSeconds(1), null));
+    var earlier = analyze(f, ordered(ContentSource.APP_META, 2, 2L, observed,
+        GuardStatus.EXCLUDED));
+    var linked = pairing.claim(new ClaimRequest(pairing.issue(f.principal()).codeDisplay(),
+        "history-" + UUID.randomUUID()), "127.0.0.172");
+    var linkedResponse = mvc.perform(post(path(f.sessionId()))
+        .header("Authorization", "Bearer " + linked.accessToken())
+        .header("X-Device-Id", linked.device().deviceId()).contentType(MediaType.APPLICATION_JSON)
+        .content(json.writeValueAsString(ordered(ContentSource.TAB_META, 1, 1L, observed,
+            GuardStatus.PRIVACY_BLOCKED))))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    var sameTime = json.readTree(linkedResponse).path("data");
+    tx.executeWithoutResult(ignored -> sessions.findById(f.sessionId()).orElseThrow()
+        .end(Instant.now(), 1000));
+
+    mvc.perform(get(path(f.sessionId()))
+        .header("Authorization", "Bearer " + f.login().accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(3))
+        .andExpect(jsonPath("$.data[0].analysisRunId").value(earlier.analysisRunId()))
+        .andExpect(jsonPath("$.data[0].observedAt").value(observed.toString()))
+        .andExpect(jsonPath("$.data[0].relation").value("EXCLUDED"))
+        .andExpect(jsonPath("$.data[0].policyVersion").value("v1"))
+        .andExpect(jsonPath("$.data[1].analysisRunId").value(sameTime.path("analysisRunId")
+            .asString()))
+        .andExpect(jsonPath("$.data[1].observedAt").value(observed.toString()))
+        .andExpect(jsonPath("$.data[1].relation").value("PRIVACY_BLOCKED"))
+        .andExpect(jsonPath("$.data[1].policyVersion").value("v1"))
+        .andExpect(jsonPath("$.data[2].analysisRunId").value(later.analysisRunId()))
+        .andExpect(jsonPath("$.data[2].relation").value("RELATED"))
+        .andExpect(jsonPath("$.data[2].policyVersion").value("v1"))
+        .andExpect(jsonPath("$.data[2].metadata").doesNotExist())
+        .andExpect(jsonPath("$.data[2].contentPayload").doesNotExist())
+        .andExpect(jsonPath("$.data[2].modelVersion").doesNotExist());
+    verify(ai, times(1)).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void historyReturnsEmptyListOnlyForAnOwnedSession() throws Exception {
+    Fixture owner = fixture();
+    Fixture other = fixture();
+    String bearer = "Bearer " + owner.login().accessToken();
+    mvc.perform(get(path(owner.sessionId())).header("Authorization", bearer))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data").isArray())
+        .andExpect(jsonPath("$.data.length()").value(0));
+    for (String id : new String[] {Long.toString(other.sessionId()),
+        Long.toString(Long.MAX_VALUE), "invalid"}) {
+      mvc.perform(get("/api/v1/sessions/{sessionId}/analysis-runs", id)
+          .header("Authorization", bearer))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.code").value("SESSION_NOT_FOUND"));
+    }
+    mvc.perform(get(path(owner.sessionId()))).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void historyRejectsLinkedExtension() throws Exception {
+    Fixture f = fixture();
+    var linked = pairing.claim(new ClaimRequest(pairing.issue(f.principal()).codeDisplay(),
+        "history-extension-" + UUID.randomUUID()), "127.0.0.173");
+    mvc.perform(get(path(f.sessionId()))
+        .header("Authorization", "Bearer " + linked.accessToken()))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.code").value("SESSION_QUERY_FORBIDDEN"));
   }
 
   @Test
