@@ -1,5 +1,11 @@
 # Backend 작업 컨텍스트
 
+## Issue #274 기기 해제 API (2026-11-18)
+
+- `DELETE /api/v1/devices/{deviceId}`를 구현했다. 폐기 로직은 `TokenLifecycleService.revokeDevice`에 두고 로그아웃과 같은 사용자 → family 잠금 순서를 따른다.
+- Desktop 해제 시 연결 코드 취소와 연결 Extension 폐기를 같은 transaction에서 한다. 마이그레이션은 없다(`DEVICE_REVOKED`는 기존 CHECK에 포함).
+- 계획: `features/device-revoke-PLAN.md`.
+
 ## Issue #272 세션 분석 이력 조회 (2026-11-18)
 
 - Desktop이 `GET /api/v1/sessions/{sessionId}/analysis-runs`로 본인 세션의 저장된 분석 결과를 조회한다. 관측 시각과 저장 ID 오름차순으로 정렬하고 각 결과의 정책 버전을 반환한다.

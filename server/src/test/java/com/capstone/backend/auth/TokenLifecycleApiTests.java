@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -63,6 +64,7 @@ class TokenLifecycleApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
   @Autowired private TokenLifecycleService lifecycle;
+  @Autowired private com.capstone.backend.auth.service.PairingService pairing;
   @Autowired private AccessJwtService jwt;
   @Autowired private UserRepository users;
   @Autowired private UserDeviceRepository devices;
@@ -331,6 +333,106 @@ class TokenLifecycleApiTests {
     mvc.perform(post("/api/v1/auth/logout")).andExpect(status().isUnauthorized());
   }
 
+  /** 다른 Desktop 해제는 그 기기와 연결 Extension만 폐기하고 호출자·다른 기기는 유지한다. */
+  @Test
+  void revokingAnotherDesktopAlsoRevokesItsExtensionsOnly() throws Exception {
+    final Session caller = desktop();
+    final Session target = desktop();
+    final Session targetChild = extension(target);
+    final Session callerChild = extension(caller);
+    final long targetCode = Long.parseLong(pairing.issue(principal(target)).pairingCodeId());
+    final long callerCode = Long.parseLong(pairing.issue(principal(caller)).pairingCodeId());
+    mvc.perform(delete("/api/v1/devices/" + target.deviceId())
+            .header("Authorization", "Bearer " + caller.access()))
+        .andExpect(status().isNoContent()).andExpect(content().string(""));
+    // 해제한 Desktop이 발급한 연결 코드만 취소되고 호출자의 코드는 유지된다.
+    assertEquals("CANCELLED", codeStatus(targetCode));
+    assertEquals("ACTIVE", codeStatus(callerCode));
+    me(target.access(), 401);
+    me(targetChild.access(), 401);
+    me(caller.access(), 200);
+    me(callerChild.access(), 200);
+    for (Session revoked : List.of(target, targetChild)) {
+      assertEquals(UserDeviceEntity.Status.REVOKED,
+          devices.findById(revoked.deviceId()).orElseThrow().getStatus());
+      var family = families.findById(revoked.familyId()).orElseThrow();
+      assertEquals(TokenFamilyEntity.Status.REVOKED, family.getStatus());
+      assertEquals(TokenFamilyEntity.RevokedReason.DEVICE_REVOKED, family.getRevokedReason());
+      assertEquals(0, activeTokenCount(revoked.familyId()));
+    }
+    refreshError(target.refresh(), "AUTH_TOKEN_REUSE_DETECTED");
+    // 재사용 탐지가 기존 폐기 사유를 덮지 않는다.
+    assertEquals(TokenFamilyEntity.RevokedReason.DEVICE_REVOKED,
+        families.findById(target.familyId()).orElseThrow().getRevokedReason());
+  }
+
+  /** Extension 하나만 해제하면 부모 Desktop은 유지된다. */
+  @Test
+  void revokingExtensionKeepsParentDesktop() throws Exception {
+    final Session caller = desktop();
+    final Session child = extension(caller);
+    mvc.perform(delete("/api/v1/devices/" + child.deviceId())
+            .header("Authorization", "Bearer " + caller.access()))
+        .andExpect(status().isNoContent());
+    me(child.access(), 401);
+    me(caller.access(), 200);
+    assertEquals(TokenFamilyEntity.RevokedReason.DEVICE_REVOKED,
+        families.findById(child.familyId()).orElseThrow().getRevokedReason());
+  }
+
+  /** 자기 자신을 해제하면 로그아웃처럼 인증이 끊기고 Desktop 슬롯이 반환된다. */
+  @Test
+  void revokingSelfEndsLoginAndReleasesDesktopSlot() throws Exception {
+    final Session first = desktop();
+    desktop();
+    desktop();
+    assertEquals("AUTH_DEVICE_LIMIT_EXCEEDED",
+        assertThrows(ApiException.class, this::desktop).code().name());
+    mvc.perform(delete("/api/v1/devices/" + first.deviceId())
+            .header("Authorization", "Bearer " + first.access()))
+        .andExpect(status().isNoContent());
+    me(first.access(), 401);
+    assertEquals(UserDeviceEntity.Status.REVOKED,
+        devices.findById(first.deviceId()).orElseThrow().getStatus());
+    me(desktop().access(), 200);
+  }
+
+  /** 없는 기기·남의 기기·이미 해제된 기기·잘못된 ID는 404, Extension·무인증 호출은 401이다. */
+  @Test
+  void revokeRejectsForeignMissingRevokedAndNonDesktopCallers() throws Exception {
+    final Session caller = desktop();
+    final Session child = extension(caller);
+    final Session target = desktop();
+    String otherSubject = subject;
+    subject = "lifecycle-other-" + UUID.randomUUID();
+    final Session stranger = desktop();
+    subject = otherSubject;
+    for (String id : List.of(String.valueOf(stranger.deviceId()), "999999999", "abc", "0")) {
+      mvc.perform(delete("/api/v1/devices/" + id)
+              .header("Authorization", "Bearer " + caller.access()))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.code").value("DEVICE_NOT_FOUND"));
+    }
+    me(stranger.access(), 200);
+    // Extension은 ID 형식과 관계없이 401이다.
+    for (String id : List.of(String.valueOf(target.deviceId()), "abc")) {
+      mvc.perform(delete("/api/v1/devices/" + id)
+              .header("Authorization", "Bearer " + child.access()))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+    }
+    me(target.access(), 200);
+    mvc.perform(delete("/api/v1/devices/" + target.deviceId()))
+        .andExpect(status().isUnauthorized());
+    mvc.perform(delete("/api/v1/devices/" + target.deviceId())
+            .header("Authorization", "Bearer " + caller.access()))
+        .andExpect(status().isNoContent());
+    mvc.perform(delete("/api/v1/devices/" + target.deviceId())
+            .header("Authorization", "Bearer " + caller.access()))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("DEVICE_NOT_FOUND"));
+  }
+
   /** DTO 문자열 변환에 Access·Refresh Token 원문이 포함되지 않게 한다. */
   @Test
   void tokenDtoStringsNeverExposeSecrets() {
@@ -397,6 +499,11 @@ class TokenLifecycleApiTests {
   private int activeTokenCount(long id) {
     return jdbc.queryForObject("select count(*) from refresh_token_records "
         + "where token_family_id=? and status='ACTIVE'", Integer.class, id);
+  }
+
+  /** commit된 DB 상태에서 연결 코드의 상태를 읽는다. */
+  private String codeStatus(long id) {
+    return jdbc.queryForObject("select status from pairing_codes where id=?", String.class, id);
   }
 
   /** 실패한 갱신이 기록을 추가하지 않았는지 검사할 전체 token 수를 읽는다. */
