@@ -64,6 +64,10 @@ public class DeviceController {
       + "해제합니다.")
   public void revoke(@AuthenticationPrincipal FocusOnPrincipal principal,
       @PathVariable String deviceId) {
+    // ID 형식보다 호출자 종류를 먼저 확인해 Extension에는 항상 401을 준다.
+    if (principal.deviceType() != UserDeviceEntity.DeviceType.DESKTOP) {
+      throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+    }
     lifecycle.revokeDevice(principal, parseDeviceId(deviceId));
   }
 

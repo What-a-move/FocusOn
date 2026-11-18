@@ -2,7 +2,10 @@
 
 ## Issue #274 기기 해제 API (2026-11-18)
 
-- Desktop: 기기 관리 화면과 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`) 안내에서 호출한다. 성공 뒤 `GET /devices`를 다시 부르고, 자기 자신을 해제했으면 로그인 화면으로 보낸다. 404면 목록을 다시 조회한다.
+- Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다. 다른 기기를 해제했으면 `GET /devices`를 다시 부르고, 404면 목록을 다시 조회한다.
+- Desktop: 자기 자신을 해제했으면 `GET /devices`를 부르지 않는다(Bearer가 이미 무효). 저장된 token을 지우고 바로 로그인 화면으로 보낸다.
+- Desktop: 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`)에 걸린 새 설치는 로그인 전이라 이 API를 부를 수 없다. 이미 로그인된 다른 Desktop에서 해제한 뒤 새 설치에서 다시 로그인하도록 안내한다.
+- Desktop: `401 AUTH_ACCESS_TOKEN_EXPIRED`면 `POST /auth/refresh` 뒤 한 번 재시도하고, `AUTH_RELOGIN_REQUIRED`면 재로그인한다.
 - 해제된 Desktop에서 진행 중이던 세션은 바로 끝나지 않고 heartbeat 중단 180초 뒤 `ABANDONED`가 된다. 즉시 종료가 필요하면 별도 Issue로 다룬다.
 - 실제 Desktop 화면 연동 QA는 아직이다.
 

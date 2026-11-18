@@ -95,7 +95,9 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 
 - `DELETE /devices/{deviceId}`는 활성 Desktop Bearer로 호출하고 204 빈 본문이다. 본인 소유 ACTIVE 기기만 폐기한다(기기 `REVOKED`, family 사유 `DEVICE_REVOKED`, 활성 Refresh Token 폐기).
 - Desktop을 해제하면 발급 중인 연결 코드를 취소하고 연결된 Extension도 같은 transaction에서 폐기한다. 자기 자신을 해제할 수도 있으며 결과는 로그아웃과 같다.
-- 없는 기기·남의 기기·이미 해제된 기기·잘못된 ID는 404 `DEVICE_NOT_FOUND`, Extension·무인증 호출은 401 `AUTH_RELOGIN_REQUIRED`다. 클라이언트는 404면 `GET /devices`를 다시 부른다.
+- 없는 기기·남의 기기·이미 해제된 기기·잘못된 ID는 404 `DEVICE_NOT_FOUND`, Extension(ID 형식과 무관)·무인증 호출은 401 `AUTH_RELOGIN_REQUIRED`, 만료된 Access Token은 401 `AUTH_ACCESS_TOKEN_EXPIRED`(refresh 뒤 한 번 재시도)다.
+- 다른 기기를 해제했으면 `GET /devices`를 다시 부르고 404여도 목록을 다시 조회한다. 자기 자신을 해제했으면 목록을 부르지 않고 token을 지운 뒤 로그인 화면으로 간다.
+- 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`)에 걸린 새 설치는 로그인 전이라 이 API를 부를 수 없다. 이미 로그인된 다른 Desktop에서 해제한 뒤 다시 로그인한다.
 
 ### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
 

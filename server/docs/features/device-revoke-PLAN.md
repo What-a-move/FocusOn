@@ -35,7 +35,8 @@
 
 | 상황 | HTTP | code |
 | --- | --- | --- |
-| Bearer 없음·만료·폐기, Extension이 호출 | 401 | `AUTH_RELOGIN_REQUIRED` |
+| Access Token 만료 | 401 | `AUTH_ACCESS_TOKEN_EXPIRED` |
+| Bearer 없음·폐기, Extension이 호출(ID 형식과 무관) | 401 | `AUTH_RELOGIN_REQUIRED` |
 | 없는 기기, 남의 기기, 이미 해제·로그아웃된 기기 | 404 | `DEVICE_NOT_FOUND` |
 
 ## 데이터 설계
@@ -47,7 +48,7 @@
 
 ## 처리 흐름
 
-1. Controller가 Desktop 호출인지 확인한다.
+1. Controller가 ID를 해석하기 전에 Desktop 호출인지 확인한다.
 2. `TokenLifecycleService.revokeDevice`가 사용자 행 → 호출자 family 순서로 잠근다(로그아웃·연결 해제와 같은 순서).
 3. 호출자 family가 활성인지 확인한다.
 4. 대상 기기가 본인 소유이고 ACTIVE인지 확인한다. 아니면 404.
@@ -62,6 +63,7 @@ DeviceController → TokenLifecycleService → UserRepository / TokenFamilyRepos
 
 | 상황 | HTTP 상태 | 오류 코드 | 처리 방법 |
 | --- | --- | --- | --- |
+| Access Token 만료 | 401 | `AUTH_ACCESS_TOKEN_EXPIRED` | `POST /auth/refresh` 뒤 한 번 재시도 |
 | 인증 실패·Extension 호출 | 401 | `AUTH_RELOGIN_REQUIRED` | 재로그인 |
 | 입력값 오류(숫자가 아닌 ID) | 404 | `DEVICE_NOT_FOUND` | 기기 목록 재조회 |
 | 데이터 없음·남의 기기·이미 해제 | 404 | `DEVICE_NOT_FOUND` | 기기 목록 재조회 |
@@ -75,7 +77,10 @@ DeviceController → TokenLifecycleService → UserRepository / TokenFamilyRepos
 
 ## 연동 범위
 
-- Desktop: 기기 관리 화면·3대 한도 안내에서 호출. 성공 후 `GET /devices`를 다시 부른다. 자기 자신을 해제하면 로그인 화면으로 보낸다.
+- Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다.
+  - 다른 기기를 해제했으면 `GET /devices`를 다시 부른다.
+  - 자기 자신을 해제했으면 Bearer가 더 이상 인증되지 않으므로 `GET /devices`를 부르지 않고, 저장된 token을 지운 뒤 바로 로그인 화면으로 보낸다.
+  - 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`)에 걸린 새 설치는 아직 로그인 전이라 이 API를 부를 수 없다. "이미 로그인된 다른 Desktop에서 기기를 해제한 뒤 다시 로그인해 주세요"라고 안내한다.
 - Chrome Extension: 직접 호출하지 않는다. 연결 Desktop이 해제되면 다음 요청부터 401이다.
 - AI: 없음.
 - 영향받는 API·Entity: 해제된 기기의 모든 인증 API(401), `POST /auth/refresh`.

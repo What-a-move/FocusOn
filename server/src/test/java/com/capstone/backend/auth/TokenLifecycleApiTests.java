@@ -64,6 +64,7 @@ class TokenLifecycleApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
   @Autowired private TokenLifecycleService lifecycle;
+  @Autowired private com.capstone.backend.auth.service.PairingService pairing;
   @Autowired private AccessJwtService jwt;
   @Autowired private UserRepository users;
   @Autowired private UserDeviceRepository devices;
@@ -339,9 +340,14 @@ class TokenLifecycleApiTests {
     final Session target = desktop();
     final Session targetChild = extension(target);
     final Session callerChild = extension(caller);
+    final long targetCode = Long.parseLong(pairing.issue(principal(target)).pairingCodeId());
+    final long callerCode = Long.parseLong(pairing.issue(principal(caller)).pairingCodeId());
     mvc.perform(delete("/api/v1/devices/" + target.deviceId())
             .header("Authorization", "Bearer " + caller.access()))
         .andExpect(status().isNoContent()).andExpect(content().string(""));
+    // 해제한 Desktop이 발급한 연결 코드만 취소되고 호출자의 코드는 유지된다.
+    assertEquals("CANCELLED", codeStatus(targetCode));
+    assertEquals("ACTIVE", codeStatus(callerCode));
     me(target.access(), 401);
     me(targetChild.access(), 401);
     me(caller.access(), 200);
@@ -408,10 +414,13 @@ class TokenLifecycleApiTests {
           .andExpect(jsonPath("$.code").value("DEVICE_NOT_FOUND"));
     }
     me(stranger.access(), 200);
-    mvc.perform(delete("/api/v1/devices/" + target.deviceId())
-            .header("Authorization", "Bearer " + child.access()))
-        .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+    // Extension은 ID 형식과 관계없이 401이다.
+    for (String id : List.of(String.valueOf(target.deviceId()), "abc")) {
+      mvc.perform(delete("/api/v1/devices/" + id)
+              .header("Authorization", "Bearer " + child.access()))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+    }
     me(target.access(), 200);
     mvc.perform(delete("/api/v1/devices/" + target.deviceId()))
         .andExpect(status().isUnauthorized());
@@ -490,6 +499,11 @@ class TokenLifecycleApiTests {
   private int activeTokenCount(long id) {
     return jdbc.queryForObject("select count(*) from refresh_token_records "
         + "where token_family_id=? and status='ACTIVE'", Integer.class, id);
+  }
+
+  /** commit된 DB 상태에서 연결 코드의 상태를 읽는다. */
+  private String codeStatus(long id) {
+    return jdbc.queryForObject("select status from pairing_codes where id=?", String.class, id);
   }
 
   /** 실패한 갱신이 기록을 추가하지 않았는지 검사할 전체 token 수를 읽는다. */
