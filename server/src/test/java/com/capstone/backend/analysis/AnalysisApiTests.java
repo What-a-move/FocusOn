@@ -74,9 +74,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
@@ -128,8 +130,11 @@ class AnalysisApiTests {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {200, 503})
-  void actualHttpTracesAnalysisThroughFakeAi(int aiStatus) throws Exception {
+  @CsvSource(value = {"200,false,RELATED,COMPLETED,SEMANTIC_GOAL_MATCH",
+      "503,false,UNCERTAIN,ERROR,ANALYSIS_UNAVAILABLE",
+      "200,true,PRIVACY_BLOCKED,SKIPPED,NONE"}, nullValues = "NONE")
+  void actualHttpTracesAnalysisThroughFakeAi(int aiStatus, boolean withdrawConsent,
+      Relation relation, AnalysisStatus status, ReasonCode reasonCode) throws Exception {
     Fixture f = fixture();
     var input = request(null);
     final String trace = input.clientRunId();
@@ -143,6 +148,11 @@ class AnalysisApiTests {
            "privateExtra":"private synthetic AI response"}
           """.getBytes(StandardCharsets.UTF_8);
       try (exchange) {
+        if (withdrawConsent) {
+          tx.executeWithoutResult(ignored -> consents.findByUserIdAndConsentType(
+                  f.principal().userId(), ConsentType.SCREEN_ANALYSIS).orElseThrow()
+              .apply(false, "2026-09-17", "SETTINGS", Instant.now()));
+        }
         exchange.sendResponseHeaders(aiStatus, body.length);
         exchange.getResponseBody().write(body);
       }
@@ -180,26 +190,37 @@ class AnalysisApiTests {
       assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
       assertEquals(trace, aiTrace.get());
       var result = json.readTree(response.body()).path("data");
-      boolean aiSucceeded = aiStatus == 200;
-      if (aiSucceeded) {
-        assertEquals("RELATED", result.path("relation").asString());
+      assertEquals(relation.name(), result.path("relation").asString());
+      assertEquals(status.name(), result.path("analysisStatus").asString());
+      assertEquals(reasonCode == null ? null : reasonCode.name(),
+          result.path("reasonCode").asString(null));
+      if (relation == Relation.RELATED) {
         assertEquals(0.9, result.path("confidence").asDouble());
-        assertEquals("COMPLETED", result.path("analysisStatus").asString());
-        assertEquals("SEMANTIC_GOAL_MATCH", result.path("reasonCode").asString());
       } else {
-        assertEquals("UNCERTAIN", result.path("relation").asString());
-        assertEquals("ERROR", result.path("analysisStatus").asString());
-        assertEquals("ANALYSIS_UNAVAILABLE", result.path("reasonCode").asString());
+        assertFalse(result.path("confidence").isNumber());
       }
       assertEquals("v1", result.path("policyVersion").asString());
       assertFalse(response.body().contains("private synthetic body"));
       assertTrue(requestLogged.await(5, TimeUnit.SECONDS));
+      boolean aiSucceeded = aiStatus == 200;
       assertEquals(List.of("http.in", "gate.rule.pass", "ai.call.start",
           aiSucceeded ? "ai.call.ok" : "ai.call.fail",
           "store.write.ok", "http.out"), logs.list.stream().map(ILoggingEvent::getMessage)
           .toList());
-      assertTrue(logs.list.get(3).getKeyValuePairs().stream()
-          .anyMatch(field -> field.key.equals("upstreamStatus") && field.value.equals(aiStatus)));
+      var aiFields = logs.list.get(3).getKeyValuePairs().stream()
+          .collect(Collectors.toMap(field -> field.key, field -> field.value));
+      var storedFields = logs.list.get(4).getKeyValuePairs().stream()
+          .collect(Collectors.toMap(field -> field.key, field -> field.value));
+      assertEquals(aiStatus, aiFields.get("upstreamStatus"));
+      assertEquals(aiSucceeded ? "RELATED" : "UNCERTAIN", aiFields.get("relation"));
+      assertEquals(relation.name(), storedFields.get("relation"));
+      assertEquals(relation == Relation.RELATED ? 0.9 : null, storedFields.get("confidence"));
+      assertEquals(reasonCode == null ? null : reasonCode.name(), storedFields.get("reasonCode"));
+      var stored = runs.findById(result.path("analysisRunId").asLong()).orElseThrow().response();
+      assertEquals(relation, stored.relation());
+      assertEquals(status, stored.analysisStatus());
+      assertEquals(reasonCode, stored.reasonCode());
+      assertEquals(stored.confidence(), storedFields.get("confidence"));
       for (var event : logs.list) {
         var logged = event.getFormattedMessage() + event.getKeyValuePairs()
             + event.getMDCPropertyMap();

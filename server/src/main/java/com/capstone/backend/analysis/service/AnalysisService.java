@@ -37,14 +37,14 @@ public class AnalysisService {
       var prepared = store.prepare(principal, parseId(sessionId), request);
       SafeApiLog.analysisEvent(prepared.guard() == null ? SafeApiLog.AnalysisEvent.GATE_PASS
           : SafeApiLog.AnalysisEvent.GATE_BLOCK, start);
-      if (prepared.guard() != null) {
-        SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.STORE_OK, start);
-        return prepared.initialResponse();
+      Response result = prepared.initialResponse();
+      if (prepared.guard() == null) {
+        var decision = prepared.latest() ? ai.analyze(prepared, request, principal.userId())
+            : AnalysisDecision.unavailable();
+        result = store.complete(principal, prepared, request, decision);
       }
-      var decision = prepared.latest() ? ai.analyze(prepared, request, principal.userId())
-          : AnalysisDecision.unavailable();
-      var result = store.complete(principal, prepared, request, decision);
-      SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.STORE_OK, start);
+      SafeApiLog.analysisStoreResult(start, result.relation(), result.confidence(),
+          result.reasonCode());
       return result;
     } catch (org.springframework.dao.DataAccessException exception) {
       SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.STORE_FAIL, start);

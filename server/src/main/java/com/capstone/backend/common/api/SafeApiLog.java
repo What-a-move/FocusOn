@@ -31,13 +31,8 @@ public final class SafeApiLog {
   public static void analysisAiResult(boolean failed, long startedNanos, Integer upstreamStatus,
       Enum<?> relation, Double confidence, Enum<?> reasonCode) {
     var event = failed ? AnalysisEvent.AI_FAIL : AnalysisEvent.AI_OK;
-    var output = analysisRecord(event, startedNanos).addKeyValue("relation", relation.name());
-    if (confidence != null) {
-      output.addKeyValue("confidence", confidence);
-    }
-    if (reasonCode != null) {
-      output.addKeyValue("reasonCode", reasonCode.name());
-    }
+    var output = analysisDecisionFields(analysisRecord(event, startedNanos), relation,
+        confidence, reasonCode);
     if (upstreamStatus != null) {
       output.addKeyValue("upstreamStatus", upstreamStatus);
     }
@@ -45,6 +40,26 @@ public final class SafeApiLog {
       output.addKeyValue("stage", "ai");
     }
     output.log(event.value);
+  }
+
+  /** 저장 트랜잭션에서 확정한 판정만 기록한다. */
+  public static void analysisStoreResult(long startedNanos, Enum<?> relation,
+      Double confidence, Enum<?> reasonCode) {
+    var event = AnalysisEvent.STORE_OK;
+    analysisDecisionFields(analysisRecord(event, startedNanos), relation, confidence, reasonCode)
+        .log(event.value);
+  }
+
+  private static LoggingEventBuilder analysisDecisionFields(LoggingEventBuilder output,
+      Enum<?> relation, Double confidence, Enum<?> reasonCode) {
+    output.addKeyValue("relation", relation.name());
+    if (confidence != null) {
+      output.addKeyValue("confidence", confidence);
+    }
+    if (reasonCode != null) {
+      output.addKeyValue("reasonCode", reasonCode.name());
+    }
+    return output;
   }
 
   private static LoggingEventBuilder analysisRecord(AnalysisEvent event, long startedNanos) {
@@ -116,7 +131,8 @@ public final class SafeApiLog {
 
   private static String safeType(Class<?> type) {
     if (type == String.class || type == Boolean.class || type == Integer.class
-        || type == Long.class || type == Double.class || type == BigDecimal.class) {
+        || type == long.class || type == Long.class || type == Double.class
+        || type == BigDecimal.class) {
       return type.getSimpleName();
     }
     return "unknown";

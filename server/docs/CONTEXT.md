@@ -4,6 +4,7 @@
 
 - 기존 #116의 `requestId`·`traceId` 분리, JSON 로그, 단일 HTTP 필터를 기준으로 서버 로깅을 보완했다. 입력 검증 실패 분류와 전경·전송 경로 마스킹을 보강하고 AI 결과는 정규화된 판정·신뢰도·사유 및 수신 상태코드만 기록한다.
 - 테스트용 루프백 AI가 `RELATED / 0.9`를 반환하는 공개 HTTP 요청으로 같은 traceId의 수신·게이트·AI 호출·저장·응답을 검증했다. 상세는 [QA](features/server-tracing-QA.md)와 [코드 리뷰](features/intervention-policy-code-review.md)에 있다.
+- PR #276 리뷰를 반영했다. `store.write.ok`는 저장 트랜잭션에서 확정한 판정을 기록하며, 연결 해제 경로의 타입 검사 실패는 `expectedType=long`을 기록한다. #272에서 추가한 분석 이력 검증을 유지했다.
 
 ## Issue #274 기기 해제 API (2026-11-18)
 

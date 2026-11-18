@@ -118,8 +118,27 @@ class MissingEndpointHttpTests {
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     assertEquals(400, response.statusCode());
     assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
+    assertValidationTrace(output, trace, "sequence", "BigDecimal", "-7654321");
+  }
+
+  @Test
+  void unlinkValidationLogsPrimitivePathTypeWithoutValue(CapturedOutput output) throws Exception {
+    when(authentication.authenticate("valid"))
+        .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
+    var trace = UUID.randomUUID().toString();
+    var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+        + "/api/v1/extension-pairings/private-device-id"))
+        .header("Authorization", "Bearer valid").header("X-Trace-Id", trace).DELETE().build();
+    var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    assertEquals(400, response.statusCode());
+    assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
+    assertValidationTrace(output, trace, "extensionDeviceId", "long", "private-device-id");
+  }
+
+  private void assertValidationTrace(CapturedOutput output, String trace, String field,
+      String expectedType, String privateValue) throws Exception {
     awaitCompletion(output, trace);
-    assertFalse(output.toString().contains("-7654321"));
+    assertFalse(output.toString().contains(privateValue));
     var json = JsonMapper.builder().build();
     var lines = output.getOut().lines().filter(line -> line.contains(trace)).toList();
     var events = lines.stream().map(json::readTree).toList();
@@ -128,8 +147,8 @@ class MissingEndpointHttpTests {
     for (var event : events) {
       assertEquals(trace, event.path("traceId").asString());
     }
-    assertEquals("sequence", events.get(1).path("field").asString());
-    assertEquals("BigDecimal", events.get(1).path("expectedType").asString());
+    assertEquals(field, events.get(1).path("field").asString());
+    assertEquals(expectedType, events.get(1).path("expectedType").asString());
     assertEquals("validation", events.getLast().path("stage").asString());
     assertEquals(400, events.getLast().path("status").asInt());
   }
