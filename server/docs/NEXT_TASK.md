@@ -5,6 +5,20 @@
 - Desktop에서 보낸 `X-Trace-Id`를 Backend가 AI 분석 호출로 전달한다. 실제 앱과 AI 서버가 연결되면 같은 ID로 모듈별 로그를 이어서 검증한다.
 - AI 담당 인계. Backend의 `ai.call.start`까지 사용한 `X-Trace-Id`가 AI 호출 헤더로 전달된다. AI 분석 라우트에서 같은 헤더를 읽어 정본 규칙에 따른 수신·응답 로그에 넣어야 양쪽 로그에서 같은 호출을 찾을 수 있다. 모델 입력·응답 전문과 인증 헤더는 기록 대상에서 제외한다.
 
+## Issue #274 기기 해제 API (2026-11-18)
+
+- Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다. 다른 기기를 해제했으면 `GET /devices`를 다시 부르고, 404면 목록을 다시 조회한다.
+- Desktop: 자기 자신을 해제했으면 `GET /devices`를 부르지 않는다(Bearer가 이미 무효). 저장된 token을 지우고 바로 로그인 화면으로 보낸다.
+- Desktop: 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`)에 걸린 새 설치는 로그인 전이라 이 API를 부를 수 없다. 이미 로그인된 다른 Desktop에서 해제한 뒤 새 설치에서 다시 로그인하도록 안내한다.
+- Desktop: `401 AUTH_ACCESS_TOKEN_EXPIRED`면 `POST /auth/refresh` 뒤 한 번 재시도하고, `AUTH_RELOGIN_REQUIRED`면 재로그인한다.
+- 해제된 Desktop에서 진행 중이던 세션은 바로 끝나지 않고 heartbeat 중단 180초 뒤 `ABANDONED`가 된다. 즉시 종료가 필요하면 별도 Issue로 다룬다.
+- 실제 Desktop 화면 연동 QA는 아직이다.
+
+## Issue #272 세션 분석 이력 조회
+
+- `feat/272-server-analysis-history`에서 백엔드 조회를 구현했다. Notion 정본과 예외 처리는 [기획서](features/analysis-history-PLAN.md)를 참고한다.
+- Desktop 사용 시 호출과 표시를 검증한다. 원격 검사와 병합 상태는 연결된 [Issue #272](https://github.com/What-a-move/FocusOn/issues/272)에서 확인한다.
+
 ## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
 
 - AI팀: 목표 다듬기 AI(`/internal/v1/goals/clarify`)에 같은 `FOCUSON_AI_API_KEY` 키 검사를 켜야 한다. 서버 배포와 같은 시점에 맞춘다.

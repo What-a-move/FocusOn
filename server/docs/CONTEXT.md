@@ -5,6 +5,17 @@
 - 기존 #116의 `requestId`·`traceId` 분리, JSON 로그, 단일 HTTP 필터를 기준으로 서버 로깅을 보완했다. 입력 검증 실패 분류와 전경·전송 경로 마스킹을 보강하고 AI 결과는 정규화된 판정·신뢰도·사유 및 수신 상태코드만 기록한다.
 - 테스트용 루프백 AI가 `RELATED / 0.9`를 반환하는 공개 HTTP 요청으로 같은 traceId의 수신·게이트·AI 호출·저장·응답을 검증했다. 상세는 [QA](features/server-tracing-QA.md)와 [코드 리뷰](features/intervention-policy-code-review.md)에 있다.
 
+## Issue #274 기기 해제 API (2026-11-18)
+
+- `DELETE /api/v1/devices/{deviceId}`를 구현했다. 폐기 로직은 `TokenLifecycleService.revokeDevice`에 두고 로그아웃과 같은 사용자 → family 잠금 순서를 따른다.
+- Desktop 해제 시 연결 코드 취소와 연결 Extension 폐기를 같은 transaction에서 한다. 마이그레이션은 없다(`DEVICE_REVOKED`는 기존 CHECK에 포함).
+- 계획: `features/device-revoke-PLAN.md`.
+
+## Issue #272 세션 분석 이력 조회 (2026-11-18)
+
+- Desktop이 `GET /api/v1/sessions/{sessionId}/analysis-runs`로 본인 세션의 저장된 분석 결과를 조회한다. 관측 시각과 저장 ID 오름차순으로 정렬하고 각 결과의 정책 버전을 반환한다.
+- 기존 분석 결과 DTO와 세션 이력 인덱스를 적용했다. 구현과 검증 범위는 [기능 결과](features/analysis-history-REPORT.md)에 기록한다.
+
 ## Issue #265 목표 다듬기 AI 호출 인증 헤더 (2026-11-16)
 
 - `GoalAiClient`가 `AnalysisAiClient`와 같은 서버 전용 키(`FOCUSON_AI_API_KEY`)로 `Authorization: Bearer`를 붙여 호출한다. 키가 비어 있으면 요청을 보내지 않고 `UNAVAILABLE`(재시도 불가)로 안전하게 실패한다.

@@ -91,6 +91,14 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 
 `POST /api/v1/auth/google/exchange` 요청에는 `authorizationCode`, `codeVerifier`, `state`, `redirectUri`, `device`를 포함한다. `redirectUri`는 Desktop Main이 Google 인증 요청에 사용한 `http://127.0.0.1:<임시 포트>` 주소 그대로다. Main이 callback의 `state` 일치를 먼저 확인한다. Backend는 `redirectUri`의 scheme·host·port·경로를 엄격히 검증한 뒤 서버 설정의 Desktop Google Client ID, code, verifier, 동일한 `redirectUri`로 Google token endpoint에 요청하고 Google ID token을 검증한다. Backend가 사전에 `state`를 저장하지 않았다면 요청에 포함된 값만으로 일치 여부를 검증했다고 간주하지 않는다. [Notion API 정본](https://app.notion.com/p/00f3391cae454614bf51bffbe995f0dc)
 
+### 기기 해제 (2026-11-18, #274)
+
+- `DELETE /devices/{deviceId}`는 활성 Desktop Bearer로 호출하고 204 빈 본문이다. 본인 소유 ACTIVE 기기만 폐기한다(기기 `REVOKED`, family 사유 `DEVICE_REVOKED`, 활성 Refresh Token 폐기).
+- Desktop을 해제하면 발급 중인 연결 코드를 취소하고 연결된 Extension도 같은 transaction에서 폐기한다. 자기 자신을 해제할 수도 있으며 결과는 로그아웃과 같다.
+- 없는 기기·남의 기기·이미 해제된 기기·잘못된 ID는 404 `DEVICE_NOT_FOUND`, Extension(ID 형식과 무관)·무인증 호출은 401 `AUTH_RELOGIN_REQUIRED`, 만료된 Access Token은 401 `AUTH_ACCESS_TOKEN_EXPIRED`(refresh 뒤 한 번 재시도)다.
+- 다른 기기를 해제했으면 `GET /devices`를 다시 부르고 404여도 목록을 다시 조회한다. 자기 자신을 해제했으면 목록을 부르지 않고 token을 지운 뒤 로그인 화면으로 간다.
+- 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`)에 걸린 새 설치는 로그인 전이라 이 API를 부를 수 없다. 이미 로그인된 다른 Desktop에서 해제한 뒤 다시 로그인한다.
+
 ### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
 
 - `POST /auth/refresh`는 Bearer 없이 `{refreshToken}`으로 인증하고 `200 data.{accessToken,refreshToken,accessTokenExpiresAt}`을 반환한다.
@@ -276,6 +284,8 @@ GET  /api/v1/sessions/{sessionId}/observation-context
 POST /api/v1/interventions/{interventionId}/deliveries
 POST /api/v1/sessions/{sessionId}/local-events
 ```
+
+`GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`을 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
 
 `GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
 
