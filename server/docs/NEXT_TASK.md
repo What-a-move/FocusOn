@@ -1,5 +1,13 @@
 # Backend 다음 작업
 
+## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
+
+- AI팀: `POST /internal/v1/learning-summaries`를 구현한다. 요청·응답 제안안은 `features/learning-summary-pipeline-PLAN.md`에 있다. 같은 `FOCUSON_AI_API_KEY` Bearer를 검사한다.
+- AI팀·Server: 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하)를 실어 줄지, 형식을 합의한다. 합의되면 Server가 분석 저장 시 `learning_review_evidences`에 쓰는 코드를 추가한다(현재 쓰는 코드 없음).
+- Desktop: 종료 뒤 `GET /sessions/{id}/learning-summary`가 200 `QUEUED`·`GENERATING`이면 5초 간격으로 다시 조회하고 terminal 상태(READY·INSUFFICIENT_DATA·FAILED)에서 멈춘다. 이제 종료한 세션에서는 404가 오지 않는다.
+- 배포: `AI_LEARNING_SUMMARY_URL`을 서버 환경에 추가한다(비어 있으면 근거가 충분한 정리가 재시도 뒤 FAILED).
+- 남은 검증: 로컬 Mac에서 실제 Google 로그인 → 세션 종료 → 조회 200, PR CI(Java 25) 통과, 근거 90일 보관 정리.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다. 다른 기기를 해제했으면 `GET /devices`를 다시 부르고, 404면 목록을 다시 조회한다.

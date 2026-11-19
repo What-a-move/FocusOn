@@ -1163,6 +1163,14 @@ class SessionApiTests {
       ReflectionTestUtils.setField(entity, "sessionId",
           Long.valueOf(id));
       ReflectionTestUtils.setField(entity, "status", state);
+      // V23 대기열 제약: 대기·생성 중 행은 입력 마감과 실행 시각 또는 점유 만료 시각을 가진다.
+      boolean queued = state == LearningSummaryResponse.Status.QUEUED;
+      boolean generating = state == LearningSummaryResponse.Status.GENERATING;
+      java.time.Instant closes = java.time.Instant.now().plusSeconds(30);
+      ReflectionTestUtils.setField(entity, "inputClosesAt", queued || generating ? closes : null);
+      ReflectionTestUtils.setField(entity, "nextAttemptAt", queued ? closes : null);
+      ReflectionTestUtils.setField(entity, "leaseExpiresAt", generating ? closes : null);
+      ReflectionTestUtils.setField(entity, "attemptCount", (short) (generating ? 1 : 0));
       boolean ready = state == LearningSummaryResponse.Status.READY;
       ReflectionTestUtils.setField(entity, "overview",
           ready ? "확인한 개념 정리" : null);

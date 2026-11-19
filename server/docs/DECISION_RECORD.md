@@ -1,5 +1,15 @@
 # Backend 결정 기록
 
+## 2026-11-19 #288 학습 정리 생성 파이프라인
+
+- 결정: 사용자 종료 커밋 뒤(AFTER_COMMIT) 별도 트랜잭션에서 `learning_summaries`를 `QUEUED`로 만든다. 입력은 종료 + 30초에 고정하고, Worker가 조건부 UPDATE로 점유한다(lease 60초, `attempt_count`를 fencing 번호로 사용). 시도는 최대 3회(재시도 1분·5분)다.
+- 이유: 이슈의 "종료 처리는 정리 생성과 독립"을 지키면서도 종료 응답 전에 행이 생겨 Desktop의 종료 직후 조회가 404가 되지 않게 한다. 커밋 직후 서버 중단으로 행이 빠지면 Worker가 최근 1일 이내 ENDED를 복구한다.
+- 재시도는 전송 실패(연결·429·5xx·20초 초과·AI 설정 누락)에만 한다. Schema·길이·민감값 위반과 그 밖의 4xx는 즉시 `FAILED`이며, 같은 근거를 외부에 반복 전송하지 않는다.
+- 근거는 `learning_review_evidences`에 120자 이하 개념과 SHA-256 해시만 저장하고 `(session_id, evidence_hash)` UNIQUE로 "서로 다른 근거"를 센다. 원문·URL은 저장하지 않는다.
+- AI 내부 API(`POST /internal/v1/learning-summaries`) 요청·응답과 분석 응답의 `reviewEvidence`는 서버 제안안이며 AI 합의가 필요하다. 합의 전에는 근거가 쌓이지 않아 정리가 `INSUFFICIENT_DATA`로 끝난다.
+- 대체: 2026-11-10 "정상 종료는 `learning_summaries` 행을 만들지 않는다"는 이 결정으로 바뀐다. ABANDONED는 계속 만들지 않는다(BE-010).
+- 상세 기준표: `features/learning-summary-pipeline-PLAN.md`.
+
 ## 2026-11-18 #274 기기 해제의 대상·응답 기준
 
 - 결정: 이미 `REVOKED`·`LOGGED_OUT`인 기기와 숫자가 아닌 ID는 404 `DEVICE_NOT_FOUND`로 응답한다. 호출한 Desktop 자기 자신도 해제할 수 있다. Extension 호출은 `GET /devices`와 같이 401 `AUTH_RELOGIN_REQUIRED`다.

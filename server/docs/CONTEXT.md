@@ -324,3 +324,10 @@ Google ID 토큰 발급 시각에 30초 오차를 허용한다. 최신 dev 통�
 ## Issue #206 로컬 이벤트·학습 정리 조회 (2026-11-09)
 
 - feat/206-session-events-learning: 권한유실2종 저장/자동정지/재전송 중복제거와 저장된학습정리5상태 조회를 구현했다. 실계정HTTP·PG34개·V19보존 검증은 features/session-events-learning-REPORT.md를 따른다. 생성자/AI/근거수집은 기존#29 선행작업이며 전체자동정리완료가 아니다. 실제앱/Notion원문 대조는 남았다.
+
+## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
+
+- 사용자 종료 → QUEUED → (30초 입력 마감) → GENERATING → READY/INSUFFICIENT_DATA/FAILED 생성 파이프라인과 V23(대기열 컬럼·`learning_review_evidences`)을 구현했다. 종료 직후 `learning-summary` 조회가 404 대신 200 QUEUED다.
+- 검증: PostgreSQL CI 목록 218개 실패 0, 8 Worker 동시 점유 10회 반복 통과, 실제 포트·스케줄러·가짜 AI 프로세스 E2E(근거 부족·READY·503 재시도·20초 timeout·민감값) 통과. 결과는 `features/learning-summary-pipeline-REPORT.md`.
+- 미완료: AI 내부 API와 `reviewEvidence` 합의 전이라 실제 정리는 INSUFFICIENT_DATA로 끝난다. 실제 Google 로그인·Java 25 CI·실제 Desktop QA는 남았다.
+

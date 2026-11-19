@@ -360,6 +360,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - 클라이언트 관측 시각의 순서 비교와 서버 수신 시각의 생존 계산은 구분한다. `clientObservedAt` 비교용 저장값·같은 시각의 재전송 처리 등 아직 부족한 정의는 대조 기록의 구현 전 확인 항목을 따른다.
 - Desktop 재실행으로 로컬 monotonic 기준점이 사라지면 서버의 마지막 확정 누적 시간만 사용하고 `AUTO_PAUSED`, `pauseReason: APP_RESTART`로 복구한다. 사용자가 명시적으로 재개하기 전에는 `RUNNING`으로 바꾸지 않는다.
 - `ENDED` 이후 학습 요약 상태는 `QUEUED`, `GENERATING`, `READY`, `INSUFFICIENT_DATA`, `FAILED`를 사용한다. `ABANDONED`는 시간·리포트 집계에 포함하지만 자동 학습 정리 작업을 만들지 않는다.
+- 2026-11-19 #288 구현: 사용자 종료가 커밋되면 서버가 정리 행을 `QUEUED`로 만들어 종료 직후 `learning-summary` 조회는 404가 아니라 200 `QUEUED`다. 종료 + 30초에 근거를 고정하고, 서로 다른 근거 2개 미만이면 AI를 부르지 않고 `INSUFFICIENT_DATA`다. AI는 20초 제한·1분/5분 재시도 뒤 `FAILED`다. AI 내부 API·`reviewEvidence` 형식은 AI 합의 전 서버 제안안이다(`server/docs/features/learning-summary-pipeline-PLAN.md`).
 
 일간 리포트와 홈 집중 달력은 세션 생성 시 고정한 `studyDate`에 `ENDED` 및 서버 확정 `ABANDONED`의 마지막 검증된 `accumulatedActiveMs`를 귀속한다. 자정을 넘어도 분할하지 않으며, 같은 날짜 합계가 60,000ms 이상일 때 달력에 포키를 표시한다. 진행 중 세션은 집계하지 않는다.
 

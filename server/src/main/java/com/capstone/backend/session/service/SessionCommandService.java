@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -50,6 +51,7 @@ public class SessionCommandService {
   private final SessionExtensionRepository extensions;
   private final OnboardingReadinessService onboarding;
   private final ObjectMapper mapper;
+  private final ApplicationEventPublisher events;
 
   /** 사용자 행 잠금 안에서 연장·이력·멱등 응답을 원자적으로 확정한다. */
   @Transactional
@@ -202,6 +204,8 @@ public class SessionCommandService {
         session.getAccumulatedActiveMs(), session.getTargetDurationMs(), session.getEndedAt());
     records.save(IdempotencyRecordEntity.create(user, scope, idempotencyKey, hash,
         (short) 200, mapper.writeValueAsString(response), now, now.plus(IDEMPOTENCY_RETENTION)));
+    // 학습 정리 대기열은 커밋 뒤 별도 트랜잭션에서 만든다. 정리 쪽 실패가 종료를 되돌리지 않는다.
+    events.publishEvent(new SessionEnded(session.getId(), now));
     return response;
   }
 
