@@ -53,7 +53,7 @@ type Receipt = { interventionId: string; clientDeliveryId: string; dispatchStatu
 type Deps = {
   auth: Pick<AuthService, 'authorizedRequest'>
   /** 포키 창에 알림을 보여 준다. 띄우지 못했으면 false. */
-  show(payload: FloatingShow, stage?: OffTaskPresentation['stage']): boolean
+  show(payload: FloatingShow, selectStage: () => OffTaskPresentation['stage'] | undefined, canShow: () => boolean): boolean | Promise<boolean>
   /** macOS 알림(소리 포함 여부)을 띄운다. 띄우지 못했으면 false. */
   notify(payload: FloatingShow, sound: boolean): boolean
   /** 잠시 쉬기: 세션을 일시정지한다. */
@@ -104,7 +104,9 @@ export class InterventionWatcher {
       const context = this.deps.currentContext()
       const next = result.data.find((item) => !this.seen.has(item.interventionId) && context !== null && item.observationContextId === context
         && item.remainingTtlMs !== null && item.remainingTtlMs - elapsed > 0)
-      if (!next) return
+      if (!next || next.remainingTtlMs === null) return
+      const deadline = startedAt + next.remainingTtlMs
+      const canShow = () => this.deps.isCurrent(sessionId) && this.deps.currentContext() === context && this.now() < deadline
       this.seen.add(next.interventionId)
       const kind = next.type === 'BREAK_SUGGESTION' ? 'BREAK' : 'OFF_TASK'
       const payload: FloatingShow = { interventionId: next.interventionId, kind, level: options.interventionLevel, goalText, ...COPY[kind === 'BREAK' ? 'BREAK' : options.interventionLevel] }
@@ -114,18 +116,22 @@ export class InterventionWatcher {
       this.receipts.push(receipt)
       this.save()
       const sent: string[] = []
-      const shownAt = this.now()
-      const streak = shownAt < this.normalStreakExpiresAt ? this.normalStreak : 0
-      const escalation = kind === 'OFF_TASK' ? nextOffTaskStage(payload.level, streak) : null
-      if (channels.includes('MOLE_UI') && this.deps.show(payload, escalation?.stage)) {
+      let currentStreak = 0
+      const selectStage = () => {
+        if (kind !== 'OFF_TASK') return undefined
+        currentStreak = this.now() < this.normalStreakExpiresAt ? this.normalStreak : 0
+        return nextOffTaskStage(payload.level, currentStreak).stage
+      }
+      if (channels.includes('MOLE_UI') && await this.deps.show(payload, selectStage, canShow)) {
         sent.push('MOLE_UI')
-        if (escalation) {
+        if (kind === 'OFF_TASK' && this.deps.isCurrent(sessionId)) {
+          const escalation = nextOffTaskStage(payload.level, currentStreak)
           this.normalStreak = escalation.streak
-          this.normalStreakExpiresAt = escalation.streak > 0 ? shownAt + NORMAL_STREAK_WINDOW_MS : 0
+          this.normalStreakExpiresAt = escalation.streak > 0 ? this.now() + NORMAL_STREAK_WINDOW_MS : 0
         }
       }
       // 소리만 골랐어도 소리 있는 알림으로 알린다. 알림과 소리를 함께 골랐으면 알림은 한 번만 띄운다.
-      if ((channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) && this.deps.notify(payload, channels.includes('SOUND'))) {
+      if ((channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) && canShow() && this.deps.notify(payload, channels.includes('SOUND'))) {
         sent.push(...channels.filter((channel) => channel !== 'MOLE_UI'))
       }
       receipt.dispatchStatus = sent.length ? 'SENT' : 'NOT_SENT'

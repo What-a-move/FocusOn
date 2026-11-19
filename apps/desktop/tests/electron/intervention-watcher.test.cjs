@@ -11,7 +11,7 @@ const OPTIONS = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI']
 const pending = (id, extra = {}) => ({ interventionId: id, type: 'OFF_TASK', status: 'PENDING', channels: [], observationContextId: 'c-1', remainingTtlMs: 30000, ...extra })
 const tempJournal = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'fo-receipts-')), 'receipts.json')
 
-function setup(lists, { current = true, pauseOk = true, context = 'c-1', journalFile = tempJournal(), deliveries = () => ({ success: true, data: true }), clock = { t: 0 }, showOk = true } = {}) {
+function setup(lists, { current = true, pauseOk = true, context = 'c-1', journalFile = tempJournal(), deliveries = () => ({ success: true, data: true }), clock = { t: 0 }, showOk = true, show = () => showOk } = {}) {
   const calls = []; const shown = []; const stages = []; const notified = []; let paused = 0
   const auth = {
     authorizedRequest: async (request) => {
@@ -23,7 +23,7 @@ function setup(lists, { current = true, pauseOk = true, context = 'c-1', journal
   }
   let n = 0
   const watcher = new InterventionWatcher({
-    auth, show: (p, stage) => { shown.push(p); stages.push(stage); return showOk }, notify: (p, sound) => { notified.push([p.interventionId, sound]); return true },
+    auth, show: (p, selectStage, canShow) => { shown.push(p); stages.push(selectStage()); return show(canShow, selectStage) }, notify: (p, sound) => { notified.push([p.interventionId, sound]); return true },
     pause: async () => { paused += 1; return { success: pauseOk } }, isCurrent: () => current, currentContext: () => context,
     journalFile, now: () => clock.t, uuid: () => `d-${++n}`,
   })
@@ -182,4 +182,61 @@ test('약하게나 적극 알림이 끼면 제한 시간 안이어도 보통 알
     clock.t += 60_000
   }
   assert.deepEqual(t.stages, ['peek', 'gentle', 'peek', 'active', 'peek'])
+})
+
+
+test('창 로드 결과를 기다리고 실패한 팝업은 전송이나 보통 단계로 세지 않는다', async () => {
+  const { promise, resolve } = Promise.withResolvers()
+  let attempt = 0
+  const t = setup([[pending('failed')], [pending('shown')]], {
+    show: () => ++attempt === 1 ? promise : true,
+  })
+  const polling = t.watcher.poll('901', '목표', OPTIONS)
+  await Promise.resolve()
+  assert.deepEqual(t.stages, ['peek'])
+  assert.deepEqual(t.receipts(), [])
+  resolve(false)
+  await polling
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages, ['peek', 'peek'])
+  assert.deepEqual(t.receipts().map(([, body]) => [body.dispatchStatus, body.channels]), [
+    ['NOT_SENT', []],
+    ['SENT', ['MOLE_UI']],
+  ])
+})
+
+test('창 로드 도중 표시 가능 시간을 넘기면 팝업과 시스템 알림을 보내지 않는다', async () => {
+  const clock = { t: 0 }
+  const { promise, resolve } = Promise.withResolvers()
+  const t = setup([[pending('expired', { remainingTtlMs: 1000, channels: ['MOLE_UI', 'MACOS_NOTIFICATION'] })]], {
+    clock, show: async (canShow) => { await promise; return canShow() },
+  })
+  const polling = t.watcher.poll('901', '목표', OPTIONS)
+  await Promise.resolve()
+  clock.t = 1000
+  resolve()
+  await polling
+  assert.deepEqual(t.notified, [])
+  assert.equal(t.receipts()[0][1].dispatchStatus, 'NOT_SENT')
+})
+
+
+test('창을 띄우기 전에 10분이 지나면 보통 단계와 횟수를 1차로 바꾼다', async () => {
+  const clock = { t: 0 }
+  const t = setup(['one', 'two', 'three'].map((id) => [pending(id)]), {
+    clock,
+    show: (_canShow, selectStage) => {
+      if (clock.t === 599_000) {
+        clock.t = 601_000
+        assert.equal(selectStage(), 'peek')
+      }
+      return true
+    },
+  })
+  await t.watcher.poll('901', '목표', OPTIONS)
+  clock.t = 599_000
+  await t.watcher.poll('901', '목표', OPTIONS)
+  clock.t = 602_000
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages, ['peek', 'normal', 'normal'])
 })

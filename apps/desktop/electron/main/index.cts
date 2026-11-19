@@ -254,7 +254,7 @@ if (!hasSingleInstanceLock) {
     sessionRuntime = authService ? new SessionRuntime(authService, (snapshot) => {
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(SESSION_CHANNELS.changed, snapshot)
       const disconnected = disconnectedNotice(lastSession, snapshot)
-      if (disconnected) showFloating(disconnected)
+      if (disconnected) void showFloating(disconnected)
       else if (pendingShow && (snapshot?.status !== 'RUNNING' || snapshot.sessionId !== lastSession?.sessionId || pendingShow.interventionId === DISCONNECTED_ID)) hideFloating()
       if (!snapshot || snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED' || snapshot.sessionId !== lastSession?.sessionId) watcher?.reset()
       lastSession = snapshot
@@ -282,18 +282,21 @@ if (!hasSingleInstanceLock) {
     let cameraBusy = false
     let floatingWindow: BrowserWindow | null = null
     let floatingReady = false
+    let floatingLoad: Promise<boolean> | null = null
     let floatingBackdrop = false
     let pendingShow: FloatingShow | null = null
     let offTaskResponded = false
     let lastActiveArt: 1 | 2 | 3 | null = null
 
-    function showFloating(payload: FloatingShow, stage = nextOffTaskStage(payload.level, 0).stage): void {
+    async function showFloating(raw: FloatingShow, selectStage = (): OffTaskPresentation['stage'] | undefined => undefined, canShow = () => true): Promise<boolean> {
+      if (!canShow()) return false
+      const stage = selectStage() ?? nextOffTaskStage(raw.level, 0).stage
+      let payload = raw
       if (payload.kind === 'OFF_TASK') {
         let presentation: OffTaskPresentation
         if (stage === 'active') {
           const arts = ([1, 2, 3] as const).filter((art) => art !== lastActiveArt)
-          lastActiveArt = arts[Math.floor(Math.random() * arts.length)]
-          presentation = { stage, art: lastActiveArt }
+          presentation = { stage, art: arts[Math.floor(Math.random() * arts.length)] }
         } else if (stage === 'normal') {
           presentation = { stage }
         } else {
@@ -311,11 +314,6 @@ if (!hasSingleInstanceLock) {
         floatingWindow = window
         floatingBackdrop = backdrop
         floatingReady = false
-        window.webContents.on('did-finish-load', () => {
-          if (window !== floatingWindow) return
-          floatingReady = true
-          showPendingFloating()
-        })
         window.webContents.on('render-process-gone', () => {
           if (window === floatingWindow && !window.isDestroyed()) window.destroy()
         })
@@ -323,25 +321,44 @@ if (!hasSingleInstanceLock) {
           if (floatingWindow !== window) return
           floatingWindow = null
           floatingReady = false
+          floatingLoad = null
           pendingShow = null
         })
-        void window.loadURL(new URL('floating/', rendererUrl).toString()).catch(() => {
-          if (!window.isDestroyed()) window.destroy()
+        let timeout: ReturnType<typeof setTimeout>
+        const expired = new Promise<false>((resolve) => {
+          timeout = setTimeout(() => {
+            resolve(false)
+            if (!window.isDestroyed()) window.destroy()
+          }, 4000)
         })
-      } else {
-        showPendingFloating()
+        const loaded = window.loadURL(new URL('floating/', rendererUrl).toString()).then(() => {
+          if (window !== floatingWindow || window.isDestroyed()) return false
+          floatingReady = true
+          return true
+        }, () => {
+          if (!window.isDestroyed()) window.destroy()
+          return false
+        })
+        floatingLoad = Promise.race([loaded, expired]).finally(() => clearTimeout(timeout))
       }
-    }
 
-    function showPendingFloating(): void {
       const window = floatingWindow
-      if (!window || !floatingReady || !pendingShow) return
+      if (!window || (!floatingReady && !await floatingLoad) || window !== floatingWindow || window.isDestroyed() || pendingShow !== payload) return false
+      if (!canShow()) {
+        hideFloating()
+        return false
+      }
+      const selected = selectStage()
+      if (selected && selected !== stage) return showFloating(raw, selectStage, canShow)
       if (floatingBackdrop) window.setVibrancy('hud')
       window.setIgnoreMouseEvents(!floatingBackdrop, { forward: true })
-      window.webContents.send(INTERVENTION_CHANNELS.show, pendingShow)
+      window.webContents.send(INTERVENTION_CHANNELS.show, payload)
       window.showInactive()
-      pinFloatingWindow(window, pendingShow)
+      pinFloatingWindow(window, payload)
       sendLift(window)
+      if (!window.isVisible()) return false
+      if (payload.presentation?.stage === 'active') lastActiveArt = payload.presentation.art
+      return true
     }
     screen.on('display-metrics-changed', () => {
       if (!floatingWindow?.isVisible() || !pendingShow) return
@@ -393,7 +410,7 @@ if (!hasSingleInstanceLock) {
     }
     const watcher = authService && runtime ? new InterventionWatcher({
       auth: authService,
-      show: (payload, stage) => { showFloating(payload, stage); return true },
+      show: showFloating,
       notify: (payload, sound) => {
         if (!Notification.isSupported()) return false
         new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show()
@@ -524,7 +541,7 @@ if (!hasSingleInstanceLock) {
           if (state !== before) log('INFO', 'state.transition', { component: 'camera', from: before, to: state })
           if (!alert) return
           const level = runtime.sessionOptions().interventionLevel
-          showFloating({ interventionId: CAMERA_ID, kind: 'OFF_TASK', level, goalText: current.goalText, ...COPY[level] })
+          void showFloating({ interventionId: CAMERA_ID, kind: 'OFF_TASK', level, goalText: current.goalText, ...COPY[level] })
           log('INFO', 'notify.fire', { component: 'camera', interventionType: 'CAMERA_AWAY', channels: ['MOLE_UI'] })
         }).finally(() => { cameraBusy = false })
       }, 2000)
