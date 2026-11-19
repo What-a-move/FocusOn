@@ -288,13 +288,15 @@ if (!hasSingleInstanceLock) {
     let offTaskResponded = false
     let lastActiveArt: 1 | 2 | 3 | null = null
 
-    async function showFloating(payload: FloatingShow, stage = nextOffTaskStage(payload.level, 0).stage, canShow = () => true): Promise<boolean> {
+    async function showFloating(raw: FloatingShow, selectStage = (): OffTaskPresentation['stage'] | undefined => undefined, canShow = () => true): Promise<boolean> {
+      if (!canShow()) return false
+      const stage = selectStage() ?? nextOffTaskStage(raw.level, 0).stage
+      let payload = raw
       if (payload.kind === 'OFF_TASK') {
         let presentation: OffTaskPresentation
         if (stage === 'active') {
           const arts = ([1, 2, 3] as const).filter((art) => art !== lastActiveArt)
-          lastActiveArt = arts[Math.floor(Math.random() * arts.length)]
-          presentation = { stage, art: lastActiveArt }
+          presentation = { stage, art: arts[Math.floor(Math.random() * arts.length)] }
         } else if (stage === 'normal') {
           presentation = { stage }
         } else {
@@ -322,7 +324,14 @@ if (!hasSingleInstanceLock) {
           floatingLoad = null
           pendingShow = null
         })
-        floatingLoad = window.loadURL(new URL('floating/', rendererUrl).toString()).then(() => {
+        let timeout: ReturnType<typeof setTimeout>
+        const expired = new Promise<false>((resolve) => {
+          timeout = setTimeout(() => {
+            resolve(false)
+            if (!window.isDestroyed()) window.destroy()
+          }, 4000)
+        })
+        const loaded = window.loadURL(new URL('floating/', rendererUrl).toString()).then(() => {
           if (window !== floatingWindow || window.isDestroyed()) return false
           floatingReady = true
           return true
@@ -330,6 +339,7 @@ if (!hasSingleInstanceLock) {
           if (!window.isDestroyed()) window.destroy()
           return false
         })
+        floatingLoad = Promise.race([loaded, expired]).finally(() => clearTimeout(timeout))
       }
 
       const window = floatingWindow
@@ -338,13 +348,17 @@ if (!hasSingleInstanceLock) {
         hideFloating()
         return false
       }
+      const selected = selectStage()
+      if (selected && selected !== stage) return showFloating(raw, selectStage, canShow)
       if (floatingBackdrop) window.setVibrancy('hud')
       window.setIgnoreMouseEvents(!floatingBackdrop, { forward: true })
       window.webContents.send(INTERVENTION_CHANNELS.show, payload)
       window.showInactive()
       pinFloatingWindow(window, payload)
       sendLift(window)
-      return window.isVisible()
+      if (!window.isVisible()) return false
+      if (payload.presentation?.stage === 'active') lastActiveArt = payload.presentation.art
+      return true
     }
     screen.on('display-metrics-changed', () => {
       if (!floatingWindow?.isVisible() || !pendingShow) return

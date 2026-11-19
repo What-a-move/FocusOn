@@ -53,7 +53,7 @@ type Receipt = { interventionId: string; clientDeliveryId: string; dispatchStatu
 type Deps = {
   auth: Pick<AuthService, 'authorizedRequest'>
   /** 포키 창에 알림을 보여 준다. 띄우지 못했으면 false. */
-  show(payload: FloatingShow, stage: OffTaskPresentation['stage'] | undefined, canShow: () => boolean): boolean | Promise<boolean>
+  show(payload: FloatingShow, selectStage: () => OffTaskPresentation['stage'] | undefined, canShow: () => boolean): boolean | Promise<boolean>
   /** macOS 알림(소리 포함 여부)을 띄운다. 띄우지 못했으면 false. */
   notify(payload: FloatingShow, sound: boolean): boolean
   /** 잠시 쉬기: 세션을 일시정지한다. */
@@ -116,12 +116,16 @@ export class InterventionWatcher {
       this.receipts.push(receipt)
       this.save()
       const sent: string[] = []
-      const shownAt = this.now()
-      const streak = shownAt < this.normalStreakExpiresAt ? this.normalStreak : 0
-      const escalation = kind === 'OFF_TASK' ? nextOffTaskStage(payload.level, streak) : null
-      if (channels.includes('MOLE_UI') && await this.deps.show(payload, escalation?.stage, canShow)) {
+      let currentStreak = 0
+      const selectStage = () => {
+        if (kind !== 'OFF_TASK') return undefined
+        currentStreak = this.now() < this.normalStreakExpiresAt ? this.normalStreak : 0
+        return nextOffTaskStage(payload.level, currentStreak).stage
+      }
+      if (channels.includes('MOLE_UI') && await this.deps.show(payload, selectStage, canShow)) {
         sent.push('MOLE_UI')
-        if (escalation && this.deps.isCurrent(sessionId)) {
+        if (kind === 'OFF_TASK' && this.deps.isCurrent(sessionId)) {
+          const escalation = nextOffTaskStage(payload.level, currentStreak)
           this.normalStreak = escalation.streak
           this.normalStreakExpiresAt = escalation.streak > 0 ? this.now() + NORMAL_STREAK_WINDOW_MS : 0
         }

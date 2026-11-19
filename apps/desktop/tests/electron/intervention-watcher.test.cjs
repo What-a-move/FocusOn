@@ -23,7 +23,7 @@ function setup(lists, { current = true, pauseOk = true, context = 'c-1', journal
   }
   let n = 0
   const watcher = new InterventionWatcher({
-    auth, show: (p, stage, canShow) => { shown.push(p); stages.push(stage); return show(canShow) }, notify: (p, sound) => { notified.push([p.interventionId, sound]); return true },
+    auth, show: (p, selectStage, canShow) => { shown.push(p); stages.push(selectStage()); return show(canShow, selectStage) }, notify: (p, sound) => { notified.push([p.interventionId, sound]); return true },
     pause: async () => { paused += 1; return { success: pauseOk } }, isCurrent: () => current, currentContext: () => context,
     journalFile, now: () => clock.t, uuid: () => `d-${++n}`,
   })
@@ -218,4 +218,25 @@ test('창 로드 도중 표시 가능 시간을 넘기면 팝업과 시스템 �
   await polling
   assert.deepEqual(t.notified, [])
   assert.equal(t.receipts()[0][1].dispatchStatus, 'NOT_SENT')
+})
+
+
+test('창을 띄우기 전에 10분이 지나면 보통 단계와 횟수를 1차로 바꾼다', async () => {
+  const clock = { t: 0 }
+  const t = setup(['one', 'two', 'three'].map((id) => [pending(id)]), {
+    clock,
+    show: (_canShow, selectStage) => {
+      if (clock.t === 599_000) {
+        clock.t = 601_000
+        assert.equal(selectStage(), 'peek')
+      }
+      return true
+    },
+  })
+  await t.watcher.poll('901', '목표', OPTIONS)
+  clock.t = 599_000
+  await t.watcher.poll('901', '목표', OPTIONS)
+  clock.t = 602_000
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages, ['peek', 'normal', 'normal'])
 })
