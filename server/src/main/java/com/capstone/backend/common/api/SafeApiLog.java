@@ -1,8 +1,10 @@
 package com.capstone.backend.common.api;
 
+import java.math.BigDecimal;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.spi.LoggingEventBuilder;
 
 /** 허용한 이벤트와 메타데이터만 로그로 내보내는 API 로거다. */
 public final class SafeApiLog {
@@ -12,7 +14,8 @@ public final class SafeApiLog {
       "profile", "consents", "focus-settings", "analysis-excluded-domains",
       "onboarding-readiness", "pairing-codes", "extension-pairings", "devices", "goals",
       "clarify", "sessions", "active", "pause", "resume", "extend", "end", "heartbeats",
-      "local-events", "analysis-runs", "interventions", "acknowledgements", "summary",
+      "local-events", "analysis-runs", "observation-context", "interventions",
+      "acknowledgements", "deliveries", "summary",
       "learning-summary", "reports", "calendar", "daily", "weekly");
   private static final Set<String> SAFE_METHODS = Set.of(
       "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS");
@@ -21,11 +24,50 @@ public final class SafeApiLog {
 
   /** 분석 경계에서 고정 enum만 받고 원문·외부 예외 메시지를 받지 않는다. */
   public static void analysisEvent(AnalysisEvent event, long startedNanos) {
+    analysisRecord(event, startedNanos).log(event.value);
+  }
+
+  /** 정규화된 판정과 상태만 남기며 AI 응답 전문이나 예외를 받지 않는다. */
+  public static void analysisAiResult(boolean failed, long startedNanos, Integer upstreamStatus,
+      Enum<?> relation, Double confidence, Enum<?> reasonCode) {
+    var event = failed ? AnalysisEvent.AI_FAIL : AnalysisEvent.AI_OK;
+    var output = analysisDecisionFields(analysisRecord(event, startedNanos), relation,
+        confidence, reasonCode);
+    if (upstreamStatus != null) {
+      output.addKeyValue("upstreamStatus", upstreamStatus);
+    }
+    if (failed) {
+      output.addKeyValue("stage", "ai");
+    }
+    output.log(event.value);
+  }
+
+  /** 저장 트랜잭션에서 확정한 판정만 기록한다. */
+  public static void analysisStoreResult(long startedNanos, Enum<?> relation,
+      Double confidence, Enum<?> reasonCode) {
+    var event = AnalysisEvent.STORE_OK;
+    analysisDecisionFields(analysisRecord(event, startedNanos), relation, confidence, reasonCode)
+        .log(event.value);
+  }
+
+  private static LoggingEventBuilder analysisDecisionFields(LoggingEventBuilder output,
+      Enum<?> relation, Double confidence, Enum<?> reasonCode) {
+    output.addKeyValue("relation", relation.name());
+    if (confidence != null) {
+      output.addKeyValue("confidence", confidence);
+    }
+    if (reasonCode != null) {
+      output.addKeyValue("reasonCode", reasonCode.name());
+    }
+    return output;
+  }
+
+  private static LoggingEventBuilder analysisRecord(AnalysisEvent event, long startedNanos) {
     boolean failure = event == AnalysisEvent.AI_FAIL || event == AnalysisEvent.STORE_FAIL;
     var output = failure ? LOGGER.atWarn() : LOGGER.atInfo();
-    output.addKeyValue("component", "analysis-orchestrator").addKeyValue("event", event.value)
-        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000))
-        .log(event.value);
+    return output.addKeyValue("component", "analysis-orchestrator")
+        .addKeyValue("event", event.value)
+        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
   }
 
   /** 모듈 연동 로깅 정본에서 정한 분석 이벤트다. */
@@ -89,7 +131,8 @@ public final class SafeApiLog {
 
   private static String safeType(Class<?> type) {
     if (type == String.class || type == Boolean.class || type == Integer.class
-        || type == Long.class || type == Double.class) {
+        || type == long.class || type == Long.class || type == Double.class
+        || type == BigDecimal.class) {
       return type.getSimpleName();
     }
     return "unknown";
