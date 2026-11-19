@@ -1191,6 +1191,87 @@ class SessionApiTests {
   }
 
   @Test
+  void learningSummaryListReturnsOnlyOwnReadyNotesNewestFirstWithCursor() throws Exception {
+    LoginResponse owner = desktop("note-list-" + UUID.randomUUID());
+    LoginResponse other = desktop("note-list-other-" + UUID.randomUUID());
+    Instant base = Instant.parse("2026-11-10T01:00:00Z");
+    // 같은 종료 시각 두 건으로 ID 보조 정렬과 커서 경계를 확인한다.
+    String oldest = endedWithSummary(owner, base, LearningSummaryResponse.Status.READY, "첫 노트");
+    String tieLow = endedWithSummary(owner, base.plusSeconds(60),
+        LearningSummaryResponse.Status.READY, "둘째 노트");
+    String tieHigh = endedWithSummary(owner, base.plusSeconds(60),
+        LearningSummaryResponse.Status.READY, "셋째 노트");
+    endedWithSummary(owner, base.plusSeconds(120), LearningSummaryResponse.Status.FAILED, null);
+    endedWithSummary(other, base.plusSeconds(180), LearningSummaryResponse.Status.READY, "남의 노트");
+    String token = "Bearer " + owner.accessToken();
+    String all = mvc.perform(get("/api/v1/learning-summaries").header("Authorization", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.items.length()").value(3))
+        .andExpect(jsonPath("$.data.nextCursor").isEmpty())
+        .andReturn().getResponse().getContentAsString();
+    var items = json.readTree(all).path("data").path("items");
+    org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(tieHigh, tieLow, oldest),
+        java.util.List.of(items.get(0).path("sessionId").asText(),
+            items.get(1).path("sessionId").asText(), items.get(2).path("sessionId").asText()));
+    var first = items.get(0);
+    org.junit.jupiter.api.Assertions.assertEquals("셋째 노트", first.path("overview").asText());
+    org.junit.jupiter.api.Assertions.assertTrue(first.path("goalSnapshot").isString());
+    org.junit.jupiter.api.Assertions.assertTrue(first.path("studyDate").isString());
+    org.junit.jupiter.api.Assertions.assertTrue(first.path("startedAt").isString());
+    org.junit.jupiter.api.Assertions.assertEquals("2026-11-10T01:01:00Z",
+        first.path("endedAt").asText());
+    org.junit.jupiter.api.Assertions.assertEquals("트랜잭션",
+        first.path("keyConcepts").get(0).path("name").asText());
+    org.junit.jupiter.api.Assertions.assertTrue(first.path("nextStartPrompt").isMissingNode());
+    java.util.List<String> paged = new java.util.ArrayList<>();
+    String cursor = null;
+    do {
+      var request = get("/api/v1/learning-summaries").param("limit", "1")
+          .header("Authorization", token);
+      if (cursor != null) {
+        request.param("cursor", cursor);
+      }
+      var data = json.readTree(mvc.perform(request).andExpect(status().isOk())
+          .andReturn().getResponse().getContentAsString()).path("data");
+      paged.add(data.path("items").get(0).path("sessionId").asText());
+      cursor = data.path("nextCursor").isNull() ? null : data.path("nextCursor").asText();
+    } while (cursor != null);
+    org.junit.jupiter.api.Assertions.assertEquals(
+        java.util.List.of(tieHigh, tieLow, oldest), paged);
+    for (String[] bad : new String[][] {{"limit", "0"}, {"limit", "51"}, {"limit", "abc"},
+        {"cursor", "abc"}, {"cursor", "1_0"}, {"cursor", "-1_5"}, {"cursor", "1_2_3"}}) {
+      mvc.perform(get("/api/v1/learning-summaries").param(bad[0], bad[1])
+              .header("Authorization", token))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+    mvc.perform(get("/api/v1/learning-summaries")).andExpect(status().isUnauthorized());
+    var extension = linked(owner);
+    mvc.perform(get("/api/v1/learning-summaries")
+            .header("Authorization", "Bearer " + extension.accessToken()))
+        .andExpect(status().isForbidden());
+  }
+
+  /** 세션 하나를 시작해 주어진 시각에 종료시키고 정리 행을 저장한 뒤 ID를 반환한다. */
+  private String endedWithSummary(LoginResponse owner, Instant endedAt,
+      LearningSummaryResponse.Status state, String overview) throws Exception {
+    String id = startForHeartbeat(owner);
+    jdbc.update("UPDATE learning_sessions SET status = 'ENDED', ended_at = ? WHERE id = ?",
+        java.sql.Timestamp.from(endedAt), Long.valueOf(id));
+    var entity = BeanUtils.instantiateClass(LearningSummaryEntity.class);
+    boolean ready = state == LearningSummaryResponse.Status.READY;
+    ReflectionTestUtils.setField(entity, "sessionId", Long.valueOf(id));
+    ReflectionTestUtils.setField(entity, "status", state);
+    ReflectionTestUtils.setField(entity, "overview", ready ? overview : null);
+    ReflectionTestUtils.setField(entity, "nextStartPrompt", ready ? "다시 살펴보세요." : null);
+    ReflectionTestUtils.setField(entity, "keyConcepts", ready
+        ? java.util.List.of(new LearningSummaryResponse.KeyConcept("트랜잭션", "원자적 변경",
+            "관련 자료 열람")) : java.util.List.of());
+    summaries.saveAndFlush(entity);
+    return id;
+  }
+
+  @Test
   void concurrentDuplicateLocalEventsCreateOneHistoryAndOneVersionChange() throws Exception {
     LoginResponse owner = desktop("event-race-" + UUID.randomUUID());
     String id = startForHeartbeat(owner);

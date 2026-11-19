@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #289 학습 노트 목록 API (2026-11-19)
+
+- `GET /api/v1/learning-summaries`를 구현했다. READY만 `endedAt DESC, id DESC`, 커서는 `종료시각(epoch 마이크로초)_세션ID` 불투명 문자열이다. 정리 생성 파이프라인(#288) 전까지 실제 데이터는 비어 있다.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - `DELETE /api/v1/devices/{deviceId}`를 구현했다. 폐기 로직은 `TokenLifecycleService.revokeDevice`에 두고 로그아웃과 같은 사용자 → family 잠금 순서를 따른다.

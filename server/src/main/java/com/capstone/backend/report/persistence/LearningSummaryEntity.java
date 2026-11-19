@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.List;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -20,6 +21,7 @@ import org.hibernate.type.SqlTypes;
 /** 세션당 정리 한 건의 저장 모델이다. 자동 생성은 #29에서 연결한다. */
 @Entity
 @Table(name = "learning_summaries")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LearningSummaryEntity {
   @Id

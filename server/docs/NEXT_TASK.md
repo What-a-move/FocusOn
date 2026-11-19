@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #289 학습 노트 목록 API (2026-11-19)
+
+- Desktop: 사이드바 학습 노트에서 호출하고 `nextCursor`를 그대로 `cursor`로 보낸다. 목록에는 `nextStartPrompt`가 없으니 회차 상세에서 단건 조회를 쓴다.
+- 실제 READY 데이터는 #288(정리 생성) 이후에 생긴다.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다. 다른 기기를 해제했으면 `GET /devices`를 다시 부르고, 404면 목록을 다시 조회한다.

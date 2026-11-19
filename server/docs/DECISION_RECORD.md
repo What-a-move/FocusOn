@@ -1,5 +1,10 @@
 # Backend 결정 기록
 
+## 2026-11-19 #289 학습 노트 목록의 커서·권한
+
+- 결정: 커서는 마지막 항목의 `종료시각(epoch 마이크로초)_세션ID` 문자열로 하고 `(endedAt, id)` 키셋 페이지네이션을 쓴다. Extension은 단건 조회와 같이 403 `SESSION_QUERY_FORBIDDEN`이다. 목록 항목은 Notion 2.4의 필드만 담고 `nextStartPrompt`는 넣지 않는다.
+- 이유: 정렬 기준이 `endedAt`이라 기존 `GET /sessions`의 ID 커서로는 같은 종료 시각·역순 ID에서 누락·중복이 생길 수 있다. 각 항목은 단건 조회와 같은 READY 검증을 거쳐 불량 저장값을 노출하지 않는다.
+
 ## 2026-11-18 #274 기기 해제의 대상·응답 기준
 
 - 결정: 이미 `REVOKED`·`LOGGED_OUT`인 기기와 숫자가 아닌 ID는 404 `DEVICE_NOT_FOUND`로 응답한다. 호출한 Desktop 자기 자신도 해제할 수 있다. Extension 호출은 `GET /devices`와 같이 401 `AUTH_RELOGIN_REQUIRED`다.
