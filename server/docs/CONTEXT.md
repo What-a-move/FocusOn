@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #290 계정 삭제 API (2026-11-19)
+
+- `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - `DELETE /api/v1/devices/{deviceId}`를 구현했다. 폐기 로직은 `TokenLifecycleService.revokeDevice`에 두고 로그아웃과 같은 사용자 → family 잠금 순서를 따른다.

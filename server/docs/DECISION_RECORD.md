@@ -1,5 +1,11 @@
 # Backend 결정 기록
 
+## 2026-11-19 #290 계정 삭제 시 Google 연결 처리
+
+- 결정: 삭제 시 `oauth_identities`를 `unlinked_at=now`, `provider_subject='deleted:<행 ID>'`로 바꾸고 닉네임을 해제한다. 같은 Google 계정의 다음 로그인은 새 계정을 만든다. 학습 기록 삭제·익명화는 후속 작업으로 분리한다.
+- 이유: `(provider, provider_subject)` 전체 유일성(V1)을 유지하면서 재가입을 막지 않고, Google sub를 남기지 않아 DATA_PRIVACY의 탈퇴 계정 익명화 기준에 맞춘다. 닉네임 유일 인덱스가 다른 사용자를 막지 않게 한다.
+- family 폐기 사유는 기존 CHECK에 있는 `DEVICE_REVOKED`를 써서 마이그레이션을 추가하지 않았다.
+
 ## 2026-11-18 #274 기기 해제의 대상·응답 기준
 
 - 결정: 이미 `REVOKED`·`LOGGED_OUT`인 기기와 숫자가 아닌 ID는 404 `DEVICE_NOT_FOUND`로 응답한다. 호출한 Desktop 자기 자신도 해제할 수 있다. Extension 호출은 `GET /devices`와 같이 401 `AUTH_RELOGIN_REQUIRED`다.
