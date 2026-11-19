@@ -47,7 +47,7 @@ const buildConfig: { apiBaseUrl?: string; googleClientId?: string } = (() => {
 
 // [주의] Scheme 권한은 app.whenReady() 전에 등록해야 한다.
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true } },
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ])
 
 // 설치한 앱은 `FocusOn` 폴더에 데이터를 둔다. 개발 실행(@focuson/desktop)과 섞이지 않고 함께 띄울 수 있다.
