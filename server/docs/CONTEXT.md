@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
+
+- 세션 종료 시 `learning_summaries`를 QUEUED로 만들고 `LearningSummaryWorker`가 입력 마감(30초) 뒤 점유해 INSUFFICIENT_DATA·READY·FAILED로 진행한다. V23에서 작업 컬럼과 `learning_review_evidences`를 추가했다.
+- AI가 근거(`reviewEvidence`)를 아직 주지 않으므로 지금은 모든 정리가 INSUFFICIENT_DATA로 끝난다. 생성 API(`/internal/v1/learning-summaries`)도 AI 미구현이다. 계획: `features/learning-summary-pipeline-PLAN.md`.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - `DELETE /api/v1/devices/{deviceId}`를 구현했다. 폐기 로직은 `TokenLifecycleService.revokeDevice`에 두고 로그아웃과 같은 사용자 → family 잠금 순서를 따른다.

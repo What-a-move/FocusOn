@@ -14,6 +14,10 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 /** V19 데이터와 checksum을 보존하면서 V20 새 쓰기 검사가 적용되는지 확인한다. */
 @EnabledIfEnvironmentVariable(named = "SPRING_DATASOURCE_URL", matches = "jdbc:postgresql:.*")
 class LearningSummaryMigrationTests {
+  /** V19 컬럼만 비교한다. 이후 마이그레이션(V23)이 추가한 작업 컬럼은 비교 대상이 아니다. */
+  private static final String LEGACY_ROW = "SELECT row_to_json(s)::text FROM (SELECT session_id,"
+      + "summary_status,overview,key_concepts,next_start_prompt FROM learning_summaries) s";
+
   @Test
   void preservesLegacyReadyAndRejectsBlankNewWrites() throws Exception {
     String url = System.getenv("SPRING_DATASOURCE_URL");
@@ -29,13 +33,13 @@ class LearningSummaryMigrationTests {
         execute(connection, "INSERT INTO learning_summaries(session_id,summary_status,overview,"
             + "next_start_prompt,key_concepts) VALUES(1,'READY',E'\\t\\n','valid',"
             + "'[{\"name\":\"concept\",\"briefExplanation\":\"valid\"}]')");
-        String before = value(connection, "SELECT row_to_json(s)::text FROM learning_summaries s");
+        String before = value(connection, LEGACY_ROW);
         String checksum = value(connection,
             "SELECT checksum::text FROM flyway_schema_history WHERE version='19'");
         Flyway.configure().dataSource(url, user, password).schemas(schema).defaultSchema(schema)
             .load().migrate();
         assertEquals(before,
-            value(connection, "SELECT row_to_json(s)::text FROM learning_summaries s"));
+            value(connection, LEGACY_ROW));
         assertEquals(checksum, value(connection,
             "SELECT checksum::text FROM flyway_schema_history WHERE version='19'"));
         assertEquals(1234, number(connection,

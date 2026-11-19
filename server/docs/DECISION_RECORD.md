@@ -1,5 +1,12 @@
 # Backend 결정 기록
 
+## 2026-11-19 #288 학습 정리 생성 위치와 작업 방식
+
+- 결정: 모델은 AI가 호출하고(AI #29 PLAN), 서버는 DB 기반 polling worker로 작업을 관리한다. 점유는 조건부 UPDATE + `attempt_count`를 fencing token으로 쓰고, lease는 60초다. AI 주소·키는 분석과 같은 `AI_ANALYSIS_URL`·`FOCUSON_AI_API_KEY`를 쓴다.
+- 이유: 별도 큐 인프라 없이 PostgreSQL만으로 세션당 단일 작업·재시작 복구·늦은 결과 차단을 보장할 수 있다. 같은 AI 서비스이므로 새 환경 변수를 늘리지 않는다.
+- 근거 부족 판단은 서로 다른 `dedupe_hash` 2개 미만이다. 출력 검사에서 민감값이 의심되면 결과 전체를 버리고 재시도한다(부분 마스킹 없음, Notion 5.5).
+- AI가 근거를 공급하기 전까지 정리는 INSUFFICIENT_DATA로 끝난다. 404보다 정확한 상태를 주기 위해 근거 공급 합의를 기다리지 않고 파이프라인을 먼저 넣었다.
+
 ## 2026-11-18 #274 기기 해제의 대상·응답 기준
 
 - 결정: 이미 `REVOKED`·`LOGGED_OUT`인 기기와 숫자가 아닌 ID는 404 `DEVICE_NOT_FOUND`로 응답한다. 호출한 Desktop 자기 자신도 해제할 수 있다. Extension 호출은 `GET /devices`와 같이 401 `AUTH_RELOGIN_REQUIRED`다.
