@@ -232,12 +232,13 @@ Notification은 Renderer가 임의의 문장을 보내는 방식이 아니라 Ma
 
 | Channel | 방향 | 입력·Payload | Backend |
 | --- | --- | --- | --- |
-| `floating:show` (Event) | Main → 포키 창 | `{ interventionId, kind: OFF_TASK \| BREAK, level, goalText, say, sub }` | — |
-| `intervention:act` | 포키 창 → Main | `{ interventionId, action: RECENTER \| ACK \| REST \| CLOSE }` → `{ done: true }` | `POST /interventions/{id}/acknowledgements { action: ACKNOWLEDGED \| DISMISSED }` |
+| `floating:show` (Event) | Main → 포키 창 | `{ interventionId, kind, level, goalText, say, sub, presentation? }` 또는 `null` | — |
+| `intervention:act` | 포키 창 → Main | `{ interventionId, action: RECENTER \| ACK \| REST \| CLOSE \| OPEN_APP }` → `{ done: true }` | `POST /interventions/{id}/acknowledgements { action: ACKNOWLEDGED \| DISMISSED }` |
 
 - Main `InterventionWatcher`가 세션 `RUNNING` 동안 10초마다 `GET /sessions/{id}/interventions`를 조회해 처음 보는 `PENDING` 하나를 보여 준다. 채널은 알림 값, 없으면 세션 시작 때 고른 값(`MOLE_UI` 포키 창, `MACOS_NOTIFICATION` 알림, `SOUND` 알림 소리).
 - 포키 창은 `/floating/`을 띄운 macOS panel 창(투명·테두리 없음·다른 앱 위·포커스를 빼앗지 않음)이며, 이 창에서 온 `intervention:act`만 받는다. 문구는 Main이 정해 보낸다.
-- `RECENTER`·`REST`는 `ACKNOWLEDGED`, `CLOSE`는 `DISMISSED`로 기록하고 `REST`는 세션을 일시정지한다. `ACK`(확인했어)는 창만 닫는다(5분 재집중은 화면 상태). 기록 실패는 다시 보내지 않는다.
+- `kind`는 `OFF_TASK`·`BREAK`·`DISCONNECTED`다. 딴짓 알림의 `presentation`에는 화면 단계와 필요한 좌우 위치 또는 적극 팻말 번호가 담긴다. `null`은 보관한 알림과 Renderer 타이머를 지우는 신호다.
+- `RECENTER`·`REST`는 `ACKNOWLEDGED`, `CLOSE`는 `DISMISSED`로 기록한다. 딴짓 알림의 `ACK`는 내려가는 모션 또는 토스트가 끝난 뒤 창만 닫는다. `REST`는 세션을 일시정지하고, 연결 끊김의 `OPEN_APP`은 메인 창을 연다. 기록 실패는 다시 보내지 않는다.
 - 알림 목록 응답 형식은 Notion에 필드만 있어 `{ interventionId, type, status, channels }` 배열 또는 `{ interventions: [] }`로 읽는다(백엔드 확인 필요).
 
 ### 설정 Channel (2026-10-27, Issue #80, 결정 029)

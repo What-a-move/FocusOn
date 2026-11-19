@@ -807,3 +807,11 @@ Notion에 조회 응답 필드와 목표 도달 전이 방법이 없어 앱 재�
 - 모서리는 macOS가 자르므로 그림 바깥 모서리는 가장자리 색으로 채운다. `resources/icon.png`도 같은 그림(1024 캔버스, 824 몸통)으로 바꿔 둔다.
 - 설치 파일 빌드에는 Xcode 26 이상(`actool` 26)이 필요하다. 개발 실행(`pnpm preview:electron`)은 Electron 기본 아이콘이 보인다.
 - 영향받는 파일: `resources/icon.icon/`, `resources/icon.png`, `electron-builder.yml`
+
+## 결정 043 - 강도별 딴짓 알림과 주 화면 흐림 오버레이
+
+- 상태: 확정 (2026-11-19, [#282](https://github.com/What-a-move/FocusOn/issues/282))
+- 동작: 약하게는 자동 숨김 팻말, 보통은 세션의 연속 OFF_TASK 표시에 따라 구석 포키 → 연한 흐림 → 적극 단계로 높인다. 마지막 보통 표시 후 10분, 약하게·적극 표시, 세션 종료·변경은 횟수를 초기화한다. 10분은 서버 OffTaskTimeline의 시간 창과 같은 길이로 맞춘다. 적극 단계는 올라온 뒤 5초 동안 입력을 잠근다.
+- 기술: 구석 알림은 Dock 아래 레벨의 투명 패널과 Dock 보정을 사용한다. 화면 전체 알림은 주 화면 크기의 `screen-saver` 패널, `hud` vibrancy와 .22/.38 색 덮기를 쓴다. macOS에서 전체 화면 Space와 일반 Space의 배치를 검증했다.
+- 확인 기록: 돌아가기 클릭은 `ACKNOWLEDGED`, 자동 숨김과 `이것도 공부야`는 `DISMISSED`를 쓴다. 서버 기록이 없는 카메라 알림은 포키·팻말 클릭으로만 닫고 공부 표시와 토스트를 보여 주지 않는다. 화면 흐림은 macOS에서 합성하며 화면 데이터를 저장하지 않는다.
+- 관련 문서: [강도별 포키 딴짓 알림 기획](features/poki-intensity-PLAN.md)
