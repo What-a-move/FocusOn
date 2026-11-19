@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 강도별 포키 딴짓 알림 ([#282](https://github.com/What-a-move/FocusOn/issues/282), `codex/282-desktop-poki-intensity`)
+- 상태: 기능 구현, Desktop 테스트 192개, 10분 초기화·카메라 버튼 숨김 반영, Electron 상태별 캡처 9장 완료. 디자인 확인 뒤 캡처와 [결과 리포트](features/poki-intensity-REPORT.md)를 연결해 `dev` 대상 PR을 연다. 실제 서버의 개입 수신과 공부 표시 기록은 계정이 연결된 환경에서 확인한다.
+
 - 작업명: 설정 연결 코드 카드·복사 (Issue #257, `fix/257-pairing-code-card`)
 - 상태: 설정 > 기기 연결의 코드를 온보딩과 같은 글자 칸 + `복사`로 바꾸고 좁은 창(800px)에서는 안내를 아래 줄로 내림. 요청 제한 안내를 서버 제한(10분)에 맞춤. 실제 앱에서 복사(`XXX-XXX`) 확인(2026-11-13). 목표 시간 끝난 뒤 첫 끝내기·연장 버전 충돌(#256)도 해결(`focus-session-end-version-conflict-ERROR.md`). 남은 일 없음.
 

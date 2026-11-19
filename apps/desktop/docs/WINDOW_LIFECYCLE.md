@@ -1,13 +1,13 @@
 # Desktop Window 생명주기
 
-> 결정 상태: Window 종류와 생명주기 기준은 확정했다. Main Window의 생성·숨김·재표시·단일 실행을 구현했다. Floating Feedback Window와 Menu Bar Item은 후속 작업이다.
+> 결정 상태: Window 종류와 생명주기 기준은 확정했다. Main Window와 Floating Feedback Window를 구현했다. Menu Bar Item은 후속 작업이다.
 
 ## Window 종류
 
 | Window | 역할 | 기본 생성 시점 |
 | --- | --- | --- |
 | Main | 로그인, 학습 설정, 세션 시작, 리포트 | 앱 준비 후 |
-| Floating Feedback | 두더지·팻말·집중 복귀 안내 | 학습 세션 시작 시 |
+| Floating Feedback | 두더지·팻말·집중 복귀 안내 | 첫 알림을 띄울 때 |
 
 macOS Menu Bar Item은 Window가 아니라 앱 상태 확인과 Window 열기를 위한 진입점으로 다룬다.
 
@@ -38,14 +38,10 @@ NOT_CREATED → CREATING → READY → VISIBLE ↔ HIDDEN → DESTROYED
 
 ## Floating Feedback Window
 
-- 사용자의 작업 화면을 과도하게 가리지 않는다.
-- 학습 세션 중에는 일반 Window보다 위에 표시하되 전체 화면 앱과 시스템 보안 화면을 침범하지 않는다.
-- 기본 상태에서는 클릭을 받을 수 있으며 지정된 Drag Handle에서만 이동한다. 버튼과 조작 영역은 `no-drag`로 분리한다.
-- 전체 Window 클릭 통과는 기본값으로 사용하지 않는다. 필요하면 사용자가 켤 수 있는 별도 모드로 추가하고 Menu Bar에서 반드시 해제할 수 있게 한다.
-- 위치는 Main Process의 설정 저장소에 `{ displayId, xRatio, yRatio }` 형태로 저장한다.
-- `displayId`가 사라졌거나 화면 배율·배치가 바뀌면 Primary Display의 `workArea` 안으로 위치를 보정한다.
-- 집중 상태가 바뀔 때마다 Window를 새로 만들지 않고 안전하게 상태를 갱신한다.
-- 세션 종료와 사용자 숨김 설정을 구분한다.
+- 구석 알림은 주 화면 아래에 고정하고, Dock이 있을 때 그 위로 올린다. 포키·팻말·버튼 바깥의 클릭은 뒤 앱으로 전달한다.
+- 보통 2차와 적극 알림은 주 화면 전체 크기의 `screen-saver` 투명 패널이다. `hud` vibrancy와 연한색 또는 진한색 덮개를 적용한다. 큰 알림이 떠 있는 동안에는 창이 클릭을 받는다.
+- 포커스를 요구하지 않고 띄우며 전체 화면 Space에도 표시한다. macOS가 위치를 작업 영역으로 옮길 수 있으므로 표시 뒤 실제 화면 좌표를 다시 지정한다. 큰 창은 `enableLargerThanScreen`으로 노치와 Dock 위치까지 덮는다.
+- 같은 크기의 창은 숨겼다가 다시 쓴다. 구석과 전체 화면 사이를 바꿀 때는 이전 창을 닫고 새 크기의 패널을 만든다.
 
 ## Navigation과 외부 Window
 
@@ -59,9 +55,7 @@ NOT_CREATED → CREATING → READY → VISIBLE ↔ HIDDEN → DESTROYED
 - Main Window 닫기: 앱과 세션을 유지하고 Window만 숨김
 - Dock·Menu Bar 재진입: 기존 Window 표시 또는 재생성
 - Settings: Main Window의 `/settings` Route
-- Floating Window: 기본 클릭 가능, Drag Handle만 이동 가능
-- 위치 저장: Display ID와 화면 내부 비율을 Main Process에서 저장
-- Multi Monitor: 저장된 Display가 없으면 Primary Display 안으로 보정
+- Floating Window: 주 화면의 구석 패널 또는 전체 화면 흐림 패널
 - 완전 종료: `Cmd+Q` 또는 명시적인 종료 메뉴만 사용
 
 ## 공식 참고
