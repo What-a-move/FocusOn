@@ -20,6 +20,10 @@
 | 학습 정리 신규 테스트 | 위 두 환경 | 검증기 32, AI 클라이언트 18, 파이프라인 11, migration 2 모두 통과 |
 | 동시성 반복 | PostgreSQL, 8 Worker 동시 점유 + lease 탈취 | 10/10회 통과(점유 1, AI 호출 1, 늦은 결과 미저장) |
 
+## 재검증 (2026-11-20, `feat/288-learning-summary-pipeline`)
+
+같은 커밋을 규칙 브랜치로 옮긴 뒤 전부 다시 실행했다. 결과는 위와 같다: H2 전체 411개(실패 1은 shim 원인)·Checkstyle 0, PostgreSQL CI 목록 218개 실패 0, 동시성 10/10, 실서버 E2E A~E 통과, 로그 유출 0건.
+
 ## 실서버 E2E (실제 포트·PostgreSQL·스케줄러 1초·별도 프로세스 가짜 AI)
 
 Google 교환과 온보딩 판정만 테스트 대역이다. 나머지(JWT 서명·Token Family·Flyway·스케줄러·AI HTTP)는 실제로 실행했다. 일회성 QA 코드는 커밋하지 않았다.
@@ -35,7 +39,7 @@ Google 교환과 온보딩 판정만 테스트 대역이다. 나머지(JWT 서�
 
 ## 남은 제한
 
-- 실제 Google 로그인 200은 확인하지 못했다. 이 환경에는 팀 Google Client 설정(`.env`)과 사용자 Google 계정 브라우저 세션이 없다. 로컬 Mac에서 `SWAGGER_TESTING.md` 순서로 확인해야 한다.
+- 실제 Google 로그인 200은 확인하지 못했다. Google 서버 접속은 되지만 (1) 서버의 `GOOGLE_DESKTOP_CLIENT_ID`/`SECRET`이 든 `server/.env`가 이 환경에 없고 (2) PKCE 로그인은 등록된 테스트 계정으로 브라우저에서 사람이 로그인·동의해야 한다. 일회용 code를 채팅으로 옮기는 것도 `SWAGGER_TESTING.md`가 금지한다. 로컬 Mac에서 같은 문서 순서로 확인해야 한다.
 - 근거를 만드는 쪽(분석 응답의 `reviewEvidence`)이 AI 합의 전이라 실제 환경에서는 모든 정리가 `INSUFFICIENT_DATA`로 끝난다.
 - AI의 `/internal/v1/learning-summaries`가 미구현이라 READY는 가짜 AI로만 확인했다.
 - `learning_review_evidences` 90일 보관 정리(DATA_PRIVACY)는 기존 보관 cleanup worker 작업에서 다룬다.

@@ -8,7 +8,7 @@
 - 작성일: 2026-11-19
 - 우선순위: MVP - 기본
 - 관련 Issue: #288 (상위 #29, 조회 API #206, 프론트 노트 #129)
-- 작업 Branch: `ccr-4e2e9e17-mtn816` (이 작업 환경이 push를 허용한 브랜치. 팀 규칙명은 `feat/288-learning-summary-pipeline`)
+- 작업 Branch: `feat/288-learning-summary-pipeline`
 - 관련 Client·AI 문서: `AI/docs/features/learning-summary-PLAN.md`, `docs/API_CONTRACT.md` 리포트·학습 정리, `docs/DATA_PRIVACY.md`
 - Notion 리포트 설계서 5장·8.2: 이 작업 환경의 Notion 연결로는 404여서 원문을 확인하지 못했다. 로컬 정본과 AI PLAN을 기준으로 했다.
 
