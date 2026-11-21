@@ -37,6 +37,30 @@ class LearningSummaryOutputGuardTests {
     assertEquals("OUTPUT_SENSITIVE", LearningSummaryOutputGuard.reject(draft(text)));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"summary-v1", "gpt-4o-mini:2026-01", "qwen3.5_14b"})
+  void ordinaryModelVersionPasses(String modelVersion) {
+    assertNull(LearningSummaryOutputGuard.reject(draft("정상 정리", modelVersion)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"password=hunter2abc", "https://example.com/model",
+      "9f8e7d6c5b4a39281706f5e4d3c2b1a0aa", "summary v1", "-v1", ""})
+  void sensitiveOrMalformedModelVersionIsRejected(String modelVersion) {
+    assertEquals("OUTPUT_SENSITIVE",
+        LearningSummaryOutputGuard.reject(draft("정상 정리", modelVersion)));
+  }
+
+  @org.junit.jupiter.api.Test
+  void missingModelVersionPasses() {
+    assertNull(LearningSummaryOutputGuard.reject(draft("정상 정리", null)));
+  }
+
+  private static LearningSummaryAiClient.Draft draft(String overview, String modelVersion) {
+    return new LearningSummaryAiClient.Draft(overview,
+        List.of(new KeyConcept("개념", "짧은 설명", null)), "다음에 이어서 보세요.", modelVersion);
+  }
+
   private static LearningSummaryAiClient.Draft draft(String overview) {
     return new LearningSummaryAiClient.Draft(overview,
         List.of(new KeyConcept("개념", "짧은 설명", null)), "다음에 이어서 보세요.", "v1");

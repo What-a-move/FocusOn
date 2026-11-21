@@ -28,6 +28,9 @@ final class LearningSummaryOutputGuard {
       Pattern.compile("(?i)(?:otp|인증\\s*(?:번호|코드)|verification\\s*code)\\D{0,12}"
           + "(?<!\\d)\\d{6}(?!\\d)"));
 
+  /** 모델 식별자는 짧은 이름·버전 문자만 허용한다(예: summary-v1, gpt-4o-mini:2026-01). */
+  private static final Pattern MODEL_VERSION = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._:-]{0,63}");
+
   private LearningSummaryOutputGuard() {}
 
   /** 통과하면 null, 실패하면 저장할 고정 오류 코드를 반환한다. */
@@ -50,6 +53,11 @@ final class LearningSummaryOutputGuard {
     if (sensitive(draft.overview()) || sensitive(draft.nextStartPrompt())
         || draft.keyConcepts().stream().anyMatch(concept -> sensitive(concept.name())
             || sensitive(concept.briefExplanation()) || sensitive(concept.sessionEvidence()))) {
+      return "OUTPUT_SENSITIVE";
+    }
+    // model_version도 그대로 저장되므로 식별자 형식이 아니거나 민감값이면 결과 전체를 버린다.
+    if (draft.modelVersion() != null && (sensitive(draft.modelVersion())
+        || !MODEL_VERSION.matcher(draft.modelVersion()).matches())) {
       return "OUTPUT_SENSITIVE";
     }
     return null;
