@@ -338,7 +338,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 GET /api/v1/learning-summaries?cursor=&limit=
 ```
 
-`GET /api/v1/learning-summaries`(학습 노트 목록, 2026-11-19 #289 구현): Desktop 전용(Extension 403 `SESSION_QUERY_FORBIDDEN`). 본인 `READY` 정리만 세션 `endedAt DESC, sessionId DESC`로 반환한다. `limit` 기본 20·1~50. 응답은 `{items:[{sessionId,goalSnapshot,studyDate,startedAt,endedAt,accumulatedActiveMs,overview,keyConcepts}],nextCursor}`이며 마지막 페이지면 `nextCursor=null`이다. `nextCursor`는 불투명 문자열이므로 그대로 `cursor`로 보낸다. 잘못된 limit·cursor는 400 `VALIDATION_ERROR`다. `nextStartPrompt`는 목록에 없고 회차 단건 조회에서 본다.
+`GET /api/v1/learning-summaries`(학습 노트 목록, 2026-11-19 #289 구현): Desktop 전용(Extension 403 `SESSION_QUERY_FORBIDDEN`). 본인 `READY` 정리만 세션 `endedAt DESC, sessionId DESC`로 반환한다. `limit` 기본 20·1~50. 응답은 `{items:[{sessionId,goalSnapshot,studyDate,startedAt,endedAt,accumulatedActiveMs,overview,keyConcepts}],nextCursor}`이며 마지막 페이지면 `nextCursor=null`이다. `nextCursor`는 불투명 문자열이므로 그대로 `cursor`로 보낸다. 잘못된 limit·cursor는 400 `VALIDATION_ERROR`다. `nextStartPrompt`는 목록에 없고 회차 단건 조회에서 본다. 검증에 실패한 정리는 목록에서 빠지므로 한 페이지 항목 수가 `limit`보다 적어도 `nextCursor`가 있으면 계속 이어서 조회한다.
 
 `GET /api/v1/sessions/{sessionId}/summary` 응답 필드는 다음과 같다(2026-11-02 확정). 제목 필드만 `goalSnapshot`이다. 필수: `sessionId`, `goalSnapshot`, `targetDurationMs`, `accumulatedActiveMs`. 선택(없으면 화면에 `기록 없음`): `status`(`ENDED`·`ABANDONED`), `startedAt`, `endedAt`, `totalPausedMs`, `pauseCount`, `autoPauseCount`, `autoPauseReasons[]`, `relatedDurationMs`, `unrelatedDurationMs`, `uncertainDurationMs`, `extensionCount`, `extendedDurationMs`, `interventionCount`.
 

@@ -87,8 +87,10 @@ public class LearningSummaryService {
         PageRequest.of(0, limit + 1));
     boolean hasMore = rows.size() > limit;
     var page = rows.subList(0, Math.min(limit, rows.size()));
+    // 불량 READY 한 건 때문에 목록 전체가 열리지 않으면 안 되므로 그 항목만 뺀다.
+    // 커서는 건너뛴 행까지 포함한 마지막 조회 행 기준이라 다음 페이지가 밀리지 않는다.
     var items = page.stream().map(row -> item((LearningSessionEntity) row[0],
-        (LearningSummaryEntity) row[1])).toList();
+        (LearningSummaryEntity) row[1])).filter(java.util.Objects::nonNull).toList();
     String next = null;
     if (hasMore) {
       var last = (LearningSessionEntity) page.getLast()[0];
@@ -99,8 +101,15 @@ public class LearningSummaryService {
 
   private LearningSummaryListResponse.Item item(LearningSessionEntity session,
       LearningSummaryEntity summary) {
-    // 단건 조회와 같은 READY 검증을 거쳐 불량 저장값을 노출하지 않는다.
-    LearningSummaryResponse ready = summary.response();
+    // 단건 조회와 같은 READY 검증을 거쳐 불량 저장값을 노출하지 않는다. 단건은 503이지만
+    // 목록은 해당 항목만 빼고 내용 없이 세션 ID만 기록한다.
+    LearningSummaryResponse ready;
+    try {
+      ready = summary.response();
+    } catch (ApiException invalid) {
+      com.capstone.backend.common.api.SafeApiLog.learningSummaryHidden(session.getId());
+      return null;
+    }
     return new LearningSummaryListResponse.Item(session.getId().toString(),
         session.getGoalTextSnapshot(), session.getStudyDate(), session.getStartedAt(),
         session.getEndedAt(), session.getAccumulatedActiveMs(), ready.overview(),

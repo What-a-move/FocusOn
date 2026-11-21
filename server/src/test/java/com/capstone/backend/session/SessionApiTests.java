@@ -1252,6 +1252,42 @@ class SessionApiTests {
         .andExpect(status().isForbidden());
   }
 
+  /** 검증에 실패한 READY 한 건은 목록에서만 빠지고, 커서는 건너뛴 행 뒤에서 이어진다. */
+  @Test
+  void learningSummaryListSkipsInvalidReadyWithoutBreakingPaging() throws Exception {
+    // PostgreSQL은 V20 CHECK가 새 불량 READY 쓰기를 막는다. V20 이전 행과 같은 상태는 H2로 재현한다.
+    org.junit.jupiter.api.Assumptions.assumeFalse(String.valueOf(
+        System.getenv("SPRING_DATASOURCE_URL")).startsWith("jdbc:postgresql:"));
+    LoginResponse owner = desktop("note-list-bad-" + UUID.randomUUID());
+    Instant base = Instant.parse("2026-11-11T01:00:00Z");
+    String oldest = endedWithSummary(owner, base, LearningSummaryResponse.Status.READY, "첫 노트");
+    String middle = endedWithSummary(owner, base.plusSeconds(60),
+        LearningSummaryResponse.Status.READY, "둘째 노트");
+    String broken = endedWithSummary(owner, base.plusSeconds(120),
+        LearningSummaryResponse.Status.READY, " ");
+    String token = "Bearer " + owner.accessToken();
+    mvc.perform(get("/api/v1/sessions/" + broken + "/learning-summary")
+            .header("Authorization", token))
+        .andExpect(status().isServiceUnavailable());
+    mvc.perform(get("/api/v1/learning-summaries").header("Authorization", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.items.length()").value(2))
+        .andExpect(jsonPath("$.data.items[0].sessionId").value(middle))
+        .andExpect(jsonPath("$.data.items[1].sessionId").value(oldest));
+    var first = json.readTree(mvc.perform(get("/api/v1/learning-summaries").param("limit", "2")
+            .header("Authorization", token)).andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString()).path("data");
+    org.junit.jupiter.api.Assertions.assertEquals(1, first.path("items").size());
+    org.junit.jupiter.api.Assertions.assertEquals(middle,
+        first.path("items").get(0).path("sessionId").asText());
+    mvc.perform(get("/api/v1/learning-summaries").param("limit", "2")
+            .param("cursor", first.path("nextCursor").asText()).header("Authorization", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.items.length()").value(1))
+        .andExpect(jsonPath("$.data.items[0].sessionId").value(oldest))
+        .andExpect(jsonPath("$.data.nextCursor").isEmpty());
+  }
+
   /** 세션 하나를 시작해 주어진 시각에 종료시키고 정리 행을 저장한 뒤 ID를 반환한다. */
   private String endedWithSummary(LoginResponse owner, Instant endedAt,
       LearningSummaryResponse.Status state, String overview) throws Exception {
