@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #290 계정 삭제 API (2026-11-19)
+
+- `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.
+
 ## Issue #289 학습 노트 목록 API (2026-11-19)
 
 - `GET /api/v1/learning-summaries`를 구현했다. READY만 `endedAt DESC, id DESC`, 커서는 `종료시각(epoch 마이크로초)_세션ID` 불투명 문자열이다. 정리 생성 파이프라인(#288) 전까지 실제 데이터는 비어 있다.

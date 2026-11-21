@@ -1,5 +1,11 @@
 # Backend 결정 기록
 
+## 2026-11-19 #290 계정 삭제 시 Google 연결 처리
+
+- 결정: 삭제 시 `oauth_identities`를 `unlinked_at=now`, `provider_subject='deleted:<행 ID>'`로 바꾸고 닉네임을 해제한다. 같은 Google 계정의 다음 로그인은 새 계정을 만든다. 학습 기록 삭제·익명화는 후속 작업으로 분리한다.
+- 이유: `(provider, provider_subject)` 전체 유일성(V1)을 유지하면서 재가입을 막지 않고, Google sub를 남기지 않아 DATA_PRIVACY의 탈퇴 계정 익명화 기준에 맞춘다. 닉네임 유일 인덱스가 다른 사용자를 막지 않게 한다.
+- family 폐기 사유는 기존 CHECK에 있는 `DEVICE_REVOKED`를 써서 마이그레이션을 추가하지 않았다.
+
 ## 2026-11-21 #289 학습 노트 목록의 불량 READY 처리
 
 - 결정: 목록은 단건 조회의 READY 검증에 실패한 항목만 빼고 나머지를 반환한다. 다음 커서는 건너뛴 행까지 포함한 마지막 조회 행 기준이라, 한 페이지 항목 수가 `limit`보다 적어도 `nextCursor`가 있을 수 있다. 뺀 항목은 세션 ID만 경고 로그로 남긴다. 단건 조회는 그대로 503이다.

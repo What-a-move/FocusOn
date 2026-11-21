@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #290 계정 삭제 API (2026-11-19)
+
+- Desktop: 설정의 계정 삭제 버튼에서 확인 후 호출하고, 204면 token을 지우고 로그인 화면으로 보낸다.
+- Backend 후속: 삭제 계정의 학습 기록 30일 이내 삭제·익명화 작업(새 Issue). 문서 오너: Notion API 명세서에 계정 삭제 행 추가.
+- 테스트 후속: `TokenLifecycleApiTests`의 Extension 도우미가 한 사용자에 Extension 2개를 만들어 PostgreSQL의 단일 활성 Extension 제약에 걸린다(H2·CI 영향 없음).
+
 ## Issue #289 학습 노트 목록 API (2026-11-19)
 
 - Desktop: 사이드바 학습 노트에서 호출하고 `nextCursor`를 그대로 `cursor`로 보낸다. 목록에는 `nextStartPrompt`가 없으니 회차 상세에서 단건 조회를 쓴다.

@@ -433,6 +433,61 @@ class TokenLifecycleApiTests {
         .andExpect(jsonPath("$.code").value("DEVICE_NOT_FOUND"));
   }
 
+  /** 계정 삭제는 모든 기기를 끊고, 같은 Google 계정의 다음 로그인은 새 계정을 만든다. */
+  @Test
+  void deleteAccountRevokesEveryDeviceAndNextLoginStartsNewAccount() throws Exception {
+    final Session first = desktop();
+    final Session second = desktop();
+    final Session child = extension(first);
+    jdbc.update("update users set nickname=? where id=?", "탈퇴" + (first.userId() % 1000),
+        first.userId());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete("/api/v1/users/me").header("Authorization", "Bearer " + first.access()))
+        .andExpect(status().isNoContent()).andExpect(content().string(""));
+    me(first.access(), 401);
+    me(second.access(), 401);
+    me(child.access(), 401);
+    for (Session session : List.of(first, second, child)) {
+      assertEquals(UserDeviceEntity.Status.REVOKED,
+          devices.findById(session.deviceId()).orElseThrow().getStatus());
+      assertEquals(0, activeTokenCount(session.familyId()));
+    }
+    var user = users.findById(first.userId()).orElseThrow();
+    assertTrue(user.getDeletedAt() != null);
+    assertEquals(null, user.getNickname());
+    assertEquals(0, jdbc.queryForObject("select count(*) from oauth_identities "
+        + "where user_id=? and unlinked_at is null", Integer.class, first.userId()));
+    assertEquals(0, jdbc.queryForObject("select count(*) from oauth_identities "
+        + "where provider_subject=?", Integer.class, subject));
+    final Session fresh = desktop();
+    assertNotEquals(first.userId(), fresh.userId());
+    me(fresh.access(), 200);
+    // 삭제된 계정은 token 재사용 판정보다 먼저 재로그인 요구로 끝난다.
+    refreshError(second.refresh(), "AUTH_RELOGIN_REQUIRED");
+  }
+
+  /** Extension·무인증·이미 삭제된 계정의 호출은 삭제를 진행하지 않고 401이다. */
+  @Test
+  void deleteAccountRejectsExtensionAnonymousAndDeletedCallers() throws Exception {
+    final Session desktop = desktop();
+    final Session child = extension(desktop);
+    var path = "/api/v1/users/me";
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete(path).header("Authorization", "Bearer " + child.access()))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("AUTH_RELOGIN_REQUIRED"));
+    me(desktop.access(), 200);
+    assertEquals(null, users.findById(desktop.userId()).orElseThrow().getDeletedAt());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(path))
+        .andExpect(status().isUnauthorized());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete(path).header("Authorization", "Bearer " + desktop.access()))
+        .andExpect(status().isNoContent());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete(path).header("Authorization", "Bearer " + desktop.access()))
+        .andExpect(status().isUnauthorized());
+  }
+
   /** DTO 문자열 변환에 Access·Refresh Token 원문이 포함되지 않게 한다. */
   @Test
   void tokenDtoStringsNeverExposeSecrets() {
