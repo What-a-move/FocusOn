@@ -4,6 +4,18 @@
 
 ## 실행
 
+### 목표와 페이지 관련성 비교 (#277)
+
+로컬 평가에서 직접 입력한 목표와 페이지의 관련성을 비교한다. 같은 페이지를 목표 한 줄과 확장 목록으로 각각 판정하고, 문단별 근거와 목표 생성 시간을 확인한다. 결과 CSV에는 페이지 원문을 넣지 않는다.
+
+```bash
+python -m pip install -r AI/requirements.txt -r AI/evaluation/requirements-goal-profile.txt
+PYTHONPATH=AI:. python -m streamlit run AI/evaluation/goal_profile_streamlit.py --server.address 127.0.0.1 --server.port 8511
+PYTHONPATH=AI:. python -m streamlit run AI/evaluation/goal_profile_upstage_streamlit.py --server.address 127.0.0.1 --server.port 8512
+```
+
+두 실행 명령은 각각 별도 터미널에서 사용한다. OpenAI는 `OPENAI_API_KEY`, Upstage는 `UPSTAGE_API_KEY`를 로컬 `AI/.env`에서 읽는다. 비교 화면에는 합성 또는 비민감 공개 테스트 입력을 사용한다. 후보 점수와 임계값은 로컬 평가용이다.
+
 ## 이 브랜치의 목표 보조 실행 (#12)
 
 JEV·Claude·LangGraph 목표 보조와 Streamlit 실행 코드가 포함돼 있다. 아래 공통 scaffold 설명은 이 기능 이외 영역의 상태와 구분한다. 공개 decision 4종과 내부 clarityStatus 6종의 변환, 실제 Backend 연결은 아직 미검증이다.
@@ -25,7 +37,7 @@ ANTHROPIC_API_KEY=발급받은_Claude_키
 CLAUDE_MODEL=claude-haiku-4-5-20251001
 ```
 
-이미 `CLAUDE_API_KEY`를 사용하고 있다면 그대로 인식한다. 두 이름이 모두 있으면 `ANTHROPIC_API_KEY`가 우선이므로 하나만 설정한다. 폐기한 `OPENAI_API_KEY`와 `OPENAI_*` 설정은 사용하지 않는다. Streamlit Cloud에서는 같은 값을 앱 Secrets에 설정하고 Reboot한다. 로컬에서도 키·모델 변경 후 Streamlit 서버를 재시작한다.
+이미 `CLAUDE_API_KEY`를 사용하고 있다면 그대로 인식한다. 두 이름이 모두 있으면 `ANTHROPIC_API_KEY`가 우선이므로 하나만 설정한다. 이 목표 보조 흐름은 Claude 설정을 사용한다. Streamlit Cloud에서는 같은 값을 앱 Secrets에 설정하고 Reboot한다. 로컬에서도 키·모델 변경 후 Streamlit 서버를 재시작한다.
 
 ## 담당 기능
 
