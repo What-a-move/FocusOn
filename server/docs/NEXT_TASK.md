@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #289 학습 노트 목록 API (2026-11-19)
+
+- Desktop: 사이드바 학습 노트에서 호출하고 `nextCursor`를 그대로 `cursor`로 보낸다. 목록에는 `nextStartPrompt`가 없으니 회차 상세에서 단건 조회를 쓴다.
+- 실제 READY 데이터는 #288(정리 생성) 이후에 생긴다.
+
 ## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
 
 - AI 담당: (1) 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하, 원문·URL 없음) 추가 여부·형식 합의 (2) `POST /internal/v1/learning-summaries` 구현 — 서버 제안 형식은 PLAN 참고.

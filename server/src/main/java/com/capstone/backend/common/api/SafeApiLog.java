@@ -65,6 +65,13 @@ public final class SafeApiLog {
         .log("session cleanup candidate failed");
   }
 
+  /** 검증에 실패한 READY 학습 정리를 목록에서 뺐음을 세션 ID만으로 기록한다. */
+  public static void learningSummaryHidden(long sessionId) {
+    LOGGER.atWarn().addKeyValue("component", "learning-summary-list")
+        .addKeyValue("event", "summary.invalid.hidden").addKeyValue("sessionId", sessionId)
+        .log("invalid learning summary hidden from list");
+  }
+
   /** 요청 시작 시 고정된 필드만 기록한다. */
   public static void httpIn(String method, String path) {
     LOGGER.atInfo().addKeyValue("component", "request-filter").addKeyValue("event", "http.in")

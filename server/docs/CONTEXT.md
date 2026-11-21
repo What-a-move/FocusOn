@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #289 학습 노트 목록 API (2026-11-19)
+
+- `GET /api/v1/learning-summaries`를 구현했다. READY만 `endedAt DESC, id DESC`, 커서는 `종료시각(epoch 마이크로초)_세션ID` 불투명 문자열이다. 정리 생성 파이프라인(#288) 전까지 실제 데이터는 비어 있다.
+
 ## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
 
 - 세션 종료 시 `learning_summaries`를 QUEUED로 만들고 `LearningSummaryWorker`가 입력 마감(30초) 뒤 점유해 INSUFFICIENT_DATA·READY·FAILED로 진행한다. V23에서 작업 컬럼과 `learning_review_evidences`를 추가했다.
