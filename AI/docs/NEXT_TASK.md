@@ -19,6 +19,10 @@
 
 화면 관련성 Streamlit UI는 2026-11-03 제거했다. Hybrid runner는 `evaluation/analysis_runner.py`에 유지하며, 목표 보조의 별도 Streamlit 테스트 화면은 유지한다.
 
+## 화면 활동 분류 실험 후속 검토
+
+- [502건 후보](../evaluation/screen_activity/README.md)로 판정 후보를 확인하고, 캔버스 작업·게임의 화면 단서와 실제 세션의 오알림을 검증한다.
+
 ## 가장 먼저 진행할 작업
 
 - 작업명: Server Adapter에서 AI 단일 판정 경로를 실제 호출하고 전체 이탈 알림 왕복을 확인한다.

@@ -1,0 +1,22 @@
+{
+  "rows": 502,
+  "labels": {
+    "STUDY": 150,
+    "OFF_TASK": 154,
+    "UNCERTAIN": 198
+  },
+  "trainingDataSHA256": "13bd0ae2acce0563e282d61fade3edf07e17d67dad9169b5710ba2b9fdbfa2ce",
+  "headSHA256": "b17cedeaf9de0daae470d4384d7240a7110aff28abdc64938c349b3dc92c2269",
+  "encoderSHA256": "7a77d5da5ee721c7c740e4082447d3026b6521d3eac5edb93edb6aa88f03b7d7",
+  "marginPp": 1.0,
+  "usesGoal": false,
+  "usesHostOrApp": false,
+  "config": {
+    "title_scale": 0.0,
+    "word_scale": 0.45,
+    "C": 32.0,
+    "groupedMacroF1": 0.9430482172042387,
+    "publicMacroF1": 0.8976102518302006,
+    "studyFalseAlarm": 0
+  }
+}
