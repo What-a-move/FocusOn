@@ -405,6 +405,7 @@ GET /api/v1/learning-summaries?cursor=&limit=
 - 학습 정리 응답과 저장 JSON은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용한다. `reviewQuestions`와 자동 퀴즈는 MVP에서 사용하지 않는다.
 - `keyConcepts`는 `{ name, briefExplanation, sessionEvidence }` 객체 배열로 최대 5개다. 설명과 근거는 확정된 세션 근거 범위만 사용하고 원문·URL·코드·개인정보를 포함하지 않는다. 전체 정리 결과는 1,200자 이하다. 서로 다른 근거가 2개 미만이면 추측으로 채우지 않고 `INSUFFICIENT_DATA`를 반환한다.
 - `learningSummaryStatus`는 HTTP 오류 코드가 아니라 정상 응답의 업무 상태다.
+- (#288 구현, 2026-11-19) `POST /sessions/{id}/end`로 ENDED가 확정되면 정리 행이 `QUEUED`로 생긴다. 종료 30초 뒤 입력을 고정하고 근거 2개 미만이면 `INSUFFICIENT_DATA`, AI 실패는 1분·5분 뒤 재시도하고 세 번째 실패에서 `FAILED`다. AI가 근거를 공급하기 전까지는 `INSUFFICIENT_DATA`로 끝난다.
 - 집중 달력은 세션 시작 시 확정한 `studyDate`를 기준으로 집계한다. 자정을 넘긴 세션도 시작일 하나에 귀속한다.
 - 세션용 migration에서 `learning_sessions.study_date`는 처음부터 `DATE NOT NULL`로 만든다. 출시 전 신규 세션 모델의 기존 기록 백필은 하지 않는다. 이 결정 자체로 기존 DB나 테스트 데이터를 삭제하지 않는다.
 - 달력 집계에는 종료가 확정된 `ENDED`, `ABANDONED` 세션만 포함하고, `ABANDONED`는 마지막 서버 확정 누적 시간만 사용한다.

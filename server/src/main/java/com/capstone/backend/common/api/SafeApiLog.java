@@ -41,6 +41,23 @@ public final class SafeApiLog {
     }
   }
 
+  /**
+   * 학습 정리 worker의 AI 호출·저장 결과를 분석과 같은 정본 이벤트 이름으로 기록한다.
+   * 목표·근거·모델 출력·예외 메시지는 넣지 않고 고정 오류 코드만 남긴다.
+   */
+  public static void learningSummaryEvent(AnalysisEvent event, long startedNanos,
+      String errorCode) {
+    boolean failure = event == AnalysisEvent.AI_FAIL || event == AnalysisEvent.STORE_FAIL;
+    var output = failure ? LOGGER.atWarn() : LOGGER.atInfo();
+    output = output.addKeyValue("component", "learning-summary-worker")
+        .addKeyValue("event", event.value)
+        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
+    if (errorCode != null) {
+      output = output.addKeyValue("errorCode", errorCode);
+    }
+    output.log(event.value);
+  }
+
   /** 자동 정리 실패를 식별자나 예외 메시지 없이 기록한다. */
   public static void sessionCleanupFailure(RuntimeException exception) {
     LOGGER.atWarn().addKeyValue("component", "session-heartbeat-cleanup")
