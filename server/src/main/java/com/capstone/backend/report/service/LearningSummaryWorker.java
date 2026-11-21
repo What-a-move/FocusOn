@@ -104,12 +104,12 @@ public class LearningSummaryWorker {
   }
 
   private void process(long id, Instant now) {
-    Integer claimed = transactions.execute(status -> summaries.claim(id, Status.QUEUED,
-        Status.GENERATING, now, now.plus(LEASE)));
-    if (claimed == null || claimed == 0) {
-      return;
-    }
+    // 점유와 시도 번호(fencing token) 읽기를 한 transaction에서 한다. 나눠 두면 점유 직후 멈춘
+    // 사이 lease가 끝나 다른 worker가 다음 시도를 점유했을 때, 그 worker의 번호를 읽어 버린다.
     var job = transactions.execute(status -> {
+      if (summaries.claim(id, Status.QUEUED, Status.GENERATING, now, now.plus(LEASE)) == 0) {
+        return null;
+      }
       var summary = summaries.findById(id).orElseThrow();
       var session = sessions.findById(id).orElseThrow();
       Instant cutoff = summary.getInputCutoffAt() == null ? now : summary.getInputCutoffAt();
@@ -117,6 +117,9 @@ public class LearningSummaryWorker {
           PageRequest.of(0, MAX_EVIDENCE));
       return new Job(summary.getAttemptCount(), session.getGoalTextSnapshot(), input);
     });
+    if (job == null) {
+      return;
+    }
     long distinct = job.evidences().stream().map(LearningReviewEvidenceEntity::getDedupeHash)
         .distinct().count();
     if (distinct < MIN_EVIDENCE) {
