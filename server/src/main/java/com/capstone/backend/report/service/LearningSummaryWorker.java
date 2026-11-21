@@ -13,6 +13,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 import org.slf4j.MDC;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -41,6 +43,8 @@ public class LearningSummaryWorker {
   private final LearningSummaryAiClient ai;
   private final TransactionTemplate transactions;
   private final SingleFlightRunner runner = new SingleFlightRunner("learning-summary-worker");
+  /** 한 번 훑는 동안 흐른 시간을 재는 단조 시계다. 테스트는 멈추거나 직접 움직인다. */
+  private volatile LongSupplier ticker = System::nanoTime;
 
   /** 저장소와 AI 내부 호출, 짧은 transaction을 연결한다. */
   public LearningSummaryWorker(LearningSummaryRepository summaries,
@@ -87,15 +91,20 @@ public class LearningSummaryWorker {
     runner.close();
   }
 
-  /** now 기준으로 처리할 수 있는 작업을 한 번 훑는다. 테스트는 시각을 직접 넘긴다. */
+  /**
+   * now 기준으로 처리할 수 있는 작업을 한 번 훑는다. 테스트는 시각을 직접 넘긴다.
+   * 작업 선택은 now로 하고, 점유 lease·재시도 시각은 앞선 AI 호출만큼 흐른 실제 시각으로 정한다.
+   */
   public void processDue(Instant now) {
     transactions.executeWithoutResult(status ->
         summaries.failExhausted(Status.GENERATING, Status.FAILED, now));
     var due = summaries.findDue(Status.QUEUED, Status.GENERATING, now,
         PageRequest.of(0, BATCH_SIZE));
+    long base = ticker.getAsLong();
+    Supplier<Instant> clock = () -> now.plusNanos(Math.max(0, ticker.getAsLong() - base));
     for (Long id : due) {
       try {
-        process(id, now);
+        process(id, clock);
       } catch (RuntimeException exception) {
         SafeApiLog.learningSummaryEvent(AnalysisEvent.STORE_FAIL, System.nanoTime(),
             exception.getClass().getSimpleName());
@@ -103,16 +112,19 @@ public class LearningSummaryWorker {
     }
   }
 
-  private void process(long id, Instant now) {
+  private void process(long id, Supplier<Instant> clock) {
+    Instant claimedAt = clock.get();
     // 점유와 시도 번호(fencing token) 읽기를 한 transaction에서 한다. 나눠 두면 점유 직후 멈춘
     // 사이 lease가 끝나 다른 worker가 다음 시도를 점유했을 때, 그 worker의 번호를 읽어 버린다.
     var job = transactions.execute(status -> {
-      if (summaries.claim(id, Status.QUEUED, Status.GENERATING, now, now.plus(LEASE)) == 0) {
+      if (summaries.claim(id, Status.QUEUED, Status.GENERATING, claimedAt,
+          claimedAt.plus(LEASE)) == 0) {
         return null;
       }
       var summary = summaries.findById(id).orElseThrow();
       var session = sessions.findById(id).orElseThrow();
-      Instant cutoff = summary.getInputCutoffAt() == null ? now : summary.getInputCutoffAt();
+      Instant cutoff = summary.getInputCutoffAt() == null ? claimedAt
+          : summary.getInputCutoffAt();
       List<LearningReviewEvidenceEntity> input = evidences.findInput(id, cutoff,
           PageRequest.of(0, MAX_EVIDENCE));
       return new Job(summary.getAttemptCount(), session.getGoalTextSnapshot(), input);
@@ -125,7 +137,7 @@ public class LearningSummaryWorker {
     if (distinct < MIN_EVIDENCE) {
       // 근거가 부족하면 모델을 부르지 않고 지어내지 않는다.
       transactions.execute(status -> summaries.completeWithoutContent(id, job.attempt(),
-          Status.GENERATING, Status.INSUFFICIENT_DATA, null, null, (int) distinct, now));
+          Status.GENERATING, Status.INSUFFICIENT_DATA, null, null, (int) distinct, clock.get()));
       return;
     }
     String traceId = UUID.randomUUID().toString();
@@ -141,13 +153,13 @@ public class LearningSummaryWorker {
         draft = ai.generate(id + "-" + job.attempt(), id, job.goalSnapshot(), request, traceId);
       } catch (LearningSummaryAiClient.AiFailure failure) {
         SafeApiLog.learningSummaryEvent(AnalysisEvent.AI_FAIL, started, failure.code());
-        retryOrFail(id, job.attempt(), failure.code(), (int) distinct, now);
+        retryOrFail(id, job.attempt(), failure.code(), (int) distinct, clock.get());
         return;
       }
       String rejected = LearningSummaryOutputGuard.reject(draft);
       if (rejected != null) {
         SafeApiLog.learningSummaryEvent(AnalysisEvent.AI_FAIL, started, rejected);
-        retryOrFail(id, job.attempt(), rejected, (int) distinct, now);
+        retryOrFail(id, job.attempt(), rejected, (int) distinct, clock.get());
         return;
       }
       SafeApiLog.learningSummaryEvent(AnalysisEvent.AI_OK, started, null);
@@ -156,7 +168,7 @@ public class LearningSummaryWorker {
               && summary.getAttemptCount() == job.attempt())
           .map(summary -> {
             summary.markReady(draft.overview(), draft.keyConcepts(), draft.nextStartPrompt(),
-                draft.modelVersion(), (int) distinct, Instant.now());
+                draft.modelVersion(), (int) distinct, clock.get());
             return true;
           }).orElse(false));
       // 다른 시도가 이미 끝냈으면 늦은 결과로 덮어쓰지 않는다.
@@ -167,12 +179,14 @@ public class LearningSummaryWorker {
     }
   }
 
-  private void retryOrFail(long id, short attempt, String code, int evidenceCount, Instant now) {
+  /** 재시도 간격은 실패한 시각부터 센다. */
+  private void retryOrFail(long id, short attempt, String code, int evidenceCount,
+      Instant failedAt) {
     boolean last = attempt > RETRY_DELAYS.size();
-    Instant retryAt = last ? null : now.plus(RETRY_DELAYS.get(attempt - 1));
+    Instant retryAt = last ? null : failedAt.plus(RETRY_DELAYS.get(attempt - 1));
     transactions.execute(status -> summaries.completeWithoutContent(id, attempt,
         Status.GENERATING, last ? Status.FAILED : Status.QUEUED, retryAt, code, evidenceCount,
-        now));
+        failedAt));
   }
 
   private record Job(short attempt, String goalSnapshot,

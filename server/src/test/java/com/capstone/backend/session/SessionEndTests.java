@@ -58,9 +58,20 @@ class SessionEndTests {
   @Autowired private LearningSummaryWorker worker;
   @Autowired private LearningReviewEvidenceRepository evidences;
   private MockMvc mvc;
+  /** worker가 재는 경과 시간이다. 기본은 멈춰 있어 processDue에 넘긴 시각이 그대로 쓰인다. */
+  private final java.util.concurrent.atomic.AtomicLong ticks =
+      new java.util.concurrent.atomic.AtomicLong();
+
+  @org.junit.jupiter.api.AfterEach
+  void restoreTicker() {
+    org.springframework.test.util.ReflectionTestUtils.setField(worker, "ticker",
+        (java.util.function.LongSupplier) System::nanoTime);
+  }
 
   @BeforeEach
   void setUp() {
+    org.springframework.test.util.ReflectionTestUtils.setField(worker, "ticker",
+        (java.util.function.LongSupplier) ticks::get);
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
         .addFilters(new RequestIdFilter()).build();
     when(google.exchange(any())).thenAnswer(invocation -> "session-" + UUID.randomUUID());
@@ -412,6 +423,71 @@ class SessionEndTests {
     worker.processDue(first.plusSeconds(3600));
     org.mockito.Mockito.verify(ai, org.mockito.Mockito.times(3)).generate(any(),
         org.mockito.ArgumentMatchers.eq(Long.parseLong(ended.fixture().id())), any(), any(), any());
+  }
+
+  /** AI 호출이 21초 걸려 실패하면 1분 재시도는 실패 시각부터 센다. */
+  @Test
+  void retryDelayStartsWhenAttemptFails() throws Exception {
+    var ended = ended();
+    long id = Long.parseLong(ended.fixture().id());
+    insertEvidence(ended, "인덱스 범위 스캔", "a");
+    insertEvidence(ended, "커버링 인덱스", "b");
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenAnswer(invocation -> {
+          if (invocation.<Long>getArgument(1) == id) {
+            ticks.addAndGet(TimeUnit.SECONDS.toNanos(21));
+          }
+          throw new LearningSummaryAiClient.AiFailure("AI_TIMEOUT");
+        });
+    java.time.Instant first = ended.endedAt().plusSeconds(31);
+    worker.processDue(first);
+    assertSummary(ended, "QUEUED", 1);
+    org.junit.jupiter.api.Assertions.assertEquals(first.plusSeconds(21 + 60),
+        jdbc.queryForObject("SELECT next_attempt_at FROM learning_summaries WHERE session_id = ?",
+            java.sql.Timestamp.class, id).toInstant());
+    worker.processDue(first.plusSeconds(80));
+    assertSummary(ended, "QUEUED", 1);
+    worker.processDue(first.plusSeconds(81));
+    assertSummary(ended, "QUEUED", 2);
+  }
+
+  /** 앞선 작업의 AI 호출이 길어져도 뒤 작업은 자기 점유 시각부터 lease 60초를 받는다. */
+  @Test
+  void laterJobGetsFullLeaseFromItsClaimTime() throws Exception {
+    var slow = ended();
+    var later = ended();
+    long slowId = Long.parseLong(slow.fixture().id());
+    long laterId = Long.parseLong(later.fixture().id());
+    for (var each : java.util.List.of(slow, later)) {
+      insertEvidence(each, "트랜잭션 격리 수준", "a");
+      insertEvidence(each, "MVCC 스냅샷", "b");
+    }
+    var leases = new java.util.concurrent.ConcurrentHashMap<Long, java.time.Instant>();
+    var offsets = new java.util.concurrent.ConcurrentHashMap<Long, Long>();
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenAnswer(invocation -> {
+          long session = invocation.getArgument(1);
+          if (session == slowId || session == laterId) {
+            leases.put(session, jdbc.queryForObject(
+                "SELECT lease_until FROM learning_summaries WHERE session_id = ?",
+                java.sql.Timestamp.class, session).toInstant());
+            offsets.put(session, ticks.get());
+          }
+          if (session == slowId) {
+            ticks.addAndGet(TimeUnit.SECONDS.toNanos(63));
+          }
+          throw new LearningSummaryAiClient.AiFailure("AI_TIMEOUT");
+        });
+    java.time.Instant now = later.endedAt().plusSeconds(31);
+    worker.processDue(now);
+    org.junit.jupiter.api.Assertions.assertEquals(2, leases.size());
+    for (long session : java.util.List.of(slowId, laterId)) {
+      // 각 작업의 lease는 그 작업을 점유한 시각(now + 그때까지 흐른 시간) + 60초다.
+      org.junit.jupiter.api.Assertions.assertEquals(
+          now.plusNanos(offsets.get(session)).plusSeconds(60), leases.get(session));
+    }
+    org.junit.jupiter.api.Assertions.assertTrue(leases.values().stream()
+        .anyMatch(lease -> lease.equals(now.plusSeconds(63 + 60))));
   }
 
   @Test
