@@ -168,6 +168,7 @@ function drawRanges(s) {
 }
 function render(x) {
   const s = x.session;
+  $("modelVersion").textContent = x.modelRows.toLocaleString("ko-KR") + "건 모델 · 로컬 실행";
   const old = data?.session?.id;
   data = x;
   if (s?.id !== old) {
@@ -197,7 +198,9 @@ function render(x) {
   $("sessionTitle").textContent = s
     ? { active: "진행 중인 세션", ended: "종료한 세션", interrupted: "중단된 세션" }[s.status]
     : "새 세션";
-  $("sessionTime").textContent = s ? when(s.startedAt) + " 시작" : "시작할 준비가 되었습니다.";
+  $("sessionTime").textContent = s
+    ? when(s.startedAt) + " 시작 · " + s.modelRows.toLocaleString("ko-KR") + "건 모델"
+    : "시작할 준비가 되었습니다.";
   $("elapsed").textContent = fmt(s?.durationSec || 0);
   $("live").textContent = stages[x.monitor.status] || x.monitor.status;
   if (!s) return;
@@ -330,7 +333,7 @@ $("range").onsubmit = (e) => {
 $("download").onclick = () => {
   if (!data?.session) return;
   const blob = new Blob(
-    [JSON.stringify({ modelRows: 4743, notifications: false, session: data.session }, null, 2)],
+    [JSON.stringify({ modelRows: data.session.modelRows, notifications: false, session: data.session }, null, 2)],
     { type: "application/json" },
   );
   const a = node("a");

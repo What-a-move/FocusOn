@@ -1,6 +1,11 @@
 {
-  "headSHA256": "74373c736cd7ab3a795cf7deff72fde8b47113813ada130ff4b6a628f0786d10",
+  "headSHA256": "b684d12c0e4af1d171b8244beb6bb0a78373e0c19ac3ee657b8d4678f58d35c9",
   "sourcePanelSHA256": "b200d5035d49b6b556f59305ee13f76bac44524059044d75b4195e39e7f3bdbf",
+  "summary": {
+    "total": 22,
+    "correct": 19,
+    "domRequests": 18
+  },
   "screens": [
     {
       "publicCaseId": "feedcheck-laftel.net",

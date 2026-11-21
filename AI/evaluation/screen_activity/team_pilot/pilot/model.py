@@ -21,7 +21,7 @@ from src.preprocessing.adapter import observation_is_current
 from src.preprocessing.validator import contains_sensitive_data
 
 PILOT_GOAL = "학습 활동 확인"
-EXPECTED_HEAD = "74373c736cd7ab3a795cf7deff72fde8b47113813ada130ff4b6a628f0786d10"
+EXPECTED_HEAD = "b684d12c0e4af1d171b8244beb6bb0a78373e0c19ac3ee657b8d4678f58d35c9"
 
 
 def verified_payload(sid, context, sequence, source, metadata, body):
@@ -92,8 +92,9 @@ class LocalModel:
         from activity import ActivityClassifier, MODEL_DIR
 
         manifest = json.loads((MODEL_DIR / "manifest.json").read_text())
-        if manifest["headSHA256"] != EXPECTED_HEAD or manifest["rows"] != 4743:
+        if manifest["headSHA256"] != EXPECTED_HEAD or manifest["rows"] != 10_168:
             raise RuntimeError("MODEL_VERSION_MISMATCH")
+        self.rows = manifest["rows"]
         self.classifier = ActivityClassifier(MODEL_DIR)
         scores = self.classifier.predict(
             [

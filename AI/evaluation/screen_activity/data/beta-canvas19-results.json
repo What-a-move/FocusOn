@@ -1,0 +1,144 @@
+{
+  "headSHA256": "b684d12c0e4af1d171b8244beb6bb0a78373e0c19ac3ee657b8d4678f58d35c9",
+  "sourcePanelSHA256": "0c512317d7fa98ca696aab95437be0de64b081a45588707de209fae49e1bd1c5",
+  "summary": {
+    "total": 19,
+    "correct": 10,
+    "domRequests": 19
+  },
+  "screens": [
+    {
+      "publicCaseId": "monster",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "racer",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "net",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "raid",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "doodle",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "geo-UNCERTAIN",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "geo-STUDY",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "circuit-UNCERTAIN",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "circuit-STUDY",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "ray-UNCERTAIN",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "ray-STUDY",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "excal-blank",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "excal-worked",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "kleki-blank",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "kleki-worked",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "paintz-blank",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "paintz-worked",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "logo-blank",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "logo-work",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    }
+  ]
+}

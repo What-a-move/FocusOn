@@ -1,4 +1,4 @@
-"""Install the pinned E5 encoder for the 4,743-row screen activity model."""
+"""Install the pinned E5 encoder for the screen activity model."""
 
 import json
 import shutil

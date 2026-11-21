@@ -5,7 +5,7 @@
 
 ## 화면 활동 분류 실험
 
-- 4,743건으로 학습한 분류기와 1%p 보류 기준을 팀 내부 무알림 베타에서 사용한다. [실행 방법](../evaluation/screen_activity/README.md) · [화면·세션·응답 시간 평가](../evaluation/screen_activity/BETA_RESULTS.md).
+- 팀 내부 무알림 베타는 10,168건으로 학습한 단일 화면 활동 분류기와 1%p 보류 기준을 사용한다. 고정 Chrome 화면 22개 중 19개, 캔버스 19개 중 10개를 맞혔다. 7개 도구에서 빈 화면과 작업 후의 확장 입력이 같았고 모두 보류했다. 팀원의 실제 공부 시간당 오알림은 실사용 세션에서 측정한다. [실행 방법](../evaluation/screen_activity/README.md) · [평가 결과](../evaluation/screen_activity/BETA_RESULTS.md)
 
 ## 담당 영역
 

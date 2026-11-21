@@ -79,7 +79,8 @@ def run_observation(raw):
 
 st.set_page_config(page_title="FocusOn · 화면 활동 테스트")
 st.title("화면 활동 테스트")
-st.caption("4,743건 베타 모델 · 탭 메타데이터와 Chrome DOM · 앱 메타데이터와 데스크톱 OCR")
+model_rows = json.loads((MODEL_DIR / "manifest.json").read_text(encoding="utf-8"))["rows"]
+st.caption(f"{model_rows:,}건 베타 모델 · 탭 메타데이터와 Chrome DOM · 앱 메타데이터와 데스크톱 OCR")
 if not (MODEL_DIR / "encoder" / "model.safetensors").is_file():
     st.error("먼저 python setup_encoder.py를 실행해 주세요.")
     st.stop()

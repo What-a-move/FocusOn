@@ -1,7 +1,9 @@
 import json
+import sqlite3
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -113,7 +115,7 @@ class SessionTests(unittest.TestCase):
         self.clock = Clock()
         self.sessions = Sessions(self.path, clock=self.clock, wall_clock=lambda: 0)
         self.addCleanup(lambda: self.sessions.close())
-        self.sid = self.sessions.start()["id"]
+        self.sid = self.sessions.start(10_168)["id"]
 
     def event(self):
         event = None
@@ -197,6 +199,28 @@ class SessionTests(unittest.TestCase):
         self.assertTrue(m["rateProvisional"])
         self.assertEqual(m["falsePerStudyHour"], 0)
 
+    def test_migrate_legacy_history_and_keep_each_sessions_model(self):
+        path = self.path.with_name("legacy.sqlite3")
+        with closing(sqlite3.connect(path)) as old, old:
+            old.execute(
+                "CREATE TABLE sessions (id TEXT PRIMARY KEY, started_at REAL NOT NULL, "
+                "status TEXT NOT NULL, elapsed REAL NOT NULL DEFAULT 0)"
+            )
+            old.execute("INSERT INTO sessions VALUES ('old', 0, 'ended', 60)")
+        sessions = Sessions(path)
+        try:
+            self.assertEqual(sessions.snapshot("old")["modelRows"], 4743)
+            new = sessions.start(10_168)
+            self.assertEqual(new["modelRows"], 10_168)
+            sessions.finish(new["id"])
+        finally:
+            sessions.close()
+        sessions = Sessions(path)
+        try:
+            self.assertEqual([s["modelRows"] for s in sessions.list_sessions()], [10_168, 4743])
+        finally:
+            sessions.close()
+
     def test_recovery_and_validation(self):
         self.clock.t = 100
         self.sessions.observe(self.sid, "a", "GUARD", "SYSTEM")
@@ -212,9 +236,9 @@ class SessionTests(unittest.TestCase):
             self.sessions.set_interval(self.sid, 0, 101, "STUDY")
         with self.assertRaises(KeyError):
             self.sessions.review(self.sid, 999, "STUDY")
-        new = self.sessions.start()
+        new = self.sessions.start(10_168)
         self.assertNotEqual(self.sid, new["id"])
-        self.assertEqual(self.sessions.start()["id"], new["id"])
+        self.assertEqual(self.sessions.start(10_168)["id"], new["id"])
         self.assertEqual(self.sessions.finish(self.sid)["status"], "interrupted")
         self.assertEqual(self.sessions.snapshot()["id"], new["id"])
 

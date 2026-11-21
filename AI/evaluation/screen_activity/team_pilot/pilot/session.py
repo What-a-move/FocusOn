@@ -231,7 +231,8 @@ class Sessions:
         self.db.executescript("""
             CREATE TABLE IF NOT EXISTS sessions(
               id TEXT PRIMARY KEY, started_at REAL NOT NULL,
-              status TEXT NOT NULL, elapsed REAL NOT NULL DEFAULT 0);
+              status TEXT NOT NULL, elapsed REAL NOT NULL DEFAULT 0,
+              model_rows INTEGER NOT NULL DEFAULT 4743);
             CREATE UNIQUE INDEX IF NOT EXISTS single_active ON sessions(status) WHERE status='active';
             CREATE TABLE IF NOT EXISTS events(
               id INTEGER PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id),
@@ -247,6 +248,12 @@ class Sessions:
               PRIMARY KEY(session_id, start_sec), CHECK(end_sec > start_sec));
         """)
         with self.db:
+            # Every session created before this column used the pinned 4,743-row beta.
+            columns = {row["name"] for row in self.db.execute("PRAGMA table_info(sessions)")}
+            if "model_rows" not in columns:
+                self.db.execute(
+                    "ALTER TABLE sessions ADD COLUMN model_rows INTEGER NOT NULL DEFAULT 4743"
+                )
             self.db.execute("UPDATE sessions SET status='interrupted' WHERE status='active'")
 
     def close(self):
@@ -278,6 +285,7 @@ class Sessions:
     def _brief(self, row):
         return {
             "id": row["id"],
+            "modelRows": row["model_rows"],
             "status": row["status"],
             "startedAt": datetime.fromtimestamp(row["started_at"], timezone.utc).isoformat(),
             "durationSec": math.floor(self._elapsed(row)),
@@ -341,15 +349,15 @@ class Sessions:
             observed_metrics(result, itertools.chain(measured, tail))
             return result
 
-    def start(self):
+    def start(self, model_rows):
         with self._transaction():
             existing = self._get()
             if existing and existing["status"] == "active":
                 return self.snapshot(existing["id"])
             sid = uuid.uuid4().hex
             self.db.execute(
-                "INSERT INTO sessions(id,started_at,status) VALUES(?,?,'active')",
-                (sid, self._wall()),
+                "INSERT INTO sessions(id,started_at,status,model_rows) VALUES(?,?,'active',?)",
+                (sid, self._wall(), model_rows),
             )
             self._origin = self._clock()
             self._coverage_kind = "DWELL"

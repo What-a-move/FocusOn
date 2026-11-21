@@ -127,6 +127,7 @@ class Handler(BaseHTTPRequestHandler):
             sid = parse_qs(parts.query).get("id", [None])[0]
             store = self.server.sessions
             result = dict(
+                modelRows=self.server.model_rows,
                 session=store.snapshot(sid),
                 history=store.list_sessions(),
                 monitor=self.server.monitor.diagnostic(),
@@ -168,7 +169,7 @@ class Handler(BaseHTTPRequestHandler):
                 if data.get("consent") is not True:
                     raise ValueError()
                 with monitor.lock:
-                    out = store.start()
+                    out = store.start(self.server.model_rows)
                     if monitor.sid != out["id"]:
                         monitor.activate(out["id"])
             elif path == "/api/end":
@@ -226,6 +227,7 @@ def main():
         server.sessions = Sessions(STORE / "sessions.sqlite3")
         try:
             model = LocalModel()
+            server.model_rows = model.rows
             monitor = server.monitor = Monitor(server.sessions, model)
             monitor.thread.start()
             sys.stdout.write(f"로컬 테스트 화면 {ORIGIN}\n")
