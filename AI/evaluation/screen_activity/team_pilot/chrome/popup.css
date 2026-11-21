@@ -1,0 +1,46 @@
+body {
+  width: 295px;
+  margin: 18px;
+  color: #202a32;
+  font:
+    14px -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+h1 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+p {
+  line-height: 1.5;
+  margin: 8px 0 14px;
+  color: #374550;
+}
+label {
+  display: block;
+  margin: 12px 0 4px;
+  font-weight: 600;
+}
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 7px;
+  border: 1px solid #a7b0b4;
+  border-radius: 5px;
+}
+button {
+  font: inherit;
+  padding: 7px 10px;
+  margin: 0 5px 0 0;
+  background: #214e53;
+  border: 1px solid #214e53;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+#disconnect {
+  background: white;
+  color: #214e53;
+}

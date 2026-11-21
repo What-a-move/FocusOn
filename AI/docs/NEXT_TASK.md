@@ -19,6 +19,10 @@
 
 화면 관련성 Streamlit UI는 2026-11-03 제거했다. Hybrid runner는 `evaluation/analysis_runner.py`에 유지하며, 목표 보조의 별도 Streamlit 테스트 화면은 유지한다.
 
+## 화면 활동 분류 실험 후속 검토
+
+- [팀 무알림 베타](../evaluation/screen_activity/team_pilot/README.md)에서 팀원이 검토한 공부 시간당 오알림 후보, 관찰 가능 시간, 지속 딴짓 누락을 확인한다. 빈 캔버스와 기능 소개 페이지에서 근거가 부족한데 확정하는 사례를 우선 살핀다.
+
 ## 가장 먼저 진행할 작업
 
 - 작업명: Server Adapter에서 AI 단일 판정 경로를 실제 호출하고 전체 이탈 알림 왕복을 확인한다.

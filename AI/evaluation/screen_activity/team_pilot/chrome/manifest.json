@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "FocusOn 로컬 테스트",
+  "description": "실행 중인 로컬 테스트에서 현재 활성 탭을 확인합니다.",
+  "version": "1.0.0",
+  "minimum_chrome_version": "120",
+  "incognito": "not_allowed",
+  "permissions": ["storage", "scripting", "tabs", "webNavigation", "alarms"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": {"service_worker": "background.js", "type": "module"},
+  "action": {"default_popup": "popup.html", "default_title": "FocusOn 로컬 테스트"},
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'; connect-src http://127.0.0.1:18743"}
+}

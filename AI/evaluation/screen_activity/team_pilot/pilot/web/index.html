@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FocusOn Local Pilot · 무알림 테스트</title>
+    <link rel="stylesheet" href="/pilot.css" />
+    <script defer src="/pilot.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="header"><b>FocusOn</b><span>팀 테스트</span></div>
+    </header>
+    <main>
+      <section class="lead">
+        <div>
+          <p class="eyebrow">4,743건 모델 · 로컬 실행</p>
+          <h1>무알림 세션</h1>
+          <p>평소처럼 공부하세요. 알림이 울렸을 시각은 이 화면에만 기록됩니다.</p>
+        </div>
+        <button id="setup" aria-expanded="false">연결 설정</button>
+      </section>
+      <section id="settings" class="panel" hidden>
+        <h2>수집 연결</h2>
+        <div class="cols">
+          <div>
+            <h3>Chrome 확장</h3>
+            <p>
+              Chrome 확장 관리에서 개발자 모드를 켜고, 팀 테스트의 <code>chrome</code> 폴더를
+              불러오세요. 확장 아이콘을 열고 연결 코드를 붙여 넣으세요.
+            </p>
+            <button id="pair">연결 코드 보기</button
+            ><input id="token" aria-label="확장 연결 코드" readonly hidden />
+          </div>
+          <div>
+            <h3>데스크톱 창</h3>
+            <p>
+              macOS 화면 기록 권한을 허용하면 현재 창의 제목을 확인하고 필요한 경우에만 OCR을
+              실행합니다.
+            </p>
+            <button id="permission">화면 기록 권한 요청</button>
+            <p id="perm"></p>
+          </div>
+        </div>
+      </section>
+      <div class="line">
+        <div id="connection"></div>
+        <label
+          >세션 기록
+          <select id="history" aria-label="세션 기록">
+            <option>기록 없음</option>
+          </select></label
+        >
+      </div>
+      <section class="panel" id="control">
+        <div class="line">
+          <div>
+            <h2 id="sessionTitle">새 세션</h2>
+            <p id="sessionTime">시작할 준비가 되었습니다.</p>
+          </div>
+          <strong class="clock" id="elapsed">00:00</strong>
+        </div>
+        <div id="begin">
+          <label class="check"
+            ><input id="consent" type="checkbox" /> 이 세션에서 활성 창과 탭을 로컬로 분석하는 데
+            동의합니다.</label
+          ><button id="start" class="primary" disabled>무알림 테스트 시작</button>
+        </div>
+        <div class="line" id="active" hidden>
+          <span id="live"></span><button id="end">세션 종료</button>
+        </div>
+      </section>
+      <div role="status" id="notice" aria-live="polite"></div>
+      <div id="report" hidden>
+        <section aria-label="세션 결과">
+          <div class="line">
+            <h2>세션 결과</h2>
+            <span id="completion" class="tag"></span>
+          </div>
+          <div class="score">
+            <div><span>공부 1시간당 오알림</span><strong id="rate">—</strong></div>
+            <div><span>공부 중 오알림</span><strong id="falseCount">—</strong></div>
+            <div><span>직접 확인한 공부 시간</span><strong id="study">—</strong></div>
+          </div>
+          <p id="metricNote"></p>
+          <p id="coverage"></p>
+        </section>
+        <section>
+          <div class="line">
+            <h2>알림 후보</h2>
+            <span id="eventCount"></span>
+          </div>
+          <p>
+            기록된 시각에 실제로 무엇을 하고 있었는지 선택하세요. 휴식·회의·음악은 별도로
+            집계됩니다.
+          </p>
+          <div id="events"></div>
+        </section>
+        <section>
+          <h2>실제 활동 시간</h2>
+          <p>
+            기억하는 구간을 선택해 실제 활동을 표시하세요. 같은 구간에 다시 저장하면 수정할 수
+            있습니다.
+          </p>
+          <div id="ranges"></div>
+          <form id="range">
+            <label
+              >시작
+              <input
+                id="from"
+                required
+                inputmode="numeric"
+                placeholder="00:00"
+                autocomplete="off" /></label
+            ><label
+              >끝
+              <input
+                id="to"
+                required
+                inputmode="numeric"
+                placeholder="30:00"
+                autocomplete="off" /></label
+            ><label
+              >실제 활동
+              <select id="truth">
+                <option value="STUDY">공부</option>
+                <option value="OFF_TASK">딴짓</option>
+                <option value="OTHER">휴식·회의·음악 등</option>
+                <option value="UNKNOWN">미확인</option>
+              </select></label
+            ><button class="primary">구간 저장</button>
+          </form>
+          <div class="line foot">
+            <span>시간은 세션 시작부터 분:초로 입력합니다.</span
+            ><button id="download">결과 JSON 저장</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

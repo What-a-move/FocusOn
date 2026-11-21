@@ -1,0 +1,182 @@
+{
+  "headSHA256": "74373c736cd7ab3a795cf7deff72fde8b47113813ada130ff4b6a628f0786d10",
+  "sourcePanelSHA256": "b200d5035d49b6b556f59305ee13f76bac44524059044d75b4195e39e7f3bdbf",
+  "screens": [
+    {
+      "publicCaseId": "feedcheck-laftel.net",
+      "group": "leisure-discovery",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "feedcheck-dailymotion.com",
+      "group": "leisure-discovery",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-rottentomatoes.com",
+      "group": "leisure-discovery",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "feedcheck-soompi.com",
+      "group": "leisure-discovery",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "feedcheck-webtoons.com",
+      "group": "leisure-discovery",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "feedcheck-agame.com",
+      "group": "leisure-discovery",
+      "expected": "OFF_TASK",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "feedcheck-boostcourse.org",
+      "group": "technical-education",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-codingeverybody.kr",
+      "group": "technical-education",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-ocw.mit.edu",
+      "group": "technical-education",
+      "expected": "STUDY",
+      "metadataDecision": "STUDY",
+      "usedDom": false,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-learncpp.com",
+      "group": "technical-education",
+      "expected": "STUDY",
+      "metadataDecision": "STUDY",
+      "usedDom": false,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-cs50.harvard.edu",
+      "group": "technical-education",
+      "expected": "STUDY",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-khanacademy.org",
+      "group": "technical-education",
+      "expected": "STUDY",
+      "metadataDecision": "STUDY",
+      "usedDom": false,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-asoftmurmur.com",
+      "group": "focused-listening",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-naturesoundsfor.me",
+      "group": "focused-listening",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-mynoise.net",
+      "group": "focused-listening",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-noisli.com",
+      "group": "focused-listening",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-ambient-mixer.com",
+      "group": "focused-listening",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-endel.io",
+      "group": "focused-listening",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-autodraw.com",
+      "group": "tool-menu",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    },
+    {
+      "publicCaseId": "feedcheck-drawisland.com",
+      "group": "tool-menu",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "OFF_TASK"
+    },
+    {
+      "publicCaseId": "feedcheck-hackmd.io",
+      "group": "tool-menu",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "STUDY",
+      "usedDom": false,
+      "finalDecision": "STUDY"
+    },
+    {
+      "publicCaseId": "feedcheck-app.diagrams.net",
+      "group": "tool-menu",
+      "expected": "UNCERTAIN",
+      "metadataDecision": "UNCERTAIN",
+      "usedDom": true,
+      "finalDecision": "UNCERTAIN"
+    }
+  ]
+}

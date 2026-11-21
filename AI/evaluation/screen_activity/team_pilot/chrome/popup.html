@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>FocusOn 로컬 테스트</title>
+    <link rel="stylesheet" href="popup.css" />
+    <script src="popup.js" type="module"></script>
+  </head>
+  <body>
+    <h1>FocusOn 로컬 테스트</h1>
+    <p id="status" role="status" aria-live="polite">연결을 확인하고 있습니다.</p>
+    <form id="form">
+      <label for="token">대시보드의 연결 코드</label>
+      <input
+        type="password"
+        id="token"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="코드를 붙여넣으세요"
+      />
+      <label for="excluded">분석에서 제외할 도메인</label>
+      <textarea
+        id="excluded"
+        rows="3"
+        spellcheck="false"
+        placeholder="도메인을 한 줄에 하나씩 입력하세요"
+      ></textarea>
+      <p>테스트 중인 활성 탭의 제목과 필요한 본문만 이 기기의 로컬 서버로 보냅니다.</p>
+      <button type="submit">연결·설정 저장</button
+      ><button type="button" id="disconnect">연결 해제</button>
+    </form>
+  </body>
+</html>

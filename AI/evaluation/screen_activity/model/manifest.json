@@ -1,0 +1,24 @@
+{
+  "rows": 4743,
+  "labels": {
+    "STUDY": 1527,
+    "OFF_TASK": 1423,
+    "UNCERTAIN": 1793
+  },
+  "trainingDataSHA256": "02618a791ed63c1c6f5db09a2985730553390c909233f52f3e79b6bfd6b74173",
+  "headSHA256": "74373c736cd7ab3a795cf7deff72fde8b47113813ada130ff4b6a628f0786d10",
+  "encoderSHA256": "7a77d5da5ee721c7c740e4082447d3026b6521d3eac5edb93edb6aa88f03b7d7",
+  "baseHeadSHA256": "3f27fe6fa009f6219fd5c4ef5c92affdd527ee6970ba9e8a9b087af4f1cfb075",
+  "marginPp": 1.0,
+  "config": {
+    "retainedPreviousWeight": 0.0,
+    "additionalDataWeight": 2,
+    "developmentMacro": 0.7930323957388179,
+    "developmentScreenMacro": 0.9235588972431078,
+    "developmentFalseOff": 1,
+    "developmentUserCases": 2,
+    "score": 0.8737693214157485
+  },
+  "policy": "native Code/Visual Studio Code = STUDY after privacy guard",
+  "usesGoal": false
+}
