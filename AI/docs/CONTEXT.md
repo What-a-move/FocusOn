@@ -5,7 +5,7 @@
 
 ## 화면 활동 분류 실험
 
-- 502건으로 학습한 활동 분류 후보를 별도 Streamlit에서 검토할 수 있다. 학습 입력 구성, 관측 요청 형식, 실행 방법은 [화면 활동 분류기](../evaluation/screen_activity/README.md)에 정리했다.
+- 4,743건으로 학습한 분류기와 1%p 보류 기준을 팀 내부 무알림 베타에서 사용한다. [실행 방법](../evaluation/screen_activity/README.md) · [화면·세션·응답 시간 평가](../evaluation/screen_activity/BETA_RESULTS.md).
 
 ## 담당 영역
 
