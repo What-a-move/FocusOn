@@ -1,5 +1,17 @@
 # Backend 결정 기록
 
+## 2026-11-21 #288 정리 worker 실행 스레드와 민감값 검사 범위
+
+- 결정: `LearningSummaryWorker.run()`은 전용 단일 스레드(`SingleFlightRunner`)에 처리를 넘기고 바로 돌아온다. 앞선 실행이 남아 있으면 그 주기는 건너뛴다. 저장 직전 민감값 검사는 긴 영숫자를 "숫자와 문자가 섞인 32자 이상"으로, 키워드 검사를 "키워드 뒤에 값이 붙은 경우"로, 여섯 자리 숫자를 "OTP·인증번호 문맥"으로 좁혔다.
+- 이유: `@Scheduled` 기본 스케줄러는 스레드 1개를 세션 heartbeat 정리·연결 코드 정리와 함께 쓴다. AI 호출(건당 최대 약 23초 × 20건)이 이 스레드를 붙잡으면 ABANDONED 정리가 수 분 늦어진다. TaskScheduler bean을 추가하면 Boot 기본 스케줄러가 빠져 다른 작업이 그 bean으로 몰리므로 bean으로 만들지 않았다. 민감값 패턴은 긴 Java 클래스 이름·"token: 설명"·"100000건" 같은 정상 학습 문장을 버려 재시도 3회 뒤 FAILED가 되는 오탐이 있었다.
+
+## 2026-11-19 #288 학습 정리 생성 위치와 작업 방식
+
+- 결정: 모델은 AI가 호출하고(AI #29 PLAN), 서버는 DB 기반 polling worker로 작업을 관리한다. 점유는 조건부 UPDATE + `attempt_count`를 fencing token으로 쓰고, lease는 60초다. AI 주소·키는 분석과 같은 `AI_ANALYSIS_URL`·`FOCUSON_AI_API_KEY`를 쓴다.
+- 이유: 별도 큐 인프라 없이 PostgreSQL만으로 세션당 단일 작업·재시작 복구·늦은 결과 차단을 보장할 수 있다. 같은 AI 서비스이므로 새 환경 변수를 늘리지 않는다.
+- 근거 부족 판단은 서로 다른 `dedupe_hash` 2개 미만이다. 출력 검사에서 민감값이 의심되면 결과 전체를 버리고 재시도한다(부분 마스킹 없음, Notion 5.5).
+- AI가 근거를 공급하기 전까지 정리는 INSUFFICIENT_DATA로 끝난다. 404보다 정확한 상태를 주기 위해 근거 공급 합의를 기다리지 않고 파이프라인을 먼저 넣었다.
+
 ## 2026-11-18 #274 기기 해제의 대상·응답 기준
 
 - 결정: 이미 `REVOKED`·`LOGGED_OUT`인 기기와 숫자가 아닌 ID는 404 `DEVICE_NOT_FOUND`로 응답한다. 호출한 Desktop 자기 자신도 해제할 수 있다. Extension 호출은 `GET /devices`와 같이 401 `AUTH_RELOGIN_REQUIRED`다.

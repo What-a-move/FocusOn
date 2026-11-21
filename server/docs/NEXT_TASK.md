@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
+
+- AI 담당: (1) 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하, 원문·URL 없음) 추가 여부·형식 합의 (2) `POST /internal/v1/learning-summaries` 구현 — 서버 제안 형식은 PLAN 참고.
+- Backend: 합의되면 분석 결과 저장 시 근거를 `learning_review_evidences`에 넣고 실제 READY까지 확인한다.
+- Desktop: 종료 직후 learning-summary가 404 대신 QUEUED→GENERATING→최종 상태로 온다. 5초 간격 조회 후 최종 상태에서 멈춘다.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다. 다른 기기를 해제했으면 `GET /devices`를 다시 부르고, 404면 목록을 다시 조회한다.

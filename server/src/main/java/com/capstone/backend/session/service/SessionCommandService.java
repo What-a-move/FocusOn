@@ -50,6 +50,7 @@ public class SessionCommandService {
   private final SessionExtensionRepository extensions;
   private final OnboardingReadinessService onboarding;
   private final ObjectMapper mapper;
+  private final com.capstone.backend.report.service.LearningSummaryWorker learningSummaries;
 
   /** 사용자 행 잠금 안에서 연장·이력·멱등 응답을 원자적으로 확정한다. */
   @Transactional
@@ -198,6 +199,8 @@ public class SessionCommandService {
     }
     session.end(now, finalActiveMs);
     sessions.flush();
+    // 종료와 같은 transaction에서 정리 작업만 등록한다. 생성은 worker가 비동기로 한다.
+    learningSummaries.enqueue(session.getId(), now);
     var response = new EndResponse(session.getStatus(), session.getVersion(),
         session.getAccumulatedActiveMs(), session.getTargetDurationMs(), session.getEndedAt());
     records.save(IdempotencyRecordEntity.create(user, scope, idempotencyKey, hash,
