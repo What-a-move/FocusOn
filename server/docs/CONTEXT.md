@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #298 목표 세분화 저장 (2026-11-21)
+
+- V25로 `goals.profile_json`, `learning_sessions.goal_profile_snapshot_json`을 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.
