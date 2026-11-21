@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
+
+- `DeletedAccountPurge`가 1시간마다 삭제 후 24시간 지난 계정의 학습 기록을 지운다. 동의 이력·계정 행은 남긴다. 계획: `features/deleted-account-purge-PLAN.md`.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.

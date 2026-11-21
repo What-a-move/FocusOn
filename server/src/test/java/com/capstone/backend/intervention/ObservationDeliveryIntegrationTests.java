@@ -104,6 +104,7 @@ class ObservationDeliveryIntegrationTests {
   @Autowired private SessionHeartbeatService heartbeat;
   @Autowired private HeartbeatPolicyEvaluator evaluator;
   @Autowired private JdbcTemplate jdbc;
+  @Autowired private com.capstone.backend.user.service.DeletedAccountPurge purge;
   @Autowired private ObjectMapper json;
   @MockitoBean private GoogleOauthClient google;
   private MockMvc mvc;
@@ -570,6 +571,57 @@ class ObservationDeliveryIntegrationTests {
     heartbeat.heartbeat(f.principal(), f.device(), f.sessionString(),
         new SessionDtos.HeartbeatRequest(Instant.now(), 100L, contextId));
     return events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+  }
+
+  /** 유예가 지난 삭제 계정의 학습 기록만 지우고, 동의 이력과 다른 사용자 기록은 남긴다(#299). */
+  @Test
+  void deletedAccountLearningDataIsPurgedAfterGraceOnly() {
+    var deleted = fixture();
+    long event = generate(deleted);
+    deliveries.receive(deleted.principal(), deleted.device(), Long.toString(event),
+        delivery(UUID.randomUUID().toString(), InterventionDtos.DispatchStatus.SENT));
+    jdbc.update("INSERT INTO learning_summaries(session_id,summary_status,key_concepts,"
+        + "attempt_count) VALUES(?,'QUEUED','[]',0)", deleted.session());
+    jdbc.update("INSERT INTO learning_review_evidences(session_id,concept_label,evidence_type,"
+        + "observed_at,content_source,dedupe_hash,created_at) VALUES(?,?,?,?,?,?,?)",
+        deleted.session(), "트랜잭션", "CONCEPT", java.sql.Timestamp.from(Instant.now()),
+        "CHROME_DOM", "a".repeat(64), java.sql.Timestamp.from(Instant.now()));
+    var kept = fixture();
+    generate(kept);
+    var recent = fixture();
+    long deletedUser = deleted.principal().userId();
+    jdbc.update("UPDATE users SET deleted_at=? WHERE id=?",
+        java.sql.Timestamp.from(Instant.now().minus(java.time.Duration.ofDays(2))), deletedUser);
+    jdbc.update("UPDATE users SET deleted_at=? WHERE id=?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(3600)), recent.principal().userId());
+
+    assertTrue(purge.purgeDue(Instant.now()) >= 1);
+
+    for (String table : List.of("intervention_events", "intervention_policy_states",
+        "learning_review_evidences", "learning_summaries", "analysis_runs",
+        "session_observation_contexts")) {
+      assertEquals(0, count("SELECT count(*) FROM " + table + " WHERE session_id=?",
+          deleted.session()), table);
+    }
+    assertEquals(0, count("SELECT count(*) FROM intervention_deliveries WHERE intervention_id=?",
+        event));
+    for (String table : List.of("learning_sessions", "goals", "goal_clarification_sessions",
+        "idempotency_records", "user_focus_settings", "user_analysis_excluded_domains")) {
+      assertEquals(0, count("SELECT count(*) FROM " + table + " WHERE user_id=?", deletedUser),
+          table);
+    }
+    // 동의 이력(3년 보관)과 익명화된 계정 행은 남긴다.
+    assertEquals(3, count("SELECT count(*) FROM user_consents WHERE user_id=?", deletedUser));
+    assertEquals(1, count("SELECT count(*) FROM users WHERE id=?", deletedUser));
+    // 다른 사용자와 유예 중인 삭제 계정은 그대로다.
+    assertEquals(1, count("SELECT count(*) FROM intervention_events WHERE session_id=?",
+        kept.session()));
+    assertEquals(1, count("SELECT count(*) FROM learning_sessions WHERE id=?", recent.session()));
+    assertEquals(0, purge.purgeDue(Instant.now()));
+  }
+
+  private int count(String sql, long id) {
+    return jdbc.queryForObject(sql, Integer.class, id);
   }
 
   private void seedUnrelatedContext(Fixture f, String contextId) {

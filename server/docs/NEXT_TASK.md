@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
+
+- 후속 Issue 후보: 기기·token family·Refresh Token·연결 코드의 폐기·만료 후 30일 정리(DATA_PRIVACY).
+- 사용자·세션을 참조하는 새 테이블을 만들 때 `DeletedAccountPurge.DELETES`에도 추가한다.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - Desktop: 설정의 계정 삭제 버튼에서 확인 후 호출하고, 204면 token을 지우고 로그인 화면으로 보낸다.
