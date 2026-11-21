@@ -194,6 +194,31 @@ class OffTaskTimelineTests {
     return timeline.pending(run, at).complete(run, relation, source, at, at, "v2");
   }
 
+  /** 근거 판정은 구간을 이어 준 마지막 무관 판정이며, 판단 보류로 멈춰도 바뀌지 않는다. */
+  @Test
+  void offTaskRunTracksLastUnrelatedRunAcrossPauseAndClearsOnRelated() {
+    var timeline = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    timeline = v2(timeline, 2, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 20);
+    assertEquals(2L, timeline.snapshot().offTaskRun());
+    timeline = v2(timeline, 3, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 40);
+    assertEquals(3L, timeline.snapshot().latestRun());
+    assertEquals(2L, timeline.snapshot().offTaskRun());
+    timeline = v2(timeline, 4, Relation.RELATED, ContentSource.DESKTOP_APP_OCR, 60);
+    assertEquals(null, timeline.snapshot().offTaskRun());
+  }
+
+  /** 근거 필드가 없던 이전 snapshot도 그대로 읽힌다. */
+  @Test
+  void legacySnapshotWithoutOffTaskRunStillLoads() {
+    var mapper = tools.jackson.databind.json.JsonMapper.builder().build();
+    var node = (tools.jackson.databind.node.ObjectNode) mapper.valueToTree(
+        unrelated(empty(), 1, 0).snapshot());
+    node.remove("offTaskRun");
+    var restored = mapper.treeToValue(node, OffTaskTimeline.Snapshot.class);
+    assertEquals(null, restored.offTaskRun());
+    assertEquals(1L, restored.openEpisode());
+  }
+
   private static OffTaskTimeline empty() {
     return OffTaskTimeline.empty(START, "synthetic-context", START);
   }

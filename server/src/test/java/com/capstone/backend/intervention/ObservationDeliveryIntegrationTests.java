@@ -252,6 +252,11 @@ class ObservationDeliveryIntegrationTests {
   void liveContextAndHeartbeatProduceEventThenSentReceiptStopsRedisplay() throws Exception {
     var f = fixture();
     var event = generate(f);
+    // 알림 이벤트는 자신을 만든 무관 판정 id를 근거로 남긴다(#297).
+    assertEquals(jdbc.queryForObject("SELECT id FROM analysis_runs WHERE session_id=? "
+        + "ORDER BY id DESC LIMIT 1", Long.class, f.session()),
+        jdbc.queryForObject("SELECT analysis_run_id FROM intervention_events WHERE id=?",
+            Long.class, event));
     mvc.perform(auth(get(interventionsPath(f)), f)).andExpect(status().isOk())
         .andExpect(jsonPath("$.data[0].observationContextId").isString())
         .andExpect(jsonPath("$.data[0].remainingTtlMs").isNumber());

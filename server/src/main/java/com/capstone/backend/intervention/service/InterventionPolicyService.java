@@ -238,6 +238,8 @@ public class InterventionPolicyService {
             session.getInterventionPolicyVersion(), session.getLastResumedAt(), now);
         event.bindContext(InterventionAccess.id(context.context(),
             com.capstone.backend.common.api.ApiErrorCode.VALIDATION_ERROR));
+        // 판단 보류로 멈춘 뒤 생긴 알림도 마지막 판정이 아니라 구간을 만든 무관 판정을 근거로 남긴다.
+        event.bindAnalysisRun(timeline.snapshot().offTaskRun());
         events.saveAndFlush(event);
       }
     }
