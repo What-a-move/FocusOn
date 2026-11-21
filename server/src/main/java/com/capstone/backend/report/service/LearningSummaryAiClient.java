@@ -10,6 +10,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -27,12 +32,20 @@ public class LearningSummaryAiClient {
   private final URI endpoint;
   private final String key;
   private final HttpClient http;
+  private final Duration timeout;
 
   /** 설정이 비어 있으면 호출하지 않고 실패로 처리한다. 잘못된 주소는 시작 시 거절한다. */
+  @Autowired
   public LearningSummaryAiClient(ObjectMapper mapper,
       @Value("${focuson.analysis.ai-url:}") String baseUrl,
       @Value("${focuson.analysis.api-key:}") String key) {
+    this(mapper, baseUrl, key, TIMEOUT);
+  }
+
+  /** 테스트가 짧은 마감 시간으로 만든다. */
+  LearningSummaryAiClient(ObjectMapper mapper, String baseUrl, String key, Duration timeout) {
     this.mapper = mapper;
+    this.timeout = timeout;
     this.key = key;
     this.endpoint = endpoint(baseUrl);
     // uvicorn은 h2c 업그레이드 요청의 본문을 버리므로 HTTP/1.1로 고정한다.
@@ -72,39 +85,92 @@ public class LearningSummaryAiClient {
     }
     var body = Map.of("requestId", requestId, "sessionId", Long.toString(sessionId),
         "goalSnapshot", goalSnapshot, "reviewEvidence", evidences);
-    var builder = HttpRequest.newBuilder(endpoint).timeout(TIMEOUT)
+    // 마감은 헤더뿐 아니라 본문을 다 읽을 때까지 적용한다. HttpRequest.timeout은 헤더를 받으면
+    // 끝나므로, AI가 헤더만 보내고 본문을 멈추면 단일 worker 스레드가 영영 막힌다.
+    long deadline = System.nanoTime() + timeout.toNanos();
+    var builder = HttpRequest.newBuilder(endpoint).timeout(timeout)
         .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body),
             StandardCharsets.UTF_8));
     if (traceId != null) {
       builder.header("X-Trace-Id", traceId);
     }
+    var exchange = http.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofInputStream());
     HttpResponse<java.io.InputStream> response;
     try {
-      response = http.send(builder.build(), HttpResponse.BodyHandlers.ofInputStream());
-    } catch (java.net.http.HttpTimeoutException exception) {
+      response = exchange.get(remaining(deadline), TimeUnit.NANOSECONDS);
+    } catch (TimeoutException exception) {
+      exchange.cancel(true);
       throw new AiFailure("AI_TIMEOUT");
-    } catch (java.io.IOException exception) {
-      throw new AiFailure("AI_UNAVAILABLE");
+    } catch (ExecutionException exception) {
+      throw new AiFailure(exception.getCause() instanceof java.net.http.HttpTimeoutException
+          ? "AI_TIMEOUT" : "AI_UNAVAILABLE");
     } catch (InterruptedException exception) {
+      exchange.cancel(true);
       Thread.currentThread().interrupt();
       throw new AiFailure("AI_UNAVAILABLE");
     }
+    byte[] bytes;
     try (var stream = response.body()) {
-      byte[] bytes = stream.readNBytes(MAX_RESPONSE_BYTES + 1);
-      if (response.statusCode() != 200) {
-        throw new AiFailure("AI_STATUS");
-      }
-      if (bytes.length > MAX_RESPONSE_BYTES) {
-        throw new AiFailure("AI_INVALID_RESPONSE");
-      }
+      bytes = readWithin(stream, deadline);
+    } catch (java.io.IOException exception) {
+      throw new AiFailure("AI_INVALID_RESPONSE");
+    }
+    if (response.statusCode() != 200) {
+      throw new AiFailure("AI_STATUS");
+    }
+    if (bytes.length > MAX_RESPONSE_BYTES) {
+      throw new AiFailure("AI_INVALID_RESPONSE");
+    }
+    try {
       return parse(mapper.readTree(bytes));
-    } catch (java.io.IOException | RuntimeException exception) {
+    } catch (RuntimeException exception) {
       if (exception instanceof AiFailure failure) {
         throw failure;
       }
       // 응답·파서 예외 메시지에 모델 출력이 섞일 수 있어 고정 코드만 남긴다.
       throw new AiFailure("AI_INVALID_RESPONSE");
+    }
+  }
+
+  /**
+   * 본문을 최대 크기+1바이트까지 마감 안에 읽는다. 마감을 넘기면 읽는 스레드를 깨우고 스트림을
+   * 닫아 연결을 버린다. 크기 제한은 그대로 유지한다.
+   */
+  private static byte[] readWithin(java.io.InputStream stream, long deadline) {
+    var result = new CompletableFuture<byte[]>();
+    Thread reader = Thread.ofVirtual().name("learning-summary-ai-body").start(() -> {
+      try {
+        result.complete(stream.readNBytes(MAX_RESPONSE_BYTES + 1));
+      } catch (Throwable failure) {
+        result.completeExceptionally(failure);
+      }
+    });
+    try {
+      return result.get(remaining(deadline), TimeUnit.NANOSECONDS);
+    } catch (TimeoutException exception) {
+      reader.interrupt();
+      closeQuietly(stream);
+      throw new AiFailure("AI_TIMEOUT");
+    } catch (ExecutionException exception) {
+      throw new AiFailure("AI_INVALID_RESPONSE");
+    } catch (InterruptedException exception) {
+      reader.interrupt();
+      closeQuietly(stream);
+      Thread.currentThread().interrupt();
+      throw new AiFailure("AI_UNAVAILABLE");
+    }
+  }
+
+  private static long remaining(long deadline) {
+    return Math.max(0, deadline - System.nanoTime());
+  }
+
+  private static void closeQuietly(java.io.InputStream stream) {
+    try {
+      stream.close();
+    } catch (java.io.IOException | RuntimeException ignored) {
+      // 이미 실패로 처리했으므로 닫기 실패는 무시한다.
     }
   }
 
