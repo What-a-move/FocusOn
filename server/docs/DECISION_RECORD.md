@@ -1,5 +1,10 @@
 # Backend 결정 기록
 
+## 2026-11-21 #288 정리 worker 실행 스레드와 민감값 검사 범위
+
+- 결정: `LearningSummaryWorker.run()`은 전용 단일 스레드(`SingleFlightRunner`)에 처리를 넘기고 바로 돌아온다. 앞선 실행이 남아 있으면 그 주기는 건너뛴다. 저장 직전 민감값 검사는 긴 영숫자를 "숫자와 문자가 섞인 32자 이상"으로, 키워드 검사를 "키워드 뒤에 값이 붙은 경우"로, 여섯 자리 숫자를 "OTP·인증번호 문맥"으로 좁혔다.
+- 이유: `@Scheduled` 기본 스케줄러는 스레드 1개를 세션 heartbeat 정리·연결 코드 정리와 함께 쓴다. AI 호출(건당 최대 약 23초 × 20건)이 이 스레드를 붙잡으면 ABANDONED 정리가 수 분 늦어진다. TaskScheduler bean을 추가하면 Boot 기본 스케줄러가 빠져 다른 작업이 그 bean으로 몰리므로 bean으로 만들지 않았다. 민감값 패턴은 긴 Java 클래스 이름·"token: 설명"·"100000건" 같은 정상 학습 문장을 버려 재시도 3회 뒤 FAILED가 되는 오탐이 있었다.
+
 ## 2026-11-19 #288 학습 정리 생성 위치와 작업 방식
 
 - 결정: 모델은 AI가 호출하고(AI #29 PLAN), 서버는 DB 기반 polling worker로 작업을 관리한다. 점유는 조건부 UPDATE + `attempt_count`를 fencing token으로 쓰고, lease는 60초다. AI 주소·키는 분석과 같은 `AI_ANALYSIS_URL`·`FOCUSON_AI_API_KEY`를 쓴다.

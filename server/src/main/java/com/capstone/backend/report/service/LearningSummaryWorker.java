@@ -8,6 +8,7 @@ import com.capstone.backend.report.persistence.LearningReviewEvidenceRepository;
 import com.capstone.backend.report.persistence.LearningSummaryEntity;
 import com.capstone.backend.report.persistence.LearningSummaryRepository;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -39,6 +40,7 @@ public class LearningSummaryWorker {
   private final LearningSessionRepository sessions;
   private final LearningSummaryAiClient ai;
   private final TransactionTemplate transactions;
+  private final SingleFlightRunner runner = new SingleFlightRunner("learning-summary-worker");
 
   /** 저장소와 AI 내부 호출, 짧은 transaction을 연결한다. */
   public LearningSummaryWorker(LearningSummaryRepository summaries,
@@ -62,11 +64,27 @@ public class LearningSummaryWorker {
     }
   }
 
-  /** 주기 실행 진입점이다. 개별 작업 실패가 다른 작업을 막지 않는다. */
+  /**
+   * 주기 실행 진입점이다. AI 호출(건당 최대 약 23초)이 세션 정리와 함께 쓰는 기본 스케줄러
+   * 스레드를 붙잡지 않도록 전용 스레드에 넘기고 바로 돌아온다. 앞선 실행이 남아 있으면 건너뛴다.
+   */
   @Scheduled(fixedDelayString = "${focuson.learning-summary.worker-delay-ms:5000}",
       initialDelayString = "${focuson.learning-summary.worker-initial-delay-ms:15000}")
   public void run() {
-    processDue(Instant.now());
+    runner.submit(() -> {
+      try {
+        processDue(Instant.now());
+      } catch (RuntimeException exception) {
+        SafeApiLog.learningSummaryEvent(AnalysisEvent.STORE_FAIL, System.nanoTime(),
+            exception.getClass().getSimpleName());
+      }
+    });
+  }
+
+  /** 종료 시 새 실행을 막고 진행 중인 작업을 잠시 기다린다. */
+  @PreDestroy
+  void shutdown() {
+    runner.close();
   }
 
   /** now 기준으로 처리할 수 있는 작업을 한 번 훑는다. 테스트는 시각을 직접 넘긴다. */
