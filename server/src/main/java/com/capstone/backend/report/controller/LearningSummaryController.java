@@ -2,6 +2,7 @@ package com.capstone.backend.report.controller;
 
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
+import com.capstone.backend.report.dto.LearningSummaryListResponse;
 import com.capstone.backend.report.dto.LearningSummaryResponse;
 import com.capstone.backend.report.service.LearningSummaryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,5 +50,21 @@ public class LearningSummaryController {
   public com.capstone.backend.common.api.ApiResponse<LearningSummaryResponse> get(
       @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId) {
     return com.capstone.backend.common.api.ApiResponse.of(summaries.get(principal, sessionId));
+  }
+
+  /** READY 노트만 세션 종료 시각 내림차순으로 커서 페이지 조회한다. */
+  @GetMapping("/api/v1/learning-summaries")
+  @ResponseStatus(HttpStatus.OK)
+  @ApiResponse(responseCode = "200", description = "학습 노트 목록 조회 성공")
+  @ApiResponse(responseCode = "400", description = "limit·cursor 형식 오류",
+      content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  @Operation(summary = "학습 노트 목록 조회",
+      description = "READY 정리만 세션 endedAt 내림차순으로 반환합니다. limit 기본 20, 1~50. "
+          + "nextCursor를 그대로 cursor로 보내면 다음 페이지이며, null이면 마지막 페이지입니다.")
+  public com.capstone.backend.common.api.ApiResponse<LearningSummaryListResponse> list(
+      @AuthenticationPrincipal FocusOnPrincipal principal,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) Integer limit) {
+    return com.capstone.backend.common.api.ApiResponse.of(summaries.list(principal, cursor, limit));
   }
 }

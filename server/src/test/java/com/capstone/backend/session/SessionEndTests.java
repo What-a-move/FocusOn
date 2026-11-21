@@ -16,6 +16,11 @@ import com.capstone.backend.auth.persistence.UserEntity.OnboardingStatus;
 import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
 import com.capstone.backend.common.api.RequestIdFilter;
+import com.capstone.backend.report.dto.LearningSummaryResponse;
+import com.capstone.backend.report.persistence.LearningReviewEvidenceEntity;
+import com.capstone.backend.report.persistence.LearningReviewEvidenceRepository;
+import com.capstone.backend.report.service.LearningSummaryAiClient;
+import com.capstone.backend.report.service.LearningSummaryWorker;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.user.service.OnboardingReadinessService;
 import com.capstone.backend.user.service.OnboardingReadinessService.Readiness;
@@ -49,10 +54,24 @@ class SessionEndTests {
   @Autowired private com.capstone.backend.session.service.SessionCommandService commands;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private OnboardingReadinessService onboarding;
+  @MockitoBean private LearningSummaryAiClient ai;
+  @Autowired private LearningSummaryWorker worker;
+  @Autowired private LearningReviewEvidenceRepository evidences;
   private MockMvc mvc;
+  /** worker가 재는 경과 시간이다. 기본은 멈춰 있어 processDue에 넘긴 시각이 그대로 쓰인다. */
+  private final java.util.concurrent.atomic.AtomicLong ticks =
+      new java.util.concurrent.atomic.AtomicLong();
+
+  @org.junit.jupiter.api.AfterEach
+  void restoreTicker() {
+    org.springframework.test.util.ReflectionTestUtils.setField(worker, "ticker",
+        (java.util.function.LongSupplier) System::nanoTime);
+  }
 
   @BeforeEach
   void setUp() {
+    org.springframework.test.util.ReflectionTestUtils.setField(worker, "ticker",
+        (java.util.function.LongSupplier) ticks::get);
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
         .addFilters(new RequestIdFilter()).build();
     when(google.exchange(any())).thenAnswer(invocation -> "session-" + UUID.randomUUID());
@@ -330,6 +349,213 @@ class SessionEndTests {
     org.junit.jupiter.api.Assertions.assertEquals(state,
         sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getStatus().name());
   }
+
+  @Test
+  void endQueuesSummaryAndWorkerFinishesInsufficientWithoutCallingAi() throws Exception {
+    var ended = ended();
+    String path = "/api/v1/sessions/" + ended.fixture().id() + "/learning-summary";
+    mvc.perform(get(path).header("Authorization", ended.fixture().token()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.learningSummaryStatus").value("QUEUED"));
+    // 입력 마감(종료 30초) 전에는 점유하지 않는다.
+    worker.processDue(ended.endedAt().plusSeconds(29));
+    assertSummary(ended, "QUEUED", 0);
+    insertEvidence(ended, "트랜잭션 격리 수준", "a");
+    worker.processDue(ended.endedAt().plusSeconds(31));
+    assertSummary(ended, "INSUFFICIENT_DATA", 1);
+    org.mockito.Mockito.verify(ai, org.mockito.Mockito.never()).generate(any(),
+        org.mockito.ArgumentMatchers.eq(Long.parseLong(ended.fixture().id())), any(), any(), any());
+    mvc.perform(get(path).header("Authorization", ended.fixture().token()))
+        .andExpect(jsonPath("$.data.learningSummaryStatus").value("INSUFFICIENT_DATA"))
+        .andExpect(jsonPath("$.data.overview").isEmpty());
+  }
+
+  @Test
+  void twoDistinctEvidencesProduceReadySummaryFromAiDraft() throws Exception {
+    var ended = ended();
+    insertEvidence(ended, "트랜잭션 격리 수준", "a");
+    insertEvidence(ended, "MVCC 스냅샷", "b");
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenReturn(new LearningSummaryAiClient.Draft("격리 수준과 스냅샷을 살펴봤어요.",
+            java.util.List.of(new LearningSummaryResponse.KeyConcept("MVCC",
+                "버전으로 동시 읽기를 처리합니다.", "스냅샷 동작을 확인")),
+            "MVCC 스냅샷부터 다시 살펴보세요.", "summary-v1"));
+    worker.processDue(ended.endedAt().plusSeconds(31));
+    assertSummary(ended, "READY", 1);
+    var input = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
+    org.mockito.Mockito.verify(ai).generate(any(),
+        org.mockito.ArgumentMatchers.eq(Long.parseLong(ended.fixture().id())),
+        org.mockito.ArgumentMatchers.eq("종료 검증"), input.capture(), any());
+    org.junit.jupiter.api.Assertions.assertEquals(2, input.getValue().size());
+    mvc.perform(get("/api/v1/sessions/" + ended.fixture().id() + "/learning-summary")
+            .header("Authorization", ended.fixture().token()))
+        .andExpect(jsonPath("$.data.learningSummaryStatus").value("READY"))
+        .andExpect(jsonPath("$.data.overview").value("격리 수준과 스냅샷을 살펴봤어요."))
+        .andExpect(jsonPath("$.data.keyConcepts[0].name").value("MVCC"));
+    // 끝난 작업은 다시 점유하지 않는다.
+    worker.processDue(ended.endedAt().plusSeconds(600));
+    org.mockito.Mockito.verify(ai, org.mockito.Mockito.times(1)).generate(any(),
+        org.mockito.ArgumentMatchers.eq(Long.parseLong(ended.fixture().id())), any(), any(), any());
+  }
+
+  @Test
+  void aiFailuresRetryAfterOneAndFiveMinutesThenFail() throws Exception {
+    var ended = ended();
+    insertEvidence(ended, "인덱스 범위 스캔", "a");
+    insertEvidence(ended, "커버링 인덱스", "b");
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenThrow(new LearningSummaryAiClient.AiFailure("AI_TIMEOUT"));
+    java.time.Instant first = ended.endedAt().plusSeconds(31);
+    worker.processDue(first);
+    assertSummary(ended, "QUEUED", 1);
+    // 1분이 지나기 전에는 다시 부르지 않는다.
+    worker.processDue(first.plusSeconds(59));
+    assertSummary(ended, "QUEUED", 1);
+    worker.processDue(first.plusSeconds(60));
+    assertSummary(ended, "QUEUED", 2);
+    worker.processDue(first.plusSeconds(60 + 299));
+    assertSummary(ended, "QUEUED", 2);
+    worker.processDue(first.plusSeconds(60 + 300));
+    assertSummary(ended, "FAILED", 3);
+    org.junit.jupiter.api.Assertions.assertEquals("AI_TIMEOUT", jdbc.queryForObject(
+        "SELECT error_code FROM learning_summaries WHERE session_id = ?", String.class,
+        Long.valueOf(ended.fixture().id())));
+    worker.processDue(first.plusSeconds(3600));
+    org.mockito.Mockito.verify(ai, org.mockito.Mockito.times(3)).generate(any(),
+        org.mockito.ArgumentMatchers.eq(Long.parseLong(ended.fixture().id())), any(), any(), any());
+  }
+
+  /** AI 호출이 21초 걸려 실패하면 1분 재시도는 실패 시각부터 센다. */
+  @Test
+  void retryDelayStartsWhenAttemptFails() throws Exception {
+    var ended = ended();
+    long id = Long.parseLong(ended.fixture().id());
+    insertEvidence(ended, "인덱스 범위 스캔", "a");
+    insertEvidence(ended, "커버링 인덱스", "b");
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenAnswer(invocation -> {
+          if (invocation.<Long>getArgument(1) == id) {
+            ticks.addAndGet(TimeUnit.SECONDS.toNanos(21));
+          }
+          throw new LearningSummaryAiClient.AiFailure("AI_TIMEOUT");
+        });
+    java.time.Instant first = ended.endedAt().plusSeconds(31);
+    worker.processDue(first);
+    assertSummary(ended, "QUEUED", 1);
+    org.junit.jupiter.api.Assertions.assertEquals(first.plusSeconds(21 + 60),
+        jdbc.queryForObject("SELECT next_attempt_at FROM learning_summaries WHERE session_id = ?",
+            java.sql.Timestamp.class, id).toInstant());
+    worker.processDue(first.plusSeconds(80));
+    assertSummary(ended, "QUEUED", 1);
+    worker.processDue(first.plusSeconds(81));
+    assertSummary(ended, "QUEUED", 2);
+  }
+
+  /** 앞선 작업의 AI 호출이 길어져도 뒤 작업은 자기 점유 시각부터 lease 60초를 받는다. */
+  @Test
+  void laterJobGetsFullLeaseFromItsClaimTime() throws Exception {
+    var slow = ended();
+    var later = ended();
+    long slowId = Long.parseLong(slow.fixture().id());
+    long laterId = Long.parseLong(later.fixture().id());
+    for (var each : java.util.List.of(slow, later)) {
+      insertEvidence(each, "트랜잭션 격리 수준", "a");
+      insertEvidence(each, "MVCC 스냅샷", "b");
+    }
+    var leases = new java.util.concurrent.ConcurrentHashMap<Long, java.time.Instant>();
+    var offsets = new java.util.concurrent.ConcurrentHashMap<Long, Long>();
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenAnswer(invocation -> {
+          long session = invocation.getArgument(1);
+          if (session == slowId || session == laterId) {
+            leases.put(session, jdbc.queryForObject(
+                "SELECT lease_until FROM learning_summaries WHERE session_id = ?",
+                java.sql.Timestamp.class, session).toInstant());
+            offsets.put(session, ticks.get());
+          }
+          if (session == slowId) {
+            ticks.addAndGet(TimeUnit.SECONDS.toNanos(63));
+          }
+          throw new LearningSummaryAiClient.AiFailure("AI_TIMEOUT");
+        });
+    java.time.Instant now = later.endedAt().plusSeconds(31);
+    worker.processDue(now);
+    org.junit.jupiter.api.Assertions.assertEquals(2, leases.size());
+    for (long session : java.util.List.of(slowId, laterId)) {
+      // 각 작업의 lease는 그 작업을 점유한 시각(now + 그때까지 흐른 시간) + 60초다.
+      org.junit.jupiter.api.Assertions.assertEquals(
+          now.plusNanos(offsets.get(session)).plusSeconds(60), leases.get(session));
+    }
+    org.junit.jupiter.api.Assertions.assertTrue(leases.values().stream()
+        .anyMatch(lease -> lease.equals(now.plusSeconds(63 + 60))));
+  }
+
+  @Test
+  void sensitiveOrOversizedDraftIsDiscardedAndRetried() throws Exception {
+    var ended = ended();
+    insertEvidence(ended, "OAuth 인가 코드 흐름", "a");
+    insertEvidence(ended, "PKCE 검증", "b");
+    when(ai.generate(any(), org.mockito.ArgumentMatchers.anyLong(), any(), any(), any()))
+        .thenReturn(new LearningSummaryAiClient.Draft("자세한 내용은 https://example.com 참고",
+            java.util.List.of(), "다시 보기", "summary-v1"));
+    worker.processDue(ended.endedAt().plusSeconds(31));
+    assertSummary(ended, "QUEUED", 1);
+    org.junit.jupiter.api.Assertions.assertEquals("OUTPUT_SENSITIVE", jdbc.queryForObject(
+        "SELECT error_code FROM learning_summaries WHERE session_id = ?", String.class,
+        Long.valueOf(ended.fixture().id())));
+    org.junit.jupiter.api.Assertions.assertNull(jdbc.queryForObject(
+        "SELECT overview FROM learning_summaries WHERE session_id = ?", String.class,
+        Long.valueOf(ended.fixture().id())));
+  }
+
+  @Test
+  void expiredLeaseIsReclaimedOnceAndLastAttemptLeaseFails() throws Exception {
+    var ended = ended();
+    long id = Long.parseLong(ended.fixture().id());
+    java.time.Instant now = ended.endedAt().plusSeconds(120);
+    // worker가 GENERATING 중에 멈춘 상황: lease가 끝나면 다음 시도로 다시 점유한다.
+    jdbc.update("UPDATE learning_summaries SET summary_status = 'GENERATING', attempt_count = 1, "
+        + "lease_until = ? WHERE session_id = ?", java.sql.Timestamp.from(now.minusSeconds(1)), id);
+    worker.processDue(now);
+    assertSummary(ended, "INSUFFICIENT_DATA", 2);
+    var other = ended();
+    jdbc.update("UPDATE learning_summaries SET summary_status = 'GENERATING', attempt_count = 3, "
+        + "lease_until = ? WHERE session_id = ?", java.sql.Timestamp.from(now.minusSeconds(1)),
+        Long.valueOf(other.fixture().id()));
+    worker.processDue(now);
+    assertSummary(other, "FAILED", 3);
+  }
+
+  private Ended ended() throws Exception {
+    var fixture = started();
+    jdbc.update("UPDATE learning_sessions SET status = 'PAUSED', accumulated_active_ms = 1234"
+        + " WHERE id = ?", Long.valueOf(fixture.id()));
+    String key = UUID.randomUUID().toString();
+    end(fixture, key, fixture.version()).andExpect(status().isOk());
+    // 같은 멱등 키 재전송은 정리 행을 하나만 유지한다.
+    end(fixture, key, fixture.version()).andExpect(status().isOk());
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM learning_summaries WHERE session_id = ?", Integer.class,
+        Long.valueOf(fixture.id())));
+    var endedAt = sessions.findById(Long.valueOf(fixture.id())).orElseThrow().getEndedAt();
+    return new Ended(fixture, endedAt);
+  }
+
+  private void insertEvidence(Ended ended, String label, String hashSeed) {
+    evidences.saveAndFlush(LearningReviewEvidenceEntity.of(Long.parseLong(ended.fixture().id()),
+        label, "CONCEPT", ended.endedAt().minusSeconds(60), "CHROME_DOM",
+        hashSeed.repeat(64), ended.endedAt().minusSeconds(30)));
+  }
+
+  private void assertSummary(Ended ended, String status, int attempts) {
+    var row = jdbc.queryForMap("SELECT summary_status, attempt_count FROM learning_summaries "
+        + "WHERE session_id = ?", Long.valueOf(ended.fixture().id()));
+    org.junit.jupiter.api.Assertions.assertEquals(status, row.get("summary_status"));
+    org.junit.jupiter.api.Assertions.assertEquals(attempts,
+        ((Number) row.get("attempt_count")).intValue());
+  }
+
+  private record Ended(Fixture fixture, java.time.Instant endedAt) {}
 
   private org.springframework.test.web.servlet.ResultActions end(
       Fixture fixture, String key, long version) throws Exception {
