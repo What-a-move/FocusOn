@@ -94,7 +94,7 @@ public class InterventionPolicyService {
       return;
     }
     timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(),
-        run.getReceivedAt(), now);
+        run.getReceivedAt(), now, session.getInterventionPolicyVersion());
     state.transition(json.writeValueAsString(timeline.snapshot()));
     evaluate(session, selected, state, timeline, now);
   }
