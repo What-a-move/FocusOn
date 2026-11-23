@@ -248,6 +248,8 @@ POST   /api/v1/goals/clarify
 
 응답의 `data`에는 기존 `decision`, `normalizedGoalText`, `question`, `suggestions`, `goalCandidates`, `conversationTurn`과 함께 서버가 발급한 문자열 `clarificationSessionId`가 있다. 이후 요청은 같은 ID와 `previousAnswers: [{question, answer}]`를 보낸다. `POST /api/v1/goals`에서 최종 목표를 저장할 때도 받은 ID를 전달한다. AI를 거치지 않은 수동 확정은 이 ID를 필수로 요구하지 않는다.
 
+공개 `clarityStatus`는 `CLEAR`·`NEEDS_SUGGESTION`·`NEEDS_QUESTION`·`UNRECOGNIZED_TERM`·`INVALID`다. `NEEDS_SELECTION`은 폐기했고(2026-11-23 #315), 여러 목표 후보는 `CLEAR` + `goalCandidates`(2~3개, `question: null`)로 준다. 사용자는 `normalizedGoalText` 또는 `goalCandidates` 중 하나를 같은 `clarificationSessionId`와 `AI_CONFIRMED`로 바로 저장할 수 있다. 후보를 고른 목표는 저장 뒤 서버가 그 문구로 세분화한다.
+
 서버는 대화 ID의 사용자 소유·유효성을 검증하고, 클라이언트가 보낸 질문·턴을 권위 있는 이력으로 무조건 신뢰하지 않는다. Desktop은 이 POST를 자동 재전송하지 않는다. AI 일시 장애·timeout 재시도는 Backend에서 1초 → 3초 간격으로 최대 2회만 수행하며, 내부 재시도로 대화 턴이나 질문 수를 중복 증가시키지 않는다. 최종 실패는 기존 목표 분석 오류로 반환하고 Desktop은 수동 확정을 제공한다.
 
 ### 세션

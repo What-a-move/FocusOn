@@ -3,6 +3,7 @@ package com.capstone.backend.goal.dto;
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
 import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
 import com.capstone.backend.goal.service.GoalProfile;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -49,9 +50,18 @@ public final class GoalDtos {
       @NotNull Integer conversationTurn, String clarificationSessionId,
       @NotNull @Size(max = 2) List<@NotNull @Valid ClarificationAnswer> previousAnswers) {}
 
-  /** 사용자에게 표시할 공개 명확성 판단이다. */
+  /**
+   * 사용자에게 표시할 공개 명확성 판단이다. NEEDS_SELECTION은 폐기했고, 여러 목표 후보는
+   * CLEAR + goalCandidates로 돌려준다(#315).
+   */
   public enum ClarifyStatus {
-    CLEAR, NEEDS_SELECTION, NEEDS_SUGGESTION, NEEDS_QUESTION, UNRECOGNIZED_TERM, INVALID
+    CLEAR, NEEDS_SUGGESTION, NEEDS_QUESTION, UNRECOGNIZED_TERM, INVALID;
+
+    /** 폐기 전에 저장된 대화 상태(최대 24시간)의 NEEDS_SELECTION은 CLEAR로 읽는다. */
+    @JsonCreator
+    public static ClarifyStatus from(String value) {
+      return "NEEDS_SELECTION".equals(value) ? CLEAR : valueOf(value);
+    }
   }
 
   /** 목표 명확화 응답과 서버가 관리하는 대화 ID다. */

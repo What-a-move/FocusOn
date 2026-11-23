@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #315 목표 후보 CLEAR (2026-11-23)
+
+- 목표 다듬기의 `NEEDS_SELECTION`을 없애고 후보를 `CLEAR` + `goalCandidates`로 준다. 후보는 바로 AI 확인 목표로 저장할 수 있다. 계획: `features/clarify-candidates-PLAN.md`.
+
 ## Issue #314 모든 목표 세분화 (2026-11-23)
 
 - 모든 목표를 세분화해 응답 `goalProfile`에 싣고, PATCH로 덮어쓰거나 문구 수정 시 다시 세분화한다. AI 호출은 잠금 밖에서 한다. 계획: `features/goal-profile-expand-PLAN.md`.

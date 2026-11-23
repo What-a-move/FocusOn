@@ -63,16 +63,24 @@ public class GoalService {
     Instant now = now();
     GoalClarificationSession clarification = findClarification(principal.userId(), request, now);
     GoalEntity goal = GoalEntity.create(user, text, request.confirmationSource(), now);
+    boolean aiConfirmedText = false;
     if (clarification != null) {
       if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
         var result = json.readTree(clarification.getStateJson()).path("response");
+        boolean candidate = false;
+        for (var value : result.path("goalCandidates")) {
+          candidate |= text.equals(value.asText());
+        }
+        // CLEAR의 확정 문구 또는 함께 받은 후보 중 하나만 AI 확인 목표로 저장한다(#315).
         if (!"CLEAR".equals(result.path("clarityStatus").asText())
-            || !text.equals(result.path("normalizedGoalText").asText())) {
+            || !(text.equals(result.path("normalizedGoalText").asText()) || candidate)) {
           throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
         }
+        aiConfirmedText = text.equals(result.path("normalizedGoalText").asText());
       }
       goal.linkClarification(clarification);
-      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
+      // 다듬기 세분화는 확정 문구의 것이다. 후보를 고른 목표는 저장 뒤 따로 세분화한다.
+      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED && aiConfirmedText) {
         // 확정 응답과 같은 대화 상태에 보관한 세분화만 목표에 붙인다.
         var profile = json.readTree(clarification.getStateJson()).path("profile");
         if (profile.isObject()) {

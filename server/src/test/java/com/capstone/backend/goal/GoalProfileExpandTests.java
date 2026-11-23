@@ -165,6 +165,40 @@ class GoalProfileExpandTests {
     verify(ai, never()).profile(argThat(body -> "리액트 공부".equals(body.get("goalText"))));
   }
 
+  /** CLEAR와 함께 받은 후보 중 하나를 AI 확인 목표로 저장하면 그 문구로 세분화한다(#315). */
+  @Test
+  void candidateFromClearResponseCanBeSavedAndIsExpanded() throws Exception {
+    when(ai.clarify(any())).thenReturn(json.readTree("{\"data\":{"
+        + "\"clarityStatus\":\"NEEDS_SELECTION\",\"interpretedGoal\":null,"
+        + "\"question\":{\"text\":\"하나를 고르세요\"},\"recommendedGoals\":["
+        + "{\"title\":\"리액트 훅 공부\"},{\"title\":\"알고리즘 풀기\"}]}}"));
+    var owner = desktop();
+    String clarify = mvc.perform(post("/api/v1/goals/clarify").header("Authorization",
+            token(owner)).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"리액트랑 알고리즘\",\"conversationTurn\":0,"
+                + "\"previousAnswers\":[]}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.clarityStatus").value("CLEAR"))
+        .andExpect(jsonPath("$.data.goalCandidates[1]").value("알고리즘 풀기"))
+        .andExpect(jsonPath("$.data.question").doesNotExist())
+        .andReturn().getResponse().getContentAsString();
+    String sessionId = json.readTree(clarify).path("data").path("clarificationSessionId")
+        .asString();
+    mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"딴 목표\",\"confirmationSource\":\"AI_CONFIRMED\","
+                + "\"clarificationSessionId\":\"" + sessionId + "\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"알고리즘 풀기\",\"confirmationSource\":\"AI_CONFIRMED\","
+                + "\"clarificationSessionId\":\"" + sessionId + "\"}"))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.data.confirmationSource").value("AI_CONFIRMED"))
+        .andExpect(jsonPath("$.data.goalProfile.mainTopic").value("알고리즘 풀기"));
+  }
+
   private JsonNode draft(String topic) {
     return json.readTree("{\"data\":{\"goalProfile\":{\"mainTopic\":\"" + topic + "\","
         + "\"purpose\":\"CONCEPT_LEARNING\",\"coreTopics\":[\"핵심\"],"

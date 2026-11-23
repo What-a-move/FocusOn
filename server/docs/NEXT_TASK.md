@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #315 목표 후보 CLEAR (2026-11-23)
+
+- Desktop: `NEEDS_SELECTION` 화면을 `CLEAR` + `goalCandidates` 선택으로 바꾼다(배포 순서 맞춤 필요).
+- 머지 순서: #319 → #313 → #314 → #315(브랜치가 쌓여 있음).
+
 ## Issue #314 모든 목표 세분화 (2026-11-23)
 
 - AI: `POST /internal/v1/goals/profile`(요청 `{requestId, goalText}`, 응답 `{data:{goalProfile}}`)을 만들거나 형식을 알려 준다. 서버는 `goalProfileDraft` 키도 받는다.

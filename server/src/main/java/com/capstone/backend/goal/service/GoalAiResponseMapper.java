@@ -16,15 +16,19 @@ public class GoalAiResponseMapper {
       throw new IllegalArgumentException("Invalid goal AI response");
     }
     JsonNode data = response.path("data");
+    String aiStatus = data.path("clarityStatus").asText("");
+    // AI는 아직 NEEDS_SELECTION을 줄 수 있다. 공개 응답은 CLEAR + goalCandidates로 바꾸고
+    // 고르라는 질문은 싣지 않는다(#315). 사용자는 후보 중 하나를 바로 저장할 수 있다.
+    boolean selection = "NEEDS_SELECTION".equals(aiStatus);
     ClarifyStatus status;
     try {
-      status = ClarifyStatus.valueOf(data.path("clarityStatus").asText(""));
+      status = selection ? ClarifyStatus.CLEAR : ClarifyStatus.valueOf(aiStatus);
     } catch (IllegalArgumentException exception) {
       throw new IllegalArgumentException("Invalid goal AI status");
     }
-    String text = optionalText(data.path("interpretedGoal"));
+    final String text = optionalText(data.path("interpretedGoal"));
     JsonNode questionValue = data.path("question");
-    String question = questionValue.isMissingNode() || questionValue.isNull()
+    final String question = selection || questionValue.isMissingNode() || questionValue.isNull()
         ? null : optionalText(questionValue.path("text"));
     JsonNode goals = data.path("recommendedGoals");
     if (!goals.isMissingNode() && !goals.isArray()) {
@@ -42,8 +46,10 @@ public class GoalAiResponseMapper {
     }
     List<String> suggestions = status == ClarifyStatus.NEEDS_SUGGESTION
         ? List.copyOf(candidates) : List.of();
-    List<String> goalCandidates = status == ClarifyStatus.NEEDS_SELECTION
-        ? List.copyOf(candidates) : List.of();
+    List<String> goalCandidates = selection ? List.copyOf(candidates) : List.of();
+    if (selection && goalCandidates.size() < 2) {
+      throw new IllegalArgumentException("Invalid goal AI candidates");
+    }
     return new ClarifyGoalResponse(status, text, question, suggestions, goalCandidates,
         turn, sessionId);
   }
