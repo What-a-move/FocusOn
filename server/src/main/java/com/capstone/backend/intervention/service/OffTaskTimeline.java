@@ -116,8 +116,8 @@ public final class OffTaskTimeline {
 
   /**
    * 휴식 제안 근거를 계산한다(설계서 「학습 세션 · 타이머 · 휴식 제안」 8.1, #301). 강도별 반복
-   * 기준을 넘긴 딴짓 구간을 이탈 1회로 보고, 시작 시각이 서로 5분 이내로 이어진 이탈이 3회 이상이며
-   * 지금 딴짓 중이고 알림 간격이 지났을 때만 근거를 돌려준다. 판단 보류·보호 화면 시간은 구간
+   * 기준을 넘긴 딴짓 구간을 이탈 1회로 보고, 지금 이탈까지 시작 시각이 서로 5분 이내로 이어진 이탈이
+   * 3회 이상이며 알림 간격이 지났을 때만 근거를 돌려준다. 판단 보류·보호 화면 시간은 구간
    * 시간에 들어가지 않으므로 근거로 쓰이지 않는다.
    */
   public java.util.Optional<BreakEvidence> breakEvidence(String policyVersion,
@@ -133,6 +133,11 @@ public final class OffTaskTimeline {
       return java.util.Optional.empty();
     }
     Duration repeat = Duration.ofSeconds(thresholds(level)[1]);
+    // 사슬은 지금 이탈에서 끝나야 한다. 지금 이탈이 아직 짧으면 몇 분 전에 끝난 이탈들만으로
+    // 새 화면을 본 직후 바로 제안하게 되므로, 지금 이탈이 반복 기준을 넘길 때까지 기다린다.
+    if (duration(state.openEpisode(), Instant.MIN, now).compareTo(repeat) <= 0) {
+      return java.util.Optional.empty();
+    }
     List<Instant> starts = state.spans().stream().map(Span::episode).distinct()
         .filter(episode -> duration(episode, Instant.MIN, now).compareTo(repeat) > 0)
         .map(episode -> state.spans().stream().filter(span -> span.episode() == episode)

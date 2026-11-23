@@ -280,6 +280,20 @@ class OffTaskTimelineTests {
         .isEmpty());
   }
 
+  /** 지난 이탈 3회가 이어져 있어도 지금 이탈이 반복 기준을 넘기 전에는 제안하지 않는다. */
+  @Test
+  void breakEvidenceWaitsUntilCurrentEpisodeQualifies() {
+    var timeline = episode(episode(episode(empty(), 1, 0, 40), 3, 120, 40), 5, 240, 40);
+    timeline = v2(timeline, 7, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 400);
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(401),
+        null).isEmpty());
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(430),
+        null).isEmpty());
+    var evidence = timeline.breakEvidence("v2", InterventionLevel.NORMAL,
+        START.plusSeconds(431), null).orElseThrow();
+    assertEquals(4, evidence.repeatCount());
+  }
+
   private static OffTaskTimeline episode(OffTaskTimeline timeline, long run, long start,
       long seconds) {
     var opened = v2(timeline, run, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, start);
