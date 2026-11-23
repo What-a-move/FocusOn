@@ -193,7 +193,7 @@ class InterventionApiTests {
   /** 5분 이내 간격의 이탈이 3회면 이탈 알림 대신 근거가 붙은 휴식 제안을 한 번만 만든다(#301). */
   @Test
   void repeatedOffTaskCreatesOneBreakSuggestionWithEvidence() throws Exception {
-    var f = fixture(true);
+    var f = fixture(true, 900);
     seedUnrelated(f);
     addEarlierEpisodes(f);
     evaluator.evaluate(f.principal().userId(), f.session());
@@ -223,7 +223,7 @@ class InterventionApiTests {
   /** 휴식 제안 설정을 끄면 같은 반복 이탈에서도 이탈 알림만 만든다. */
   @Test
   void disabledBreakSuggestionFallsBackToOffTask() throws Exception {
-    var f = fixture(true);
+    var f = fixture(true, 900);
     tx.executeWithoutResult(ignored -> focusSettings.save(
         com.capstone.backend.user.persistence.UserFocusSettingsEntity.create(
             f.principal().userId(), com.capstone.backend.user.persistence.UserFocusSettingsEntity
@@ -511,6 +511,11 @@ class InterventionApiTests {
   }
 
   private Fixture fixture(boolean binding) {
+    return fixture(binding, 150);
+  }
+
+  /** startedSecondsAgo: 세션 시작을 몇 초 전으로 둘지. 지난 이탈을 넣는 테스트는 그보다 앞서 시작한다. */
+  private Fixture fixture(boolean binding, long startedSecondsAgo) {
     var account = login.exchange(new GoogleExchangeRequest("code", "a".repeat(43), "test",
         "http://127.0.0.1:49152", new DesktopDevice(UUID.randomUUID().toString(), "QA", "MACOS")));
     var result = tx.execute(ignored -> {
@@ -528,7 +533,7 @@ class InterventionApiTests {
       var session = sessions.saveAndFlush(LearningSessionEntity.create(user, goal, device,
           1800000, "Asia/Seoul", LocalDate.now(), "{\"interventionLevel\":\"NORMAL\","
               + "\"notificationChannels\":[\"MOLE_UI\"],\"cameraAnalysisEnabled\":false}",
-          "v1", Instant.now().minusSeconds(150)));
+          "v1", Instant.now().minusSeconds(startedSecondsAgo)));
       var observationContext = observationContexts.saveAndFlush(
           com.capstone.backend.intervention.persistence.ObservationContextEntity.create(
               session.getId(), device.getId(), device.getId(),
