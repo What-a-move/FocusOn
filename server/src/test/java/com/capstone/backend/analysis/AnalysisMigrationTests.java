@@ -45,7 +45,7 @@ class AnalysisMigrationTests {
               + "'relation_confidence','analysis_status','reason_code','error_code',"
               + "'model_version','prompt_version','policy_version','created_at',"
               + "'observation_sequence','current_eligible','ordering_untrusted',"
-              + "'observation_context_id')"));
+              + "'observation_context_id','match_status')"));
         } else if (scenario.equals("crossSourceOrder")) {
           execute(connection, insert.replace("RELATED',0.9,'COMPLETED'",
               "EXCLUDED',NULL,'SKIPPED'").replace("CHROME_DOM", "APP_META")
