@@ -16,7 +16,7 @@ public final class SafeApiLog {
       "clarify", "sessions", "active", "pause", "resume", "extend", "end", "heartbeats",
       "local-events", "analysis-runs", "observation-context", "interventions",
       "acknowledgements", "deliveries", "summary",
-      "learning-summary", "reports", "calendar", "daily", "weekly");
+      "learning-summary", "learning-summaries", "reports", "calendar", "daily", "weekly");
   private static final Set<String> SAFE_METHODS = Set.of(
       "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS");
 

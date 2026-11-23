@@ -103,6 +103,30 @@ class MissingEndpointHttpTests {
   }
 
   @Test
+  void learningSummaryListLogsRouteWithoutCursor(CapturedOutput output) throws Exception {
+    when(authentication.authenticate("valid"))
+        .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
+    var trace = UUID.randomUUID().toString();
+    var cursor = "1234567890123_987654321";
+    var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+        + "/api/v1/learning-summaries?cursor=" + cursor))
+        .header("Authorization", "Bearer valid").header("X-Trace-Id", trace).GET().build();
+    var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, response.statusCode());
+    assertEquals(trace, response.headers().firstValue("X-Trace-Id").orElseThrow());
+    awaitCompletion(output, trace);
+    assertFalse(output.toString().contains(cursor));
+    var json = JsonMapper.builder().build();
+    var events = output.getOut().lines().filter(line -> line.contains(trace))
+        .map(json::readTree).toList();
+    assertEquals(List.of("http.in", "http.out"),
+        events.stream().map(event -> event.path("event").asString()).toList());
+    for (var event : events) {
+      assertEquals("/api/v1/learning-summaries", event.path("path").asString());
+    }
+  }
+
+  @Test
   void analysisValidationLogsNumericFieldTypeAndTrace(CapturedOutput output) throws Exception {
     when(authentication.authenticate("valid"))
         .thenReturn(new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP));
