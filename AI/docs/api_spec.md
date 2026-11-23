@@ -1,12 +1,10 @@
 # AI API 계약 초안
 
-> 2026-11-03 `/health`는 실제 Qwen 임베딩 호출·응답 검증이 성공해야 HTTP 200과 `modelConnected: true`를 반환한다. 실패 시 HTTP 503, `analysisEnabled: false`, `modelConnected: false`, `reasonCode: ANALYSIS_UNAVAILABLE`을 반환한다. 고정 합성 문장을 사용하며 `/health` 성공은 전체 Backend·Desktop 연결 검증과 별개다.
-
-> 2026-11-08 베타 구현: `POST /internal/v1/analysis-runs`가 기존 내부 envelope를 검증하고 Hybrid 관련성 판정을 동기 반환한다. 별도 `/internal/v1/analysis-runs/analyze` 경로는 제거했다. 베타 candidate 모드는 미보정 후보를 decision으로 반환하며, 전체 Backend 왕복은 아직 미검증이다. [실행·입력·출력](features/fastapi-reception-REPORT.md).
-
-> Desktop OCR은 `contentPayload.text`만으로 분석할 수 있다. `ocr.confidence`와 `captureStatus`는 선택 입력이고, 누락값은 추정하거나 만들어 넣지 않는다.
-
-> 베타 응답의 `confidence`는 보정 확률이 아니다. 사용자 요청으로 AI는 0.6 미만 또는 점수 누락 시 `UNCERTAIN`을 반환한다. 모델 또는 요청 timeout은 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`로 처리한다.
+> 2026-11-23 화면 분석은 10,168건 E5 분류기를 사용한다. 기존 `POST /internal/v1/analysis-runs` envelope와 출력 5개 필드를 사용한다. 활동 분류의 STUDY/OFF_TASK/UNCERTAIN을 각각 RELATED/UNRELATED/UNCERTAIN으로 전달한다. 목표 스냅샷은 세션 검증에 사용한다.
+>
+> 메타데이터의 딴짓 후보는 보류하고 Chrome DOM 또는 데스크톱 OCR 텍스트에서 재판정한다. OCR 품질은 선택 입력이다. 분류 점수 차이 1%p와 최고 점수 하한 0.60은 AI 내부 기준이다. 응답은 `confidence: null` 및 `promptVersion: e5-activity-v1-uncalibrated`로 미보정 판정임을 표시한다.
+>
+> `/health`는 시작 시 로컬 모델 로드와 예열이 성공하면 200을 반환한다. 로드 실패 시 503이며 화면 응답은 `UNCERTAIN` / `ANALYSIS_UNAVAILABLE`이다.
 
 > 2026-10-26 사용자 제공 최신 화면 분석 계약 적용: 공개 화면 입력은 `metadata`/`contentPayload.text`/`goalSnapshot` 구조이며 text는 최대 2,000자다. AI 내부 실행 문맥은 Server가 제공한다. 코드 경계는 `src/api/relevance_contract.py`, 적용 범위와 미완료 연동은 [정합성 보고서](features/screen-analysis-contract-v1-REPORT.md)를 따른다. 아래 과거 제안 API를 새 공개 계약으로 자동 적용하지 않는다.
 
@@ -74,7 +72,7 @@ Extension / macOS 네이티브 모듈
 | 기능 | 공개 Server 경로 | 내부 AI 경로 | 상태 |
 | --- | --- | --- |
 | 목표 명확화 | `POST /api/v1/goals/clarify` | `POST /internal/v1/goals/clarify` | 공개 경로는 Notion 확정, 내부 경로 제안 |
-| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | AI는 판정 응답 구현, 실제 Backend 호출·왕복은 미검증 |
+| 페이지 관련성 분석 | `POST /api/v1/sessions/{sessionId}/analysis-runs` | `POST /internal/v1/analysis-runs` | E5 판정과 기존 Backend 내부 API 계약 사용 |
 | 사용자 관련성 판정 수정·무효화 | MVP 공개 경로 없음 | Server 소유권 검증 후 후속 검토 | P1 이후 제안; Notion API 계약 변경 전 구현 금지 |
 | 학습 정리 생성 | 세션 종료 후 비동기 작업 | `POST /internal/v1/learning-summaries` | 내부 경로 제안·미구현; #29는 합성 입력 생성 코어·시연 단계다. MVP 응답은 `overview`, `keyConcepts`(name·briefExplanation·sessionEvidence 객체 최대 5개), `nextStartPrompt`만 사용 |
 

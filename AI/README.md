@@ -1,6 +1,6 @@
 # FocusOn AI
 
-현재 AI 영역은 **Kiwi + Qwen Hybrid 화면 관련성 분석**과 별도의 **JEV + Claude 목표 보조**를 포함한다. 관련성 경로의 미사용 목표 Graph와 이전 비교 코드는 제거했으며 목표 보조 생성은 Claude 공식 API를 사용한다.
+AI 서버는 **10,168건 E5 화면 활동 분류**와 **JEV + Claude 목표 보조**를 제공한다. 화면 판정은 로컬 모델에서 실행하고 목표 보조는 해당 제공자의 API를 사용한다.
 
 ## 실행
 
@@ -43,40 +43,21 @@ CLAUDE_MODEL=claude-haiku-4-5-20251001
 
 이미 `CLAUDE_API_KEY`를 사용하고 있다면 그대로 인식한다. 두 이름이 모두 있으면 `ANTHROPIC_API_KEY`가 우선이므로 하나만 설정한다. 이 목표 보조 흐름은 Claude 설정을 사용한다. Streamlit Cloud에서는 같은 값을 앱 Secrets에 설정하고 Reboot한다. 로컬에서도 키·모델 변경 후 Streamlit 서버를 재시작한다.
 
-## 담당 기능
+## 백엔드 화면 분석
 
-Backend 전용 FastAPI의 단일 경로 `POST /internal/v1/analysis-runs`가 검증 후 Kiwi + Qwen Hybrid 판정을 반환한다. 베타에서는 `FOCUSON_ANALYSIS_DECISION_MODE=candidate`로 미보정 후보를 `decision`으로 사용하며, `promptVersion`에 `-uncalibrated`가 붙는다. 운영 배포 전에는 confidence 보정이 필요하다. [분석 경로와 한계](docs/features/fastapi-relevance-analysis-REPORT.md) 및 [실행·인증·입력 예제](docs/features/fastapi-reception-REPORT.md)를 따른다.
+`POST /internal/v1/analysis-runs`는 검증된 현재 화면을 로컬 10,168건 E5 분류기로 판정한다. 탭·앱 메타데이터를 먼저 보내고 보류되면 Chrome DOM 또는 데스크톱 OCR 텍스트를 보낸다. 학습된 분류기의 공부 중·딴짓·보류를 기존 계약의 `RELATED`·`UNRELATED`·`UNCERTAIN`으로 전달한다. 요청의 목표 스냅샷은 세션 검증에 사용한다.
 
-## 현재 처리 과정
+저장소 루트에서 Python 3.11 이상으로 실행한다. 최초 설치 단계에서 고정된 E5 인코더를 준비한다. 설치 이후 화면 추론은 로컬에서 실행하고, 시작 시 워커당 모델을 한 번 로드하고 예열한다. `/health`가 503이면 설치 및 무결성을 확인한 뒤 서비스를 다시 시작한다.
 
-1. 목표·입력 형식, 제외·민감정보·현재 관측 문맥·추출 품질을 검사한다.
-2. Kiwi가 목표·제목·본문의 명사·고유명사·기술 식별자를 정규화한다. 조사·어미·불용어를 제외하고 같은 토큰을 비교한다. 동의어·별칭·선수 개념을 생성하지 않는다.
-3. 학교 Qwen API의 `/api/embed`로 목표 질의와 정제 본문·제목/소제목 문맥·설명+코드 묶음의 벡터를 받는다. 모델 메타데이터 API를 반복 호출하지 않는다.
-4. 원래 본문의 코사인 유사도에 목표 키워드 적중을 보강하고, 관련·무관 근거와 커버리지를 계산한다.
-5. `RELATED`·`UNRELATED`·`UNCERTAIN`, 근거, 점수, 사유, 다음 입력 출처, 처리 시간을 표시한다.
+```bash
+python3 -m pip install -r AI/requirements.txt
+python3 -m AI.src.models.screen_activity.setup_encoder
+PYTHONPATH=AI:. python3 -m uvicorn AI.src.main:app --env-file AI/.env --host 127.0.0.1 --port 8001 --http h11 --no-access-log
+```
 
-현재 점수·근거 정책과 고정 보정값은 이번 정리에서 변경하지 않았다.
+`AI/.env`의 `FOCUSON_AI_API_KEY`를 Backend 환경의 같은 키와 맞추고 Backend의 기존 `AI_ANALYSIS_URL`에 AI 서버 주소를 사용한다. AI에서 분류 점수 차이가 1%p 이하이거나 최고 점수가 0.60 미만이면 보류한다. 확정 판정은 기존 미보정 응답 계약에 따라 `confidence: null`과 `e5-activity-v1-uncalibrated`를 반환한다.
 
-- 본문: `body-context-hybrid-v3`, `kiwi-weighted-terms-v3`, `dependent-followup-v2`.
-- `K = 적중한 목표 용어 가중치 합 / 전체 목표 용어 가중치 합`. 넓은 용어는 0.25, 나머지는 1.0인 제한된 규칙이다.
-- `S = max(0, cosine)`, `H = S + 0.20 × K × (1 − S)`.
-- 현재 합성 개발 자료에서 선택한 관련 기준은 원래 본문 V≥0.30 및 본문/문맥 H≥0.35다. 무관 후보는 본문 V≤0.25, UNRELATED는 무관 커버리지≥0.70·본문80자·완전 추출과 충돌 없음이 필요하다. 관련 커버리지 60%를 최소 판정 조건으로 쓰지 않는다.
-- 메타데이터는 `title-hybrid-v3-mvp` 별도 경로다. 실제 제목 V≥0.55/H≥0.60의 RELATED만 확정하고, 정상 non-RELATED 입력은 Chrome DOM 또는 Desktop OCR로 재확인을 요청한다. 본문 길이·커버리지는 적용하지 않는다.
-- 점수는 검증된 판정 confidence가 아니다. 수치의 선택·한계·합성 평가 이력은 [Hybrid 평가 보고서](docs/features/graphless-hybrid-calibration-REPORT.md)에 있다.
-
-## 입력·출력 범위
-
-- 단일 JSON·배열·`cases` 최대 30개, 사례당 현재 화면 observation 1개를 지원한다. 데이터셋 `goal.text`와 목표 칸이 다르면 모델 호출 전에 거부한다.
-- 공개 계약의 중첩 `metadata`/`contentPayload.text` 입력을 변환한다. DOM/OCR 본문은 최대 2,000자다.
-- APP_META·TAB_META → RELATED면 종료, 그 외 정상 결과는 Desktop OCR·Chrome DOM 재확인을 표시한다. Chrome viewport OCR은 P1이며 현재 입력으로도 모델을 호출하지 않는다.
-- Desktop OCR에는 인식 품질 정보가 필요하다. 공개 계약에 없는 OCR 품질을 임의 상수로 채우지 않는다. 캡처·OCR 실행과 민감정보 사전 제거는 Client 담당이다.
-- 내부 `templateId`·`goalProfile`은 이전 입력의 호환을 위해 받아도 점수나 목표 확장에 사용하지 않는다. 새로운 공개 필드로 요구하지 않는다.
-- 기대 라벨은 판정·모델 입력에서 제외한다. 실패·분석 불가를 정답 UNCERTAIN으로 집계하지 않는다.
-- 화면 원문·결과는 파일·DB에 자동 저장하지 않는다. 벡터는 해시 기반 메모리 캐시(512개/300초)에서 재사용하고 매 실행 점수와 판정을 다시 계산한다. OpenAI·Graph·ChromaDB 호출이 없다.
-
-## 구현 상태와 검증
-
-입력 전처리, Qwen Client, Kiwi Hybrid, 공개 요청 변환·응답 검증 및 내부 FastAPI 실험 분석 경로가 있다. 실제 Backend 연결, 보정된 confidence, 운영 중복/역순 결과 적용, 이탈 집계·알림은 후속 작업이다. 이전 Graph 분석기의 캐시·단계별 callback은 제거됐으며 실험 코드의 다음 출처 표시는 실제 수집 실행이 아니다.
+이전 Kiwi·임베딩 비교는 [오프라인 평가 보고서](docs/features/graphless-hybrid-calibration-REPORT.md)에 남아 있다.
 
 ```bash
 PYTHONPATH=AI:. python3 -m pytest AI/tests -q
