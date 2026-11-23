@@ -251,6 +251,17 @@ class OffTaskTimelineTests {
         at.plusSeconds(60)).isEmpty());
   }
 
+  /** 판단 보류로 멈춘 동안에는 반복 조건을 채웠어도 휴식 제안 근거를 내지 않는다. */
+  @Test
+  void breakEvidenceIsWithheldWhileOnHold() {
+    var timeline = episode(episode(empty(), 1, 0, 40), 3, 240, 40);
+    timeline = v2(timeline, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 480);
+    timeline = v2(timeline, 6, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 520);
+    assertTrue(timeline.onHold());
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(600),
+        null).isEmpty());
+  }
+
   @Test
   void breakEvidenceIgnoresLongGapsShortEpisodesAndClosedEpisode() {
     // 5분 넘게 벌어지면 사슬이 끊긴다.
