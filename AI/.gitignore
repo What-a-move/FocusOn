@@ -12,3 +12,5 @@ __pycache__/
 /evaluation/AI 2/
 
 /evaluation/*.zip
+
+/src/models/screen_activity/model/encoder/

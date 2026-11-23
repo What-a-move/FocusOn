@@ -1,0 +1,48 @@
+{
+  "rows": 10168,
+  "labels": {
+    "STUDY": 3755,
+    "OFF_TASK": 2807,
+    "UNCERTAIN": 3606
+  },
+  "trainingDataSHA256": "132f2dbfb0ffc9a5095e9b02bd717ca81d07f1b2c0e2b503424e2f5907cdd870",
+  "encoderSHA256": "7a77d5da5ee721c7c740e4082447d3026b6521d3eac5edb93edb6aa88f03b7d7",
+  "baselineHeadSHA256": "afa56b74bcaefaccc6e878b0bd6fd68ea62f65bcbd48823746af353cec48d99c",
+  "marginPp": 1.0,
+  "usesGoal": false,
+  "policy": "native Code/Visual Studio Code = STUDY after privacy guard",
+  "recipe": {
+    "optimizer": "LogisticRegression",
+    "solver": "lbfgs",
+    "C": 20,
+    "classWeight": "balanced",
+    "maxIter": 500,
+    "retainedPreviousWeight": 0,
+    "additionalDataWeight": 2,
+    "rowWeightDistribution": {
+      "1": 4457,
+      "6": 191,
+      "2": 5520
+    },
+    "additionalFromRowOneBased": 4649,
+    "encoderFrozen": true,
+    "evaluationUsedForFitOrSelection": false,
+    "featureScales": [
+      1,
+      0.35,
+      0.25,
+      0.65,
+      0.4,
+      1,
+      0.35,
+      1.0
+    ],
+    "sklearn": "1.9.0",
+    "torch": "2.9.0"
+  },
+  "headSHA256": "b684d12c0e4af1d171b8244beb6bb0a78373e0c19ac3ee657b8d4678f58d35c9",
+  "nIter": [
+    72
+  ],
+  "elapsedSeconds": 36.2
+}
