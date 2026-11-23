@@ -17,6 +17,11 @@
 - Backend: 합의되면 분석 결과 저장 시 근거를 `learning_review_evidences`에 넣고 실제 READY까지 확인한다.
 - Desktop: 종료 직후 learning-summary가 404 대신 QUEUED→GENERATING→최종 상태로 온다. 5초 간격 조회 후 최종 상태에서 멈춘다.
 
+## #182 분석 요청 추적 연동
+
+- Desktop에서 보낸 `X-Trace-Id`를 Backend가 AI 분석 호출로 전달한다. 실제 앱과 AI 서버가 연결되면 같은 ID로 모듈별 로그를 이어서 검증한다.
+- AI 담당 인계. Backend의 `ai.call.start`까지 사용한 `X-Trace-Id`가 AI 호출 헤더로 전달된다. AI 분석 라우트에서 같은 헤더를 읽어 정본 규칙에 따른 수신·응답 로그에 넣어야 양쪽 로그에서 같은 호출을 찾을 수 있다. 모델 입력·응답 전문과 인증 헤더는 기록 대상에서 제외한다.
+
 ## Issue #274 기기 해제 API (2026-11-18)
 
 - Desktop: 로그인된 Desktop의 기기 관리 화면에서 호출한다. 다른 기기를 해제했으면 `GET /devices`를 다시 부르고, 404면 목록을 다시 조회한다.

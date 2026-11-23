@@ -102,6 +102,26 @@ class RequestTraceFilterTests {
   }
 
   @Test
+  void contextAndDeliveryLogsKeepRouteAndMaskIdentifiersAndQuery() throws Exception {
+    for (var path : List.of("/api/v1/sessions/private-id/observation-context",
+        "/api/v1/interventions/private-id/deliveries")) {
+      var request = new MockHttpServletRequest("POST", path);
+      request.setServletPath(path);
+      request.setQueryString("secret=private-query");
+      events.list.clear();
+      filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> {});
+      var safePath = path.replace("private-id", "{redacted}");
+      for (var event : events.list) {
+        var fields = event.getKeyValuePairs().toString();
+        assertTrue(fields.contains("path=\"" + safePath + "\""));
+        assertFalse(fields.contains("private-id"));
+        assertFalse(fields.contains("private-query"));
+      }
+      assertEquals(2, events.list.size());
+    }
+  }
+
+  @Test
   void concurrentRequestsKeepTheirOwnTrace() throws Exception {
     logger.detachAppender(events);
     try (var executor = Executors.newFixedThreadPool(4)) {
