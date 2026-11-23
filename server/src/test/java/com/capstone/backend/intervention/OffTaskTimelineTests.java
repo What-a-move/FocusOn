@@ -233,6 +233,86 @@ class OffTaskTimelineTests {
     assertEquals(1L, restored.openEpisode());
   }
 
+  /** 보통 강도: 0분·4분·8분에 시작한 40초 넘는 이탈 3회면 근거(3회, 첫 이탈부터 9분)를 낸다. */
+  @Test
+  void breakEvidenceNeedsThreeQualifyingEpisodesWithinFiveMinuteGaps() {
+    var timeline = episode(empty(), 1, 0, 40);
+    timeline = episode(timeline, 3, 240, 40);
+    timeline = v2(timeline, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 480);
+    var at = START.plusSeconds(480 + 31);
+    var evidence = timeline.breakEvidence("v2", InterventionLevel.NORMAL, at, null).orElseThrow();
+    assertEquals(3, evidence.repeatCount());
+    assertEquals(9, evidence.windowMinutes());
+    // 지금 이탈이 반복 기준(30초)을 넘기 전에는 아직 제안하지 않는다.
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL,
+        START.plusSeconds(480 + 30), null).isEmpty());
+    // 알림 간격 중이면 제안하지 않는다.
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, at,
+        at.plusSeconds(60)).isEmpty());
+  }
+
+  /** 판단 보류로 멈춘 동안에는 반복 조건을 채웠어도 휴식 제안 근거를 내지 않는다. */
+  @Test
+  void breakEvidenceIsWithheldWhileOnHold() {
+    var timeline = episode(episode(empty(), 1, 0, 40), 3, 240, 40);
+    timeline = v2(timeline, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 480);
+    timeline = v2(timeline, 6, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 520);
+    assertTrue(timeline.onHold());
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(600),
+        null).isEmpty());
+  }
+
+  @Test
+  void breakEvidenceIgnoresLongGapsShortEpisodesAndClosedEpisode() {
+    // 5분 넘게 벌어지면 사슬이 끊긴다.
+    var gap = episode(episode(empty(), 1, 0, 40), 3, 400, 40);
+    gap = v2(gap, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 640);
+    assertTrue(gap.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(700), null)
+        .isEmpty());
+    // 반복 기준 이하의 짧은 이탈은 세지 않는다.
+    var shortOnes = episode(episode(empty(), 1, 0, 20), 3, 120, 20);
+    shortOnes = v2(shortOnes, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 240);
+    assertTrue(shortOnes.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(300),
+        null).isEmpty());
+    // 지금 딴짓 중이 아니면 제안하지 않는다.
+    var closed = episode(episode(episode(empty(), 1, 0, 40), 3, 120, 40), 5, 240, 40);
+    assertTrue(closed.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(300), null)
+        .isEmpty());
+  }
+
+  /** 지난 이탈 3회가 이어져 있어도 지금 이탈이 반복 기준을 넘기 전에는 제안하지 않는다. */
+  @Test
+  void breakEvidenceWaitsUntilCurrentEpisodeQualifies() {
+    var timeline = episode(episode(episode(empty(), 1, 0, 40), 3, 120, 40), 5, 240, 40);
+    timeline = v2(timeline, 7, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 400);
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(401),
+        null).isEmpty());
+    assertTrue(timeline.breakEvidence("v2", InterventionLevel.NORMAL, START.plusSeconds(430),
+        null).isEmpty());
+    var evidence = timeline.breakEvidence("v2", InterventionLevel.NORMAL,
+        START.plusSeconds(431), null).orElseThrow();
+    assertEquals(4, evidence.repeatCount());
+  }
+
+  /** 사슬이 10분 넘게 걸쳐 있어도 판정이 이어지는 사이 첫 이탈이 정리되지 않는다. */
+  @Test
+  void breakEvidenceKeepsChainStartBeyondTenMinuteWindow() {
+    var timeline = episode(episode(empty(), 1, 0, 40), 3, 300, 40);
+    timeline = v2(timeline, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 600);
+    // 10분 창 밖으로 나간 뒤(첫 이탈 끝 40초 < 700-600초) 같은 이탈을 잇는 판정이 들어온다.
+    timeline = v2(timeline, 6, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 700);
+    var evidence = timeline.breakEvidence("v2", InterventionLevel.NORMAL,
+        START.plusSeconds(701), null).orElseThrow();
+    assertEquals(3, evidence.repeatCount());
+    assertEquals(12, evidence.windowMinutes());
+  }
+
+  private static OffTaskTimeline episode(OffTaskTimeline timeline, long run, long start,
+      long seconds) {
+    var opened = v2(timeline, run, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, start);
+    return v2(opened, run + 1, Relation.RELATED, ContentSource.DESKTOP_APP_OCR, start + seconds);
+  }
+
   private static OffTaskTimeline empty() {
     return OffTaskTimeline.empty(START, "synthetic-context", START);
   }

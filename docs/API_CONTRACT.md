@@ -294,7 +294,9 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 `GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`을 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
 
-`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs, breakEvidence }`이다. `breakEvidence`는 `BREAK_SUGGESTION`에만 있는 `{ repeatCount, windowMinutes }`(예: 최근 9분 동안 3회)이고 `OFF_TASK`는 `null`이다(2026-11-21 #301 — 서버 제안, 문서 오너 확인 필요). `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+
+서버는 설계서 「학습 세션 · 타이머 · 휴식 제안」 8.1에 따라 `BREAK_SUGGESTION`을 만든다(#301). 강도별 반복 기준(약하게 60초·보통 30초·적극 20초)을 넘긴 딴짓 구간을 이탈 1회로 보고, 시작 시각이 서로 5분 이내로 이어진 이탈이 3회 이상이며 지금 딴짓 중이고 알림 간격이 지났을 때 이탈 알림 대신 휴식 제안을 만든다. `breakSuggestionEnabled`가 꺼져 있으면 만들지 않고, 같은 실행 구간(재개 시각)에서는 한 번만 만든다. 판단 보류·보호 화면 시간은 이탈 시간에 들어가지 않는다.
 
 `POST /api/v1/interventions/{interventionId}/acknowledgements`의 `action`은 `ACKNOWLEDGED`(확인·돌아가기)·`DISMISSED`(닫기)·`NOT_OFF_TASK`(「이것도 공부야」, 딴짓 판정이 틀림)다(2026-11-21 #300 — 서버 제안, 문서 오너 확인 필요). `NOT_OFF_TASK`는 `OFF_TASK` 알림에만 쓰며 `BREAK_SUGGESTION`에 보내면 400 `VALIDATION_ERROR`다. 상태와 응답 `status`도 같은 값(`NOT_OFF_TASK`)이 되고, 다른 반응처럼 첫 결정만 남는다. 서버는 이 반응을 알림을 만든 판정 기록 id와만 잇고 제목·URL은 저장하지 않는다. 만료된 알림에 보내면 지금처럼 `EXPIRED`를 돌려준다.
 

@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #301 휴식 제안 생성 (2026-11-21)
+
+- 반복 이탈(5분 이내 간격 3회)이면 서버가 `BREAK_SUGGESTION`을 만들고 `breakEvidence`를 내려 준다(V27). 계획: `features/break-suggestion-PLAN.md`.
+
 ## Issue #300 NOT_OFF_TASK (2026-11-21)
 
 - 개입 반응에 `NOT_OFF_TASK`를 추가했다(V26). 근거 판정은 #297의 `analysis_run_id`다. 계획: `features/not-off-task-PLAN.md`.

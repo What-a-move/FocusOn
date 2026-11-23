@@ -125,7 +125,10 @@ public class InterventionService {
         event.getCreatedAt(), event.getPolicyVersion(),
         event.getObservationContextId() == null ? null : event.getObservationContextId().toString(),
         status == Status.PENDING && event.getDeliveryConfirmedAt() == null
-            ? Math.max(0, Duration.between(now, event.getExpiresAt()).toMillis()) : 0);
+            ? Math.max(0, Duration.between(now, event.getExpiresAt()).toMillis()) : 0,
+        event.getBreakRepeatCount() == null ? null
+            : new com.capstone.backend.intervention.dto.InterventionDtos.BreakEvidence(
+                event.getBreakRepeatCount(), event.getBreakWindowMinutes()));
   }
 
   private void authenticate(FocusOnPrincipal principal) {
