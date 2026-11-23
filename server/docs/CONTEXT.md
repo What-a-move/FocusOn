@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #298 목표 세분화 저장 (2026-11-21)
+
+- V25로 `goals.profile_json`과 세션 목표 목록 `session_goals`(최대 3개, 지금은 1개)를 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.
+
 ## Issue #297 개입 근거 판정 id (2026-11-21)
 
 - V24로 `intervention_events.analysis_run_id`를 추가했다. 알림을 만든 무관 판정 id만 남긴다. #296 위에 쌓은 브랜치다. 계획: `features/intervention-run-link-PLAN.md`.

@@ -57,6 +57,11 @@ public class GoalEntity {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
+  /** AI 확인 목표의 세분화(GoalProfile) JSON이다. 직접 입력 목표는 null이다. */
+  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+  @Column(name = "profile_json", columnDefinition = "jsonb")
+  private String profileJson;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
@@ -84,10 +89,16 @@ public class GoalEntity {
     this.clarificationSession = session;
   }
 
-  /** 수정된 목표 문구와 변경 시각을 반영한다. */
+  /** 검증된 세분화를 저장한다. */
+  public void attachProfile(String profileJson) {
+    this.profileJson = profileJson;
+  }
+
+  /** 수정된 목표 문구와 변경 시각을 반영한다. 이전 문구의 세분화는 맞지 않으므로 지운다. */
   public void updateText(String text, Instant now) {
     this.goalText = text;
     this.normalizedGoalText = null;
+    this.profileJson = null;
     this.updatedAt = now;
   }
 
