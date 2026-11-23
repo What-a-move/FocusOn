@@ -99,7 +99,7 @@ class ExperimentEmbeddings:
         return tuple(output)
 
 
-def compare_profile(text, profile, cases, client, *, config=GraphlessConfig()):
+def compare_profile(text, profile, cases, client, *, config=GraphlessConfig(), jev_judge=None):
     """Hold inputs, model, and scorer settings fixed across the two runs."""
     text = checked_goal_text(text)
     goal, observations = parse_inputs(text, json.dumps({"cases": cases}, ensure_ascii=False), "CHROME_DOM")
@@ -112,8 +112,8 @@ def compare_profile(text, profile, cases, client, *, config=GraphlessConfig()):
         raise ValueError("목표 확장 목록을 합계 2,000자 이하로 줄여 주세요.")
     # The copied goal is scoped to this experiment. The baseline and observation IDs are identical.
     expanded = goal.model_copy(update={"text": comparison_text})
-    baseline_result = compare_graphless(goal, observations, client, config=config)
-    expanded_result = compare_graphless(expanded, observations, client, config=config)
+    baseline_result = compare_graphless(goal, observations, client, config=config, jev_judge=jev_judge)
+    expanded_result = compare_graphless(expanded, observations, client, config=config, jev_judge=jev_judge)
     for report in (baseline_result, expanded_result):
         for row in report["rows"]:
             row.pop("evidence", None)

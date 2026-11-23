@@ -16,6 +16,10 @@ PYTHONPATH=AI:. python -m streamlit run AI/evaluation/goal_profile_upstage_strea
 
 두 실행 명령은 각각 별도 터미널에서 사용한다. OpenAI는 `OPENAI_API_KEY`, Upstage는 `UPSTAGE_API_KEY`를 로컬 `AI/.env`에서 읽는다. 비교 화면에는 합성 또는 비민감 공개 테스트 입력을 사용한다. 후보 점수와 임계값은 로컬 평가용이다.
 
+같은 화면에서 **Jev로 평가**를 선택하면 `AI/.env`의 `TYPESAFE_API_KEY`로 목표 한 줄과 확장 목표를 각각 평가한다. **Hybrid도 함께 평가**를 끄면 TypeSafe 키 하나로 실행할 수 있으며, 이 경우 목표 확장 항목을 직접 입력한다. Jev의 기본 모델은 `jev-latest`이고 `TYPESAFE_MODEL`로 고정할 수 있다.
+
+Jev는 직접 관련 콘텐츠와 필요한 선수 지식·문제 해결을 `RELATED`로 본다. 관련·무관 선택지 확률이 기본 0.65 미만이면 `UNCERTAIN`으로 보류한다. 제목 또는 불완전 추출로는 `UNRELATED`를 확정하지 않는다. 선택지 확률의 최솟값은 화면에서 조정할 수 있다. Jev 결과와 처리 시간은 비교 표·CSV에 표시된다. 제외·민감·추출 실패 입력은 기존 검사에서 걸러진다.
+
 ## 이 브랜치의 목표 보조 실행 (#12)
 
 JEV·Claude·LangGraph 목표 보조와 Streamlit 실행 코드가 포함돼 있다. 아래 공통 scaffold 설명은 이 기능 이외 영역의 상태와 구분한다. 공개 decision 4종과 내부 clarityStatus 6종의 변환, 실제 Backend 연결은 아직 미검증이다.
