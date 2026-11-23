@@ -67,7 +67,16 @@ public final class GoalDtos {
   /** 목표 명확화 응답과 서버가 관리하는 대화 ID다. */
   public record ClarifyGoalResponse(ClarifyStatus clarityStatus, String normalizedGoalText,
       String question, List<String> suggestions, List<String> goalCandidates,
-      int conversationTurn, String clarificationSessionId) {}
+      int conversationTurn, String clarificationSessionId) {
+    /** 후보가 있는 CLEAR에는 고르기 질문이 없다. 폐기 전에 저장된 응답을 다시 돌려줄 때도 같다. */
+    public ClarifyGoalResponse {
+      suggestions = suggestions == null ? List.of() : suggestions;
+      goalCandidates = goalCandidates == null ? List.of() : goalCandidates;
+      if (clarityStatus == ClarifyStatus.CLEAR && !goalCandidates.isEmpty()) {
+        question = null;
+      }
+    }
+  }
 
   /** 저장하거나 조회한 목표의 공개 정보다. */
   public record GoalResponse(String goalId, String goalText,

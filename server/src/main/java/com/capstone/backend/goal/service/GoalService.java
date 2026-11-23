@@ -69,14 +69,19 @@ public class GoalService {
         var result = json.readTree(clarification.getStateJson()).path("response");
         boolean candidate = false;
         for (var value : result.path("goalCandidates")) {
-          candidate |= text.equals(value.asText());
+          candidate |= value.isString() && text.equals(value.asString());
         }
+        var normalized = result.path("normalizedGoalText");
+        boolean confirmedText = normalized.isString() && text.equals(normalized.asString());
         // CLEAR의 확정 문구 또는 함께 받은 후보 중 하나만 AI 확인 목표로 저장한다(#315).
-        if (!"CLEAR".equals(result.path("clarityStatus").asText())
-            || !(text.equals(result.path("normalizedGoalText").asText()) || candidate)) {
+        // 폐기 전에 저장된 대화 상태(최대 24시간)의 NEEDS_SELECTION은 후보만 허용한다.
+        String stored = result.path("clarityStatus").asString("");
+        boolean allowed = "CLEAR".equals(stored) ? confirmedText || candidate
+            : "NEEDS_SELECTION".equals(stored) && candidate;
+        if (!allowed) {
           throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
         }
-        aiConfirmedText = text.equals(result.path("normalizedGoalText").asText());
+        aiConfirmedText = "CLEAR".equals(stored) && confirmedText;
       }
       goal.linkClarification(clarification);
       // 다듬기 세분화는 확정 문구의 것이다. 후보를 고른 목표는 저장 뒤 따로 세분화한다.

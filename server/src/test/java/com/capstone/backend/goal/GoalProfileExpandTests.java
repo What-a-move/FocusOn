@@ -56,6 +56,9 @@ class GoalProfileExpandTests {
   @Autowired private UserDeviceRepository devices;
   @Autowired private GoalRepository goals;
   @Autowired private LearningSessionRepository sessions;
+  @Autowired private com.capstone.backend.goal.persistence.GoalClarificationRepository
+      clarifications;
+  @Autowired private org.springframework.transaction.support.TransactionTemplate transactions;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private GoalAiClient ai;
   private MockMvc mvc;
@@ -197,6 +200,52 @@ class GoalProfileExpandTests {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.data.confirmationSource").value("AI_CONFIRMED"))
         .andExpect(jsonPath("$.data.goalProfile.mainTopic").value("알고리즘 풀기"));
+  }
+
+  /** 폐기 전에 저장된 NEEDS_SELECTION 상태: 다시 받으면 질문 없는 CLEAR이고 후보만 저장된다. */
+  @Test
+  void legacySelectionStateReplaysAsClearAndAllowsOnlyCandidates() throws Exception {
+    when(ai.clarify(any())).thenReturn(json.readTree("{\"data\":{"
+        + "\"clarityStatus\":\"NEEDS_SELECTION\",\"interpretedGoal\":null,"
+        + "\"recommendedGoals\":[{\"title\":\"리액트 훅 공부\"},{\"title\":\"알고리즘 풀기\"}]}}"));
+    var owner = desktop();
+    String request = "{\"goalText\":\"리액트랑 알고리즘\",\"conversationTurn\":0,"
+        + "\"previousAnswers\":[]}";
+    String first = mvc.perform(post("/api/v1/goals/clarify").header("Authorization",
+            token(owner)).contentType(MediaType.APPLICATION_JSON).content(request))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    String sessionId = json.readTree(first).path("data").path("clarificationSessionId")
+        .asString();
+    // 폐기 전 형식으로 저장된 상태를 흉내 낸다(상태 이름과 고르기 질문).
+    transactions.executeWithoutResult(status -> {
+      var stored = clarifications.findById(Long.valueOf(sessionId)).orElseThrow();
+      var state = (tools.jackson.databind.node.ObjectNode) json.readTree(stored.getStateJson());
+      var response = (tools.jackson.databind.node.ObjectNode) state.path("response");
+      response.put("clarityStatus", "NEEDS_SELECTION");
+      response.put("question", "하나를 고르세요");
+      // 같은 대화 ID로 같은 요청을 다시 보내면 저장된 응답을 그대로 돌려주는 경로를 탄다.
+      ((tools.jackson.databind.node.ObjectNode) state.path("request"))
+          .put("clarificationSessionId", sessionId);
+      stored.complete(json.writeValueAsString(state), 0, Instant.now());
+    });
+    String request2 = request.replace("\"conversationTurn\":0", "\"conversationTurn\":0,"
+        + "\"clarificationSessionId\":\"" + sessionId + "\"");
+    mvc.perform(post("/api/v1/goals/clarify").header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON).content(request2))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.clarityStatus").value("CLEAR"))
+        .andExpect(jsonPath("$.data.question").doesNotExist())
+        .andExpect(jsonPath("$.data.goalCandidates[0]").value("리액트 훅 공부"));
+    mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"null\",\"confirmationSource\":\"AI_CONFIRMED\","
+                + "\"clarificationSessionId\":\"" + sessionId + "\"}"))
+        .andExpect(status().isBadRequest());
+    mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"goalText\":\"리액트 훅 공부\",\"confirmationSource\":\"AI_CONFIRMED\","
+                + "\"clarificationSessionId\":\"" + sessionId + "\"}"))
+        .andExpect(status().isCreated());
   }
 
   private JsonNode draft(String topic) {

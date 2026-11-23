@@ -2,7 +2,7 @@
 
 ## Issue #315 목표 후보 CLEAR (2026-11-23)
 
-- Desktop: `NEEDS_SELECTION` 화면을 `CLEAR` + `goalCandidates` 선택으로 바꾼다(배포 순서 맞춤 필요).
+- Desktop: 다듬기 파서가 아직 옛 `decision` 필드를 읽어 서버 응답(`clarityStatus`)을 해석하지 못한다(이 PR 전부터). 맞출 때 후보 선택은 `CLEAR` + `goalCandidates`로 구현한다.
 - 머지 순서: #319 → #313 → #314 → #315(브랜치가 쌓여 있음).
 
 ## Issue #314 모든 목표 세분화 (2026-11-23)
