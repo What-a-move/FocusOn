@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -47,11 +48,11 @@ public class AnalysisAiClient {
   public AnalysisDecision analyze(Prepared prepared, Request request, long userId) {
     long start = System.nanoTime();
     if (endpoint == null || key.isBlank() || !prepared.latest()) {
-      SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.AI_FAIL, start);
-      return AnalysisDecision.unavailable();
+      return logResult(AnalysisDecision.unavailable(), start, null);
     }
     SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.AI_START, start);
     CompletableFuture<HttpResponse<byte[]>> pending = null;
+    var upstreamStatus = new AtomicReference<Integer>();
     try {
       var builder = HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(5))
           .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
@@ -62,18 +63,16 @@ public class AnalysisAiClient {
         builder.header("X-Trace-Id", trace);
       }
       // request timeout만으로 본문 stall을 제한할 수 없어 전체 future에 별도 deadline을 둔다.
-      pending = http.sendAsync(builder.build(), ignored ->
-          HttpResponse.BodySubscribers.mapping(
-              HttpResponse.BodySubscribers.limiting(HttpResponse.BodySubscribers.ofByteArray(),
-                  8192), value -> value));
+      pending = http.sendAsync(builder.build(), info -> {
+        upstreamStatus.set(info.statusCode());
+        return HttpResponse.BodySubscribers.limiting(HttpResponse.BodySubscribers.ofByteArray(),
+            8192);
+      });
       var response = pending.get(5, TimeUnit.SECONDS);
       if (response.statusCode() != 200) {
-        throw new IllegalStateException("AI_STATUS");
+        return logResult(AnalysisDecision.unavailable(), start, response.statusCode());
       }
-      AnalysisDecision decision = normalize(mapper.readTree(response.body()));
-      SafeApiLog.analysisEvent(decision.status() == AnalysisStatus.ERROR
-          ? SafeApiLog.AnalysisEvent.AI_FAIL : SafeApiLog.AnalysisEvent.AI_OK, start);
-      return decision;
+      return logResult(normalize(mapper.readTree(response.body())), start, response.statusCode());
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
     } catch (ExecutionException | TimeoutException | RuntimeException exception) {
@@ -83,8 +82,14 @@ public class AnalysisAiClient {
         pending.cancel(true);
       }
     }
-    SafeApiLog.analysisEvent(SafeApiLog.AnalysisEvent.AI_FAIL, start);
-    return AnalysisDecision.unavailable();
+    return logResult(AnalysisDecision.unavailable(), start, upstreamStatus.get());
+  }
+
+  private static AnalysisDecision logResult(AnalysisDecision decision, long start,
+      Integer upstreamStatus) {
+    SafeApiLog.analysisAiResult(decision.status() == AnalysisStatus.ERROR, start, upstreamStatus,
+        decision.relation(), decision.confidence(), decision.reasonCode());
+    return decision;
   }
 
   /** 클라이언트 입력이 아닌 서버 설정의 서비스 origin만 내부 호출 대상으로 허용한다. */

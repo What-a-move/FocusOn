@@ -26,7 +26,7 @@ async def post(app, payload):
 
 @pytest.mark.asyncio
 async def test_api_uses_camel_case_and_never_confirms_automatically():
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     workflow = GoalAssistanceWorkflow(
         Settings(),
         FakeJevClient(
@@ -49,7 +49,7 @@ async def test_api_uses_camel_case_and_never_confirms_automatically():
 
 @pytest.mark.asyncio
 async def test_schema_validation_has_common_safe_error_shape():
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     response = await post(app, {"requestId": "req-2", "originalText": "   "})
 
     assert response.status_code == 422
@@ -60,7 +60,7 @@ async def test_schema_validation_has_common_safe_error_shape():
 
 @pytest.mark.asyncio
 async def test_dynamic_length_validation_does_not_call_jev():
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     jev = FakeJevClient(
         [GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)],
         [PASS],
@@ -85,7 +85,7 @@ async def test_model_outage_is_503_not_invalid():
         async def aclose(self):
             return None
 
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     app.dependency_overrides[get_goal_workflow] = lambda: GoalAssistanceWorkflow(
         Settings(), DownJev(), FakeGoalGenerationClient()
     )
@@ -108,7 +108,7 @@ async def test_missing_model_configuration_is_not_marked_retryable():
         async def aclose(self):
             return None
 
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     app.dependency_overrides[get_goal_workflow] = lambda: GoalAssistanceWorkflow(
         Settings(), MisconfiguredJev(), FakeGoalGenerationClient()
     )
@@ -124,7 +124,7 @@ async def test_missing_model_configuration_is_not_marked_retryable():
 
 @pytest.mark.asyncio
 async def test_agreed_fields_accept_answers_without_question_id_and_echo_session():
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     jev = FakeJevClient([GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)], [PASS])
     app.dependency_overrides[get_goal_workflow] = lambda: GoalAssistanceWorkflow(
         Settings(), jev, FakeGoalGenerationClient()
@@ -150,7 +150,7 @@ async def test_agreed_fields_accept_answers_without_question_id_and_echo_session
 
 @pytest.mark.asyncio
 async def test_initial_request_leaves_id_issuance_to_backend():
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     app.dependency_overrides[get_goal_workflow] = lambda: GoalAssistanceWorkflow(
         Settings(), FakeJevClient([GoalAssessment(0.9, 0.1, 0.1, 3, 0.9)], [PASS]),
         FakeGoalGenerationClient(),
@@ -168,7 +168,7 @@ async def test_initial_request_leaves_id_issuance_to_backend():
     {"previousAnswers": [{"question": " ", "answer": "a"}], "conversationTurn": 1},
 ])
 async def test_invalid_conversation_fields_are_rejected_before_workflow(changes):
-    app = create_app()
+    app = create_app(classifier_factory=lambda: None)
     workflow = Mock(run=AsyncMock())
     app.dependency_overrides[get_goal_workflow] = lambda: workflow
     payload = {"requestId": "invalid", "goalText": "캐시 학습", "conversationTurn": 0, "previousAnswers": []}

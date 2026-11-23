@@ -7,6 +7,7 @@ import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.goal.dto.GoalDtos.ClarificationAnswer;
 import com.capstone.backend.goal.dto.GoalDtos.ClarifyGoalRequest;
 import com.capstone.backend.goal.dto.GoalDtos.ClarifyGoalResponse;
+import com.capstone.backend.goal.dto.GoalDtos.ClarifyStatus;
 import com.capstone.backend.goal.persistence.GoalClarificationRepository;
 import com.capstone.backend.goal.persistence.GoalClarificationSession;
 import com.capstone.backend.goal.persistence.GoalClarificationSession.Status;
@@ -53,13 +54,17 @@ public class GoalClarificationService {
       if (!claim.originalText().equals(request.goalText().strip())) {
         body.put("selectedGoalText", request.goalText().strip());
       }
-      ClarifyGoalResponse result = mapper.map(callWithRetry(body), request.conversationTurn(),
+      var aiResponse = callWithRetry(body);
+      ClarifyGoalResponse result = mapper.map(aiResponse, request.conversationTurn(),
           claim.id().toString());
+      // 세분화는 공개 응답에 싣지 않고 서버 대화 상태에만 보관한다. 확정(CLEAR) 목표에만 쓴다.
+      GoalProfile profile = result.clarityStatus() == ClarifyStatus.CLEAR
+          ? GoalProfile.fromDraft(aiResponse.path("data").path("goalProfileDraft")) : null;
       if (request.conversationTurn() >= 2 && result.question() != null) {
         throw new IllegalArgumentException("Goal AI exceeded question limit");
       }
       transactions.executeWithoutResult(
-          status -> finish(principal.userId(), claim, request, result));
+          status -> finish(principal.userId(), claim, request, result, profile));
       return result;
     } catch (RuntimeException exception) {
       transactions.executeWithoutResult(status -> release(principal.userId(), claim));
@@ -139,14 +144,14 @@ public class GoalClarificationService {
   }
 
   private void finish(Long userId, Claim claim, ClarifyGoalRequest request,
-      ClarifyGoalResponse response) {
+      ClarifyGoalResponse response, GoalProfile profile) {
     GoalClarificationSession session = findOwned(userId, claim.id().toString());
     if (session.getStatus() != Status.PROCESSING
         || !session.getUpdatedAt().equals(claim.claimedAt())
         || !session.getExpiresAt().isAfter(Instant.now())) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
-    session.complete(json.writeValueAsString(new ConversationState(request, response)),
+    session.complete(json.writeValueAsString(new ConversationState(request, response, profile)),
         request.conversationTurn(), Instant.now());
   }
 
@@ -196,5 +201,7 @@ public class GoalClarificationService {
   private record Claim(Long id, String originalText, Instant claimedAt,
       ClarifyGoalResponse cached, boolean newSession) {}
 
-  private record ConversationState(ClarifyGoalRequest request, ClarifyGoalResponse response) {}
+  /** profile은 이전에 저장된 상태에는 없어 null일 수 있다. */
+  private record ConversationState(ClarifyGoalRequest request, ClarifyGoalResponse response,
+      GoalProfile profile) {}
 }

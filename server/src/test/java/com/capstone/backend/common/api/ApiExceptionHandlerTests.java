@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** 공통 응답 모델과 예외 처리기가 실제 HTTP 응답으로 연결되는지 확인한다. */
@@ -119,6 +120,37 @@ class ApiExceptionHandlerTests {
   }
 
   @Test
+  void queryTypeMismatchAndDomainValidationAreLoggedWithoutInput() throws Exception {
+    var logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
+    var appender = new ListAppender<ILoggingEvent>();
+    appender.start();
+    logger.addAppender(appender);
+    try {
+      var path = "/api/v1/probe/quantity";
+      mvc.perform(get(path).servletPath(path).param("quantity", "private-invalid-value"))
+          .andExpect(status().isBadRequest());
+      mvc.perform(get(path).servletPath(path).param("quantity", "-42"))
+          .andExpect(status().isBadRequest());
+      var validation = appender.list.stream()
+          .filter(event -> event.getMessage().equals("validate.fail")).toList();
+      var fields = validation.getFirst().getKeyValuePairs().toString();
+      assertTrue(fields.contains("field=\"quantity\""));
+      assertTrue(fields.contains("expectedType=\"Long\""));
+      var domainFields = validation.get(1).getKeyValuePairs().toString();
+      assertFalse(domainFields.contains("field="));
+      assertFalse(domainFields.contains("-42"));
+      var out = appender.list.getLast().getKeyValuePairs().toString();
+      assertTrue(out.contains("stage=\"validation\""));
+      assertTrue(out.contains("status=\"400\""));
+      assertFalse(appender.list.stream().anyMatch(event ->
+          event.getKeyValuePairs().toString().contains("private-invalid-value")));
+    } finally {
+      logger.detachAppender(appender);
+      appender.stop();
+    }
+  }
+
+  @Test
   void databaseFailureLogsSafeStageWithoutExceptionMessage() throws Exception {
     Logger logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
     var appender = new ListAppender<ILoggingEvent>();
@@ -148,6 +180,14 @@ class ApiExceptionHandlerTests {
     @PostMapping("/validate")
     ApiResponse<String> validate(@Valid @RequestBody ProbeInput input) {
       return ApiResponse.of(input.value());
+    }
+
+    @GetMapping("/quantity")
+    ApiResponse<Long> quantity(@RequestParam Long quantity) {
+      if (quantity < 0) {
+        throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+      }
+      return ApiResponse.of(quantity);
     }
 
     @GetMapping("/rate")

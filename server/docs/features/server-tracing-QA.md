@@ -1,5 +1,30 @@
 # 서버 요청 추적 QA
 
+## 최신 dev 통합 및 노트 목록 경로 검증 (2026-11-23)
+
+- `dev` `5129c9c`를 통합해 분석 추적과 학습 정리의 공용 로깅을 함께 검증했다.
+- 노트 목록 API에 커서를 넣어 실제 HTTP 요청을 보냈다. 같은 traceId의 `http.in`·`http.out`에 `/api/v1/learning-summaries`가 남고 커서 값은 콘솔에 나타나지 않았다.
+- 전체 빌드·Checkstyle 통과. 테스트 399개 중 382개 통과, 실패·오류 0개, 17개 생략.
+
+## PR #276 리뷰 반영 검증 (2026-11-18)
+
+- 최신 `dev` `70e61ea`의 이력 조회 회귀와 추적 회귀를 모두 실행했다. 전체 빌드·Checkstyle 통과, 테스트 357개 중 340개 통과, 실패·오류 0개, 17개 생략.
+- 격리 PostgreSQL 17에서 Flyway와 스키마 검증을 켜고 분석·개입·기타 Backend CI 회귀 및 실제 경로 검증 217개를 실행했다. 실패·오류·생략 0개.
+- AI 응답 대기 중 화면 분석 동의를 철회했다. 같은 traceId에서 `ai.call.ok`는 `RELATED`, `store.write.ok`는 `PRIVACY_BLOCKED`를 기록했다. 응답과 DB 재조회에서도 최종 판정이 일치했다.
+- 연결 해제 경로에 잘못된 기기 식별자를 전송해 400, `field=extensionDeviceId`, `expectedType=long`을 확인했다. 콘솔에는 제출한 경로 값이 남지 않았다.
+- CodeRabbit 보완 후 전체 빌드·Checkstyle을 다시 실행했다. 결과는 340개 통과, 실패·오류 0개, 17개 생략이다. 본문 관측 ID와 헤더 추적 ID의 구분, 비어 있는 신뢰도, AI 로그의 메시지·필드·MDC·예외 첨부를 검증했다.
+
+## #182 분석 추적 보완 (2026-11-18)
+
+- 백엔드 전체 빌드와 Checkstyle을 통과했다. 테스트 347개 중 330개 통과, 실패·오류 0개, 17개 생략이다.
+- 내장 서버 임의 포트로 `X-Trace-Id = clientRunId`를 보내고 루프백 AI에서 `RELATED / 0.9`를 반환했다. AI 호출 헤더와 공개 응답 헤더에서 같은 ID를 확인했다.
+- 수집된 JSON에서 같은 traceId로 `http.in → gate.rule.pass → ai.call.start → ai.call.ok → store.write.ok → http.out`이 이어졌다. HTTP 200·소요시간·별도 requestId를 확인했다.
+- 음수 `sequence`를 보낸 공개 HTTP 요청에서 `http.in → validate.fail → http.out`과 400을 확인했다. 검증 로그에 `sequence`와 `BigDecimal`이 기록되며 거부된 값은 콘솔에서 제외됐다. 인증 실패 401과 없는 경로 404도 각 요청의 traceId로 조회했다.
+- 루프백 AI 503에서 같은 traceId로 `ai.call.fail`의 503과 공개 API의 200을 확인했다. API 판정은 `UNCERTAIN / ANALYSIS_UNAVAILABLE`이다. 8KiB 초과 503도 수신 상태만 기록했다.
+- 요청 본문·제목·쿼리·토큰·AI 응답 원문은 테스트 로그에서 제외됐다. 실제 Desktop·AI 서버 전체 연동 검증은 남아 있다.
+
+## 초기 서버 추적 (#116)
+
 - Issue #116, 기준 dev `8b68916`.
 - `./gradlew build`: 전체 테스트 113개, 실패·오류 0개, 1개 건너뜀. 건너뛴 항목은 기존 PostgreSQL 닉네임 동시성 테스트이며 H2 테스트 환경의 조건에 따른 것이다. Checkstyle 통과.
 - 20개 동시 요청에서 각 traceId가 서로 섞이지 않고, 요청 종료 후 MDC가 복원되는지 확인했다.

@@ -50,6 +50,13 @@ public class GoalService {
         }
       }
       goal.linkClarification(clarification);
+      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
+        // 확정 응답과 같은 대화 상태에 보관한 세분화만 목표에 붙인다.
+        var profile = json.readTree(clarification.getStateJson()).path("profile");
+        if (profile.isObject()) {
+          goal.attachProfile(json.writeValueAsString(profile));
+        }
+      }
       clarification.confirm(now);
     }
     return response(goals.save(goal));

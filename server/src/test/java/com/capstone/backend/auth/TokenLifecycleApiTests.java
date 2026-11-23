@@ -29,6 +29,7 @@ import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.auth.service.GoogleOauthClient;
 import com.capstone.backend.auth.service.LoginService;
+import com.capstone.backend.auth.service.TokenFamilyRetention;
 import com.capstone.backend.auth.service.TokenLifecycleService;
 import com.capstone.backend.auth.service.TokenSecrets;
 import com.capstone.backend.common.api.ApiException;
@@ -64,6 +65,7 @@ class TokenLifecycleApiTests {
   @Autowired private WebApplicationContext context;
   @Autowired private LoginService login;
   @Autowired private TokenLifecycleService lifecycle;
+  @Autowired private TokenFamilyRetention retention;
   @Autowired private com.capstone.backend.auth.service.PairingService pairing;
   @Autowired private AccessJwtService jwt;
   @Autowired private UserRepository users;
@@ -486,6 +488,67 @@ class TokenLifecycleApiTests {
     mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
             .delete(path).header("Authorization", "Bearer " + desktop.access()))
         .andExpect(status().isUnauthorized());
+  }
+
+  /** 기한 직후 패밀리 및 부모 토큰 참조를 함께 정리한다. */
+  @Test
+  void retentionRemovesRevokedRotationChainAtCutoff() throws Exception {
+    var old = desktop();
+    var rotated = lifecycle.refresh(old.refresh());
+    final var active = desktop();
+    mvc.perform(post("/api/v1/auth/logout")
+            .header("Authorization", "Bearer " + rotated.accessToken()))
+        .andExpect(status().isNoContent());
+    Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+    jdbc.update("update token_families set revoked_at=? where id=?",
+        Timestamp.from(now.minus(Duration.ofDays(30))), old.familyId());
+    assertTrue(tokens.findByTokenHash(TokenSecrets.hash(old.refresh())).isPresent());
+    assertTrue(tokens.findByTokenHash(TokenSecrets.hash(rotated.refreshToken())).isPresent());
+
+    retention.purgeDue(now);
+    retention.purgeDue(now);
+
+    assertTrue(families.findById(old.familyId()).isEmpty());
+    assertTrue(tokens.findByTokenHash(TokenSecrets.hash(old.refresh())).isEmpty());
+    assertTrue(tokens.findByTokenHash(TokenSecrets.hash(rotated.refreshToken())).isEmpty());
+    assertTrue(devices.findById(old.deviceId()).isPresent());
+    refreshError(old.refresh(), "AUTH_RELOGIN_REQUIRED");
+    me(active.access(), 200);
+  }
+
+  @Test
+  void retentionUsesEarlierExpiryEvenWhenRevokedLater() {
+    var expired = desktop();
+    var withinRetention = desktop();
+    var revokedAfterExpiry = desktop();
+    Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+    Instant cutoff = now.minus(Duration.ofDays(30));
+    var oldCreated = Timestamp.from(cutoff.minus(Duration.ofDays(40)));
+    String age = "update token_families set created_at=?, expires_at=? where id=?";
+    jdbc.update(age, oldCreated, Timestamp.from(cutoff), expired.familyId());
+    jdbc.update(age, oldCreated, Timestamp.from(cutoff.plusSeconds(1)), withinRetention.familyId());
+    jdbc.update(age, oldCreated, Timestamp.from(cutoff.minusSeconds(1)),
+        revokedAfterExpiry.familyId());
+    jdbc.update("update token_families set status='REVOKED', revoked_at=? where id=?",
+        Timestamp.from(cutoff.plusSeconds(1)), revokedAfterExpiry.familyId());
+
+    retention.purgeDue(now);
+
+    assertTrue(families.findById(expired.familyId()).isEmpty());
+    assertTrue(tokens.findByTokenHash(TokenSecrets.hash(expired.refresh())).isEmpty());
+    assertTrue(families.findById(withinRetention.familyId()).isPresent());
+    assertTrue(families.findById(revokedAfterExpiry.familyId()).isEmpty());
+    assertTrue(tokens.findByTokenHash(TokenSecrets.hash(revokedAfterExpiry.refresh())).isEmpty());
+  }
+
+  @Test
+  void retentionPreservesRecentRevocationForReuseDetection() throws Exception {
+    var recent = desktop();
+    mvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + recent.access()))
+        .andExpect(status().isNoContent());
+    retention.purgeDue(Instant.now());
+    assertTrue(families.findById(recent.familyId()).isPresent());
+    refreshError(recent.refresh(), "AUTH_TOKEN_REUSE_DETECTED");
   }
 
   /** DTO 문자열 변환에 Access·Refresh Token 원문이 포함되지 않게 한다. */
