@@ -109,7 +109,9 @@ public final class OffTaskTimeline {
             .compareTo(Duration.ofSeconds(thresholds[1])) > 0).count();
     boolean matches = continuous.compareTo(Duration.ofSeconds(thresholds[0])) > 0
         || repeats >= thresholds[2];
-    return new Evaluation(cooled(now, cooldownUntil) && matches, continuous, repeats);
+    // 판단 보류로 멈춘 동안은 지금 화면이 딴짓인지 모르므로 시간은 보고하되 알림 후보는 아니다.
+    return new Evaluation(cooled(now, cooldownUntil) && matches && !onHold(), continuous,
+        repeats);
   }
 
   /**
@@ -121,7 +123,9 @@ public final class OffTaskTimeline {
   public java.util.Optional<BreakEvidence> breakEvidence(String policyVersion,
       InterventionLevel level, Instant at, Instant cooldownUntil) {
     boolean known = "v1".equals(policyVersion) || POLICY_V2.equals(policyVersion);
-    if (!known || level == null || state.pendingRun() != null || state.openEpisode() == null) {
+    // 판단 보류로 멈춘 동안(onHold)에는 지금 딴짓 중인지 모르므로 휴식 제안도 만들지 않는다.
+    if (!known || level == null || state.pendingRun() != null || state.openEpisode() == null
+        || onHold()) {
       return java.util.Optional.empty();
     }
     Instant now = monotonic(at);
@@ -163,6 +167,15 @@ public final class OffTaskTimeline {
   private boolean cooled(Instant now, Instant cooldownUntil) {
     return cooldownUntil == null || (!now.isBefore(cooldownUntil)
         && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
+  }
+
+  /**
+   * 열린 딴짓 구간은 있지만 지금 흐르는 시간 조각이 없는 상태다. v2에서 판단 보류로 멈췄거나
+   * 재분석을 기다리는 중이다. 지금 화면이 딴짓인지 모르므로 새 알림을 만들지 않는다.
+   */
+  public boolean onHold() {
+    return state.openEpisode() != null
+        && state.spans().stream().noneMatch(span -> span.end() == null);
   }
 
   /** 원문 없는 영속화용 snapshot이다. */
