@@ -228,7 +228,9 @@ DELETE /api/v1/goals/{goalId}
 POST   /api/v1/goals/clarify
 ```
 
-목표 응답(`POST`·`GET`·`PATCH`)은 `{ goalId, goalText, confirmationSource, todoStatus }`다. `todoStatus`는 사용자가 직접 표시하는 할 일 상태 `OPEN`·`DONE`이며 새 목표는 `OPEN`이다(2026-11-23 #313, 재설계 1차). 서버가 완료를 판정하지 않는다.
+목표 응답(`POST`·`GET`·`PATCH`)은 `{ goalId, goalText, confirmationSource, todoStatus, goalProfile }`다. `todoStatus`는 사용자가 직접 표시하는 할 일 상태 `OPEN`·`DONE`이며 새 목표는 `OPEN`이다(2026-11-23 #313, 재설계 1차). 서버가 완료를 판정하지 않는다.
+
+`goalProfile`(2026-11-23 #314)은 목표 세분화 `{ mainTopic, purpose, coreTopics, supportingTopics, expectedActivities }`(목록은 각 최대 5개, 항목 100자, `purpose`는 `CONCEPT_LEARNING`·`IMPLEMENTATION`·`PROBLEM_SOLVING`·`DEBUGGING`·`PRACTICE`·`PRESENTATION_OR_ASSIGNMENT`·`OTHER`)이며 없으면 `null`이다. `POST /goals`는 AI 확인 목표면 다듬기 결과를 쓰고, 그 밖(직접 입력 등)은 서버가 AI 내부 `POST /internal/v1/goals/profile`로 세분화한다. AI 실패·형식 오류여도 목표는 201로 저장되고 `goalProfile: null`이다. `PATCH`는 `goalProfile`을 받으면 통째로 덮어쓰고(형식 위반 400 `VALIDATION_ERROR`, 활성 세션 참조 중 409 `GOAL_UPDATE_BLOCKED`), 문구만 바뀌면 지우지 않고 다시 세분화한다. 문구와 `goalProfile`이 함께 오면 보낸 `goalProfile`을 쓴다. 세션 시작 때 고정한 사본은 바뀌지 않는다.
 
 `GET /api/v1/goals`(할 일 목록, #313): 삭제하지 않은 본인 목표를 최신순(`goalId DESC`)으로 반환한다. `todoStatus`로 거를 수 있고, 없으면 전체다. `limit` 기본 20·1~50. 응답은 `{items:[목표 응답], nextCursor}`이며 마지막 페이지면 `nextCursor=null`이다. `nextCursor`는 불투명 문자열이므로 그대로 `cursor`로 보낸다. 잘못된 `todoStatus`·`limit`·`cursor`는 400 `VALIDATION_ERROR`다.
 

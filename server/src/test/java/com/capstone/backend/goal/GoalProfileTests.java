@@ -38,7 +38,10 @@ import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/** 목표 세분화가 공개 응답에 나오지 않고, AI 확인 목표에만 저장되고, 세션에 고정되는지 본다. */
+/**
+ * 목표 다듬기 응답에는 세분화가 나오지 않고, 확정 목표에 저장되고, 세션에 고정되는지 본다. 여기서는
+ * 세분화 AI(profile)가 응답하지 않으므로(목) 직접 입력·문구 수정 목표의 세분화는 비어 있다(#314).
+ */
 @SpringBootTest
 @ActiveProfiles({"local", "test"})
 class GoalProfileTests {
@@ -63,7 +66,7 @@ class GoalProfileTests {
   }
 
   @Test
-  void clearGoalProfileIsStoredHiddenAndClearedOnTextChange() throws Exception {
+  void clearGoalProfileIsStoredAndOldProfileDropsOnTextChange() throws Exception {
     var owner = desktop();
     aiReturns(PROFILE);
     String sessionId = clarify(owner)
@@ -87,7 +90,7 @@ class GoalProfileTests {
   }
 
   @Test
-  void invalidDraftAndManualGoalStoreNoProfileButGoalIsCreated() throws Exception {
+  void invalidDraftAndFailedExpansionStoreNoProfileButGoalIsCreated() throws Exception {
     var owner = desktop();
     aiReturns(PROFILE.replace("\"CONCEPT_LEARNING\"", "\"UNKNOWN_PURPOSE\""));
     String body = clarify(owner).andReturn().getResponse().getContentAsString();

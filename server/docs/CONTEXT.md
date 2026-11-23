@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #314 모든 목표 세분화 (2026-11-23)
+
+- 모든 목표를 세분화해 응답 `goalProfile`에 싣고, PATCH로 덮어쓰거나 문구 수정 시 다시 세분화한다. AI 호출은 잠금 밖에서 한다. 계획: `features/goal-profile-expand-PLAN.md`.
+
 ## Issue #313 할 일 목록 (2026-11-23)
 
 - `GET /goals`(상태 필터·cursor)와 `todoStatus`(OPEN/DONE, V29)를 추가했다. 상태만 바꾸는 PATCH는 활성 세션 중에도 허용한다. 계획: `features/goal-todo-list-PLAN.md`.

@@ -2,12 +2,14 @@ package com.capstone.backend.goal.dto;
 
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
 import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
+import com.capstone.backend.goal.service.GoalProfile;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
 
 /** 목표 API 요청과 응답이다. */
 public final class GoalDtos {
@@ -23,11 +25,19 @@ public final class GoalDtos {
 
   /**
    * 목표 수정 요청이다. 보낸 필드만 바꾼다. 활성 세션이 참조 중이면 todoStatus만 바꿀 수 있다.
+   * goalProfile은 통째로 덮어쓰며, 문구만 바뀌면 서버가 다시 세분화한다(#314).
    */
   @Schema(example = "{\"goalText\":\"Spring Security 인증 복습\"}")
   public record UpdateGoalRequest(
       @Schema(example = "Spring Security 인증 복습") String goalText,
-      @Schema(description = "할 일 상태 (선택)") TodoStatus todoStatus) {}
+      @Schema(description = "할 일 상태 (선택)") TodoStatus todoStatus,
+      @Schema(description = "목표 세분화 전체 (선택, 통째 덮어쓰기)",
+          implementation = GoalProfile.class) JsonNode goalProfile) {
+    /** 짧은 생성자: 문구만 바꾼다. */
+    public UpdateGoalRequest(String goalText) {
+      this(goalText, null, null);
+    }
+  }
 
   /** 사용자가 이전에 받은 질문과 답변이다. */
   public record ClarificationAnswer(@NotBlank String question, @NotBlank String answer) {}
@@ -51,7 +61,7 @@ public final class GoalDtos {
 
   /** 저장하거나 조회한 목표의 공개 정보다. */
   public record GoalResponse(String goalId, String goalText,
-      ConfirmationSource confirmationSource, TodoStatus todoStatus) {}
+      ConfirmationSource confirmationSource, TodoStatus todoStatus, GoalProfile goalProfile) {}
 
   /** 할 일 목록 한 페이지다. 마지막 페이지면 nextCursor는 null이다. */
   public record GoalListResponse(List<GoalResponse> items, String nextCursor) {}

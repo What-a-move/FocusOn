@@ -49,6 +49,32 @@ class GoalAiClientTests {
     }
   }
 
+  /** 세분화 요청은 profile 경로로 보낸다(#314). */
+  @Test
+  void profileUsesItsOwnInternalPath() throws Exception {
+    AtomicReference<String> body = new AtomicReference<>();
+    HttpServer server = HttpServer.create(new InetSocketAddress(
+        InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext("/internal/v1/goals/profile", exchange -> {
+      body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+      byte[] response = "{\"data\":{\"goalProfile\":{\"mainTopic\":\"React\"}}}"
+          .getBytes(StandardCharsets.UTF_8);
+      exchange.sendResponseHeaders(200, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    });
+    server.start();
+    try {
+      var client = new GoalAiClient(new ObjectMapper(),
+          "http://127.0.0.1:" + server.getAddress().getPort(), "server-only-key");
+      var result = client.profile(Map.of("requestId", "r1", "goalText", "리액트 공부"));
+      assertEquals("React", result.path("data").path("goalProfile").path("mainTopic").asText());
+      assertTrue(body.get().contains("리액트 공부"));
+    } finally {
+      server.stop(0);
+    }
+  }
+
   /** 분석 AI와 공유하는 서버 전용 키가 없으면 요청을 보내지 않고 안전하게 실패한다. */
   @Test
   void rejectsBeforeSendingWhenApiKeyIsBlank() {

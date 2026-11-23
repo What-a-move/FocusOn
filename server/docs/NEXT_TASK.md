@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #314 모든 목표 세분화 (2026-11-23)
+
+- AI: `POST /internal/v1/goals/profile`(요청 `{requestId, goalText}`, 응답 `{data:{goalProfile}}`)을 만들거나 형식을 알려 준다. 서버는 `goalProfileDraft` 키도 받는다.
+- Desktop: 목표 응답의 `goalProfile`을 보여 주고 PATCH로 고칠 수 있다.
+
 ## Issue #313 할 일 목록 (2026-11-23)
 
 - 문서 오너: `GET /goals` 응답 형식(`items`·`nextCursor`, 최신순) 확인.

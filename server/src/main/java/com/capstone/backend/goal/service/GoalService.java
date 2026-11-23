@@ -18,10 +18,14 @@ import com.capstone.backend.goal.persistence.GoalRepository;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /** 인증된 사용자의 학습 목표를 저장하고 조회한다. */
@@ -36,14 +40,27 @@ public class GoalService {
   private final LearningSessionRepository sessions;
   private final GoalClarificationRepository clarifications;
   private final ObjectMapper json;
+  private final GoalProfileExpander expander;
+  private final TransactionTemplate transactions;
 
-  /** 확정 방식과 명확화 이력을 검증하고 목표를 저장한다. */
-  @Transactional
+  /**
+   * 확정 방식과 명확화 이력을 검증하고 목표를 저장한다. 세분화가 없으면 저장을 끝낸 뒤 트랜잭션
+   * 밖에서 Goal AI로 세분화해 붙인다(#314). 세분화가 실패해도 목표는 저장되고 goalProfile은 null이다.
+   */
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public GoalResponse create(FocusOnPrincipal principal, CreateGoalRequest request) {
+    GoalEntity saved = transactions.execute(status -> save(principal, request));
+    if (saved.getProfileJson() != null) {
+      return response(saved);
+    }
+    return expandAfterCommit(principal.userId(), saved);
+  }
+
+  private GoalEntity save(FocusOnPrincipal principal, CreateGoalRequest request) {
     String text = validatedText(request.goalText());
     UserEntity user = users.findById(principal.userId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
-    Instant now = Instant.now();
+    Instant now = now();
     GoalClarificationSession clarification = findClarification(principal.userId(), request, now);
     GoalEntity goal = GoalEntity.create(user, text, request.confirmationSource(), now);
     if (clarification != null) {
@@ -64,7 +81,32 @@ public class GoalService {
       }
       clarification.confirm(now);
     }
-    return response(goals.save(goal));
+    return goals.save(goal);
+  }
+
+  /**
+   * 잠금·트랜잭션 밖에서 세분화한 뒤 짧은 트랜잭션으로 붙인다. 그 사이 문구가 바뀌었거나 사용자가
+   * 세분화를 직접 넣었거나 목표가 지워졌으면 결과를 버린다.
+   */
+  private GoalResponse expandAfterCommit(Long userId, GoalEntity goal) {
+    String text = goal.getGoalText();
+    GoalProfile profile = expander.expand(text);
+    if (profile == null) {
+      return response(goal);
+    }
+    String profileJson = json.writeValueAsString(profile);
+    return transactions.execute(status -> {
+      lockUser(userId);
+      var current = goals.findByIdAndUserIdAndDeletedAtIsNull(goal.getId(), userId)
+          .filter(value -> value.getStatus() != GoalEntity.Status.DELETED).orElse(null);
+      if (current == null) {
+        return response(goal);
+      }
+      if (current.getProfileJson() == null && current.getGoalText().equals(text)) {
+        current.attachProfile(profileJson);
+      }
+      return response(current);
+    });
   }
 
   private GoalClarificationSession findClarification(Long userId, CreateGoalRequest request,
@@ -131,30 +173,62 @@ public class GoalService {
    * 본인 목표를 활성 세션과 충돌하지 않도록 수정한다. 할 일 상태만 바꾸는 요청은 활성 세션이
    * 참조 중이어도 허용한다(#313). 문구가 함께 오면 기존 규칙을 그대로 따른다.
    */
-  @Transactional
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public GoalResponse update(FocusOnPrincipal principal, String goalId, UpdateGoalRequest request) {
-    if (request.goalText() == null && request.todoStatus() != null) {
-      GoalEntity goal = findGoal(principal.userId(), goalId);
-      goal.markTodo(request.todoStatus(), Instant.now());
-      return response(goal);
+    String profileJson = submittedProfile(request.goalProfile());
+    boolean profileGiven = request.goalProfile() != null && !request.goalProfile().isNull();
+    var result = transactions.execute(status -> applyUpdate(principal.userId(), goalId,
+        request, profileGiven, profileJson));
+    // 문구만 바뀌었으면 지운 세분화를 다시 만든다. 직접 보낸 세분화가 있으면 그 값을 우선한다.
+    return result.reexpand() ? expandAfterCommit(principal.userId(), result.goal())
+        : response(result.goal());
+  }
+
+  private Updated applyUpdate(Long userId, String goalId, UpdateGoalRequest request,
+      boolean profileGiven, String profileJson) {
+    if (request.goalText() == null && !profileGiven && request.todoStatus() != null) {
+      GoalEntity goal = findGoal(userId, goalId);
+      goal.markTodo(request.todoStatus(), now());
+      return new Updated(goal, false);
     }
-    String text = normalizeText(request.goalText());
-    if (!isValidText(text)) {
+    String text = request.goalText() == null && profileGiven ? null
+        : normalizeText(request.goalText());
+    if ((text != null && !isValidText(text)) || (profileGiven && profileJson == null)) {
       // 오류 응답의 기존 우선순위는 유지하되 변경이 없는 요청은 행 잠금을 피한다.
-      GoalEntity goal = findGoal(principal.userId(), goalId);
-      requireNotInActiveSession(principal.userId(), goal.getId());
-      throw new ApiException(ApiErrorCode.GOAL_TEXT_INVALID);
+      GoalEntity goal = findGoal(userId, goalId);
+      requireNotInActiveSession(userId, goal.getId());
+      throw new ApiException(text != null && !isValidText(text)
+          ? ApiErrorCode.GOAL_TEXT_INVALID : ApiErrorCode.VALIDATION_ERROR);
     }
-    lockUser(principal.userId());
-    GoalEntity goal = findGoal(principal.userId(), goalId);
-    requireNotInActiveSession(principal.userId(), goal.getId());
-    Instant now = Instant.now();
-    goal.updateText(text, now);
+    lockUser(userId);
+    GoalEntity goal = findGoal(userId, goalId);
+    requireNotInActiveSession(userId, goal.getId());
+    Instant now = now();
+    boolean textChanged = text != null && !text.equals(goal.getGoalText());
+    if (textChanged) {
+      goal.updateText(text, now);
+    }
+    if (profileGiven) {
+      goal.replaceProfile(profileJson, now);
+    }
     if (request.todoStatus() != null) {
       goal.markTodo(request.todoStatus(), now);
     }
-    return response(goal);
+    // 문구를 다시 보냈는데 이전 세분화가 실패해 비어 있으면 이번에 다시 시도한다.
+    boolean missing = text != null && goal.getProfileJson() == null;
+    return new Updated(goal, (textChanged || missing) && !profileGiven);
   }
+
+  /** 사용자가 보낸 세분화를 AI 응답과 같은 규칙으로 검증한다. 형식이 틀리면 null이다. */
+  private String submittedProfile(JsonNode value) {
+    if (value == null || value.isNull()) {
+      return null;
+    }
+    GoalProfile profile = GoalProfile.fromDraft(value);
+    return profile == null ? null : json.writeValueAsString(profile);
+  }
+
+  private record Updated(GoalEntity goal, boolean reexpand) {}
 
   /** 활성 세션이 참조하지 않는 목표만 논리 삭제한다. */
   @Transactional
@@ -162,7 +236,12 @@ public class GoalService {
     lockUser(principal.userId());
     GoalEntity goal = findGoal(principal.userId(), goalId);
     requireNotInActiveSession(principal.userId(), goal.getId());
-    goal.delete(Instant.now());
+    goal.delete(now());
+  }
+
+  /** DB 정밀도(마이크로초)에 맞춘 현재 시각이다. */
+  private static Instant now() {
+    return Instant.now().truncatedTo(ChronoUnit.MICROS);
   }
 
   private void lockUser(Long userId) {
@@ -211,6 +290,18 @@ public class GoalService {
 
   private GoalResponse response(GoalEntity goal) {
     return new GoalResponse(goal.getId().toString(), goal.getGoalText(),
-        goal.getConfirmationSource(), goal.getTodoStatus());
+        goal.getConfirmationSource(), goal.getTodoStatus(), profile(goal.getProfileJson()));
+  }
+
+  /** 저장된 세분화를 다시 검증해 싣는다. 깨진 값은 응답에서 빼고 목표 조회는 막지 않는다. */
+  private GoalProfile profile(String profileJson) {
+    if (profileJson == null) {
+      return null;
+    }
+    try {
+      return GoalProfile.fromDraft(json.readTree(profileJson));
+    } catch (RuntimeException exception) {
+      return null;
+    }
   }
 }

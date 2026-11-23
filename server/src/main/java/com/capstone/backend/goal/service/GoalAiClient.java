@@ -21,6 +21,10 @@ import tools.jackson.databind.ObjectMapper;
 public class GoalAiClient {
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(60);
+  /** 목표 저장 응답이 기다리는 세분화 요청은 짧게 끊는다. 실패해도 목표는 저장된다. */
+  private static final Duration PROFILE_TIMEOUT = Duration.ofSeconds(8);
+  private static final String CLARIFY_PATH = "/internal/v1/goals/clarify";
+  private static final String PROFILE_PATH = "/internal/v1/goals/profile";
   private static final int MAX_RESPONSE_BYTES = 65_536;
   private static final Set<String> ALLOWED_HOSTS =
       Set.of("localhost", "127.0.0.1", "host.docker.internal");
@@ -42,11 +46,20 @@ public class GoalAiClient {
 
   /** 내부 계약의 요청을 전송하고 결과를 파싱한다. 재시도는 호출 서비스가 담당한다. */
   public JsonNode clarify(Map<String, Object> body) {
+    return send(CLARIFY_PATH, REQUEST_TIMEOUT, body);
+  }
+
+  /** 목표 한 줄을 세분화(GoalProfile)한다(#314). 재시도하지 않는다. */
+  public JsonNode profile(Map<String, Object> body) {
+    return send(PROFILE_PATH, PROFILE_TIMEOUT, body);
+  }
+
+  private JsonNode send(String path, Duration timeout, Map<String, Object> body) {
     if (key.isBlank()) {
       throw new GoalAiException(Failure.UNAVAILABLE, false);
     }
-    URI endpoint = endpoint();
-    var request = HttpRequest.newBuilder(endpoint).timeout(REQUEST_TIMEOUT)
+    URI endpoint = endpoint(path);
+    var request = HttpRequest.newBuilder(endpoint).timeout(timeout)
         .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body),
             StandardCharsets.UTF_8)).build();
@@ -95,6 +108,10 @@ public class GoalAiClient {
    * compose의 {@code extra_hosts}로 호스트 게이트웨이에 연결되는 {@code host.docker.internal}이다.
    */
   URI endpoint() {
+    return endpoint(CLARIFY_PATH);
+  }
+
+  URI endpoint(String path) {
     try {
       URI base = URI.create(baseUrl);
       if (!"http".equals(base.getScheme()) || base.getUserInfo() != null
@@ -103,7 +120,7 @@ public class GoalAiClient {
           || !(base.getPath().isEmpty() || "/".equals(base.getPath()))) {
         throw new IllegalArgumentException();
       }
-      return base.resolve("/internal/v1/goals/clarify");
+      return base.resolve(path);
     } catch (IllegalArgumentException exception) {
       throw new GoalAiException(Failure.UNAVAILABLE, false);
     }
