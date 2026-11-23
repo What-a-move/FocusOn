@@ -294,6 +294,19 @@ class OffTaskTimelineTests {
     assertEquals(4, evidence.repeatCount());
   }
 
+  /** 사슬이 10분 넘게 걸쳐 있어도 판정이 이어지는 사이 첫 이탈이 정리되지 않는다. */
+  @Test
+  void breakEvidenceKeepsChainStartBeyondTenMinuteWindow() {
+    var timeline = episode(episode(empty(), 1, 0, 40), 3, 300, 40);
+    timeline = v2(timeline, 5, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 600);
+    // 10분 창 밖으로 나간 뒤(첫 이탈 끝 40초 < 700-600초) 같은 이탈을 잇는 판정이 들어온다.
+    timeline = v2(timeline, 6, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 700);
+    var evidence = timeline.breakEvidence("v2", InterventionLevel.NORMAL,
+        START.plusSeconds(701), null).orElseThrow();
+    assertEquals(3, evidence.repeatCount());
+    assertEquals(12, evidence.windowMinutes());
+  }
+
   private static OffTaskTimeline episode(OffTaskTimeline timeline, long run, long start,
       long seconds) {
     var opened = v2(timeline, run, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, start);

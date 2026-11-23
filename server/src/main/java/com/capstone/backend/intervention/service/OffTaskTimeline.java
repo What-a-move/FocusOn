@@ -17,6 +17,11 @@ public final class OffTaskTimeline {
   /** 휴식 제안: 이탈 시작 사이 최대 간격과 최소 반복 횟수(설계서 8.1). */
   private static final Duration BREAK_GAP = Duration.ofMinutes(5);
   private static final int BREAK_REPEATS = 3;
+  /**
+   * 닫힌 구간 보관 기간. 10분 반복 평가보다 길게 둬서, 최대 약 11분에 걸치는 휴식 제안 사슬
+   * (5분 간격 이탈 3회 + 반복 기준)의 첫 이탈이 판정 지연 중에 지워지지 않게 한다.
+   */
+  private static final Duration RETENTION = Duration.ofMinutes(15);
   private final Snapshot state;
 
   /** DB snapshot 또는 새 실행/context의 빈 상태로 시작한다. */
@@ -220,9 +225,10 @@ public final class OffTaskTimeline {
 
   private OffTaskTimeline copy(Instant now, long episode, Long pending, Long latest,
       Instant completed, Instant received, Long open, List<Span> spans, Long offTaskRun) {
-    // 과거 닫힌 구간은 10분 평가에 필요하지 않지만 열린 구간의 연속 누적은 보존한다.
+    // 10분 평가는 창으로 잘라 세므로 더 오래 보관해도 결과가 같다. 휴식 제안 사슬을 위해 15분 보관하고,
+    // 열린 구간의 연속 누적은 기간과 무관하게 보존한다.
     var retained = spans.stream().filter(span -> span.end() == null
-        || Objects.equals(span.episode(), open) || span.end().isAfter(now.minus(WINDOW)))
+        || Objects.equals(span.episode(), open) || span.end().isAfter(now.minus(RETENTION)))
         .toList();
     return new OffTaskTimeline(new Snapshot(state.runningSince(), state.context(), now,
         episode, pending, latest, completed, received, open, retained, offTaskRun));
