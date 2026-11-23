@@ -1,4 +1,5 @@
-"""Run from the repository root: python3 -m uvicorn AI.src.main:app."""
+"""Run from the repository root: python3 -m uvicorn AI.src.main:app --http h11."""
+from asyncio import Lock
 from contextlib import asynccontextmanager
 import os
 import logging
@@ -14,20 +15,38 @@ from .api.routes import router
 from src.api.goal_routes import router as goal_router
 from src.api.schemas import ErrorResponse
 from src.utils.logger import configure_logging, log_event
-from .models.embedding_client import configured_embedding_client
+from .models.screen_activity.activity import ActivityClassifier
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(*, api_key: str | None = None) -> FastAPI:
+def load_activity_classifier():
+    classifier = ActivityClassifier()
+    # Warm the same inference path before accepting Backend traffic.
+    classifier.predict([{"contentSource": "TAB_META", "metadata": {"pageTitle": "FocusOn readiness probe"}}])
+    return classifier
+
+
+def create_app(*, api_key: str | None = None, classifier_factory=load_activity_classifier) -> FastAPI:
     @asynccontextmanager
     async def lifespan(application: FastAPI):
         key = api_key if api_key is not None else os.environ.get("FOCUSON_AI_API_KEY", "")
         if not 32 <= len(key.encode()) <= 1024 or key.strip() != key:
             raise RuntimeError("FOCUSON_AI_API_KEY_REQUIRED_MIN_32_BYTES")
         application.state.backend_api_key = key
-        yield
-        application.state.backend_api_key = ""
+        application.state.activity_lock = Lock()
+        started = perf_counter()
+        try:
+            application.state.activity_classifier = await run_in_threadpool(classifier_factory)
+        except Exception:
+            application.state.activity_classifier = None
+            log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE", path="/health")
+        application.state.model_load_ms = round((perf_counter() - started) * 1000, 1)
+        try:
+            yield
+        finally:
+            application.state.activity_classifier = None
+            application.state.backend_api_key = ""
 
     configure_logging()
     application = FastAPI(title="FocusOn AI reception", version="0.1.0", lifespan=lifespan)
@@ -36,29 +55,14 @@ def create_app(*, api_key: str | None = None) -> FastAPI:
 
     @application.get("/health")
     async def health():
-        def probe_model():
-            factory = getattr(application.state, "embedding_client_factory", None)
-            client = factory() if factory else configured_embedding_client(probe=True)
-            try:
-                vectors = client.embed(["FocusOn model readiness probe"])
-                if len(vectors) != 1 or len(vectors[0]) != 2560:
-                    raise ValueError("MODEL_PROBE_INVALID")
-            finally:
-                client.close()
-
-        started = perf_counter()
-        try:
-            await run_in_threadpool(probe_model)
-        except Exception:
-            log_event(logger, "request.fail", level=logging.WARNING,
-                      error_code="ANALYSIS_UNAVAILABLE", path="/health")
+        if application.state.activity_classifier is None:
             return JSONResponse(status_code=503, content={
                 "status": "unavailable", "analysisEnabled": False,
                 "modelConnected": False, "reasonCode": "ANALYSIS_UNAVAILABLE",
             })
         return {"status": "ready", "mode": "analysis", "analysisEnabled": True,
-                "decisionMode": os.environ.get("FOCUSON_ANALYSIS_DECISION_MODE", "safe"),
-                "modelConnected": True, "modelProbeMs": round((perf_counter() - started) * 1000, 1)}
+                "decisionMode": "candidate", "modelConnected": True,
+                "modelProbeMs": application.state.model_load_ms}
 
     @application.exception_handler(RequestValidationError)
     async def invalid_request(request: Request, exc: RequestValidationError):
