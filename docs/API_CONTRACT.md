@@ -296,6 +296,8 @@ POST /api/v1/sessions/{sessionId}/local-events
 
 `GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs }`이다. `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
 
+`POST /api/v1/interventions/{interventionId}/acknowledgements`의 `action`은 `ACKNOWLEDGED`(확인·돌아가기)·`DISMISSED`(닫기)·`NOT_OFF_TASK`(「이것도 공부야」, 딴짓 판정이 틀림)다(2026-11-21 #300 — 서버 제안, 문서 오너 확인 필요). `NOT_OFF_TASK`는 `OFF_TASK` 알림에만 쓰며 `BREAK_SUGGESTION`에 보내면 400 `VALIDATION_ERROR`다. 상태와 응답 `status`도 같은 값(`NOT_OFF_TASK`)이 되고, 다른 반응처럼 첫 결정만 남는다. 서버는 이 반응을 알림을 만든 판정 기록 id와만 잇고 제목·URL은 저장하지 않는다. 만료된 알림에 보내면 지금처럼 `EXPIRED`를 돌려준다.
+
 ### 실제 알림 연결 (#182, 2026-11-09 사용자 승인)
 
 - 전경 PUT: Authorization·X-Device-Id, RUNNING runner Desktop만. JSON 필수 `clientContextId`(UUID-v4), `foregroundSequence`(양의 JS 안전 정수), `observer`(DESKTOP|EXTENSION|NONE). 실제 Extension device는 활성 연결에서 서버가 결정한다. nonce 재시도는 같은 context, 충돌/낮은 번호는409 IDEMPOTENCY_CONFLICT. 전경 순번은 session+runner 전체 영속 counter다.

@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #300 NOT_OFF_TASK (2026-11-21)
+
+- 개입 반응에 `NOT_OFF_TASK`를 추가했다(V26). 근거 판정은 #297의 `analysis_run_id`다. 계획: `features/not-off-task-PLAN.md`.
+
 ## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
 
 - `DeletedAccountPurge`가 1시간마다 삭제 후 24시간 지난 계정의 학습 기록을 지운다. 동의 이력·계정 행은 남긴다. 계획: `features/deleted-account-purge-PLAN.md`.

@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #300 NOT_OFF_TASK (2026-11-21)
+
+- Notion API 명세 acknowledgements에 `NOT_OFF_TASK` 반영 완료(재설계 1차 정리, DR-024~030).
+- Desktop: 포키 알림에 「이것도 공부야」 버튼을 달고 `action: NOT_OFF_TASK`를 보낸다.
+- 다음 마이그레이션은 V27부터.
+
 ## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
 
 - 후속 Issue 후보: 기기·token family·Refresh Token·연결 코드의 폐기·만료 후 30일 정리(DATA_PRIVACY).
@@ -216,6 +222,7 @@
 3. 기기 간 현재 화면 선택·서버 기준 구간 시간·rolling 구간 포함·실제 표시/cooldown·ack 수명 경계를 정본과 함께 확정하고 최종 구현 승인을 받는다. 기존 heartbeat #167은 최소 정책 연결만 검토한다.
 4. #154 실제 AI 판정, Frontend 영속 observationSequence·표시/ack 흐름은 담당자 인계와 실제 연동 QA로 확인한다. 다른 영역 코드를 직접 수정하지 않는다.
 5. BREAK_SUGGESTION·카메라 개입, 분석 이력·local-events, summary/달력/일간, 학습 정리·cleanup은 후속 단위로 나누며 담당·기존 Issue를 각각 다시 확인한다. #163/PR164·#168 등 세션 명령은 팀원 범위를 유지한다.
+
 ## Issue #168 세션 연장 후속
 
 - 최신 dev `8a5933f`와 충돌을 해결하고 연장 migration을 V16으로 조정했다. 기존 개발 DB 복제본에서 V15 상태를 재현한 뒤 V16 적용 및 주요 데이터 보존을 확인했다.
