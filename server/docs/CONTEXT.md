@@ -2,7 +2,7 @@
 
 ## Issue #298 목표 세분화 저장 (2026-11-21)
 
-- V25로 `goals.profile_json`, `learning_sessions.goal_profile_snapshot_json`을 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.
+- V25로 `goals.profile_json`과 세션 목표 목록 `session_goals`(최대 3개, 지금은 1개)를 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.
 
 ## Issue #290 계정 삭제 API (2026-11-19)
 

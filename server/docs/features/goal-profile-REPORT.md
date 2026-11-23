@@ -3,8 +3,13 @@
 ## 변경 요약
 
 - `GoalProfile`(검증 포함)을 추가하고, 목표 다듬기 CLEAR 응답의 `goalProfileDraft`를 서버 대화 상태에 보관한다.
-- AI 확인 목표 생성 시 `goals.profile_json`에 저장하고, 세션 시작 때 `learning_sessions.goal_profile_snapshot_json`으로 복사한다(V25).
+- AI 확인 목표 생성 시 `goals.profile_json`에 저장하고, 세션 시작 때 `session_goals`(세션당 최대 3개, 지금은 1개)에 목표 문구와 함께 복사한다(V25).
 - 목표 문구를 수정하면 세분화를 지운다. 공개 API 변경 없음.
+
+## 수정 (2026-11-23)
+
+- 팀이 「세션당 목표 1개」를 버리고 할 일 최대 3개 선택으로 정해, 세션 사본을 `learning_sessions` 한 칸에서 `session_goals` 목록 테이블로 바꿨다(PR 머지 전이라 V25를 그대로 고침). 이전 설명의 "어느 안이든 다시 마이그레이션하지 않는다"는 세션 쪽에서 틀렸으므로 바로잡는다.
+- `SessionApiTests`: API로 시작한 세션에 `session_goals` position 1 행과 같은 goal_id. PostgreSQL에서 세션 삭제 시 `session_goals` 연쇄 삭제 확인.
 
 ## 테스트
 

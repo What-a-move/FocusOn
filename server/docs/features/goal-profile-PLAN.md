@@ -22,17 +22,17 @@
 
 ## 데이터 설계
 
-- V25: `goals.profile_json JSONB NULL`, `learning_sessions.goal_profile_snapshot_json JSONB NULL`. 기존 행은 NULL.
+- V25: `goals.profile_json JSONB NULL`, 새 테이블 `session_goals(session_id, position 1~3, goal_id, goal_text_snapshot, goal_profile_snapshot_json)`. 세션 삭제 시 함께 지워진다(ON DELETE CASCADE). 지금은 position 1만 쓴다.
 - 저장 필드: `mainTopic`, `purpose`(AI `GoalPurpose` 7개 값), `coreTopics`·`supportingTopics`·`expectedActivities`(각 최대 5개, 항목 100자 이하, 대소문자 무시 중복 금지).
 - 저장하지 않을 데이터: 목표 다듬기 질문·답변 원문, AI 원본 출력(`originalText`·`interpretedGoal` 포함), 화면 내용.
-- 저장 구조를 「목표마다 profile, 세션에는 시작 당시 사본」으로 잡아 논의안 ①·②·③ 어느 쪽으로 가도 다시 마이그레이션하지 않게 한다.
+- 저장 구조는 「목표마다 profile, 세션에는 고른 목표들의 사본 목록」이다. 2026-11-23 팀 결정(세션당 목표 1개 원칙을 버리고 할 일 최대 3개 선택)에 맞춰, 세션 쪽 사본을 한 칸이 아닌 목록 테이블로 바꿨다. 다중 목표 세션 시작 API가 정해지면 같은 테이블에 position 2·3을 넣으면 된다.
 
 ## 처리 흐름
 
 1. `POST /goals/clarify`: AI 응답이 CLEAR면 `goalProfileDraft`를 검증해 서버 대화 상태에만 보관한다. 형식이 어긋나면 버리고 응답은 그대로 준다.
 2. `POST /goals`(`AI_CONFIRMED`): 확정 응답과 같은 대화 상태에 있는 세분화를 목표에 저장한다. 직접 입력(`MANUAL_CONFIRMED`)은 저장하지 않는다.
 3. `PATCH /goals/{id}`: 문구가 바뀌면 이전 세분화를 지운다.
-4. 세션 시작: 목표의 세분화를 세션에 복사해 고정한다.
+4. 세션 시작: 목표 문구와 세분화를 `session_goals` position 1에 복사해 고정한다.
 
 ## 범위 밖
 

@@ -16,6 +16,8 @@ import com.capstone.backend.session.persistence.IdempotencyRecordEntity;
 import com.capstone.backend.session.persistence.IdempotencyRecordRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionGoalEntity;
+import com.capstone.backend.session.persistence.SessionGoalRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
@@ -51,6 +53,7 @@ public class SessionService {
   private final UserDeviceRepository devices;
   private final GoalRepository goals;
   private final LearningSessionRepository sessions;
+  private final SessionGoalRepository sessionGoals;
   private final IdempotencyRecordRepository records;
   private final OnboardingReadinessService onboarding;
   private final UserConsentRepository consents;
@@ -117,6 +120,8 @@ public class SessionService {
         request.targetDurationMs().longValueExact(), zone.getId(),
         startedAt.atZone(zone).toLocalDate(), mapper.writeValueAsString(request.sessionOptions()),
         POLICY_VERSION, startedAt));
+    // 목표 문구·세분화 사본을 세션 목표 목록에 고정한다. 지금은 목표 1개라 position 1만 쓴다.
+    sessionGoals.save(SessionGoalEntity.snapshot(session.getId(), 1, goal));
     var response = new StartResponse(session.getId().toString(), session.getStatus(),
         session.getVersion(), session.getTargetDurationMs(), session.getAccumulatedActiveMs(),
         session.getStartedAt(), session.getInterventionPolicyVersion());

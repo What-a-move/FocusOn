@@ -48,11 +48,6 @@ public class LearningSessionEntity {
   @Column(name = "goal_text_snapshot", nullable = false, length = 40)
   private String goalTextSnapshot;
 
-  /** 세션 시작 때 고정한 목표 세분화다. 목표가 나중에 바뀌어도 이 세션 판정 기준은 그대로다. */
-  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
-  @Column(name = "goal_profile_snapshot_json", columnDefinition = "jsonb")
-  private String goalProfileSnapshotJson;
-
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 32)
   private SessionStatus status;
@@ -114,7 +109,6 @@ public class LearningSessionEntity {
     this.goal = goal;
     this.runnerDevice = runnerDevice;
     this.goalTextSnapshot = goal.getGoalText();
-    this.goalProfileSnapshotJson = goal.getProfileJson();
     this.status = SessionStatus.RUNNING;
     this.targetDurationMs = targetDurationMs;
     this.userTimeZoneSnapshot = userTimeZoneSnapshot;

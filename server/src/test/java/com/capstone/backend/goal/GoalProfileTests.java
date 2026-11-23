@@ -21,9 +21,8 @@ import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
 import com.capstone.backend.goal.service.GoalAiClient;
 import com.capstone.backend.goal.service.GoalProfile;
-import com.capstone.backend.session.persistence.LearningSessionEntity;
+import com.capstone.backend.session.persistence.SessionGoalEntity;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,10 +103,13 @@ class GoalProfileTests {
     var goal = GoalEntity.create(null, "리액트 공부", ConfirmationSource.AI_CONFIRMED,
         Instant.now());
     goal.attachProfile(json.writeValueAsString(profile));
-    var session = LearningSessionEntity.create(null, goal, null, 1_800_000, "Asia/Seoul",
-        LocalDate.now(), "{}", "v1", Instant.now());
+    var snapshot = SessionGoalEntity.snapshot(10L, 1, goal);
     goal.updateText("뷰 공부", Instant.now());
-    assertEquals(json.writeValueAsString(profile), session.getGoalProfileSnapshotJson());
+    assertEquals(json.writeValueAsString(profile), snapshot.getGoalProfileSnapshotJson());
+    assertEquals("리액트 공부", snapshot.getGoalTextSnapshot());
+    // 세션 하나에 담을 수 있는 목표는 최대 3개다.
+    org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+        () -> SessionGoalEntity.snapshot(10L, 4, goal));
   }
 
   @Test
