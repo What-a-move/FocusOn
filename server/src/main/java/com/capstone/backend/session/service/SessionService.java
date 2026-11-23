@@ -44,7 +44,9 @@ public class SessionService {
   private static final long MAX_DURATION_MS = 18_000_000L;
   private static final long MINUTE_MS = 60_000L;
   private static final String START_SCOPE = "CREATE_SESSION";
-  private static final String POLICY_VERSION = "v1";
+  /** 새 세션은 판단 보류 구간을 멈춤으로 처리하는 v2 정책을 쓴다(#296). 진행 중 세션은 v1 유지. */
+  private static final String POLICY_VERSION =
+      com.capstone.backend.intervention.service.OffTaskTimeline.POLICY_V2;
   private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Seoul");
 
   private final UserRepository users;

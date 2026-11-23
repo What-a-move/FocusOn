@@ -12,6 +12,8 @@ import java.util.Objects;
 /** 서버 확정 시간만 세며 처리 중과 확정 UNCERTAIN을 분리하는 순수 정책 상태다. */
 public final class OffTaskTimeline {
   private static final Duration WINDOW = Duration.ofMinutes(10);
+  /** 판단 보류·분석 장애가 딴짓 구간을 끊지 않고 멈추게 하는 정책 버전이다(#296). */
+  public static final String POLICY_V2 = "v2";
   private final Snapshot state;
 
   /** DB snapshot 또는 새 실행/context의 빈 상태로 시작한다. */
@@ -42,9 +44,19 @@ public final class OffTaskTimeline {
     return complete(runId, relation, source, at, at);
   }
 
-  /** 완료 시각과 실제 서버 접수 시각을 분리해 cooldown 이후 새 관측을 검증한다. */
+  /** 완료 시각과 실제 서버 접수 시각을 분리해 cooldown 이후 새 관측을 검증한다(v1 규칙). */
   public OffTaskTimeline complete(long runId, Relation relation, ContentSource source,
       Instant receivedAt, Instant at) {
+    return complete(runId, relation, source, receivedAt, at, "v1");
+  }
+
+  /**
+   * 세션 정책 버전에 맞춰 확정 결과를 반영한다. v2에서는 판단 보류(분석 장애·제목만 본 무관 판정
+   * 포함)가 열린 딴짓 구간을 닫지 않고 멈춘다. 그 시간은 쌓지도 빼지도 않고, 다음 무관 판정이
+   * 같은 구간을 이어 센다. 관련 판정과 보호 상태는 지금처럼 구간을 끊는다.
+   */
+  public OffTaskTimeline complete(long runId, Relation relation, ContentSource source,
+      Instant receivedAt, Instant at, String policyVersion) {
     if (!Objects.equals(state.pendingRun(), runId)) {
       return this;
     }
@@ -53,7 +65,9 @@ public final class OffTaskTimeline {
         && (source == ContentSource.APP_META || source == ContentSource.TAB_META)
         ? Relation.UNCERTAIN : relation;
     if (effective != Relation.UNRELATED) {
-      return copy(now, state.episode(), null, runId, now, receivedAt, null, closeSpan(now));
+      Long paused = POLICY_V2.equals(policyVersion) && effective == Relation.UNCERTAIN
+          ? state.openEpisode() : null;
+      return copy(now, state.episode(), null, runId, now, receivedAt, paused, closeSpan(now));
     }
     long episode = state.openEpisode() == null ? state.episode() + 1 : state.openEpisode();
     var spans = new ArrayList<>(state.spans());
@@ -78,7 +92,8 @@ public final class OffTaskTimeline {
   /** 같은 서버 시각에서 반복 호출해도 구간 횟수가 늘지 않는 정책 평가다. */
   public Evaluation evaluate(String policyVersion, InterventionLevel level, Instant at,
       Instant cooldownUntil) {
-    if (!"v1".equals(policyVersion) || level == null || state.pendingRun() != null
+    boolean known = "v1".equals(policyVersion) || POLICY_V2.equals(policyVersion);
+    if (!known || level == null || state.pendingRun() != null
         || state.openEpisode() == null) {
       return new Evaluation(false, Duration.ZERO, 0);
     }
@@ -97,7 +112,17 @@ public final class OffTaskTimeline {
         && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
     boolean matches = continuous.compareTo(Duration.ofSeconds(thresholds[0])) > 0
         || repeats >= thresholds[2];
-    return new Evaluation(cooled && matches, continuous, repeats);
+    // 판단 보류로 멈춘 동안은 지금 화면이 딴짓인지 모르므로 시간은 보고하되 알림 후보는 아니다.
+    return new Evaluation(cooled && matches && !onHold(), continuous, repeats);
+  }
+
+  /**
+   * 열린 딴짓 구간은 있지만 지금 흐르는 시간 조각이 없는 상태다. v2에서 판단 보류로 멈췄거나
+   * 재분석을 기다리는 중이다. 지금 화면이 딴짓인지 모르므로 새 알림을 만들지 않는다.
+   */
+  public boolean onHold() {
+    return state.openEpisode() != null
+        && state.spans().stream().noneMatch(span -> span.end() == null);
   }
 
   /** 원문 없는 영속화용 snapshot이다. */

@@ -130,7 +130,8 @@ class OffTaskTimelineTests {
   @Test
   void unknownPolicyAndInterruptedContextCannotGenerate() {
     var state = unrelated(empty(), 1, 0);
-    assertFalse(state.evaluate("v2", InterventionLevel.NORMAL, START.plusSeconds(300), null)
+    // v1·v2 외의 정책 버전은 알림 후보를 만들지 않는다.
+    assertFalse(state.evaluate("v3", InterventionLevel.NORMAL, START.plusSeconds(300), null)
         .candidate());
     state = state.interrupt(START.plusSeconds(20));
     assertFalse(state.evaluate("v1", InterventionLevel.NORMAL, START.plusSeconds(300), null)
@@ -145,6 +146,66 @@ class OffTaskTimelineTests {
         START.plusSeconds(10));
     assertEquals(Duration.ofSeconds(20), restored.evaluate("v1", InterventionLevel.NORMAL,
         START.plusSeconds(15), null).continuous());
+  }
+
+  /** v2: 딴짓 40초 → 판단 보류 30초 → 딴짓 25초면 연속 딴짓은 보류를 뺀 65초로 이어진다. */
+  @ParameterizedTest
+  @EnumSource(value = ContentSource.class, names = {"DESKTOP_APP_OCR", "APP_META"})
+  void v2UncertainPausesEpisodeWithoutCountingPausedTime(ContentSource uncertainSource) {
+    var timeline = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    // APP_META의 무관 판정은 UNCERTAIN으로 낮춰지므로 같은 멈춤 규칙을 탄다.
+    Relation pause = uncertainSource == ContentSource.APP_META ? Relation.UNRELATED
+        : Relation.UNCERTAIN;
+    timeline = v2(timeline, 2, pause, uncertainSource, 40);
+    assertEquals(1L, timeline.snapshot().openEpisode());
+    timeline = v2(timeline, 3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 70);
+    assertEquals(1L, timeline.snapshot().openEpisode());
+    var at = START.plusSeconds(95);
+    assertEquals(Duration.ofSeconds(65),
+        timeline.evaluate("v2", InterventionLevel.NORMAL, at, null).continuous());
+    assertTrue(timeline.evaluate("v2", InterventionLevel.NORMAL, at, null).candidate());
+  }
+
+  /** v2: 분석 장애(UNCERTAIN)도 구간을 끊지 않는다. 보류 중에는 시간이 늘지 않는다. */
+  @Test
+  void v2AnalysisFailureDoesNotAccumulateWhilePaused() {
+    var timeline = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    timeline = v2(timeline, 2, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 50);
+    assertEquals(Duration.ofSeconds(50), timeline.evaluate("v2", InterventionLevel.NORMAL,
+        START.plusSeconds(500), null).continuous());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.NORMAL, START.plusSeconds(500), null)
+        .candidate());
+  }
+
+  /** v2: 보류 중에는 기준을 넘긴 시간이 있어도 새 알림을 만들지 않고, 다음 무관 판정에서 다시 본다. */
+  @Test
+  void v2HoldBlocksCandidatesUntilNextUnrelated() {
+    var timeline = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    timeline = v2(timeline, 2, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 70);
+    assertTrue(timeline.onHold());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.NORMAL, START.plusSeconds(300), null)
+        .candidate());
+    timeline = v2(timeline, 3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 300);
+    assertFalse(timeline.onHold());
+    assertTrue(timeline.evaluate("v2", InterventionLevel.NORMAL, START.plusSeconds(301), null)
+        .candidate());
+  }
+
+  /** v2에서도 관련 판정은 구간을 끊고, v1은 판단 보류에서 구간을 끊는 기존 동작을 유지한다. */
+  @Test
+  void relatedStillEndsEpisodeAndV1KeepsLegacyBreak() {
+    var v2 = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    v2 = v2(v2, 2, Relation.RELATED, ContentSource.DESKTOP_APP_OCR, 40);
+    assertEquals(null, v2.snapshot().openEpisode());
+    var v1 = unrelated(empty(), 1, 0).pending(2, START.plusSeconds(40))
+        .complete(2, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, START.plusSeconds(40));
+    assertEquals(null, v1.snapshot().openEpisode());
+  }
+
+  private static OffTaskTimeline v2(OffTaskTimeline timeline, long run, Relation relation,
+      ContentSource source, long seconds) {
+    Instant at = START.plusSeconds(seconds);
+    return timeline.pending(run, at).complete(run, relation, source, at, at, "v2");
   }
 
   private static OffTaskTimeline empty() {

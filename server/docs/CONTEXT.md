@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #296 판단 보류 구간 멈춤 (2026-11-21)
+
+- 새 세션은 개입 정책 `v2`로 시작한다. 판단 보류·분석 장애는 딴짓 구간을 끊지 않고 멈춘다. 계획: `features/uncertain-pause-PLAN.md`.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.

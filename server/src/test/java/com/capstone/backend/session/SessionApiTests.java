@@ -955,7 +955,7 @@ class SessionApiTests {
     String path = "/api/v1/sessions/" + id;
     mvc.perform(get(path).header("Authorization", token))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.sessionId").value(id))
-        .andExpect(jsonPath("$.data.interventionPolicyVersion").isString());
+        .andExpect(jsonPath("$.data.interventionPolicyVersion").value("v2"));
     mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
         .andExpect(status().isNotFound());
     mvc.perform(get(path)).andExpect(status().isUnauthorized());
