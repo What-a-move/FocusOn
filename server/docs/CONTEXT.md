@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #297 개입 근거 판정 id (2026-11-21)
+
+- V24로 `intervention_events.analysis_run_id`를 추가했다. 알림을 만든 무관 판정 id만 남긴다. #296 위에 쌓은 브랜치다. 계획: `features/intervention-run-link-PLAN.md`.
+
 ## Issue #296 판단 보류 구간 멈춤 (2026-11-21)
 
 - 새 세션은 개입 정책 `v2`로 시작한다. 판단 보류·분석 장애는 딴짓 구간을 끊지 않고 멈춘다. 계획: `features/uncertain-pause-PLAN.md`.
