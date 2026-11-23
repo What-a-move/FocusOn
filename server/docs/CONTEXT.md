@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## #309 토큰 패밀리 보관 기간 정리 (2026-11-23)
+
+- 만료·폐기 중 먼저 확정된 시각부터 30일이 지난 패밀리와 갱신 토큰 회전 이력을 주기적으로 정리한다. 사용자 → 패밀리 잠금에서 기한을 확인하고 부모 참조 해제와 삭제를 한 트랜잭션으로 처리한다.
+- 실행당 후보는 최대 100건이다. [보관 기간 정리 설계](features/token-family-retention-PLAN.md)와 [인증 QA](features/auth-lifecycle-QA.md)에 범위와 검증을 기록한다.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.

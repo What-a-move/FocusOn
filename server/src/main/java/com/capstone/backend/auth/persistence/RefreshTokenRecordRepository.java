@@ -10,6 +10,17 @@ import org.springframework.data.repository.query.Param;
 /** Refresh Token 해시 조회로 회전·재사용 감지를 돕는다. */
 public interface RefreshTokenRecordRepository
     extends JpaRepository<RefreshTokenRecordEntity, Long> {
+  /** 정리할 패밀리 안의 회전 연결을 풀어 부모·자식 행을 함께 삭제할 수 있게 한다. */
+  @Modifying
+  @Query("update RefreshTokenRecordEntity r set r.parentToken = null "
+      + "where r.tokenFamily.id = :familyId and r.parentToken is not null")
+  int clearParentLinksByFamily(@Param("familyId") long familyId);
+
+  /** 패밀리의 Refresh Token 기록을 일괄 삭제한다. */
+  @Modifying
+  @Query("delete from RefreshTokenRecordEntity r where r.tokenFamily.id = :familyId")
+  int deleteRecordsByFamily(@Param("familyId") long familyId);
+
   /** 동일 기기 재로그인 시 이전 family의 활성 Refresh Token만 폐기한다. */
   @Modifying
   @Query("update RefreshTokenRecordEntity r set r.status = "
