@@ -1,0 +1,140 @@
+# 「FocusOn 이슈 보드」(조직 Projects #1)의 이슈 Status를 자동으로 옮긴다(#325).
+# - 이슈 번호가 들어간 브랜치 생성(예: feat/123-...) → In Progress
+# - PR 열림·다시 열림·리뷰 준비 → 연결 이슈 In Review
+# - dev·main으로 PR 머지 → 연결 이슈 닫기 + Done (dev 머지는 Closes #가 이슈를 닫지 않기 때문)
+# 연결 이슈는 PR 본문의 Closes/Fixes/Resolves #번호와 브랜치 이름의 번호다.
+# 보드 수정에는 project·repo 권한 토큰이 필요하다. 저장소 secret PROJECT_TOKEN이 없으면 건너뛴다.
+name: Project status
+
+on:
+  create:
+  pull_request:
+    types: [opened, reopened, ready_for_review, closed]
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-status-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  status:
+    if: github.event_name != 'create' || github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move linked issues
+        uses: actions/github-script@v7
+        env:
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN || github.token }}
+          script: |
+            if (!process.env.PROJECT_TOKEN) {
+              core.warning('PROJECT_TOKEN secret이 없어 보드 Status를 바꾸지 않습니다.');
+              return;
+            }
+            const ORG = 'What-a-move';
+            const PROJECT_NUMBER = 1;
+            const { owner, repo } = context.repo;
+
+            // 1) 이벤트에서 이슈 번호와 목표 Status를 정한다.
+            const branchNumber = (ref) => {
+              const match = /^(?:feat|fix|chore|docs|test|refactor|hotfix)\/#?(\d+)[-_]/.exec(ref || '');
+              return match ? [Number(match[1])] : [];
+            };
+            let numbers = [];
+            let target;
+            let close = false;
+            if (context.eventName === 'create') {
+              numbers = branchNumber(context.payload.ref);
+              target = 'In Progress';
+            } else {
+              const pr = context.payload.pull_request;
+              const body = pr.body || '';
+              const linked = [...body.matchAll(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+#(\d+)/gi)]
+                .map((m) => Number(m[1]));
+              numbers = [...linked, ...branchNumber(pr.head.ref)];
+              if (context.payload.action === 'closed') {
+                if (!pr.merged) {
+                  core.info('머지 없이 닫힌 PR이라 이슈는 그대로 둡니다.');
+                  return;
+                }
+                target = 'Done';
+                close = true;
+              } else {
+                target = 'In Review';
+              }
+            }
+            numbers = [...new Set(numbers)].filter((n) => n > 0);
+            if (numbers.length === 0) {
+              core.info('연결된 이슈 번호가 없습니다.');
+              return;
+            }
+
+            // 2) 보드와 Status 칸·선택지를 이름으로 찾는다(ID를 고정하지 않는다).
+            const project = (await github.graphql(`
+              query($org: String!, $number: Int!) {
+                organization(login: $org) {
+                  projectV2(number: $number) {
+                    id
+                    field(name: "Status") {
+                      ... on ProjectV2SingleSelectField { id options { id name } }
+                    }
+                  }
+                }
+              }`, { org: ORG, number: PROJECT_NUMBER })).organization.projectV2;
+            const option = project.field.options.find((o) => o.name === target);
+            if (!option) {
+              core.setFailed(`Status 선택지 "${target}"가 보드에 없습니다.`);
+              return;
+            }
+
+            for (const number of numbers) {
+              let issue;
+              try {
+                issue = (await github.graphql(`
+                  query($owner: String!, $repo: String!, $number: Int!) {
+                    repository(owner: $owner, name: $repo) {
+                      issue(number: $number) {
+                        id state
+                        projectItems(first: 20) { nodes { id project { id } } }
+                      }
+                    }
+                  }`, { owner, repo, number })).repository.issue;
+              } catch (error) {
+                core.warning(`#${number}은 이슈가 아닙니다(PR이거나 없음). 건너뜁니다.`);
+                continue;
+              }
+              if (!issue) {
+                continue;
+              }
+              // 이미 닫힌 이슈를 브랜치·PR 열림으로 되돌리지 않는다.
+              if (issue.state === 'CLOSED' && !close) {
+                core.info(`#${number}은 닫혀 있어 ${target}로 옮기지 않습니다.`);
+                continue;
+              }
+              let itemId = issue.projectItems.nodes.find((n) => n.project.id === project.id)?.id;
+              if (!itemId) {
+                itemId = (await github.graphql(`
+                  mutation($project: ID!, $content: ID!) {
+                    addProjectV2ItemById(input: { projectId: $project, contentId: $content }) { item { id } }
+                  }`, { project: project.id, content: issue.id })).addProjectV2ItemById.item.id;
+              }
+              await github.graphql(`
+                mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $project, itemId: $item, fieldId: $field,
+                    value: { singleSelectOptionId: $option }
+                  }) { projectV2Item { id } }
+                }`, { project: project.id, item: itemId, field: project.field.id, option: option.id });
+              if (close && issue.state === 'OPEN') {
+                const pr = context.payload.pull_request;
+                await github.rest.issues.createComment({ owner, repo, issue_number: number,
+                  body: `#${pr.number}이 \`${pr.base.ref}\`에 머지되어 이슈를 닫습니다.` });
+                await github.rest.issues.update({ owner, repo, issue_number: number,
+                  state: 'closed', state_reason: 'completed' });
+              }
+              core.info(`#${number} → ${target}${close ? ' (닫음)' : ''}`);
+            }
