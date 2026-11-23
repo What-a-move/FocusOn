@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #313 할 일 목록 (2026-11-23)
+
+- `GET /goals`(상태 필터·cursor)와 `todoStatus`(OPEN/DONE, V29)를 추가했다. 상태만 바꾸는 PATCH는 활성 세션 중에도 허용한다. 계획: `features/goal-todo-list-PLAN.md`.
+
 ## Issue #301 휴식 제안 생성 (2026-11-21)
 
 - 반복 이탈(5분 이내 간격 3회)이면 서버가 `BREAK_SUGGESTION`을 만들고 `breakEvidence`를 내려 준다(V27). 계획: `features/break-suggestion-PLAN.md`.

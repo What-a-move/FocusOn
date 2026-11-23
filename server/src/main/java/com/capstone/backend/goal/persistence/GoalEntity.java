@@ -28,6 +28,9 @@ public class GoalEntity {
   /** 목표의 보관 상태다. */
   public enum Status { ACTIVE, ARCHIVED, DELETED }
 
+  /** 할 일 진행 상태다(재설계 1차, #313). 완료 판정이 아니라 사용자가 직접 표시한 값이다. */
+  public enum TodoStatus { OPEN, DONE }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -54,6 +57,10 @@ public class GoalEntity {
   @Column(nullable = false, length = 16)
   private Status status;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "todo_status", nullable = false, length = 8)
+  private TodoStatus todoStatus;
+
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
@@ -74,6 +81,7 @@ public class GoalEntity {
     this.goalText = goalText;
     this.confirmationSource = confirmationSource;
     this.status = Status.ACTIVE;
+    this.todoStatus = TodoStatus.OPEN;
     this.createdAt = now;
     this.updatedAt = now;
   }
@@ -100,6 +108,14 @@ public class GoalEntity {
     this.normalizedGoalText = null;
     this.profileJson = null;
     this.updatedAt = now;
+  }
+
+  /** 사용자가 표시한 할 일 상태를 바꾼다. 같은 값이면 변경 시각도 그대로 둔다. */
+  public void markTodo(TodoStatus value, Instant now) {
+    if (todoStatus != value) {
+      todoStatus = value;
+      updatedAt = now;
+    }
   }
 
   /** 이력을 보존하기 위해 목표를 논리 삭제한다. */

@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #313 할 일 목록 (2026-11-23)
+
+- 문서 오너: `GET /goals` 응답 형식(`items`·`nextCursor`, 최신순) 확인.
+- Desktop: 할 일 목록 화면에서 `GET /goals?todoStatus=OPEN`과 PATCH `todoStatus`를 쓴다.
+- 머지 순서: #319(V28) 뒤. 다음 마이그레이션은 V30부터.
+
 ## Issue #301 휴식 제안 생성 (2026-11-21)
 
 - 문서 오너: Notion API 명세 개입 항목에 `breakEvidence` 반영, 설계서 8.1 "이탈 1회" 정의 확인.

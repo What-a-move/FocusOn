@@ -1,6 +1,7 @@
 package com.capstone.backend.goal.dto;
 
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
+import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -20,10 +21,13 @@ public final class GoalDtos {
       @NotNull ConfirmationSource confirmationSource,
       @Schema(description = "AI 명확화 대화 ID (선택)") String clarificationSessionId) {}
 
-  /** 목표 문구 수정 요청이다. */
+  /**
+   * 목표 수정 요청이다. 보낸 필드만 바꾼다. 활성 세션이 참조 중이면 todoStatus만 바꿀 수 있다.
+   */
   @Schema(example = "{\"goalText\":\"Spring Security 인증 복습\"}")
   public record UpdateGoalRequest(
-      @Schema(example = "Spring Security 인증 복습") String goalText) {}
+      @Schema(example = "Spring Security 인증 복습") String goalText,
+      @Schema(description = "할 일 상태 (선택)") TodoStatus todoStatus) {}
 
   /** 사용자가 이전에 받은 질문과 답변이다. */
   public record ClarificationAnswer(@NotBlank String question, @NotBlank String answer) {}
@@ -47,5 +51,8 @@ public final class GoalDtos {
 
   /** 저장하거나 조회한 목표의 공개 정보다. */
   public record GoalResponse(String goalId, String goalText,
-      ConfirmationSource confirmationSource) {}
+      ConfirmationSource confirmationSource, TodoStatus todoStatus) {}
+
+  /** 할 일 목록 한 페이지다. 마지막 페이지면 nextCursor는 null이다. */
+  public record GoalListResponse(List<GoalResponse> items, String nextCursor) {}
 }

@@ -6,17 +6,20 @@ import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.goal.dto.GoalDtos.CreateGoalRequest;
+import com.capstone.backend.goal.dto.GoalDtos.GoalListResponse;
 import com.capstone.backend.goal.dto.GoalDtos.GoalResponse;
 import com.capstone.backend.goal.dto.GoalDtos.UpdateGoalRequest;
 import com.capstone.backend.goal.persistence.GoalClarificationRepository;
 import com.capstone.backend.goal.persistence.GoalClarificationSession;
 import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
+import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
 import com.capstone.backend.goal.persistence.GoalRepository;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -26,6 +29,8 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class GoalService {
+  private static final int DEFAULT_LIMIT = 20;
+  private static final int MAX_LIMIT = 50;
   private final GoalRepository goals;
   private final UserRepository users;
   private final LearningSessionRepository sessions;
@@ -94,9 +99,45 @@ public class GoalService {
     return response(findGoal(principal.userId(), goalId));
   }
 
-  /** 본인 목표를 활성 세션과 충돌하지 않도록 수정한다. */
+  /**
+   * 본인 할 일 목록을 최신순으로 돌려준다(#313). nextCursor는 불투명 문자열이며 그대로 cursor로
+   * 보내면 다음 페이지다. 잘못된 limit·cursor는 VALIDATION_ERROR다.
+   */
+  public GoalListResponse list(FocusOnPrincipal principal, TodoStatus todoStatus, String cursor,
+      Integer requestedLimit) {
+    int limit = requestedLimit == null ? DEFAULT_LIMIT : requestedLimit;
+    if (limit < 1 || limit > MAX_LIMIT) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    long idBefore = Long.MAX_VALUE;
+    if (cursor != null) {
+      try {
+        idBefore = Long.parseLong(cursor);
+      } catch (NumberFormatException exception) {
+        throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+      }
+      if (idBefore <= 0) {
+        throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+      }
+    }
+    var rows = goals.findTodoPage(principal.userId(), todoStatus, idBefore,
+        PageRequest.of(0, limit + 1));
+    var page = rows.subList(0, Math.min(limit, rows.size()));
+    String next = rows.size() > limit ? page.getLast().getId().toString() : null;
+    return new GoalListResponse(page.stream().map(this::response).toList(), next);
+  }
+
+  /**
+   * 본인 목표를 활성 세션과 충돌하지 않도록 수정한다. 할 일 상태만 바꾸는 요청은 활성 세션이
+   * 참조 중이어도 허용한다(#313). 문구가 함께 오면 기존 규칙을 그대로 따른다.
+   */
   @Transactional
   public GoalResponse update(FocusOnPrincipal principal, String goalId, UpdateGoalRequest request) {
+    if (request.goalText() == null && request.todoStatus() != null) {
+      GoalEntity goal = findGoal(principal.userId(), goalId);
+      goal.markTodo(request.todoStatus(), Instant.now());
+      return response(goal);
+    }
     String text = normalizeText(request.goalText());
     if (!isValidText(text)) {
       // 오류 응답의 기존 우선순위는 유지하되 변경이 없는 요청은 행 잠금을 피한다.
@@ -107,7 +148,11 @@ public class GoalService {
     lockUser(principal.userId());
     GoalEntity goal = findGoal(principal.userId(), goalId);
     requireNotInActiveSession(principal.userId(), goal.getId());
-    goal.updateText(text, Instant.now());
+    Instant now = Instant.now();
+    goal.updateText(text, now);
+    if (request.todoStatus() != null) {
+      goal.markTodo(request.todoStatus(), now);
+    }
     return response(goal);
   }
 
@@ -166,6 +211,6 @@ public class GoalService {
 
   private GoalResponse response(GoalEntity goal) {
     return new GoalResponse(goal.getId().toString(), goal.getGoalText(),
-        goal.getConfirmationSource());
+        goal.getConfirmationSource(), goal.getTodoStatus());
   }
 }
