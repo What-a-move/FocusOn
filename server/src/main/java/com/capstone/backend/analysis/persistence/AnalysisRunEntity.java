@@ -2,6 +2,7 @@ package com.capstone.backend.analysis.persistence;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
+import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
@@ -94,6 +95,10 @@ public class AnalysisRunEntity {
   @Column(name = "reason_code", length = 80)
   private ReasonCode reasonCode;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "match_status", length = 16)
+  private MatchStatus matchStatus;
+
   @Column(name = "error_code", length = 80)
   private String errorCode;
 
@@ -146,6 +151,7 @@ public class AnalysisRunEntity {
         : BigDecimal.valueOf(decision.confidence()).setScale(3, java.math.RoundingMode.HALF_UP);
     reasonCode = decision.reasonCode();
     analysisStatus = decision.status();
+    matchStatus = decision.matchStatus();
     modelVersion = decision.modelVersion();
     promptVersion = decision.promptVersion();
     errorCode = reasonCode == ReasonCode.ANALYSIS_UNAVAILABLE
@@ -156,7 +162,7 @@ public class AnalysisRunEntity {
   public Response response() {
     return new Response(id.toString(), analysisStatus, relation,
         relationConfidence == null ? null : relationConfidence.doubleValue(), reasonCode,
-        observedAt, policyVersion);
+        observedAt, policyVersion, matchStatus);
   }
 
   /** metadata만 근거인 무관 판정은 후속 Policy Engine의 이탈 시간에 포함하지 않는다. */

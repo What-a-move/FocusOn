@@ -4,6 +4,11 @@
 
 - `GET /goals`(상태 필터·cursor)와 `todoStatus`(OPEN/DONE, V29)를 추가했다. 상태만 바꾸는 PATCH는 활성 세션 중에도 허용한다. 계획: `features/goal-todo-list-PLAN.md`.
 
+## Issue #319 화면 판정 matchStatus (2026-11-23)
+
+- AI의 `matchStatus`(MATCHED/FAR/NOT_ENOUGH)를 확정 RELATED일 때만 `analysis_runs.match_status`에 저장하고 분석 응답·이력에 싣는다(V28). 계획: `features/match-status-PLAN.md`.
+- 재설계 목표·세션 작업은 Issue #313~#318·#320으로 나눴다.
+
 ## Issue #301 휴식 제안 생성 (2026-11-21)
 
 - 반복 이탈(5분 이내 간격 3회)이면 서버가 `BREAK_SUGGESTION`을 만들고 `breakEvidence`를 내려 준다(V27). 계획: `features/break-suggestion-PLAN.md`.

@@ -2,6 +2,7 @@ package com.capstone.backend.analysis.service;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
+import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
@@ -197,10 +198,26 @@ public class AnalysisAiClient {
             AnalysisStatus.NEEDS_CONFIRMATION, model, prompt);
       }
       return new AnalysisDecision(relation, confidence, reason, AnalysisStatus.COMPLETED,
-          model, prompt);
+          model, prompt, matchStatus(value.path("matchStatus")));
     } catch (IllegalArgumentException exception) {
       return AnalysisDecision.unavailable();
     }
+  }
+
+  /**
+   * 할 일 일치 정도는 보조 정보다. 아직 이 필드를 보내지 않는 AI나 허용 밖 값이면 판정은 유지하고
+   * 값만 비운다(DR-030).
+   */
+  private static MatchStatus matchStatus(JsonNode value) {
+    if (!value.isString()) {
+      return null;
+    }
+    for (var status : MatchStatus.values()) {
+      if (status.name().equals(value.asString())) {
+        return status;
+      }
+    }
+    return null;
   }
 
   /** 버전은 원문 대신 남기는 고정 길이 식별자이므로 임의의 자유 텍스트를 받지 않는다. */

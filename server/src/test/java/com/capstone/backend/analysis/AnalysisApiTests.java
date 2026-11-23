@@ -241,6 +241,49 @@ class AnalysisApiTests {
     }
   }
 
+  /** 확정 RELATED의 matchStatus는 응답·이력·DB에 같은 값으로 남는다(#319, DR-030). */
+  @Test
+  void relatedMatchStatusIsStoredAndReturned() throws Exception {
+    Fixture f = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(new AnalysisDecision(Relation.RELATED,
+        .9, ReasonCode.SEMANTIC_GOAL_MATCH, AnalysisStatus.COMPLETED, "test-model",
+        "test-prompt", com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.FAR));
+    mvc.perform(post(path(f.sessionId())).header("Authorization",
+            "Bearer " + f.login().accessToken())
+        .header("X-Device-Id", f.login().device().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(request(null))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("RELATED"))
+        .andExpect(jsonPath("$.data.matchStatus").value("FAR"));
+    assertEquals("FAR", jdbc.queryForObject(
+        "SELECT match_status FROM analysis_runs WHERE session_id = ?", String.class,
+        f.sessionId()));
+    mvc.perform(get(path(f.sessionId())).header("Authorization",
+            "Bearer " + f.login().accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].matchStatus").value("FAR"));
+  }
+
+  /** RELATED가 아닌 판정에는 matchStatus를 저장하지 않는다. */
+  @Test
+  void nonRelatedDecisionDropsMatchStatus() throws Exception {
+    Fixture f = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(new AnalysisDecision(
+        Relation.UNRELATED, .9, ReasonCode.SEMANTIC_GOAL_MISMATCH, AnalysisStatus.COMPLETED,
+        "test-model", "test-prompt",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.MATCHED));
+    mvc.perform(post(path(f.sessionId())).header("Authorization",
+            "Bearer " + f.login().accessToken())
+        .header("X-Device-Id", f.login().device().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(request(null))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("UNRELATED"))
+        .andExpect(jsonPath("$.data.matchStatus").doesNotExist());
+    assertEquals(null, jdbc.queryForObject(
+        "SELECT match_status FROM analysis_runs WHERE session_id = ?", String.class,
+        f.sessionId()));
+  }
+
   @Test
   void actualHttpReturnsPublicShapeAndServerPolicy() throws Exception {
     Fixture f = fixture();

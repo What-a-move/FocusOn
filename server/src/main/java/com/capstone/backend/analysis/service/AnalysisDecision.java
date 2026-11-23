@@ -2,12 +2,29 @@ package com.capstone.backend.analysis.service;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.GuardStatus;
+import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 
-/** 원문·외부 오류 메시지를 포함하지 않는 정규화된 판정이다. */
+/**
+ * 원문·외부 오류 메시지를 포함하지 않는 정규화된 판정이다. matchStatus는 확정 RELATED일 때만 값이
+ * 있다(DR-030).
+ */
 public record AnalysisDecision(Relation relation, Double confidence, ReasonCode reasonCode,
-    AnalysisStatus status, String modelVersion, String promptVersion) {
+    AnalysisStatus status, String modelVersion, String promptVersion, MatchStatus matchStatus) {
+  /** 확정 RELATED가 아니면 matchStatus를 남기지 않는다. */
+  public AnalysisDecision {
+    if (relation != Relation.RELATED || status != AnalysisStatus.COMPLETED) {
+      matchStatus = null;
+    }
+  }
+
+  /** matchStatus가 없는 판정이다. */
+  public AnalysisDecision(Relation relation, Double confidence, ReasonCode reasonCode,
+      AnalysisStatus status, String modelVersion, String promptVersion) {
+    this(relation, confidence, reasonCode, status, modelVersion, promptVersion, null);
+  }
+
   /** AI 미설정·장애·잘못된 응답은 경고 근거가 될 수 없다. */
   public static AnalysisDecision unavailable() {
     return new AnalysisDecision(Relation.UNCERTAIN, null, ReasonCode.ANALYSIS_UNAVAILABLE,
