@@ -65,6 +65,12 @@ public class InterventionEventEntity {
   /** 알림을 만든 근거 무관 판정이다. 오판 신고(NOT_OFF_TASK)와 재보정 평가를 이 id로만 잇는다. */
   @Column(name = "analysis_run_id")
   private Long analysisRunId;
+  /** 휴식 제안 근거: 이어진 이탈 횟수. 이탈 알림은 null이다. */
+  @Column(name = "break_repeat_count")
+  private Integer breakRepeatCount;
+  /** 휴식 제안 근거: 첫 이탈부터 제안까지의 분. 이탈 알림은 null이다. */
+  @Column(name = "break_window_minutes")
+  private Integer breakWindowMinutes;
 
   /** 승인된 수명 30초를 적용한다. 생성 시각은 실제 전송 시각이 아니다. */
   public static InterventionEventEntity offTask(long sessionId, long revision, String channels,
@@ -80,6 +86,17 @@ public class InterventionEventEntity {
     event.runningSince = runningSince;
     event.createdAt = now;
     event.expiresAt = now.plusSeconds(30);
+    return event;
+  }
+
+  /** 반복 이탈 근거로 휴식 제안을 만든다. 수명·대기 슬롯은 이탈 알림과 같다(#301). */
+  public static InterventionEventEntity breakSuggestion(long sessionId, long revision,
+      String channels, String policyVersion, Instant runningSince, Instant now,
+      int repeatCount, int windowMinutes) {
+    var event = offTask(sessionId, revision, channels, policyVersion, runningSince, now);
+    event.type = Type.BREAK_SUGGESTION;
+    event.breakRepeatCount = repeatCount;
+    event.breakWindowMinutes = windowMinutes;
     return event;
   }
 

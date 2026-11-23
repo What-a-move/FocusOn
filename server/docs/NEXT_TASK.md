@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #301 휴식 제안 생성 (2026-11-21)
+
+- 문서 오너: Notion API 명세 개입 항목에 `breakEvidence` 반영, 설계서 8.1 "이탈 1회" 정의 확인.
+- Desktop: 휴식 제안 문구에 `breakEvidence`(최근 N분 동안 M회)를 쓴다.
+- 다음 마이그레이션은 V28부터.
+
 ## Issue #300 NOT_OFF_TASK (2026-11-21)
 
 - 문서 오너: Notion API 명세 acknowledgements에 `NOT_OFF_TASK` 반영.

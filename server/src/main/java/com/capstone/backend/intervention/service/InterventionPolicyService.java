@@ -7,6 +7,7 @@ import com.capstone.backend.auth.persistence.TokenFamilyRepository;
 import com.capstone.backend.auth.persistence.UserDeviceEntity;
 import com.capstone.backend.auth.persistence.UserDeviceRepository;
 import com.capstone.backend.auth.security.TokenFamilyGuard;
+import com.capstone.backend.intervention.dto.InterventionDtos.Type;
 import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.intervention.persistence.InterventionPolicyRepository;
@@ -16,7 +17,10 @@ import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
+import com.capstone.backend.user.persistence.UserFocusSettingsEntity;
+import com.capstone.backend.user.persistence.UserFocusSettingsRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +43,7 @@ public class InterventionPolicyService {
   private final TokenFamilyGuard guard;
   private final UserConsentRepository consents;
   private final ObjectMapper json;
+  private final UserFocusSettingsRepository focusSettings;
 
   /** 분석 예약의 processing과 이미 확정된 보호 결과를 구분한다. */
   public void prepared(LearningSessionEntity session, AnalysisRunEntity run, boolean current,
@@ -208,6 +213,38 @@ public class InterventionPolicyService {
     events.flush();
   }
 
+  /**
+   * 반복 이탈이면 이탈 알림 대신 휴식 제안을 만든다(#301). 설정이 꺼져 있거나 이번 실행 구간에서
+   * 이미 제안했으면 만들지 않는다. 「잠시 쉬기」로 멈췄다 재개하면 실행 구간이 바뀌어 새로 센다.
+   */
+  private boolean suggestBreak(LearningSessionEntity session,
+      ForegroundPolicyContext.Binding context, InterventionPolicyState state,
+      OffTaskTimeline timeline, SessionOptions options, List<InterventionEventEntity> history,
+      Instant now) {
+    boolean enabled = focusSettings.findById(session.getUser().getId())
+        .map(UserFocusSettingsEntity::isBreakSuggestionEnabled).orElse(true);
+    boolean suggested = history.stream().anyMatch(event -> event.getType() == Type.BREAK_SUGGESTION
+        && Objects.equals(event.getRunningSince(), session.getLastResumedAt()));
+    if (!enabled || suggested) {
+      return false;
+    }
+    var evidence = timeline.breakEvidence(session.getInterventionPolicyVersion(),
+        options.interventionLevel(), now, context.cooldownUntil()).orElse(null);
+    if (evidence == null || history.stream().anyMatch(event -> event.getType()
+        == Type.BREAK_SUGGESTION && event.getCause() == state.getRevision())) {
+      return false;
+    }
+    var event = InterventionEventEntity.breakSuggestion(session.getId(), state.getRevision(),
+        json.writeValueAsString(options.notificationChannels()),
+        session.getInterventionPolicyVersion(), session.getLastResumedAt(), now,
+        evidence.repeatCount(), evidence.windowMinutes());
+    event.bindContext(InterventionAccess.id(context.context(),
+        com.capstone.backend.common.api.ApiErrorCode.VALIDATION_ERROR));
+    event.bindAnalysisRun(timeline.snapshot().offTaskRun());
+    events.saveAndFlush(event);
+    return true;
+  }
+
   private void evaluate(LearningSessionEntity session, ForegroundPolicyContext.Binding context,
       InterventionPolicyState state, OffTaskTimeline timeline, Instant now) {
     expirePending(session, now, timeline.snapshot().openEpisode() == null);
@@ -228,6 +265,9 @@ public class InterventionPolicyService {
       return;
     }
     var options = json.readValue(session.getSessionOptionsSnapshotJson(), SessionOptions.class);
+    if (suggestBreak(session, context, state, timeline, options, history, now)) {
+      return;
+    }
     if (timeline.evaluate(session.getInterventionPolicyVersion(), options.interventionLevel(),
         now, context.cooldownUntil()).candidate()) {
       boolean duplicate = history.stream()

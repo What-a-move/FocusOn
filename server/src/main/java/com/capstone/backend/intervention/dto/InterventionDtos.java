@@ -26,10 +26,16 @@ public final class InterventionDtos {
    */
   public enum Action { ACKNOWLEDGED, DISMISSED, NOT_OFF_TASK }
 
-  /** 목록 항목은 공개 문자열 식별자와 시작 당시 정책을 포함한다. */
+  /**
+   * 목록 항목은 공개 문자열 식별자와 시작 당시 정책을 포함한다. breakEvidence는 휴식 제안에만
+   * 있는 민감값 없는 근거다(예: 최근 12분 동안 3회). 이탈 알림은 null이다.
+   */
   public record Item(String interventionId, Type type, Status status,
       List<NotificationChannel> channels, Instant createdAt, String policyVersion,
-      String observationContextId, long remainingTtlMs) {}
+      String observationContextId, long remainingTtlMs, BreakEvidence breakEvidence) {}
+
+  /** 휴식 제안 근거다. 화면 원문·도메인·카메라 신호는 담지 않는다. */
+  public record BreakEvidence(int repeatCount, int windowMinutes) {}
 
   /** OS 제출 결과와 사용자 반응은 별개의 상태다. */
   public enum DispatchStatus { SENT, NOT_SENT, UNKNOWN }

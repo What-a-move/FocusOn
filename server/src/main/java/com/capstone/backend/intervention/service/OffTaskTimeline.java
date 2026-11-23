@@ -14,6 +14,9 @@ public final class OffTaskTimeline {
   private static final Duration WINDOW = Duration.ofMinutes(10);
   /** 판단 보류·분석 장애가 딴짓 구간을 끊지 않고 멈추게 하는 정책 버전이다(#296). */
   public static final String POLICY_V2 = "v2";
+  /** 휴식 제안: 이탈 시작 사이 최대 간격과 최소 반복 횟수(설계서 8.1). */
+  private static final Duration BREAK_GAP = Duration.ofMinutes(5);
+  private static final int BREAK_REPEATS = 3;
   private final Snapshot state;
 
   /** DB snapshot 또는 새 실행/context의 빈 상태로 시작한다. */
@@ -99,20 +102,67 @@ public final class OffTaskTimeline {
     }
     Instant now = monotonic(at);
     Duration continuous = duration(state.openEpisode(), Instant.MIN, now);
-    long[] thresholds = switch (level) {
-      case GENTLE -> new long[] {180, 60, 3};
-      case NORMAL -> new long[] {60, 30, 2};
-      case ACTIVE -> new long[] {30, 20, 2};
-    };
+    long[] thresholds = thresholds(level);
     Instant left = now.minus(WINDOW);
     long repeats = state.spans().stream().map(Span::episode).distinct()
         .filter(episode -> duration(episode, left, now)
             .compareTo(Duration.ofSeconds(thresholds[1])) > 0).count();
-    boolean cooled = cooldownUntil == null || (!now.isBefore(cooldownUntil)
-        && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
     boolean matches = continuous.compareTo(Duration.ofSeconds(thresholds[0])) > 0
         || repeats >= thresholds[2];
-    return new Evaluation(cooled && matches, continuous, repeats);
+    return new Evaluation(cooled(now, cooldownUntil) && matches, continuous, repeats);
+  }
+
+  /**
+   * 휴식 제안 근거를 계산한다(설계서 「학습 세션 · 타이머 · 휴식 제안」 8.1, #301). 강도별 반복
+   * 기준을 넘긴 딴짓 구간을 이탈 1회로 보고, 시작 시각이 서로 5분 이내로 이어진 이탈이 3회 이상이며
+   * 지금 딴짓 중이고 알림 간격이 지났을 때만 근거를 돌려준다. 판단 보류·보호 화면 시간은 구간
+   * 시간에 들어가지 않으므로 근거로 쓰이지 않는다.
+   */
+  public java.util.Optional<BreakEvidence> breakEvidence(String policyVersion,
+      InterventionLevel level, Instant at, Instant cooldownUntil) {
+    boolean known = "v1".equals(policyVersion) || POLICY_V2.equals(policyVersion);
+    if (!known || level == null || state.pendingRun() != null || state.openEpisode() == null) {
+      return java.util.Optional.empty();
+    }
+    Instant now = monotonic(at);
+    if (!cooled(now, cooldownUntil)) {
+      return java.util.Optional.empty();
+    }
+    Duration repeat = Duration.ofSeconds(thresholds(level)[1]);
+    List<Instant> starts = state.spans().stream().map(Span::episode).distinct()
+        .filter(episode -> duration(episode, Instant.MIN, now).compareTo(repeat) > 0)
+        .map(episode -> state.spans().stream().filter(span -> span.episode() == episode)
+            .map(Span::start).min(Instant::compareTo).orElseThrow())
+        .sorted().toList();
+    if (starts.isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    int chain = 1;
+    for (int index = starts.size() - 1; index > 0; index--) {
+      if (Duration.between(starts.get(index - 1), starts.get(index)).compareTo(BREAK_GAP) > 0) {
+        break;
+      }
+      chain++;
+    }
+    if (chain < BREAK_REPEATS) {
+      return java.util.Optional.empty();
+    }
+    Instant first = starts.get(starts.size() - chain);
+    long minutes = Math.max(1, (Duration.between(first, now).toSeconds() + 59) / 60);
+    return java.util.Optional.of(new BreakEvidence(chain, (int) minutes));
+  }
+
+  private static long[] thresholds(InterventionLevel level) {
+    return switch (level) {
+      case GENTLE -> new long[] {180, 60, 3};
+      case NORMAL -> new long[] {60, 30, 2};
+      case ACTIVE -> new long[] {30, 20, 2};
+    };
+  }
+
+  private boolean cooled(Instant now, Instant cooldownUntil) {
+    return cooldownUntil == null || (!now.isBefore(cooldownUntil)
+        && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
   }
 
   /** 원문 없는 영속화용 snapshot이다. */
@@ -180,6 +230,9 @@ public final class OffTaskTimeline {
       spans = List.copyOf(spans);
     }
   }
+
+  /** 휴식 제안 근거: 이어진 이탈 횟수와 첫 이탈부터 지금까지의 분(올림). 민감값은 없다. */
+  public record BreakEvidence(int repeatCount, int windowMinutes) {}
 
   /** 확정된 시간과 서로 다른 구간 수를 후보 여부와 함께 반환한다. */
   public record Evaluation(boolean candidate, Duration continuous, long repeatedIntervals) {}
