@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #313 할 일 목록 (2026-11-23)
+
+- `GET /goals`(상태 필터·cursor)와 `todoStatus`(OPEN/DONE, V29)를 추가했다. 상태만 바꾸는 PATCH는 활성 세션 중에도 허용한다. 계획: `features/goal-todo-list-PLAN.md`.
+
 ## Issue #319 화면 판정 matchStatus (2026-11-23)
 
 - AI의 `matchStatus`(MATCHED/FAR/NOT_ENOUGH)를 확정 RELATED일 때만 `analysis_runs.match_status`에 저장하고 분석 응답·이력에 싣는다(V28). 계획: `features/match-status-PLAN.md`.

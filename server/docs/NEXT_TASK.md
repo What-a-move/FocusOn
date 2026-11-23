@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #313 할 일 목록 (2026-11-23)
+
+- 문서 오너: `GET /goals` 응답 형식(`items`·`nextCursor`, 최신순) 확인.
+- Desktop: 할 일 목록 화면에서 `GET /goals?todoStatus=OPEN`과 PATCH `todoStatus`를 쓴다.
+- 머지 순서: #319(V28) 뒤. 다음 마이그레이션은 V30부터.
+
 ## Issue #319 화면 판정 matchStatus (2026-11-23)
 
 - AI: 내부 판정 응답에 `matchStatus`를 넣어 배포한다. 배포 전에는 서버가 null로 둔다.

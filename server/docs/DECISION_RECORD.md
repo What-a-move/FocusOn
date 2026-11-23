@@ -1,5 +1,10 @@
 # Backend 결정 기록
 
+## 2026-11-23 #313 할 일 목록은 학습 노트 목록과 같은 cursor 형식
+
+- 결정: `GET /goals`는 `{items, nextCursor}`, 최신순(`goalId DESC`), limit 기본 20·1~50으로 둔다. `todoStatus`만 바꾸는 PATCH는 활성 세션 검사를 하지 않는다.
+- 이유: Desktop이 이미 쓰는 목록 형식과 맞추고, 세션 중 할 일 완료 표시는 세션 사본에 영향을 주지 않는다.
+
 ## 2026-11-23 #319 matchStatus는 판정을 버리지 않는 보조 값으로 받음
 
 - 결정: AI 응답에 `matchStatus`가 없거나 허용 밖이면 판정은 그대로 쓰고 값만 null로 둔다. 확정 RELATED가 아니면 저장하지 않고 DB CHECK로도 막는다. 마이그레이션은 V28이다.

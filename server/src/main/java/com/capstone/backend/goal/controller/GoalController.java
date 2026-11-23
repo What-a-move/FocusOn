@@ -5,8 +5,10 @@ import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.goal.dto.GoalDtos.ClarifyGoalRequest;
 import com.capstone.backend.goal.dto.GoalDtos.ClarifyGoalResponse;
 import com.capstone.backend.goal.dto.GoalDtos.CreateGoalRequest;
+import com.capstone.backend.goal.dto.GoalDtos.GoalListResponse;
 import com.capstone.backend.goal.dto.GoalDtos.GoalResponse;
 import com.capstone.backend.goal.dto.GoalDtos.UpdateGoalRequest;
+import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
 import com.capstone.backend.goal.service.GoalClarificationService;
 import com.capstone.backend.goal.service.GoalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -85,6 +88,29 @@ public class GoalController {
     return com.capstone.backend.common.api.ApiResponse.of(goals.create(principal, request));
   }
 
+  /** 본인 할 일 목록을 최신순으로 조회한다. */
+  @GetMapping
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "할 일 목록 조회",
+      description = "삭제하지 않은 본인 목표를 최신순으로 반환합니다. todoStatus(OPEN·DONE)로 거를 수 "
+          + "있습니다. limit 기본 20, 1~50. nextCursor를 그대로 cursor로 보내면 다음 페이지이며, "
+          + "null이면 마지막 페이지입니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "목록 조회 성공"),
+      @ApiResponse(responseCode = "400", description = "todoStatus·limit·cursor 형식 오류",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "401", description = "인증 필요",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public com.capstone.backend.common.api.ApiResponse<GoalListResponse> list(
+      @AuthenticationPrincipal FocusOnPrincipal principal,
+      @RequestParam(required = false) TodoStatus todoStatus,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) Integer limit) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        goals.list(principal, todoStatus, cursor, limit));
+  }
+
   /** 본인 소유의 목표를 조회한다. */
   @GetMapping("/{goalId}")
   @ResponseStatus(HttpStatus.OK)
@@ -104,7 +130,8 @@ public class GoalController {
   /** 본인 목표의 문구를 수정한다. */
   @PatchMapping("/{goalId}")
   @ResponseStatus(HttpStatus.OK)
-  @Operation(summary = "학습 목표 수정")
+  @Operation(summary = "학습 목표 수정",
+      description = "보낸 필드만 바꿉니다. 활성 세션이 참조 중이면 todoStatus만 바꿀 수 있습니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "목표 수정 성공"),
       @ApiResponse(responseCode = "400", description = "목표 문구 오류",
