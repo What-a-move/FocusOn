@@ -26,7 +26,27 @@ _API_KEY_RE = re.compile(
 )
 _EMAIL_RE = re.compile(r"(?<![A-Za-z0-9_.+-])[A-Za-z0-9_.+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?![A-Za-z0-9_.-])")
 _PHONE_RE = re.compile(r"(?<!\d)01[016789][ -]?\d{3,4}[ -]?\d{4}(?!\d)")
-_CARD_CANDIDATE_RE = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")
+_DIGIT_RUN_RE = re.compile(r"\d+(?:[\s-]+\d+)*")
+_YEAR_LIST_RE = re.compile(r"(?:19|20)[0-9]{2}(?:\s+(?:19|20)[0-9]{2}){7,}")
+
+
+def redact_chrome_year_lists(text: str) -> str:
+    """Remove a complete calendar selector before screening or using Chrome body text."""
+    def redact(match: re.Match[str]) -> str:
+        run = match.group()
+        if not _YEAR_LIST_RE.fullmatch(run):
+            return run
+        if match.start() and not text[match.start() - 1].isspace():
+            return run
+        if match.end() < len(text) and not text[match.end()].isspace():
+            return run
+        years = [int(token) for token in run.split()]
+        step = years[1] - years[0]
+        if abs(step) == 1 and all(b - a == step for a, b in zip(years, years[1:])):
+            return "[연도 목록]"
+        return run
+
+    return _DIGIT_RUN_RE.sub(redact, text)
 
 
 def validate_and_preprocess(
@@ -135,7 +155,8 @@ def contains_sensitive_data(text: str) -> bool:
         for pattern in (_BEARER_RE, _JWT_RE, _API_KEY_RE, _EMAIL_RE, _PHONE_RE)
     ):
         return True
-    return any(_passes_luhn(candidate.group(0)) for candidate in _CARD_CANDIDATE_RE.finditer(text))
+    return any(_run_contains_card(run.group()) for run in _DIGIT_RUN_RE.finditer(text)
+               if run.end() - run.start() >= 13)
 
 
 def _contains_sensitive_data(request: PreprocessingRequest) -> bool:
@@ -208,6 +229,20 @@ def _broken_character_ratio(text: str) -> float:
         for character in text
     )
     return broken_count / len(text)
+
+
+def _run_contains_card(run: str) -> bool:
+    # A neighboring number may share the same run. Try each complete group boundary.
+    groups = re.findall(r"\d+", run)
+    for start in range(len(groups)):
+        candidate = ""
+        for index in range(start, len(groups)):
+            if len(candidate) + len(groups[index]) > 19:
+                break
+            candidate += groups[index]
+            if len(candidate) >= 13 and _passes_luhn(candidate):
+                return True
+    return False
 
 
 def _passes_luhn(candidate: str) -> bool:

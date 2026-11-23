@@ -104,7 +104,7 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 - `DELETE /users/me`는 활성 Desktop Bearer로 호출하고 204 빈 본문이다. 모든 기기 로그인이 즉시 끝나고 닉네임이 해제된다.
 - 같은 Google 계정으로 다시 로그인하면 새 계정으로 시작한다(이전 기록과 연결하지 않음).
 - Extension·무인증·이미 삭제된 계정 호출은 401 `AUTH_RELOGIN_REQUIRED`다. Desktop은 성공 후 저장 token을 지우고 로그인 화면으로 보낸다.
-- 학습 기록의 30일 이내 삭제·익명화는 후속 작업이다.
+- 학습 기록은 삭제 24시간 뒤 서버 주기 작업이 지운다(#299, 30일 이내 기준). 동의 이력은 3년 보관한다.
 
 ### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
 
@@ -382,7 +382,8 @@ GET /api/v1/learning-summaries?cursor=&limit=
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
 - `confidence < 0.6`인 관련성 결과는 `UNCERTAIN`으로 정규화한다. 2026-11-03 AI 계약의 베타 예외로 내부 AI 응답의 `promptVersion`이 `-uncalibrated`로 끝나고 `confidence: null`인 후보 판정만 수치 기준에서 제외한다. 버전을 이력에 남기며 confidence를 임의로 만들지 않는다. metadata만 근거인 UNRELATED는 이 예외에서도 이탈 시간에 포함하지 않는다.
 - AI 장애·시간 초과는 HTTP 오류가 아니라 `relation: UNCERTAIN`, `confidence: null`, `reasonCode: ANALYSIS_UNAVAILABLE`로 응답한다. 베타까지 AI가 준비되지 않으면 서버가 임시 규칙 판정으로 대신할 수 있으며, 응답 형식·`reasonCode` 허용 목록·세션 고정 `policyVersion`은 같게 유지한다(2026-11-02 확정).
-- 정책 `v1`에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
+- 정책 `v2`(2026-11-21 #296, 새 세션 기본값)에서 `UNCERTAIN`(분석 장애 `ANALYSIS_UNAVAILABLE`, 앱 이름·탭 제목만 보고 낮춘 무관 판정 포함) 시간은 이탈 시간에 합산하지 않고, 현재 연속 이탈 구간을 끊지도 않는다. 구간은 멈췄다가 다음 `UNRELATED`에서 이어서 센다. 멈춘 동안에는 새 개입을 만들지 않고, 보류 전에 만든 아직 표시되지 않은 개입은 만료한다. `RELATED`는 구간을 끊는다. 개입 조건 표는 `v1`과 같다.
+- 정책 `v1`(기존 진행 중 세션)에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
 - `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
 - 개입 조건은 아래 `v1` 표를 사용한다. 각 강도에서 연속 조건과 반복 조건 중 하나만 충족해도 후보가 된다. `초과`는 엄격한 `>`이며 경계값과 같은 시간에는 충족하지 않는다. 15초 미만 전환 제외와 신뢰도·세션·권한 검사를 먼저 적용한다.
 
@@ -395,7 +396,7 @@ GET /api/v1/learning-summaries?cursor=&limit=
 - 같은 구간의 여러 heartbeat·분석 결과를 서로 다른 이탈 횟수로 중복 집계하지 않는다. rolling window 경계에서 구간을 포함하는 정확한 시각 기준은 Policy Engine 구현 전에 공통 계약에 명시한다.
 - 서버 개입 cooldown은 `sessionId + interventionType`별 5분이며 알림이 실제 전송된 시점부터 계산한다. cooldown 동안 쌓인 후보를 만료 직후 그대로 전송하지 않고 새 관측에서 조건을 다시 평가한다.
 - `확인했어` 뒤의 5분 재집중 구간은 Desktop UI 상태다. 타이머·세션·AI 판정을 바꾸거나 별도 서버 상태로 저장하지 않는다. 서버 cooldown의 시작 시각과 혼합하지 않는다.
-- 서버가 세션 생성 시 현재 버전 `v1`을 `interventionPolicyVersion`에 고정하고 분석 기록·개입 이벤트에는 같은 값을 `policyVersion`으로 저장한다. 클라이언트가 임계값이나 버전을 임의 선택하지 않는다. 일시정지·재개·배포 뒤에도 진행 중 세션의 버전을 바꾸지 않는다.
+- 서버가 세션 생성 시 현재 버전(`v2`, 2026-11-21 이전 세션은 `v1`)을 `interventionPolicyVersion`에 고정하고 분석 기록·개입 이벤트에는 같은 값을 `policyVersion`으로 저장한다. 클라이언트가 임계값이나 버전을 임의 선택하지 않는다. 일시정지·재개·배포 뒤에도 진행 중 세션의 버전을 바꾸지 않는다.
 - 기준은 2026-10-24 사용자 확정과 Notion `화면 분석` 5.2·5.3이다. 아직 이전 임계값·`focus-intervention-v1` 예시가 남은 Notion `AI 분석 계약` 7장과의 차이는 [대조 기록](NOTION_SYNC_AUDIT.md)에 남긴다.
 
 ## 분석 제외 도메인

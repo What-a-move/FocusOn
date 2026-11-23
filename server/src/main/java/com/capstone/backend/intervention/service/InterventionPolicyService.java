@@ -94,8 +94,13 @@ public class InterventionPolicyService {
       return;
     }
     timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(),
-        run.getReceivedAt(), now);
+        run.getReceivedAt(), now, session.getInterventionPolicyVersion());
     state.transition(json.writeValueAsString(timeline.snapshot()));
+    if (timeline.onHold()) {
+      // v2 판단 보류: 딴짓 시간은 멈춘 채 유지하지만, 보류 전에 만든 아직 표시되지 않은 알림은
+      // 지금 화면이 딴짓인지 모르는 상태라 v1처럼 만료한다.
+      expirePending(session, now, true);
+    }
     evaluate(session, selected, state, timeline, now);
   }
 
@@ -238,6 +243,8 @@ public class InterventionPolicyService {
             session.getInterventionPolicyVersion(), session.getLastResumedAt(), now);
         event.bindContext(InterventionAccess.id(context.context(),
             com.capstone.backend.common.api.ApiErrorCode.VALIDATION_ERROR));
+        // 판단 보류로 멈춘 뒤 생긴 알림도 마지막 판정이 아니라 구간을 만든 무관 판정을 근거로 남긴다.
+        event.bindAnalysisRun(timeline.snapshot().offTaskRun());
         events.saveAndFlush(event);
       }
     }

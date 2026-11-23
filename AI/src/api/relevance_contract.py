@@ -9,12 +9,13 @@ from datetime import datetime
 from typing import Annotated, Literal, get_args
 from uuid import UUID
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 
 from .schemas import (ConfirmedGoal, ContentInput, Identifier, InternalSchema,
                       OCRMetadata, Observation, VerifiedContext)
 from ..analysis.acquisition_policy import METADATA_SOURCES
 from ..preprocessing.models import ContentSource, ExtractionStatus
+from ..preprocessing.validator import redact_chrome_year_lists
 
 ReasonCode = Literal["SEMANTIC_GOAL_MATCH", "SEMANTIC_GOAL_MISMATCH",
                      "INSUFFICIENT_CONTEXT", "AMBIGUOUS_CONTEXT", "ANALYSIS_UNAVAILABLE"]
@@ -59,6 +60,15 @@ class ScreenAnalysisRequest(InternalSchema):
         if parsed.version != 4 or str(parsed) != value:
             raise ValueError("UUID_V4_REQUIRED")
         return value
+
+    @field_validator("content_payload")
+    @classmethod
+    def redact_chrome_body(cls, payload: ContentPayload | None, info: ValidationInfo):
+        if payload is None or info.data.get("content_source") is not ContentSource.CHROME_DOM:
+            return payload
+        # Older extension captures may still contain unredacted archive selectors.
+        text = redact_chrome_year_lists(payload.text)
+        return payload.model_copy(update={"text": text}) if text != payload.text else payload
 
     @model_validator(mode="after")
     def allowed_payload(self):

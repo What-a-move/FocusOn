@@ -1,21 +1,27 @@
 """Analyze verified Backend input without storing or logging content text."""
 import json
 import secrets
-import os
-import math
+import logging
 
 from fastapi import APIRouter, HTTPException, Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
+from starlette.requests import ClientDisconnect
 
 from .reception import AnalysisReception, AnalysisDecisionResponse
-from .relevance_contract import adapt_screen_request, public_response, contract_reason_code
+from .relevance_contract import adapt_screen_request
 from .schemas import SafeInputError
 from ..analysis.acquisition_policy import desktop_target_block_reason
 from ..preprocessing.adapter import observation_is_current
 from ..preprocessing.models import ContentSource, ExtractionStatus
 from ..preprocessing.validator import contains_sensitive_data
+from ..models.screen_activity.beta_decision import beta_decision
+from ..utils.logger import log_event
 
+logger = logging.getLogger(__name__)
+MODEL_VERSION = "e5-activity-10168"
+DECISION_VERSION = "e5-activity-v1-uncalibrated"
+ACTIVITY_TO_DECISION = {"STUDY": "RELATED", "OFF_TASK": "UNRELATED", "UNCERTAIN": "UNCERTAIN"}
 MAX_REQUEST_BYTES = 65_536
 bearer = HTTPBearer(auto_error=False, scheme_name="BackendServiceKey")
 router = APIRouter()
@@ -43,10 +49,13 @@ async def read_payload(request: Request) -> object:
     if request.headers.get("content-encoding", "identity").lower() != "identity":
         raise HTTPException(415, "CONTENT_ENCODING_UNSUPPORTED")
     data = bytearray()
-    async for chunk in request.stream():
-        if len(data) + len(chunk) > MAX_REQUEST_BYTES:
-            raise HTTPException(413, "REQUEST_TOO_LARGE")
-        data.extend(chunk)
+    try:
+        async for chunk in request.stream():
+            if len(data) + len(chunk) > MAX_REQUEST_BYTES:
+                raise HTTPException(413, "REQUEST_TOO_LARGE")
+            data.extend(chunk)
+    except ClientDisconnect:
+        raise HTTPException(400, "INCOMPLETE_REQUEST") from None
     try:
         return json.loads(data.decode("utf-8"), object_pairs_hook=_unique_object)
     except (ValueError, UnicodeError, RecursionError):
@@ -79,7 +88,7 @@ async def validated_input(request: Request):
             content.text, content.page_title, content.window_title, content.app_name,
             content.url_host, envelope.goal.text)):
         raise HTTPException(422, "CONTENT_BLOCKED")
-    return envelope, content
+    return content
 
 
 @router.post("/internal/v1/analysis-runs", response_model=AnalysisDecisionResponse,
@@ -87,85 +96,34 @@ async def validated_input(request: Request):
              openapi_extra={"requestBody": {"required": True, "content": {
                  "application/json": {"schema": {"$ref": "#/components/schemas/AnalysisReception"}}}}})
 async def analyze_relevance(request: Request) -> AnalysisDecisionResponse:
-    """Validate the trusted envelope and return the Hybrid relevance decision."""
-    envelope, content = await validated_input(request)
-    result = await run_in_threadpool(run_analysis, envelope, content,
-                                     getattr(request.app.state, "embedding_client_factory", None))
-    return AnalysisDecisionResponse.parse_safe(result)
+    """Validate the trusted envelope and classify the active screen locally."""
+    content = await validated_input(request)
+    # Fast tokenizers share mutable padding/truncation settings within a worker.
+    async with request.app.state.activity_lock:
+        return await run_in_threadpool(run_analysis, content, request.app.state.activity_classifier)
 
 
-def experimental_score(row, source):
-    """Return an uncalibrated per-observation beta score, never change a label."""
-    label = row.get("relevanceLabel")
-    if row.get("status") != "COMPLETED" or label not in {"RELATED", "UNRELATED"}:
-        return None
-    is_metadata = source in {ContentSource.APP_META, ContentSource.TAB_META}
-    if is_metadata and label != "RELATED":
-        return None
-
-    def number(key):
-        value = row.get(key)
-        if (isinstance(value, bool) or not isinstance(value, (int, float))
-                or not math.isfinite(value) or not 0 <= value <= 1):
-            raise ValueError("INVALID_EXPERIMENTAL_SCORE")
-        return float(value)
-
-    if label == "RELATED":
-        score = number("decisionScore")
-        return score if is_metadata else .7 * score + .3 * number("relatedCoverage")
-    return number("unrelatedCoverage") * (1 - number("relatedCoverage"))
-
-
-def run_analysis(envelope, content, client_factory):
-    # The existing evaluation engine imports its models via `src`. Convert at
-    # the boundary so that Enum class identities remain consistent.
-    from AI.evaluation.analysis_runner import compare_graphless
-    from src.api.schemas import ConfirmedGoal, ContentInput, VerifiedContext
-    from ..models.embedding_client import configured_embedding_client
-
-    goal = ConfirmedGoal.parse_safe(envelope.goal.model_dump(mode="json", by_alias=True))
-    observation = ContentInput.parse_safe(content.model_dump(mode="json", by_alias=True))
-    context = VerifiedContext.parse_safe(envelope.context.model_dump(mode="json", by_alias=True))
-    try:
-        client = client_factory() if client_factory else configured_embedding_client()
+def run_analysis(content, classifier) -> AnalysisDecisionResponse:
+    label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
+    if classifier is not None and content.extraction_status in {ExtractionStatus.SUCCESS, ExtractionStatus.PARTIAL}:
+        payload = {
+            "contentSource": content.content_source.value,
+            "metadata": {
+                "appName": content.app_name, "pageTitle": content.page_title,
+                "windowTitle": content.window_title, "urlHost": content.url_host,
+            },
+            "contentPayload": {"text": content.text},
+        }
         try:
-            row = compare_graphless(goal, [("request", observation, context, None)], client)["rows"][0]
-        finally:
-            client.close()
-        label, reason = row["relevanceLabel"], row["reasonCode"]
-        candidate = label if row["status"] == "COMPLETED" and label in {"RELATED", "UNRELATED", "UNCERTAIN"} else None
-        if row["status"] == "FAILED":
-            label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
-        if os.environ.get("FOCUSON_ANALYSIS_DECISION_MODE", "safe") == "candidate":
-            metadata = content.content_source in {ContentSource.APP_META, ContentSource.TAB_META}
-            if metadata and label == "UNRELATED":
-                label, reason, candidate = "UNCERTAIN", "INSUFFICIENT_CONTEXT", "UNCERTAIN"
-            try:
-                score = experimental_score(row, content.content_source)
-            except (ValueError, TypeError):
-                score = None
-            if candidate not in {"RELATED", "UNRELATED"}:
-                label, score = "UNCERTAIN", None
-            elif score is None or score < 0.6:
-                label, score, reason = "UNCERTAIN", None, "INSUFFICIENT_CONTEXT"
-            version = "title-hybrid-v3-mvp" if metadata else "body-context-hybrid-v3"
-            return {"decision": label, "confidence": score,
-                    "reasonCode": contract_reason_code(label, reason),
-                    "modelVersion": "qwen3-embedding-4b-fp16",
-                    "promptVersion": version + "-uncalibrated"}
-        response = public_response(label if label in {"RELATED", "UNRELATED", "UNCERTAIN"} else "UNCERTAIN",
-                                   reason, source=content.content_source, confidence=None,
-                                   model_version="qwen3-embedding-4b-fp16", prompt_version=(
-                                       "title-hybrid-v3-mvp" if content.content_source in {ContentSource.APP_META, ContentSource.TAB_META}
-                                       else "body-context-hybrid-v3"))
-        return response.model_dump(mode="json", by_alias=True)
-    except Exception:
-        # Avoid logging provider errors, input text and configuration secrets.
-        response = public_response("UNCERTAIN", "ANALYSIS_UNAVAILABLE", source=content.content_source,
-                                   confidence=None, model_version="qwen3-embedding-4b-fp16",
-                                   prompt_version="body-context-hybrid-v3" + (
-                                       "-uncalibrated" if os.environ.get("FOCUSON_ANALYSIS_DECISION_MODE", "safe") == "candidate" else ""))
-        return response.model_dump(mode="json", by_alias=True)
+            prediction = classifier.predict([payload])[0]
+            result = beta_decision(payload, prediction, content.extraction_status.value)
+            label, reason = ACTIVITY_TO_DECISION[result["label"]], result["reasonCode"]
+        except Exception:
+            # Inference errors may contain input text or local runtime details.
+            log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
+
+    return AnalysisDecisionResponse(decision=label, confidence=None, reasonCode=reason,
+                                    modelVersion=MODEL_VERSION, promptVersion=DECISION_VERSION)
 
 
 from src.api.goal_routes import get_goal_workflow

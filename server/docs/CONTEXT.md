@@ -1,5 +1,21 @@
 # Backend 작업 컨텍스트
 
+## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
+
+- `DeletedAccountPurge`가 1시간마다 삭제 후 24시간 지난 계정의 학습 기록을 지운다. 동의 이력·계정 행은 남긴다. 계획: `features/deleted-account-purge-PLAN.md`.
+
+## Issue #298 목표 세분화 저장 (2026-11-21)
+
+- V25로 `goals.profile_json`과 세션 목표 목록 `session_goals`(최대 3개, 지금은 1개)를 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.
+
+## Issue #297 개입 근거 판정 id (2026-11-21)
+
+- V24로 `intervention_events.analysis_run_id`를 추가했다. 알림을 만든 무관 판정 id만 남긴다. #296 위에 쌓은 브랜치다. 계획: `features/intervention-run-link-PLAN.md`.
+
+## Issue #296 판단 보류 구간 멈춤 (2026-11-21)
+
+- 새 세션은 개입 정책 `v2`로 시작한다. 판단 보류·분석 장애는 딴짓 구간을 끊지 않고 멈춘다. 계획: `features/uncertain-pause-PLAN.md`.
+
 ## #309 토큰 패밀리 보관 기간 정리 (2026-11-23)
 
 - 만료·폐기 중 먼저 확정된 시각부터 30일이 지난 패밀리와 갱신 토큰 회전 이력을 주기적으로 정리한다. 사용자 → 패밀리 잠금에서 기한을 확인하고 부모 참조 해제와 삭제를 한 트랜잭션으로 처리한다.

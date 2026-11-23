@@ -16,6 +16,8 @@ import com.capstone.backend.session.persistence.IdempotencyRecordEntity;
 import com.capstone.backend.session.persistence.IdempotencyRecordRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionGoalEntity;
+import com.capstone.backend.session.persistence.SessionGoalRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
@@ -44,13 +46,16 @@ public class SessionService {
   private static final long MAX_DURATION_MS = 18_000_000L;
   private static final long MINUTE_MS = 60_000L;
   private static final String START_SCOPE = "CREATE_SESSION";
-  private static final String POLICY_VERSION = "v1";
+  /** 새 세션은 판단 보류 구간을 멈춤으로 처리하는 v2 정책을 쓴다(#296). 진행 중 세션은 v1 유지. */
+  private static final String POLICY_VERSION =
+      com.capstone.backend.intervention.service.OffTaskTimeline.POLICY_V2;
   private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Seoul");
 
   private final UserRepository users;
   private final UserDeviceRepository devices;
   private final GoalRepository goals;
   private final LearningSessionRepository sessions;
+  private final SessionGoalRepository sessionGoals;
   private final IdempotencyRecordRepository records;
   private final OnboardingReadinessService onboarding;
   private final UserConsentRepository consents;
@@ -117,6 +122,8 @@ public class SessionService {
         request.targetDurationMs().longValueExact(), zone.getId(),
         startedAt.atZone(zone).toLocalDate(), mapper.writeValueAsString(request.sessionOptions()),
         POLICY_VERSION, startedAt));
+    // 목표 문구·세분화 사본을 세션 목표 목록에 고정한다. 지금은 목표 1개라 position 1만 쓴다.
+    sessionGoals.save(SessionGoalEntity.snapshot(session.getId(), 1, goal));
     var response = new StartResponse(session.getId().toString(), session.getStatus(),
         session.getVersion(), session.getTargetDurationMs(), session.getAccumulatedActiveMs(),
         session.getStartedAt(), session.getInterventionPolicyVersion());
