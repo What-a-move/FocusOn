@@ -23,7 +23,12 @@ public class ApiExceptionHandler {
     String requestId = RequestIdFilter.from(request);
     ApiErrorCode code = exception.code();
     request.setAttribute(RequestIdFilter.ERROR_CODE_ATTRIBUTE, code);
-    request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE, SafeApiLog.Stage.REQUEST);
+    if (code == ApiErrorCode.VALIDATION_ERROR) {
+      request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE, SafeApiLog.Stage.VALIDATION);
+      SafeApiLog.validationFailure(null, null);
+    } else {
+      request.setAttribute(RequestIdFilter.ERROR_STAGE_ATTRIBUTE, SafeApiLog.Stage.REQUEST);
+    }
     ApiErrorResponse body = ApiErrorResponse.of(
         code, exception.retryAfterSeconds(), requestId, exception.details());
     ResponseEntity.BodyBuilder response = ResponseEntity.status(exception.status());
@@ -59,6 +64,8 @@ public class ApiExceptionHandler {
       if (!logged) {
         SafeApiLog.validationFailure(null, null);
       }
+    } else if (exception instanceof MethodArgumentTypeMismatchException mismatch) {
+      SafeApiLog.validationFailure(mismatch.getName(), mismatch.getRequiredType());
     } else {
       SafeApiLog.validationFailure(null, null);
     }

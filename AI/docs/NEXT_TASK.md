@@ -13,6 +13,9 @@
 
 # AI 다음 작업
 
+- [#277](https://github.com/What-a-move/FocusOn/issues/277)의 비교 화면으로 새 평가 사례의 목표 한 줄과 확장 목록 결과를 남긴다. 같은 모델·임계값으로 오판과 처리 시간을 비교한 뒤 새 데이터로 기준값을 검증한다. 제품 알림 지연은 Backend 통합 검증에서 별도로 측정한다.
+- Jev의 초기 선택지 확률 기준 0.65를 합성·공개 사례에서 검토한다. 학습 화면을 무관으로 판정한 사례와 판단을 보류한 사례를 따로 기록하고 Hybrid와 비교한다.
+
 - Backend 배포 환경에서 학교 PC 모델 주소를 실제로 resolve/connect 할 수 있는지 `/health`와 함께 확인한다. 최신 dev의 AI 호출 Adapter는 구현되어 있으나 배포와 실제 연결 확인은 남았다.
 
 - 2026-11-08 `POST /internal/v1/analysis-runs` 단일 판정 경로, 베타 candidate 응답, 실제 모델 health probe, OCR 품질 필드 선택성을 구현했다. 최신 dev Backend의 호출부와 실제 AI 모델 왕복을 확인하고 AI의 0.6에 맞춘 Backend 변경과 실제 실행 환경의 AI·Backend 왕복을 확인해야 한다. Desktop→Server→AI→지속 이탈 알림 전체 왕복은 아직 검증하지 않았다. [결과](features/fastapi-relevance-analysis-REPORT.md).

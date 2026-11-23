@@ -253,6 +253,11 @@ class ObservationDeliveryIntegrationTests {
   void liveContextAndHeartbeatProduceEventThenSentReceiptStopsRedisplay() throws Exception {
     var f = fixture();
     var event = generate(f);
+    // 알림 이벤트는 자신을 만든 무관 판정 id를 근거로 남긴다(#297).
+    assertEquals(jdbc.queryForObject("SELECT id FROM analysis_runs WHERE session_id=? "
+        + "ORDER BY id DESC LIMIT 1", Long.class, f.session()),
+        jdbc.queryForObject("SELECT analysis_run_id FROM intervention_events WHERE id=?",
+            Long.class, event));
     mvc.perform(auth(get(interventionsPath(f)), f)).andExpect(status().isOk())
         .andExpect(jsonPath("$.data[0].observationContextId").isString())
         .andExpect(jsonPath("$.data[0].remainingTtlMs").isNumber());
@@ -595,9 +600,13 @@ class ObservationDeliveryIntegrationTests {
     jdbc.update("UPDATE users SET deleted_at=? WHERE id=?",
         java.sql.Timestamp.from(Instant.now().minusSeconds(3600)), recent.principal().userId());
 
+    jdbc.update("INSERT INTO session_goals(session_id,position,goal_id,goal_text_snapshot) "
+        + "SELECT id,1,goal_id,'목표' FROM learning_sessions WHERE id=?", deleted.session());
+
     assertTrue(purge.purgeDue(Instant.now()) >= 1);
 
-    for (String table : List.of("intervention_events", "intervention_policy_states",
+    for (String table : List.of("session_goals", "intervention_events",
+        "intervention_policy_states",
         "learning_review_evidences", "learning_summaries", "analysis_runs",
         "session_observation_contexts")) {
       assertEquals(0, count("SELECT count(*) FROM " + table + " WHERE session_id=?",

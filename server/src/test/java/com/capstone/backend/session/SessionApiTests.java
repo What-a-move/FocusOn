@@ -949,13 +949,22 @@ class SessionApiTests {
   @Test
   void detailAndHistoryEnforceOwnershipAndPagination() throws Exception {
     LoginResponse owner = desktop("query-owner-" + UUID.randomUUID());
-    LoginResponse other = desktop("query-other-" + UUID.randomUUID());
+    final LoginResponse other = desktop("query-other-" + UUID.randomUUID());
     String id = startForHeartbeat(owner);
+    // 세션 시작 때 목표 사본이 세션 목표 목록 1번에 고정된다(#298).
+    var goals = jdbc.queryForList("SELECT position, goal_id, goal_text_snapshot FROM session_goals"
+        + " WHERE session_id = ?", Long.valueOf(id));
+    org.junit.jupiter.api.Assertions.assertEquals(1, goals.size());
+    org.junit.jupiter.api.Assertions.assertEquals(1,
+        ((Number) goals.getFirst().get("position")).intValue());
+    org.junit.jupiter.api.Assertions.assertEquals(jdbc.queryForObject(
+        "SELECT goal_id FROM learning_sessions WHERE id = ?", Long.class, Long.valueOf(id)),
+        ((Number) goals.getFirst().get("goal_id")).longValue());
     String token = "Bearer " + owner.accessToken();
     String path = "/api/v1/sessions/" + id;
     mvc.perform(get(path).header("Authorization", token))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.sessionId").value(id))
-        .andExpect(jsonPath("$.data.interventionPolicyVersion").isString());
+        .andExpect(jsonPath("$.data.interventionPolicyVersion").value("v2"));
     mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
         .andExpect(status().isNotFound());
     mvc.perform(get(path)).andExpect(status().isUnauthorized());

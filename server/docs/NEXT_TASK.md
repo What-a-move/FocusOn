@@ -5,6 +5,22 @@
 - 후속 Issue 후보: 기기·token family·Refresh Token·연결 코드의 폐기·만료 후 30일 정리(DATA_PRIVACY).
 - 사용자·세션을 참조하는 새 테이블을 만들 때 `DeletedAccountPurge.DELETES`에도 추가한다.
 
+## Issue #298 목표 세분화 저장 (2026-11-21)
+
+- 머지 순서: #296 → #297(V24) → #298(V25).
+- 다음: API 계약에 판정 요청 `goalProfile` 추가가 합의되면 `AnalysisAiClient`가 세션의 `session_goals` 사본(세분화)을 함께 보낸다(판정 AI 항목별 비교와 같이 진행).
+- 팀 결정 대기: 사용자 노출 여부, 직접 입력 목표의 세분화 생성 여부, 다중 목표(할 일 최대 3개) 세션 시작 API 계약.
+
+## Issue #297 개입 근거 판정 id (2026-11-21)
+
+- 머지 순서: #296 → #297. 다음 마이그레이션은 V25부터.
+- 후속 #300: API 계약에 NOT_OFF_TASK가 반영되면 이 id로 오판 신고를 연결한다.
+
+## Issue #296 판단 보류 구간 멈춤 (2026-11-21)
+
+- 문서 오너: Notion API 계약의 개입 정책 설명에 v2(판단 보류는 구간을 멈춤)를 반영한다.
+- 실제 왕복(Desktop→서버→AI→알림)에서 보류가 섞인 딴짓 시나리오를 기준선에 넣어 확인한다.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - Desktop: 설정의 계정 삭제 버튼에서 확인 후 호출하고, 204면 token을 지우고 로그인 화면으로 보낸다.
@@ -21,6 +37,11 @@
 - AI 담당: (1) 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하, 원문·URL 없음) 추가 여부·형식 합의 (2) `POST /internal/v1/learning-summaries` 구현 — 서버 제안 형식은 PLAN 참고.
 - Backend: 합의되면 분석 결과 저장 시 근거를 `learning_review_evidences`에 넣고 실제 READY까지 확인한다.
 - Desktop: 종료 직후 learning-summary가 404 대신 QUEUED→GENERATING→최종 상태로 온다. 5초 간격 조회 후 최종 상태에서 멈춘다.
+
+## #182 분석 요청 추적 연동
+
+- Desktop에서 보낸 `X-Trace-Id`를 Backend가 AI 분석 호출로 전달한다. 실제 앱과 AI 서버가 연결되면 같은 ID로 모듈별 로그를 이어서 검증한다.
+- AI 담당 인계. Backend의 `ai.call.start`까지 사용한 `X-Trace-Id`가 AI 호출 헤더로 전달된다. AI 분석 라우트에서 같은 헤더를 읽어 정본 규칙에 따른 수신·응답 로그에 넣어야 양쪽 로그에서 같은 호출을 찾을 수 있다. 모델 입력·응답 전문과 인증 헤더는 기록 대상에서 제외한다.
 
 ## Issue #274 기기 해제 API (2026-11-18)
 

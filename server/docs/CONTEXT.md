@@ -4,6 +4,18 @@
 
 - `DeletedAccountPurge`가 1시간마다 삭제 후 24시간 지난 계정의 학습 기록을 지운다. 동의 이력·계정 행은 남긴다. 계획: `features/deleted-account-purge-PLAN.md`.
 
+## Issue #298 목표 세분화 저장 (2026-11-21)
+
+- V25로 `goals.profile_json`과 세션 목표 목록 `session_goals`(최대 3개, 지금은 1개)를 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.
+
+## Issue #297 개입 근거 판정 id (2026-11-21)
+
+- V24로 `intervention_events.analysis_run_id`를 추가했다. 알림을 만든 무관 판정 id만 남긴다. #296 위에 쌓은 브랜치다. 계획: `features/intervention-run-link-PLAN.md`.
+
+## Issue #296 판단 보류 구간 멈춤 (2026-11-21)
+
+- 새 세션은 개입 정책 `v2`로 시작한다. 판단 보류·분석 장애는 딴짓 구간을 끊지 않고 멈춘다. 계획: `features/uncertain-pause-PLAN.md`.
+
 ## Issue #290 계정 삭제 API (2026-11-19)
 
 - `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.
@@ -16,6 +28,13 @@
 
 - 세션 종료 시 `learning_summaries`를 QUEUED로 만들고 `LearningSummaryWorker`가 입력 마감(30초) 뒤 점유해 INSUFFICIENT_DATA·READY·FAILED로 진행한다. V23에서 작업 컬럼과 `learning_review_evidences`를 추가했다.
 - AI가 근거(`reviewEvidence`)를 아직 주지 않으므로 지금은 모든 정리가 INSUFFICIENT_DATA로 끝난다. 생성 API(`/internal/v1/learning-summaries`)도 AI 미구현이다. 계획: `features/learning-summary-pipeline-PLAN.md`.
+
+## #182 분석 요청 추적 보완 (2026-11-18)
+
+- 기존 #116의 `requestId`·`traceId` 분리, JSON 로그, 단일 HTTP 필터를 기준으로 서버 로깅을 보완했다. 입력 검증 실패 분류와 전경·전송 경로 마스킹을 보강하고 AI 결과는 정규화된 판정·신뢰도·사유 및 수신 상태코드만 기록한다.
+- 테스트용 루프백 AI가 `RELATED / 0.9`를 반환하는 공개 HTTP 요청으로 같은 traceId의 수신·게이트·AI 호출·저장·응답을 검증했다. 상세는 [QA](features/server-tracing-QA.md)와 [코드 리뷰](features/intervention-policy-code-review.md)에 있다.
+- PR #276 리뷰를 반영했다. `store.write.ok`는 저장 트랜잭션에서 확정한 판정을 기록하며, 연결 해제 경로의 타입 검사 실패는 `expectedType=long`을 기록한다. #272에서 추가한 분석 이력 검증을 유지했다.
+- 최신 `dev`의 노트 목록 경로가 요청 추적에 남도록 보강했다. 커서 비노출은 실제 HTTP 회귀로 확인했다.
 
 ## Issue #274 기기 해제 API (2026-11-18)
 
