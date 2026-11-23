@@ -1,10 +1,14 @@
 package com.capstone.backend.analysis.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentPayload;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
@@ -13,6 +17,7 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
 import com.capstone.backend.analysis.service.AnalysisRunStore.Prepared;
+import com.capstone.backend.common.api.SafeApiLog;
 import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -28,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import tools.jackson.databind.ObjectMapper;
 
@@ -104,6 +110,10 @@ class AnalysisAiClientTests {
       exchange.close();
     });
     server.start();
+    var logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
+    var logs = new ListAppender<ILoggingEvent>();
+    logs.start();
+    logger.addAppender(logs);
     try {
       String id = UUID.randomUUID().toString();
       MDC.put("traceId", id);
@@ -124,10 +134,69 @@ class AnalysisAiClientTests {
       assertEquals("example.com", envelope.at("/request/metadata/urlHost").asString());
       assertEquals("synthetic body", envelope.at("/request/contentPayload/text").asString());
       assertTrue(envelope.at("/request/observationSequence").isMissingNode());
+      var event = logs.list.getLast();
+      var fields = event.getKeyValuePairs().toString();
+      assertEquals(id, event.getMDCPropertyMap().get("traceId"));
+      assertEquals("ai.call.ok", event.getMessage());
+      assertTrue(fields.contains("relation=\"RELATED\""));
+      assertTrue(fields.contains("confidence=\"0.91\""));
+      assertTrue(fields.contains("reasonCode=\"SEMANTIC_GOAL_MATCH\""));
+      assertTrue(fields.contains("upstreamStatus=\"200\""));
+      assertSafeResultLog(event, "synthetic body", "synthetic title", "service-test-only", "서버 목표");
     } finally {
+      logger.detachAppender(logs);
+      logs.stop();
       MDC.remove("traceId");
       server.stop(0);
     }
+  }
+
+  @Test
+  void oversizedUpstreamFailureKeepsStatusWithoutLoggingResponseBody() throws Exception {
+    var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext("/internal/v1/analysis-runs", exchange -> {
+      byte[] body = ("private AI error body " + "x".repeat(8192))
+          .getBytes(StandardCharsets.UTF_8);
+      exchange.sendResponseHeaders(503, body.length);
+      try {
+        exchange.getResponseBody().write(body);
+      } finally {
+        exchange.close();
+      }
+    });
+    var logger = (Logger) LoggerFactory.getLogger(SafeApiLog.class);
+    var logs = new ListAppender<ILoggingEvent>();
+    logs.start();
+    logger.addAppender(logs);
+    server.start();
+    try {
+      var client = new AnalysisAiClient(json, "http://127.0.0.1:"
+          + server.getAddress().getPort(), "service-test-only");
+      var request = new Request(UUID.randomUUID().toString(), ContentSource.APP_META,
+          Instant.now(), BigDecimal.ONE, null, null, null);
+      var prepared = new Prepared(1, 2, 3, 0, Instant.now(), "목표", "v1", null, true, null);
+      assertEquals(ReasonCode.ANALYSIS_UNAVAILABLE,
+          client.analyze(prepared, request, 4).reasonCode());
+      var event = logs.list.getLast();
+      var fields = event.getKeyValuePairs().toString();
+      assertEquals("ai.call.fail", event.getMessage());
+      assertTrue(fields.contains("stage=\"ai\""));
+      assertTrue(fields.contains("upstreamStatus=\"503\""));
+      assertTrue(fields.contains("reasonCode=\"ANALYSIS_UNAVAILABLE\""));
+      assertSafeResultLog(event, "private AI error body", "service-test-only", "목표");
+    } finally {
+      logger.detachAppender(logs);
+      logs.stop();
+      server.stop(0);
+    }
+  }
+
+  private static void assertSafeResultLog(ILoggingEvent event, String... privateValues) {
+    var logged = event.getFormattedMessage() + event.getKeyValuePairs() + event.getMDCPropertyMap();
+    for (String value : privateValues) {
+      assertFalse(logged.contains(value));
+    }
+    assertNull(event.getThrowableProxy());
   }
 
   @Test

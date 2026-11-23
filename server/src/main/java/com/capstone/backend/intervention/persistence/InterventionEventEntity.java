@@ -62,6 +62,9 @@ public class InterventionEventEntity {
   private Long observationContextId;
   @Column(name = "acted_at")
   private Instant actedAt;
+  /** 알림을 만든 근거 무관 판정이다. 오판 신고(NOT_OFF_TASK)와 재보정 평가를 이 id로만 잇는다. */
+  @Column(name = "analysis_run_id")
+  private Long analysisRunId;
 
   /** 승인된 수명 30초를 적용한다. 생성 시각은 실제 전송 시각이 아니다. */
   public static InterventionEventEntity offTask(long sessionId, long revision, String channels,
@@ -78,6 +81,11 @@ public class InterventionEventEntity {
     event.createdAt = now;
     event.expiresAt = now.plusSeconds(30);
     return event;
+  }
+
+  /** 근거 판정 id를 기록한다. 제목·URL·본문은 남기지 않는다. */
+  public void bindAnalysisRun(Long runId) {
+    analysisRunId = runId;
   }
 
   /** 검증된 관측 소속을 표시 직전 재확인할 수 있게 고정한다. */

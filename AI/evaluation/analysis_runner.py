@@ -30,6 +30,7 @@ from AI.evaluation.graphless_hybrid import (GraphlessConfig, SCORING_VERSION, bu
                                            score_passages, score_metadata, metadata_titles, metadata_is_informative,
                                            METADATA_CONFIG, METADATA_SCORING_VERSION, EVIDENCE_POLICY_VERSION,
                                            build_followup_contexts)
+from AI.evaluation.goal_profile_jev import JevEvaluationError
 
 LABELS = ("RELATED", "UNRELATED", "UNCERTAIN", "EXCLUDED", "PRIVACY_BLOCKED")
 DEFAULT_URL = "https://desktop-n7o3o02.tail1023df.ts.net"
@@ -169,6 +170,41 @@ class RecordingClient:
             self.vectors.put(hashlib.sha256(text.encode()).hexdigest(), tuple(vector))
         return vectors
 
+    def comparison_vectors(self, goal_text, passages):
+        query_encoder = getattr(self.client, "embed_query", None)
+        if callable(query_encoder):
+            # A dual encoder may produce different vectors for identical text in each role.
+            query_key = hashlib.sha256(goal_text.encode()).hexdigest()
+            query_key = f"query:{query_key}"
+            query_vector = self.vectors.get(query_key)
+            if query_vector is None:
+                started = perf_counter()
+                try:
+                    vectors = query_encoder((goal_text,))
+                finally:
+                    self.embedding_ms += (perf_counter() - started) * 1000
+                if len(vectors) != 1:
+                    raise ValueError("VECTOR_COUNT_INVALID")
+                query_vector = tuple(vectors[0])
+                self.vectors.put(query_key, query_vector)
+            return query_vector, self._passage_vectors(passages)
+
+        # Existing Ollama clients send the retrieval instruction and passages in one batch.
+        query = f"Instruct: {DEFAULT_INSTRUCTION}\nQuery: {goal_text}"
+        vectors = self._passage_vectors((query, *passages))
+        return vectors[query], vectors
+
+    def _passage_vectors(self, texts):
+        vectors = {text: self.vectors.get(hashlib.sha256(text.encode()).hexdigest())
+                   for text in dict.fromkeys(texts)}
+        missing = tuple(text for text, vector in vectors.items() if vector is None)
+        if missing:
+            embedded = self.embed(missing)
+            if len(embedded) != len(missing):
+                raise ValueError("VECTOR_COUNT_INVALID")
+            vectors.update(zip(missing, embedded))
+        return vectors
+
     def lookup(self, texts):
         vectors = tuple(self.vectors.get(hashlib.sha256(text.encode()).hexdigest()) for text in texts)
         if any(vector is None for vector in vectors):
@@ -188,13 +224,12 @@ class GraphlessSession:
 
 
 def compare_graphless(goal, cases, client, *, config: GraphlessConfig = GraphlessConfig(),
-                      session: GraphlessSession | None = None):
+                      session: GraphlessSession | None = None, jev_judge=None):
     """Streamlit experiment only. Expectations never enter scoring or embedding."""
     started = perf_counter()
     calls_start = getattr(client, "calls", 0)
-    recorded = session.recorded if session else RecordingClient(client)
-    embedding_start = recorded.embedding_ms
-    query_text = f"Instruct: {DEFAULT_INSTRUCTION}\nQuery: {goal.text}"
+    recorded = None if jev_judge else session.recorded if session else RecordingClient(client)
+    embedding_start = recorded.embedding_ms if recorded else 0.0
     # This experiment judges short text by evidence, not a character minimum.
     preprocessing = PreprocessingConfig(min_text_chars=0, penalize_removed_fragments=False,
                                         preserve_extracted_markup=True,
@@ -202,7 +237,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
     rows = []
     for case_id, content, context, expected in cases:
         tick = perf_counter()
-        embedding_before = recorded.embedding_ms
+        embedding_before = recorded.embedding_ms if recorded else 0.0
         calls_before = getattr(client, "calls", 0)
         score_result = {
             "relevanceLabel": "UNCERTAIN", "reasonCode": "INSUFFICIENT_EVIDENCE",
@@ -216,6 +251,8 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
         titles = ()
         status = "SKIPPED"
         reason = None
+        jev_calls = 0
+        jev_probability = None
         if content.is_excluded or content.extraction_status.value == "EXCLUDED" or context.exclusion_mode.value != "NONE":
             reason = "EXCLUDED"
         elif content.is_sensitive or any(contains_sensitive_data(value) for value in (
@@ -250,21 +287,14 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                     # Missing/generic metadata is a completed abstention, not model failure.
                     score_result = score_metadata(goal.text, (), (), ())
                     status = "COMPLETED"
+                elif jev_judge is not None:
+                    jev_calls = 1
+                    label, code, jev_probability = jev_judge(goal.text, titles, allow_unrelated=False)
+                    score_result.update(relevanceLabel=label, reasonCode=code)
+                    status = "COMPLETED"
                 else:
-                    inputs = tuple(dict.fromkeys((query_text, *titles)))
-                    vector_by_text, missing = {}, []
-                    for text in inputs:
-                        cached = recorded.vectors.get(hashlib.sha256(text.encode()).hexdigest())
-                        if cached is None:
-                            missing.append(text)
-                        else:
-                            vector_by_text[text] = cached
-                    if missing:
-                        vectors = recorded.embed(tuple(missing))
-                        if len(vectors) != len(missing):
-                            raise ValueError("VECTOR_COUNT_INVALID")
-                        vector_by_text.update(zip(missing, vectors))
-                    score_result = score_metadata(goal.text, titles, vector_by_text[query_text],
+                    query_vector, vector_by_text = recorded.comparison_vectors(goal.text, titles)
+                    score_result = score_metadata(goal.text, titles, query_vector,
                                                   tuple(vector_by_text[text] for text in titles),
                                                   allow_unrelated=content.extraction_status.value == "SUCCESS",
                                                   app_name=content.app_name)
@@ -280,6 +310,14 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                     reason = "INCOMPLETE_REPRESENTATION"
                 elif not body or not any(char.isalnum() for p in body for char in p.text):
                     reason = "INSUFFICIENT_BODY"
+                elif jev_judge is not None:
+                    jev_calls = 1
+                    label, code, jev_probability = jev_judge(
+                        goal.text, tuple(p.text for p in prepared.passages),
+                        allow_unrelated=content.extraction_status.value == "SUCCESS",
+                    )
+                    score_result.update(relevanceLabel=label, reasonCode=code)
+                    status = "COMPLETED"
                 else:
                     pairs = tuple((clean_text(a.text, a.kind, preprocessing.ui_fragments,
                                               strip_html=False).text,
@@ -299,21 +337,9 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                     texts = (tuple(p.text for p in prepared.passages) + tuple(g.passage.text for g in groups)
                              + tuple(g.passage.text for g in screen_contexts)
                              + tuple(g.passage.text for g in followups))
-                    inputs = tuple(dict.fromkeys((query_text, *texts)))
-                    vector_by_text, missing = {}, []
-                    for text in inputs:
-                        cached = recorded.vectors.get(hashlib.sha256(text.encode()).hexdigest())
-                        if cached is None:
-                            missing.append(text)
-                        else:
-                            vector_by_text[text] = cached
-                    if missing:
-                        vectors = recorded.embed(tuple(missing))
-                        if len(vectors) != len(missing):
-                            raise ValueError("VECTOR_COUNT_INVALID")
-                        vector_by_text.update(zip(missing, vectors))
+                    query_vector, vector_by_text = recorded.comparison_vectors(goal.text, texts)
                     score_result = score_passages(
-                        goal.text, prepared.passages, vector_by_text[query_text],
+                        goal.text, prepared.passages, query_vector,
                         tuple(vector_by_text[p.text] for p in prepared.passages), config,
                         context_groups=groups,
                         context_vectors=tuple(vector_by_text[g.passage.text] for g in groups),
@@ -329,12 +355,17 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                 score_result["reasonCode"] = reason
                 if reason in {"EXCLUDED", "PRIVACY_BLOCKED"}:
                     score_result["relevanceLabel"] = reason
-                    recorded.vectors.clear()
+                    if recorded is not None:
+                        recorded.vectors.clear()
+        except JevEvaluationError as exc:
+            status = "FAILED"
+            score_result["reasonCode"] = str(exc)
         except Exception:
             # Do not expose provider errors, raw content or secrets through UI logs.
             status = "FAILED"
             score_result["reasonCode"] = "MODEL_OR_SCORING_FAILED"
-            recorded.vectors.clear()
+            if recorded is not None:
+                recorded.vectors.clear()
         evidence_ids = set(score_result["evidenceIds"])
         body_scores = [item["hybridScore"] for item in score_result["matches"]
                        if item["kind"] not in {"TITLE", "HEADING"}
@@ -344,9 +375,9 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
         metadata_scores = [item["hybridScore"] for item in score_result["matches"] if item["kind"] in {"TITLE", "HEADING"}]
         evidence_scores = [item["hybridScore"] for item in score_result["matches"] if item["relatedEvidence"]]
         fallback = next_content_source(content.content_source, score_result["relevanceLabel"],
-                                       score_result["reasonCode"])
+                                       score_result["reasonCode"]) if jev_judge is None or status != "FAILED" else None
         elapsed_ms = (perf_counter() - tick) * 1000
-        embedding_ms = recorded.embedding_ms - embedding_before
+        embedding_ms = recorded.embedding_ms - embedding_before if recorded else 0.0
         rows.append({
             "caseId": case_id, "method": "graphless", "methodName": "키워드 + 벡터 Hybrid (Graph 없음)",
             "status": status, "expectedLabel": expected,
@@ -356,7 +387,7 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
             "scoringVersion": METADATA_SCORING_VERSION if is_metadata else SCORING_VERSION,
             "evidencePolicyVersion": METADATA_SCORING_VERSION if is_metadata else EVIDENCE_POLICY_VERSION,
             "analysisPath": "METADATA" if is_metadata else "BODY",
-            "coverageApplicable": not is_metadata,
+            "coverageApplicable": jev_judge is None and not is_metadata,
             "score": max(metadata_scores if is_metadata else body_scores, default=None),
             "bodyScore": max(body_scores, default=None), "contextScore": max(context_scores, default=None),
             "metadataScore": max(metadata_scores, default=None), "decisionScore": max(evidence_scores, default=None),
@@ -368,23 +399,26 @@ def compare_graphless(goal, cases, client, *, config: GraphlessConfig = Graphles
                              for item in score_result["matches"] if item["passageId"] in evidence_ids] if is_metadata else []),
             "nextContentSource": fallback.value if fallback else None,
             "publicReasonCode": contract_reason_code(score_result["relevanceLabel"], score_result["reasonCode"]),
-            "cacheHit": status == "COMPLETED" and getattr(client, "calls", 0) == calls_before,
+            "cacheHit": recorded is not None and status == "COMPLETED" and getattr(client, "calls", 0) == calls_before,
             "embeddingMs": round(embedding_ms, 2), "localMs": round(max(0, elapsed_ms - embedding_ms), 2),
             "openaiCalls": 0, "openaiMs": 0.0,
             "embeddingCalls": getattr(client, "calls", 0) - calls_before, "elapsedMs": round(elapsed_ms, 2),
             "matchesExpected": (status == "COMPLETED" and score_result["relevanceLabel"] == expected)
                                if expected else None,
         })
+        if jev_judge is not None:
+            rows[-1].update(method="jev", methodName="Jev", scoreType="Jev 선택지 확률",
+                            jevCalls=jev_calls, jevProbability=jev_probability)
     labelled = [row for row in rows if row["expectedLabel"] in {"RELATED", "UNRELATED", "UNCERTAIN"}]
     summary = [{
-        "방식": "키워드 + 벡터 Hybrid (Graph 없음)", "사례 수": len(rows),
+        "방식": "Jev" if jev_judge else "키워드 + 벡터 Hybrid (Graph 없음)", "사례 수": len(rows),
         "실패·분석 제외": sum(row["status"] != "COMPLETED" for row in rows),
         "기대 일치": f"{sum(row['matchesExpected'] is True for row in labelled)}/{len(labelled)}" if labelled else "기대 라벨 없음",
         "기대 일치율 %": round(100 * sum(row["matchesExpected"] is True for row in labelled) / len(labelled), 1) if labelled else None,
         "평균 시간 ms": round(sum(row["elapsedMs"] for row in rows) / max(1, len(rows)), 2),
     }]
     total_ms = (perf_counter() - started) * 1000
-    embedding_ms = recorded.embedding_ms - embedding_start
+    embedding_ms = recorded.embedding_ms - embedding_start if recorded else 0.0
     return {"rows": rows, "summary": summary,
             "scoringVersion": SCORING_VERSION,
             "evidencePolicyVersion": EVIDENCE_POLICY_VERSION,
