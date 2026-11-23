@@ -11,8 +11,8 @@ const OPTIONS = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI']
 const pending = (id, extra = {}) => ({ interventionId: id, type: 'OFF_TASK', status: 'PENDING', channels: [], observationContextId: 'c-1', remainingTtlMs: 30000, ...extra })
 const tempJournal = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'fo-receipts-')), 'receipts.json')
 
-function setup(lists, { current = true, pauseOk = true, context = 'c-1', journalFile = tempJournal(), deliveries = () => ({ success: true, data: true }), clock = { t: 0 }, showOk = true } = {}) {
-  const calls = []; const shown = []; const notified = []; let paused = 0
+function setup(lists, { current = true, pauseOk = true, context = 'c-1', journalFile = tempJournal(), deliveries = () => ({ success: true, data: true }), clock = { t: 0 }, showOk = true, show = () => showOk } = {}) {
+  const calls = []; const shown = []; const stages = []; const notified = []; let paused = 0
   const auth = {
     authorizedRequest: async (request) => {
       calls.push(request)
@@ -23,12 +23,12 @@ function setup(lists, { current = true, pauseOk = true, context = 'c-1', journal
   }
   let n = 0
   const watcher = new InterventionWatcher({
-    auth, show: (p) => { shown.push(p); return showOk }, notify: (p, sound) => { notified.push([p.interventionId, sound]); return true },
+    auth, show: (p, selectStage, canShow) => { shown.push(p); stages.push(selectStage()); return show(canShow, selectStage) }, notify: (p, sound) => { notified.push([p.interventionId, sound]); return true },
     pause: async () => { paused += 1; return { success: pauseOk } }, isCurrent: () => current, currentContext: () => context,
     journalFile, now: () => clock.t, uuid: () => `d-${++n}`,
   })
   const receipts = () => calls.filter((c) => c.path.endsWith('/deliveries')).map((c) => [c.path, c.body])
-  return { watcher, calls, shown, notified, receipts, journalFile, paused: () => paused }
+  return { watcher, calls, shown, stages, notified, receipts, journalFile, paused: () => paused }
 }
 
 test('처음 보는 PENDING 알림 하나만 강도별 문구로 보여 주고, 띄운 결과를 SENT로 보낸다', async () => {
@@ -139,4 +139,104 @@ test('잠시 쉬기에서 일시정지에 실패하면 실패로 알린다', asy
   const t = setup([], { pauseOk: false })
   assert.equal(await t.watcher.act('i-1', 'REST'), false)
   assert.equal(await t.watcher.act('i-1', 'CLOSE'), true)
+})
+
+test('보통은 같은 세션의 중복 없는 딴짓 알림을 1차·2차·3차로 표시한다', async () => {
+  const first = pending('normal-1')
+  const t = setup([[first], [first], [pending('normal-2')], [pending('normal-3')], [pending('normal-4')], [pending('gentle')], [pending('normal-5')], [pending('normal-6')]])
+  for (let i = 0; i < 5; i++) await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages, ['peek', 'normal', 'active', 'active'])
+  await t.watcher.poll('901', '목표', { ...OPTIONS, interventionLevel: 'GENTLE' })
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages.slice(-2), ['gentle', 'peek'])
+  t.watcher.reset()
+  await t.watcher.poll('902', '새 목표', OPTIONS)
+  assert.equal(t.stages.at(-1), 'peek')
+})
+
+test('10분 안에 표시한 보통 알림 세 번은 1차·2차·적극 단계로 올라간다', async () => {
+  const clock = { t: 0 }
+  const t = setup(['one', 'two', 'three'].map((id) => [pending(id)]), { clock })
+  for (const minutes of [0, 3, 8]) {
+    clock.t = minutes * 60_000
+    await t.watcher.poll('901', '목표', OPTIONS)
+  }
+  assert.deepEqual(t.stages, ['peek', 'normal', 'active'])
+})
+
+test('마지막으로 표시한 보통 알림에서 10분이 지나면 다시 1차로 표시한다', async () => {
+  const clock = { t: 0 }
+  const t = setup(['one', 'two', 'three', 'four'].map((id) => [pending(id)]), { clock })
+  for (const ms of [0, 9 * 60_000, 19 * 60_000, 29 * 60_000 + 1]) {
+    clock.t = ms
+    await t.watcher.poll('901', '목표', OPTIONS)
+  }
+  assert.deepEqual(t.stages, ['peek', 'normal', 'peek', 'peek'])
+})
+
+test('약하게나 적극 알림이 끼면 제한 시간 안이어도 보통 알림을 다시 1차로 표시한다', async () => {
+  const clock = { t: 0 }
+  const t = setup(['one', 'gentle', 'two', 'active', 'three'].map((id) => [pending(id)]), { clock })
+  for (const interventionLevel of ['NORMAL', 'GENTLE', 'NORMAL', 'ACTIVE', 'NORMAL']) {
+    await t.watcher.poll('901', '목표', { ...OPTIONS, interventionLevel })
+    clock.t += 60_000
+  }
+  assert.deepEqual(t.stages, ['peek', 'gentle', 'peek', 'active', 'peek'])
+})
+
+
+test('창 로드 결과를 기다리고 실패한 팝업은 전송이나 보통 단계로 세지 않는다', async () => {
+  const { promise, resolve } = Promise.withResolvers()
+  let attempt = 0
+  const t = setup([[pending('failed')], [pending('shown')]], {
+    show: () => ++attempt === 1 ? promise : true,
+  })
+  const polling = t.watcher.poll('901', '목표', OPTIONS)
+  await Promise.resolve()
+  assert.deepEqual(t.stages, ['peek'])
+  assert.deepEqual(t.receipts(), [])
+  resolve(false)
+  await polling
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages, ['peek', 'peek'])
+  assert.deepEqual(t.receipts().map(([, body]) => [body.dispatchStatus, body.channels]), [
+    ['NOT_SENT', []],
+    ['SENT', ['MOLE_UI']],
+  ])
+})
+
+test('창 로드 도중 표시 가능 시간을 넘기면 팝업과 시스템 알림을 보내지 않는다', async () => {
+  const clock = { t: 0 }
+  const { promise, resolve } = Promise.withResolvers()
+  const t = setup([[pending('expired', { remainingTtlMs: 1000, channels: ['MOLE_UI', 'MACOS_NOTIFICATION'] })]], {
+    clock, show: async (canShow) => { await promise; return canShow() },
+  })
+  const polling = t.watcher.poll('901', '목표', OPTIONS)
+  await Promise.resolve()
+  clock.t = 1000
+  resolve()
+  await polling
+  assert.deepEqual(t.notified, [])
+  assert.equal(t.receipts()[0][1].dispatchStatus, 'NOT_SENT')
+})
+
+
+test('창을 띄우기 전에 10분이 지나면 보통 단계와 횟수를 1차로 바꾼다', async () => {
+  const clock = { t: 0 }
+  const t = setup(['one', 'two', 'three'].map((id) => [pending(id)]), {
+    clock,
+    show: (_canShow, selectStage) => {
+      if (clock.t === 599_000) {
+        clock.t = 601_000
+        assert.equal(selectStage(), 'peek')
+      }
+      return true
+    },
+  })
+  await t.watcher.poll('901', '목표', OPTIONS)
+  clock.t = 599_000
+  await t.watcher.poll('901', '목표', OPTIONS)
+  clock.t = 602_000
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.deepEqual(t.stages, ['peek', 'normal', 'normal'])
 })

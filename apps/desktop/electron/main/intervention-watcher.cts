@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import type { AuthService } from './auth-service.cjs'
 import { log } from './logger.cjs'
-import type { FloatingShow, InterventionAction } from '../shared/intervention-contract.cjs'
-import type { SessionOptions } from '../shared/session-contract.cjs'
+import type { FloatingShow, InterventionAction, OffTaskPresentation } from '../shared/intervention-contract.cjs'
+import type { InterventionLevel, SessionOptions } from '../shared/session-contract.cjs'
 
 // 포키 코칭 문구는 친근한 반말이다(Notion UX 문구·알림 문구 정책 2.1, floating-poki.html). 구체 활동은 추측해 말하지 않는다.
 export const COPY = {
@@ -13,7 +13,15 @@ export const COPY = {
   BREAK: { say: '벌써 세 번째 흐트러졌어.', sub: '잠깐 쉬었다 갈까?' },
 } as const
 
+export function nextOffTaskStage(level: InterventionLevel, normalStreak: number): { stage: OffTaskPresentation['stage']; streak: number } {
+  if (level === 'GENTLE') return { stage: 'gentle', streak: 0 }
+  if (level === 'ACTIVE') return { stage: 'active', streak: 0 }
+  const streak = Math.min(normalStreak + 1, 3)
+  return { stage: streak === 1 ? 'peek' : streak === 2 ? 'normal' : 'active', streak }
+}
+
 const CHANNELS: readonly string[] = ['MOLE_UI', 'MACOS_NOTIFICATION', 'SOUND']
+const NORMAL_STREAK_WINDOW_MS = 10 * 60_000
 
 const TYPES = ['OFF_TASK', 'BREAK_SUGGESTION'] as const
 /** observationContextId: 알림을 만든 전경 context(null은 예전 이력). remainingTtlMs: 서버 기준 남은 표시 가능 시간(ms). */
@@ -45,7 +53,7 @@ type Receipt = { interventionId: string; clientDeliveryId: string; dispatchStatu
 type Deps = {
   auth: Pick<AuthService, 'authorizedRequest'>
   /** 포키 창에 알림을 보여 준다. 띄우지 못했으면 false. */
-  show(payload: FloatingShow): boolean
+  show(payload: FloatingShow, selectStage: () => OffTaskPresentation['stage'] | undefined, canShow: () => boolean): boolean | Promise<boolean>
   /** macOS 알림(소리 포함 여부)을 띄운다. 띄우지 못했으면 false. */
   notify(payload: FloatingShow, sound: boolean): boolean
   /** 잠시 쉬기: 세션을 일시정지한다. */
@@ -69,6 +77,8 @@ type Deps = {
  * - 사용자 반응(확인했어·닫기·잠시 쉬기)은 acknowledgements로 따로 기록한다.
  */
 export class InterventionWatcher {
+  private normalStreak = 0
+  private normalStreakExpiresAt = 0
   private readonly seen = new Set<string>()
   private readonly receipts: Receipt[]
   private polling = false
@@ -94,7 +104,9 @@ export class InterventionWatcher {
       const context = this.deps.currentContext()
       const next = result.data.find((item) => !this.seen.has(item.interventionId) && context !== null && item.observationContextId === context
         && item.remainingTtlMs !== null && item.remainingTtlMs - elapsed > 0)
-      if (!next) return
+      if (!next || next.remainingTtlMs === null) return
+      const deadline = startedAt + next.remainingTtlMs
+      const canShow = () => this.deps.isCurrent(sessionId) && this.deps.currentContext() === context && this.now() < deadline
       this.seen.add(next.interventionId)
       const kind = next.type === 'BREAK_SUGGESTION' ? 'BREAK' : 'OFF_TASK'
       const payload: FloatingShow = { interventionId: next.interventionId, kind, level: options.interventionLevel, goalText, ...COPY[kind === 'BREAK' ? 'BREAK' : options.interventionLevel] }
@@ -104,9 +116,22 @@ export class InterventionWatcher {
       this.receipts.push(receipt)
       this.save()
       const sent: string[] = []
-      if (channels.includes('MOLE_UI') && this.deps.show(payload)) sent.push('MOLE_UI')
+      let currentStreak = 0
+      const selectStage = () => {
+        if (kind !== 'OFF_TASK') return undefined
+        currentStreak = this.now() < this.normalStreakExpiresAt ? this.normalStreak : 0
+        return nextOffTaskStage(payload.level, currentStreak).stage
+      }
+      if (channels.includes('MOLE_UI') && await this.deps.show(payload, selectStage, canShow)) {
+        sent.push('MOLE_UI')
+        if (kind === 'OFF_TASK' && this.deps.isCurrent(sessionId)) {
+          const escalation = nextOffTaskStage(payload.level, currentStreak)
+          this.normalStreak = escalation.streak
+          this.normalStreakExpiresAt = escalation.streak > 0 ? this.now() + NORMAL_STREAK_WINDOW_MS : 0
+        }
+      }
       // 소리만 골랐어도 소리 있는 알림으로 알린다. 알림과 소리를 함께 골랐으면 알림은 한 번만 띄운다.
-      if ((channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) && this.deps.notify(payload, channels.includes('SOUND'))) {
+      if ((channels.includes('MACOS_NOTIFICATION') || channels.includes('SOUND')) && canShow() && this.deps.notify(payload, channels.includes('SOUND'))) {
         sent.push(...channels.filter((channel) => channel !== 'MOLE_UI'))
       }
       receipt.dispatchStatus = sent.length ? 'SENT' : 'NOT_SENT'
@@ -168,5 +193,7 @@ export class InterventionWatcher {
   /** 세션이 바뀌면 이전 세션의 알림 기록을 비운다. */
   reset(): void {
     this.seen.clear()
+    this.normalStreak = 0
+    this.normalStreakExpiresAt = 0
   }
 }

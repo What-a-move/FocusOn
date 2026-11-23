@@ -83,11 +83,35 @@ public final class SafeApiLog {
     }
   }
 
+  /**
+   * 학습 정리 worker의 AI 호출·저장 결과를 분석과 같은 정본 이벤트 이름으로 기록한다.
+   * 목표·근거·모델 출력·예외 메시지는 넣지 않고 고정 오류 코드만 남긴다.
+   */
+  public static void learningSummaryEvent(AnalysisEvent event, long startedNanos,
+      String errorCode) {
+    boolean failure = event == AnalysisEvent.AI_FAIL || event == AnalysisEvent.STORE_FAIL;
+    var output = failure ? LOGGER.atWarn() : LOGGER.atInfo();
+    output = output.addKeyValue("component", "learning-summary-worker")
+        .addKeyValue("event", event.value)
+        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
+    if (errorCode != null) {
+      output = output.addKeyValue("errorCode", errorCode);
+    }
+    output.log(event.value);
+  }
+
   /** 자동 정리 실패를 식별자나 예외 메시지 없이 기록한다. */
   public static void sessionCleanupFailure(RuntimeException exception) {
     LOGGER.atWarn().addKeyValue("component", "session-heartbeat-cleanup")
         .addKeyValue("errorClass", exception.getClass().getSimpleName())
         .log("session cleanup candidate failed");
+  }
+
+  /** 검증에 실패한 READY 학습 정리를 목록에서 뺐음을 세션 ID만으로 기록한다. */
+  public static void learningSummaryHidden(long sessionId) {
+    LOGGER.atWarn().addKeyValue("component", "learning-summary-list")
+        .addKeyValue("event", "summary.invalid.hidden").addKeyValue("sessionId", sessionId)
+        .log("invalid learning summary hidden from list");
   }
 
   /** 요청 시작 시 고정된 필드만 기록한다. */

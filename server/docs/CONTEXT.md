@@ -1,5 +1,18 @@
 # Backend 작업 컨텍스트
 
+## Issue #290 계정 삭제 API (2026-11-19)
+
+- `DELETE /api/v1/users/me`를 구현했다. 삭제 표시·닉네임 해제·Google 연결 익명화·모든 기기 폐기를 한 transaction에서 한다. 학습 기록 삭제·익명화(30일)는 후속이다. 계획: `features/account-delete-PLAN.md`.
+
+## Issue #289 학습 노트 목록 API (2026-11-19)
+
+- `GET /api/v1/learning-summaries`를 구현했다. READY만 `endedAt DESC, id DESC`, 커서는 `종료시각(epoch 마이크로초)_세션ID` 불투명 문자열이다. 정리 생성 파이프라인(#288) 전까지 실제 데이터는 비어 있다.
+
+## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
+
+- 세션 종료 시 `learning_summaries`를 QUEUED로 만들고 `LearningSummaryWorker`가 입력 마감(30초) 뒤 점유해 INSUFFICIENT_DATA·READY·FAILED로 진행한다. V23에서 작업 컬럼과 `learning_review_evidences`를 추가했다.
+- AI가 근거(`reviewEvidence`)를 아직 주지 않으므로 지금은 모든 정리가 INSUFFICIENT_DATA로 끝난다. 생성 API(`/internal/v1/learning-summaries`)도 AI 미구현이다. 계획: `features/learning-summary-pipeline-PLAN.md`.
+
 ## #182 분석 요청 추적 보완 (2026-11-18)
 
 - 기존 #116의 `requestId`·`traceId` 분리, JSON 로그, 단일 HTTP 필터를 기준으로 서버 로깅을 보완했다. 입력 검증 실패 분류와 전경·전송 경로 마스킹을 보강하고 AI 결과는 정규화된 판정·신뢰도·사유 및 수신 상태코드만 기록한다.

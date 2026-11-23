@@ -12,9 +12,9 @@ import { INTERVENTION_CHANNELS, isFloatingShow, type FloatingShow } from '../sha
 
 // 포키 창이 구독하기 전에 첫 알림이 도착해도 잃지 않도록 마지막 알림을 보관했다가 구독할 때 다시 전달한다.
 let lastShow: FloatingShow | null = null
-const showListeners = new Set<(show: FloatingShow) => void>()
+const showListeners = new Set<(show: FloatingShow | null) => void>()
 ipcRenderer.on(INTERVENTION_CHANNELS.show, (_event, payload: unknown) => {
-  if (!isFloatingShow(payload)) return
+  if (payload !== null && !isFloatingShow(payload)) return
   lastShow = payload
   showListeners.forEach((listener) => listener(payload))
 })
@@ -139,11 +139,8 @@ const focusOnApi: FocusOnApi = {
       if (lastShow) callback(lastShow)
       return () => { showListeners.delete(callback) }
     },
-    async act(input) {
-      const result = await ipcRenderer.invoke(INTERVENTION_CHANNELS.act, { interventionId: input.interventionId, action: input.action })
-      // 창을 닫는 동작이 끝나면 보관한 알림을 지워 다시 보이지 않게 한다.
-      if (result?.success && input.action !== 'RECENTER') lastShow = null
-      return result
+    act(input) {
+      return ipcRenderer.invoke(INTERVENTION_CHANNELS.act, { interventionId: input.interventionId, action: input.action })
     },
     onLift(callback) {
       liftListeners.add(callback)

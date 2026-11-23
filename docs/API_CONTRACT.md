@@ -99,6 +99,13 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 - 다른 기기를 해제했으면 `GET /devices`를 다시 부르고 404여도 목록을 다시 조회한다. 자기 자신을 해제했으면 목록을 부르지 않고 token을 지운 뒤 로그인 화면으로 간다.
 - 3대 한도(`AUTH_DEVICE_LIMIT_EXCEEDED`)에 걸린 새 설치는 로그인 전이라 이 API를 부를 수 없다. 이미 로그인된 다른 Desktop에서 해제한 뒤 다시 로그인한다.
 
+### 계정 삭제 (2026-11-19, #290 — 서버 제안, 문서 오너 확인 필요)
+
+- `DELETE /users/me`는 활성 Desktop Bearer로 호출하고 204 빈 본문이다. 모든 기기 로그인이 즉시 끝나고 닉네임이 해제된다.
+- 같은 Google 계정으로 다시 로그인하면 새 계정으로 시작한다(이전 기록과 연결하지 않음).
+- Extension·무인증·이미 삭제된 계정 호출은 401 `AUTH_RELOGIN_REQUIRED`다. Desktop은 성공 후 저장 token을 지우고 로그인 화면으로 보낸다.
+- 학습 기록의 30일 이내 삭제·익명화는 후속 작업이다.
+
 ### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
 
 - `POST /auth/refresh`는 Bearer 없이 `{refreshToken}`으로 인증하고 `200 data.{accessToken,refreshToken,accessTokenExpiresAt}`을 반환한다.
@@ -335,7 +342,10 @@ GET /api/v1/reports/calendar?month=YYYY-MM
 GET /api/v1/reports/weekly                     # P1
 GET /api/v1/sessions/{sessionId}/summary
 GET /api/v1/sessions/{sessionId}/learning-summary
+GET /api/v1/learning-summaries?cursor=&limit=
 ```
+
+`GET /api/v1/learning-summaries`(학습 노트 목록, 2026-11-19 #289 구현): Desktop 전용(Extension 403 `SESSION_QUERY_FORBIDDEN`). 본인 `READY` 정리만 세션 `endedAt DESC, sessionId DESC`로 반환한다. `limit` 기본 20·1~50. 응답은 `{items:[{sessionId,goalSnapshot,studyDate,startedAt,endedAt,accumulatedActiveMs,overview,keyConcepts}],nextCursor}`이며 마지막 페이지면 `nextCursor=null`이다. `nextCursor`는 불투명 문자열이므로 그대로 `cursor`로 보낸다. 잘못된 limit·cursor는 400 `VALIDATION_ERROR`다. `nextStartPrompt`는 목록에 없고 회차 단건 조회에서 본다. 검증에 실패한 정리는 목록에서 빠지므로 한 페이지 항목 수가 `limit`보다 적어도 `nextCursor`가 있으면 계속 이어서 조회한다.
 
 `GET /api/v1/sessions/{sessionId}/summary` 응답 필드는 다음과 같다(2026-11-02 확정). 제목 필드만 `goalSnapshot`이다. 필수: `sessionId`, `goalSnapshot`, `targetDurationMs`, `accumulatedActiveMs`. 선택(없으면 화면에 `기록 없음`): `status`(`ENDED`·`ABANDONED`), `startedAt`, `endedAt`, `totalPausedMs`, `pauseCount`, `autoPauseCount`, `autoPauseReasons[]`, `relatedDurationMs`, `unrelatedDurationMs`, `uncertainDurationMs`, `extensionCount`, `extendedDurationMs`, `interventionCount`.
 
@@ -402,6 +412,7 @@ GET /api/v1/sessions/{sessionId}/learning-summary
 - 학습 정리 응답과 저장 JSON은 `overview`, `keyConcepts`, `nextStartPrompt`만 사용한다. `reviewQuestions`와 자동 퀴즈는 MVP에서 사용하지 않는다.
 - `keyConcepts`는 `{ name, briefExplanation, sessionEvidence }` 객체 배열로 최대 5개다. 설명과 근거는 확정된 세션 근거 범위만 사용하고 원문·URL·코드·개인정보를 포함하지 않는다. 전체 정리 결과는 1,200자 이하다. 서로 다른 근거가 2개 미만이면 추측으로 채우지 않고 `INSUFFICIENT_DATA`를 반환한다.
 - `learningSummaryStatus`는 HTTP 오류 코드가 아니라 정상 응답의 업무 상태다.
+- (#288 구현, 2026-11-19) `POST /sessions/{id}/end`로 ENDED가 확정되면 정리 행이 `QUEUED`로 생긴다. 종료 30초 뒤 입력을 고정하고 근거 2개 미만이면 `INSUFFICIENT_DATA`, AI 실패는 1분·5분 뒤 재시도하고 세 번째 실패에서 `FAILED`다. AI가 근거를 공급하기 전까지는 `INSUFFICIENT_DATA`로 끝난다.
 - 집중 달력은 세션 시작 시 확정한 `studyDate`를 기준으로 집계한다. 자정을 넘긴 세션도 시작일 하나에 귀속한다.
 - 세션용 migration에서 `learning_sessions.study_date`는 처음부터 `DATE NOT NULL`로 만든다. 출시 전 신규 세션 모델의 기존 기록 백필은 하지 않는다. 이 결정 자체로 기존 DB나 테스트 데이터를 삭제하지 않는다.
 - 달력 집계에는 종료가 확정된 `ENDED`, `ABANDONED` 세션만 포함하고, `ABANDONED`는 마지막 서버 확정 누적 시간만 사용한다.

@@ -19,12 +19,14 @@
 
 ### 완료된 작업
 
+- 이슈 [#282](https://github.com/What-a-move/FocusOn/issues/282)(2026-11-19): 약하게 자동 숨김, 보통 연속 1·2·3차, 적극 5초 잠금과 공부 표시 토스트를 구현했다. 주 화면의 Electron 흐림 오버레이를 macOS 전체 화면 Space와 일반 Space에서 확인했다. [결과 리포트](features/poki-intensity-REPORT.md) · 결정 043. 상태별 캡처 디자인 확인 대기.
+
 - Issue #173(2026-11-08): 화면 위 포키 알림 개편. 포키가 먼저 화면 오른쪽 아래에서 크게 고개를 내밀어 표정으로 알리고, 0.6초 뒤 흰 카드(이름표·말·설명·버튼)가 포키 왼쪽에 뜬다. 상황별 이미지 `poki-peek-*.png` 6장, 포키 대사 반말(적극은 약 올리는 말투), F07 오류는 존댓말 유지. 버튼 `확인했어`(→목표 안내)·`알겠어`. 서버 알림 API 전이라 실제 왕복은 미검증.
 - Issue #175(2026-11-08): 큰 글자(h1·h2·집중 타이머·목표 문구·큰 숫자·연결 코드)에 페이퍼로지 적용, 작은 글자는 Pretendard 유지. 글꼴은 `public/fonts/`(TTF 2종)에 넣어 인터넷 없이도 보인다. 토큰 `--fo-font-display`.
 - Issue #179(2026-11-08): 상황별 새 포키 이미지로 교체. 오류는 걱정, 없음은 두리번, 온보딩·설정은 플러그·동의·열쇠, 완료는 축하 포키. 집중 달력·프로필 얼굴은 기존 유지.
 - Issue #183(2026-11-09): 폴더 구조를 가벼운 FSD(`app` → `features` → `shared`)로 정리. 여러 화면이 쓰던 API·사이드바·설정 틀·오류 문구·공용 CSS를 `shared/{api,ui,lib,styles}`로 옮기고 `features/` 사이 import를 없앴다(16곳 → 0). ESLint `no-restricted-imports`가 규칙을 검사한다. 화면·동작 변경 없음. 규칙은 `apps/docs/FOLDER_STRUCTURE.md`, 결정 037.
 - Issue #185(2026-11-09): 공용 CSS 3개를 공용·화면 전용으로 나눴다. `dashboard.css` → `shared/styles/app-shell.css`+홈 전용, `settings.css` → `settings-shell.css`+설정 전용, `onboarding.css` → `onboarding-window.css`+온보딩 전용. 값·클래스는 그대로이고, dev 빌드와 모든 요소의 계산된 스타일을 비교해 같음을 확인했다(라이트·다크, 창 크기 4개, 화면 상태 38개).
-- Issue #189(2026-11-09): 시연 모드 `pnpm dev:demo`. ⌘⇧D로 포키 이탈 알림을 바로 띄우고, 서버에 없는 세션 종료·결과 요약·달력·하루 기록은 그 실행의 세션으로 가짜 응답한다. 학습 정리는 가짜로 만들지 않는다(결정 038). 배포 앱에서는 꺼진다.
+- Issue #189(2026-11-09) 시연 모드는 Issue #280(2026-11-18)에서 지웠다. 서버 알림·종료·리포트 API가 생겨 실제 서버로 시연한다(결정 038 폐기).
 - Issue #214(2026-11-10): 서버 세션 종료 API(#164) 연동. 집중 끝내기 요청에 종료 시점 전체 누적값 `{ accumulatedActiveMs }`를 보내고(재시도는 처음 값·키 유지), 명령 응답이 `409 SESSION_ABANDONED`면 heartbeat와 같이 ABANDONED로 정리한다. 실제 서버 연동 QA는 로컬 서버를 최신 dev로 다시 빌드한 뒤 진행.
 - Issue #229(2026-11-13): 잠자기 뒤 서버(Docker) 시계가 15분 넘게 뒤처지면 정상 refresh 응답을 버려 다음 갱신에서 `AUTH_TOKEN_REUSE_DETECTED`로 강제 로그아웃되던 문제 수정. 토큰 만료 시각을 응답 `Date` 헤더 기준 남은 수명으로 바꿔 저장한다(결정 042). 실제 잠자기 재현 QA는 남음.
 - Next.js 기본 화면을 FocusOn 로그인·온보딩 시작·홈 화면으로 교체했다.

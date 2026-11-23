@@ -2,6 +2,7 @@ package com.capstone.backend.auth.service;
 
 import com.capstone.backend.auth.AccessJwtService;
 import com.capstone.backend.auth.dto.TokenLifecycleDtos.TokenPair;
+import com.capstone.backend.auth.persistence.OauthIdentityRepository;
 import com.capstone.backend.auth.persistence.PairingCodeRepository;
 import com.capstone.backend.auth.persistence.RefreshTokenRecordEntity;
 import com.capstone.backend.auth.persistence.RefreshTokenRecordRepository;
@@ -32,14 +33,17 @@ public class TokenLifecycleService {
   private final TokenFamilyGuard guard;
   private final AuthRateLimiter limits;
   private final PairingCodeRepository pairingCodes;
+  private final OauthIdentityRepository identities;
   private final TransactionTemplate transaction;
 
   /** 기존 인증 저장소와 잠금·회전 transaction을 연결한다. */
   public TokenLifecycleService(AccessJwtService jwt, UserRepository users,
       UserDeviceRepository devices, TokenFamilyRepository families,
       RefreshTokenRecordRepository tokens, TokenFamilyGuard guard, AuthRateLimiter limits,
-      PairingCodeRepository pairingCodes, PlatformTransactionManager transactions) {
+      PairingCodeRepository pairingCodes, OauthIdentityRepository identities,
+      PlatformTransactionManager transactions) {
     this.pairingCodes = pairingCodes;
+    this.identities = identities;
     this.jwt = jwt;
     this.users = users;
     this.devices = devices;
@@ -178,6 +182,42 @@ public class TokenLifecycleService {
             revokeDeviceLogin(extension, now);
           }
         }
+      }
+    });
+  }
+
+  /**
+   * 활성 Desktop이 자기 계정을 삭제한다. 사용자 행을 잠그고 삭제 표시·닉네임 해제·Google 연결
+   * 익명화를 한 뒤 모든 기기의 로그인과 연결 코드를 같은 transaction에서 끝낸다. 학습 기록의
+   * 삭제·익명화는 보관 기준(30일 이내)에 따라 별도 작업이 맡는다.
+   */
+  public void deleteAccount(FocusOnPrincipal principal) {
+    if (principal.deviceType() != UserDeviceEntity.DeviceType.DESKTOP) {
+      throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+    }
+    transaction.executeWithoutResult(status -> {
+      var user = users.findByIdForUpdate(principal.userId())
+          .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+      var caller = families.findByIdForUpdate(principal.tokenFamilyId())
+          .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+      Instant now = Instant.now();
+      if (!caller.getUser().getId().equals(user.getId())
+          || !caller.getDevice().getId().equals(principal.deviceId())
+          || caller.getDevice().getDeviceType() != UserDeviceEntity.DeviceType.DESKTOP
+          || !guard.isActive(caller, now)) {
+        throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+      }
+      user.setDeletedAt(now);
+      user.setNickname(null);
+      user.setUpdatedAt(now);
+      users.saveAndFlush(user);
+      identities.anonymizeForDeletedUser(user.getId(), now);
+      for (var device : devices.findByUserIdAndStatus(user.getId(),
+          UserDeviceEntity.Status.ACTIVE)) {
+        if (device.getDeviceType() == UserDeviceEntity.DeviceType.DESKTOP) {
+          pairingCodes.cancelActive(device.getId(), now);
+        }
+        revokeDeviceLogin(device, now);
       }
     });
   }

@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 강도별 포키 딴짓 알림 ([#282](https://github.com/What-a-move/FocusOn/issues/282), `codex/282-desktop-poki-intensity`)
+- 상태: 기능 구현, Desktop 테스트 192개, 10분 초기화·카메라 버튼 숨김 반영, Electron 상태별 캡처 9장 완료. 디자인 확인 뒤 캡처와 [결과 리포트](features/poki-intensity-REPORT.md)를 연결해 `dev` 대상 PR을 연다. 실제 서버의 개입 수신과 공부 표시 기록은 계정이 연결된 환경에서 확인한다.
+
 - 작업명: 설정 연결 코드 카드·복사 (Issue #257, `fix/257-pairing-code-card`)
 - 상태: 설정 > 기기 연결의 코드를 온보딩과 같은 글자 칸 + `복사`로 바꾸고 좁은 창(800px)에서는 안내를 아래 줄로 내림. 요청 제한 안내를 서버 제한(10분)에 맞춤. 실제 앱에서 복사(`XXX-XXX`) 확인(2026-11-13). 목표 시간 끝난 뒤 첫 끝내기·연장 버전 충돌(#256)도 해결(`focus-session-end-version-conflict-ERROR.md`). 남은 일 없음.
 
@@ -22,8 +25,8 @@
 - 작업명: 카메라 분석 (Issue #222, `feat/222-desktop-camera-analysis`)
 - 상태: Swift 도우미 Apple Vision 로컬 분석·60/90초 상태 기계·포키 알림 구현, 실제 앱에서 자리 비움 90초 알림·일시정지 해제 확인(2026-11-12, `camera-analysis-PLAN.md`, 결정 039). 남은 일: 고개 숙임 오탐 각도 조정(사용자 테스트), 카메라 오류 사유 설정 화면 표시, 서버 카메라 이벤트 API 제안.
 
-- 작업명: 시연 모드 (Issue #189, `chore/189-desktop-demo-mode`)
-- 상태: `pnpm dev:demo`, ⌘⇧D 포키 알림, 가짜 집중 리포트·기록(2026-11-09, 결정 038). 남은 일: 서버 #164 병합 전에는 끝낸 뒤 약 3분(서버 무신호 자동 종료) 기다렸다가 다시 촬영. 서버 알림(#182)·리포트·기록 API가 생기면 `demo-mode.cts`와 `dev:demo` 삭제.
+- 작업명: 시연 모드 삭제 (Issue #280, `chore/280-desktop-remove-demo-mode`)
+- 상태: `demo-mode.cts`·테스트·`dev:demo`·⌘⇧D 삭제, 결정 038 폐기(2026-11-18). 시연은 실제 서버로 한다. 남은 일 없음.
 
 - 작업명: 화면 위 포키 알림 디자인 개편 (Issue #173, `feat/173-desktop-poki-alert`)
 - 상태: 고개 내민 포키 6장 + 흰 카드 배치, 포키 반말 대사, 창 720×300으로 변경(2026-11-08). 가짜 데이터로 6가지 상태 캡처 확인. 남은 일: 서버 `interventions` API가 생기면 실제 앱 창에서 강도 전환·클릭 확인. 창의 투명한 빈 영역이 아래 클릭을 막는 문제는 후속 Issue 후보. 제목·포키 말에 페이퍼로지 섞어 쓰기는 라이선스 확인 뒤 별도 Issue.

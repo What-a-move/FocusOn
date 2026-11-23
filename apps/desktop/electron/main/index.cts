@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
 import {
   APP_HOST,
   DEV_RENDERER_URL,
@@ -34,10 +34,10 @@ import { AnalysisSender } from './analysis-sender.cjs'
 import { analyzeObservation } from './screen-analysis.cjs'
 import { registerAnalysisIpc } from './analysis-ipc.cjs'
 import { SettingsService, ThemePreference, registerSettingsIpc } from './settings-ipc.cjs'
-import { COPY, InterventionWatcher } from './intervention-watcher.cjs'
+import { COPY, InterventionWatcher, nextOffTaskStage } from './intervention-watcher.cjs'
+import { createFloatingWindow, hasFloatingBackdrop, pinFloatingWindow } from './floating-window.cjs'
 import { CameraMonitor, parseCameraReply } from './camera-monitor.cjs'
-import { installDemoMode } from './demo-mode.cjs'
-import { CAMERA_ID, DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow } from '../shared/intervention-contract.cjs'
+import { CAMERA_ID, DISCONNECTED_ID, INTERVENTION_CHANNELS, isActInput, type FloatingShow, type OffTaskPresentation } from '../shared/intervention-contract.cjs'
 
 const useProductionRenderer = app.isPackaged || process.env.FOCUSON_RENDERER_MODE === 'production'
 const rendererUrl = useProductionRenderer ? PROD_RENDERER_URL : DEV_RENDERER_URL
@@ -48,7 +48,7 @@ const buildConfig: { apiBaseUrl?: string; googleClientId?: string } = (() => {
 
 // [주의] Scheme 권한은 app.whenReady() 전에 등록해야 한다.
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true } },
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ])
 
 // 설치한 앱은 `FocusOn` 폴더에 데이터를 둔다. 개발 실행(@focuson/desktop)과 섞이지 않고 함께 띄울 수 있다.
@@ -254,8 +254,9 @@ if (!hasSingleInstanceLock) {
     sessionRuntime = authService ? new SessionRuntime(authService, (snapshot) => {
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(SESSION_CHANNELS.changed, snapshot)
       const disconnected = disconnectedNotice(lastSession, snapshot)
-      if (disconnected) showFloating(disconnected)
-      else if (snapshot?.status === 'RUNNING' && pendingShow?.interventionId === DISCONNECTED_ID) hideFloating()
+      if (disconnected) void showFloating(disconnected)
+      else if (pendingShow && (snapshot?.status !== 'RUNNING' || snapshot.sessionId !== lastSession?.sessionId || pendingShow.interventionId === DISCONNECTED_ID)) hideFloating()
+      if (!snapshot || snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED' || snapshot.sessionId !== lastSession?.sessionId) watcher?.reset()
       lastSession = snapshot
     }, sessionReady) : null
     const runtime = sessionRuntime
@@ -279,51 +280,92 @@ if (!hasSingleInstanceLock) {
     const cameraMonitor = new CameraMonitor(() => performance.now())
     let cameraOn = false
     let cameraBusy = false
-    // 화면 위 포키 (화면 분석 4단계, floating-poki.html). 평소엔 숨기고 이탈 알림이 올 때만 포커스를 빼앗지 않고 띄운다.
     let floatingWindow: BrowserWindow | null = null
+    let floatingReady = false
+    let floatingLoad: Promise<boolean> | null = null
+    let floatingBackdrop = false
     let pendingShow: FloatingShow | null = null
-    // 고개 내민 포키 + 왼쪽 카드가 딱 들어가는 크기에, Dock 위로 올릴 여유(80px)를 더했다. 화면 오른쪽 아래 모서리에 붙인다(#225).
-    const FLOATING_SIZE = { width: 720, height: 380 }
-    function showFloating(payload: FloatingShow): void {
-      if (!floatingWindow || floatingWindow.isDestroyed()) {
-        const area = screen.getPrimaryDisplay().bounds
-        const window = new BrowserWindow({
-          ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width, y: area.y + area.height - FLOATING_SIZE.height,
-          // macOS panel: 다른 앱을 쓰는 중에도 클릭할 수 있고 FocusOn을 앞으로 가져오지 않는다.
-          type: 'panel', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false,
-          minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, show: false,
-          webPreferences: { preload: path.join(__dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
-        })
-        // [주의] Dock보다 한 층 아래(modal-panel)에 둔다. 보통은 Dock 위에 앉고, 전체 화면에서 Dock이 잠깐 올라오면 Dock이 포키를 덮는다(#225).
-        window.setAlwaysOnTop(true, 'modal-panel')
-        window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-        // 투명한 빈 곳은 아래 앱이 클릭되게 통과시킨다. 포인터 이동은 계속 받아서, 카드·포키 위에 오면 창이 클릭을 받게 바꾼다(#225).
-        window.setIgnoreMouseEvents(true, { forward: true })
-        window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
-        window.webContents.on('will-navigate', (event) => event.preventDefault())
-        window.webContents.on('did-finish-load', () => {
-          if (pendingShow) { window.webContents.send(INTERVENTION_CHANNELS.show, pendingShow); window.showInactive(); pinFloating(window) }
-        })
-        window.on('closed', () => { if (floatingWindow === window) floatingWindow = null })
-        floatingWindow = window
-        pendingShow = payload
-        void window.loadURL(new URL('floating/', rendererUrl).toString()).catch(() => {})
-        return
+    let offTaskResponded = false
+    let lastActiveArt: 1 | 2 | 3 | null = null
+
+    async function showFloating(raw: FloatingShow, selectStage = (): OffTaskPresentation['stage'] | undefined => undefined, canShow = () => true): Promise<boolean> {
+      if (!canShow()) return false
+      const stage = selectStage() ?? nextOffTaskStage(raw.level, 0).stage
+      let payload = raw
+      if (payload.kind === 'OFF_TASK') {
+        let presentation: OffTaskPresentation
+        if (stage === 'active') {
+          const arts = ([1, 2, 3] as const).filter((art) => art !== lastActiveArt)
+          presentation = { stage, art: arts[Math.floor(Math.random() * arts.length)] }
+        } else if (stage === 'normal') {
+          presentation = { stage }
+        } else {
+          presentation = { stage, side: Math.random() < .5 ? 'left' : 'right' }
+        }
+        payload = { ...payload, presentation }
       }
+
+      const backdrop = hasFloatingBackdrop(payload)
+      if (floatingWindow && !floatingWindow.isDestroyed() && backdrop !== floatingBackdrop) floatingWindow.destroy()
       pendingShow = payload
-      floatingWindow.webContents.send(INTERVENTION_CHANNELS.show, payload)
-      floatingWindow.showInactive()
-      pinFloating(floatingWindow)
-    }
-    /**
-     * 포키 창은 늘 화면 진짜 맨 아래 오른쪽에 둔다. [주의] 처음 만들 때 준 위치는 macOS가 Dock을 피해 작업 영역 안으로 밀어 올리므로 띄운 뒤 다시 준다.
-     * 창은 Dock보다 아래 레벨이고 빈 곳은 클릭이 통과해서 Dock을 가리지 않는다. 포키를 Dock 위로 올리는 건 창 안 CSS가 한다(lift, #225).
-     */
-    function pinFloating(window: BrowserWindow): void {
-      const area = screen.getPrimaryDisplay().bounds
-      window.setBounds({ ...FLOATING_SIZE, x: area.x + area.width - FLOATING_SIZE.width, y: area.y + area.height - FLOATING_SIZE.height })
+      offTaskResponded = false
+      if (!floatingWindow || floatingWindow.isDestroyed()) {
+        const window = createFloatingWindow(path.join(__dirname, '../preload/index.cjs'), backdrop)
+        floatingWindow = window
+        floatingBackdrop = backdrop
+        floatingReady = false
+        window.webContents.on('render-process-gone', () => {
+          if (window === floatingWindow && !window.isDestroyed()) window.destroy()
+        })
+        window.on('closed', () => {
+          if (floatingWindow !== window) return
+          floatingWindow = null
+          floatingReady = false
+          floatingLoad = null
+          pendingShow = null
+        })
+        let timeout: ReturnType<typeof setTimeout>
+        const expired = new Promise<false>((resolve) => {
+          timeout = setTimeout(() => {
+            resolve(false)
+            if (!window.isDestroyed()) window.destroy()
+          }, 4000)
+        })
+        const loaded = window.loadURL(new URL('floating/', rendererUrl).toString()).then(() => {
+          if (window !== floatingWindow || window.isDestroyed()) return false
+          floatingReady = true
+          return true
+        }, () => {
+          if (!window.isDestroyed()) window.destroy()
+          return false
+        })
+        floatingLoad = Promise.race([loaded, expired]).finally(() => clearTimeout(timeout))
+      }
+
+      const window = floatingWindow
+      if (!window || (!floatingReady && !await floatingLoad) || window !== floatingWindow || window.isDestroyed() || pendingShow !== payload) return false
+      if (!canShow()) {
+        hideFloating()
+        return false
+      }
+      const selected = selectStage()
+      if (selected && selected !== stage) return showFloating(raw, selectStage, canShow)
+      if (floatingBackdrop) window.setVibrancy('hud')
+      window.setIgnoreMouseEvents(!floatingBackdrop, { forward: true })
+      window.webContents.send(INTERVENTION_CHANNELS.show, payload)
+      window.showInactive()
+      pinFloatingWindow(window, payload)
       sendLift(window)
+      if (!window.isVisible()) return false
+      if (payload.presentation?.stage === 'active') lastActiveArt = payload.presentation.art
+      return true
     }
+    screen.on('display-metrics-changed', () => {
+      if (!floatingWindow?.isVisible() || !pendingShow) return
+      pinFloatingWindow(floatingWindow, pendingShow)
+      sendLift(floatingWindow)
+    })
+
     /** Dock이 보이면 Dock 높이만큼, 전체 화면 앱이라 Dock이 숨겨지면 0만큼 포키를 올린다. Dock 자동 숨기기면 둘 다 0이다. */
     function sendLift(window: BrowserWindow): void {
       const display = screen.getPrimaryDisplay()
@@ -360,11 +402,15 @@ if (!hasSingleInstanceLock) {
     }
     function hideFloating(): void {
       pendingShow = null
-      if (floatingWindow && !floatingWindow.isDestroyed()) { floatingWindow.setIgnoreMouseEvents(true, { forward: true }); floatingWindow.hide() }
+      if (floatingWindow && !floatingWindow.isDestroyed()) {
+        floatingWindow.setIgnoreMouseEvents(true, { forward: true })
+        if (floatingReady) floatingWindow.webContents.send(INTERVENTION_CHANNELS.show, null)
+        floatingWindow.hide()
+      }
     }
     const watcher = authService && runtime ? new InterventionWatcher({
       auth: authService,
-      show: (payload) => { showFloating(payload); return true },
+      show: showFloating,
       notify: (payload, sound) => {
         if (!Notification.isSupported()) return false
         new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show()
@@ -375,26 +421,33 @@ if (!hasSingleInstanceLock) {
       currentContext: () => context?.currentId() ?? null,
       journalFile: path.join(app.getPath('userData'), 'intervention-receipts.json'),
     }) : null
-    // 시연 모드(#189): `pnpm dev:demo`로 실행할 때만 켠다(빌드한 화면을 써서 Next 개발 표시가 영상에 안 나온다). 배포 앱은 환경 변수가 있어도 켜지 않는다.
-    if (authService && runtime && process.env.FOCUSON_DEMO === '1' && !app.isPackaged) {
-      const demo = installDemoMode(authService, () => runtime.snapshot(), () => context?.currentId() ?? null)
-      // ⌘⇧D: 진행 중 세션에 이탈 알림을 만들고 10초 조회를 기다리지 않고 바로 보여 준다.
-      globalShortcut.register('CommandOrControl+Shift+D', () => {
-        const current = runtime.snapshot()
-        if (current && demo.triggerAlert()) void watcher?.poll(current.sessionId, current.goalText, runtime.sessionOptions())
-      })
-      app.on('will-quit', () => globalShortcut.unregisterAll())
-    }
     ipcMain.on(INTERVENTION_CHANNELS.interactive, (event, interactive: unknown) => {
       // 포키 창이 보낸 boolean만 받는다. 다른 창이 클릭 통과를 바꾸지 못하게 한다.
       if (!floatingWindow || floatingWindow.isDestroyed() || event.sender !== floatingWindow.webContents || typeof interactive !== 'boolean') return
-      floatingWindow.setIgnoreMouseEvents(!interactive, { forward: true })
+      if (!pendingShow || offTaskResponded) return
+      if (!floatingBackdrop) floatingWindow.setIgnoreMouseEvents(!interactive, { forward: true })
       // 비활성 창이라 CSS 커서가 안 먹는다. 포키·버튼 위면 손가락, 벗어나면 기본 화살표로 직접 바꾼다(#246).
       void helper?.request('cursor', { kind: interactive ? 'pointer' : 'arrow', timeoutMs: 300 })
     })
     ipcMain.handle(INTERVENTION_CHANNELS.act, async (event, ...args: unknown[]) => {
       if (args.length !== 1 || !isActInput(args[0]) || !isTrustedAuthSender(event, floatingWindow, rendererUrl)) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
       const { interventionId, action } = args[0]
+      const shown = pendingShow
+      if (!shown || shown.interventionId !== interventionId || !floatingWindow) return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
+      if (shown.kind === 'OFF_TASK') {
+        if (action === 'ACK' && offTaskResponded) {
+          hideFloating()
+        } else if (!offTaskResponded && (action === 'RECENTER' || action === 'CLOSE')) {
+          offTaskResponded = true
+          floatingWindow.setIgnoreMouseEvents(true, { forward: true })
+          if (floatingBackdrop) floatingWindow.setVibrancy(null, { animationDuration: 1000 })
+          void helper?.request('cursor', { kind: 'arrow', timeoutMs: 300 })
+          if (interventionId !== CAMERA_ID) await watcher?.act(interventionId, action).catch(() => {})
+        } else {
+          return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
+        }
+        return { success: true, data: { done: true } }
+      }
       // F07은 서버 알림이 아니라 기록하지 않는다. 앱 열기는 FocusOn 창을 앞으로 가져온다.
       if (interventionId === DISCONNECTED_ID) {
         hideFloating()
@@ -402,16 +455,12 @@ if (!hasSingleInstanceLock) {
         if (action === 'OPEN_APP') { app.focus({ steal: true }); showMainWindow() }
         return { success: true, data: { done: true } }
       }
-      // 카메라 알림도 서버 기록이 없다. 잠시 쉬기는 세션만 멈춘다.
-      const done = interventionId === CAMERA_ID
-        ? action !== 'REST' || (await runtime?.pause('USER').catch(() => null))?.success === true
-        : await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
+      const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
       // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 확인했어는 같은 창에서 목표 안내로 이어진다.
       if (!done) return { success: false, error: { code: 'SESSION_PAUSE_FAILED', retryable: true } }
-      if (action !== 'RECENTER') hideFloating()
+      if (pendingShow === shown) hideFloating()
       return { success: true, data: { done: true } }
     })
-    let watchedSession: string | null = null
 
     // [유지보수] 창을 숨겨도 Main에서 목표 시간 도달(1초)과 서버 생존 신호(10초, 학습 세션 설계서·세션 상태 전이 정책)를 계속 처리한다.
     if (runtime) {
@@ -492,7 +541,7 @@ if (!hasSingleInstanceLock) {
           if (state !== before) log('INFO', 'state.transition', { component: 'camera', from: before, to: state })
           if (!alert) return
           const level = runtime.sessionOptions().interventionLevel
-          showFloating({ interventionId: CAMERA_ID, kind: 'OFF_TASK', level, goalText: current.goalText, ...COPY[level] })
+          void showFloating({ interventionId: CAMERA_ID, kind: 'OFF_TASK', level, goalText: current.goalText, ...COPY[level] })
           log('INFO', 'notify.fire', { component: 'camera', interventionType: 'CAMERA_AWAY', channels: ['MOLE_UI'] })
         }).finally(() => { cameraBusy = false })
       }, 2000)
@@ -504,10 +553,8 @@ if (!hasSingleInstanceLock) {
         void runtime.heartbeat(heartbeatContext).then((ok) => { if (ok && heartbeatContext) context?.renewed(heartbeatContext) })
         // 이탈 알림은 heartbeat와 같은 10초 주기로 조회한다(Notion interventions 비고). 진행 중이 아니면 포키를 숨긴다.
         const current = runtime.snapshot()
-        // 세션이 바뀌면 이전 세션의 포키를 닫는다. 그 알림으로 새 세션을 멈추지 않게 한다.
-        if (current?.sessionId !== watchedSession) { watchedSession = current?.sessionId ?? null; watcher?.reset(); hideFloating() }
         if (current?.status === 'RUNNING') void watcher?.poll(current.sessionId, current.goalText, runtime.sessionOptions())
-        else hideFloating()
+        else if (pendingShow?.kind === 'DISCONNECTED') hideFloating()
       }, 10_000)
     }
     createMainWindow()

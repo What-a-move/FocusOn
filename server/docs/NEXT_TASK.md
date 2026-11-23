@@ -1,5 +1,22 @@
 # Backend 다음 작업
 
+## Issue #290 계정 삭제 API (2026-11-19)
+
+- Desktop: 설정의 계정 삭제 버튼에서 확인 후 호출하고, 204면 token을 지우고 로그인 화면으로 보낸다.
+- Backend 후속: 삭제 계정의 학습 기록 30일 이내 삭제·익명화 작업(새 Issue). 문서 오너: Notion API 명세서에 계정 삭제 행 추가.
+- 테스트 후속: `TokenLifecycleApiTests`의 Extension 도우미가 한 사용자에 Extension 2개를 만들어 PostgreSQL의 단일 활성 Extension 제약에 걸린다(H2·CI 영향 없음).
+
+## Issue #289 학습 노트 목록 API (2026-11-19)
+
+- Desktop: 사이드바 학습 노트에서 호출하고 `nextCursor`를 그대로 `cursor`로 보낸다. 목록에는 `nextStartPrompt`가 없으니 회차 상세에서 단건 조회를 쓴다.
+- 실제 READY 데이터는 #288(정리 생성) 이후에 생긴다.
+
+## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
+
+- AI 담당: (1) 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하, 원문·URL 없음) 추가 여부·형식 합의 (2) `POST /internal/v1/learning-summaries` 구현 — 서버 제안 형식은 PLAN 참고.
+- Backend: 합의되면 분석 결과 저장 시 근거를 `learning_review_evidences`에 넣고 실제 READY까지 확인한다.
+- Desktop: 종료 직후 learning-summary가 404 대신 QUEUED→GENERATING→최종 상태로 온다. 5초 간격 조회 후 최종 상태에서 멈춘다.
+
 ## #182 분석 요청 추적 연동
 
 - Desktop에서 보낸 `X-Trace-Id`를 Backend가 AI 분석 호출로 전달한다. 실제 앱과 AI 서버가 연결되면 같은 ID로 모듈별 로그를 이어서 검증한다.

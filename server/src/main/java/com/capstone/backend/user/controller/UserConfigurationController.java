@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserConfigurationController {
   private final UserConfigurationService configuration;
   private final com.capstone.backend.user.service.OnboardingReadinessService readiness;
+  private final com.capstone.backend.auth.service.TokenLifecycleService lifecycle;
 
   /** 토큰이 가리키는 현재 사용자만 반환한다. */
   @GetMapping
@@ -237,5 +238,16 @@ public class UserConfigurationController {
     DeviceHeaderValidator.require(deviceId, principal);
     return com.capstone.backend.common.api.ApiResponse.of(
         configuration.replaceExcludedDomains(principal, request));
+  }
+
+  /** 현재 Desktop 사용자의 계정을 삭제하고 모든 기기의 로그인을 끝낸다. */
+  @org.springframework.web.bind.annotation.DeleteMapping
+  @org.springframework.web.bind.annotation.ResponseStatus(
+      org.springframework.http.HttpStatus.NO_CONTENT)
+  @Operation(summary = "계정 삭제", description = "활성 Desktop만 호출합니다. 성공하면 204이며 "
+      + "모든 기기의 로그인이 즉시 끝나고, 같은 Google 계정으로 다시 로그인하면 새 계정으로 "
+      + "시작합니다. Extension 호출은 401입니다.")
+  public void delete(@AuthenticationPrincipal FocusOnPrincipal principal) {
+    lifecycle.deleteAccount(principal);
   }
 }

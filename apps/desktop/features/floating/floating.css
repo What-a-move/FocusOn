@@ -53,3 +53,135 @@ html:has(.floating-root), html:has(.floating-root) body { min-width: 0; backgrou
 .sign-alert .sign-rest:focus-visible { outline: 3px solid var(--fo-gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .sign-alert .poki-hit, .sign-alert .sign, .sign-alert.is-ducking .poki-hit, .sign-alert.is-ducking .sign { animation-duration: .01s; animation-delay: 0s; } }
 @media (prefers-reduced-motion: reduce) { .floating-root .stack { transition: none; } .floating-root .stack::before, .floating-root .poki, .floating-root .card, .floating-root .card-body { animation: none; } }
+
+/* 강도별 딴짓 알림. 크기와 움직임은 poki-intensity-preview.html 기준이다. */
+.off-task-corner, .off-task-backdrop { position: absolute; inset: 0; }
+.off-task-corner { bottom: var(--lift); overflow: hidden; }
+.gentle-sign, .peek-alert button, .stage-poki, .stage-sign {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.gentle-sign, .peek-alert button, .off-task-stage.is-ready button { cursor: pointer; }
+.off-task-corner img, .off-task-art img { display: block; width: 100%; pointer-events: none; user-select: none; }
+
+.gentle-sign {
+  --inset: clamp(16px, calc(var(--screen-width) * .05), 80px);
+  bottom: 0;
+  width: clamp(160px, calc(var(--screen-width) * .18), 240px);
+  transform: translateY(105%);
+}
+.gentle-sign.left { left: var(--inset); }
+.gentle-sign.right { right: var(--inset); }
+.gentle-sign.is-up { transform: translateY(6%); }
+.gentle-sign.is-up:is(:hover, :focus-visible) { transform: translateY(2%); }
+
+.peek-alert { position: absolute; inset: auto 0 0; height: 300px; pointer-events: none; }
+.peek-alert.left { transform: scaleX(-1); }
+.peek-alert button { bottom: -14px; pointer-events: auto; transform: translateY(105%); }
+.peek-alert.is-up button { transform: translateY(0); }
+.peek-alert .peek-poki { right: -28px; width: 360px; }
+.peek-alert .peek-sign { right: 268px; width: 262px; }
+.peek-alert.left .peek-sign img { scale: -1 1; }
+.peek-alert.is-up:has(button:is(:hover, :focus-visible)) img { transform: translateY(-6px); }
+
+.off-task-backdrop { background: rgba(36, 23, 15, 0); transition: background-color 1s ease; }
+.off-task-backdrop.normal.is-up { background-color: rgba(36, 23, 15, .22); }
+.off-task-backdrop.active.is-up { background-color: rgba(36, 23, 15, .38); }
+.off-task-stage {
+  --w: min(140vh, 120vw);
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--w) / 2 * -.06);
+  width: var(--w);
+  height: calc(var(--w) / 2);
+  transform: translate(-50%, 108%);
+  font-family: -apple-system, "Apple SD Gothic Neo", sans-serif;
+}
+.off-task-stage.normal { --w: min(100vh, 110vw); }
+.off-task-stage.is-up { transform: translate(-50%, 0); }
+.off-task-art { position: absolute; inset: 0; pointer-events: none; }
+.off-task-art img { height: 100%; }
+.off-task-stage.is-ready:has(button:is(:hover, :focus-visible)) .off-task-art { transform: translateY(calc(var(--w) * -.0125)); }
+.stage-poki { left: 21%; right: 21%; top: 1%; height: 57%; border-radius: 50% 50% 0 0 / 70% 70% 0 0; }
+.stage-sign { left: 3.8%; right: 4.1%; top: 55.8%; bottom: 0; border-radius: 18px; }
+.floating-root .stage-sign:focus-visible { outline-color: #5e3a20; outline-offset: -8px; }
+
+.off-task-actions {
+  --s: clamp(30px, calc(var(--w) * .032), 52px);
+  position: absolute;
+  right: max(7%, calc((var(--w) - 100vw) / 2 + 16px));
+  bottom: calc(6% + clamp(10px, 3%, 28px));
+  display: flex;
+  align-items: center;
+  gap: calc(var(--s) * .3);
+}
+.off-task-count {
+  display: grid;
+  place-items: center;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #8a5a36;
+  color: #fff;
+  font-size: calc(var(--s) * .48);
+  font-weight: 800;
+  box-shadow: 0 3px 0 #5e3a20;
+  transition: opacity .4s ease, width .4s ease, margin .4s ease;
+}
+.off-task-stage.is-ready .off-task-count, .off-task-count[aria-hidden="true"] { opacity: 0; width: 0; margin-right: calc(var(--s) * -.3); }
+.off-task-study {
+  height: var(--s);
+  border: 0;
+  border-radius: calc(var(--s) * .32);
+  padding: 0 calc(var(--s) * .42);
+  font: inherit;
+  font-size: calc(var(--s) * .4);
+  font-weight: 700;
+  white-space: nowrap;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 3px 0 #c9b08c;
+  transition: opacity .4s ease;
+}
+.off-task-study:disabled { opacity: .55; }
+.off-task-study:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 #c9b08c; }
+
+.off-task-toast {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+  font: 700 15px -apple-system, "Apple SD Gothic Neo", sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  transform: translate(-50%, -10px);
+  opacity: 0;
+  pointer-events: none;
+}
+.off-task-toast.is-up { transform: translate(-50%, 0); opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .gentle-sign { transition: transform .7s cubic-bezier(.22, .8, .3, 1); }
+  .peek-alert .peek-poki { transition: transform .6s cubic-bezier(.22, .8, .3, 1); }
+  .peek-alert .peek-sign { transition: transform .5s cubic-bezier(.22, .8, .3, 1) .25s; }
+  .peek-alert.is-down .peek-sign { transition-delay: 0s; }
+  .peek-alert img { transition: transform .18s ease-out; }
+  .off-task-stage { transition: transform 1.3s cubic-bezier(.22, .8, .3, 1); }
+  .off-task-art { transition: transform .35s ease; }
+  .off-task-toast { transition: opacity .3s ease, transform .3s ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* 공통 CSS의 0.01ms도 포키 이동에는 적용하지 않는다. */
+  .gentle-sign, .peek-alert button, .peek-alert img, .off-task-stage, .off-task-art, .off-task-toast { transition: none !important; }
+  .gentle-sign.is-up:is(:hover, :focus-visible) { transform: translateY(6%); }
+  .peek-alert.is-up:has(button:is(:hover, :focus-visible)) img,
+  .off-task-stage.is-ready:has(button:is(:hover, :focus-visible)) .off-task-art,
+  .off-task-study:not(:disabled):active { transform: none; }
+  .off-task-count { transition-property: opacity; }
+}
