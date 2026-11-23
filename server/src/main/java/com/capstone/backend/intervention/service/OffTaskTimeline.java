@@ -14,6 +14,14 @@ public final class OffTaskTimeline {
   private static final Duration WINDOW = Duration.ofMinutes(10);
   /** 판단 보류·분석 장애가 딴짓 구간을 끊지 않고 멈추게 하는 정책 버전이다(#296). */
   public static final String POLICY_V2 = "v2";
+  /** 휴식 제안: 이탈 시작 사이 최대 간격과 최소 반복 횟수(설계서 8.1). */
+  private static final Duration BREAK_GAP = Duration.ofMinutes(5);
+  private static final int BREAK_REPEATS = 3;
+  /**
+   * 닫힌 구간 보관 기간. 10분 반복 평가보다 길게 둬서, 최대 약 11분에 걸치는 휴식 제안 사슬
+   * (5분 간격 이탈 3회 + 반복 기준)의 첫 이탈이 판정 지연 중에 지워지지 않게 한다.
+   */
+  private static final Duration RETENTION = Duration.ofMinutes(15);
   private final Snapshot state;
 
   /** DB snapshot 또는 새 실행/context의 빈 상태로 시작한다. */
@@ -99,21 +107,76 @@ public final class OffTaskTimeline {
     }
     Instant now = monotonic(at);
     Duration continuous = duration(state.openEpisode(), Instant.MIN, now);
-    long[] thresholds = switch (level) {
-      case GENTLE -> new long[] {180, 60, 3};
-      case NORMAL -> new long[] {60, 30, 2};
-      case ACTIVE -> new long[] {30, 20, 2};
-    };
+    long[] thresholds = thresholds(level);
     Instant left = now.minus(WINDOW);
     long repeats = state.spans().stream().map(Span::episode).distinct()
         .filter(episode -> duration(episode, left, now)
             .compareTo(Duration.ofSeconds(thresholds[1])) > 0).count();
-    boolean cooled = cooldownUntil == null || (!now.isBefore(cooldownUntil)
-        && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
     boolean matches = continuous.compareTo(Duration.ofSeconds(thresholds[0])) > 0
         || repeats >= thresholds[2];
     // 판단 보류로 멈춘 동안은 지금 화면이 딴짓인지 모르므로 시간은 보고하되 알림 후보는 아니다.
-    return new Evaluation(cooled && matches && !onHold(), continuous, repeats);
+    return new Evaluation(cooled(now, cooldownUntil) && matches && !onHold(), continuous,
+        repeats);
+  }
+
+  /**
+   * 휴식 제안 근거를 계산한다(설계서 「학습 세션 · 타이머 · 휴식 제안」 8.1, #301). 강도별 반복
+   * 기준을 넘긴 딴짓 구간을 이탈 1회로 보고, 지금 이탈까지 시작 시각이 서로 5분 이내로 이어진 이탈이
+   * 3회 이상이며 알림 간격이 지났을 때만 근거를 돌려준다. 판단 보류·보호 화면 시간은 구간
+   * 시간에 들어가지 않으므로 근거로 쓰이지 않는다.
+   */
+  public java.util.Optional<BreakEvidence> breakEvidence(String policyVersion,
+      InterventionLevel level, Instant at, Instant cooldownUntil) {
+    boolean known = "v1".equals(policyVersion) || POLICY_V2.equals(policyVersion);
+    // 판단 보류로 멈춘 동안(onHold)에는 지금 딴짓 중인지 모르므로 휴식 제안도 만들지 않는다.
+    if (!known || level == null || state.pendingRun() != null || state.openEpisode() == null
+        || onHold()) {
+      return java.util.Optional.empty();
+    }
+    Instant now = monotonic(at);
+    if (!cooled(now, cooldownUntil)) {
+      return java.util.Optional.empty();
+    }
+    Duration repeat = Duration.ofSeconds(thresholds(level)[1]);
+    // 사슬은 지금 이탈에서 끝나야 한다. 지금 이탈이 아직 짧으면 몇 분 전에 끝난 이탈들만으로
+    // 새 화면을 본 직후 바로 제안하게 되므로, 지금 이탈이 반복 기준을 넘길 때까지 기다린다.
+    if (duration(state.openEpisode(), Instant.MIN, now).compareTo(repeat) <= 0) {
+      return java.util.Optional.empty();
+    }
+    List<Instant> starts = state.spans().stream().map(Span::episode).distinct()
+        .filter(episode -> duration(episode, Instant.MIN, now).compareTo(repeat) > 0)
+        .map(episode -> state.spans().stream().filter(span -> span.episode() == episode)
+            .map(Span::start).min(Instant::compareTo).orElseThrow())
+        .sorted().toList();
+    if (starts.isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    int chain = 1;
+    for (int index = starts.size() - 1; index > 0; index--) {
+      if (Duration.between(starts.get(index - 1), starts.get(index)).compareTo(BREAK_GAP) > 0) {
+        break;
+      }
+      chain++;
+    }
+    if (chain < BREAK_REPEATS) {
+      return java.util.Optional.empty();
+    }
+    Instant first = starts.get(starts.size() - chain);
+    long minutes = Math.max(1, (Duration.between(first, now).toSeconds() + 59) / 60);
+    return java.util.Optional.of(new BreakEvidence(chain, (int) minutes));
+  }
+
+  private static long[] thresholds(InterventionLevel level) {
+    return switch (level) {
+      case GENTLE -> new long[] {180, 60, 3};
+      case NORMAL -> new long[] {60, 30, 2};
+      case ACTIVE -> new long[] {30, 20, 2};
+    };
+  }
+
+  private boolean cooled(Instant now, Instant cooldownUntil) {
+    return cooldownUntil == null || (!now.isBefore(cooldownUntil)
+        && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
   }
 
   /**
@@ -162,9 +225,10 @@ public final class OffTaskTimeline {
 
   private OffTaskTimeline copy(Instant now, long episode, Long pending, Long latest,
       Instant completed, Instant received, Long open, List<Span> spans, Long offTaskRun) {
-    // 과거 닫힌 구간은 10분 평가에 필요하지 않지만 열린 구간의 연속 누적은 보존한다.
+    // 10분 평가는 창으로 잘라 세므로 더 오래 보관해도 결과가 같다. 휴식 제안 사슬을 위해 15분 보관하고,
+    // 열린 구간의 연속 누적은 기간과 무관하게 보존한다.
     var retained = spans.stream().filter(span -> span.end() == null
-        || Objects.equals(span.episode(), open) || span.end().isAfter(now.minus(WINDOW)))
+        || Objects.equals(span.episode(), open) || span.end().isAfter(now.minus(RETENTION)))
         .toList();
     return new OffTaskTimeline(new Snapshot(state.runningSince(), state.context(), now,
         episode, pending, latest, completed, received, open, retained, offTaskRun));
@@ -190,6 +254,9 @@ public final class OffTaskTimeline {
       spans = List.copyOf(spans);
     }
   }
+
+  /** 휴식 제안 근거: 이어진 이탈 횟수와 첫 이탈부터 지금까지의 분(올림). 민감값은 없다. */
+  public record BreakEvidence(int repeatCount, int windowMinutes) {}
 
   /** 확정된 시간과 서로 다른 구간 수를 후보 여부와 함께 반환한다. */
   public record Evaluation(boolean candidate, Duration continuous, long repeatedIntervals) {}

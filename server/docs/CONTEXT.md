@@ -1,5 +1,13 @@
 # Backend 작업 컨텍스트
 
+## Issue #301 휴식 제안 생성 (2026-11-21)
+
+- 반복 이탈(5분 이내 간격 3회)이면 서버가 `BREAK_SUGGESTION`을 만들고 `breakEvidence`를 내려 준다(V27). 계획: `features/break-suggestion-PLAN.md`.
+
+## Issue #300 NOT_OFF_TASK (2026-11-21)
+
+- 개입 반응에 `NOT_OFF_TASK`를 추가했다(V26). 근거 판정은 #297의 `analysis_run_id`다. 계획: `features/not-off-task-PLAN.md`.
+
 ## #311 화면 분석 기록 보관 기간 정리 (2026-11-23)
 
 - 종료·자동 종료 후 90일이 지난 분석 실행을 기본 5분마다 최대 500건씩 정리한다. 사용자 → 세션 잠금에서 기한을 재확인하고 개입의 근거 참조를 해제한 뒤 분석 행을 삭제한다.

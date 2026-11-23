@@ -10,8 +10,10 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.intervention.dto.InterventionDtos.Acknowledge;
 import com.capstone.backend.intervention.dto.InterventionDtos.Acknowledgement;
+import com.capstone.backend.intervention.dto.InterventionDtos.Action;
 import com.capstone.backend.intervention.dto.InterventionDtos.Item;
 import com.capstone.backend.intervention.dto.InterventionDtos.Status;
+import com.capstone.backend.intervention.dto.InterventionDtos.Type;
 import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.intervention.persistence.InterventionPolicyRepository;
@@ -72,6 +74,11 @@ public class InterventionService {
     var session = sessions.findOwnedForUpdate(event.getSessionId(), principal.userId())
         .filter(value -> value.getRunnerDevice().getId().equals(principal.deviceId()))
         .orElseThrow(() -> new ApiException(ApiErrorCode.NOT_FOUND));
+    // 오판 신고는 딴짓 판정이 있는 이탈 알림에만 의미가 있다. 근거 판정은 이벤트의 analysis_run_id다.
+    if (request.action() == Action.NOT_OFF_TASK
+        && event.getType() != Type.OFF_TASK) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
     Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
     if (event.getDeliveryConfirmedAt() == null
         && (!now.isBefore(event.getExpiresAt()) || !validCandidate(session, event, now))) {
@@ -118,7 +125,10 @@ public class InterventionService {
         event.getCreatedAt(), event.getPolicyVersion(),
         event.getObservationContextId() == null ? null : event.getObservationContextId().toString(),
         status == Status.PENDING && event.getDeliveryConfirmedAt() == null
-            ? Math.max(0, Duration.between(now, event.getExpiresAt()).toMillis()) : 0);
+            ? Math.max(0, Duration.between(now, event.getExpiresAt()).toMillis()) : 0,
+        event.getBreakRepeatCount() == null ? null
+            : new com.capstone.backend.intervention.dto.InterventionDtos.BreakEvidence(
+                event.getBreakRepeatCount(), event.getBreakWindowMinutes()));
   }
 
   private void authenticate(FocusOnPrincipal principal) {

@@ -81,6 +81,8 @@ class InterventionApiTests {
   @Autowired private UserConsentRepository consents;
   @Autowired private InterventionEventRepository events;
   @Autowired private InterventionPolicyRepository states;
+  @Autowired private com.capstone.backend.user.persistence.UserFocusSettingsRepository
+      focusSettings;
   @Autowired private com.capstone.backend.intervention.persistence.ObservationContextRepository
       observationContexts;
   @Autowired private InterventionPolicyService policy;
@@ -156,6 +158,111 @@ class InterventionApiTests {
     assertEquals(null, events.findById(event).orElseThrow().getDeliveryConfirmedAt());
     evaluator.evaluate(f.principal().userId(), f.session());
     assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+  }
+
+  /** 「이것도 공부야」는 확인과 따로 기록되고, 근거 판정 id와 이어지며, 휴식 제안에는 쓸 수 없다. */
+  @Test
+  void notOffTaskIsRecordedSeparatelyAndOnlyForOffTask() throws Exception {
+    var f = fixture(true);
+    generate(f);
+    long event = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+    mvc.perform(auth(post(ack(event)), f).header("X-Device-Id", f.principal().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content("{\"action\":\"NOT_OFF_TASK\"}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("NOT_OFF_TASK"))
+        .andExpect(jsonPath("$.data.actedAt").isString());
+    // 첫 결정이 유지되고, 근거 판정 id로만 이어진다.
+    var again = service.acknowledge(f.principal(), f.device(), Long.toString(event),
+        new Acknowledge(Action.ACKNOWLEDGED));
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Status.NOT_OFF_TASK,
+        again.status());
+    org.junit.jupiter.api.Assertions.assertNotNull(
+        events.findById(event).orElseThrow().getAnalysisRunId());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].status").value("NOT_OFF_TASK"));
+    // 휴식 제안은 딴짓 판정이 아니므로 오판 신고를 받지 않는다.
+    jdbc.update("UPDATE intervention_events SET type='BREAK_SUGGESTION', status='PENDING', "
+        + "acted_at=NULL, pending_slot=1 WHERE id=?", event);
+    mvc.perform(auth(post(ack(event)), f).header("X-Device-Id", f.principal().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content("{\"action\":\"NOT_OFF_TASK\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    assertEquals("PENDING", jdbc.queryForObject(
+        "SELECT status FROM intervention_events WHERE id=?", String.class, event));
+  }
+
+  /** 5분 이내 간격의 이탈이 3회면 이탈 알림 대신 근거가 붙은 휴식 제안을 한 번만 만든다(#301). */
+  @Test
+  void repeatedOffTaskCreatesOneBreakSuggestionWithEvidence() throws Exception {
+    var f = fixture(true, 900);
+    seedUnrelated(f);
+    addEarlierEpisodes(f);
+    evaluator.evaluate(f.principal().userId(), f.session());
+    var created = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, created.size());
+    var event = created.getFirst();
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Type.BREAK_SUGGESTION,
+        event.getType());
+    assertEquals(3, event.getBreakRepeatCount());
+    org.junit.jupiter.api.Assertions.assertNotNull(event.getAnalysisRunId());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].type").value("BREAK_SUGGESTION"))
+        .andExpect(jsonPath("$.data[0].breakEvidence.repeatCount").value(3))
+        .andExpect(jsonPath("$.data[0].breakEvidence.windowMinutes").isNumber());
+    // 같은 실행 구간에서는 다시 제안하지 않는다. 대기 알림을 정리한 뒤에도 휴식 제안은 늘지 않는다.
+    jdbc.update("UPDATE intervention_events SET status='DISMISSED', acted_at=?, pending_slot=NULL,"
+        + " delivery_confirmed_at=? WHERE id=?", java.sql.Timestamp.from(Instant.now()),
+        java.sql.Timestamp.from(Instant.now().minusSeconds(600)), event.getId());
+    addEarlierEpisodes(f);
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).stream()
+        .filter(value -> value.getType()
+            == com.capstone.backend.intervention.dto.InterventionDtos.Type.BREAK_SUGGESTION)
+        .count());
+  }
+
+  /** 휴식 제안 설정을 끄면 같은 반복 이탈에서도 이탈 알림만 만든다. */
+  @Test
+  void disabledBreakSuggestionFallsBackToOffTask() throws Exception {
+    var f = fixture(true, 900);
+    tx.executeWithoutResult(ignored -> focusSettings.save(
+        com.capstone.backend.user.persistence.UserFocusSettingsEntity.create(
+            f.principal().userId(), com.capstone.backend.user.persistence.UserFocusSettingsEntity
+                .InterventionLevel.NORMAL, "MOLE_UI", false, false, Instant.now())));
+    seedUnrelated(f);
+    addEarlierEpisodes(f);
+    evaluator.evaluate(f.principal().userId(), f.session());
+    var created = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, created.size());
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Type.OFF_TASK,
+        created.getFirst().getType());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].breakEvidence").doesNotExist());
+  }
+
+  /** 현재 열린 딴짓 구간 앞에 4분 간격으로 40초짜리 이탈 2개를 넣는다(보통 강도 반복 기준 30초). */
+  private void addEarlierEpisodes(Fixture f) {
+    tx.executeWithoutResult(ignored -> {
+      var state = states.findById(f.session()).orElseThrow();
+      var snapshot = json.readValue(state.getTimelineJson(),
+          com.capstone.backend.intervention.service.OffTaskTimeline.Snapshot.class);
+      Instant open = snapshot.spans().stream()
+          .filter(span -> span.episode() == snapshot.openEpisode())
+          .map(com.capstone.backend.intervention.service.OffTaskTimeline.Span::start)
+          .min(Instant::compareTo).orElseThrow();
+      var spans = new java.util.ArrayList<>(snapshot.spans());
+      for (int index = 1; index <= 2; index++) {
+        Instant start = open.minusSeconds(240L * index);
+        spans.add(new com.capstone.backend.intervention.service.OffTaskTimeline.Span(
+            1000L + index, start, start.plusSeconds(40)));
+      }
+      state.transition(json.writeValueAsString(
+          new com.capstone.backend.intervention.service.OffTaskTimeline.Snapshot(
+              snapshot.runningSince(), snapshot.context(), snapshot.changedAt(),
+              snapshot.episode(), snapshot.pendingRun(), snapshot.latestRun(),
+              snapshot.completedAt(), snapshot.latestReceivedAt(), snapshot.openEpisode(),
+              spans, snapshot.offTaskRun())));
+      states.saveAndFlush(state);
+    });
   }
 
   @Test
@@ -404,6 +511,11 @@ class InterventionApiTests {
   }
 
   private Fixture fixture(boolean binding) {
+    return fixture(binding, 150);
+  }
+
+  /** startedSecondsAgo: 세션 시작을 몇 초 전으로 둘지. 지난 이탈을 넣는 테스트는 그보다 앞서 시작한다. */
+  private Fixture fixture(boolean binding, long startedSecondsAgo) {
     var account = login.exchange(new GoogleExchangeRequest("code", "a".repeat(43), "test",
         "http://127.0.0.1:49152", new DesktopDevice(UUID.randomUUID().toString(), "QA", "MACOS")));
     var result = tx.execute(ignored -> {
@@ -421,7 +533,7 @@ class InterventionApiTests {
       var session = sessions.saveAndFlush(LearningSessionEntity.create(user, goal, device,
           1800000, "Asia/Seoul", LocalDate.now(), "{\"interventionLevel\":\"NORMAL\","
               + "\"notificationChannels\":[\"MOLE_UI\"],\"cameraAnalysisEnabled\":false}",
-          "v1", Instant.now().minusSeconds(150)));
+          "v1", Instant.now().minusSeconds(startedSecondsAgo)));
       var observationContext = observationContexts.saveAndFlush(
           com.capstone.backend.intervention.persistence.ObservationContextEntity.create(
               session.getId(), device.getId(), device.getId(),

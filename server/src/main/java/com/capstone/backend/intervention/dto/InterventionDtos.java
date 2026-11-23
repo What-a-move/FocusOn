@@ -14,16 +14,28 @@ public final class InterventionDtos {
   /** 기존 공개 개입 종류다. 이번 생성 대상은 OFF_TASK뿐이다. */
   public enum Type { OFF_TASK, BREAK_SUGGESTION }
 
-  /** 전송 여부를 표현하는 enum이 아닌 사용자 반응/수명 상태다. */
-  public enum Status { PENDING, ACKNOWLEDGED, DISMISSED, EXPIRED }
+  /**
+   * 전송 여부를 표현하는 enum이 아닌 사용자 반응/수명 상태다. NOT_OFF_TASK는 사용자가 「이것도
+   * 공부야」로 딴짓 판정이 틀렸다고 알린 상태다(#300).
+   */
+  public enum Status { PENDING, ACKNOWLEDGED, DISMISSED, EXPIRED, NOT_OFF_TASK }
 
-  /** 새 전송 확인 action을 기존 사용자 반응에 섞지 않는다. */
-  public enum Action { ACKNOWLEDGED, DISMISSED }
+  /**
+   * 새 전송 확인 action을 기존 사용자 반응에 섞지 않는다. NOT_OFF_TASK는 OFF_TASK 알림에만 쓴다.
+   * 「돌아가기」(ACKNOWLEDGED)와 나눠야 재보정 정답 데이터가 틀어지지 않는다.
+   */
+  public enum Action { ACKNOWLEDGED, DISMISSED, NOT_OFF_TASK }
 
-  /** 목록 항목은 공개 문자열 식별자와 시작 당시 정책을 포함한다. */
+  /**
+   * 목록 항목은 공개 문자열 식별자와 시작 당시 정책을 포함한다. breakEvidence는 휴식 제안에만
+   * 있는 민감값 없는 근거다(예: 최근 12분 동안 3회). 이탈 알림은 null이다.
+   */
   public record Item(String interventionId, Type type, Status status,
       List<NotificationChannel> channels, Instant createdAt, String policyVersion,
-      String observationContextId, long remainingTtlMs) {}
+      String observationContextId, long remainingTtlMs, BreakEvidence breakEvidence) {}
+
+  /** 휴식 제안 근거다. 화면 원문·도메인·카메라 신호는 담지 않는다. */
+  public record BreakEvidence(int repeatCount, int windowMinutes) {}
 
   /** OS 제출 결과와 사용자 반응은 별개의 상태다. */
   public enum DispatchStatus { SENT, NOT_SENT, UNKNOWN }
