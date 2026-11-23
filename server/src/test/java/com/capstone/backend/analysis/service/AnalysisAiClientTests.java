@@ -77,6 +77,37 @@ class AnalysisAiClientTests {
     }
   }
 
+  /** matchStatus는 확정 RELATED일 때만 남고, 없거나 잘못된 값이면 판정은 유지한 채 비운다. */
+  @Test
+  void matchStatusIsKeptOnlyForConfirmedRelated() {
+    for (String status : new String[] {"MATCHED", "FAR", "NOT_ENOUGH"}) {
+      var related = withMatch("RELATED", "0.9", "SEMANTIC_GOAL_MATCH", "\"" + status + "\"");
+      assertEquals(Relation.RELATED, related.relation());
+      assertEquals(status, related.matchStatus().name());
+    }
+    for (String invalid : new String[] {"\"far\"", "\"SOMETHING\"", "1", "null", "{}"}) {
+      var related = withMatch("RELATED", "0.9", "SEMANTIC_GOAL_MATCH", invalid);
+      assertEquals(Relation.RELATED, related.relation());
+      assertEquals(AnalysisStatus.COMPLETED, related.status());
+      assertNull(related.matchStatus());
+    }
+    assertNull(decision("RELATED", "0.9", "SEMANTIC_GOAL_MATCH", "v1").matchStatus());
+    assertNull(withMatch("UNRELATED", "0.9", "SEMANTIC_GOAL_MISMATCH", "\"FAR\"")
+        .matchStatus());
+    var lowered = withMatch("RELATED", "0.5", "SEMANTIC_GOAL_MATCH", "\"MATCHED\"");
+    assertEquals(Relation.UNCERTAIN, lowered.relation());
+    assertNull(lowered.matchStatus());
+    assertNull(withMatch("UNCERTAIN", "null", "INSUFFICIENT_CONTEXT", "\"MATCHED\"")
+        .matchStatus());
+  }
+
+  private AnalysisDecision withMatch(String relation, String score, String reason,
+      String match) {
+    String body = result(relation, score, reason, "v1");
+    return AnalysisAiClient.normalize(json.readTree(
+        body.substring(0, body.length() - 1) + ",\"matchStatus\":" + match + "}"));
+  }
+
   @Test
   void receiptMalformedAndContradictoryResultsAreUnavailable() {
     for (String value : new String[] {"{}", "null", "[]", "{\"status\":\"RECEIVED\"}",

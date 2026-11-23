@@ -21,6 +21,12 @@ public final class AnalysisDtos {
   /** 공개 관련성 또는 사전 보호 상태다. */
   public enum Relation { RELATED, UNRELATED, UNCERTAIN, EXCLUDED, PRIVACY_BLOCKED }
 
+  /**
+   * RELATED 판정이 할 일과 얼마나 맞는지(DR-030). MATCHED는 할 일과 맞음, FAR는 공부지만 할 일과
+   * 멂, NOT_ENOUGH는 비교할 근거가 부족함이다. RELATED가 아니면 값이 없다.
+   */
+  public enum MatchStatus { MATCHED, FAR, NOT_ENOUGH }
+
   /** AI 실행 여부와 처리 결과를 관련성과 분리한다. */
   public enum AnalysisStatus { COMPLETED, NEEDS_CONFIRMATION, SKIPPED, ERROR }
 
@@ -91,5 +97,6 @@ public final class AnalysisDtos {
 
   /** 클라이언트가 사용하는 공개 분석 결과다. */
   public record Response(String analysisRunId, AnalysisStatus analysisStatus, Relation relation,
-      Double confidence, ReasonCode reasonCode, Instant observedAt, String policyVersion) {}
+      Double confidence, ReasonCode reasonCode, Instant observedAt, String policyVersion,
+      MatchStatus matchStatus) {}
 }

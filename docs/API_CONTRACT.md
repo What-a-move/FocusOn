@@ -292,7 +292,7 @@ POST /api/v1/interventions/{interventionId}/deliveries
 POST /api/v1/sessions/{sessionId}/local-events
 ```
 
-`GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`을 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
+`GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`, `matchStatus`를 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
 
 `GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs, breakEvidence }`이다. `breakEvidence`는 `BREAK_SUGGESTION`에만 있는 `{ repeatCount, windowMinutes }`(예: 최근 9분 동안 3회)이고 `OFF_TASK`는 `null`이다(2026-11-21 #301 — 서버 제안, 문서 오너 확인 필요). `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
 
@@ -386,6 +386,7 @@ GET /api/v1/learning-summaries?cursor=&limit=
 - 원본 화면과 카메라 영상은 기본 저장하지 않는다.
 - `confidence < 0.6`인 관련성 결과는 `UNCERTAIN`으로 정규화한다. 2026-11-03 AI 계약의 베타 예외로 내부 AI 응답의 `promptVersion`이 `-uncalibrated`로 끝나고 `confidence: null`인 후보 판정만 수치 기준에서 제외한다. 버전을 이력에 남기며 confidence를 임의로 만들지 않는다. metadata만 근거인 UNRELATED는 이 예외에서도 이탈 시간에 포함하지 않는다.
 - AI 장애·시간 초과는 HTTP 오류가 아니라 `relation: UNCERTAIN`, `confidence: null`, `reasonCode: ANALYSIS_UNAVAILABLE`로 응답한다. 베타까지 AI가 준비되지 않으면 서버가 임시 규칙 판정으로 대신할 수 있으며, 응답 형식·`reasonCode` 허용 목록·세션 고정 `policyVersion`은 같게 유지한다(2026-11-02 확정).
+- `matchStatus`(2026-11-23 #319, DR-030): 확정 `RELATED`(`analysisStatus: COMPLETED`)일 때 할 일과 맞는 정도 `MATCHED` / `FAR` / `NOT_ENOUGH`, 그 밖은 `null`이다. POST 응답과 GET 이력 항목에 함께 담긴다. AI가 값을 보내지 않거나 허용 밖 값이면 판정은 유지하고 `null`로 둔다. 서버는 `analysis_runs.match_status`에 저장한다.
 - 정책 `v2`(2026-11-21 #296, 새 세션 기본값)에서 `UNCERTAIN`(분석 장애 `ANALYSIS_UNAVAILABLE`, 앱 이름·탭 제목만 보고 낮춘 무관 판정 포함) 시간은 이탈 시간에 합산하지 않고, 현재 연속 이탈 구간을 끊지도 않는다. 구간은 멈췄다가 다음 `UNRELATED`에서 이어서 센다. 멈춘 동안에는 새 개입을 만들지 않고, 보류 전에 만든 아직 표시되지 않은 개입은 만료한다. `RELATED`는 구간을 끊는다. 개입 조건 표는 `v1`과 같다.
 - 정책 `v1`(기존 진행 중 세션)에서 `UNCERTAIN` 시간은 이탈 시간에 합산하지 않고 현재 연속 이탈 구간을 끊는다. 이전의 30초 보류·이어붙이기 규칙은 새 세션에 사용하지 않는다. `EXCLUDED`·`PRIVACY_BLOCKED`·미관찰 시간도 연속 이탈을 이어붙일 근거가 아니다.
 - `RELATED`가 확인되면 기존 이탈 구간과 카메라 알림 후보를 즉시 초기화한다. 15초 미만의 짧은 화면 전환은 이탈 구간으로 집계하지 않는다.
