@@ -104,7 +104,7 @@ DELETE /api/v1/extension-pairings/{extensionDeviceId}
 - `DELETE /users/me`는 활성 Desktop Bearer로 호출하고 204 빈 본문이다. 모든 기기 로그인이 즉시 끝나고 닉네임이 해제된다.
 - 같은 Google 계정으로 다시 로그인하면 새 계정으로 시작한다(이전 기록과 연결하지 않음).
 - Extension·무인증·이미 삭제된 계정 호출은 401 `AUTH_RELOGIN_REQUIRED`다. Desktop은 성공 후 저장 token을 지우고 로그인 화면으로 보낸다.
-- 학습 기록의 30일 이내 삭제·익명화는 후속 작업이다.
+- 학습 기록은 삭제 24시간 뒤 서버 주기 작업이 지운다(#299, 30일 이내 기준). 동의 이력은 3년 보관한다.
 
 ### FocusOn 로그인 유지·로그아웃 (2026-10-26 사용자 승인)
 

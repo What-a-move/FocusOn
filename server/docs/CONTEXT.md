@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
+
+- `DeletedAccountPurge`가 1시간마다 삭제 후 24시간 지난 계정의 학습 기록을 지운다. 동의 이력·계정 행은 남긴다. 계획: `features/deleted-account-purge-PLAN.md`.
+
 ## Issue #298 목표 세분화 저장 (2026-11-21)
 
 - V25로 `goals.profile_json`과 세션 목표 목록 `session_goals`(최대 3개, 지금은 1개)를 추가했다. CLEAR 목표의 세분화를 저장하고 세션 시작 때 고정한다. 판정 AI 전달은 아직이다. 계획: `features/goal-profile-PLAN.md`.

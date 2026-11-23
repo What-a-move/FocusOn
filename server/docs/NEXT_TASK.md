@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
+
+- 후속 Issue 후보: 기기·token family·Refresh Token·연결 코드의 폐기·만료 후 30일 정리(DATA_PRIVACY).
+- 사용자·세션을 참조하는 새 테이블을 만들 때 `DeletedAccountPurge.DELETES`에도 추가한다.
+
 ## Issue #298 목표 세분화 저장 (2026-11-21)
 
 - 머지 순서: #296 → #297(V24) → #298(V25).
