@@ -1,7 +1,5 @@
 package com.capstone.backend.goal.service;
 
-import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,6 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -59,47 +61,57 @@ public class GoalAiClient {
       throw new GoalAiException(Failure.UNAVAILABLE, false);
     }
     URI endpoint = endpoint(path);
-    var request = HttpRequest.newBuilder(endpoint).timeout(timeout)
+    var builder = HttpRequest.newBuilder(endpoint).timeout(timeout)
         .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body),
-            StandardCharsets.UTF_8)).build();
+            StandardCharsets.UTF_8));
+    // 같은 요청의 traceId를 AI까지 넘겨 모듈 경계 로그를 잇는다(ARCHITECTURE 로그·추적 원칙).
+    String trace = MDC.get("traceId");
+    if (trace != null && trace.matches("[A-Za-z0-9-]{8,64}")) {
+      builder.header("X-Trace-Id", trace);
+    }
+    // 요청 timeout은 응답 헤더까지만 막으므로 본문 지연까지 포함한 전체 마감을 따로 둔다.
+    var pending = client.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
     try {
-      var response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
-      try (var stream = response.body()) {
-        byte[] bytes = stream.readNBytes(MAX_RESPONSE_BYTES + 1);
-        if (bytes.length > MAX_RESPONSE_BYTES) {
-          throw new GoalAiException(Failure.INVALID_RESPONSE, false);
-        }
-        if (response.statusCode() == 504) {
-          throw new GoalAiException(Failure.TIMEOUT, true);
-        }
-        if (response.statusCode() == 502 || response.statusCode() == 503) {
-          boolean retryable;
-          try {
-            retryable = mapper.readTree(bytes).path("retryable").asBoolean(false);
-          } catch (RuntimeException exception) {
-            retryable = false;
-          }
-          throw new GoalAiException(Failure.UNAVAILABLE, retryable);
-        }
-        if (response.statusCode() != 200) {
-          throw new GoalAiException(Failure.INVALID_RESPONSE, false);
-        }
-        try {
-          return mapper.readTree(bytes);
-        } catch (RuntimeException exception) {
-          throw new GoalAiException(Failure.INVALID_RESPONSE, false);
-        }
+      var response = pending.get(timeout.toMillis() + 1000, TimeUnit.MILLISECONDS);
+      byte[] bytes = response.body();
+      if (bytes.length > MAX_RESPONSE_BYTES) {
+        throw new GoalAiException(Failure.INVALID_RESPONSE, false);
       }
-    } catch (HttpTimeoutException exception) {
+      if (response.statusCode() == 504) {
+        throw new GoalAiException(Failure.TIMEOUT, true);
+      }
+      if (response.statusCode() == 502 || response.statusCode() == 503) {
+        boolean retryable;
+        try {
+          retryable = mapper.readTree(bytes).path("retryable").asBoolean(false);
+        } catch (RuntimeException exception) {
+          retryable = false;
+        }
+        throw new GoalAiException(Failure.UNAVAILABLE, retryable);
+      }
+      if (response.statusCode() != 200) {
+        throw new GoalAiException(Failure.INVALID_RESPONSE, false);
+      }
+      try {
+        return mapper.readTree(bytes);
+      } catch (RuntimeException exception) {
+        throw new GoalAiException(Failure.INVALID_RESPONSE, false);
+      }
+    } catch (TimeoutException exception) {
       throw new GoalAiException(Failure.TIMEOUT, true);
-    } catch (ConnectException exception) {
-      throw new GoalAiException(Failure.UNAVAILABLE, true);
-    } catch (IOException exception) {
+    } catch (ExecutionException exception) {
+      if (exception.getCause() instanceof HttpTimeoutException) {
+        throw new GoalAiException(Failure.TIMEOUT, true);
+      }
       throw new GoalAiException(Failure.UNAVAILABLE, true);
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
       throw new GoalAiException(Failure.UNAVAILABLE, false);
+    } finally {
+      if (!pending.isDone()) {
+        pending.cancel(true);
+      }
     }
   }
 

@@ -55,7 +55,9 @@ class GoalAiClientTests {
     AtomicReference<String> body = new AtomicReference<>();
     HttpServer server = HttpServer.create(new InetSocketAddress(
         InetAddress.getLoopbackAddress(), 0), 0);
+    AtomicReference<String> trace = new AtomicReference<>();
     server.createContext("/internal/v1/goals/profile", exchange -> {
+      trace.set(exchange.getRequestHeaders().getFirst("X-Trace-Id"));
       body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
       byte[] response = "{\"data\":{\"goalProfile\":{\"mainTopic\":\"React\"}}}"
           .getBytes(StandardCharsets.UTF_8);
@@ -67,10 +69,47 @@ class GoalAiClientTests {
     try {
       var client = new GoalAiClient(new ObjectMapper(),
           "http://127.0.0.1:" + server.getAddress().getPort(), "server-only-key");
+      org.slf4j.MDC.put("traceId", "trace-goal-profile-1");
       var result = client.profile(Map.of("requestId", "r1", "goalText", "리액트 공부"));
       assertEquals("React", result.path("data").path("goalProfile").path("mainTopic").asText());
       assertTrue(body.get().contains("리액트 공부"));
+      assertEquals("trace-goal-profile-1", trace.get());
     } finally {
+      org.slf4j.MDC.remove("traceId");
+      server.stop(0);
+    }
+  }
+
+  /** 헤더만 보내고 본문을 멈춘 AI도 전체 마감 안에 시간 초과로 끝난다. */
+  @Test
+  void stalledProfileBodyEndsWithinDeadline() throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress(
+        InetAddress.getLoopbackAddress(), 0), 0);
+    var release = new java.util.concurrent.CountDownLatch(1);
+    server.createContext("/internal/v1/goals/profile", exchange -> {
+      exchange.sendResponseHeaders(200, 100);
+      exchange.getResponseBody().write("{".getBytes(StandardCharsets.UTF_8));
+      exchange.getResponseBody().flush();
+      try {
+        release.await(30, java.util.concurrent.TimeUnit.SECONDS);
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+      }
+      exchange.close();
+    });
+    server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+    server.start();
+    try {
+      var client = new GoalAiClient(new ObjectMapper(),
+          "http://127.0.0.1:" + server.getAddress().getPort(), "server-only-key");
+      long started = System.nanoTime();
+      var failure = assertThrows(GoalAiClient.GoalAiException.class,
+          () -> client.profile(Map.of("requestId", "r1", "goalText", "리액트 공부")));
+      assertEquals(GoalAiClient.Failure.TIMEOUT, failure.failure());
+      assertTrue(System.nanoTime() - started
+          < java.util.concurrent.TimeUnit.SECONDS.toNanos(15));
+    } finally {
+      release.countDown();
       server.stop(0);
     }
   }

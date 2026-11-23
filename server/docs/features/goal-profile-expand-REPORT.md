@@ -2,7 +2,8 @@
 
 ## 변경 요약
 
-- `GoalAiClient.profile`: `/internal/v1/goals/profile`, 8초 제한, 재시도 없음. 경로별 요청 공통화.
+- `GoalAiClient.profile`: `/internal/v1/goals/profile`, 8초 제한, 재시도 없음. 경로별 요청 공통화, `X-Trace-Id` 전달, 본문 지연까지 포함한 전체 마감(다듬기 요청도 같이 적용).
+- 세분화 호출 로그: `ai.call.start`/`ok`/`fail`(component `goal-profile`, 목표 문구·응답 원문 없음).
 - `GoalProfileExpander`: AI 실패·형식 오류를 모두 null로 바꾼다.
 - `GoalService.create`·`update`: 트랜잭션을 나눠 AI 호출을 잠금 밖으로 뺐다. 문구 변경 시 재확장, 직접 보낸 `goalProfile` 우선, 그 사이 바뀐 목표에는 결과를 붙이지 않는다. 같은 문구를 다시 보냈는데 세분화가 비어 있으면 다시 시도한다.
 - 응답 `GoalResponse.goalProfile`(저장값을 다시 검증해 싣고, 깨진 값은 null).
@@ -11,7 +12,7 @@
 ## 테스트
 
 - `GoalProfileExpandTests`: 직접 입력 세분화·응답·DB·단건 조회 / AI 실패 시 201 + null / 문구 수정 재확장, 문구+직접 세분화는 AI 미호출, 형식 위반 400·기존 값 유지 / 세분화 중 문구가 바뀌면 결과 버림 / 활성 세션 중 세분화 변경 409, AI 확인 목표는 세분화 AI 미호출.
-- `GoalAiClientTests.profileUsesItsOwnInternalPath`.
+- `GoalAiClientTests.profileUsesItsOwnInternalPath`(traceId 전달 포함), `stalledProfileBodyEndsWithinDeadline`.
 - `GoalProfileTests`는 이름·설명만 새 동작에 맞췄다.
 - H2 전체 431개 통과(PostgreSQL 전용 17개 생략), Checkstyle 통과. PostgreSQL 확인은 #315 리포트에서 함께 한다.
 

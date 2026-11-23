@@ -100,6 +100,22 @@ public final class SafeApiLog {
     output.log(event.value);
   }
 
+  /**
+   * 목표 세분화 AI 호출을 분석과 같은 정본 이벤트 이름으로 기록한다(#314). 목표 문구·AI 응답·예외
+   * 메시지는 넣지 않고 고정 오류 코드만 남긴다.
+   */
+  public static void goalProfileEvent(AnalysisEvent event, long startedNanos, String errorCode) {
+    boolean failure = event == AnalysisEvent.AI_FAIL || event == AnalysisEvent.STORE_FAIL;
+    var output = failure ? LOGGER.atWarn() : LOGGER.atInfo();
+    output = output.addKeyValue("component", "goal-profile")
+        .addKeyValue("event", event.value)
+        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000));
+    if (errorCode != null) {
+      output = output.addKeyValue("errorCode", errorCode);
+    }
+    output.log(event.value);
+  }
+
   /** 보관 기간 정리 실패를 식별자와 예외 메시지 없이 기록한다. */
   public static void tokenRetentionFailure(RuntimeException exception) {
     LOGGER.atWarn().addKeyValue("component", "token-family-retention")
