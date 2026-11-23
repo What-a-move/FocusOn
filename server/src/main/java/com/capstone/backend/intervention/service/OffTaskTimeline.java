@@ -112,7 +112,17 @@ public final class OffTaskTimeline {
         && state.latestReceivedAt() != null && !state.latestReceivedAt().isBefore(cooldownUntil));
     boolean matches = continuous.compareTo(Duration.ofSeconds(thresholds[0])) > 0
         || repeats >= thresholds[2];
-    return new Evaluation(cooled && matches, continuous, repeats);
+    // 판단 보류로 멈춘 동안은 지금 화면이 딴짓인지 모르므로 시간은 보고하되 알림 후보는 아니다.
+    return new Evaluation(cooled && matches && !onHold(), continuous, repeats);
+  }
+
+  /**
+   * 열린 딴짓 구간은 있지만 지금 흐르는 시간 조각이 없는 상태다. v2에서 판단 보류로 멈췄거나
+   * 재분석을 기다리는 중이다. 지금 화면이 딴짓인지 모르므로 새 알림을 만들지 않는다.
+   */
+  public boolean onHold() {
+    return state.openEpisode() != null
+        && state.spans().stream().noneMatch(span -> span.end() == null);
   }
 
   /** 원문 없는 영속화용 snapshot이다. */

@@ -377,6 +377,42 @@ class InterventionApiTests {
     evaluator.evaluate(f.principal().userId(), f.session());
   }
 
+  /** v2: 판단 보류가 오면 보류 전에 만든 미표시 알림은 만료되고, 멈춘 동안 새 알림도 없다. */
+  @Test
+  void v2UncertainExpiresPendingAlertAndBlocksNewOnesWhileOnHold() throws Exception {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    generate(f);
+    long event = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+    assertEquals("PENDING", jdbc.queryForObject(
+        "SELECT status FROM intervention_events WHERE id=?", String.class, event));
+    tx.executeWithoutResult(ignored -> {
+      users.findByIdForUpdate(f.principal().userId()).orElseThrow();
+      var session = sessions.findOwnedForUpdate(f.session(), f.principal().userId()).orElseThrow();
+      Instant at = Instant.now();
+      var request = new Request(UUID.randomUUID().toString(), ContentSource.DESKTOP_APP_OCR,
+          at, BigDecimal.valueOf(2), null, null, null, BigDecimal.valueOf(2));
+      var run = AnalysisRunEntity.reserve(session,
+          devices.getReferenceById(f.principal().deviceId()), request, at);
+      run.bindContext(f.observationContext());
+      runs.saveAndFlush(run);
+      policy.prepared(session, run, true, false, at);
+      run.complete(AnalysisDecision.unavailable());
+      policy.completed(session, run, at);
+    });
+    assertEquals("EXPIRED", jdbc.queryForObject(
+        "SELECT status FROM intervention_events WHERE id=?", String.class, event));
+    var snapshot = json.readValue(states.findById(f.session()).orElseThrow().getTimelineJson(),
+        com.capstone.backend.intervention.service.OffTaskTimeline.Snapshot.class);
+    // 딴짓 구간은 끊기지 않고 멈춘다.
+    org.junit.jupiter.api.Assertions.assertNotNull(snapshot.openEpisode());
+    jdbc.update("UPDATE intervention_events SET delivery_confirmed_at=created_at WHERE id=?",
+        event);
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+  }
+
   private void seedUnrelated(Fixture f) {
     tx.executeWithoutResult(ignored -> {
       users.findByIdForUpdate(f.principal().userId()).orElseThrow();

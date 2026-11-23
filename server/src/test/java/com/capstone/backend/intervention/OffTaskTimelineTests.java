@@ -177,6 +177,20 @@ class OffTaskTimelineTests {
         .candidate());
   }
 
+  /** v2: 보류 중에는 기준을 넘긴 시간이 있어도 새 알림을 만들지 않고, 다음 무관 판정에서 다시 본다. */
+  @Test
+  void v2HoldBlocksCandidatesUntilNextUnrelated() {
+    var timeline = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    timeline = v2(timeline, 2, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 70);
+    assertTrue(timeline.onHold());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.NORMAL, START.plusSeconds(300), null)
+        .candidate());
+    timeline = v2(timeline, 3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 300);
+    assertFalse(timeline.onHold());
+    assertTrue(timeline.evaluate("v2", InterventionLevel.NORMAL, START.plusSeconds(301), null)
+        .candidate());
+  }
+
   /** v2에서도 관련 판정은 구간을 끊고, v1은 판단 보류에서 구간을 끊는 기존 동작을 유지한다. */
   @Test
   void relatedStillEndsEpisodeAndV1KeepsLegacyBreak() {
