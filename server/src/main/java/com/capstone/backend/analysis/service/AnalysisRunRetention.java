@@ -5,6 +5,7 @@ import com.capstone.backend.analysis.persistence.AnalysisRunRepository.Retention
 import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.common.api.SafeApiLog;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
+import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import java.time.Clock;
@@ -45,7 +46,7 @@ public class AnalysisRunRetention {
 
   /** 후보 한 페이지를 세션별로 나눠 잠금과 삭제를 수행한다. */
   public synchronized void purgeDue(Instant now) {
-    Instant cutoff = now.minus(RETENTION);
+    Instant cutoff = cutoff(now);
     List<RetentionCandidate> batch;
     try {
       batch = runs.findRetentionCandidates(afterId, TERMINAL, cutoff, PAGE);
@@ -72,12 +73,21 @@ public class AnalysisRunRetention {
     }
     var session = sessions.findOwnedForUpdate(first.getSessionId(), first.getUserId())
         .orElse(null);
-    if (session == null || !TERMINAL.contains(session.getStatus()) || session.getEndedAt() == null
-        || session.getEndedAt().isAfter(cutoff)) {
+    if (session == null || !expired(session, cutoff)) {
       return;
     }
     var runIds = candidates.stream().map(RetentionCandidate::getRunId).toList();
     events.clearExpiredAnalysisLinks(session.getId(), runIds);
     runs.deleteRetainedRuns(session.getId(), runIds);
+  }
+
+  static Instant cutoff(Instant now) {
+    return now.minus(RETENTION);
+  }
+
+  /** 조회와 정리에서 먼저 종료 상태를 확인하고 동일한 시각 경계를 적용한다. */
+  static boolean expired(LearningSessionEntity session, Instant cutoff) {
+    return TERMINAL.contains(session.getStatus()) && session.getEndedAt() != null
+        && !session.getEndedAt().isAfter(cutoff);
   }
 }

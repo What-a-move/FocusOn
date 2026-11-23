@@ -357,6 +357,12 @@ class AnalysisApiTests {
     assertTrue(runs.findById(runId).isPresent());
     assertEquals(runId, interventionEvents.findById(eventId).orElseThrow().getAnalysisRunId());
 
+    mvc.perform(get(path(owner.sessionId()))
+        .header("Authorization", "Bearer " + owner.login().accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data").isEmpty());
+    assertTrue(runs.findById(runId).isPresent());
+
     retention.purgeDue(end.plus(Duration.ofDays(90)));
     retention.purgeDue(end.plus(Duration.ofDays(90)));
 
@@ -376,7 +382,7 @@ class AnalysisApiTests {
   }
 
   @Test
-  void retentionRemovesAbandonedHistoryAndKeepsRecentAndActiveRuns() {
+  void retentionRemovesAbandonedHistoryAndKeepsRecentAndActiveRuns() throws Exception {
     var abandoned = fixture();
     var recent = fixture();
     var active = fixture();
@@ -386,8 +392,18 @@ class AnalysisApiTests {
     Instant end = Instant.now().minus(Duration.ofDays(90)).truncatedTo(ChronoUnit.MICROS);
     tx.executeWithoutResult(ignored -> {
       sessions.findById(abandoned.sessionId()).orElseThrow().abandon(end);
-      sessions.findById(recent.sessionId()).orElseThrow().end(end.plusSeconds(1), 1000);
+      sessions.findById(recent.sessionId()).orElseThrow().end(end.plus(Duration.ofDays(1)), 1000);
     });
+
+    mvc.perform(get(path(abandoned.sessionId()))
+        .header("Authorization", "Bearer " + abandoned.login().accessToken()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data").isEmpty());
+    assertTrue(runs.findById(abandonedRun).isPresent());
+    for (var available : List.of(recent, active)) {
+      mvc.perform(get(path(available.sessionId()))
+          .header("Authorization", "Bearer " + available.login().accessToken()))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.length()").value(1));
+    }
 
     retention.purgeDue(end.plus(Duration.ofDays(90)));
 
