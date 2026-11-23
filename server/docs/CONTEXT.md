@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #300 NOT_OFF_TASK (2026-11-21)
+
+- 개입 반응에 `NOT_OFF_TASK`를 추가했다(V26). 근거 판정은 #297의 `analysis_run_id`다. 계획: `features/not-off-task-PLAN.md`.
+
 ## Issue #297 개입 근거 판정 id (2026-11-21)
 
 - V24로 `intervention_events.analysis_run_id`를 추가했다. 알림을 만든 무관 판정 id만 남긴다. #296 위에 쌓은 브랜치다. 계획: `features/intervention-run-link-PLAN.md`.

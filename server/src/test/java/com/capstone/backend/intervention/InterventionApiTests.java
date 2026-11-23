@@ -158,6 +158,36 @@ class InterventionApiTests {
     assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
   }
 
+  /** 「이것도 공부야」는 확인과 따로 기록되고, 근거 판정 id와 이어지며, 휴식 제안에는 쓸 수 없다. */
+  @Test
+  void notOffTaskIsRecordedSeparatelyAndOnlyForOffTask() throws Exception {
+    var f = fixture(true);
+    generate(f);
+    long event = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+    mvc.perform(auth(post(ack(event)), f).header("X-Device-Id", f.principal().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content("{\"action\":\"NOT_OFF_TASK\"}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("NOT_OFF_TASK"))
+        .andExpect(jsonPath("$.data.actedAt").isString());
+    // 첫 결정이 유지되고, 근거 판정 id로만 이어진다.
+    var again = service.acknowledge(f.principal(), f.device(), Long.toString(event),
+        new Acknowledge(Action.ACKNOWLEDGED));
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Status.NOT_OFF_TASK,
+        again.status());
+    org.junit.jupiter.api.Assertions.assertNotNull(
+        events.findById(event).orElseThrow().getAnalysisRunId());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].status").value("NOT_OFF_TASK"));
+    // 휴식 제안은 딴짓 판정이 아니므로 오판 신고를 받지 않는다.
+    jdbc.update("UPDATE intervention_events SET type='BREAK_SUGGESTION', status='PENDING', "
+        + "acted_at=NULL, pending_slot=1 WHERE id=?", event);
+    mvc.perform(auth(post(ack(event)), f).header("X-Device-Id", f.principal().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content("{\"action\":\"NOT_OFF_TASK\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    assertEquals("PENDING", jdbc.queryForObject(
+        "SELECT status FROM intervention_events WHERE id=?", String.class, event));
+  }
+
   @Test
   void unknownContextNeverGuessesLatestDeviceOrGenerates() throws Exception {
     var f = fixture(false);

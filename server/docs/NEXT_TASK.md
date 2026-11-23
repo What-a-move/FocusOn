@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #300 NOT_OFF_TASK (2026-11-21)
+
+- 문서 오너: Notion API 명세 acknowledgements에 `NOT_OFF_TASK` 반영.
+- Desktop: 포키 알림에 「이것도 공부야」 버튼을 달고 `action: NOT_OFF_TASK`를 보낸다.
+- 다음 마이그레이션은 V27부터.
+
 ## Issue #297 개입 근거 판정 id (2026-11-21)
 
 - 머지 순서: #296 → #297. 다음 마이그레이션은 V25부터.
