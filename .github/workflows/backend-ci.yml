@@ -79,6 +79,7 @@ jobs:
         run: >-
           ./gradlew test
           --tests '*UserConfigurationApiTests.concurrentNicknameConflictsOnPostgres'
+          --tests '*TokenLifecycleApiTests.retention*'
           --tests '*ExtensionMigrationTests'
           --tests '*AnalysisApiTests'
           --tests '*AnalysisMigrationTests'

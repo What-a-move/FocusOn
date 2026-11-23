@@ -100,6 +100,13 @@ public final class SafeApiLog {
     output.log(event.value);
   }
 
+  /** 보관 기간 정리 실패를 식별자와 예외 메시지 없이 기록한다. */
+  public static void tokenRetentionFailure(RuntimeException exception) {
+    LOGGER.atWarn().addKeyValue("component", "token-family-retention")
+        .addKeyValue("errorClass", exception.getClass().getSimpleName())
+        .log("token family retention candidate failed");
+  }
+
   /** 자동 정리 실패를 식별자나 예외 메시지 없이 기록한다. */
   public static void sessionCleanupFailure(RuntimeException exception) {
     LOGGER.atWarn().addKeyValue("component", "session-heartbeat-cleanup")
