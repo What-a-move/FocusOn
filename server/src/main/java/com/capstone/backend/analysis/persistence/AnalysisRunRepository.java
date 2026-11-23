@@ -1,17 +1,43 @@
 package com.capstone.backend.analysis.persistence;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
+import com.capstone.backend.session.persistence.SessionStatus;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /** 원본 이력과 현재 판정용 관측 순서를 분리한다. */
 public interface AnalysisRunRepository extends JpaRepository<AnalysisRunEntity, Long> {
+  /** 종료된 세션에 속한 오래된 실행의 식별자를 배치 단위로 읽는다. */
+  @Query("select r.id as runId, r.session.id as sessionId, r.session.user.id as userId "
+      + "from AnalysisRunEntity r where r.id > :afterId and r.session.status in :statuses "
+      + "and r.session.endedAt <= :cutoff order by r.id")
+  List<RetentionCandidate> findRetentionCandidates(@Param("afterId") long afterId,
+      @Param("statuses") List<SessionStatus> statuses, @Param("cutoff") Instant cutoff,
+      Pageable page);
+
+  /** 참조 해제와 같은 트랜잭션에서 정리 대상으로 확인된 행만 지운다. */
+  @Modifying
+  @Query("delete from AnalysisRunEntity r where r.session.id = :sessionId "
+      + "and r.id in :runIds")
+  int deleteRetainedRuns(@Param("sessionId") long sessionId, @Param("runIds") List<Long> runIds);
+
+  /** 잠금에 필요한 사용자와 세션 ID를 실행 ID와 함께 읽는다. */
+  interface RetentionCandidate {
+    Long getRunId();
+
+    Long getSessionId();
+
+    Long getUserId();
+  }
+
   /** clientRunId는 session 안에서 유일하다. */
   boolean existsBySessionIdAndClientRunId(Long sessionId, UUID clientRunId);
 

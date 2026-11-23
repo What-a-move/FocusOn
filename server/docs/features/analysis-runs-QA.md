@@ -93,3 +93,9 @@
 - 세션 내 Desktop/Extension 같은 전역 번호와 같은 기기의 서로 다른 세션 같은 번호를 각각 검증한다. RUNNING 재개 후 예전 AI 결과 거절, AI 요청 정확히1회, 유효 origin+빈 key일 때0회로 테스트 보강4건도 반영했다.
 - 최종 전체 build·Checkstyle200개(실패0/오류0/생략9), PostgreSQL80개 전부 통과(분석39+분석 migration14+확장 migration9+닉네임1+세션16+cleanup1). 최신 원격 CI는 push 후 확인한다.
 - 범위 근거: https://github.com/postgres/postgres/blob/REL_17_STABLE/src/include/datatype/timestamp.h . 기본OSIV=false 설정은 유지했다. 실제 앱/AI QA는 미실시다.
+
+## #311 보관 기간 정리 검증 (2026-11-23)
+
+- `dev` `2d61010` 기준 전체 빌드·Checkstyle 통과. 테스트 417개 중 400개 통과, 실패·오류 0개, 17개 생략.
+- 격리 PostgreSQL 17에서 Flyway·스키마 검증을 켜고 분석·개입 관련 135개를 실행했다. 실패·오류·생략 0개.
+- 정상 종료 90일 경계, 자동 종료, 최근 종료·실행 중 기록 보호, 반복 정리를 확인했다. 참조가 있던 분석 행이 사라진 뒤에도 개입 응답과 전송 이력, 종료 세션은 남았다. 기존 분석 이력 조회는 빈 배열을 반환했다.

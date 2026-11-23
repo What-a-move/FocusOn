@@ -1,5 +1,9 @@
 # Backend 다음 작업
 
+## #311 화면 분석 기록 보관 기간 정리 (2026-11-23)
+
+- 로컬 구현과 독립 리뷰를 완료했다. PR 제출 후 기존 PostgreSQL CI의 `AnalysisApiTests`에서 보관 경계와 개입 참조 정리 결과를 확인한다.
+
 ## Issue #299 삭제 계정 학습 기록 정리 (2026-11-21)
 
 - 후속 Issue 후보: 기기·token family·Refresh Token·연결 코드의 폐기·만료 후 30일 정리(DATA_PRIVACY).

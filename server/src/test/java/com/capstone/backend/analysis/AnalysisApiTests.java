@@ -31,6 +31,7 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
 import com.capstone.backend.analysis.persistence.AnalysisRunRepository;
 import com.capstone.backend.analysis.service.AnalysisAiClient;
 import com.capstone.backend.analysis.service.AnalysisDecision;
+import com.capstone.backend.analysis.service.AnalysisRunRetention;
 import com.capstone.backend.analysis.service.AnalysisRunStore;
 import com.capstone.backend.analysis.service.AnalysisService;
 import com.capstone.backend.auth.dto.AuthDtos.DesktopDevice;
@@ -50,6 +51,11 @@ import com.capstone.backend.common.api.RequestIdFilter;
 import com.capstone.backend.common.api.SafeApiLog;
 import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalRepository;
+import com.capstone.backend.intervention.dto.InterventionDtos;
+import com.capstone.backend.intervention.persistence.InterventionDeliveryEntity;
+import com.capstone.backend.intervention.persistence.InterventionDeliveryRepository;
+import com.capstone.backend.intervention.persistence.InterventionEventEntity;
+import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
@@ -66,8 +72,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -112,9 +120,12 @@ class AnalysisApiTests {
   @Autowired private UserConsentRepository consents;
   @Autowired private AnalysisExcludedDomainRepository exclusions;
   @Autowired private AnalysisRunRepository runs;
+  @Autowired private AnalysisRunRetention retention;
   @Autowired private AnalysisRunStore store;
   @Autowired private AnalysisService service;
   @Autowired private PairingService pairing;
+  @Autowired private InterventionEventRepository interventionEvents;
+  @Autowired private InterventionDeliveryRepository interventionDeliveries;
   @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private AnalysisAiClient ai;
@@ -316,6 +327,73 @@ class AnalysisApiTests {
         .andExpect(jsonPath("$.data[2].contentPayload").doesNotExist())
         .andExpect(jsonPath("$.data[2].modelVersion").doesNotExist());
     verify(ai, times(1)).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void retentionClearsExpiredRunLinksAndKeepsInterventionAndDelivery() throws Exception {
+    var owner = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(new AnalysisDecision(
+        Relation.UNRELATED, 0.9, ReasonCode.SEMANTIC_GOAL_MISMATCH, AnalysisStatus.COMPLETED,
+        "test-model", "test-prompt"));
+    var analysis = analyze(owner, request(null));
+    long runId = Long.parseLong(analysis.analysisRunId());
+    Instant end = Instant.now().minus(Duration.ofDays(90)).truncatedTo(ChronoUnit.MICROS);
+    long eventId = tx.execute(ignored -> {
+      var session = sessions.findById(owner.sessionId()).orElseThrow();
+      var event = InterventionEventEntity.offTask(session.getId(), 1,
+          "[\"MOLE_UI\"]", "v1", session.getLastResumedAt(), end.minusSeconds(1));
+      event.bindAnalysisRun(runId);
+      event.confirmDelivery(end);
+      event.acknowledge(InterventionDtos.Action.ACKNOWLEDGED, end);
+      interventionEvents.saveAndFlush(event);
+      interventionDeliveries.save(InterventionDeliveryEntity.create(event.getId(),
+          UUID.randomUUID(), InterventionDtos.DispatchStatus.SENT, "[\"MOLE_UI\"]",
+          end, end.plusSeconds(300)));
+      session.end(end, 1000);
+      return event.getId();
+    });
+
+    retention.purgeDue(end.plus(Duration.ofDays(90)).minusSeconds(1));
+    assertTrue(runs.findById(runId).isPresent());
+    assertEquals(runId, interventionEvents.findById(eventId).orElseThrow().getAnalysisRunId());
+
+    retention.purgeDue(end.plus(Duration.ofDays(90)));
+    retention.purgeDue(end.plus(Duration.ofDays(90)));
+
+    assertTrue(runs.findById(runId).isEmpty());
+    var event = interventionEvents.findById(eventId).orElseThrow();
+    assertNull(event.getAnalysisRunId());
+    assertEquals(InterventionDtos.Status.ACKNOWLEDGED, event.getStatus());
+    var deliveries = interventionDeliveries.findByInterventionIdOrderByIdAsc(eventId);
+    assertEquals(1, deliveries.size());
+    assertEquals(InterventionDtos.DispatchStatus.SENT, deliveries.getFirst().getDispatchStatus());
+    var session = sessions.findById(owner.sessionId()).orElseThrow();
+    assertEquals(SessionStatus.ENDED, session.getStatus());
+    mvc.perform(get(path(owner.sessionId()))
+        .header("Authorization", "Bearer " + owner.login().accessToken()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data").isEmpty());
+  }
+
+  @Test
+  void retentionRemovesAbandonedHistoryAndKeepsRecentAndActiveRuns() {
+    var abandoned = fixture();
+    var recent = fixture();
+    var active = fixture();
+    long abandonedRun = Long.parseLong(analyze(abandoned, request(null)).analysisRunId());
+    final long recentRun = Long.parseLong(analyze(recent, request(null)).analysisRunId());
+    final long activeRun = Long.parseLong(analyze(active, request(null)).analysisRunId());
+    Instant end = Instant.now().minus(Duration.ofDays(90)).truncatedTo(ChronoUnit.MICROS);
+    tx.executeWithoutResult(ignored -> {
+      sessions.findById(abandoned.sessionId()).orElseThrow().abandon(end);
+      sessions.findById(recent.sessionId()).orElseThrow().end(end.plusSeconds(1), 1000);
+    });
+
+    retention.purgeDue(end.plus(Duration.ofDays(90)));
+
+    assertTrue(runs.findById(abandonedRun).isEmpty());
+    assertTrue(runs.findById(recentRun).isPresent());
+    assertTrue(runs.findById(activeRun).isPresent());
   }
 
   @Test
