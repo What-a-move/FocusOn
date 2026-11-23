@@ -24,7 +24,7 @@
 
 ## 데이터 설계
 
-- V28: `analysis_runs.match_status` VARCHAR(16) NULL. CHECK: NULL이거나, 값 목록 안이면서 `relation = 'RELATED'` 그리고 `analysis_status = 'COMPLETED'`.
+- V28: `analysis_runs.match_status` VARCHAR(16) NULL. CHECK: NULL이거나, 값 목록 안이면서 `relation = 'RELATED'` 그리고 `analysis_status = 'COMPLETED'`. 큰 테이블이라 `NOT VALID`로 새 행부터 검사한다(기존 행은 모두 NULL).
 - ERD 8.1은 V26 목록에 적혀 있지만 V26·V27은 #300·#301이 이미 써서 V28로 둔다.
 - 화면 원문은 저장하지 않는다.
 

@@ -5,7 +5,7 @@
 - `AnalysisDtos.MatchStatus`(`MATCHED`/`FAR`/`NOT_ENOUGH`) 추가, 분석 응답 `Response`에 `matchStatus`.
 - `AnalysisAiClient.normalize`: 확정 RELATED일 때만 AI의 `matchStatus`를 읽는다. 없거나 허용 밖 값이면 판정은 유지하고 null.
 - `AnalysisDecision`: 확정 RELATED가 아니면 `matchStatus`를 비우는 규칙을 레코드에 둬서 어느 경로로 만들어도 지켜진다.
-- `AnalysisRunEntity`·V28: `analysis_runs.match_status` VARCHAR(16) NULL + CHECK(값 목록, RELATED·COMPLETED일 때만).
+- `AnalysisRunEntity`·V28: `analysis_runs.match_status` VARCHAR(16) NULL + CHECK(값 목록, RELATED·COMPLETED일 때만, `NOT VALID`로 기존 행 검사 생략 — CodeRabbit 리뷰 반영).
 - `docs/API_CONTRACT.md`에 필드와 규칙 기록. POST 응답과 GET 이력에 함께 담긴다.
 
 ## 테스트
