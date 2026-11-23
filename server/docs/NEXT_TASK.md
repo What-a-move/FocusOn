@@ -1,5 +1,12 @@
 # Backend 다음 작업
 
+## Issue #319 화면 판정 matchStatus (2026-11-23)
+
+- AI: 내부 판정 응답에 `matchStatus`를 넣어 배포한다. 배포 전에는 서버가 null로 둔다.
+- 문서 오너: ERD 8.1의 `match_status`는 V26이 아니라 V28로 적는다.
+- 후속: `GOAL_ADD_PROMPT`(RELATED + FAR 10분)·할 일별 시간(MATCHED만)은 할 일 여러 개 판정 Issue에서 진행한다.
+- 다음 마이그레이션은 V29부터.
+
 ## Issue #301 휴식 제안 생성 (2026-11-21)
 
 - 문서 오너: Notion API 명세 개입 항목에 `breakEvidence` 반영, 설계서 8.1 "이탈 1회" 정의 확인.
