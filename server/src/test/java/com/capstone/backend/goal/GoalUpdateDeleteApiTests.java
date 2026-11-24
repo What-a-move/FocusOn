@@ -120,6 +120,37 @@ class GoalUpdateDeleteApiTests {
     }
   }
 
+  /** 할 일 상태만 바꾸는 요청도 사용자 잠금을 기다려 동시 수정·삭제를 되돌리지 않는다. */
+  @Test
+  void postgresTodoOnlyUpdateWaitsForUserLock() throws Exception {
+    try (Connection blocker = jdbc.getDataSource().getConnection()) {
+      assumeTrue("PostgreSQL".equals(blocker.getMetaData().getDatabaseProductName()));
+      LoginResponse owner = desktop("todo-lock-" + UUID.randomUUID());
+      String id = createGoal(owner);
+      blocker.setAutoCommit(false);
+      try (var statement = blocker.prepareStatement(
+          "SELECT id FROM users WHERE id = ? FOR UPDATE")) {
+        statement.setLong(1, Long.parseLong(owner.user().userId()));
+        try (var result = statement.executeQuery()) {
+          assertTrue(result.next());
+        }
+      }
+      try (var pool = Executors.newSingleThreadExecutor()) {
+        var response = pool.submit(() -> mvc.perform(patch("/api/v1/goals/" + id)
+            .header("Authorization", token(owner)).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"todoStatus\":\"DONE\"}")).andReturn().getResponse().getStatus());
+        try {
+          org.junit.jupiter.api.Assertions.assertThrows(
+              java.util.concurrent.TimeoutException.class,
+              () -> response.get(1, TimeUnit.SECONDS), "잠금이 풀리기 전에 끝나면 안 된다");
+        } finally {
+          blocker.rollback();
+        }
+        assertEquals(200, response.get(10, TimeUnit.SECONDS));
+      }
+    }
+  }
+
   private void assertRequestsWaitForUserLock(boolean update) throws Exception {
     try (Connection blocker = jdbc.getDataSource().getConnection()) {
       assumeTrue("PostgreSQL".equals(blocker.getMetaData().getDatabaseProductName()));

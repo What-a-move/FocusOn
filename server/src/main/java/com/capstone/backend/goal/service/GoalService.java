@@ -310,6 +310,9 @@ public class GoalService {
   public GoalResponse update(FocusOnPrincipal principal, String goalId, UpdateGoalRequest request) {
     boolean profileGiven = request.goalProfile() != null && !request.goalProfile().isNull();
     if (request.goalText() == null && !profileGiven && request.todoStatus() != null) {
+      // 엔티티 전체를 다시 쓰므로 다른 수정·삭제와 같은 사용자 잠금 아래에서 읽어야 그 사이
+      // 커밋된 범위·문구·삭제를 옛 값으로 되돌리지 않는다.
+      lockUser(principal.userId());
       GoalEntity goal = findGoal(principal.userId(), goalId);
       goal.markTodo(request.todoStatus(), Instant.now());
       return response(goal);
