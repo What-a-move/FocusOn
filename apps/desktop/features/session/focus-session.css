@@ -101,7 +101,25 @@
 .focus-window .session-goals .num[data-c="2"] { background: var(--fo-todo-2); }
 .focus-window .session-goals .num[data-c="3"] { background: var(--fo-todo-3); color: #fff; }
 .focus-window .add-goal-button { margin-top: 14px; }
-.focus-window .add-goal-form { display: grid; gap: 10px; text-align: left; }
-.focus-window .add-goal-form label { font-weight: 700; }
-.focus-window .add-goal-form input, .focus-window .add-goal-form select { width: 100%; min-height: 44px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); }
-.focus-window .add-goal-form :is(input, select):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* 할 일 추가 창 (FocusOn-design/session.html `#add-dialog`) */
+.focus-window dialog.add-dialog { text-align: left; }
+.focus-window .add-dialog .poki { display: block; }
+.focus-window .add-dialog h2 { text-align: center; }
+.focus-window .add-field { margin: 20px 0 0; padding: 0; border: 0; min-width: 0; }
+.focus-window .add-field label, .focus-window .replace-head { display: block; margin-bottom: 8px; padding: 0; font-size: 14px; font-weight: 700; }
+.focus-window .add-input { width: 100%; height: 52px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; outline: none; }
+.focus-window .add-input:focus { border-color: var(--ink); }
+.focus-window .add-input[aria-invalid="true"] { border-color: var(--danger); }
+.focus-window .add-count { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.focus-window .replace-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.focus-window .replace-list li { min-width: 0; }
+.focus-window .replace-list label { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 46px; margin: 0; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.focus-window .replace-list label span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.focus-window .replace-list input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--brand); }
+.focus-window .replace-list label:has(input:checked) { border-color: var(--brand); }
+.focus-window .replace-list label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.focus-window dialog .replace-note { margin-top: 8px; font-size: 13px; }
+.focus-window .add-error { margin-top: 12px; }
+.focus-window .add-error strong { display: block; color: var(--danger); font-size: 14px; }
+.focus-window .add-error span { display: block; margin-top: 2px; color: var(--ink); font-size: 14px; }
+.focus-window .toast { position: fixed; left: 50%; bottom: 72px; z-index: 5; padding: 12px 18px; border-radius: 12px; background: var(--ink); color: var(--surface); font-size: 14px; font-weight: 600; transform: translateX(-50%); animation: onboarding-fade-in .3s ease-out; }
