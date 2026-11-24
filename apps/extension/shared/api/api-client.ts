@@ -76,8 +76,10 @@ export function createApiClient({ baseUrl, store, request = fetch, sleep = (ms) 
   const classOf = (code: string, status: number): ErrorClass =>
     status === 401 || status === 403 ? 'auth' : status === 429 ? 'rate_limit' : code === 'INVALID_RESPONSE' ? 'bad_response' : 'unknown'
 
+  // [주의] 코드 없는 403은 우리 API 응답이 아니라 서버 CORS가 Extension origin을 막은 것이다(Spring 'Invalid CORS request').
+  //        네트워크 끊김으로 보이지 않게 따로 구분한다(extension-popup-cors-shown-as-offline-ERROR.md).
   const errorCode = (status: number, payload: unknown) =>
-    isRecord(payload) && typeof payload.code === 'string' ? payload.code : status === 503 ? 'SERVICE_UNAVAILABLE' : status === 504 ? 'REQUEST_TIMEOUT' : 'REQUEST_FAILED'
+    isRecord(payload) && typeof payload.code === 'string' ? payload.code : status === 403 ? 'ORIGIN_NOT_ALLOWED' : status === 503 ? 'SERVICE_UNAVAILABLE' : status === 504 ? 'REQUEST_TIMEOUT' : 'REQUEST_FAILED'
 
   async function relink(): Promise<{ success: false; error: ApiError }> {
     // [주의] 갱신이 막힌 토큰을 계속 쓰지 않도록 지운다. 사용자는 Desktop에서 새 연결 코드를 받아야 한다.

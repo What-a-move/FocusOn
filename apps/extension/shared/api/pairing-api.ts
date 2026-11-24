@@ -65,7 +65,7 @@ export async function submitPairing(codeDisplay: string, baseUrl = resolveApiBas
   if (response.status !== 201) {
     const code = typeof payload === 'object' && payload !== null && typeof (payload as { code?: unknown }).code === 'string'
       ? (payload as { code: string }).code
-      : response.status === 429 ? 'TOO_MANY_REQUESTS' : 'SERVICE_UNAVAILABLE'
+      : response.status === 429 ? 'TOO_MANY_REQUESTS' : response.status === 403 ? 'ORIGIN_NOT_ALLOWED' : 'SERVICE_UNAVAILABLE'
     const retryAfter = Number(response.headers.get('Retry-After'))
     const details = typeof payload === 'object' && payload !== null ? (payload as { details?: { remainingAttempts?: unknown } }).details : undefined
     const remaining = typeof details?.remainingAttempts === 'number' && details.remainingAttempts >= 0 ? details.remainingAttempts : undefined
@@ -100,6 +100,7 @@ export function describePairingError(error: PairingError): PairingNotice {
     case 'LINK_005_CANCELLED': return { title: '취소된 코드예요.', lines: ['데스크톱 앱에서 새 코드를 받아 주세요.'] }
     case 'TOO_MANY_REQUESTS': return { title: '입력이 너무 잦았어요.', lines: [error.retryAfterSeconds ? `${error.retryAfterSeconds}초 뒤에 다시 입력해 주세요.` : '잠시 후 다시 입력해 주세요.'] }
     case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '서버에 연결할 수 없어요.', lines: ['인터넷 연결을 확인해 주세요.'] }
+    case 'ORIGIN_NOT_ALLOWED': return { title: '서버가 이 확장 프로그램의 요청을 막았어요.', lines: ['서버의 허용 주소 설정을 확인해 주세요.', '오류 코드 ORIGIN_NOT_ALLOWED'] }
     case 'EXTENSION_CONTEXT_REQUIRED': return { title: 'Chrome 확장 프로그램에서 열어 주세요.', lines: ['Chrome 오른쪽 위의 FocusOn 아이콘을 눌러 연결해 주세요.'] }
     case 'STORAGE_UNAVAILABLE': return { title: '연결 정보를 저장하지 못했어요.', lines: ['Chrome을 다시 연 뒤 새 코드로 연결해 주세요.'] }
     case 'SERVICE_UNAVAILABLE': return { title: '연결하지 못했어요.', lines: ['잠시 후 다시 시도해 주세요.'] }
