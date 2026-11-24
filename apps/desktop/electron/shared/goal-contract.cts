@@ -30,7 +30,8 @@ export type ClarifyResult = {
   goalProfileDraft?: GoalProfile
 }
 export type CreateGoalInput = { goalText: string; confirmationSource: ConfirmationSource; clarificationSessionId?: string; goalProfile?: GoalProfile; idempotencyKey?: string }
-export type CreatedGoal = { goalId: string; goalText: string; confirmationSource: ConfirmationSource }
+// goalProfile: 목록 조회에만 온다(목표 확인 화면). 형식이 어긋나면 범위 없이 읽어 할 일 이름만으로 보여 준다.
+export type CreatedGoal = { goalId: string; goalText: string; confirmationSource: ConfirmationSource; goalProfile?: GoalProfile }
 
 export type OpenGoalList = { items: CreatedGoal[]; nextCursor: string | null }
 
@@ -126,7 +127,8 @@ export function parseClarifyResult(value: unknown): ClarifyResult | null {
 
 export function parseCreatedGoal(value: unknown): CreatedGoal | null {
   if (!isRecord(value) || !isId(value.goalId) || !isValidGoalText(value.goalText) || !SOURCES.includes(value.confirmationSource as ConfirmationSource)) return null
-  return { goalId: value.goalId, goalText: value.goalText, confirmationSource: value.confirmationSource as ConfirmationSource }
+  return { goalId: value.goalId, goalText: value.goalText, confirmationSource: value.confirmationSource as ConfirmationSource,
+    ...(isGoalProfile(value.goalProfile) ? { goalProfile: value.goalProfile } : {}) }
 }
 
 export function parseOpenGoalList(value: unknown): OpenGoalList | null {

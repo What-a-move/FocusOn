@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 할 일 고르기 · 목표 확인 (PR #329, `feat/desktop-todo-pick`)
+- 상태: 할 일 고르기(최대 3개)·목표 확인(보기 전용)·집중 준비 요약 구현, 브라우저 가짜 응답으로 상태 확인(2026-11-24). 남은 일: 실제 서버 목록으로 앱 확인, 할 일 지우기(DELETE IPC), 범위 편집은 서버 `PATCH goalProfile` 이후. [기획](features/todo-pick-PLAN.md)
+
 - DR-024·DR-030: 실제 로그인 환경에서 목표 프로필 저장, 최대 3개 시작, 추가 제안의 포키 및 macOS 알림 클릭, 오래된 버전 처리까지 한 세션으로 검증한다. [기획](features/session-goal-profile-PLAN.md) · [결과](features/session-goal-profile-REPORT.md)
 
 - 작업명: 강도별 포키 딴짓 알림 ([#282](https://github.com/What-a-move/FocusOn/issues/282), `codex/282-desktop-poki-intensity`)

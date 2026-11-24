@@ -62,3 +62,55 @@
   .todo-card { min-height: 72px; padding: 16px 18px; }
 }
 @media (prefers-reduced-motion: reduce) { .todo-card, .todo-wrap, .todo-window .hl::after { animation: none; } .todo-window .hl::after { transform: none; } }
+
+/* ---------- 목표 확인: 할 일마다 넘겨 보는 범위 (FocusOn-design/todo-goals.html 2. 목표 확인) ---------- */
+.review-wrap { display: flex; flex-direction: column; width: min(1100px, calc(100% - 48px)); min-height: 100%; margin: 0 auto; padding: 24px 0 32px; animation: onboarding-fade-in .35s var(--ease) both; }
+.review-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; margin: 0 72px; }
+.onboarding-window.todo-window .review-head .poki { width: 56px; height: 56px; flex: 0 0 56px; }
+.review-head h1 { margin: 0; color: var(--muted); font-size: 20px; font-weight: 700; }
+.todo-window .pager { display: flex; justify-content: center; gap: 8px; }
+.todo-window .pager button { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 6px; border: 0; border-radius: 99px; background: none; color: var(--muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: color .2s ease; }
+.todo-window .pager button .badge { width: 24px; height: 24px; flex-basis: 24px; font-size: 12px; background: var(--c); opacity: .55; transition: opacity .2s ease; }
+.todo-window .pager button span:last-child { max-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: max-width .4s var(--ease); }
+.todo-window .pager button[aria-current="true"] { padding-right: 12px; color: var(--ink); }
+.todo-window .pager button[aria-current="true"] .badge { opacity: 1; }
+.todo-window .pager button[aria-current="true"] span:last-child { max-width: 260px; }
+.todo-window .pager button:focus-visible, .arrow-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* 제목 줄은 위, 할 일 내용은 남은 공간 세로 가운데. 넘치면 위에서부터(safe) */
+.center-zone { flex: 1; display: flex; flex-direction: column; justify-content: safe center; padding: 28px 0 8px; }
+.stage { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; align-items: center; gap: 16px; }
+.arrow-btn { display: grid; place-items: center; align-self: start; width: 52px; height: 52px; margin-top: -10px; border: 1.5px solid var(--ghost-edge); border-radius: 50%; background: var(--surface); box-shadow: 0 3px 0 var(--ghost-edge); color: var(--ink); font-size: 22px; font-weight: 700; cursor: pointer; transition: transform .1s ease, box-shadow .1s ease, opacity .2s ease; }
+.arrow-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 var(--ghost-edge); }
+.arrow-btn:disabled { opacity: 0; pointer-events: none; }
+/* 트랙 높이는 가장 긴 할 일에 맞춰져 넘길 때 위치가 흔들리지 않는다 */
+.viewport { overflow: hidden; }
+.track { display: flex; align-items: flex-start; transition: transform .5s var(--ease); }
+.slide { flex: 0 0 100%; min-width: 0; padding: 4px 2px 6px; transition: opacity .4s var(--ease); }
+.slide[aria-hidden="true"] { opacity: .25; }
+.slide-head { display: flex; align-items: center; gap: 12px; }
+.todo-window .slide-head .badge { width: 32px; height: 32px; flex-basis: 32px; font-size: 15px; background: var(--c); }
+.slide-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.slide-head .count { color: var(--faint); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.todo-window .label { margin: 0; color: var(--muted); font-size: 14px; font-weight: 700; }
+.core-block { margin-top: 28px; padding: 24px 28px 26px; border-radius: 22px; background: var(--fo-gold-soft); }
+.core-list { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+.core-list li { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 44px; padding: 0 18px; border-radius: 99px; background: var(--surface); box-shadow: 0 1px 0 var(--line); font-size: 17px; font-weight: 700; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.core-list li::before { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--c); content: ''; }
+.sub-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.sub-block > div { min-width: 0; padding: 22px 24px 18px; border: 1.5px solid var(--line); border-radius: 22px; }
+.todo-window .items { display: grid; margin: 10px 0 0; padding: 0; list-style: none; }
+.todo-window .items li { display: flex; align-items: center; min-height: 46px; font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.todo-window .items li + li { border-top: 1px solid var(--line); }
+.items-empty { margin: 10px 0 0; color: var(--faint); font-size: 15px; }
+.missing { display: grid; gap: 4px; margin-top: 24px; padding-left: 44px; line-height: 1.5; }
+.missing strong { font-size: 17px; }
+.missing span { color: var(--muted); font-size: 15px; }
+
+@media (max-width: 1000px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .stage .arrow-btn { display: none; }
+  .review-head { margin: 0; }
+}
+@media (max-width: 760px) { .sub-block { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .track, .slide, .review-wrap { transition: none; animation: none; } }
