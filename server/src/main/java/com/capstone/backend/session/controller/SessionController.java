@@ -3,6 +3,7 @@ package com.capstone.backend.session.controller;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.session.dto.SessionDtos.ActiveResponse;
+import com.capstone.backend.session.dto.SessionDtos.AddGoalRequest;
 import com.capstone.backend.session.dto.SessionDtos.EndRequest;
 import com.capstone.backend.session.dto.SessionDtos.EndResponse;
 import com.capstone.backend.session.dto.SessionDtos.ExtendRequest;
@@ -13,6 +14,7 @@ import com.capstone.backend.session.dto.SessionDtos.PauseRequest;
 import com.capstone.backend.session.dto.SessionDtos.PauseResponse;
 import com.capstone.backend.session.dto.SessionDtos.ResumeRequest;
 import com.capstone.backend.session.dto.SessionDtos.ResumeResponse;
+import com.capstone.backend.session.dto.SessionDtos.SessionGoalsResponse;
 import com.capstone.backend.session.dto.SessionDtos.StartRequest;
 import com.capstone.backend.session.dto.SessionDtos.StartResponse;
 import com.capstone.backend.session.service.SessionCommandService;
@@ -205,6 +207,17 @@ public class SessionController {
       @Valid @RequestBody StartRequest request) {
     return com.capstone.backend.common.api.ApiResponse.of(
         sessions.start(principal, deviceId, key, request));
+  }
+
+  /** 실행 중인 세션에 본인 할 일을 추가한다. */
+  @PostMapping("/{sessionId}/goals")
+  @Operation(summary = "실행 중인 세션에 할 일 추가")
+  public com.capstone.backend.common.api.ApiResponse<SessionGoalsResponse> addGoal(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId,
+      @RequestHeader(value = "X-Device-Id", required = false) String deviceId,
+      @Valid @RequestBody AddGoalRequest request) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        sessions.addGoal(principal, deviceId, sessionId, request));
   }
 
   /** 현재 사용자의 활성 세션이 없으면 본문 없이 204를 반환한다. */

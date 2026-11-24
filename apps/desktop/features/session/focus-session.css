@@ -90,3 +90,10 @@
 .focus-window .btn-danger { background: var(--danger-strong); color: #fff; box-shadow: 0 4px 0 var(--danger-edge, #a32218); }
 .focus-window .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
 .focus-window .btn-danger:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--danger-edge, #a32218); transition-duration: .05s; }
+
+.focus-window .session-goals { margin: 8px 0 0; padding-left: 20px; color: var(--muted); list-style: disc; }
+.focus-window .add-goal-button { margin-top: 14px; }
+.focus-window .add-goal-form { display: grid; gap: 10px; text-align: left; }
+.focus-window .add-goal-form label { font-weight: 700; }
+.focus-window .add-goal-form input, .focus-window .add-goal-form select { width: 100%; min-height: 44px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); }
+.focus-window .add-goal-form :is(input, select):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }

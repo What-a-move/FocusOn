@@ -2,11 +2,13 @@ package com.capstone.backend.analysis.service;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
+import com.capstone.backend.analysis.service.AnalysisRunStore.GoalInput;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import java.net.IDN;
 import java.text.Normalizer;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -72,12 +74,21 @@ final class AnalysisPrivacy {
   }
 
   /** 원문을 전송하기 전에 목표·메타데이터·본문 전체에 같은 추가 보호 검사를 적용한다. */
-  static boolean containsSensitive(Request request, String goal) {
+  static boolean containsSensitive(Request request, List<GoalInput> goals) {
     var metadata = request.metadata();
-    return sensitive(goal) || (request.contentPayload() != null
+    return goals.stream().anyMatch(AnalysisPrivacy::sensitiveGoal)
+        || (request.contentPayload() != null
         && sensitive(request.contentPayload().text())) || (metadata != null
         && (sensitive(metadata.appName()) || sensitive(metadata.windowTitle())
         || sensitive(metadata.pageTitle()) || sensitive(metadata.urlHost())));
+  }
+
+  private static boolean sensitiveGoal(GoalInput goal) {
+    var profile = goal.goalProfile();
+    return sensitive(goal.goalText()) || (profile != null && (sensitive(profile.mainTopic())
+        || profile.coreTopics().stream().anyMatch(AnalysisPrivacy::sensitive)
+        || profile.supportingTopics().stream().anyMatch(AnalysisPrivacy::sensitive)
+        || profile.expectedActivities().stream().anyMatch(AnalysisPrivacy::sensitive)));
   }
 
   /** 눈에 보이지 않는 문자로 알려진 민감 패턴 검사를 우회하지 못하게 정규화한다. */

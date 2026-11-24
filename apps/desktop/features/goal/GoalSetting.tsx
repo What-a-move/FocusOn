@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { ConfirmationSource, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
+import type { ConfirmationSource, CreatedGoal, GoalProfile, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
 import { CONFIRMED_GOAL_KEY, goalApi, goalLength, MAX_QUESTIONS, type ClarifyResult } from '../../shared/api/goal-api'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
@@ -13,7 +13,12 @@ type View = 'entry' | 'questions' | 'candidates' | 'review' | 'done'
 type QuestionMode = 'term' | 'scope' | 'multi'
 type Line = { text: string; error?: boolean; typing?: boolean }
 type Feedback = { title: string; body: string; info?: boolean } | null
-type Review = { goal: string; caption: string; source: ConfirmationSource }
+type Review = { goal: string; caption: string; source: ConfirmationSource; profile?: GoalProfile; candidates?: string[]; editableGoal?: boolean }
+const PROFILE_FIELDS = [
+  { key: 'coreTopics', label: '핵심 주제' },
+  { key: 'supportingTopics', label: '보조 주제' },
+  { key: 'expectedActivities', label: '예상 활동' },
+] as const
 
 const EXAMPLES = ['React Query 캐싱 방식 이해하기', '미적분 적분 문제 풀기', '캡스톤 발표 자료 정리하기']
 const STAGE: Record<View, number> = { entry: 0, questions: 1, candidates: 1, review: 2, done: 3 }
@@ -30,7 +35,7 @@ function Options({ labels, selected, onChoose, onSubmit, label }: { labels: stri
   </div>
 }
 
-/** D06·D07 목표 설정 (FocusOn-design/goal-setting.html). AI는 판정만 하고, 질문은 최대 2회, 장애 때는 수동 확정한다. */
+/** D06·D07 목표 설정. AI는 목표와 프로필을 제안하고, 질문은 최대 2회로 제한한다. */
 export function GoalSetting() {
   const router = useRouter()
   const [view, setView] = useState<View>('entry')
@@ -49,6 +54,10 @@ export function GoalSetting() {
   const [selected, setSelected] = useState(-1)
   const [scopeAnswer, setScopeAnswer] = useState('')
   const [review, setReview] = useState<Review | null>(null)
+  const [profileInputs, setProfileInputs] = useState({ coreTopics: '', supportingTopics: '', expectedActivities: '' })
+  const partialSave = useRef<CreatedGoal[]>([])
+  const saveKeys = useRef(new Map<string, string>())
+  const saving = useRef(false)
   const request = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const sayRef = useRef<HTMLParagraphElement>(null)
@@ -79,8 +88,14 @@ export function GoalSetting() {
     queueMicrotask(() => inputRef.current?.focus())
   }
 
-  const toReview = (goal: string, caption: string, source: ConfirmationSource) => {
-    setReview({ goal, caption, source })
+  const toReview = (goal: string, caption: string, source: ConfirmationSource, profile?: GoalProfile, candidates?: string[], editableGoal?: boolean) => {
+    partialSave.current = []
+    setProfileInputs({
+      coreTopics: profile?.coreTopics.join('\n') ?? '',
+      supportingTopics: profile?.supportingTopics.join('\n') ?? '',
+      expectedActivities: profile?.expectedActivities.join('\n') ?? '',
+    })
+    setReview({ goal, caption, source, profile, candidates, editableGoal })
     go('review', { text: '이 목표로 시작할까요?' })
   }
 
@@ -100,7 +115,16 @@ export function GoalSetting() {
     const canAsk = questionsUsed < MAX_QUESTIONS
     switch (result.decision) {
       case 'CLEAR':
-        toReview(result.normalizedGoalText ?? goalText, '확인한 목표', 'AI_CONFIRMED')
+        if (result.goalCandidates.length >= 2) {
+          toReview(result.goalCandidates[0], '나눈 할 일', 'MANUAL_CONFIRMED', undefined, result.goalCandidates)
+        } else if (!result.normalizedGoalText || goalLength(result.normalizedGoalText) < 2 || goalLength(result.normalizedGoalText) > 40) {
+          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED', result.goalProfileDraft, undefined, true)
+        } else {
+          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED', result.goalProfileDraft)
+        }
+        return
+      case 'INVALID':
+        toEntry('목표를 구체적으로 다시 적어 주세요.')
         return
       case 'AMBIGUOUS':
         // 추천 목표를 고르는 것은 질문 횟수에 세지 않는다 (AI 분석 계약 3.3).
@@ -144,24 +168,63 @@ export function GoalSetting() {
   }
 
   const save = async () => {
-    if (!review || busy) return
-    setBusy(true)
-    setFeedback(null)
-    const result = await goalApi.create({
-      goalText: review.goal,
-      confirmationSource: review.source,
-      // 수동 확정이어도 앞서 AI와 나눈 대화가 있으면 같은 id로 이어 기록한다.
-      ...(clarificationSessionId ? { clarificationSessionId } : {}),
-    })
-    setBusy(false)
-    if (!result.success) {
-      if (result.error.code === 'GOAL_TEXT_INVALID') { setDraft(review.goal); toEntry('목표는 2~40자로 적어 주세요.'); setHint({ text: '목표는 2~40자로 적어 주세요.', error: true }); return }
-      setFeedback({ title: '목표를 저장하지 못했어요.', body: errorText(result.error) })
+    if (!review || saving.current) return
+    if (goalLength(review.goal) < 2 || goalLength(review.goal) > 40) {
+      setFeedback({ title: '목표 길이를 확인해 주세요.', body: '목표는 2~40자로 적어 주세요.' })
       return
     }
-    try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify({ goalId: result.data.goalId, goalText: result.data.goalText })) } catch { /* 저장소를 못 써도 목표는 서버에 저장됐다. */ }
-    setReview({ ...review, goal: result.data.goalText })
-    go('done', { text: '' })
+    const profile = review.profile && {
+      ...review.profile,
+      coreTopics: profileInputs.coreTopics.split('\n').map((text) => text.trim()).filter(Boolean),
+      supportingTopics: profileInputs.supportingTopics.split('\n').map((text) => text.trim()).filter(Boolean),
+      expectedActivities: profileInputs.expectedActivities.split('\n').map((text) => text.trim()).filter(Boolean),
+    }
+    if (profile && PROFILE_FIELDS.some(({ key }) => {
+      const values = profile[key]
+      return values.length > 5 || values.some((text) => goalLength(text) > 100)
+        || new Set(values.map((text) => text.toLowerCase())).size !== values.length
+    })) {
+      setFeedback({ title: '세부 항목을 확인해 주세요.', body: '각 목록에 중복 없이 최대 5개, 항목당 100자까지 적어 주세요.' })
+      return
+    }
+
+    saving.current = true
+    setBusy(true)
+    setFeedback(null)
+    try {
+      const terms = review.candidates ?? [review.goal]
+      for (const term of terms.slice(partialSave.current.length)) {
+        const payload = {
+          goalText: term.trim(),
+          confirmationSource: review.source,
+          ...(clarificationSessionId && !review.candidates && !review.editableGoal ? { clarificationSessionId } : {}),
+          ...(profile ? { goalProfile: profile } : {}),
+        }
+        const fingerprint = JSON.stringify(payload)
+        const idempotencyKey = saveKeys.current.get(fingerprint) ?? crypto.randomUUID()
+        saveKeys.current.set(fingerprint, idempotencyKey)
+        const result = await goalApi.create({ ...payload, idempotencyKey })
+        if (!result.success) {
+          if (result.error.code === 'GOAL_TEXT_INVALID' && !review.candidates) {
+            setDraft(review.goal)
+            toEntry('목표는 2~40자로 적어 주세요.')
+            setHint({ text: '목표는 2~40자로 적어 주세요.', error: true })
+          } else {
+            setFeedback({ title: '할 일을 저장하지 못했어요.', body: errorText(result.error) })
+          }
+          return
+        }
+        partialSave.current.push(result.data)
+      }
+      const goals = partialSave.current.map(({ goalId, goalText }) => ({ goalId, goalText }))
+      saveKeys.current.clear()
+      try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(goals)) } catch { /* 저장소를 못 써도 목표는 서버에 저장됐다. */ }
+      setReview({ ...review, goal: goals[0].goalText, candidates: review.candidates && goals.map(({ goalText }) => goalText) })
+      go('done', { text: '' })
+    } finally {
+      setBusy(false)
+      saving.current = false
+    }
   }
 
   const validDraft = () => {
@@ -187,7 +250,7 @@ export function GoalSetting() {
         return
       }
       if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
-      if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'AI_CONFIRMED'); return }
+      if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'MANUAL_CONFIRMED'); return }
       if (selected === 0) { void clarify(draft.trim(), [...answers, { question: question.text, answer: '맞아요' }]); return }
       // 아니에요: 문장을 고치게 한다. 이 질문도 횟수에 들어간다.
       setAnswers([...answers, { question: question.text, answer: '아니에요' }])
@@ -197,7 +260,7 @@ export function GoalSetting() {
     }
     if (view === 'candidates') {
       if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
-      toReview(candidates.options[selected], '고른 목표', 'AI_CONFIRMED')
+      toReview(candidates.options[selected], '고른 목표', 'MANUAL_CONFIRMED')
       return
     }
     if (view === 'review') { void save(); return }
@@ -225,7 +288,7 @@ export function GoalSetting() {
   const onEnter = (event: React.KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) primary() }
 
   const stage = STAGE[view]
-  const primaryLabel = { entry: '다음', questions: '다음', candidates: '이 목표로', review: '이 목표로 정하기', done: '집중 시간 정하기' }[view]
+  const primaryLabel = { entry: '다음', questions: '다음', candidates: '이 목표로', review: review?.candidates ? '할 일 저장하기' : '이 목표로 정하기', done: '집중 시간 정하기' }[view]
   const poki = view === 'questions' || view === 'candidates' ? POKI.thinking : POKI.planning
   const pokiAlt = view === 'questions' || view === 'candidates' ? '생각하는 포키' : '체크리스트를 든 포키'
 
@@ -243,7 +306,8 @@ export function GoalSetting() {
         {view === 'done' && review ? <section className="view done-view" aria-labelledby="done-goal">
           <div>
             <p className="done-label">이번 집중 목표</p>
-            <h2 id="done-goal" tabIndex={-1} ref={doneRef}>{review.goal}</h2>
+            <h2 id="done-goal" tabIndex={-1} ref={doneRef}>{review.candidates ? '할 일을 저장했어요' : review.goal}</h2>
+            {review.candidates && <ul className="review-goals">{review.candidates.map((goal) => <li key={goal}>{goal}</li>)}</ul>}
             <p className="done-ok"><i aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg></i>목표가 정해졌어요. 이제 시간만 정하면 돼요</p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -285,8 +349,23 @@ export function GoalSetting() {
           </div>}
 
           {view === 'review' && review && <div className="panel">
-            <div className="goal-card"><small>{review.caption}</small><p>{review.goal}</p></div>
-            <ul className="rules"><li>한 세션에 목표 하나</li><li>완료 여부는 판단하지 않아요</li></ul>
+            <div className="goal-card"><small>{review.caption}</small>
+              {review.candidates ? <ul className="review-goals">{review.candidates.map((goal) => <li key={goal}>{goal}</li>)}</ul>
+                : review.editableGoal ? <label className="editable-goal">
+                  목표 문장을 2~40자로 확인해 주세요.
+                  <input className="goal-input" type="text" maxLength={40} value={review.goal} disabled={busy}
+                    onChange={(event) => { setReview({ ...review, goal: event.target.value, profile: undefined }); setFeedback(null) }} />
+                </label> : <p>{review.goal}</p>}
+            </div>
+            {review.profile && <fieldset className="goal-profile" disabled={busy}>
+              <legend>목표 세부 항목</legend>
+              <p id="goal-profile-hint">한 줄에 한 항목씩, 목록마다 최대 5개까지 적어 주세요.</p>
+              {PROFILE_FIELDS.map(({ key, label }) => <label key={key}>
+                {label}
+                <textarea rows={Math.max(2, profileInputs[key].split('\n').length)} value={profileInputs[key]} aria-describedby="goal-profile-hint"
+                  onChange={(event) => { setProfileInputs({ ...profileInputs, [key]: event.target.value }); setFeedback(null) }} />
+              </label>)}
+            </fieldset>}
           </div>}
         </section>}
       </div>

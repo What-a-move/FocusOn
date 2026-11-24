@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
+import { useOpenGoals } from './useOpenGoals'
 import { CONFIRMED_GOAL_KEY } from '../../shared/api/goal-api'
 import {
   formatMinutes, isValidMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi,
@@ -30,20 +32,24 @@ function startError(error: { code: string; retryable: boolean }): Feedback {
   }
 }
 
-function readGoal(): { goalId: string; goalText: string } | null {
+function readGoals(): SessionGoal[] {
   try {
     const saved: unknown = JSON.parse(sessionStorage.getItem(CONFIRMED_GOAL_KEY) ?? 'null')
-    if (typeof saved === 'object' && saved !== null && typeof (saved as { goalId?: unknown }).goalId === 'string' && typeof (saved as { goalText?: unknown }).goalText === 'string') {
-      return saved as { goalId: string; goalText: string }
-    }
-  } catch { /* 저장소를 못 읽으면 목표가 없는 것으로 본다. */ }
-  return null
+    const list = Array.isArray(saved) ? saved : [saved]
+    const valid = list.filter((goal): goal is SessionGoal => !!goal && typeof goal.goalId === 'string'
+      && typeof goal.goalText === 'string' && !!goal.goalText.trim())
+    return [...new Map(valid.map((goal) => [goal.goalId, goal])).values()].slice(0, 3)
+  } catch {
+    return []
+  }
 }
 
 /** D09 세션 설정 (FocusOn-design/session-setup.html). 기본값은 서버 집중 설정, 시작은 POST /sessions. */
 export function SessionSetup() {
   const router = useRouter()
-  const [goal, setGoal] = useState<{ goalId: string; goalText: string } | null | undefined>(undefined)
+  const [selectedGoals, setSelectedGoals] = useState<SessionGoal[]>([])
+  const { goals, nextCursor, loading, failed, load } = useOpenGoals()
+  const options = [...new Map([...selectedGoals, ...goals].map((goal) => [goal.goalId, goal])).values()]
   const [duration, setDuration] = useState<string>('60')
   const [custom, setCustom] = useState('40')
   const [level, setLevel] = useState<InterventionLevel>('NORMAL')
@@ -68,7 +74,7 @@ export function SessionSetup() {
   }, [router])
 
   useEffect(() => {
-    queueMicrotask(() => { setGoal(readGoal()); setNow(new Date()) })
+    queueMicrotask(() => { setSelectedGoals(readGoals()); setNow(new Date()) })
     const timer = setInterval(() => setNow(new Date()), 30_000)
     void sessionApi.getFocusSettings().then((result) => {
       if (!result.success) return
@@ -108,12 +114,12 @@ export function SessionSetup() {
   }
 
   const start = async () => {
-    if (busy || started || !goal) return
+    if (busy || started || selectedGoals.length === 0) return
     if (!validMinutes) { customRef.current?.focus(); return }
     if (channels.length === 0) { setChannelError(true); return }
     const payload = {
-      goalId: goal.goalId,
-      goalText: goal.goalText,
+      ...(selectedGoals.length === 1 ? { goalId: selectedGoals[0].goalId } : { goalIds: selectedGoals.map(({ goalId }) => goalId) }),
+      goalText: selectedGoals[0].goalText,
       targetDurationMs: minutes * 60_000,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sessionOptions: { interventionLevel: level, notificationChannels: CHANNELS.map(({ key }) => key).filter((key) => channels.includes(key)), cameraAnalysisEnabled: camera === true },
@@ -156,10 +162,27 @@ export function SessionSetup() {
       <section className="sheet" aria-labelledby="setup-title"><div className="sheet-inner">
         <Link className="back-link" href="/"><span aria-hidden="true">←</span>홈으로</Link>
         <h1 id="setup-title">집중을 준비할게요</h1>
-        <div className={`goal-line${goal === null ? ' is-missing' : ''}`}>
-          <p>{goal === undefined ? '목표를 불러오고 있어요' : goal ? goal.goalText : '먼저 목표를 정해 주세요.'}</p>
-          <Link href="/goal/">{goal ? '수정' : '목표 정하기'}</Link>
-        </div>
+        <fieldset className="group setup-goals" disabled={busy || started}>
+          <legend>이번 세션에 할 일</legend>
+          <p className="goals-status" role="status">{selectedGoals.length}/3개 선택</p>
+          {options.map((goal) => {
+            const checked = selectedGoals.some(({ goalId }) => goalId === goal.goalId)
+            return <label className="goal-choice" key={goal.goalId}>
+              <input type="checkbox" checked={checked} disabled={!checked && selectedGoals.length >= 3}
+                onChange={() => {
+                  setSelectedGoals((current) => checked ? current.filter(({ goalId }) => goalId !== goal.goalId) : [...current, goal].slice(0, 3))
+                  setFeedback(null)
+                }} />
+              {goal.goalText}
+            </label>
+          })}
+          {loading && <p role="status">할 일을 불러오고 있어요.</p>}
+          {failed && <p role="alert">할 일 목록을 불러오지 못했어요. <button type="button" className="btn btn-ghost" onClick={() => { void load(nextCursor ?? undefined) }}>다시 시도</button></p>}
+          {!loading && !failed && options.length === 0 && <p>저장한 할 일이 없어요.</p>}
+          {!failed && nextCursor && <button type="button" className="btn btn-ghost" disabled={loading}
+            onClick={() => { void load(nextCursor) }}>할 일 더 보기</button>}
+          <Link className="new-goal" href="/goal/">새 할 일 정하기</Link>
+        </fieldset>
 
         <div className="group" role="radiogroup" aria-labelledby="duration-title">
           <div className="group-head"><h2 id="duration-title">집중 시간</h2></div>
@@ -209,7 +232,7 @@ export function SessionSetup() {
             </div>
           </div>}
           <p>카메라 <strong>{camera === null ? '확인하지 못했어요' : camera ? '사용 중' : '사용 안 함'}</strong></p>
-          <button className="btn btn-primary" type="button" onClick={() => { void start() }} disabled={busy || started || !goal}>
+          <button className="btn btn-primary" type="button" onClick={() => { void start() }} disabled={busy || started || selectedGoals.length === 0}>
             {busy ? '시작하는 중…' : started ? '시작했어요' : <>집중 시작하기 <span aria-hidden="true">→</span></>}
           </button>
         </div>

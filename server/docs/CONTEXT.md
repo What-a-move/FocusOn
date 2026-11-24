@@ -1,5 +1,12 @@
 # Backend 작업 컨텍스트
 
+## DR-030 목표 프로필·세션 할 일 연동 (2026-11-24)
+
+- 목표 다듬기 응답에 검증한 프로필을 공개하고, 목표 생성은 사용자 수정본·기존 초안·내부 확장 순으로 사용한다. 프로필 확장 실패에도 목표는 저장한다.
+- 세션은 목표 1~3개의 문구·프로필을 사본으로 고정한다. 목표 추가 때 목표 버전만 올라가며, 분석 응답에는 검증된 매칭 ID와 요청 시점의 목표 버전을 남긴다(V30).
+- v2에서 현재 전경의 본문 판정 RELATED+FAR가 10분 쌓였을 때만 세션당 한 번 포키에 할 일 추가를 제안한다(V31). 근거 부족과 분석 대기 중에는 합산을 멈춘다.
+- [기획서](features/session-goal-profile-PLAN.md) · [결과](features/session-goal-profile-REPORT.md)
+
 ## Issue #313 할 일 목록 (2026-11-23)
 
 - `GET /goals`(상태 필터·cursor)와 `todoStatus`(OPEN/DONE, V29)를 추가했다. 상태만 바꾸는 PATCH는 활성 세션 중에도 허용한다. 계획: `features/goal-todo-list-PLAN.md`.

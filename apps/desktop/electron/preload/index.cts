@@ -84,12 +84,15 @@ const focusOnApi: FocusOnApi = {
       goalText: input.goalText,
       confirmationSource: input.confirmationSource,
       ...(input.clarificationSessionId ? { clarificationSessionId: input.clarificationSessionId } : {}),
+      ...(input.goalProfile ? { goalProfile: input.goalProfile } : {}),
+      ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
     }),
+    listOpen: (cursor) => ipcRenderer.invoke(GOAL_CHANNELS.listOpen, cursor ?? null),
   },
   sessions: {
     getFocusSettings: () => ipcRenderer.invoke(SESSION_CHANNELS.focusSettings),
     start: (input) => ipcRenderer.invoke(SESSION_CHANNELS.start, {
-      goalId: input.goalId,
+      ...(input.goalIds ? { goalIds: [...input.goalIds] } : { goalId: input.goalId }),
       targetDurationMs: input.targetDurationMs,
       timeZone: input.timeZone,
       sessionOptions: {
@@ -100,6 +103,7 @@ const focusOnApi: FocusOnApi = {
       idempotencyKey: input.idempotencyKey,
       goalText: input.goalText,
     }),
+    addGoal: (input) => ipcRenderer.invoke(SESSION_CHANNELS.addGoal, { sessionId: input.sessionId, goalId: input.goalId, goalVersion: input.goalVersion }),
     getCurrent: () => ipcRenderer.invoke(SESSION_CHANNELS.current),
     onChanged(callback) {
       const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => { callback(isSessionSnapshot(payload) ? payload : null) }

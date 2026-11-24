@@ -1,8 +1,8 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { GOAL_CHANNELS, isValidClarifyInput, isValidCreateGoalInput, parseClarifyResult, parseCreatedGoal } from '../shared/goal-contract.cjs'
-import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal } from '../shared/goal-contract.cjs'
+import { GOAL_CHANNELS, isValidClarifyInput, isValidCreateGoalInput, isGoalListCursor, parseClarifyResult, parseCreatedGoal, parseOpenGoalList } from '../shared/goal-contract.cjs'
+import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../shared/goal-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -21,9 +21,18 @@ export class GoalService {
   }
 
   create(input: CreateGoalInput): Promise<ApiResult<CreatedGoal>> {
-    const body: CreateGoalInput = { goalText: input.goalText.trim(), confirmationSource: input.confirmationSource }
+    const body: Omit<CreateGoalInput, 'idempotencyKey'> = { goalText: input.goalText.trim(), confirmationSource: input.confirmationSource }
     if (input.clarificationSessionId) body.clarificationSessionId = input.clarificationSessionId
-    return this.auth.authorizedRequest({ path: '/api/v1/goals', method: 'POST', expectedStatus: 201, parse: parseCreatedGoal, body })
+    if (input.goalProfile) body.goalProfile = input.goalProfile
+    return this.auth.authorizedRequest({
+      path: '/api/v1/goals', method: 'POST', expectedStatus: 201, parse: parseCreatedGoal, body,
+      ...(input.idempotencyKey ? { headers: { 'Idempotency-Key': input.idempotencyKey } } : {}),
+    })
+  }
+
+  listOpen(cursor: string | null): Promise<ApiResult<OpenGoalList>> {
+    const query = cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''
+    return this.auth.authorizedRequest({ path: `/api/v1/goals?todoStatus=OPEN${query}`, method: 'GET', expectedStatus: 200, parse: parseOpenGoalList })
   }
 }
 
@@ -42,4 +51,5 @@ export function registerGoalIpc(getMainWindow: () => BrowserWindow | null, rende
 
   handle(GOAL_CHANNELS.clarify, isValidClarifyInput, (s, input) => s.clarify(input))
   handle(GOAL_CHANNELS.create, isValidCreateGoalInput, (s, input) => s.create(input))
+  handle(GOAL_CHANNELS.listOpen, isGoalListCursor, (s, cursor) => s.listOpen(cursor))
 }

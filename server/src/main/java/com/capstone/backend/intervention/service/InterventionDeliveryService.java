@@ -7,6 +7,7 @@ import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.intervention.dto.InterventionDtos.Delivery;
 import com.capstone.backend.intervention.dto.InterventionDtos.DeliveryReceipt;
 import com.capstone.backend.intervention.dto.InterventionDtos.DispatchStatus;
+import com.capstone.backend.intervention.dto.InterventionDtos.Type;
 import com.capstone.backend.intervention.persistence.InterventionDeliveryEntity;
 import com.capstone.backend.intervention.persistence.InterventionDeliveryRepository;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
@@ -70,7 +71,8 @@ public class InterventionDeliveryService {
     if (request.dispatchStatus() == DispatchStatus.SENT) {
       event.confirmDelivery(now);
     }
-    Instant cooldown = event.getDeliveryConfirmedAt() == null ? null
+    Instant cooldown = event.getType() == Type.GOAL_ADD_PROMPT
+        || event.getDeliveryConfirmedAt() == null ? null
         : event.getDeliveryConfirmedAt().plusSeconds(300);
     var saved = deliveries.saveAndFlush(InterventionDeliveryEntity.create(event.getId(), nonce,
         request.dispatchStatus(), json.writeValueAsString(channels), now, cooldown));

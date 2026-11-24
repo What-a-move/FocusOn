@@ -1,6 +1,10 @@
 # AI API 계약 초안
 
-> 2026-11-23 화면 분석은 10,168건 E5 분류기를 사용한다. 기존 `POST /internal/v1/analysis-runs` envelope와 출력 5개 필드를 사용한다. 활동 분류의 STUDY/OFF_TASK/UNCERTAIN을 각각 RELATED/UNRELATED/UNCERTAIN으로 전달한다. 목표 스냅샷은 세션 검증에 사용한다.
+> 2026-11-24 DR-030: 서버는 `request.goals`에 목표 1~3개(`goalId`, `goalText`, 선택적 `goalProfile`)와 `request.goalVersion`을 보낸다. 호환 스냅샷을 함께 보내면 첫 목표와 버전이 일치해야 한다. `RELATED` 응답의 `matchStatus`는 `MATCHED`·`FAR`·`NOT_ENOUGH`이며 일치한 목표 ID는 `matchedGoalId`에 담는다. 다른 활동 라벨은 두 필드가 null이다.
+>
+> `POST /internal/v1/goals/profile`는 인증된 서버 요청의 확정 목표(`goalText`, `locale`)를 Claude에 전달해 `{goalProfile}`을 반환한다. 명확성 검사는 반복하지 않는다.
+
+> 2026-11-23 화면 분석은 10,168건 E5 분류기를 사용한다. 활동 분류의 STUDY/OFF_TASK/UNCERTAIN을 각각 RELATED/UNRELATED/UNCERTAIN으로 전달한다. 목표 스냅샷은 세션 검증에 사용한다.
 >
 > 메타데이터의 딴짓 후보는 보류하고 Chrome DOM 또는 데스크톱 OCR 텍스트에서 재판정한다. OCR 품질은 선택 입력이다. 분류 점수 차이 1%p와 최고 점수 하한 0.60은 AI 내부 기준이다. 응답은 `confidence: null` 및 `promptVersion: e5-activity-v1-uncalibrated`로 미보정 판정임을 표시한다.
 >

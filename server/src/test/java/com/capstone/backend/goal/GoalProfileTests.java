@@ -38,7 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/** 목표 세분화가 공개 응답에 나오지 않고, AI 확인 목표에만 저장되고, 세션에 고정되는지 본다. */
+/** 목표 세분화의 공개 편집·저장·확정 시점 사본을 검증한다. */
 @SpringBootTest
 @ActiveProfiles({"local", "test"})
 class GoalProfileTests {
@@ -63,12 +63,12 @@ class GoalProfileTests {
   }
 
   @Test
-  void clearGoalProfileIsStoredHiddenAndClearedOnTextChange() throws Exception {
+  void clearGoalProfileIsVisibleStoredAndClearedOnTextChange() throws Exception {
     var owner = desktop();
     aiReturns(PROFILE);
     String sessionId = clarify(owner)
         .andExpect(jsonPath("$.data.clarityStatus").value("CLEAR"))
-        .andExpect(jsonPath("$.data.goalProfileDraft").doesNotExist())
+        .andExpect(jsonPath("$.data.goalProfileDraft.coreTopics[0]").value("컴포넌트"))
         .andExpect(jsonPath("$.data.profile").doesNotExist())
         .andReturn().getResponse().getContentAsString();
     String goalId = create(owner, ConfirmationSource.AI_CONFIRMED,
@@ -95,6 +95,45 @@ class GoalProfileTests {
         json.readTree(body).path("data").path("clarificationSessionId").asText());
     assertNull(profileJson(goalId));
     assertNull(profileJson(create(owner, ConfirmationSource.MANUAL_CONFIRMED, null)));
+  }
+
+  @Test
+  void editedProfileOverridesDraftAndInvalidEditsAreRejected() throws Exception {
+    var owner = desktop();
+    aiReturns(PROFILE);
+    String clarified = clarify(owner).andReturn().getResponse().getContentAsString();
+    String sessionId = json.readTree(clarified).at("/data/clarificationSessionId").asString();
+    var body = json.createObjectNode();
+    body.put("goalText", "리액트 공부").put("confirmationSource", "AI_CONFIRMED")
+        .put("clarificationSessionId", sessionId);
+    body.set("goalProfile", json.readTree(PROFILE.replace("\"컴포넌트\"", "\"useState\"")));
+    String created = mvc.perform(post("/api/v1/goals")
+            .header("Authorization", "Bearer " + owner.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.data.goalProfile.coreTopics[0]").value("useState"))
+        .andReturn().getResponse().getContentAsString();
+    String goalId = json.readTree(created).at("/data/goalId").asString();
+    JsonNode stored = json.readTree(profileJson(goalId));
+    assertEquals("useState", stored.at("/coreTopics/0").asString());
+
+    body.remove("clarificationSessionId");
+    body.put("confirmationSource", "MANUAL_CONFIRMED");
+    body.set("goalProfile", json.readTree(PROFILE.replace("[\"컴포넌트\",\"훅\"]",
+        "[\"React\",\"react\"]")));
+    mvc.perform(post("/api/v1/goals").header("Authorization", "Bearer " + owner.accessToken())
+            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void manualConfirmedGoalUsesInternalProfileEndpoint() throws Exception {
+    var owner = desktop();
+    when(ai.profile(org.mockito.ArgumentMatchers.eq("리액트 공부"), any()))
+        .thenReturn(json.readTree("{\"goalProfile\":" + PROFILE + "}"));
+    String goalId = create(owner, ConfirmationSource.MANUAL_CONFIRMED, null);
+    assertEquals("React", json.readTree(profileJson(goalId)).path("mainTopic").asString());
+    org.mockito.Mockito.verify(ai, org.mockito.Mockito.never()).clarify(any());
   }
 
   @Test

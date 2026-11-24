@@ -10,10 +10,10 @@ const { AnalysisSender } = require('../../dist-electron/main/analysis-sender.cjs
 const AT = new Date('2026-10-26T10:00:30Z')
 const meta = { observedAt: '2026-10-26T10:00:15Z', guardStatus: null, contentSource: 'APP_META', metadata: { appName: 'Preview', windowTitle: 'notes.pdf' }, key: 'com.apple.Preview\nnotes.pdf', windowId: 42 }
 
-function setup({ relation = 'UNRELATED', ocr = '미분 계수 정의와 극한', showing = [true, true] } = {}) {
+function setup({ relation = 'UNRELATED', matchStatus, ocr = '미분 계수 정의와 극한', showing = [true, true] } = {}) {
   const sent = []; const ocrCalls = []
   const deps = {
-    send: async (_sessionId, observation) => { sent.push(observation); return { analysisRunId: String(sent.length), relation: sent.length === 1 ? relation : 'RELATED', confidence: 0.9, reasonCode: null, observedAt: observation.observedAt, policyVersion: 'v1' } },
+    send: async (_sessionId, observation) => { sent.push(observation); return { analysisRunId: String(sent.length), relation: sent.length === 1 ? relation : 'RELATED', matchStatus, confidence: 0.9, reasonCode: null, observedAt: observation.observedAt, policyVersion: 'v1' } },
     ocr: async (windowId) => { ocrCalls.push(windowId); return ocr },
     stillShowing: () => showing.shift() ?? true,
     now: () => AT,
@@ -30,14 +30,22 @@ test('앱 정보 결과가 관련 없음·판단 보류면 그 창의 글자로 
   }
 })
 
-test('관련 있음이거나 제외·민감 관측이면 OCR하지 않는다', async () => {
-  const related = setup({ relation: 'RELATED' })
+test('일치한 관련 있음이거나 제외·민감 관측이면 OCR하지 않는다', async () => {
+  const related = setup({ relation: 'RELATED', matchStatus: 'MATCHED' })
   await analyzeObservation(related.deps, '901', meta)
   const guarded = setup()
   await analyzeObservation(guarded.deps, '901', { observedAt: meta.observedAt, guardStatus: 'EXCLUDED' })
   const noWindow = setup()
   await analyzeObservation(noWindow.deps, '901', { ...meta, windowId: null })
   assert.deepEqual([related.ocrCalls, guarded.ocrCalls, noWindow.ocrCalls], [[], [], []])
+})
+
+test('목표와 맞는지 확인되지 않은 관련 화면은 OCR한다', async () => {
+  for (const matchStatus of ['FAR', 'NOT_ENOUGH', null, undefined]) {
+    const t = setup({ relation: 'RELATED', matchStatus })
+    await analyzeObservation(t.deps, '901', meta)
+    assert.deepEqual(t.ocrCalls, [42], String(matchStatus))
+  }
 })
 
 test('응답이나 OCR을 기다리는 사이 다른 화면으로 옮겼으면 늦은 결과로 보내지 않는다', async () => {

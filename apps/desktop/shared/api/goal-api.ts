@@ -1,4 +1,4 @@
-import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal } from '../../electron/shared/goal-contract.cjs'
+import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../../electron/shared/goal-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -22,6 +22,7 @@ async function viaGoals<T>(call: (api: NonNullable<Window['focusOn']>['goals']) 
 export const goalApi = {
   clarify: (input: ClarifyInput) => viaGoals<ClarifyResult>((api) => api.clarify(input)),
   create: (input: CreateGoalInput) => viaGoals<CreatedGoal>((api) => api.create(input)),
+  listOpen: (cursor?: string) => viaGoals<OpenGoalList>((api) => api.listOpen(cursor)),
 }
 
 /** 저장한 목표를 세션 설정 화면으로 넘긴다. 목표 문구와 id만 두며 민감 정보가 아니다. */

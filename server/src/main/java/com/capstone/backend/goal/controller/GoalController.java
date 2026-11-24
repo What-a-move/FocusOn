@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -84,8 +85,10 @@ public class GoalController {
   })
   public com.capstone.backend.common.api.ApiResponse<GoalResponse> create(
       @AuthenticationPrincipal FocusOnPrincipal principal,
+      @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
       @Valid @RequestBody CreateGoalRequest request) {
-    return com.capstone.backend.common.api.ApiResponse.of(goals.create(principal, request));
+    return com.capstone.backend.common.api.ApiResponse.of(
+        goals.create(principal, request, idempotencyKey));
   }
 
   /** 본인 할 일 목록을 최신순으로 조회한다. */

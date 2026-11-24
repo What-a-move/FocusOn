@@ -228,7 +228,7 @@ DELETE /api/v1/goals/{goalId}
 POST   /api/v1/goals/clarify
 ```
 
-목표 응답(`POST`·`GET`·`PATCH`)은 `{ goalId, goalText, confirmationSource, todoStatus }`다. `todoStatus`는 사용자가 직접 표시하는 할 일 상태 `OPEN`·`DONE`이며 새 목표는 `OPEN`이다(2026-11-23 #313, 재설계 1차). 서버가 완료를 판정하지 않는다.
+목표 응답(`POST`·`GET`·`PATCH`)은 `{ goalId, goalText, confirmationSource, todoStatus, goalProfile }`다. 프로필은 없으면 null이다. `todoStatus`는 사용자가 직접 표시하는 할 일 상태 `OPEN`·`DONE`이며 새 목표는 `OPEN`이다(2026-11-23 #313, 재설계 1차). 서버가 완료를 판정하지 않는다.
 
 `GET /api/v1/goals`(할 일 목록, #313): 삭제하지 않은 본인 목표를 최신순(`goalId DESC`)으로 반환한다. `todoStatus`로 거를 수 있고, 없으면 전체다. `limit` 기본 20·1~50. 응답은 `{items:[목표 응답], nextCursor}`이며 마지막 페이지면 `nextCursor=null`이다. `nextCursor`는 불투명 문자열이므로 그대로 `cursor`로 보낸다. 잘못된 `todoStatus`·`limit`·`cursor`는 400 `VALIDATION_ERROR`다.
 
@@ -246,6 +246,10 @@ POST   /api/v1/goals/clarify
 
 응답의 `data`에는 기존 `decision`, `normalizedGoalText`, `question`, `suggestions`, `goalCandidates`, `conversationTurn`과 함께 서버가 발급한 문자열 `clarificationSessionId`가 있다. 이후 요청은 같은 ID와 `previousAnswers: [{question, answer}]`를 보낸다. `POST /api/v1/goals`에서 최종 목표를 저장할 때도 받은 ID를 전달한다. AI를 거치지 않은 수동 확정은 이 ID를 필수로 요구하지 않는다.
 
+`POST /api/v1/goals`의 선택 헤더 `Idempotency-Key`는 UUID다. 같은 사용자·키·요청 본문으로 24시간 안에 재시도하면 기존 생성 결과를 돌려준다. 같은 키의 다른 본문은 409 `IDEMPOTENCY_CONFLICT`다.
+
+DR-030 명확화 응답의 `goalProfileDraft`에는 대표 주제·목적·세 분류 목록이 들어간다. 사용자가 확인·수정한 프로필은 생성 요청의 `goalProfile`로 보낼 수 있다. 초안이 없는 확정 목표는 서버가 Goal AI에 직접 확장을 요청하고 최종 실패 시에도 목표는 저장한다. 여러 목표로 분리된 응답은 `CLEAR`와 `goalCandidates`로 전달해 후보마다 별도 할 일로 저장한다.
+
 서버는 대화 ID의 사용자 소유·유효성을 검증하고, 클라이언트가 보낸 질문·턴을 권위 있는 이력으로 무조건 신뢰하지 않는다. Desktop은 이 POST를 자동 재전송하지 않는다. AI 일시 장애·timeout 재시도는 Backend에서 1초 → 3초 간격으로 최대 2회만 수행하며, 내부 재시도로 대화 턴이나 질문 수를 중복 증가시키지 않는다. 최종 실패는 기존 목표 분석 오류로 반환하고 Desktop은 수동 확정을 제공한다.
 
 ### 세션
@@ -260,11 +264,14 @@ POST /api/v1/sessions/{sessionId}/resume
 POST /api/v1/sessions/{sessionId}/extend
 POST /api/v1/sessions/{sessionId}/end
 POST /api/v1/sessions/{sessionId}/heartbeats
+POST /api/v1/sessions/{sessionId}/goals
 ```
 
 `GET /api/v1/sessions/active`의 `data`에는 `accumulatedAt`과 `serverNow`(ISO-8601 UTC)가 있다. `accumulatedAt`은 `accumulatedActiveMs`가 확정된 서버 시각(서버가 마지막 heartbeat를 받은 시각과 마지막 재개 시각 중 늦은 값)이고, 상태가 `RUNNING`이 아니면 `null`이다. `serverNow`는 응답을 만든 서버 시각이다. 클라이언트는 `RUNNING`일 때 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 세며 두 값 모두 서버 시계이므로 사용자 시계와 무관하다.
 
 `POST /api/v1/sessions/{sessionId}/heartbeats`의 `data`는 `{ status, lastHeartbeatAt, accumulatedActiveMs, pauseReason, version }`이다. `version`은 응답 시점의 세션 명령 버전으로, 목표 시간에 닿아 `AWAITING_END_CONFIRMATION`으로 바뀐 응답에서는 증가한 값이라 `If-Match-Version`에 바로 쓸 수 있다. 필드 추가만이라 기존 클라이언트에 영향이 없다.
+
+세션 시작은 단일 `goalId` 또는 순서가 있는 `goalIds` 1~3개 중 하나를 받는다. 시작·활성 응답의 `goals: [{goalId, goalText}]`와 `goalVersion`은 시작 시 고정한 목표 사본을 나타낸다. 실행 중 같은 Desktop은 `POST /api/v1/sessions/{sessionId}/goals`에 `{goalId, goalVersion}`으로 본인의 새 할 일을 하나 추가할 수 있다. 추가 시 목표 목록 버전만 증가한다.
 
 세션 생성의 필수 헤더는 `Authorization`, `X-Device-Id`, `Idempotency-Key`다. 기존 세션이 아직 없으므로 생성에 `If-Match-Version`을 요구하지 않는다.
 
@@ -299,9 +306,11 @@ POST /api/v1/interventions/{interventionId}/deliveries
 POST /api/v1/sessions/{sessionId}/local-events
 ```
 
-`GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`, `matchStatus`를 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
+`GET /api/v1/sessions/{sessionId}/analysis-runs`는 Desktop 전용이며 `Authorization`을 사용한다. 본인 세션의 저장된 분석 결과를 `data` 배열로 반환한다. 각 항목은 `analysisRunId`, `analysisStatus`, `relation`, `confidence`, `reasonCode`, `observedAt`, `policyVersion`, `matchStatus`, `matchedGoalId`를 포함한다. `observedAt` 오름차순이며 동일 시각은 저장 ID 오름차순이다. 이력이 없으면 빈 배열, 세션이 없거나 타인 소유면 `404 SESSION_NOT_FOUND`를 반환한다. [Notion API 명세](https://app.notion.com/p/d6db8ba5fb1e44d8b3eb6cb08a43a2b1)
 
-`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs, breakEvidence }`이다. `breakEvidence`는 `BREAK_SUGGESTION`에만 있는 `{ repeatCount, windowMinutes }`(예: 최근 9분 동안 3회)이고 `OFF_TASK`는 `null`이다(2026-11-21 #301 — 서버 제안, 문서 오너 확인 필요). `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+`GET /api/v1/sessions/{sessionId}/interventions`는 배열을 반환하고 각 항목은 `{ interventionId, type, status, channels, createdAt, policyVersion, observationContextId, remainingTtlMs, breakEvidence }`이다. `breakEvidence`는 `BREAK_SUGGESTION`에만 있는 `{ repeatCount, windowMinutes }`(예: 최근 9분 동안 3회)이고 `OFF_TASK`는 `null`이다(2026-11-21 #301 — 서버 제안, 문서 오너 확인 필요). `interventionId`는 acknowledgements 경로에 쓰는 문자열 ID다. MVP `type`은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)·`GOAL_ADD_PROMPT`(할 일 추가 안내)이며, 종료 확인은 heartbeat의 `AWAITING_END_CONFIRMATION`으로 처리하므로 개입 목록에 넣지 않는다. Desktop은 정하지 않은 `type`을 표시하지 않는다(2026-11-02 확정).
+
+v2에서 확정 본문 관측의 `RELATED / FAR`가 유효 전경 기준으로 누적 10분이면 할 일이 3개 미만인 세션에 한 번 `GOAL_ADD_PROMPT`를 만든다. `NOT_ENOUGH`, 미완료 분석 및 전경을 확인할 수 없는 시간은 제외한다. 이 시간은 딴짓으로 집계하지 않는다.
 
 서버는 설계서 「학습 세션 · 타이머 · 휴식 제안」 8.1에 따라 `BREAK_SUGGESTION`을 만든다(#301). 강도별 반복 기준(약하게 60초·보통 30초·적극 20초)을 넘긴 딴짓 구간을 이탈 1회로 보고, 시작 시각이 서로 5분 이내로 이어진 이탈이 3회 이상이며 지금 딴짓 중이고 알림 간격이 지났을 때 이탈 알림 대신 휴식 제안을 만든다. `breakSuggestionEnabled`가 꺼져 있으면 만들지 않고, 같은 실행 구간(재개 시각)에서는 한 번만 만든다. 판단 보류·보호 화면 시간은 이탈 시간에 들어가지 않는다.
 

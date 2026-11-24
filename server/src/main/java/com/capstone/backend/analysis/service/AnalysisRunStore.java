@@ -1,6 +1,7 @@
 package com.capstone.backend.analysis.service;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.GuardStatus;
+import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Response;
 import com.capstone.backend.analysis.persistence.AnalysisRunEntity;
@@ -13,9 +14,11 @@ import com.capstone.backend.auth.security.TokenFamilyGuard;
 import com.capstone.backend.auth.service.AuthRateLimiter;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.goal.service.GoalProfile;
 import com.capstone.backend.intervention.service.InterventionPolicyService;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionGoalRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.AnalysisExcludedDomainRepository;
 import com.capstone.backend.user.persistence.UserConsentEntity;
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 /** AI 호출 밖의 짧은 transaction 경계. 기존 사용자 잠금 순서를 유지한다. */
 @Service
@@ -41,6 +45,8 @@ public class AnalysisRunStore {
   private final TokenFamilyRepository families;
   private final TokenFamilyGuard familyGuard;
   private final LearningSessionRepository sessions;
+  private final SessionGoalRepository sessionGoals;
+  private final ObjectMapper json;
   private final AnalysisRunRepository runs;
   private final UserConsentRepository consents;
   private final AnalysisExcludedDomainRepository exclusions;
@@ -91,7 +97,8 @@ public class AnalysisRunStore {
     run.bindContext(foreground.requireForRun(session, device.getId(),
         request.observationContextId(), now));
     run.order(order.eligible(), order.untrusted());
-    GuardStatus guard = guard(principal.userId(), request, session.getGoalTextSnapshot());
+    var verifiedGoals = goalInputs(session);
+    GuardStatus guard = guard(principal.userId(), request, verifiedGoals);
     if (order.untrusted()) {
       guard = AnalysisObservationOrder.retainGuard(guard, current);
     }
@@ -108,7 +115,8 @@ public class AnalysisRunStore {
     interventionPolicy.prepared(session, run, policyCurrent, guard != null, now);
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),
-        session.getInterventionPolicyVersion(), guard, latest, run.response());
+        session.getInterventionPolicyVersion(), guard, latest, run.response(),
+        session.getGoalVersion(), verifiedGoals);
   }
 
   /** 호출 중의 unlink·동의 철회·세션 전이를 다시 확인하고 해당 이력만 완료한다. */
@@ -120,14 +128,20 @@ public class AnalysisRunStore {
     var device = lockAndValidate(principal);
     var session = ownedSession(principal, prepared.sessionId(), device);
     var run = runs.findById(prepared.runId()).orElseThrow();
-    var guard = guard(principal.userId(), request, session.getGoalTextSnapshot());
+    var guard = guard(principal.userId(), request, prepared.goals());
+    Long matchedGoalId = decision.matchedGoalId();
     if (guard != null) {
       decision = AnalysisDecision.guarded(guard);
     } else if (!prepared.latest() || run.isOrderingUntrusted() || !run.isCurrentEligible()
         || session.getStatus() != SessionStatus.RUNNING
+        || session.getGoalVersion() != prepared.goalVersion()
         || !java.util.Objects.equals(session.getLastResumedAt(), prepared.runningSince())) {
       // pause/resume 동안 도착한 결과로 새 실행 구간을 판정하지 않는다.
       decision = AnalysisDecision.unavailable();
+    } else if (decision.matchStatus() == MatchStatus.MATCHED
+        && (matchedGoalId == null || prepared.goals().stream()
+            .noneMatch(goal -> goal.goalId().equals(matchedGoalId.toString())))) {
+      decision = decision.withoutGoalAttribution();
     }
     run.complete(decision);
     interventionPolicy.completed(session, run, Instant.now());
@@ -163,8 +177,19 @@ public class AnalysisRunStore {
     return session;
   }
 
+  private List<GoalInput> goalInputs(LearningSessionEntity session) {
+    var snapshots = sessionGoals.findByIdSessionIdOrderByIdPositionAsc(session.getId());
+    if (snapshots.isEmpty()) {
+      return List.of(new GoalInput(session.getGoal().getId().toString(),
+          session.getGoalTextSnapshot(), null));
+    }
+    return snapshots.stream().map(row -> new GoalInput(row.getGoalId().toString(),
+        row.getGoalTextSnapshot(), row.getGoalProfileSnapshotJson() == null ? null
+            : GoalProfile.fromDraft(json.readTree(row.getGoalProfileSnapshotJson())))).toList();
+  }
+
   /** 동의 철회·제외 목록 변경을 AI 전후에 확인해 오래된 허용 상태를 사용하지 않는다. */
-  private GuardStatus guard(long userId, Request request, String goal) {
+  private GuardStatus guard(long userId, Request request, List<GoalInput> goals) {
     if (request.guardStatus() == GuardStatus.PRIVACY_BLOCKED) {
       return GuardStatus.PRIVACY_BLOCKED;
     }
@@ -185,14 +210,26 @@ public class AnalysisRunStore {
     if (excluded) {
       return GuardStatus.EXCLUDED;
     }
-    return AnalysisPrivacy.containsSensitive(request, goal) ? GuardStatus.PRIVACY_BLOCKED : null;
+    return AnalysisPrivacy.containsSensitive(request, goals) ? GuardStatus.PRIVACY_BLOCKED : null;
   }
 
-  /** Entity나 원문을 transaction 밖으로 유출하지 않는 서버 snapshot이다. */
+  /** 화면 원문 없이 저장했던 목표 사본만 내부 AI로 전달한다. */
+  public record GoalInput(String goalId, String goalText, GoalProfile goalProfile) {}
+
+  /** Entity나 화면 원문을 transaction 밖으로 유출하지 않는 서버 snapshot이다. */
   public record Prepared(long runId, long sessionId, long goalId, long sessionVersion,
       Instant runningSince,
       String goalSnapshot, String policyVersion, GuardStatus guard, boolean latest,
-      Response initialResponse) {
+      Response initialResponse, long goalVersion, List<GoalInput> goals) {
+    /** 기존 단일 목표 요청에 맞는 초기 목표 집합이다. */
+    public Prepared(long runId, long sessionId, long goalId, long sessionVersion,
+        Instant runningSince, String goalSnapshot, String policyVersion, GuardStatus guard,
+        boolean latest, Response initialResponse) {
+      this(runId, sessionId, goalId, sessionVersion, runningSince, goalSnapshot, policyVersion,
+          guard, latest, initialResponse, 1,
+          List.of(new GoalInput(Long.toString(goalId), goalSnapshot, null)));
+    }
+
     @Override
     public String toString() {
       return "PreparedAnalysis[redacted]";

@@ -1,3 +1,7 @@
+## DR-030 연동 확인
+
+- 연동 환경에서 `RELATED / NOT_ENOUGH` 탭의 후속 DOM 요청과 탭 변경 시 취소를 확인한다.
+
 # Extension 다음 작업
 
 > Frontend(`apps`) 담당자는 Extension 작업 시작 전에 이 문서를 확인하고, 작업 종료 후 다음 작업을 갱신한다.

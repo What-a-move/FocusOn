@@ -11,6 +11,7 @@ export const COPY = {
   NORMAL: { say: '어? 또 딴 데 보고 있네 👀', sub: '목표로 돌아가자!' },
   ACTIVE: { say: '어 얘 봐라? 또 놀고 있네 😏', sub: '이러다 오늘 목표 다 날아간다?' },
   BREAK: { say: '벌써 세 번째 흐트러졌어.', sub: '잠깐 쉬었다 갈까?' },
+  GOAL_ADD: { say: '지금 하는 일도 할 일에 넣을까?', sub: '추가하면 이번 세션에서 함께 볼게.' },
 } as const
 
 export function nextOffTaskStage(level: InterventionLevel, normalStreak: number): { stage: OffTaskPresentation['stage']; streak: number } {
@@ -23,13 +24,13 @@ export function nextOffTaskStage(level: InterventionLevel, normalStreak: number)
 const CHANNELS: readonly string[] = ['MOLE_UI', 'MACOS_NOTIFICATION', 'SOUND']
 const NORMAL_STREAK_WINDOW_MS = 10 * 60_000
 
-const TYPES = ['OFF_TASK', 'BREAK_SUGGESTION'] as const
+const TYPES = ['OFF_TASK', 'BREAK_SUGGESTION', 'GOAL_ADD_PROMPT'] as const
 /** observationContextId: 알림을 만든 전경 context(null은 예전 이력). remainingTtlMs: 서버 기준 남은 표시 가능 시간(ms). */
 export type PendingIntervention = { interventionId: string; type: (typeof TYPES)[number]; channels: string[]; observationContextId: string | null; remainingTtlMs: number | null }
 
 /**
  * 알림 목록 응답에서 아직 보이지 않은(PENDING) 알림만 꺼낸다. 배열 또는 { interventions: [] } 둘 다 읽는다.
- * type은 `OFF_TASK`(이탈 알림)·`BREAK_SUGGESTION`(휴식 제안)만 보여 준다. 그 밖의 type은 Desktop이 표시하지 않는다(결정 035).
+ * 이탈 알림, 휴식 제안, 할 일 추가 제안만 Desktop이 표시한다.
  */
 export function parsePending(value: unknown): PendingIntervention[] | null {
   const list = Array.isArray(value) ? value : (value as { interventions?: unknown } | null)?.interventions
@@ -108,8 +109,12 @@ export class InterventionWatcher {
       const deadline = startedAt + next.remainingTtlMs
       const canShow = () => this.deps.isCurrent(sessionId) && this.deps.currentContext() === context && this.now() < deadline
       this.seen.add(next.interventionId)
-      const kind = next.type === 'BREAK_SUGGESTION' ? 'BREAK' : 'OFF_TASK'
-      const payload: FloatingShow = { interventionId: next.interventionId, kind, level: options.interventionLevel, goalText, ...COPY[kind === 'BREAK' ? 'BREAK' : options.interventionLevel] }
+      const kind = next.type === 'BREAK_SUGGESTION' ? 'BREAK' : next.type === 'GOAL_ADD_PROMPT' ? 'GOAL_ADD' : 'OFF_TASK'
+      const payload: FloatingShow = {
+        interventionId: next.interventionId, kind, level: options.interventionLevel, goalText,
+        ...(kind === 'GOAL_ADD' ? { sessionId } : {}),
+        ...COPY[kind === 'OFF_TASK' ? options.interventionLevel : kind],
+      }
       // 알림에 채널이 없으면 세션 시작 때 고른 채널을 쓴다. 아는 채널만 쓴다.
       const channels = (next.channels.length ? next.channels : options.notificationChannels).filter((channel) => CHANNELS.includes(channel))
       const receipt: Receipt = { interventionId: next.interventionId, clientDeliveryId: this.uuid(), dispatchStatus: 'DISPATCHING', channels: [] }

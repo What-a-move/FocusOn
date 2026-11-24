@@ -2,12 +2,14 @@ package com.capstone.backend.goal.dto;
 
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
 import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
+import com.capstone.backend.goal.service.GoalProfile;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
 
 /** 목표 API 요청과 응답이다. */
 public final class GoalDtos {
@@ -19,7 +21,8 @@ public final class GoalDtos {
   public record CreateGoalRequest(
       @Schema(example = "Spring Security 인증 구현") String goalText,
       @NotNull ConfirmationSource confirmationSource,
-      @Schema(description = "AI 명확화 대화 ID (선택)") String clarificationSessionId) {}
+      @Schema(description = "AI 명확화 대화 ID (선택)") String clarificationSessionId,
+      @Schema(implementation = GoalProfile.class) JsonNode goalProfile) {}
 
   /**
    * 목표 수정 요청이다. 보낸 필드만 바꾼다. 활성 세션이 참조 중이면 todoStatus만 바꿀 수 있다.
@@ -47,11 +50,11 @@ public final class GoalDtos {
   /** 목표 명확화 응답과 서버가 관리하는 대화 ID다. */
   public record ClarifyGoalResponse(ClarifyStatus clarityStatus, String normalizedGoalText,
       String question, List<String> suggestions, List<String> goalCandidates,
-      int conversationTurn, String clarificationSessionId) {}
+      int conversationTurn, String clarificationSessionId, GoalProfile goalProfileDraft) {}
 
   /** 저장하거나 조회한 목표의 공개 정보다. */
   public record GoalResponse(String goalId, String goalText,
-      ConfirmationSource confirmationSource, TodoStatus todoStatus) {}
+      ConfirmationSource confirmationSource, TodoStatus todoStatus, GoalProfile goalProfile) {}
 
   /** 할 일 목록 한 페이지다. 마지막 페이지면 nextCursor는 null이다. */
   public record GoalListResponse(List<GoalResponse> items, String nextCursor) {}

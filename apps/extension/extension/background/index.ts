@@ -1,5 +1,6 @@
 // Service Worker 진입점: Chrome 이벤트를 TabAnalyzer에 잇는다 (화면 분석 3단계, 결정 014).
 // [주의] Listener는 최상위에서 바로 등록한다. Worker는 언제든 꺼졌다 다시 켜질 수 있다.
+import type { MatchStatus } from '@focuson/shared-types'
 import { getDeviceId } from '../../shared/api/extension-auth'
 import { chromeLogStore, createLogger } from '../../shared/lib/logger'
 import { client, getActiveSession } from '../../shared/api/session-api'
@@ -64,15 +65,18 @@ const analyzer = new TabAnalyzer({
     const context = await client.authorized(`/api/v1/sessions/${sessionId}/observation-context`, 'GET', 200, (data) => ({ data }), { headers })
     const observationContextId = context.success ? pickContextId(context.data.data, headers['X-Device-Id'] ?? null) : null
     const result = await client.authorized(`/api/v1/sessions/${sessionId}/analysis-runs`, 'POST', 200, (data) => {
-      const relation = (data as { relation?: unknown } | null)?.relation
-      return typeof relation === 'string' ? { relation } : null
+      const run = data as { relation?: unknown; matchStatus?: unknown } | null
+      if (typeof run?.relation !== 'string') return null
+      const status = run.matchStatus
+      const matchStatus: MatchStatus | null = status === 'MATCHED' || status === 'FAR' || status === 'NOT_ENOUGH' ? status : null
+      return { relation: run.relation, matchStatus }
     }, {
       body: observationContextId ? { ...body, observationContextId } : body, headers,
       // 로그를 서버 판정 기록과 잇도록 traceId는 clientRunId를 그대로 쓴다. 제목·본문은 로거가 글자 수로만 남긴다.
       traceId: body.clientRunId,
       logFields: { sessionId, contentSource: body.contentSource, guardStatus: body.guardStatus, domain: body.metadata?.urlHost, title: body.metadata?.pageTitle, text: body.contentPayload?.text },
     })
-    return result.success ? { ok: true, relation: result.data.relation } : { ok: false, code: result.error.code }
+    return result.success ? { ok: true, ...result.data } : { ok: false, code: result.error.code }
   },
   async loadTracking() {
     return ((await chrome.storage.session.get(KEYS.tracking))[KEYS.tracking] as Tracking | undefined) ?? null

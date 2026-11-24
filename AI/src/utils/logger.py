@@ -13,6 +13,10 @@ ALLOWED_METADATA = {
     "error_code",
     "http_status",
     "path",
+    "traceId",
+    "durMs",
+    "module",
+    "component",
 }
 
 

@@ -26,8 +26,12 @@ export function FloatingPoki() {
     <BreakAlert key={show.interventionId} show={show} lift={lift} />
   </main>
   const act = async (action: InterventionAction) => {
-    await window.focusOn?.interventions.act({ interventionId: show.interventionId, action })
+    return window.focusOn?.interventions.act({ interventionId: show.interventionId, action })
   }
+
+  if (show.kind === 'GOAL_ADD') return <main className="floating-root">
+    <GoalAddAlert key={show.interventionId} show={show} lift={lift} />
+  </main>
 
   // F07은 세션이 실제로 멈춘 오류라 시스템 안내(존댓말)·빨간 글자로 보여 준다(결정 031).
   return <main className="floating-root">
@@ -50,6 +54,41 @@ export function FloatingPoki() {
       </div>
     </div>
   </main>
+}
+
+function GoalAddAlert({ show, lift }: { show: FloatingShow; lift: number }) {
+  const [busy, setBusy] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const api = window.focusOn?.interventions
+  const hover = { onPointerEnter: () => api?.setInteractive(true), onPointerLeave: () => api?.setInteractive(false) }
+  const open = async () => {
+    if (busy) return
+    setBusy(true)
+    setFailed(false)
+    try {
+      const result = await api?.act({ interventionId: show.interventionId, action: 'OPEN_APP' })
+      setFailed(result?.success !== true)
+    } catch {
+      setFailed(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return <div className="stack" style={{ '--lift': `${lift}px` } as React.CSSProperties}>
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img className="poki" {...hover} src="/design/poki-peek-chrome-disconnected.png" alt="" />
+    <div {...hover} className="card" role="status">
+      <div className="card-body">
+        <span>{show.say}</span>
+        <small>{show.sub}</small>
+        {failed && <small role="alert">세션을 열지 못했어요. 다시 시도해 주세요.</small>}
+        <div className="say-actions">
+          <button type="button" className="primary" disabled={busy} onClick={() => { void open() }}>할 일 추가</button>
+          <button type="button" disabled={busy} onClick={() => { void api?.act({ interventionId: show.interventionId, action: 'CLOSE' }) }}>지금은 괜찮아요</button>
+        </div>
+      </div>
+    </div>
+  </div>
 }
 
 // 처음 한 번은 누르는 방법을 안내한다. 이 기기에만 기억한다.

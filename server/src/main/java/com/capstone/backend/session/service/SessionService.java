@@ -10,6 +10,9 @@ import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalRepository;
 import com.capstone.backend.session.dto.SessionDtos.ActiveResponse;
+import com.capstone.backend.session.dto.SessionDtos.AddGoalRequest;
+import com.capstone.backend.session.dto.SessionDtos.SessionGoal;
+import com.capstone.backend.session.dto.SessionDtos.SessionGoalsResponse;
 import com.capstone.backend.session.dto.SessionDtos.StartRequest;
 import com.capstone.backend.session.dto.SessionDtos.StartResponse;
 import com.capstone.backend.session.persistence.IdempotencyRecordEntity;
@@ -29,12 +32,15 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
@@ -87,7 +93,7 @@ public class SessionService {
         if (!record.getRequestHash().equals(hash)) {
           throw new ApiException(ApiErrorCode.IDEMPOTENCY_CONFLICT);
         }
-        return mapper.readValue(record.getResponseBodyJson(), StartResponse.class);
+        return replayStart(record.getResponseBodyJson());
       }
       // 만료된 기록은 같은 사용자·명령·키의 유일 제약에 걸리지 않도록 먼저 삭제한다.
       records.delete(record);
@@ -110,9 +116,9 @@ public class SessionService {
       throw new ApiException(ApiErrorCode.SESSION_START_REQUIREMENT_MISSING);
     }
     // 존재하지 않는 목표와 다른 사용자의 목표를 모두 같은 404로 처리한다.
-    var goal = goals.findByIdAndUserIdAndDeletedAtIsNull(parseGoalId(request.goalId()),
-        user.getId()).filter(g -> g.getStatus() == GoalEntity.Status.ACTIVE)
-        .orElseThrow(() -> new ApiException(ApiErrorCode.GOAL_NOT_FOUND));
+    var selectedGoals = requestedGoalIds(request).stream()
+        .map(id -> activeGoal(user.getId(), id)).toList();
+    var goal = selectedGoals.getFirst();
     var device = devices.findById(principal.deviceId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
     ZoneId zone = zone(request.timeZone());
@@ -122,11 +128,16 @@ public class SessionService {
         request.targetDurationMs().longValueExact(), zone.getId(),
         startedAt.atZone(zone).toLocalDate(), mapper.writeValueAsString(request.sessionOptions()),
         POLICY_VERSION, startedAt));
-    // 목표 문구·세분화 사본을 세션 목표 목록에 고정한다. 지금은 목표 1개라 position 1만 쓴다.
-    sessionGoals.save(SessionGoalEntity.snapshot(session.getId(), 1, goal));
+    List<SessionGoalEntity> snapshots = new ArrayList<>(selectedGoals.size());
+    for (int index = 0; index < selectedGoals.size(); index++) {
+      snapshots.add(SessionGoalEntity.snapshot(session.getId(), index + 1,
+          selectedGoals.get(index)));
+    }
+    sessionGoals.saveAll(snapshots);
     var response = new StartResponse(session.getId().toString(), session.getStatus(),
         session.getVersion(), session.getTargetDurationMs(), session.getAccumulatedActiveMs(),
-        session.getStartedAt(), session.getInterventionPolicyVersion());
+        session.getStartedAt(), session.getInterventionPolicyVersion(), publicGoals(snapshots),
+        session.getGoalVersion());
     // 세션과 응답을 같은 트랜잭션에 저장해야 중복 요청이 최초 응답을 재현할 수 있다.
     records.save(IdempotencyRecordEntity.create(user, START_SCOPE, idempotencyKey, hash,
         (short) 201, mapper.writeValueAsString(response), startedAt,
@@ -134,14 +145,109 @@ public class SessionService {
     return response;
   }
 
+  private StartResponse replayStart(String responseJson) {
+    var response = mapper.readValue(responseJson, StartResponse.class);
+    if (response.goalVersion() > 0) {
+      return response;
+    }
+    var session = sessions.findById(Long.valueOf(response.sessionId()))
+        .orElseThrow(() -> new ApiException(ApiErrorCode.SESSION_NOT_FOUND));
+    return new StartResponse(response.sessionId(), response.status(), response.version(),
+        response.targetDurationMs(), response.accumulatedActiveMs(), response.startedAt(),
+        response.interventionPolicyVersion(),
+        publicGoals(List.of(SessionGoalEntity.legacySnapshot(session))), 1);
+  }
+
+  /** 실행 Desktop만 목표를 추가한다. 이미 포함한 목표는 안전하게 재시도할 수 있다. */
+  @Transactional
+  public SessionGoalsResponse addGoal(FocusOnPrincipal principal, String deviceId,
+      String sessionId, AddGoalRequest request) {
+    DeviceHeaderValidator.require(deviceId, principal);
+    if (principal.deviceType() != UserDeviceEntity.DeviceType.DESKTOP) {
+      throw new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED);
+    }
+    long id;
+    try {
+      id = Long.parseLong(sessionId);
+    } catch (NumberFormatException exception) {
+      throw new ApiException(ApiErrorCode.SESSION_NOT_FOUND);
+    }
+    users.findByIdForUpdate(principal.userId())
+        .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+    var session = sessions.findOwnedForUpdate(id, principal.userId())
+        .filter(row -> row.getRunnerDevice().getId().equals(principal.deviceId()))
+        .orElseThrow(() -> new ApiException(ApiErrorCode.SESSION_NOT_FOUND));
+    if (session.getStatus() != SessionStatus.RUNNING) {
+      throw new ApiException(ApiErrorCode.SESSION_STATE_INVALID);
+    }
+    long goalId = parseGoalId(request.goalId());
+    long version = session.getGoalVersion();
+    var snapshots = sessionGoals.findByIdSessionIdOrderByIdPositionAsc(id);
+    var ordered = new ArrayList<>(snapshots.isEmpty()
+        ? List.of(SessionGoalEntity.legacySnapshot(session)) : snapshots);
+    if (request.goalVersion() <= version
+        && ordered.stream().anyMatch(row -> row.getGoalId() == goalId)) {
+      return new SessionGoalsResponse(publicGoals(ordered), version);
+    }
+    if (request.goalVersion() != version) {
+      throw new ApiException(ApiErrorCode.SESSION_VERSION_CONFLICT);
+    }
+    if (ordered.size() == 3) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    var goal = activeGoal(principal.userId(), goalId);
+    if (snapshots.isEmpty()) {
+      sessionGoals.save(ordered.getFirst());
+    }
+    var added = SessionGoalEntity.snapshot(id, ordered.size() + 1, goal);
+    sessionGoals.save(added);
+    ordered.add(added);
+    if (sessions.incrementGoalVersion(id, version) != 1) {
+      throw new ApiException(ApiErrorCode.SESSION_VERSION_CONFLICT);
+    }
+    return new SessionGoalsResponse(publicGoals(ordered), version + 1);
+  }
+
+  private List<Long> requestedGoalIds(StartRequest request) {
+    if (request.goalIds() == null && request.goalId() != null) {
+      return List.of(parseGoalId(request.goalId()));
+    }
+    if (request.goalId() != null || request.goalIds() == null || request.goalIds().isEmpty()
+        || request.goalIds().size() > 3) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    var ids = request.goalIds().stream().map(this::parseGoalId).toList();
+    if (Set.copyOf(ids).size() != ids.size()) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    return ids;
+  }
+
+  private GoalEntity activeGoal(long userId, long goalId) {
+    return goals.findByIdAndUserIdAndDeletedAtIsNull(goalId, userId)
+        .filter(goal -> goal.getStatus() == GoalEntity.Status.ACTIVE)
+        .orElseThrow(() -> new ApiException(ApiErrorCode.GOAL_NOT_FOUND));
+  }
+
+  private List<SessionGoalEntity> goalSnapshots(LearningSessionEntity session) {
+    var snapshots = sessionGoals.findByIdSessionIdOrderByIdPositionAsc(session.getId());
+    return snapshots.isEmpty() ? List.of(SessionGoalEntity.legacySnapshot(session)) : snapshots;
+  }
+
+  private List<SessionGoal> publicGoals(List<SessionGoalEntity> snapshots) {
+    return snapshots.stream()
+        .map(row -> new SessionGoal(row.getGoalId().toString(), row.getGoalTextSnapshot()))
+        .toList();
+  }
+
   /** 인증한 사용자에게 속한 활성 세션만 반환한다. */
-  @Transactional(readOnly = true)
+  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
   public Optional<ActiveResponse> active(FocusOnPrincipal principal) {
     Instant now = Instant.now();
     return sessions.findByUserIdAndStatusIn(principal.userId(), SessionStatus.activeStatuses())
         .map(s -> new ActiveResponse(s.getId().toString(), s.getStatus(), s.getVersion(),
             s.getGoalTextSnapshot(), s.getTargetDurationMs(), s.getAccumulatedActiveMs(),
-            accumulatedAt(s), now));
+            accumulatedAt(s), now, publicGoals(goalSnapshots(s)), s.getGoalVersion()));
   }
 
   /**

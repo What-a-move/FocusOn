@@ -20,7 +20,7 @@ export type OffTaskPresentation =
   | { stage: 'normal' }
   | { stage: 'active'; art: 1 | 2 | 3 }
 
-export type FloatingShow = { interventionId: string; kind: 'OFF_TASK' | 'BREAK' | 'DISCONNECTED'; level: InterventionLevel; goalText: string; say: string; sub: string; presentation?: OffTaskPresentation }
+export type FloatingShow = { interventionId: string; kind: 'OFF_TASK' | 'BREAK' | 'DISCONNECTED' | 'GOAL_ADD'; sessionId?: string; level: InterventionLevel; goalText: string; say: string; sub: string; presentation?: OffTaskPresentation }
 export const DISCONNECTED_ID = 'local-disconnected'
 /** 카메라 분석(#222)이 Desktop에서 직접 띄운 이탈 알림. 서버 알림이 아니라 확인 기록을 보내지 않는다. */
 export const CAMERA_ID = 'local-camera'
@@ -45,9 +45,10 @@ export function isActInput(value: unknown): value is { interventionId: string; a
 
 export function isFloatingShow(value: unknown): value is FloatingShow {
   if (typeof value !== 'object' || value === null) return false
-  const { interventionId, kind, level, goalText, say, sub, presentation } = value as Record<string, unknown>
-  return typeof interventionId === 'string' && (kind === 'OFF_TASK' || kind === 'BREAK' || kind === 'DISCONNECTED') && LEVELS.includes(level as InterventionLevel)
+  const { interventionId, kind, sessionId, level, goalText, say, sub, presentation } = value as Record<string, unknown>
+  return typeof interventionId === 'string' && (kind === 'OFF_TASK' || kind === 'BREAK' || kind === 'DISCONNECTED' || kind === 'GOAL_ADD') && LEVELS.includes(level as InterventionLevel)
     && typeof goalText === 'string' && typeof say === 'string' && typeof sub === 'string'
+    && (kind !== 'GOAL_ADD' || (typeof sessionId === 'string' && /^[\w-]{1,64}$/u.test(sessionId)))
     && (presentation === undefined || (kind === 'OFF_TASK' && isOffTaskPresentation(presentation)))
 }
 

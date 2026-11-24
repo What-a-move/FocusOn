@@ -1,6 +1,6 @@
 // Chrome 탭 분석 흐름 (화면 분석 3단계, 결정 013·014). Chrome API는 Deps로 받아 테스트할 수 있게 한다.
 // [주의] 이 파일은 node --test로도 실행하므로 상대 import는 확장자(.ts)를 붙인다.
-import type { AnalysisRunRequest, ContentSource, GuardStatus } from '@focuson/shared-types'
+import type { AnalysisRunRequest, ContentSource, GuardStatus, MatchStatus } from '@focuson/shared-types'
 import { cleanPageText, hostOf, isExcludedHost, isPrivateHost, isWebPage, MAX_TEXT_LENGTH } from '../shared/page-rules.ts'
 
 export const DWELL_MS = 15_000
@@ -13,7 +13,7 @@ type Source = Extract<ContentSource, 'TAB_META' | 'CHROME_DOM'>
 type Guard = GuardStatus
 // 서버 계약 타입은 Desktop과 함께 shared-types에서 가져온다(타입만, 결정 015).
 export type RunBody = AnalysisRunRequest
-export type RunResult = { ok: true; relation: string } | { ok: false; code: string }
+export type RunResult = { ok: true; relation: string; matchStatus?: MatchStatus | null } | { ok: false; code: string }
 type Sequences = { sessionId: string; TAB_META: number; CHROME_DOM: number }
 
 export type Deps = {
@@ -41,7 +41,7 @@ const keyOf = (target: Target) => `${target.tabId}\n${target.url.split('#')[0]}`
 
 /**
  * 1) 탭·주소가 바뀌면 15초를 새로 센다. 2) 15초 뒤 같은 화면·세션 RUNNING이면 판정해 보낸다.
- * 3) 탭 정보 결과가 관련 없음·판단 보류면 본문으로 한 번 더 보낸다. 그 사이 화면이 바뀌었으면 늦은 응답은 버린다.
+ * 3) 관련 있고 할 일까지 연결됐으면 종료한다. 본문을 보낼 때 탭 전환 여부를 다시 확인한다.
  */
 export class TabAnalyzer {
   private pausedUntil = 0
@@ -87,8 +87,8 @@ export class TabAnalyzer {
     if (guard) { await this.send(session.sessionId, 'TAB_META', guard); return }
     const metadata = { appName: 'Google Chrome' as const, pageTitle: target.title, urlHost: hostOf(target.url) ?? '' }
     const meta = await this.send(session.sessionId, 'TAB_META', null, metadata)
-    // 탭 정보만으로 관련 있음이면 끝낸다. 관련 없음·판단 보류는 본문으로 확인한다(AI 분석 계약 4.1).
-    if (!meta.ok || !['UNRELATED', 'UNCERTAIN'].includes(meta.relation)) return
+    if (!meta.ok || !['RELATED', 'UNRELATED', 'UNCERTAIN'].includes(meta.relation)) return
+    if (meta.relation === 'RELATED' && meta.matchStatus === 'MATCHED') return
     if (!(await this.stillShowing(tracking))) return
     const page = await this.deps.inspect(target.tabId, MAX_TEXT_LENGTH)
     if (!page || !(await this.stillShowing(tracking))) return

@@ -22,9 +22,9 @@ public class GoalAiResponseMapper {
     } catch (IllegalArgumentException exception) {
       throw new IllegalArgumentException("Invalid goal AI status");
     }
-    String text = optionalText(data.path("interpretedGoal"));
+    final String text = optionalText(data.path("interpretedGoal"));
     JsonNode questionValue = data.path("question");
-    String question = questionValue.isMissingNode() || questionValue.isNull()
+    final String question = questionValue.isMissingNode() || questionValue.isNull()
         ? null : optionalText(questionValue.path("text"));
     JsonNode goals = data.path("recommendedGoals");
     if (!goals.isMissingNode() && !goals.isArray()) {
@@ -43,9 +43,16 @@ public class GoalAiResponseMapper {
     List<String> suggestions = status == ClarifyStatus.NEEDS_SUGGESTION
         ? List.copyOf(candidates) : List.of();
     List<String> goalCandidates = status == ClarifyStatus.NEEDS_SELECTION
-        ? List.copyOf(candidates) : List.of();
+        || status == ClarifyStatus.CLEAR ? List.copyOf(candidates) : List.of();
+    GoalProfile draft = status == ClarifyStatus.CLEAR && goalCandidates.isEmpty()
+        ? GoalProfile.fromDraft(data.path("goalProfileDraft")) : null;
+    if (goalCandidates.size() >= 2 && (status == ClarifyStatus.NEEDS_SELECTION
+        || status == ClarifyStatus.CLEAR)) {
+      return new ClarifyGoalResponse(ClarifyStatus.CLEAR, null, null, List.of(), goalCandidates,
+          turn, sessionId, null);
+    }
     return new ClarifyGoalResponse(status, text, question, suggestions, goalCandidates,
-        turn, sessionId);
+        turn, sessionId, draft);
   }
 
   private String optionalText(JsonNode value) {

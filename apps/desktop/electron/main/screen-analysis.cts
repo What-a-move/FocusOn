@@ -13,14 +13,15 @@ type Deps = {
 }
 
 /**
- * 1) 관측을 보낸다. 2) 앱 정보(APP_META) 결과가 관련 없음·판단 보류이고 아직 같은 화면이면 OCR로 다시 보낸다.
+ * 관측을 보낸 뒤 앱 정보가 관련 있음이면서 할 일도 일치할 때 끝낸다. 다른 분석 판정은 같은 화면이면 OCR로 확인한다.
  * 서버는 앱 정보만으로 나온 UNRELATED를 이탈로 세지 않으므로(AI 분석 계약 4.4), 이 단계가 있어야 앱에서의 이탈을 판단한다.
  * [주의] 응답·OCR을 기다리는 사이 다른 화면으로 옮겼으면 늦은 결과로 다음 단계를 보내지 않는다(계약 8).
  */
 export async function analyzeObservation(deps: Deps, sessionId: string, observation: Observation): Promise<void> {
   const run = await deps.send(sessionId, observation)
   if (!run || observation.guardStatus || observation.contentSource !== 'APP_META' || observation.windowId === null) return
-  if (run.relation !== 'UNRELATED' && run.relation !== 'UNCERTAIN') return
+  if (run.relation !== 'UNRELATED' && run.relation !== 'UNCERTAIN'
+    && !(run.relation === 'RELATED' && run.matchStatus !== 'MATCHED')) return
   if (!deps.stillShowing(observation.key, sessionId)) return
   const raw = await deps.ocr(observation.windowId)
   if (raw === null || !deps.stillShowing(observation.key, sessionId)) return
