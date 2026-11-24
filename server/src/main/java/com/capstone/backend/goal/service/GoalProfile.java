@@ -8,7 +8,8 @@ import java.util.Set;
 import tools.jackson.databind.JsonNode;
 
 /**
- * 사용자가 편집할 수 있는 목표 세분화다(DR-030). 원문 질문·답변이나 화면 내용은 담지 않는다.
+ * Goal AI가 확정 목표를 넓힌 세분화 결과다(재설계 A-1). 판정 비교용 서버 내부 값이며 1차에서는
+ * 사용자에게 노출하지 않는다. 원문 질문·답변이나 화면 내용은 담지 않는다.
  */
 public record GoalProfile(String mainTopic, String purpose, List<String> coreTopics,
     List<String> supportingTopics, List<String> expectedActivities) {
