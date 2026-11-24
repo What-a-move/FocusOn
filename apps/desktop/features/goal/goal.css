@@ -73,14 +73,6 @@
 .goal-window .goal-card p { margin-top: 6px; font-size: 26px; font-weight: 700; line-height: 1.45; letter-spacing: -.02em; }
 
 /* 완료: 넓은 가로 폭, 목표를 가장 위·가장 크게 */
-.goal-window .view.done-view { width: min(1000px, calc(100% - 64px)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 56px; }
-.onboarding-window.goal-window .done-view .poki { width: auto; height: 260px; flex: none; }
-.goal-window .done-label { color: var(--muted); font-size: 15px; font-weight: 600; }
-.goal-window .done-view h2 { margin-top: 8px; font-size: clamp(32px, 3.6vw, 44px); font-weight: 700; line-height: 1.3; letter-spacing: -.03em; animation: onboarding-rise-in .55s .1s var(--ease) both; }
-.goal-window .done-view h2:focus { outline: none; }
-.goal-window .done-ok { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 17px; font-weight: 600; animation: onboarding-fade-in .4s .35s var(--ease) both; }
-.goal-window .done-ok i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--gold); color: #fff; animation: onboarding-pop-in .55s .45s var(--ease) both; }
-.goal-window .done-ok svg { width: 14px; height: 14px; }
 
 /* 하단 바 */
 .goal-window .footer { flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--surface); }
@@ -108,22 +100,11 @@
   .goal-window .chips-label { margin-top: 20px; }
   .goal-window .chip { height: 42px; }
   .goal-window .option { min-height: 56px; padding: 10px 18px; }
-  .onboarding-window.goal-window .done-view .poki { height: 180px; }
   .goal-window .footer-inner { padding: 14px 0 28px; }
 }
 @media (max-width: 760px) {
-  .goal-window .view.done-view { grid-template-columns: 1fr; gap: 20px; }
-  .onboarding-window.goal-window .done-view .poki { order: -1; height: 150px; }
   .onboarding-window.goal-window .speaker .poki { width: 72px; height: 72px; flex-basis: 72px; }
   .onboarding-window.goal-window .bubble { font-size: 22px; }
 }
 
-.goal-window .goal-profile { display: grid; gap: 12px; min-width: 0; margin: 20px 0 0; padding: 16px; border: 1.5px solid var(--line); border-radius: 14px; }
-.goal-window .goal-profile legend, .goal-window .goal-profile label { font-weight: 700; }
-.goal-window .goal-profile p { color: var(--muted); font-size: 14px; }
-.goal-window .goal-profile label { display: grid; gap: 6px; }
-.goal-window .goal-profile textarea { width: 100%; min-height: 58px; padding: 10px 12px; resize: vertical; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); font: inherit; font-weight: 500; }
-.goal-window .goal-profile textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .goal-window .review-goals { margin: 8px 0 0; padding-left: 22px; list-style: disc; }
-.goal-window .editable-goal { display: grid; gap: 8px; margin-top: 8px; }
-.goal-window .editable-goal .goal-input { padding-right: 20px; }
