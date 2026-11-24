@@ -26,11 +26,19 @@ public final class GoalDtos {
 
   /**
    * 목표 수정 요청이다. 보낸 필드만 바꾼다. 활성 세션이 참조 중이면 todoStatus만 바꿀 수 있다.
+   * goalProfile은 만들 때와 같은 형식으로 통째 덮어쓴다(#314).
    */
   @Schema(example = "{\"goalText\":\"Spring Security 인증 복습\"}")
   public record UpdateGoalRequest(
       @Schema(example = "Spring Security 인증 복습") String goalText,
-      @Schema(description = "할 일 상태 (선택)") TodoStatus todoStatus) {}
+      @Schema(description = "할 일 상태 (선택)") TodoStatus todoStatus,
+      @Schema(description = "공부로 볼 범위 전체 (선택, 통째 덮어쓰기)",
+          implementation = GoalProfile.class) JsonNode goalProfile) {
+    /** 문구와 상태만 바꾸는 요청이다. */
+    public UpdateGoalRequest(String goalText, TodoStatus todoStatus) {
+      this(goalText, todoStatus, null);
+    }
+  }
 
   /** 사용자가 이전에 받은 질문과 답변이다. */
   public record ClarificationAnswer(@NotBlank String question, @NotBlank String answer) {}
