@@ -16,14 +16,14 @@ export function NicknameStep() {
   const [hint, setHint] = useState<Hint>(defaultHint)
   const [checked, setChecked] = useState(false)
   const [checking, setChecking] = useState(false)
-  const [prompt, setPrompt] = useState({ text: '어떻게 불러드릴까요?', error: false })
+  const [prompt, setPrompt] = useState({ text: '뭐라고 부르면 돼?', error: false })
   const [feedback, setFeedback] = useState<Notice | null>(null)
 
   async function check() {
     const value = nickname.trim()
     if (!/^[가-힣A-Za-z0-9]{2,12}$/u.test(value)) {
       setHint({ kind: 'error', text: value.length < 2 ? '2자 이상 입력해 주세요.' : '2~12자의 한글·영문·숫자만 쓸 수 있어요.' })
-      setPrompt({ text: '음… 다시 한번 적어 주실래요?', error: true })
+      setPrompt({ text: '음… 다시 한번 적어 줄래?', error: true })
       return
     }
 
@@ -34,7 +34,7 @@ export function NicknameStep() {
     if (result.success) {
       setChecked(true)
       setHint({ kind: 'success', text: '사용할 수 있는 닉네임이에요.' })
-      setPrompt({ text: `반가워요, ${value}님!`, error: false })
+      setPrompt({ text: `반가워, ${value}!`, error: false })
       setFeedback(null)
       return
     }
@@ -43,7 +43,7 @@ export function NicknameStep() {
     const duplicate = result.error.code === 'PROFILE_NICKNAME_DUPLICATE'
     // [디자인] 같은 오류를 하단 바에 한 번 더 띄우지 않는다.
     setHint({ kind: 'error', text: duplicate ? '이미 사용 중인 닉네임이에요. 다른 이름을 적어 주세요.' : `${notice.title} ${notice.body}`, field: duplicate })
-    setPrompt(duplicate ? { text: '앗, 누가 벌써 쓰고 있어요!', error: true } : { text: '어떻게 불러드릴까요?', error: false })
+    setPrompt(duplicate ? { text: '앗, 누가 벌써 쓰고 있어!', error: true } : { text: '뭐라고 부르면 돼?', error: false })
     setFeedback(null)
   }
 

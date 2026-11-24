@@ -37,7 +37,6 @@ export function ExcludedAppsField({ apps, onChange }: { apps: ExcludedApp[]; onC
   return <div className="app-field">
     <p className="field-label" id="apps-label">분석 제외 앱 <span className="tag">선택</span></p>
     <div className="app-add">
-      <p>메시지·메일 앱은 처음부터 분석하지 않아요.</p>
       <button className="btn btn-ghost check-button" type="button" onClick={open}>앱 추가</button>
     </div>
     <p className={`hint${hint ? ' is-success' : ''}`} aria-live="polite">{hint}</p>
@@ -52,7 +51,7 @@ export function ExcludedAppsField({ apps, onChange }: { apps: ExcludedApp[]; onC
 
     <dialog ref={dialogRef} className="consent-dialog app-dialog" aria-labelledby="app-dialog-title">
       <h2 id="app-dialog-title">제외할 앱 고르기</h2>
-      <p>설치된 앱 중에서 골라 주세요.{full ? ` 제외 앱은 ${MAX_APPS}개까지 추가할 수 있어요.` : ''}</p>
+      {full && <p>제외 앱은 {MAX_APPS}개까지 추가할 수 있어요.</p>}
       {installed === 'loading' && <p role="status">설치된 앱을 확인하고 있어요.</p>}
       {installed === 'error' && <div className="app-error" role="alert">
         <p>설치된 앱을 불러오지 못했어요. 다시 시도해 주세요.</p>

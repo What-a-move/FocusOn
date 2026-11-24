@@ -2,7 +2,7 @@
    설정 틀 토큰·토스트는 shared/styles/settings-shell.css를 쓴다. */
 /* 세로 간격은 창 높이에 맞춰 늘고 줄어든다 */
 /* 사이드바 화면 공통: 내용 시작은 창 높이에 맞춰 32~64px. 세로로 꽉 채워, 짧은 상태(오류·빈 화면)를 남은 공간 가운데에 둘 수 있게 한다. */
-.fo-settings-page { display: flex; flex-direction: column; min-height: 100%; width: min(820px, calc(100% - 80px)); margin: 0 auto; padding: clamp(32px, 6vh, 64px) 0 40px; }
+.fo-settings-page { display: flex; flex-direction: column; min-height: 100%; width: min(820px, calc(100% - var(--fo-page-x) * 2)); margin: 0 auto; padding: var(--fo-page-top) 0 var(--fo-page-bottom); }
 .fo-settings-page > .fo-settings-panel { flex: 1; display: flex; flex-direction: column; }
 .fo-settings-panel > .fo-error-state:only-child { margin: auto; }
 

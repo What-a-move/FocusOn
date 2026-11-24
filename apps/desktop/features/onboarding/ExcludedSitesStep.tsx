@@ -7,7 +7,7 @@ import { ExcludedAppsField } from './ExcludedAppsField'
 import { analysisApi, describeError, onboardingApi, type ExcludedApp, type Notice } from '../../shared/api/onboarding-api'
 import { DOMAIN, MAX_SITES, normalizeDomain } from '../../shared/lib/domain'
 
-const defaultHint = { kind: '' as '' | 'error' | 'success', text: '도메인만 적어 주세요. 하위 도메인도 함께 제외돼요.' }
+const defaultHint = { kind: '' as '' | 'error' | 'success', text: '' }
 
 export function ExcludedSitesStep() {
   const router = useRouter()
@@ -65,7 +65,7 @@ export function ExcludedSitesStep() {
   return (
     <OnboardingShell
       currentStep={3}
-      prompt="분석하지 않을 사이트가 있나요?"
+      prompt="빼 둘 사이트가 있어?"
       poki="/design/poki-floating-excluded-v2.png"
       backHref="/onboarding/permissions/"
       feedback={feedback}
@@ -97,7 +97,6 @@ export function ExcludedSitesStep() {
         ))}
       </ul>
       <ExcludedAppsField apps={apps} onChange={(next) => { setApps(next); setFeedback(null) }} />
-      <p className="exclude-note">여기 있는 사이트와 앱에서는 화면 분석만 멈추고, 집중 타이머는 계속돼요.<br />지금 건너뛰어도 설정에서 언제든 추가할 수 있어요.</p>
     </OnboardingShell>
   )
 }

@@ -44,7 +44,7 @@ function readGoal(): { goalId: string; goalText: string } | null {
 export function SessionSetup() {
   const router = useRouter()
   const [goal, setGoal] = useState<{ goalId: string; goalText: string } | null | undefined>(undefined)
-  const [duration, setDuration] = useState<string>('30')
+  const [duration, setDuration] = useState<string>('60')
   const [custom, setCustom] = useState('40')
   const [level, setLevel] = useState<InterventionLevel>('NORMAL')
   const [channels, setChannels] = useState<NotificationChannel[]>(DEFAULT_CHANNELS)
