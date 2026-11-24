@@ -44,6 +44,13 @@ export function FocusSession() {
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [toast, setToast] = useState(false)
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(false), 2000)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+  const goals = snapshot?.goals ?? []
   const addGoalSubmitting = useRef(false)
   const [screenOpened, setScreenOpened] = useState(false)
 
@@ -67,7 +74,7 @@ export function FocusSession() {
   }, [router])
 
   const sessionId = snapshot?.sessionId
-  const canAddGoal = snapshot?.status === 'RUNNING' && !!snapshot.goalVersion && (snapshot.goals?.length ?? 3) < 3
+  const canAddGoal = snapshot?.status === 'RUNNING' && !!snapshot.goalVersion
   useEffect(() => {
     if (!canAddGoal || new URLSearchParams(window.location.search).get('addGoal') !== sessionId) return
     const timer = window.setTimeout(() => {
@@ -157,11 +164,13 @@ export function FocusSession() {
         </div>
         {/* 오른쪽: 목표·버튼·안내. 타이머가 세로로만 길어지지 않게 옆에 둔다. */}
         <div className="side">
-        <p className="goal-label">지금 집중하는 목표</p>
-        <p className="goal" id="goal-text">{snapshot.goalText}</p>
-        {!!snapshot.goals && snapshot.goals.length > 1 && <ul className="session-goals" aria-label="함께 진행하는 할 일">
-          {snapshot.goals.slice(1).map(({ goalId, goalText }) => <li key={goalId}>{goalText}</li>)}
-        </ul>}
+        {goals.length > 1
+          ? <ul className="session-goals" id="goal-text" aria-label="이번 할 일">
+            {goals.map(({ goalId, goalText }, index) => <li key={goalId} title={goalText}>
+              <span className="num" data-c={index + 1} aria-hidden="true">{index + 1}</span><span>{goalText}</span>
+            </li>)}
+          </ul>
+          : <p className="goal" id="goal-text" aria-label={`이번 할 일: ${snapshot.goalText}`}>{snapshot.goalText}</p>}
         {canAddGoal && <button className="btn btn-ghost add-goal-button" type="button" onClick={() => setDialog('add-goal')}>할 일 추가</button>}
         <div className="controls">
           <div className="control">
@@ -188,11 +197,11 @@ export function FocusSession() {
       </div>
     </section>
 
-    <dialog ref={dialogRef} aria-labelledby="dialog-title" onCancel={(event) => {
+    <dialog ref={dialogRef} className={activeDialog === 'add-goal' ? 'add-dialog' : undefined} aria-labelledby="dialog-title" onCancel={(event) => {
       event.preventDefault()
       if (!awaiting && (activeDialog !== 'add-goal' || !addGoalSubmitting.current)) setDialog(null)
     }}>
-      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} /> : <>
+      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} onAdded={() => { setDialog(null); setToast(true) }} /> : <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
@@ -219,5 +228,6 @@ export function FocusSession() {
       </div>}
       </>}
     </dialog>
+    {toast && <div className="toast" role="status">할 일에 추가했어요</div>}
   </main>
 }

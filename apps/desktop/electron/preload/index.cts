@@ -88,6 +88,7 @@ const focusOnApi: FocusOnApi = {
       ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
     }),
     listOpen: (cursor) => ipcRenderer.invoke(GOAL_CHANNELS.listOpen, cursor ?? null),
+    remove: (goalId) => ipcRenderer.invoke(GOAL_CHANNELS.remove, goalId),
   },
   sessions: {
     getFocusSettings: () => ipcRenderer.invoke(SESSION_CHANNELS.focusSettings),

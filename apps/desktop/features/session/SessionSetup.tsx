@@ -4,8 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
-import { useOpenGoals } from './useOpenGoals'
-import { CONFIRMED_GOAL_KEY } from '../../shared/api/goal-api'
+import { readPicked } from '../../shared/api/goal-api'
 import {
   formatMinutes, isValidMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi,
   type InterventionLevel, type NotificationChannel,
@@ -20,27 +19,18 @@ const DURATIONS = [{ key: '30', label: '30분' }, { key: '60', label: '1시간' 
 const DEFAULT_CHANNELS: NotificationChannel[] = ['MOLE_UI', 'MACOS_NOTIFICATION']
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 
-type Feedback = { title: string; body: string; info?: boolean } | null
+// action: 안내 아래에 붙는 바로 가기 (시안 session-setup.html START_ERRORS)
+type Feedback = { title: string; body: string; info?: boolean; action?: 'session' | 'todo' | 'screen' } | null
 
 function startError(error: { code: string; retryable: boolean }): Feedback {
   switch (error.code) {
     case 'SESSION_START_REQUIREMENT_MISSING': return { title: '시작에 필요한 준비가 빠졌어요.', body: '화면 기록·알림 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.' }
-    case 'SESSION_ACTIVE_EXISTS': return { title: '진행 중인 집중이 있어요.', body: '진행 중인 집중을 끝낸 뒤 새로 시작할 수 있어요.' }
+    case 'SESSION_ACTIVE_EXISTS': return { title: '이미 진행 중인 집중이 있어요.', body: '진행 중인 집중으로 가서 이어 하거나 끝내 주세요.', action: 'session' }
+    // 서버는 끝났거나 지운 할 일을 같은 404로 돌려준다.
+    case 'GOAL_NOT_FOUND': return { title: '고른 할 일 중 하나가 이미 끝났어요.', body: '할 일을 다시 골라 주세요.', action: 'todo' }
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return { title: '알림이 보이는지 확인이 필요해요.', body: '시험 알림을 보내 볼게요. 알림이 보이면 ‘보였어요’를 눌러 주세요.' }
-    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '인터넷 연결을 확인해 주세요.', body: '연결된 뒤 다시 누르면 같은 요청으로 이어서 시작해요.' }
+    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '집중을 시작하지 못했어요.', body: '인터넷 연결을 확인한 뒤 다시 눌러 주세요.' }
     default: return { title: '집중을 시작하지 못했어요.', body: errorText(error) }
-  }
-}
-
-function readGoals(): SessionGoal[] {
-  try {
-    const saved: unknown = JSON.parse(sessionStorage.getItem(CONFIRMED_GOAL_KEY) ?? 'null')
-    const list = Array.isArray(saved) ? saved : [saved]
-    const valid = list.filter((goal): goal is SessionGoal => !!goal && typeof goal.goalId === 'string'
-      && typeof goal.goalText === 'string' && !!goal.goalText.trim())
-    return [...new Map(valid.map((goal) => [goal.goalId, goal])).values()].slice(0, 3)
-  } catch {
-    return []
   }
 }
 
@@ -48,8 +38,6 @@ function readGoals(): SessionGoal[] {
 export function SessionSetup() {
   const router = useRouter()
   const [selectedGoals, setSelectedGoals] = useState<SessionGoal[]>([])
-  const { goals, nextCursor, loading, failed, load } = useOpenGoals()
-  const options = [...new Map([...selectedGoals, ...goals].map((goal) => [goal.goalId, goal])).values()]
   const [duration, setDuration] = useState<string>('60')
   const [custom, setCustom] = useState('40')
   const [level, setLevel] = useState<InterventionLevel>('NORMAL')
@@ -62,6 +50,7 @@ export function SessionSetup() {
   // 알림 확인: 서버는 알림을 검증하지 않아 Desktop이 시험 알림 + 사용자 확인으로 막는다(결정 022).
   const [notifyCheck, setNotifyCheck] = useState<'ask' | 'sent' | 'denied' | null>(null)
   const [now, setNow] = useState<Date | null>(null)
+  const [screenOpened, setScreenOpened] = useState(false)
   // [주의] 같은 선택으로 다시 누르면 같은 Idempotency-Key를 보내 서버가 세션을 두 번 만들지 않게 한다.
   const attempt = useRef<{ fingerprint: string; key: string } | null>(null)
   const customRef = useRef<HTMLInputElement>(null)
@@ -74,7 +63,8 @@ export function SessionSetup() {
   }, [router])
 
   useEffect(() => {
-    queueMicrotask(() => { setSelectedGoals(readGoals()); setNow(new Date()) })
+    // 고른 할 일 없이 들어오면 할 일 고르기로 보낸다.
+    queueMicrotask(() => { const picked = readPicked(); if (!picked.length) { router.replace('/todo/'); return } setSelectedGoals(picked); setNow(new Date()) })
     const timer = setInterval(() => setNow(new Date()), 30_000)
     void sessionApi.getFocusSettings().then((result) => {
       if (!result.success) return
@@ -83,7 +73,7 @@ export function SessionSetup() {
       setCamera(result.data.cameraAnalysisEnabled)
     })
     return () => clearInterval(timer)
-  }, [])
+  }, [router])
 
   const minutes = duration === 'custom' ? Number(custom) : Number(duration)
   const validMinutes = isValidMinutes(minutes)
@@ -132,7 +122,11 @@ export function SessionSetup() {
     setBusy(false)
     if (!result.success) {
       setNotifyCheck(result.error.code === 'LOCAL_NOTIFICATION_NOT_CONFIRMED' ? 'ask' : null)
-      setFeedback(startError(result.error))
+      // 서버는 빠진 조건을 알려 주지 않는다. 화면 기록 권한은 이 기기에서 확인할 수 있어 그것만 따로 안내한다.
+      const screen = result.error.code === 'SESSION_START_REQUIREMENT_MISSING' ? await window.focusOn?.permissions?.getScreenStatus() : undefined
+      setFeedback(screen?.success && screen.data.status !== 'granted'
+        ? { title: '화면 기록 권한이 꺼져 있어요.', body: '시스템 설정에서 FocusOn을 켠 뒤 앱을 다시 열어 주세요.', action: 'screen' }
+        : startError(result.error))
       return
     }
     attempt.current = null
@@ -141,6 +135,14 @@ export function SessionSetup() {
     router.push('/session/')
   }
 
+  // 화면 기록은 켜도 앱을 다시 켜야 반영된다(FocusSession과 같은 순서).
+  const fixScreen = async () => {
+    const permissions = window.focusOn?.permissions
+    if (!permissions) return
+    if (!screenOpened) { await permissions.openScreenSettings(); setScreenOpened(true); return }
+    const status = await permissions.getScreenStatus()
+    if (status.success && status.data.status === 'granted') await permissions.relaunch()
+  }
   const sendTest = async () => {
     const sent = await sessionApi.sendTestNotification()
     if (!sent.success) { setFeedback({ title: '알림을 보내지 못했어요.', body: errorText(sent.error) }); return }
@@ -162,27 +164,12 @@ export function SessionSetup() {
       <section className="sheet" aria-labelledby="setup-title"><div className="sheet-inner">
         <Link className="back-link" href="/"><span aria-hidden="true">←</span>홈으로</Link>
         <h1 id="setup-title">집중을 준비할게요</h1>
-        <fieldset className="group setup-goals" disabled={busy || started}>
-          <legend>이번 세션에 할 일</legend>
-          <p className="goals-status" role="status">{selectedGoals.length}/3개 선택</p>
-          {options.map((goal) => {
-            const checked = selectedGoals.some(({ goalId }) => goalId === goal.goalId)
-            return <label className="goal-choice" key={goal.goalId}>
-              <input type="checkbox" checked={checked} disabled={!checked && selectedGoals.length >= 3}
-                onChange={() => {
-                  setSelectedGoals((current) => checked ? current.filter(({ goalId }) => goalId !== goal.goalId) : [...current, goal].slice(0, 3))
-                  setFeedback(null)
-                }} />
-              {goal.goalText}
-            </label>
-          })}
-          {loading && <p role="status">할 일을 불러오고 있어요.</p>}
-          {failed && <p role="alert">할 일 목록을 불러오지 못했어요. <button type="button" className="btn btn-ghost" onClick={() => { void load(nextCursor ?? undefined) }}>다시 시도</button></p>}
-          {!loading && !failed && options.length === 0 && <p>저장한 할 일이 없어요.</p>}
-          {!failed && nextCursor && <button type="button" className="btn btn-ghost" disabled={loading}
-            onClick={() => { void load(nextCursor) }}>할 일 더 보기</button>}
-          <Link className="new-goal" href="/goal/">새 할 일 정하기</Link>
-        </fieldset>
+        {selectedGoals.length > 0 && <div className="goals-box">
+          <ol className="setup-goal-list" aria-label="이번에 할 일">
+            {selectedGoals.map((goal, index) => <li key={goal.goalId}><span className="num" aria-hidden="true">{index + 1}</span><span>{goal.goalText}</span></li>)}
+          </ol>
+          <Link href="/todo/">바꾸기</Link>
+        </div>}
 
         <div className="group" role="radiogroup" aria-labelledby="duration-title">
           <div className="group-head"><h2 id="duration-title">집중 시간</h2></div>
@@ -224,6 +211,9 @@ export function SessionSetup() {
             {!feedback.info && <span className="icon-error" aria-hidden="true">!</span>}
             <div>
               <strong>{feedback.title}</strong><span>{feedback.body}</span>
+              {feedback.action === 'session' && <span className="notify-actions"><Link className="btn btn-ghost" href="/session/">진행 중인 집중 보기</Link></span>}
+              {feedback.action === 'todo' && <span className="notify-actions"><Link className="btn btn-ghost" href="/todo/">할 일 다시 고르기</Link></span>}
+              {feedback.action === 'screen' && <span className="notify-actions"><button className="btn btn-ghost" type="button" onClick={() => { void fixScreen() }}>{screenOpened ? '앱 다시 열기' : '시스템 설정 열기'}</button></span>}
               {notifyCheck && <span className="notify-actions">
                 {notifyCheck === 'sent'
                   ? <><button className="btn btn-ghost" type="button" onClick={() => { void answerTest(false) }}>안 보였어요</button><button className="btn btn-primary" type="button" onClick={() => { void answerTest(true) }}>보였어요</button></>
@@ -239,12 +229,12 @@ export function SessionSetup() {
       </div></section>
 
       <aside className="preview" aria-label="이탈 알림 미리보기">
-        <span className="preview-label">이렇게 알려드려요</span>
-        <p className="bubble" key={level} aria-live="polite">{preview.say}</p>
+        <span className="preview-label">딴짓이 이어지면</span>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <div className="poki-stage"><img className="poki" key={preview.poki} src={preview.poki} alt={preview.alt} /></div>
-        {/* [디자인] 기준이 길어 넘쳐 떨어지지 않게, 기준 뒤에서 일부러 줄을 바꾼다. */}
-        <p className="preview-meta">{preview.meta[0]}<strong>{preview.meta[1]}</strong><br />{preview.meta[2].trim()}</p>
+        <div className="poki-stage"><img className="poki" key={preview.poki} src={preview.poki} alt="" /></div>
+        <p className="preview-scene" key={level} aria-live="polite">{preview.scene}</p>
+        {/* [디자인] 기준이 길어 넘쳐 떨어지지 않게, "이어지거나" 뒤에서 일부러 줄을 바꾼다. */}
+        <p className="preview-meta">{preview.meta[0]}<strong>{preview.meta[1]}</strong>{preview.meta[2]}<br />{preview.meta[3].trim()}</p>
       </aside>
     </div>
   </main>

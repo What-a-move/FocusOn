@@ -1,0 +1,131 @@
+/* 디자인 원본: FocusOn-design/todo-goals.html 1. 할 일 고르기. 창 상단(✕·점)은 goal.css를 그대로 쓴다. */
+.goal-window.todo-window .top,
+.todo-window .footer-inner { width: min(960px, calc(100% - 64px)); }
+.todo-wrap { width: min(960px, calc(100% - 64px)); margin: 0 auto; padding: 32px 0 40px; animation: onboarding-fade-in .35s var(--ease) both; }
+
+.todo-speaker { display: flex; align-items: center; gap: 20px; }
+.onboarding-window.todo-window .todo-speaker .poki { width: 88px; height: 88px; flex: 0 0 88px; }
+.todo-speaker h1 { margin: 0; font-size: 28px; font-weight: 700; line-height: 1.35; letter-spacing: -.03em; }
+.todo-speaker p { margin: 8px 0 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
+.todo-speaker p.saved { color: var(--ink); font-weight: 600; }
+.todo-window .hl { position: relative; isolation: isolate; white-space: nowrap; }
+.todo-window .hl::after { position: absolute; right: -2px; bottom: 3px; left: -2px; z-index: -1; height: 10px; border-radius: 99px; background: var(--gold); content: ''; opacity: .6; transform: scaleX(0); transform-origin: left; animation: todo-draw .6s .35s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes todo-draw { to { transform: scaleX(1); } }
+
+/* 1·2·3 배지: 같은 금색을 연한 것→진한 것 (globals --fo-todo-*) */
+.todo-window .badge { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%; background: var(--c, var(--track)); color: #2a1d14; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.todo-window [data-c="1"] { --c: var(--fo-todo-1); }
+.todo-window [data-c="2"] { --c: var(--fo-todo-2); }
+.todo-window [data-c="3"] { --c: var(--fo-todo-3); }
+.todo-window [data-c="3"] .badge { color: #fff; }
+
+.todo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 32px 0 0; padding: 0; list-style: none; }
+.todo-card { display: flex; align-items: flex-start; gap: 14px; width: 100%; min-height: 88px; padding: 20px 22px; border: 1.5px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: 0 4px 0 var(--ghost-edge); color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .12s ease-out, box-shadow .12s ease-out, opacity .2s ease; animation: onboarding-rise-in .45s var(--ease) backwards; }
+.todo-card:hover { background: var(--hover); }
+.todo-card:active { transform: translateY(4px); box-shadow: 0 0 0 var(--ghost-edge); }
+.todo-card[aria-checked="true"] { border-color: var(--c); box-shadow: 0 4px 0 var(--c); }
+.todo-card[aria-checked="true"]:active { box-shadow: 0 0 0 var(--c); }
+.todo-card[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.todo-card[aria-disabled="true"]:active { transform: none; box-shadow: 0 4px 0 var(--ghost-edge); }
+.todo-card:focus-visible, .add-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.todo-card .badge { margin-top: 1px; border: 1.5px solid var(--dim); background: var(--surface); }
+.todo-card[aria-checked="true"] .badge { border-color: var(--c); background: var(--c); }
+.todo-card strong { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
+.add-card { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 100%; min-height: 88px; border: 1.5px dashed var(--dim); border-radius: 18px; color: var(--muted); font-size: 16px; font-weight: 700; text-decoration: none; transition: border-color .15s ease, color .15s ease; }
+.add-card:hover { border-color: var(--ink); color: var(--ink); }
+.add-card b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--field); font-size: 18px; }
+.todo-more { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 24px 0 0; color: var(--muted); font-size: 14px; }
+
+/* 아래 줄: 고른 할 일 */
+.todo-window .tray { display: flex; align-items: center; gap: 20px; min-width: 0; overflow: hidden; }
+.todo-window .pill { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 220px; font-size: 14px; font-weight: 700; }
+.todo-window .pill span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.todo-window .tray-note { color: var(--muted); font-size: 14px; }
+.todo-window .footer .btn { flex: 0 0 auto; }
+.todo-window .btn .arrow { display: inline-block; margin-left: 6px; transition: transform .2s ease; }
+.todo-window .btn:hover:not(:disabled) .arrow { transform: translateX(4px); }
+
+/* 빈 목록·불러오기 실패: 본문 가운데 */
+.todo-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 100%; padding: 32px; text-align: center; }
+.todo-state img { width: 160px; height: 160px; margin-bottom: 8px; object-fit: contain; }
+.todo-state strong { font-size: 20px; font-weight: 700; }
+.todo-state strong.is-error { color: var(--danger); font-size: 18px; }
+.todo-state span { color: var(--muted); font-size: 15px; }
+.todo-state .btn { display: inline-flex; align-items: center; margin-top: 14px; text-decoration: none; }
+
+@media (max-width: 760px) {
+  .todo-grid { grid-template-columns: 1fr; }
+  .todo-window .pill { max-width: 140px; }
+}
+@media (max-height: 700px) {
+  .todo-wrap { padding-top: 20px; }
+  .todo-grid { gap: 12px; margin-top: 20px; }
+  .todo-card { min-height: 72px; padding: 16px 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .todo-card, .todo-wrap, .todo-window .hl::after { animation: none; } .todo-window .hl::after { transform: none; } }
+
+/* ---------- 목표 확인: 할 일마다 넘겨 보는 범위 (FocusOn-design/todo-goals.html 2. 목표 확인) ---------- */
+.review-wrap { display: flex; flex-direction: column; width: min(1100px, calc(100% - 48px)); min-height: 100%; margin: 0 auto; padding: 24px 0 32px; animation: onboarding-fade-in .35s var(--ease) both; }
+.review-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; margin: 0 72px; }
+.onboarding-window.todo-window .review-head .poki { width: 56px; height: 56px; flex: 0 0 56px; }
+.review-head h1 { margin: 0; color: var(--muted); font-size: 20px; font-weight: 700; }
+.todo-window .pager { display: flex; justify-content: center; gap: 8px; }
+.todo-window .pager button { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 6px; border: 0; border-radius: 99px; background: none; color: var(--muted); font-size: 14px; font-weight: 700; cursor: pointer; transition: color .2s ease; }
+.todo-window .pager button .badge { width: 24px; height: 24px; flex-basis: 24px; font-size: 12px; background: var(--c); opacity: .55; transition: opacity .2s ease; }
+.todo-window .pager button span:last-child { max-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: max-width .4s var(--ease); }
+.todo-window .pager button[aria-current="true"] { padding-right: 12px; color: var(--ink); }
+.todo-window .pager button[aria-current="true"] .badge { opacity: 1; }
+.todo-window .pager button[aria-current="true"] span:last-child { max-width: 260px; }
+.todo-window .pager button:focus-visible, .arrow-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* 제목 줄은 위, 할 일 내용은 남은 공간 세로 가운데. 넘치면 위에서부터(safe) */
+.center-zone { flex: 1; display: flex; flex-direction: column; justify-content: safe center; padding: 28px 0 8px; }
+.stage { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; align-items: center; gap: 16px; }
+.arrow-btn { display: grid; place-items: center; align-self: start; width: 52px; height: 52px; margin-top: -10px; border: 1.5px solid var(--ghost-edge); border-radius: 50%; background: var(--surface); box-shadow: 0 3px 0 var(--ghost-edge); color: var(--ink); font-size: 22px; font-weight: 700; cursor: pointer; transition: transform .1s ease, box-shadow .1s ease, opacity .2s ease; }
+.arrow-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 var(--ghost-edge); }
+.arrow-btn:disabled { opacity: 0; pointer-events: none; }
+/* 트랙 높이는 가장 긴 할 일에 맞춰져 넘길 때 위치가 흔들리지 않는다 */
+.viewport { overflow: hidden; }
+.track { display: flex; align-items: flex-start; transition: transform .5s var(--ease); }
+.slide { flex: 0 0 100%; min-width: 0; padding: 4px 2px 6px; transition: opacity .4s var(--ease); }
+.slide[aria-hidden="true"] { opacity: .25; }
+.slide-head { display: flex; align-items: center; gap: 12px; }
+.todo-window .slide-head .badge { width: 32px; height: 32px; flex-basis: 32px; font-size: 15px; background: var(--c); }
+.slide-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.slide-head .count { color: var(--faint); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.todo-window .label { margin: 0; color: var(--muted); font-size: 14px; font-weight: 700; }
+.core-block { margin-top: 28px; padding: 24px 28px 26px; border-radius: 22px; background: var(--fo-gold-soft); }
+.core-list { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+.core-list li { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 44px; padding: 0 18px; border-radius: 99px; background: var(--surface); box-shadow: 0 1px 0 var(--line); font-size: 17px; font-weight: 700; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.core-list li::before { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--c); content: ''; }
+.sub-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.sub-block > div { min-width: 0; padding: 22px 24px 18px; border: 1.5px solid var(--line); border-radius: 22px; }
+.todo-window .items { display: grid; margin: 10px 0 0; padding: 0; list-style: none; }
+.todo-window .items li { display: flex; align-items: center; min-height: 46px; font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.todo-window .items li + li { border-top: 1px solid var(--line); }
+.items-empty { margin: 10px 0 0; color: var(--faint); font-size: 15px; }
+.missing { display: grid; gap: 4px; margin-top: 24px; padding-left: 44px; line-height: 1.5; }
+.missing strong { font-size: 17px; }
+.missing span { color: var(--muted); font-size: 15px; }
+
+@media (max-width: 1000px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .stage .arrow-btn { display: none; }
+  .review-head { margin: 0; }
+}
+@media (max-width: 760px) { .sub-block { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .track, .slide, .review-wrap { transition: none; animation: none; } }
+
+/* 할 일 지우기: 카드 오른쪽 위 ✕ (마우스를 올리거나 키보드로 갔을 때만) */
+.todo-grid > li { position: relative; }
+.todo-card { padding-right: 48px; }
+.todo-remove { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 0; border-radius: 9px; background: none; color: var(--faint); font-size: 15px; cursor: pointer; opacity: 0; transition: opacity .15s ease; }
+.todo-grid > li:hover .todo-remove, .todo-remove:focus-visible { opacity: 1; }
+.todo-remove:hover { background: var(--field); color: var(--ink); }
+.todo-remove:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.todo-note { display: flex; align-items: center; gap: 14px; margin-top: 20px; font-size: 14px; line-height: 1.55; animation: onboarding-rise-in .35s var(--ease) both; }
+.todo-note > div { flex: 1; min-width: 0; }
+.todo-note strong { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.todo-note.is-error strong { color: var(--danger); }
+.todo-note span { display: block; color: var(--ink); }
+.todo-note .btn { min-width: 0; height: 40px; padding: 0 16px; font-size: 14px; }
