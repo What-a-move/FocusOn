@@ -117,6 +117,8 @@ public class AnalysisAiClient {
     input.put("observedAt", request.observedAt().toString());
     input.put("sequence", request.sequence());
     input.put("goalSnapshot", p.goalSnapshot());
+    input.put("goals", p.goals());
+    input.put("goalVersion", p.goalVersion());
     input.put("guardStatus", null);
     if (request.metadata() != null) {
       var meta = new LinkedHashMap<String, Object>();
@@ -135,7 +137,7 @@ public class AnalysisAiClient {
     context.put("sessionId", Long.toString(p.sessionId()));
     context.put("runId", Long.toString(p.runId()));
     context.put("goalId", Long.toString(p.goalId()));
-    context.put("goalVersion", 1);
+    context.put("goalVersion", p.goalVersion());
     context.put("clientRunId", request.clientRunId());
     context.put("sequence", request.sequence());
     context.put("navigationId", "analysis-" + p.runId());
@@ -153,7 +155,7 @@ public class AnalysisAiClient {
     String extraction = metadata || (request.contentPayload() != null
         && !request.contentPayload().text().isBlank()) ? "SUCCESS" : "FAILED";
     return Map.of("request", input, "goal", Map.of("goalId", Long.toString(p.goalId()),
-        "goalVersion", 1, "text", p.goalSnapshot(), "confirmed", true),
+        "goalVersion", p.goalVersion(), "text", p.goalSnapshot(), "confirmed", true),
         "context", context, "extractionStatus", extraction);
   }
 
@@ -198,7 +200,8 @@ public class AnalysisAiClient {
             AnalysisStatus.NEEDS_CONFIRMATION, model, prompt);
       }
       return new AnalysisDecision(relation, confidence, reason, AnalysisStatus.COMPLETED,
-          model, prompt, matchStatus(value.path("matchStatus")));
+          model, prompt, matchStatus(value.path("matchStatus")),
+          matchedGoalId(value.path("matchedGoalId")));
     } catch (IllegalArgumentException exception) {
       return AnalysisDecision.unavailable();
     }
@@ -218,6 +221,17 @@ public class AnalysisAiClient {
       }
     }
     return null;
+  }
+
+  private static Long matchedGoalId(JsonNode value) {
+    if (!value.isString() || !value.asString().matches("[1-9][0-9]{0,18}")) {
+      return null;
+    }
+    try {
+      return Long.valueOf(value.asString());
+    } catch (NumberFormatException exception) {
+      return null;
+    }
   }
 
   /** 버전은 원문 대신 남기는 고정 길이 식별자이므로 임의의 자유 텍스트를 받지 않는다. */

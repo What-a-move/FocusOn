@@ -35,10 +35,14 @@ export type AnalysisRunRequest = {
   observationContextId?: string
 }
 
+export type MatchStatus = 'MATCHED' | 'FAR' | 'NOT_ENOUGH'
+
 /** `analysis-runs` 응답 중 클라이언트가 읽는 값. reasonCode는 ReasonCode 값이 오지만, 모르는 값이 와도 응답 자체는 받는다. */
 export type AnalysisRunResponse = {
   analysisRunId: string
   relation: Relation
+  matchedGoalId?: string | null
+  matchStatus?: MatchStatus | null
   /** 0~1. 판정이 없으면 null */
   confidence: number | null
   reasonCode: string | null

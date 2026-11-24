@@ -204,3 +204,26 @@ async def test_http_dependency_disables_provider_retries_without_mutating_local_
     assert settings.goal_assistance_max_retries == 2
     jev.aclose.assert_awaited_once()
     generator.aclose.assert_awaited_once()
+
+
+def test_confirmed_profile_uses_locale_and_does_not_require_goal_assessment(monkeypatch):
+    from fastapi.testclient import TestClient
+    import src.models.llm_client
+
+    key = "local-test-key-only-0123456789abcdef"
+    generator = FakeGoalGenerationClient()
+    generator.generate_profile = AsyncMock(wraps=generator.generate_profile)
+    generator.aclose = AsyncMock()
+    monkeypatch.setattr(src.models.llm_client, "ClaudeGoalGenerationClient", lambda _: generator)
+    app = create_app(api_key=key, classifier_factory=lambda: None)
+    with TestClient(app) as client:
+        path = "/internal/v1/goals/profile"
+        payload = {"goalText": "리액트 카운터 만들기", "locale": "ko-KR"}
+        assert client.post(path, json=payload).status_code == 401
+        response = client.post(path, json=payload, headers={"Authorization": f"Bearer {key}"})
+
+    assert response.status_code == 200
+    profile = response.json()["goalProfile"]
+    assert profile["mainTopic"] == payload["goalText"]
+    assert "originalText" not in profile
+    assert generator.generate_profile.await_args.args[0].locale == "ko-KR"

@@ -57,9 +57,7 @@ public class GoalClarificationService {
       var aiResponse = callWithRetry(body);
       ClarifyGoalResponse result = mapper.map(aiResponse, request.conversationTurn(),
           claim.id().toString());
-      // 세분화는 공개 응답에 싣지 않고 서버 대화 상태에만 보관한다. 확정(CLEAR) 목표에만 쓴다.
-      GoalProfile profile = result.clarityStatus() == ClarifyStatus.CLEAR
-          ? GoalProfile.fromDraft(aiResponse.path("data").path("goalProfileDraft")) : null;
+      GoalProfile profile = result.goalProfileDraft();
       if (request.conversationTurn() >= 2 && result.question() != null) {
         throw new IllegalArgumentException("Goal AI exceeded question limit");
       }

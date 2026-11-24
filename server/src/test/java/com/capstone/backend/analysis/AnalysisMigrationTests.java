@@ -45,7 +45,11 @@ class AnalysisMigrationTests {
               + "'relation_confidence','analysis_status','reason_code','error_code',"
               + "'model_version','prompt_version','policy_version','created_at',"
               + "'observation_sequence','current_eligible','ordering_untrusted',"
-              + "'observation_context_id','match_status')"));
+              + "'observation_context_id','match_status','goal_version','matched_goal_id')"));
+          assertEquals(2, number(connection, "SELECT count(*) FROM pg_constraint"
+              + " WHERE connamespace = '" + schema + "'::regnamespace AND convalidated"
+              + " AND conname IN "
+              + "('ck_learning_session_goal_version','ck_analysis_run_goal_version')"));
         } else if (scenario.equals("crossSourceOrder")) {
           execute(connection, insert.replace("RELATED',0.9,'COMPLETED'",
               "EXCLUDED',NULL,'SKIPPED'").replace("CHROME_DOM", "APP_META")

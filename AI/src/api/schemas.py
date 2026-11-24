@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import StringConstraints, BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ..preprocessing.models import ContentSource, ExtractionStatus
 
@@ -111,16 +111,17 @@ class VerifiedContext(Observation):
         return self.session_status in {SessionStatus.ACTIVE, SessionStatus.RUNNING} and not self.resume_required
 
 
-GoalTopic = Annotated[str, Field(min_length=1, max_length=200)]
+GoalTopic = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 
 
 class GoalProfile(InternalSchema):
     """User-confirmed semantic scope. Page content must never mutate this value."""
     main_topic: GoalTopic = Field(alias="mainTopic")
-    purpose: Literal["LEARNING", "IMPLEMENTATION", "PROBLEM_SOLVING", "DEBUGGING", "PRACTICE", "OTHER"]
-    core_topics: Annotated[list[GoalTopic], Field(min_length=1, max_length=12)] = Field(alias="coreTopics")
-    supporting_topics: Annotated[list[GoalTopic], Field(max_length=12)] = Field(default_factory=list, alias="supportingTopics")
-    expected_activities: Annotated[list[GoalTopic], Field(max_length=8)] = Field(default_factory=list, alias="expectedActivities")
+    purpose: Literal["LEARNING", "CONCEPT_LEARNING", "IMPLEMENTATION", "PROBLEM_SOLVING",
+                     "DEBUGGING", "PRACTICE", "PRESENTATION_OR_ASSIGNMENT", "OTHER"]
+    core_topics: Annotated[list[GoalTopic], Field(max_length=5)] = Field(alias="coreTopics")
+    supporting_topics: Annotated[list[GoalTopic], Field(max_length=5)] = Field(default_factory=list, alias="supportingTopics")
+    expected_activities: Annotated[list[GoalTopic], Field(max_length=5)] = Field(default_factory=list, alias="expectedActivities")
 
     @field_validator("core_topics", "supporting_topics", "expected_activities")
     @classmethod
@@ -202,6 +203,7 @@ class GoalClarifyRequest(CamelModel):
         serialization_alias="goalText",
     )
     selected_goal_text: str | None = None
+    locale: str | None = Field(default=None, min_length=2, max_length=35, exclude=True)
     clarification_answers: list[ClarificationAnswer] = Field(
         default_factory=list, max_length=2,
         validation_alias=AliasChoices("previousAnswers", "clarificationAnswers"),

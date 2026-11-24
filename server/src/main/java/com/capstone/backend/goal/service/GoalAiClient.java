@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -42,16 +43,29 @@ public class GoalAiClient {
 
   /** 내부 계약의 요청을 전송하고 결과를 파싱한다. 재시도는 호출 서비스가 담당한다. */
   public JsonNode clarify(Map<String, Object> body) {
+    return request("/internal/v1/goals/clarify", body);
+  }
+
+  /** 명확성 재검사 없이 확정된 목표만 확장한다. */
+  public JsonNode profile(String goalText, String locale) {
+    return request("/internal/v1/goals/profile", Map.of("goalText", goalText, "locale", locale));
+  }
+
+  private JsonNode request(String path, Map<String, Object> body) {
     if (key.isBlank()) {
       throw new GoalAiException(Failure.UNAVAILABLE, false);
     }
-    URI endpoint = endpoint();
-    var request = HttpRequest.newBuilder(endpoint).timeout(REQUEST_TIMEOUT)
+    URI target = endpoint().resolve(path);
+    var builder = HttpRequest.newBuilder(target).timeout(REQUEST_TIMEOUT)
         .header("Authorization", "Bearer " + key).header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body),
-            StandardCharsets.UTF_8)).build();
+            StandardCharsets.UTF_8));
+    String trace = MDC.get("traceId");
+    if (trace != null && trace.matches("[A-Za-z0-9-]{8,64}")) {
+      builder.header("X-Trace-Id", trace);
+    }
     try {
-      var response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+      var response = client.send(builder.build(), HttpResponse.BodyHandlers.ofInputStream());
       try (var stream = response.body()) {
         byte[] bytes = stream.readNBytes(MAX_RESPONSE_BYTES + 1);
         if (bytes.length > MAX_RESPONSE_BYTES) {

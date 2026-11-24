@@ -100,6 +100,14 @@ public class InterventionEventEntity {
     return event;
   }
 
+  /** 할 일 밖 공부를 세션에 추가할 수 있도록 포키에 안내한다. */
+  public static InterventionEventEntity goalAddPrompt(long sessionId, long revision,
+      String channels, String policyVersion, Instant runningSince, Instant now) {
+    var event = offTask(sessionId, revision, channels, policyVersion, runningSince, now);
+    event.type = Type.GOAL_ADD_PROMPT;
+    return event;
+  }
+
   /** 근거 판정 id를 기록한다. 제목·URL·본문은 남기지 않는다. */
   public void bindAnalysisRun(Long runId) {
     analysisRunId = runId;

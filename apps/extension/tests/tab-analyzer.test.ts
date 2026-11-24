@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import type { MatchStatus } from '@focuson/shared-types'
 import { DWELL_MS, TabAnalyzer, type Deps, type RunBody, type Target, type Tracking } from '../extension/background/tab-analyzer.ts'
 
 const docs: Target = { tabId: 7, url: 'https://tanstack.com/query/latest?utm=1', title: 'Important Defaults - TanStack Query' }
 
-function setup(options: { relation?: string; relations?: string[]; page?: { sensitive: boolean; text: string } | null; excluded?: string[] | null; access?: boolean; session?: string | null } = {}) {
+function setup(options: { relation?: string; relations?: string[]; matchStatus?: MatchStatus | null; page?: { sensitive: boolean; text: string } | null; excluded?: string[] | null; access?: boolean; session?: string | null } = {}) {
   let clock = 1_000_000
   let ids = 0
   let target: Target | null = docs
@@ -22,7 +23,7 @@ function setup(options: { relation?: string; relations?: string[]; page?: { sens
     excludedDomains: async () => options.excluded === undefined ? [] : options.excluded,
     hasSiteAccess: async () => options.access ?? true,
     inspect: async (_tabId, max) => { inspected.push(max); return options.page === undefined ? { sensitive: false, text: 'staleTime 기본값은 0이다' } : options.page },
-    post: async (_sessionId, body) => { sent.push(body); return { ok: true, relation: relations.shift() ?? 'RELATED' } },
+    post: async (_sessionId, body) => { sent.push(body); return { ok: true, relation: relations.shift() ?? 'RELATED', matchStatus: options.matchStatus === undefined ? 'MATCHED' : options.matchStatus } },
     loadTracking: async () => tracking,
     saveTracking: async (value) => { tracking = value },
     loadSequences: async () => sequences,
@@ -39,7 +40,7 @@ function setup(options: { relation?: string; relations?: string[]; page?: { sens
   }
 }
 
-test('같은 탭을 15초 보면 탭 제목·도메인만 보내고, 관련 있으면 본문은 읽지 않는다', async () => {
+test('같은 탭을 15초 보면 탭 제목·도메인만 보내고, 할 일까지 매칭되면 본문을 읽지 않는다', async () => {
   const t = setup({ relation: 'RELATED' })
   await t.analyzer.onChange()
   t.advance(DWELL_MS)
@@ -61,6 +62,16 @@ test('관련 없음·판단 보류면 정리한 본문으로 한 번 더 보낸�
     assert.deepEqual(t.sent.map((body) => [body.contentSource, body.sequence]), [['TAB_META', 1], ['CHROME_DOM', 1]], relation)
     assert.deepEqual(t.sent[1].contentPayload, { text: 'staleTime 기본값은 0이다' })
     assert.equal(t.sent[1].metadata?.urlHost, 'tanstack.com')
+  }
+})
+
+test('관련 화면이 할 일에 매칭되지 않으면 본문을 보낸다', async () => {
+  for (const matchStatus of ['FAR', 'NOT_ENOUGH', null] as const) {
+    const t = setup({ relation: 'RELATED', matchStatus })
+    await t.analyzer.onChange()
+    t.advance(DWELL_MS)
+    await t.fire()
+    assert.deepEqual(t.sent.map(({ contentSource }) => contentSource), ['TAB_META', 'CHROME_DOM'])
   }
 })
 

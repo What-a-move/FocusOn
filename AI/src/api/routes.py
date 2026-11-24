@@ -2,20 +2,25 @@
 import json
 import secrets
 import logging
+from time import perf_counter
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request, Security
+from fastapi import APIRouter, Header, HTTPException, Request, Security
+from pydantic import Field, ValidationError
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
 from starlette.requests import ClientDisconnect
 
 from .reception import AnalysisReception, AnalysisDecisionResponse
 from .relevance_contract import adapt_screen_request
-from .schemas import SafeInputError
+from .schemas import GoalProfile, InternalSchema, SafeInputError
 from ..analysis.acquisition_policy import desktop_target_block_reason
 from ..preprocessing.adapter import observation_is_current
 from ..preprocessing.models import ContentSource, ExtractionStatus
 from ..preprocessing.validator import contains_sensitive_data
 from ..models.screen_activity.beta_decision import beta_decision
+from ..models.screen_activity.goal_match import goal_terms, match_goal
 from ..utils.logger import log_event
 
 logger = logging.getLogger(__name__)
@@ -84,11 +89,12 @@ async def validated_input(request: Request):
     block = desktop_target_block_reason(content.content_source, content.app_name)
     if block:
         raise HTTPException(409, block)
+    goals = envelope.request.goals or (envelope.goal,)
     if any(contains_sensitive_data(value) for value in (
             content.text, content.page_title, content.window_title, content.app_name,
-            content.url_host, envelope.goal.text)):
+            content.url_host, *(term for goal in goals for term in goal_terms(goal)))):
         raise HTTPException(422, "CONTENT_BLOCKED")
-    return content
+    return content, goals
 
 
 @router.post("/internal/v1/analysis-runs", response_model=AnalysisDecisionResponse,
@@ -97,14 +103,15 @@ async def validated_input(request: Request):
                  "application/json": {"schema": {"$ref": "#/components/schemas/AnalysisReception"}}}}})
 async def analyze_relevance(request: Request) -> AnalysisDecisionResponse:
     """Validate the trusted envelope and classify the active screen locally."""
-    content = await validated_input(request)
+    content, goals = await validated_input(request)
     # Fast tokenizers share mutable padding/truncation settings within a worker.
     async with request.app.state.activity_lock:
-        return await run_in_threadpool(run_analysis, content, request.app.state.activity_classifier)
+        return await run_in_threadpool(run_analysis, content, request.app.state.activity_classifier, goals)
 
 
-def run_analysis(content, classifier) -> AnalysisDecisionResponse:
+def run_analysis(content, classifier, goals) -> AnalysisDecisionResponse:
     label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
+    goal_id = match_status = None
     if classifier is not None and content.extraction_status in {ExtractionStatus.SUCCESS, ExtractionStatus.PARTIAL}:
         payload = {
             "contentSource": content.content_source.value,
@@ -122,8 +129,72 @@ def run_analysis(content, classifier) -> AnalysisDecisionResponse:
             # Inference errors may contain input text or local runtime details.
             log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
 
+        if label == "RELATED":
+            try:
+                goal_id, match_status = match_goal(classifier, content, payload, goals)
+            except Exception:
+                log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
+                match_status = "NOT_ENOUGH"
+
     return AnalysisDecisionResponse(decision=label, confidence=None, reasonCode=reason,
-                                    modelVersion=MODEL_VERSION, promptVersion=DECISION_VERSION)
+                                    modelVersion=MODEL_VERSION, promptVersion=DECISION_VERSION,
+                                    matchedGoalId=goal_id, matchStatus=match_status)
 
 
 from src.api.goal_routes import get_goal_workflow
+
+class ConfirmedProfileRequest(InternalSchema):
+    goal_text: str = Field(alias="goalText", min_length=2, max_length=40, repr=False)
+    locale: str = Field(default="ko-KR", min_length=2, max_length=35, pattern=r"^[A-Za-z0-9-]+$")
+
+
+class ConfirmedProfileResponse(InternalSchema):
+    profile: GoalProfile = Field(alias="goalProfile")
+    model_config = {"serialize_by_alias": True}
+
+
+@router.post("/internal/v1/goals/profile", response_model=ConfirmedProfileResponse,
+             dependencies=[Security(require_backend)])
+async def generate_confirmed_profile(
+    request: ConfirmedProfileRequest,
+    trace_header: Annotated[str | None, Header(alias="X-Trace-Id")] = None,
+) -> ConfirmedProfileResponse:
+    from src.api.schemas import GoalClarifyRequest
+    from src.config import get_settings
+    from src.models.errors import InvalidModelResponseError, ModelConfigurationError, ModelUnavailableError
+    from src.models.llm_client import ClaudeGoalGenerationClient
+
+    goal = request.goal_text.strip()
+    if len(goal) < 2 or contains_sensitive_data(goal):
+        raise HTTPException(422, "INVALID_GOAL_TEXT")
+    settings = get_settings().model_copy(update={"goal_assistance_max_retries": 0})
+    generator = ClaudeGoalGenerationClient(settings)
+    try:
+        trace_id = str(UUID(trace_header)) if trace_header and len(trace_header) == 36 else None
+    except ValueError:
+        trace_id = None
+    log_fields = {"module": "ai", "component": "goal-profile", "traceId": trace_id,
+                  "path": "/internal/v1/goals/profile"}
+    started = perf_counter()
+    log_event(logger, "ai.call.start", durMs=0, **log_fields)
+    try:
+        draft = await generator.generate_profile(GoalClarifyRequest(
+            requestId="confirmed-profile", goalText=goal, locale=request.locale, conversationTurn=0))
+        profile = GoalProfile.model_validate(draft.model_dump(by_alias=True, mode="json",
+            include={"main_topic", "purpose", "core_topics", "supporting_topics", "expected_activities"}))
+        if any(contains_sensitive_data(term) for term in (
+            profile.main_topic, *profile.core_topics, *profile.supporting_topics, *profile.expected_activities
+        )):
+            raise ValueError("CONTENT_BLOCKED")
+        log_event(logger, "ai.call.ok", durMs=round((perf_counter() - started) * 1000, 1), **log_fields)
+        return ConfirmedProfileResponse(goalProfile=profile)
+    except (ValidationError, ValueError, InvalidModelResponseError):
+        log_event(logger, "ai.call.fail", level=logging.WARNING, error_code="INVALID_MODEL_RESPONSE",
+                  durMs=round((perf_counter() - started) * 1000, 1), **log_fields)
+        raise HTTPException(502, "INVALID_MODEL_RESPONSE") from None
+    except (ModelConfigurationError, ModelUnavailableError):
+        log_event(logger, "ai.call.fail", level=logging.WARNING, error_code="AI_UNAVAILABLE",
+                  durMs=round((perf_counter() - started) * 1000, 1), **log_fields)
+        raise HTTPException(503, "AI_UNAVAILABLE") from None
+    finally:
+        await generator.aclose()

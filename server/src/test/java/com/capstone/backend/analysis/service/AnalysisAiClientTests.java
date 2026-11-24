@@ -160,6 +160,11 @@ class AnalysisAiClientTests {
       assertEquals(id, trace.get());
       var envelope = json.readTree(body.get());
       assertEquals("서버 목표", envelope.at("/request/goalSnapshot").asString());
+      assertEquals("30", envelope.at("/request/goals/0/goalId").asString());
+      assertEquals("서버 목표", envelope.at("/request/goals/0/goalText").asString());
+      assertEquals(1, envelope.at("/request/goalVersion").asInt());
+      assertEquals(1, envelope.at("/context/goalVersion").asInt());
+      assertEquals(1, envelope.at("/goal/goalVersion").asInt());
       assertEquals("40", envelope.at("/context/userId").asString());
       assertEquals(1, envelope.at("/context/stateVersion").asInt());
       assertEquals("example.com", envelope.at("/request/metadata/urlHost").asString());

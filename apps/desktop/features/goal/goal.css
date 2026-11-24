@@ -71,8 +71,6 @@
 .goal-window .goal-card { padding: 24px 28px; border: 1.5px solid var(--gold); border-radius: 18px; background: var(--gold-tint); }
 .goal-window .goal-card small { display: block; color: var(--muted); font-size: 14px; font-weight: 600; }
 .goal-window .goal-card p { margin-top: 6px; font-size: 26px; font-weight: 700; line-height: 1.45; letter-spacing: -.02em; }
-.goal-window .rules { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
-.goal-window .rules li { padding: 8px 12px; border-radius: 99px; background: var(--field); font-size: 14px; font-weight: 600; }
 
 /* 완료: 넓은 가로 폭, 목표를 가장 위·가장 크게 */
 .goal-window .view.done-view { width: min(1000px, calc(100% - 64px)); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 56px; }
@@ -119,3 +117,13 @@
   .onboarding-window.goal-window .speaker .poki { width: 72px; height: 72px; flex-basis: 72px; }
   .onboarding-window.goal-window .bubble { font-size: 22px; }
 }
+
+.goal-window .goal-profile { display: grid; gap: 12px; min-width: 0; margin: 20px 0 0; padding: 16px; border: 1.5px solid var(--line); border-radius: 14px; }
+.goal-window .goal-profile legend, .goal-window .goal-profile label { font-weight: 700; }
+.goal-window .goal-profile p { color: var(--muted); font-size: 14px; }
+.goal-window .goal-profile label { display: grid; gap: 6px; }
+.goal-window .goal-profile textarea { width: 100%; min-height: 58px; padding: 10px 12px; resize: vertical; border: 1.5px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); font: inherit; font-weight: 500; }
+.goal-window .goal-profile textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.goal-window .review-goals { margin: 8px 0 0; padding-left: 22px; list-style: disc; }
+.goal-window .editable-goal { display: grid; gap: 8px; margin-top: 8px; }
+.goal-window .editable-goal .goal-input { padding-right: 20px; }

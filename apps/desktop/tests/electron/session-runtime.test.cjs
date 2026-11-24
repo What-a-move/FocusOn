@@ -13,7 +13,7 @@ function setup(routes, ready = { screen: () => true, notification: () => true })
     authorizedRequest: async (request) => {
       calls.push(request)
       const reply = routes[`${request.method} ${request.path}`]
-      const result = typeof reply === 'function' ? reply(request, calls) : reply
+      const result = typeof reply === 'function' ? await reply(request, calls) : reply
       if (!result) return { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } }
       if (!result.success) return result
       // raw: auth-api가 이미 parse한 결과(예: 204 → parse(null))를 그대로 돌려준다.
@@ -72,6 +72,28 @@ test('버전 충돌이면 서버 최신 상태로 맞추고 로컬 값으로 덮
   assert.equal(runtime.snapshot().status, 'PAUSED')
   assert.equal(runtime.snapshot().accumulatedActiveMs, 300000)
   assert.equal(runtime.snapshot().error, 'SESSION_VERSION_CONFLICT')
+})
+
+test('할 일 추가 충돌 뒤 늦게 온 조회가 화면 권한 상실로 멈춘 타이머를 다시 켜지 않는다', async () => {
+  let release
+  const { runtime, advance } = setup({
+    'POST /api/v1/sessions/901/goals': { success: false, error: { code: 'SESSION_VERSION_CONFLICT', retryable: false } },
+    'GET /api/v1/sessions/901': () => new Promise((resolve) => { release = resolve }),
+  })
+  runtime.begin(started, '미적분 풀기')
+  const request = runtime.addGoal({ sessionId: '901', goalId: '13', goalVersion: 1 })
+  await new Promise((resolve) => setImmediate(resolve))
+  advance(1000)
+  runtime.screenPermissionLost()
+  release({ success: true, data: {
+    sessionId: '901', status: 'RUNNING', version: 1, goalTextSnapshot: '미적분 풀기',
+    targetDurationMs: 600000, accumulatedActiveMs: 0,
+  } })
+  assert.equal((await request).error.code, 'SESSION_VERSION_CONFLICT')
+  advance(1000)
+  assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
+  assert.equal(runtime.snapshot().pauseReason, 'REQUIRED_PERMISSION')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 1000)
 })
 
 test('heartbeat는 X-Device-Id로 누적 시간을 보내고, 서버가 끝낸 세션은 되살리지 않는다', async () => {
@@ -353,4 +375,19 @@ test('다시 조회에 실패하면 다음 heartbeat에서 또 맞춘다', async
   await runtime.heartbeat()
   await runtime.heartbeat()
   assert.equal(calls.filter((c) => c.path === '/api/v1/sessions/901').length, 2)
+})
+
+test('진행 세션의 할 일 추가는 올바른 세션 ID에만 요청하고 서버 버전만 로컬에 반영한다', async () => {
+  const first = { goalId: '12', goalText: '미적분 풀기' }
+  const second = { goalId: '13', goalText: '영어 단어 정리' }
+  const { runtime, calls } = setup({
+    'POST /api/v1/sessions/901/goals': { success: true, data: { goals: [first, second], goalVersion: 2 } },
+  })
+  runtime.begin({ ...started, goals: [first], goalVersion: 1 }, first.goalText)
+  assert.equal((await runtime.addGoal({ sessionId: '902', goalId: '13', goalVersion: 1 })).success, false)
+  assert.equal(calls.length, 0)
+  assert.equal((await runtime.addGoal({ sessionId: '901', goalId: '13', goalVersion: 1 })).success, true)
+  assert.deepEqual(calls[0].body, { goalId: '13', goalVersion: 1 })
+  assert.deepEqual(runtime.snapshot().goals, [first, second])
+  assert.equal(runtime.snapshot().goalVersion, 2)
 })

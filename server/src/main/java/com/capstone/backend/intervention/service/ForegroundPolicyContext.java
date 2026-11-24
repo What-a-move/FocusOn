@@ -4,8 +4,10 @@ import com.capstone.backend.analysis.persistence.AnalysisRunRepository;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.intervention.dto.InterventionDtos.DispatchStatus;
+import com.capstone.backend.intervention.dto.InterventionDtos.Type;
 import com.capstone.backend.intervention.dto.ObservationContextDtos.Observer;
 import com.capstone.backend.intervention.persistence.InterventionDeliveryRepository;
+import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.intervention.persistence.ObservationContextEntity;
 import com.capstone.backend.intervention.persistence.ObservationContextRepository;
@@ -38,11 +40,14 @@ public class ForegroundPolicyContext {
             && Objects.equals(value.getRunningSince(), session.getLastResumedAt()))
         .map(value -> {
           var history = events.findBySessionIdOrderByCreatedAtAscIdAsc(sessionId);
-          Instant cooldown = history.stream().map(event -> event.getDeliveryConfirmedAt())
+          Instant cooldown = history.stream()
+              .filter(event -> event.getType() != Type.GOAL_ADD_PROMPT)
+              .map(InterventionEventEntity::getDeliveryConfirmedAt)
               .filter(Objects::nonNull).max(Instant::compareTo)
               .map(at -> at.plusSeconds(300)).orElse(null);
           boolean unknown = history.stream().anyMatch(event ->
-              event.getDeliveryConfirmedAt() == null && !definitelyNotSent(event.getId()));
+              event.getType() != Type.GOAL_ADD_PROMPT && event.getDeliveryConfirmedAt() == null
+                  && !definitelyNotSent(event.getId()));
           return new Binding(value.getObserverDeviceId(), value.getId().toString(),
               value.getCreatedAt(), true, cooldown, unknown, value.getValidUntil());
         });

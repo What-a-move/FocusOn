@@ -1,5 +1,8 @@
 package com.capstone.backend.intervention.service;
 
+import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
+import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
+import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.persistence.AnalysisRunEntity;
 import com.capstone.backend.analysis.persistence.AnalysisRunRepository;
 import com.capstone.backend.auth.persistence.TokenFamilyEntity;
@@ -12,8 +15,10 @@ import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.intervention.persistence.InterventionPolicyRepository;
 import com.capstone.backend.intervention.persistence.InterventionPolicyState;
+import com.capstone.backend.session.dto.SessionDtos.NotificationChannel;
 import com.capstone.backend.session.dto.SessionDtos.SessionOptions;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
+import com.capstone.backend.session.persistence.SessionGoalRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
@@ -44,6 +49,7 @@ public class InterventionPolicyService {
   private final UserConsentRepository consents;
   private final ObjectMapper json;
   private final UserFocusSettingsRepository focusSettings;
+  private final SessionGoalRepository sessionGoals;
 
   /** 분석 예약의 processing과 이미 확정된 보호 결과를 구분한다. */
   public void prepared(LearningSessionEntity session, AnalysisRunEntity run, boolean current,
@@ -64,6 +70,7 @@ public class InterventionPolicyService {
       return;
     }
     var state = load(session, binding.get(), now);
+    state.suspendFar();
     var timeline = read(state).pending(run.getId(), now);
     if (guarded || run.isOrderingUntrusted()) {
       timeline = timeline.interrupt(now);
@@ -106,7 +113,7 @@ public class InterventionPolicyService {
       // 지금 화면이 딴짓인지 모르는 상태라 v1처럼 만료한다.
       expirePending(session, now, true);
     }
-    evaluate(session, selected, state, timeline, now);
+    evaluate(session, selected, state, timeline, run, now);
   }
 
   /** 신호 자체는 관측이 아니므로 최신 확정 상태의 경과 시간만 평가한다. */
@@ -133,9 +140,10 @@ public class InterventionPolicyService {
       return;
     }
     if (current == null || !Objects.equals(current.getId(), timeline.snapshot().latestRun())) {
+      state.suspendFar();
       return;
     }
-    evaluate(session, binding.get(), state, timeline, now);
+    evaluate(session, binding.get(), state, timeline, current, now);
   }
 
   /** 실제 앱이 아직 보내지 않는 context를 기기별 번호/시각으로 만들어내지 않는다. */
@@ -182,9 +190,11 @@ public class InterventionPolicyService {
                 .snapshot()))));
     var timeline = read(state);
     if (!Objects.equals(timeline.snapshot().runningSince(), session.getLastResumedAt())) {
+      state.suspendFar();
       state.transition(json.writeValueAsString(
           OffTaskTimeline.empty(session.getLastResumedAt(), context.context(), now).snapshot()));
     } else if (!timeline.snapshot().context().equals(context.context())) {
+      state.suspendFar();
       state.transition(json.writeValueAsString(
           timeline.switchContext(context.context(), now).snapshot()));
     }
@@ -206,6 +216,7 @@ public class InterventionPolicyService {
       var timeline = read(state);
       Instant cutoff = contexts.expiry(timeline.snapshot().context())
           .filter(at -> at.isBefore(now)).orElse(now);
+      state.suspendFar();
       state.transition(json.writeValueAsString(timeline.interrupt(cutoff).snapshot()));
     });
     expirePending(session, now, true);
@@ -250,14 +261,32 @@ public class InterventionPolicyService {
     return true;
   }
 
+  static boolean confirmedFar(LearningSessionEntity session, AnalysisRunEntity run) {
+    return OffTaskTimeline.POLICY_V2.equals(session.getInterventionPolicyVersion())
+        && !run.isOrderingUntrusted() && run.isCurrentEligible()
+        && run.getGoalVersion() == session.getGoalVersion()
+        && run.effectiveRelation() == Relation.RELATED && run.getMatchStatus() == MatchStatus.FAR
+        && (run.getContentSource() == ContentSource.CHROME_DOM
+            || run.getContentSource() == ContentSource.DESKTOP_APP_OCR);
+  }
+
   private void evaluate(LearningSessionEntity session, ForegroundPolicyContext.Binding context,
-      InterventionPolicyState state, OffTaskTimeline timeline, Instant now) {
-    expirePending(session, now, timeline.snapshot().openEpisode() == null);
+      InterventionPolicyState state, OffTaskTimeline timeline, AnalysisRunEntity run, Instant now) {
+    boolean far = timeline.snapshot().pendingRun() == null && confirmedFar(session, run);
+    final boolean promptReady = far && state.countConfirmedFar(session.getGoalVersion(), now);
+    if (!far) {
+      state.suspendFar();
+    }
+    var history = events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId());
+    history.stream().filter(event -> !now.isBefore(event.getExpiresAt())
+        || (event.getType() == Type.GOAL_ADD_PROMPT ? !far
+            : timeline.snapshot().openEpisode() == null))
+        .forEach(InterventionEventEntity::expire);
+    events.flush();
     if (!context.deliveryContractReady() || context.deliveryUnconfirmed()
         || timeline.snapshot().pendingRun() != null) {
       return;
     }
-    var history = events.findBySessionIdOrderByCreatedAtAscIdAsc(session.getId());
     // NOT_SENT도 TTL 안에는 같은 후보를 재시도하며 별도 pending 후보를 생성하지 않는다.
     if (history.stream().anyMatch(event -> event.getStatus()
         == com.capstone.backend.intervention.dto.InterventionDtos.Status.PENDING
@@ -265,8 +294,19 @@ public class InterventionPolicyService {
       return;
     }
     // receipt 미확인 이벤트는 ack/만료 뒤에도 재발송을 막는다. ack는 receipt가 아니다.
-    if (history.stream().anyMatch(event -> event.getDeliveryConfirmedAt() == null
-        && !contexts.definitelyNotSent(event.getId()))) {
+    if (history.stream().anyMatch(event -> event.getType() != Type.GOAL_ADD_PROMPT
+        && event.getDeliveryConfirmedAt() == null && !contexts.definitelyNotSent(event.getId()))) {
+      return;
+    }
+    if (promptReady && history.stream().noneMatch(event -> event.getType() == Type.GOAL_ADD_PROMPT)
+        && sessionGoals.countByIdSessionId(session.getId()) < 3) {
+      var event = InterventionEventEntity.goalAddPrompt(session.getId(), state.getRevision(),
+          json.writeValueAsString(List.of(NotificationChannel.MOLE_UI)),
+          session.getInterventionPolicyVersion(), session.getLastResumedAt(), now);
+      event.bindContext(InterventionAccess.id(context.context(),
+          com.capstone.backend.common.api.ApiErrorCode.VALIDATION_ERROR));
+      event.bindAnalysisRun(run.getId());
+      events.saveAndFlush(event);
       return;
     }
     var options = json.readValue(session.getSessionOptionsSnapshotJson(), SessionOptions.class);

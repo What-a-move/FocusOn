@@ -15,7 +15,7 @@ import org.hibernate.type.SqlTypes;
 
 /**
  * 세션 시작 때 고른 목표의 사본이다. 목표 문구·세분화가 나중에 바뀌어도 이 세션의 판정 기준은
- * 그대로다. 세션 하나에 최대 3개(position 1~3)를 담을 수 있으며 지금은 1개만 쓴다.
+ * 그대로다. 세션 하나에 최대 3개(position 1~3)를 담을 수 있다.
  */
 @Entity
 @Table(name = "session_goals")
@@ -42,6 +42,15 @@ public class SessionGoalEntity {
     entity.goalId = goal.getId();
     entity.goalTextSnapshot = goal.getGoalText();
     entity.goalProfileSnapshotJson = goal.getProfileJson();
+    return entity;
+  }
+
+  /** 다중 목표 도입 전 세션의 최초 목표 사본을 복구한다. */
+  public static SessionGoalEntity legacySnapshot(LearningSessionEntity session) {
+    var entity = new SessionGoalEntity();
+    entity.id = new Key(session.getId(), (short) 1);
+    entity.goalId = session.getGoal().getId();
+    entity.goalTextSnapshot = session.getGoalTextSnapshot();
     return entity;
   }
 

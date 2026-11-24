@@ -99,6 +99,12 @@ public class AnalysisRunEntity {
   @Column(name = "match_status", length = 16)
   private MatchStatus matchStatus;
 
+  @Column(name = "matched_goal_id")
+  private Long matchedGoalId;
+
+  @Column(name = "goal_version", nullable = false)
+  private long goalVersion;
+
   @Column(name = "error_code", length = 80)
   private String errorCode;
 
@@ -128,6 +134,7 @@ public class AnalysisRunEntity {
     run.observationSequence = request.observationSequence() == null ? null
         : request.observationSequence().longValueExact();
     run.policyVersion = session.getInterventionPolicyVersion();
+    run.goalVersion = session.getGoalVersion();
     run.createdAt = now;
     run.complete(AnalysisDecision.unavailable());
     return run;
@@ -152,6 +159,7 @@ public class AnalysisRunEntity {
     reasonCode = decision.reasonCode();
     analysisStatus = decision.status();
     matchStatus = decision.matchStatus();
+    matchedGoalId = decision.matchedGoalId();
     modelVersion = decision.modelVersion();
     promptVersion = decision.promptVersion();
     errorCode = reasonCode == ReasonCode.ANALYSIS_UNAVAILABLE
@@ -162,7 +170,8 @@ public class AnalysisRunEntity {
   public Response response() {
     return new Response(id.toString(), analysisStatus, relation,
         relationConfidence == null ? null : relationConfidence.doubleValue(), reasonCode,
-        observedAt, policyVersion, matchStatus);
+        observedAt, policyVersion, matchStatus,
+        matchedGoalId == null ? null : matchedGoalId.toString(), goalVersion);
   }
 
   /** metadata만 근거인 무관 판정은 후속 Policy Engine의 이탈 시간에 포함하지 않는다. */

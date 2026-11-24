@@ -1,4 +1,4 @@
-import type { FocusSettings, InterventionLevel, NotificationChannel, SessionSnapshot, StartSessionInput, StartedSession } from '../../electron/shared/session-contract.cjs'
+import type { AddSessionGoalInput, FocusSettings, InterventionLevel, NotificationChannel, SessionSnapshot, StartSessionInput, StartedSession } from '../../electron/shared/session-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -34,6 +34,7 @@ async function viaPermissions<T>(call: (api: NonNullable<Window['focusOn']>['per
 export const sessionApi = {
   getFocusSettings: () => viaSessions<FocusSettings>((api) => api.getFocusSettings()),
   start: (input: StartSessionInput) => viaSessions<StartedSession>((api) => api.start(input)),
+  addGoal: (input: AddSessionGoalInput) => viaSessions<SessionSnapshot>((api) => api.addGoal(input)),
   // 알림은 서버가 검증하지 않아 Desktop에서 시험 알림 + 사용자 확인으로 준비를 막는다(결정 022).
   sendTestNotification: () => viaPermissions<{ shown: boolean }>((api) => api.showNotification({ titleCode: 'ONBOARDING_TEST', bodyCode: 'ONBOARDING_TEST' })),
   getNotificationStatus: () => viaPermissions<{ confirmed: boolean }>((api) => api.getNotificationStatus()),

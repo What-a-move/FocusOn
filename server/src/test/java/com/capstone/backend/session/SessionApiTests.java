@@ -28,6 +28,9 @@ import com.capstone.backend.user.service.OnboardingReadinessService;
 import com.capstone.backend.user.service.OnboardingReadinessService.Readiness;
 import com.capstone.backend.user.service.OnboardingReadinessService.Steps;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -728,6 +731,61 @@ class SessionApiTests {
             .header("Authorization", "Bearer " + other.accessToken()))
         .andExpect(status().isNoContent());
     mvc.perform(get("/api/v1/sessions/active")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void orderedGoalsStartAndAddWithoutChangingSessionCommandVersion() throws Exception {
+    LoginResponse owner = desktop("session-selected-goals");
+    String token = "Bearer " + owner.accessToken();
+    List<String> goalIds = new ArrayList<>();
+    for (String text : List.of("React 상태", "Spring 작업", "판정 결과", "네 번째 목표")) {
+      String goal = mvc.perform(post("/api/v1/goals").header("Authorization", token)
+              .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                  "goalText", text, "confirmationSource", "MANUAL_CONFIRMED"))))
+          .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+      goalIds.add(json.readTree(goal).at("/data/goalId").asString());
+    }
+    var request = (tools.jackson.databind.node.ObjectNode) json.readTree(request(goalIds.getFirst(),
+        1800000));
+    request.remove("goalId");
+    request.set("goalIds", json.valueToTree(goalIds.subList(0, 2)));
+    String created = mvc.perform(post("/api/v1/sessions").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(request)))
+        .andExpect(status().isCreated()).andExpect(jsonPath("$.data.goalVersion").value(1))
+        .andExpect(jsonPath("$.data.goals[0].goalId").value(goalIds.get(0)))
+        .andExpect(jsonPath("$.data.goals[1].goalId").value(goalIds.get(1)))
+        .andReturn().getResponse().getContentAsString();
+    var data = json.readTree(created).path("data");
+    String path = "/api/v1/sessions/" + data.path("sessionId").asString() + "/goals";
+    String add = json.writeValueAsString(Map.of("goalId", goalIds.get(2), "goalVersion", 1));
+    for (int call = 0; call < 2; call++) {
+      mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(add))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(2))
+          .andExpect(jsonPath("$.data.goals[2].goalId").value(goalIds.get(2)));
+    }
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(Map.of("goalId", goalIds.get(3), "goalVersion", 1))))
+        .andExpect(status().isConflict()).andExpect(jsonPath("$.code")
+            .value("SESSION_VERSION_CONFLICT"));
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(Map.of("goalId", goalIds.get(3), "goalVersion", 2))))
+        .andExpect(status().isBadRequest());
+    mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(2))
+        .andExpect(jsonPath("$.data.version").value(data.path("version").asInt()));
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete("/api/v1/goals/" + goalIds.get(1))
+            .header("Authorization", token))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("GOAL_UPDATE_BLOCKED"));
   }
 
   /** accumulatedAt은 서버 시각 기준이며 기기 시계나 RUNNING 아닌 상태의 값을 쓰지 않는다. */

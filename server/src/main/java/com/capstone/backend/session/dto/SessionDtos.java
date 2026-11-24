@@ -2,13 +2,16 @@ package com.capstone.backend.session.dto;
 
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.UserFocusSettingsEntity.InterventionLevel;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -35,7 +38,9 @@ public final class SessionDtos {
       Boolean screenAnalysisReady) {}
 
   /** 세션 시작 요청이다. */
-  public record StartRequest(@NotBlank @Schema(example = "12") String goalId,
+  public record StartRequest(@Schema(example = "12") String goalId,
+      @JsonInclude(JsonInclude.Include.NON_NULL)
+      @Size(min = 1, max = 3) List<@NotBlank String> goalIds,
       @NotNull @Digits(integer = 8, fraction = 0)
       @Schema(example = "1800000", description = "5~300분, 1분 단위의 밀리초")
       BigDecimal targetDurationMs,
@@ -46,7 +51,16 @@ public final class SessionDtos {
   /** 세션 생성 결과다. */
   public record StartResponse(String sessionId, SessionStatus status, long version,
       long targetDurationMs, long accumulatedActiveMs, Instant startedAt,
-      String interventionPolicyVersion) {}
+      String interventionPolicyVersion, List<SessionGoal> goals, long goalVersion) {}
+
+  /** 세션 시점의 목표 사본과 목표 목록 버전이다. */
+  public record SessionGoal(String goalId, String goalText) {}
+
+  /** 기존 목표 집합에 할 일을 추가한다. */
+  public record AddGoalRequest(@NotBlank String goalId, @NotNull @Positive Long goalVersion) {}
+
+  /** 할 일 추가 후 서버가 확정한 목록이다. */
+  public record SessionGoalsResponse(List<SessionGoal> goals, long goalVersion) {}
 
   /**
    * 사용자의 활성 세션 정보다. {@code accumulatedAt}은 누적 시간이 확정된 서버 시각이며
@@ -54,7 +68,7 @@ public final class SessionDtos {
    */
   public record ActiveResponse(String sessionId, SessionStatus status, long version,
       String goalTextSnapshot, long targetDurationMs, long accumulatedActiveMs,
-      Instant accumulatedAt, Instant serverNow) {}
+      Instant accumulatedAt, Instant serverNow, List<SessionGoal> goals, long goalVersion) {}
 
   /** 일시정지의 사용자 및 자동 복구 사유다. */
   public enum PauseReason { USER, REQUIRED_PERMISSION, EXTENSION_UNLINKED, APP_RESTART, SYSTEM }
