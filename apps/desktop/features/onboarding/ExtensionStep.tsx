@@ -77,10 +77,10 @@ export function ExtensionStep() {
   const seconds = Math.ceil(left / 1000)
   const characters = [...code.padEnd(6, ' ').slice(0, 6)]
   const prompt = status === 'connected'
-    ? { text: '연결됐어요! 잘하셨어요.', error: false }
+    ? { text: '연결됐어!', error: false }
     : status === 'expired'
-      ? { text: '새 코드를 받아 주세요!', error: false }
-      : { text: 'Chrome이랑 연결해 볼까요?', error: false }
+      ? { text: '새 코드를 받아 줘!', error: false }
+      : { text: 'Chrome이랑 연결해 볼까?', error: false }
 
   async function copyCode() {
     try {

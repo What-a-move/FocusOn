@@ -50,7 +50,7 @@ export function SessionSetup() {
   const [selectedGoals, setSelectedGoals] = useState<SessionGoal[]>([])
   const { goals, nextCursor, loading, failed, load } = useOpenGoals()
   const options = [...new Map([...selectedGoals, ...goals].map((goal) => [goal.goalId, goal])).values()]
-  const [duration, setDuration] = useState<string>('30')
+  const [duration, setDuration] = useState<string>('60')
   const [custom, setCustom] = useState('40')
   const [level, setLevel] = useState<InterventionLevel>('NORMAL')
   const [channels, setChannels] = useState<NotificationChannel[]>(DEFAULT_CHANNELS)

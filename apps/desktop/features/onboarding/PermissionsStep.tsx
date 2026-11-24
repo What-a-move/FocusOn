@@ -67,7 +67,7 @@ export function PermissionsStep() {
   const [cameraConsent, setCameraConsent] = useState(false)
   const [perms, setPerms] = useState<Record<PermName, PermState>>({ screen: idle, camera: idle, notify: idle })
   const [detail, setDetail] = useState<Detail | null>(null)
-  const [prompt, setPrompt] = useState({ text: '시작하려면 동의가 필요해요!', error: false })
+  const [prompt, setPrompt] = useState({ text: '시작하려면 동의가 필요해!', error: false })
   const [feedback, setFeedback] = useState<Notice | null>(null)
   const [saving, setSaving] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -79,7 +79,7 @@ export function PermissionsStep() {
       setAccepted(new Set(draft.accepted))
       setCameraConsent(draft.cameraConsent)
       setView('permission')
-      setPrompt({ text: '다시 왔네요! 권한을 확인할게요', error: false })
+      setPrompt({ text: '다시 왔네! 권한 확인할게', error: false })
     })
   }, [])
 
@@ -92,7 +92,7 @@ export function PermissionsStep() {
     setAccepted(next)
     setFeedback(null)
     const ready = requiredConsents.every(({ id }) => next.has(id))
-    setPrompt({ text: ready ? '좋아요, 다 됐어요!' : '시작하려면 동의가 필요해요!', error: false })
+    setPrompt({ text: ready ? '좋아, 다 됐어!' : '시작하려면 동의가 필요해!', error: false })
   }
 
   function showDetail(next: Detail) {
@@ -102,7 +102,7 @@ export function PermissionsStep() {
 
   function failPerm(name: PermName, state: PermState['state'], notice: Notice) {
     setPerm(name, { state, error: `${notice.title} ${notice.body}` })
-    setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
+    setPrompt({ text: '권한을 확인하지 못했어.', error: true })
   }
 
   // [유지보수] 시스템 설정에서 돌아오면(창 포커스) 화면 기록 상태를 조용히 다시 확인한다.
@@ -113,16 +113,16 @@ export function PermissionsStep() {
       if (!silent) {
         const notice = describeError(result.error, '화면 기록 권한을 확인하지 못했어요.')
         setScreen({ state: 'opened', error: `${notice.title} ${notice.body}` })
-        setPrompt({ text: '권한을 확인하지 못했어요.', error: true })
+        setPrompt({ text: '권한을 확인하지 못했어.', error: true })
       }
       return
     }
     if (result.data.granted) {
       setScreen({ state: 'granted', error: null })
-      setPrompt({ text: '좋아요, 준비됐어요!', error: false })
+      setPrompt({ text: '좋아, 준비됐어!', error: false })
     } else if (!silent) {
       setScreen({ state: 'denied', error: null })
-      setPrompt({ text: '아직 꺼져 있는 것 같아요.', error: false })
+      setPrompt({ text: '아직 꺼져 있는 것 같아.', error: false })
     }
   }, [])
 
@@ -149,28 +149,28 @@ export function PermissionsStep() {
       const result = await onboardingApi.openScreenRecordingSettings()
       if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.screen)
       setPerm(name, { state: 'opened', error: null })
-      setPrompt({ text: '켠 다음 다시 열어 주세요!', error: false })
+      setPrompt({ text: '켠 다음 다시 열어 줘!', error: false })
       return
     }
     if (name === 'camera') {
       const result = await onboardingApi.requestCamera()
       if (!result.success) return failPerm(name, current.state, describeError(result.error, '카메라 권한을 요청하지 못했어요.'))
       setPerm(name, { state: result.data.granted ? 'granted' : 'denied', error: null })
-      if (result.data.granted) setPrompt({ text: '카메라도 준비됐어요!', error: false })
+      if (result.data.granted) setPrompt({ text: '카메라도 준비됐어!', error: false })
       return
     }
     if (current.state === 'denied') {
       const result = await onboardingApi.openNotificationSettings()
       if (!result.success || !result.data.opened) return failPerm(name, 'opened', SETTINGS_NOT_OPENED.notify)
       setPerm(name, { state: 'opened', error: null })
-      setPrompt({ text: '설정에서 켜고 돌아와 주세요!', error: false })
+      setPrompt({ text: '설정에서 켜고 돌아와 줘!', error: false })
       return
     }
     const result = await onboardingApi.requestNotifications()
     // Main은 실패해도 '꺼져 있음'으로 답한다. 여기로 오면 앱과 화면 연결이 끊긴 것이라 다시 열기를 안내한다.
     if (!result.success) return failPerm(name, current.state, { title: '시험 알림을 보내지 못했어요.', body: '앱을 다시 연 뒤 시도해 주세요.' })
     setPerm(name, { state: result.data.requested ? 'requested' : 'denied', error: null })
-    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 주세요!', error: false } : { text: '알림이 꺼져 있나 봐요', error: false })
+    setPrompt(result.data.requested ? { text: '알림이 왔는지 봐 줘!', error: false } : { text: '알림이 꺼져 있나 봐', error: false })
   }
 
   async function openScreenSettingsAgain() {
@@ -185,7 +185,7 @@ export function PermissionsStep() {
     const status = await onboardingApi.checkScreenRecording()
     if (status.success && status.data.granted) {
       setPerm('screen', { state: 'granted', error: null })
-      setPrompt({ text: '좋아요, 준비됐어요!', error: false })
+      setPrompt({ text: '좋아, 준비됐어!', error: false })
       return
     }
     const result = await onboardingApi.relaunchApp()
@@ -200,7 +200,7 @@ export function PermissionsStep() {
       return
     }
     setPerm('notify', { state: seen ? 'granted' : 'denied', error: null })
-    setPrompt(seen ? { text: '알림도 준비됐어요!', error: false } : { text: '설정에서 알림을 켜 주세요.', error: false })
+    setPrompt(seen ? { text: '알림도 준비됐어!', error: false } : { text: '설정에서 알림을 켜 줘.', error: false })
   }
 
   async function goNext() {
@@ -212,7 +212,7 @@ export function PermissionsStep() {
       setView('permission')
       writeDraft({ accepted: [...accepted], cameraConsent })
       setFeedback(null)
-      setPrompt({ text: '권한 두 개만 켜 주시면 돼요', error: false })
+      setPrompt({ text: '권한 두 개만 켜 주면 돼', error: false })
       return
     }
     if (!screenReady) {
@@ -243,7 +243,7 @@ export function PermissionsStep() {
       prompt={prompt.text}
       promptError={prompt.error}
       backHref={view === 'consents' ? '/onboarding/extension/' : undefined}
-      onBack={view === 'permission' ? () => { writeDraft(null); setView('consents'); setFeedback(null); setPrompt({ text: '시작하려면 동의가 필요해요!', error: false }) } : undefined}
+      onBack={view === 'permission' ? () => { writeDraft(null); setView('consents'); setFeedback(null); setPrompt({ text: '시작하려면 동의가 필요해!', error: false }) } : undefined}
       feedback={feedback}
       next={{ label: '다음', blocked: view === 'consents' ? !allAccepted : !(screenReady && notifyReady), busy: saving, onClick: () => { void goNext() } }}
     >
@@ -293,7 +293,7 @@ export function PermissionsStep() {
                   const on = !cameraConsent
                   setCameraConsent(on)
                   if (!on) setPerm('camera', idle)
-                  setPrompt({ text: on ? '카메라도 함께 볼게요.\n다음에서 권한을 물어볼게요.' : '카메라는 안 켜도 괜찮아요!', error: false })
+                  setPrompt({ text: on ? '카메라도 같이 볼게!' : '카메라는 안 켜도 괜찮아!', error: false })
                 }}
               >
                 <span className="check" aria-hidden="true">✓</span>

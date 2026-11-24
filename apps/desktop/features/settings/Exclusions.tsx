@@ -13,7 +13,7 @@ import { settingsApi } from './settings-api'
 
 const MAX_APPS = 50
 const SUGGESTED = ['youtube.com', 'instagram.com', 'netflix.com', 'x.com']
-const DEFAULT_HINT = { kind: '' as '' | 'error' | 'success', text: '하위 도메인까지 함께 제외돼요' }
+const DEFAULT_HINT = { kind: '' as '' | 'error' | 'success', text: '' }
 type Kind = 'sites' | 'apps'
 type Load<T> = { status: 'loading' } | { status: 'error'; code: string } | { status: 'ready'; data: T }
 type Item = { id: string; label: string }
@@ -88,7 +88,6 @@ export function Exclusions() {
     <div className="fo-settings-page fo-exclusions">
       <Link className="fo-back-link" href="/settings/#analysis">← 설정</Link>
       <h1>분석 제외 목록</h1>
-      <p className="fo-intro">여기 있는 곳은 분석하지 않고 알림도 보내지 않아요. 타이머는 그대로 흘러가요.</p>
       <UnderlineTabs kind={kind} onChange={setKind} counts={{ sites: count(sites), apps: count(apps) }} />
       {kind === 'sites'
         ? <section className="fo-ex-panel" id="sites-panel" role="tabpanel" aria-labelledby="tab-sites" key="sites">
@@ -187,13 +186,11 @@ function AppPicker({ apps, saving, showToast, onAdd }: { apps: ExcludedApp[] | n
   const full = (apps?.length ?? 0) >= MAX_APPS
   return <>
     <div className="fo-app-add">
-      <p>메시지·메일 앱은 처음부터 분석하지 않아요</p>
       <button className="fo-button fo-button-primary" type="button" disabled={!apps || saving}
         onClick={() => { if (full) return showToast({ text: `제외 앱은 ${MAX_APPS}개까지 추가할 수 있어요.` }); dialogRef.current?.showModal(); void load() }}>앱 추가</button>
     </div>
     <dialog ref={dialogRef} className="fo-dialog" aria-labelledby="app-dialog-title">
       <h2 id="app-dialog-title">제외할 앱 고르기</h2>
-      <p>설치된 앱 중에서 골라 주세요.</p>
       {installed === 'loading' && <p role="status">설치된 앱을 확인하고 있어요.</p>}
       {installed === 'error' && <div className="fo-app-error" role="alert">
         <p>설치된 앱을 불러오지 못했어요. 다시 시도해 주세요.</p>

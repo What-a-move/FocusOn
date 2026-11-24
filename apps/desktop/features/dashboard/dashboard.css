@@ -1,14 +1,14 @@
 /* 홈 대시보드 — FocusOn-design/main.html을 옮겼다. 창 틀·사이드바는 shared/styles/app-shell.css를 쓴다. */
 /* 콘텐츠: 테두리 상자 없이 면·여백·구분선으로 나눈다. */
 .fo-home-content { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
-.fo-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(32px, 5.5vh, 56px) 48px 0; }
+.fo-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; max-width: calc(var(--fo-page-max) + var(--fo-page-x) * 2); margin: 0 auto; padding: var(--fo-page-top) var(--fo-page-x) 0; }
 .fo-topbar > div > span { display: block; margin-bottom: 2px; color: var(--fo-muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .fo-topbar p { margin: 0; font-size: 16px; font-weight: 600; }
 .fo-topbar ul { display: flex; align-items: center; gap: 22px; margin: 0; padding: 0; list-style: none; }
 .fo-topbar li { display: flex; align-items: center; gap: 8px; color: var(--fo-muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
 .fo-topbar li b { color: var(--fo-ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.fo-dashboard { display: flex; flex-direction: column; gap: 36px; width: 100%; max-width: 1180px; margin: auto; padding: 8px 48px 40px; }
+.fo-dashboard { display: flex; flex-direction: column; gap: var(--fo-section-gap); width: 100%; max-width: calc(var(--fo-page-max) + var(--fo-page-x) * 2); margin: 0 auto; padding: var(--fo-head-gap) var(--fo-page-x) var(--fo-page-bottom); }
 
 /* 오늘: 포키 + 큰 질문 + 버튼 */
 .fo-hero { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: center; gap: 40px; padding: 12px 0 4px; }
@@ -87,7 +87,6 @@ a.fo-recent-item:hover { background: var(--fo-field); }
 @keyframes fo-shimmer { to { background-position: -200% 0; } }
 
 @media (max-width: 1000px) {
-  .fo-topbar, .fo-dashboard { padding-inline: 28px; }
   .fo-hero { grid-template-columns: 190px minmax(0, 1fr); gap: 28px; }
   .fo-poki-stage { height: 180px; }
   .fo-poki-stage img { width: 180px; height: 180px; }
@@ -108,8 +107,7 @@ a.fo-recent-item:hover { background: var(--fo-field); }
 }
 /* 낮은 창: 세로 여백을 줄여 스크롤 없이 */
 @media (max-height: 760px) {
-  .fo-topbar { padding-top: 24px; }
-  .fo-dashboard { gap: 28px; padding-top: 14px; padding-bottom: 24px; }
+  .fo-dashboard { gap: 28px; padding-bottom: 24px; }
   .fo-hero { padding: 0; }
   .fo-poki-stage { height: 180px; }
   .fo-poki-stage img { width: 180px; height: 180px; }

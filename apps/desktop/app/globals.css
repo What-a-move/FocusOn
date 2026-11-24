@@ -25,6 +25,23 @@ dialog:modal { margin: auto; }
   --fo-danger-line: #f5b5ae;
   --fo-danger-soft: #fef2f1;
   --fo-focus: rgba(89, 56, 40, .35);
+  /* 할 일 1·2·3: 같은 금색을 연한 것→진한 것. 3번 위 글씨는 흰색. */
+  --fo-todo-1: #f0d9b3;
+  --fo-todo-2: #dcae6e;
+  --fo-todo-3: #b07b45;
+  /* 흐름 막대: 금색 한 가족 안에서 단계적으로 */
+  --fo-flow-other: #b98b5f;
+  --fo-flow-hold: #f2e2c6;
+  --fo-stripe-1: #efe2cc;
+  --fo-stripe-2: #fbf6ee;
+  /* 공통 레이아웃 여백(FocusOn-design/fo-base.css). 화면마다 바깥 여백을 숫자로 쓰지 않고 이 값을 쓴다. */
+  --fo-page-max: 1040px;
+  --fo-page-x: 48px;
+  --fo-page-top: 48px;
+  --fo-page-bottom: 64px;
+  --fo-head-gap: 32px;
+  --fo-section-gap: 48px;
+  --fo-block-gap: 20px;
   font-family: Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -49,8 +66,16 @@ dialog:modal { margin: auto; }
     --fo-danger-line: #7d2e26;
     --fo-danger-soft: #3a1915;
     --fo-focus: rgba(205, 165, 119, .5);
+    --fo-flow-other: #a5784f;
+    --fo-flow-hold: #5c4b35;
+    --fo-stripe-1: #3a3024;
+    --fo-stripe-2: #241e18;
   }
 }
+@media (max-width: 900px) { :root { --fo-page-x: 28px; --fo-page-top: 36px; --fo-section-gap: 40px; } }
+@media (max-height: 700px) { :root { --fo-page-top: 32px; --fo-head-gap: 24px; } }
+/* 본문 틀: 최대 너비 안에서 좌우·위아래 여백을 토큰으로 고정한다. */
+.fo-page-shell { width: 100%; max-width: calc(var(--fo-page-max) + var(--fo-page-x) * 2); margin: 0 auto; padding: var(--fo-page-top) var(--fo-page-x) var(--fo-page-bottom); }
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; min-width: 320px; }

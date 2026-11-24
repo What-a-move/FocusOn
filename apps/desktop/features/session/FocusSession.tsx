@@ -196,8 +196,7 @@ export function FocusSession() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
-      <p>{activeDialog === 'finish' ? '지금까지 집중한 시간을 기록하고 이번 회차를 마칩니다.'
-        : activeDialog === 'extend' ? '얼마나 더 할까요? 같은 회차로 이어져요.' : '타이머와 분석은 멈췄어요.\n끝내거나 같은 목표로 더 공부할 수 있어요.'}</p>
+      {activeDialog === 'extend' && <p>얼마나 더 할까요?</p>}
       {activeDialog === 'timeup' && <div className="time-facts"><div><span>집중한 시간</span> <b>{Math.floor(elapsed / 60000)}분</b></div></div>}
       {snapshot.error && activeDialog && <p className="dialog-error" role="alert">{sessionErrorText(snapshot.error)}</p>}
       {activeDialog === 'finish' && <div className="dialog-actions"><div className="row">

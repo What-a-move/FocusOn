@@ -1,8 +1,8 @@
 /* 디자인 원본: FocusOn-design/session-result.html. 색 토큰·버튼·창 상단은 onboarding.css(.onboarding-window)를 쓰고,
    리포트에만 필요한 토큰과 배치를 .result-window로 덧붙인다. 시안의 `예시` 태그·미리보기 링크는 넣지 않는다. */
-.onboarding-window.result-window { --gold-soft: #fff4e3; --flow-other: #8a8f98; --flow-hold: #c9cdd3; --stripe-1: #e6e6e6; --stripe-2: #f3f3f3; --ease-pop: cubic-bezier(.34, 1.56, .64, 1); }
+.onboarding-window.result-window { --gold-soft: #fff4e3; --flow-other: var(--fo-flow-other); --flow-hold: var(--fo-flow-hold); --stripe-1: var(--fo-stripe-1); --stripe-2: var(--fo-stripe-2); --ease-pop: cubic-bezier(.34, 1.56, .64, 1); }
 @media (prefers-color-scheme: dark) {
-  .onboarding-window.result-window { --gold-soft: #2b2418; --flow-hold: #4a4a50; --stripe-1: #26262b; --stripe-2: #1d1d21; }
+  .onboarding-window.result-window { --gold-soft: #2b2418; }
 }
 
 .result-window .scroll { flex: 1; min-height: 0; overflow-y: auto; }
@@ -46,8 +46,8 @@
 .result-window .block-head h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
 
 /* 집중 흐름: 한 줄 막대가 왼쪽에서 오른쪽으로 한 번에 채워짐 */
-.result-window .track { display: flex; height: 16px; margin-top: 18px; overflow: hidden; border-radius: 99px; animation: result-wipe .9s var(--ease) .45s both; }
-.result-window .track span { height: 100%; }
+.result-window .track { display: flex; gap: 2px; height: 16px; margin-top: 18px; overflow: hidden; border-radius: 99px; animation: result-wipe .9s var(--ease) .45s both; }
+.result-window .track span { height: 100%; border-radius: 3px; }
 @keyframes result-wipe { from { clip-path: inset(0 100% 0 0 round 99px); } to { clip-path: inset(0 0 0 0 round 99px); } }
 .result-window .c-related { background: var(--gold); }
 .result-window .c-unrelated { background: var(--flow-other); }

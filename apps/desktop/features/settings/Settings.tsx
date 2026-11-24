@@ -148,11 +148,10 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
       </div>
     </div>
     <div className="fo-row" style={{ '--n': 2 } as CSSProperties}>
-      <div className="fo-row-copy"><strong id="break-title">휴식 제안</strong><small>자주 흐트러지면 쉬어 갈지 물어봐요</small></div>
+      <div className="fo-row-copy"><strong id="break-title">휴식 제안</strong></div>
       <button className="fo-switch" type="button" role="switch" aria-labelledby="break-title" aria-checked={settings.breakSuggestionEnabled} disabled={saving}
         onClick={() => { void save({ ...settings, breakSuggestionEnabled: !settings.breakSuggestionEnabled }) }} />
     </div>
-    <p className="fo-foot-note" style={{ '--n': 3 } as CSSProperties}>바꾼 설정은 다음 집중부터 적용돼요.</p>
   </>
 }
 
@@ -234,10 +233,9 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
     </div>
     <CameraRow showToast={showToast} n={1} />
     <div className="fo-row" style={{ '--n': 2 } as CSSProperties}>
-      <div className="fo-row-copy"><strong>분석 제외 목록</strong><small>여기 있는 사이트·앱은 분석하지 않아요</small></div>
+      <div className="fo-row-copy"><strong>분석 제외 목록</strong></div>
       <Link className="fo-small-btn" href="/settings/exclusions/">관리</Link>
     </div>
-    <p className="fo-foot-note" style={{ '--n': 3 } as CSSProperties}>화면 원문·캡처·카메라 영상은 저장하지 않아요. 비밀번호·결제·메시지 화면은 분석하지 않아요.</p>
   </>
 }
 
@@ -321,7 +319,6 @@ function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
   return <div className="fo-row" style={{ '--n': n } as CSSProperties}>
     <div className="fo-row-copy">
       <strong id="camera-title">카메라 분석<span className="fo-tag">선택</span></strong>
-      <small>기기 안에서만 분석하고 영상은 저장하지 않아요</small>
       {copy && <span className="fo-error-line" role="alert">{copy.error}</span>}
       {!copy && loadFailed && <span className="fo-error-line" role="alert">설정을 불러오지 못했어요</span>}
     </div>
