@@ -115,11 +115,12 @@
 }
 @media (min-height: 860px) { .setup-window .sheet-inner { padding-top: 5vh; } }
 
-.setup-window .setup-goals { min-width: 0; margin-top: 20px; padding-top: 10px; }
-.setup-window .setup-goals legend { font-size: 18px; font-weight: 700; }
-.setup-window .setup-goals .goals-status { margin-bottom: 8px; color: var(--muted); font-size: 14px; }
-.setup-window .goal-choice { display: flex; gap: 10px; align-items: center; min-height: 42px; padding: 6px 8px; border-radius: 8px; overflow-wrap: anywhere; }
-.setup-window .goal-choice:hover { background: var(--field); }
-.setup-window .goal-choice input { width: 18px; height: 18px; flex: none; accent-color: var(--brand); }
-.setup-window .goal-choice input:focus-visible, .setup-window .new-goal:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.setup-window .new-goal { display: inline-block; margin: 12px 0 0 8px; color: var(--muted); font-size: 14px; font-weight: 600; }
+.setup-window .goals-box { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 18px 22px; border-radius: 18px; background: var(--gold-soft); }
+.setup-window .setup-goal-list { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.setup-window .setup-goal-list li { display: flex; align-items: center; gap: 12px; min-width: 0; font-size: 17px; font-weight: 700; line-height: 1.45; }
+.setup-window .setup-goal-list li span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setup-window .setup-goal-list .num { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%; background: var(--fo-todo-1); color: #2a1d14; font-size: 13px; font-weight: 800; }
+.setup-window .setup-goal-list li:nth-child(2) .num { background: var(--fo-todo-2); }
+.setup-window .setup-goal-list li:nth-child(3) .num { background: var(--fo-todo-3); color: #fff; }
+.setup-window .goals-box a { flex: 0 0 auto; display: inline-grid; place-items: center; height: 34px; padding: 0 14px; border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 700; text-decoration: none; }
+.setup-window .goals-box a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }

@@ -1,3 +1,4 @@
+import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
 import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../../electron/shared/goal-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
@@ -29,3 +30,19 @@ export const goalApi = {
 export const CONFIRMED_GOAL_KEY = 'focuson.confirmedGoal'
 
 export const goalLength = (text: string) => [...text.trim()].length
+
+/** 세션에 담을 수 있는 할 일 수 (POST /sessions goalIds 최대 3). */
+export const MAX_TODO_PICK = 3
+
+/** 지난번 고른 할 일·방금 만든 할 일을 처음 선택으로 쓴다. */
+export function readPicked(): SessionGoal[] {
+  try {
+    const saved: unknown = JSON.parse(sessionStorage.getItem(CONFIRMED_GOAL_KEY) ?? 'null')
+    const list = Array.isArray(saved) ? saved : [saved]
+    const valid = list.filter((goal): goal is SessionGoal => !!goal && typeof goal.goalId === 'string'
+      && typeof goal.goalText === 'string' && !!goal.goalText.trim())
+    return [...new Map(valid.map((goal) => [goal.goalId, goal])).values()].slice(0, MAX_TODO_PICK)
+  } catch {
+    return []
+  }
+}

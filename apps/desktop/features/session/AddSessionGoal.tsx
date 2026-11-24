@@ -2,7 +2,7 @@ import { useRef, useState, type RefObject } from 'react'
 import { goalApi, goalLength } from '../../shared/api/goal-api'
 import { sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
 import { errorText } from '../../shared/lib/error-text'
-import { useOpenGoals } from './useOpenGoals'
+import { useOpenGoals } from '../../shared/api/useOpenGoals'
 
 export function AddSessionGoal({ session, onClose, submittingRef }: {
   session: SessionSnapshot; onClose: () => void; submittingRef: RefObject<boolean>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ConfirmationSource, CreatedGoal, GoalProfile, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
-import { CONFIRMED_GOAL_KEY, goalApi, goalLength, MAX_QUESTIONS, type ClarifyResult } from '../../shared/api/goal-api'
+import { CONFIRMED_GOAL_KEY, goalApi, readPicked, goalLength, MAX_QUESTIONS, type ClarifyResult } from '../../shared/api/goal-api'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
 import './goal.css'
@@ -218,7 +218,8 @@ export function GoalSetting() {
       }
       const goals = partialSave.current.map(({ goalId, goalText }) => ({ goalId, goalText }))
       saveKeys.current.clear()
-      try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(goals)) } catch { /* 저장소를 못 써도 목표는 서버에 저장됐다. */ }
+      // 고르던 할 일 뒤에 새 할 일을 붙여 할 일 고르기에서 이미 골라진 채로 보이게 한다(최대 3개).
+      try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify([...readPicked(), ...goals].filter((goal, index, list) => list.findIndex(({ goalId }) => goalId === goal.goalId) === index).slice(0, 3))) } catch { /* 저장소를 못 써도 목표는 서버에 저장됐다. */ }
       setReview({ ...review, goal: goals[0].goalText, candidates: review.candidates && goals.map(({ goalText }) => goalText) })
       go('done', { text: '' })
     } finally {
@@ -264,7 +265,7 @@ export function GoalSetting() {
       return
     }
     if (view === 'review') { void save(); return }
-    router.push('/session-setup/')
+    router.push('/todo/')
   }
 
   const secondaryLabel = view === 'entry' ? (manual === 'exhausted' ? '지금 문구로 정하기' : '입력한 그대로 시작')
@@ -288,14 +289,14 @@ export function GoalSetting() {
   const onEnter = (event: React.KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) primary() }
 
   const stage = STAGE[view]
-  const primaryLabel = { entry: '다음', questions: '다음', candidates: '이 목표로', review: review?.candidates ? '할 일 저장하기' : '이 목표로 정하기', done: '집중 시간 정하기' }[view]
+  const primaryLabel = { entry: '다음', questions: '다음', candidates: '이 목표로', review: review?.candidates ? '할 일 저장하기' : '이 목표로 정하기', done: '할 일 고르기' }[view]
   const poki = view === 'questions' || view === 'candidates' ? POKI.thinking : POKI.planning
   const pokiAlt = view === 'questions' || view === 'candidates' ? '생각하는 포키' : '체크리스트를 든 포키'
 
   return <main className="app-window onboarding-window goal-window">
     <div className="flow">
       <div className="top">
-        <Link className="close" href="/" aria-label="목표 설정 닫고 홈으로">✕</Link>
+        <Link className="close" href="/todo/" aria-label="닫고 할 일 고르기로">✕</Link>
         <div className="progress" role="progressbar" aria-label="목표 설정 진행" aria-valuemin={1} aria-valuemax={3} aria-valuenow={Math.min(stage + 1, 3)}>
           {[0, 1, 2].map((index) => <i className={index < stage ? 'done' : index === stage ? 'active' : ''} key={index} />)}
         </div>
@@ -308,7 +309,7 @@ export function GoalSetting() {
             <p className="done-label">이번 집중 목표</p>
             <h2 id="done-goal" tabIndex={-1} ref={doneRef}>{review.candidates ? '할 일을 저장했어요' : review.goal}</h2>
             {review.candidates && <ul className="review-goals">{review.candidates.map((goal) => <li key={goal}>{goal}</li>)}</ul>}
-            <p className="done-ok"><i aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg></i>목표가 정해졌어요. 이제 시간만 정하면 돼요</p>
+            <p className="done-ok"><i aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg></i>할 일에 담았어요</p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="poki" src={POKI.celebrate} alt="축하하는 포키" />
