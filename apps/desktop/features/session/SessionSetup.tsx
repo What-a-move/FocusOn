@@ -19,14 +19,17 @@ const DURATIONS = [{ key: '30', label: '30분' }, { key: '60', label: '1시간' 
 const DEFAULT_CHANNELS: NotificationChannel[] = ['MOLE_UI', 'MACOS_NOTIFICATION']
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 
-type Feedback = { title: string; body: string; info?: boolean } | null
+// action: 안내 아래에 붙는 바로 가기 (시안 session-setup.html START_ERRORS)
+type Feedback = { title: string; body: string; info?: boolean; action?: 'session' | 'todo' | 'screen' } | null
 
 function startError(error: { code: string; retryable: boolean }): Feedback {
   switch (error.code) {
     case 'SESSION_START_REQUIREMENT_MISSING': return { title: '시작에 필요한 준비가 빠졌어요.', body: '화면 기록·알림 권한과 Chrome 확장 연결을 확인한 뒤 다시 눌러 주세요.' }
-    case 'SESSION_ACTIVE_EXISTS': return { title: '진행 중인 집중이 있어요.', body: '진행 중인 집중을 끝낸 뒤 새로 시작할 수 있어요.' }
+    case 'SESSION_ACTIVE_EXISTS': return { title: '이미 진행 중인 집중이 있어요.', body: '진행 중인 집중으로 가서 이어 하거나 끝내 주세요.', action: 'session' }
+    // 서버는 끝났거나 지운 할 일을 같은 404로 돌려준다.
+    case 'GOAL_NOT_FOUND': return { title: '고른 할 일 중 하나가 이미 끝났어요.', body: '할 일을 다시 골라 주세요.', action: 'todo' }
     case 'LOCAL_NOTIFICATION_NOT_CONFIRMED': return { title: '알림이 보이는지 확인이 필요해요.', body: '시험 알림을 보내 볼게요. 알림이 보이면 ‘보였어요’를 눌러 주세요.' }
-    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '인터넷 연결을 확인해 주세요.', body: '연결된 뒤 다시 누르면 같은 요청으로 이어서 시작해요.' }
+    case 'LOCAL_NETWORK_UNAVAILABLE': return { title: '집중을 시작하지 못했어요.', body: '인터넷 연결을 확인한 뒤 다시 눌러 주세요.' }
     default: return { title: '집중을 시작하지 못했어요.', body: errorText(error) }
   }
 }
@@ -47,6 +50,7 @@ export function SessionSetup() {
   // 알림 확인: 서버는 알림을 검증하지 않아 Desktop이 시험 알림 + 사용자 확인으로 막는다(결정 022).
   const [notifyCheck, setNotifyCheck] = useState<'ask' | 'sent' | 'denied' | null>(null)
   const [now, setNow] = useState<Date | null>(null)
+  const [screenOpened, setScreenOpened] = useState(false)
   // [주의] 같은 선택으로 다시 누르면 같은 Idempotency-Key를 보내 서버가 세션을 두 번 만들지 않게 한다.
   const attempt = useRef<{ fingerprint: string; key: string } | null>(null)
   const customRef = useRef<HTMLInputElement>(null)
@@ -118,7 +122,11 @@ export function SessionSetup() {
     setBusy(false)
     if (!result.success) {
       setNotifyCheck(result.error.code === 'LOCAL_NOTIFICATION_NOT_CONFIRMED' ? 'ask' : null)
-      setFeedback(startError(result.error))
+      // 서버는 빠진 조건을 알려 주지 않는다. 화면 기록 권한은 이 기기에서 확인할 수 있어 그것만 따로 안내한다.
+      const screen = result.error.code === 'SESSION_START_REQUIREMENT_MISSING' ? await window.focusOn?.permissions?.getScreenStatus() : undefined
+      setFeedback(screen?.success && screen.data.status !== 'granted'
+        ? { title: '화면 기록 권한이 꺼져 있어요.', body: '시스템 설정에서 FocusOn을 켠 뒤 앱을 다시 열어 주세요.', action: 'screen' }
+        : startError(result.error))
       return
     }
     attempt.current = null
@@ -127,6 +135,14 @@ export function SessionSetup() {
     router.push('/session/')
   }
 
+  // 화면 기록은 켜도 앱을 다시 켜야 반영된다(FocusSession과 같은 순서).
+  const fixScreen = async () => {
+    const permissions = window.focusOn?.permissions
+    if (!permissions) return
+    if (!screenOpened) { await permissions.openScreenSettings(); setScreenOpened(true); return }
+    const status = await permissions.getScreenStatus()
+    if (status.success && status.data.status === 'granted') await permissions.relaunch()
+  }
   const sendTest = async () => {
     const sent = await sessionApi.sendTestNotification()
     if (!sent.success) { setFeedback({ title: '알림을 보내지 못했어요.', body: errorText(sent.error) }); return }
@@ -195,6 +211,9 @@ export function SessionSetup() {
             {!feedback.info && <span className="icon-error" aria-hidden="true">!</span>}
             <div>
               <strong>{feedback.title}</strong><span>{feedback.body}</span>
+              {feedback.action === 'session' && <span className="notify-actions"><Link className="btn btn-ghost" href="/session/">진행 중인 집중 보기</Link></span>}
+              {feedback.action === 'todo' && <span className="notify-actions"><Link className="btn btn-ghost" href="/todo/">할 일 다시 고르기</Link></span>}
+              {feedback.action === 'screen' && <span className="notify-actions"><button className="btn btn-ghost" type="button" onClick={() => { void fixScreen() }}>{screenOpened ? '앱 다시 열기' : '시스템 설정 열기'}</button></span>}
               {notifyCheck && <span className="notify-actions">
                 {notifyCheck === 'sent'
                   ? <><button className="btn btn-ghost" type="button" onClick={() => { void answerTest(false) }}>안 보였어요</button><button className="btn btn-primary" type="button" onClick={() => { void answerTest(true) }}>보였어요</button></>
