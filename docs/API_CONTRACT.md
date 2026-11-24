@@ -237,7 +237,7 @@ POST   /api/v1/goals/clarify
 
 `PATCH`의 `goalProfile`(2026-11-24 #314, Desktop 범위 편집 요청)은 만들 때와 같은 형식(목록 각 최대 5개·항목 100자·중복 불가, `mainTopic`·`purpose` 필수)으로 범위를 통째 덮어쓴다. 형식 위반은 400 `VALIDATION_ERROR`, 활성 세션 참조 중이면 409 `GOAL_UPDATE_BLOCKED`다. 같은 문구를 다시 보내면 범위를 지우지 않고, 문구가 바뀌면 이전 범위는 비운다(함께 보낸 `goalProfile`이 있으면 그 값).
 
-`POST /api/v1/goals/{goalId}/profile`(#314)은 저장된 목표 문구로 Goal AI 범위를 새로 만들어 저장하고 목표 응답을 200으로 돌려준다. 요청 본문은 없다. AI 실패·잘못된 응답은 503 `GOAL_ANALYSIS_UNAVAILABLE`, 시간 초과는 504 `GOAL_ANALYSIS_TIMEOUT`이며 기존 범위는 그대로 둔다. 활성 세션 참조 중이면 409 `GOAL_UPDATE_BLOCKED`, 다른 사용자·없는 목표는 404 `GOAL_NOT_FOUND`다. AI 호출 동안 문구가 바뀌면 새 범위를 저장하지 않고 현재 목표를 돌려준다.
+`POST /api/v1/goals/{goalId}/profile`(#314)은 저장된 목표 문구로 Goal AI 범위를 새로 만들어 저장하고 목표 응답을 200으로 돌려준다. 요청 본문은 없다. AI 실패·잘못된 응답은 503 `GOAL_ANALYSIS_UNAVAILABLE`, 시간 초과는 504 `GOAL_ANALYSIS_TIMEOUT`이며 기존 범위는 그대로 둔다. 활성 세션 참조 중이면 409 `GOAL_UPDATE_BLOCKED`, 다른 사용자·없는 목표는 404 `GOAL_NOT_FOUND`다. AI 호출 동안 다른 요청이 문구나 범위를 바꾸면 새 범위로 덮어쓰지 않고 현재 목표를 돌려준다. 같은 목표에 대한 다시 만들기 요청 횟수 제한은 아직 없다.
 
 `POST /api/v1/goals/clarify`는 다음 요청으로 대화를 이어 간다. 첫 요청은 `conversationTurn: 0`, `previousAnswers: []`이며 `clarificationSessionId`를 생략한다.
 

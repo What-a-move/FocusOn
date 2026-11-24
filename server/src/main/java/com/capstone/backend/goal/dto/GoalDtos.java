@@ -33,12 +33,7 @@ public final class GoalDtos {
       @Schema(example = "Spring Security 인증 복습") String goalText,
       @Schema(description = "할 일 상태 (선택)") TodoStatus todoStatus,
       @Schema(description = "공부로 볼 범위 전체 (선택, 통째 덮어쓰기)",
-          implementation = GoalProfile.class) JsonNode goalProfile) {
-    /** 문구와 상태만 바꾸는 요청이다. */
-    public UpdateGoalRequest(String goalText, TodoStatus todoStatus) {
-      this(goalText, todoStatus, null);
-    }
-  }
+          implementation = GoalProfile.class) JsonNode goalProfile) {}
 
   /** 사용자가 이전에 받은 질문과 답변이다. */
   public record ClarificationAnswer(@NotBlank String question, @NotBlank String answer) {}

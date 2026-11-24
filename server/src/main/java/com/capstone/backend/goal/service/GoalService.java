@@ -219,28 +219,32 @@ public class GoalService {
   /**
    * 저장된 목표 문구로 AI 범위를 새로 만들어 저장한다(#314). AI가 실패하면 기존 범위는 그대로 두고
    * 오류만 돌려준다. 활성 세션이 쓰는 할 일이면 409다. AI 호출 동안 잠금·트랜잭션을 잡지 않으며,
-   * 그 사이 문구가 바뀌었으면 새 범위를 버리고 현재 상태를 돌려준다.
+   * 그 사이 문구나 범위가 바뀌었으면(다른 요청의 수정) 새 범위로 덮어쓰지 않고 현재 상태를 돌려준다.
    */
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public GoalResponse regenerateProfile(FocusOnPrincipal principal, String goalId) {
     long userId = principal.userId();
-    String text = transactions.execute(status -> {
+    Snapshot before = transactions.execute(status -> {
       GoalEntity goal = findGoal(userId, goalId);
       requireNotInActiveSession(userId, goal.getId());
-      return goal.getGoalText();
+      return new Snapshot(goal.getGoalText(), goal.getProfileJson());
     });
-    GoalProfile profile = requestProfile(text);
+    GoalProfile profile = requestProfile(before.text());
     String profileJson = json.writeValueAsString(profile);
     return transactions.execute(status -> {
       lockUser(userId);
       GoalEntity goal = findGoal(userId, goalId);
       requireNotInActiveSession(userId, goal.getId());
-      if (goal.getGoalText().equals(text)) {
+      if (goal.getGoalText().equals(before.text())
+          && java.util.Objects.equals(goal.getProfileJson(), before.profileJson())) {
         goal.replaceProfile(profileJson, Instant.now());
       }
       return response(goal);
     });
   }
+
+  /** 다시 만들기 전후에 다른 수정이 있었는지 보는 문구·범위 사본이다. */
+  private record Snapshot(String text, String profileJson) {}
 
   private GoalClarificationSession findClarification(Long userId, CreateGoalRequest request,
       Instant now) {

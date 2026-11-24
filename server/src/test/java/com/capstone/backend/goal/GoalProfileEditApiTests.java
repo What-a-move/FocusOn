@@ -136,6 +136,23 @@ class GoalProfileEditApiTests {
         .andExpect(jsonPath("$.data.goalProfile.mainTopic").value("이제 생긴 주제"));
   }
 
+  /** AI를 기다리는 사이 사용자가 고친 범위는 다시 만든 결과로 덮어쓰지 않는다. */
+  @Test
+  void regenerateDoesNotOverwriteEditMadeDuringAiCall() throws Exception {
+    var owner = desktop();
+    aiReturns("처음 주제");
+    String id = create(owner, "리액트 공부");
+    org.mockito.Mockito.doAnswer(invocation -> {
+      patch(owner, id, "{\"goalProfile\":" + EDITED.replace("\"리액트\"", "\"직접 고친 주제\"")
+          + "}").andExpect(status().isOk());
+      return json.readTree("{\"goalProfile\":" + EDITED.replace("\"리액트\"", "\"AI 새 주제\"")
+          + "}");
+    }).when(ai).profile(eq("리액트 공부"), any());
+    regenerate(owner, id).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.goalProfile.mainTopic").value("직접 고친 주제"));
+    assertEquals("직접 고친 주제", stored(id).path("mainTopic").asString());
+  }
+
   @Test
   void activeSessionBlocksProfileEditAndRegenerateAndOthersGet404() throws Exception {
     var owner = desktop();
