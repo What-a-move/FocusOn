@@ -100,6 +100,13 @@ public final class SafeApiLog {
     output.log(event.value);
   }
 
+  /** 분석 기록 정리 실패에서 데이터와 식별자를 제외한다. */
+  public static void analysisRetentionFailure(RuntimeException exception) {
+    LOGGER.atWarn().addKeyValue("component", "analysis-run-retention")
+        .addKeyValue("errorClass", exception.getClass().getSimpleName())
+        .log("analysis run retention failed");
+  }
+
   /** 보관 기간 정리 실패를 식별자와 예외 메시지 없이 기록한다. */
   public static void tokenRetentionFailure(RuntimeException exception) {
     LOGGER.atWarn().addKeyValue("component", "token-family-retention")

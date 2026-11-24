@@ -22,6 +22,7 @@ import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
 import jakarta.persistence.EntityManager;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AnalysisRunStore {
   private final EntityManager entityManager;
+  private final Clock clock;
   private final UserRepository users;
   private final TokenFamilyRepository families;
   private final TokenFamilyGuard familyGuard;
@@ -46,11 +48,14 @@ public class AnalysisRunStore {
   private final InterventionPolicyService interventionPolicy;
   private final com.capstone.backend.intervention.service.ForegroundPolicyContext foreground;
 
-  /** 사용자가 소유한 세션의 모든 관측 결과를 시각순으로 반환한다. */
+  /** 사용자가 소유한 세션의 보관 중인 관측 결과를 시각순으로 반환한다. */
   @Transactional(readOnly = true)
   public List<Response> history(long userId, long sessionId) {
-    sessions.findByIdAndUserId(sessionId, userId)
+    var session = sessions.findByIdAndUserId(sessionId, userId)
         .orElseThrow(() -> new ApiException(ApiErrorCode.SESSION_NOT_FOUND));
+    if (AnalysisRunRetention.expired(session, AnalysisRunRetention.cutoff(clock.instant()))) {
+      return List.of();
+    }
     return runs.findAllBySessionIdOrderByObservedAtAscIdAsc(sessionId).stream()
         .map(AnalysisRunEntity::response)
         .toList();
