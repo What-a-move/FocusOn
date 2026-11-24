@@ -64,7 +64,7 @@ public class GoalEntity {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
-  /** AI 확인 목표의 세분화(GoalProfile) JSON이다. 직접 입력 목표는 null이다. */
+  /** 검증된 목표 세분화 JSON이다. 확장할 수 없으면 null이다. */
   @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
   @Column(name = "profile_json", columnDefinition = "jsonb")
   private String profileJson;

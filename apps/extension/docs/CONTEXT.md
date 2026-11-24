@@ -1,5 +1,9 @@
 # Extension 작업 컨텍스트
 
+## DR-030 탭 분석 후 본문 요청
+
+- 메타데이터가 `RELATED`이고 `matchStatus=MATCHED`일 때 종료한다. 매칭되지 않은 관련 화면은 같은 탭일 때만 DOM으로 다시 확인한다.
+
 > Frontend(`apps`) 담당자가 Chrome Extension 작업을 시작할 때 읽는 플랫폼 전용 문서다.
 > 작업이 끝나면 현재 상태와 다음 담당자가 알아야 할 내용을 갱신한다.
 

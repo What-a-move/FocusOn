@@ -11,8 +11,8 @@ import java.util.List;
 public final class InterventionDtos {
   private InterventionDtos() {}
 
-  /** 기존 공개 개입 종류다. 이번 생성 대상은 OFF_TASK뿐이다. */
-  public enum Type { OFF_TASK, BREAK_SUGGESTION }
+  /** 서버가 전달하는 개입 종류다. */
+  public enum Type { OFF_TASK, BREAK_SUGGESTION, GOAL_ADD_PROMPT }
 
   /**
    * 전송 여부를 표현하는 enum이 아닌 사용자 반응/수명 상태다. NOT_OFF_TASK는 사용자가 「이것도

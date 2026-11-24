@@ -9,9 +9,9 @@ from datetime import datetime
 from typing import Annotated, Literal, get_args
 from uuid import UUID
 
-from pydantic import Field, ValidationInfo, field_validator, model_validator
+from pydantic import Field, StringConstraints, ValidationInfo, field_validator, model_validator
 
-from .schemas import (ConfirmedGoal, ContentInput, Identifier, InternalSchema,
+from .schemas import (ConfirmedGoal, ContentInput, GoalProfile, Identifier, InternalSchema,
                       OCRMetadata, Observation, VerifiedContext)
 from ..analysis.acquisition_policy import METADATA_SOURCES
 from ..preprocessing.models import ContentSource, ExtractionStatus
@@ -37,6 +37,12 @@ class ContentPayload(InternalSchema):
     text: Annotated[str, Field(max_length=2_000)] = Field(repr=False)
 
 
+class SessionGoal(InternalSchema):
+    goal_id: Identifier = Field(alias="goalId")
+    text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=40)] = Field(alias="goalText", repr=False)
+    profile: GoalProfile | None = Field(default=None, alias="goalProfile", repr=False)
+
+
 class ScreenAnalysisRequest(InternalSchema):
     session_id: Identifier = Field(alias="sessionId")
     client_run_id: Identifier = Field(alias="clientRunId")
@@ -44,6 +50,8 @@ class ScreenAnalysisRequest(InternalSchema):
     sequence: Annotated[int, Field(ge=1)]
     content_source: ContentSource = Field(alias="contentSource")
     goal_snapshot: Annotated[str, Field(min_length=2, max_length=40)] | None = Field(default=None, alias="goalSnapshot", repr=False)
+    goals: Annotated[list[SessionGoal], Field(min_length=1, max_length=3)] | None = Field(default=None, repr=False)
+    goal_version: Annotated[int, Field(ge=1)] | None = Field(default=None, alias="goalVersion")
     metadata: Metadata | None = Field(default=None, repr=False)
     content_payload: ContentPayload | None = Field(default=None, alias="contentPayload", repr=False)
     guard_status: Literal["EXCLUDED", "PRIVACY_BLOCKED"] | None = Field(alias="guardStatus")
@@ -72,17 +80,21 @@ class ScreenAnalysisRequest(InternalSchema):
 
     @model_validator(mode="after")
     def allowed_payload(self):
+        if (self.goals is None) != (self.goal_version is None):
+            raise ValueError("GOAL_VERSION_REQUIRED")
+        if self.goals is not None and len({goal.goal_id for goal in self.goals}) != len(self.goals):
+            raise ValueError("INVALID_GOAL_SET")
         if self.guard_status is not None:
-            if self.metadata is not None or self.content_payload is not None or self.goal_snapshot is not None:
+            if any(value is not None for value in (self.metadata, self.content_payload, self.goal_snapshot, self.goals)):
                 raise ValueError("GUARD_CONTENT_FORBIDDEN")
-        elif self.goal_snapshot is None:
+        elif self.goal_snapshot is None and self.goals is None:
             raise ValueError("GOAL_SNAPSHOT_REQUIRED")
         elif self.content_source in METADATA_SOURCES and self.content_payload is not None:
             raise ValueError("METADATA_BODY_FORBIDDEN")
         return self
 
 
-def adapt_screen_request(request: ScreenAnalysisRequest, goal: ConfirmedGoal,
+def adapt_screen_request(request: ScreenAnalysisRequest, goal: ConfirmedGoal | None,
                          context: VerifiedContext, *, extraction_status: ExtractionStatus,
                          ocr: OCRMetadata | None = None) -> ContentInput:
     """Called only with authoritative Server context and extractor status.
@@ -92,7 +104,15 @@ def adapt_screen_request(request: ScreenAnalysisRequest, goal: ConfirmedGoal,
     """
     if request.guard_status is not None:
         raise ValueError("GUARD_BLOCKED")
-    if request.goal_snapshot != goal.text or (goal.goal_id, goal.goal_version) != (context.goal_id, context.goal_version):
+    if request.goals is not None:
+        primary = request.goals[0]
+        if (request.goal_version != context.goal_version or primary.goal_id != context.goal_id
+                or (request.goal_snapshot is not None and request.goal_snapshot != primary.text)
+                or (goal is not None and
+                    (goal.goal_id, goal.goal_version, goal.text) != (primary.goal_id, request.goal_version, primary.text))):
+            raise ValueError("GOAL_CONTEXT_MISMATCH")
+    elif goal is None or request.goal_snapshot != goal.text or (
+            goal.goal_id, goal.goal_version) != (context.goal_id, context.goal_version):
         raise ValueError("GOAL_SNAPSHOT_MISMATCH")
     for name in ("session_id", "client_run_id", "observed_at", "sequence", "content_source"):
         if getattr(request, name) != getattr(context, name):

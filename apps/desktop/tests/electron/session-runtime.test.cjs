@@ -354,3 +354,18 @@ test('다시 조회에 실패하면 다음 heartbeat에서 또 맞춘다', async
   await runtime.heartbeat()
   assert.equal(calls.filter((c) => c.path === '/api/v1/sessions/901').length, 2)
 })
+
+test('진행 세션의 할 일 추가는 올바른 세션 ID에만 요청하고 서버 버전만 로컬에 반영한다', async () => {
+  const first = { goalId: '12', goalText: '미적분 풀기' }
+  const second = { goalId: '13', goalText: '영어 단어 정리' }
+  const { runtime, calls } = setup({
+    'POST /api/v1/sessions/901/goals': { success: true, data: { goals: [first, second], goalVersion: 2 } },
+  })
+  runtime.begin({ ...started, goals: [first], goalVersion: 1 }, first.goalText)
+  assert.equal((await runtime.addGoal({ sessionId: '902', goalId: '13', goalVersion: 1 })).success, false)
+  assert.equal(calls.length, 0)
+  assert.equal((await runtime.addGoal({ sessionId: '901', goalId: '13', goalVersion: 1 })).success, true)
+  assert.deepEqual(calls[0].body, { goalId: '13', goalVersion: 1 })
+  assert.deepEqual(runtime.snapshot().goals, [first, second])
+  assert.equal(runtime.snapshot().goalVersion, 2)
+})

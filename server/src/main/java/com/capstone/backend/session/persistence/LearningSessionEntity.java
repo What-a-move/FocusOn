@@ -56,6 +56,9 @@ public class LearningSessionEntity {
   @Column(nullable = false)
   private long version;
 
+  @Column(name = "goal_version", nullable = false)
+  private long goalVersion = 1;
+
   @Column(name = "target_duration_ms", nullable = false)
   private long targetDurationMs;
 

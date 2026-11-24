@@ -240,3 +240,12 @@ test('창을 띄우기 전에 10분이 지나면 보통 단계와 횟수를 1차
   await t.watcher.poll('901', '목표', OPTIONS)
   assert.deepEqual(t.stages, ['peek', 'normal', 'normal'])
 })
+
+test('할 일 추가 알림은 접속 중인 세션 ID를 전달하고 이탈 강도를 적용하지 않는다', async () => {
+  const t = setup([[pending('goal-1', { type: 'GOAL_ADD_PROMPT' })]])
+  await t.watcher.poll('901', '목표', OPTIONS)
+  assert.equal(t.shown[0].kind, 'GOAL_ADD')
+  assert.equal(t.shown[0].sessionId, '901')
+  assert.deepEqual(t.stages, [undefined])
+  assert.equal(t.receipts()[0][1].dispatchStatus, 'SENT')
+})

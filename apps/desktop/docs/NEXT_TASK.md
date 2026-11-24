@@ -4,6 +4,8 @@
 
 ## 가장 먼저 진행할 작업
 
+- DR-024·DR-030: 실제 로그인 환경에서 목표 프로필 저장, 최대 3개 시작, 추가 제안의 포키 및 macOS 알림 클릭, 오래된 버전 처리까지 한 세션으로 검증한다. [기획](features/session-goal-profile-PLAN.md) · [결과](features/session-goal-profile-REPORT.md)
+
 - 작업명: 강도별 포키 딴짓 알림 ([#282](https://github.com/What-a-move/FocusOn/issues/282), `codex/282-desktop-poki-intensity`)
 - 상태: 기능 구현, Desktop 테스트 192개, 10분 초기화·카메라 버튼 숨김 반영, Electron 상태별 캡처 9장 완료. 디자인 확인 뒤 캡처와 [결과 리포트](features/poki-intensity-REPORT.md)를 연결해 `dev` 대상 PR을 연다. 실제 서버의 개입 수신과 공부 표시 기록은 계정이 연결된 환경에서 확인한다.
 

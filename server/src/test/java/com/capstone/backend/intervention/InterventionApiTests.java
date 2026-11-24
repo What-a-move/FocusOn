@@ -34,6 +34,9 @@ import com.capstone.backend.goal.persistence.GoalRepository;
 import com.capstone.backend.intervention.dto.InterventionDtos.Acknowledge;
 import com.capstone.backend.intervention.dto.InterventionDtos.Action;
 import com.capstone.backend.intervention.dto.InterventionDtos.Status;
+import com.capstone.backend.intervention.dto.InterventionDtos.Type;
+import com.capstone.backend.intervention.persistence.InterventionDeliveryRepository;
+import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
 import com.capstone.backend.intervention.persistence.InterventionPolicyRepository;
 import com.capstone.backend.intervention.service.ForegroundPolicyContext;
@@ -80,6 +83,7 @@ class InterventionApiTests {
   @Autowired private AnalysisRunRepository runs;
   @Autowired private UserConsentRepository consents;
   @Autowired private InterventionEventRepository events;
+  @Autowired private InterventionDeliveryRepository deliveries;
   @Autowired private InterventionPolicyRepository states;
   @Autowired private com.capstone.backend.user.persistence.UserFocusSettingsRepository
       focusSettings;
@@ -372,6 +376,79 @@ class InterventionApiTests {
     assertEquals(null, snapshot(f).openEpisode());
     assertEquals(Status.EXPIRED,
         events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getStatus());
+  }
+
+  @Test
+  void confirmedFarCreatesOnePromptAndInconclusiveTimeIsExcluded() throws Exception {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    var first = observation(f, 1, 1L, null);
+    var inconclusive = analysisStore.prepare(f.principal(), f.session(), first);
+    var notEnough = new AnalysisDecision(
+        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
+        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
+        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.NOT_ENOUGH);
+    analysisStore.complete(f.principal(), inconclusive, first, notEnough);
+    assertEquals(null, states.findById(f.session()).orElseThrow().getFarCheckpointAt());
+
+    var second = observation(f, 2, 2L, null);
+    var confirmed = analysisStore.prepare(f.principal(), f.session(), second);
+    var far = new AnalysisDecision(
+        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
+        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
+        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.FAR);
+    analysisStore.complete(f.principal(), confirmed, second, far);
+    Instant checkpoint = states.findById(f.session()).orElseThrow().getFarCheckpointAt();
+    tx.executeWithoutResult(status -> policy.heartbeat(
+        sessions.findById(f.session()).orElseThrow(), checkpoint.plusSeconds(599)));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+
+    tx.executeWithoutResult(status -> policy.heartbeat(
+        sessions.findById(f.session()).orElseThrow(), checkpoint.plusSeconds(600)));
+    var event = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst();
+    assertEquals(Type.GOAL_ADD_PROMPT, event.getType());
+    assertEquals(confirmed.runId(), event.getAnalysisRunId());
+
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].type").value("GOAL_ADD_PROMPT"));
+    String deliveryPath = "/api/v1/interventions/" + event.getId() + "/deliveries";
+    String delivery = "{\"clientDeliveryId\":\"" + UUID.randomUUID()
+        + "\",\"dispatchStatus\":\"SENT\",\"channels\":[\"MOLE_UI\"]}";
+    mvc.perform(auth(post(deliveryPath), f).header("X-Device-Id", f.device())
+            .contentType(MediaType.APPLICATION_JSON).content(delivery))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.cooldownUntil").doesNotExist());
+    assertEquals(Status.PENDING, events.findById(event.getId()).orElseThrow().getStatus());
+    mvc.perform(auth(post(ack(event.getId())), f).header("X-Device-Id", f.device())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"action\":\"ACKNOWLEDGED\"}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("ACKNOWLEDGED"));
+    tx.executeWithoutResult(status -> policy.heartbeat(
+        sessions.findById(f.session()).orElseThrow(), checkpoint.plusSeconds(601)));
+    assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+  }
+
+  @Test
+  void expiredGoalPromptWithoutReceiptDoesNotSuppressOffTaskAlert() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    var session = sessions.findById(f.session()).orElseThrow();
+    var prompt = InterventionEventEntity.goalAddPrompt(session.getId(), 1, "[\"MOLE_UI\"]",
+        "v2", session.getLastResumedAt(), Instant.now().minusSeconds(60));
+    prompt.bindContext(f.observationContext());
+    prompt.expire();
+    events.saveAndFlush(prompt);
+
+    var actualContext = new ForegroundPolicyContext(observationContexts, sessions, runs, events,
+        deliveries).resolve(f.session()).orElseThrow();
+    assertFalse(actualContext.deliveryUnconfirmed());
+
+    generate(f);
+    assertEquals(List.of(Type.GOAL_ADD_PROMPT, Type.OFF_TASK),
+        events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).stream()
+            .map(InterventionEventEntity::getType).toList());
   }
 
   @Test

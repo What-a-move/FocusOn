@@ -5,6 +5,7 @@ import type { IpcResult } from './auth-contract.cjs'
 export const SESSION_CHANNELS = {
   focusSettings: 'session:focus-settings:get',
   start: 'session:start',
+  addGoal: 'session:addGoal',
   current: 'session:current:get',
   changed: 'session:changed',
   pause: 'session:pause',
@@ -19,14 +20,18 @@ export type SessionOptions = { interventionLevel: InterventionLevel; notificatio
 /** GET·PUT /users/me/focus-settings. 세션 시작 sessionOptions에는 breakSuggestionEnabled를 넣지 않는다(API_CONTRACT). */
 export type FocusSettings = SessionOptions & { breakSuggestionEnabled: boolean }
 /** goalText는 집중 화면 표시용이며 서버로 보내지 않는다(서버는 goalId로 snapshot을 만든다). */
-export type StartSessionInput = { goalId: string; goalText: string; targetDurationMs: number; timeZone: string; sessionOptions: SessionOptions; idempotencyKey: string }
-export type StartedSession = { sessionId: string; status: string; version: number; targetDurationMs: number; accumulatedActiveMs: number; startedAt: string; interventionPolicyVersion: string }
+export type StartSessionInput = { goalText: string; targetDurationMs: number; timeZone: string; sessionOptions: SessionOptions; idempotencyKey: string }
+  & ({ goalId: string; goalIds?: never } | { goalIds: string[]; goalId?: never })
+export type SessionGoal = { goalId: string; goalText: string }
+type GoalState = { goals: SessionGoal[]; goalVersion: number }
+export type AddSessionGoalInput = { sessionId: string; goalId: string; goalVersion: number }
+export type StartedSession = Partial<GoalState> & { sessionId: string; status: string; version: number; targetDurationMs: number; accumulatedActiveMs: number; startedAt: string; interventionPolicyVersion: string }
 
 /** 서버 세션 상태 (세션 상태 전이 정책). */
 // 서버 계약 타입은 Desktop·Extension이 shared-types에서 함께 쓴다(타입만, 결정 025).
 export type { SessionStatus }
 /** GET /sessions/active · GET /sessions/{id} 응답 중 화면에 필요한 값 (2026-10-25 확정, 결정 023). */
-export type RemoteSession = { sessionId: string; status: SessionStatus; version: number; goalText: string; targetDurationMs: number; accumulatedActiveMs: number; pauseReason: string | null }
+export type RemoteSession = Partial<GoalState> & { sessionId: string; status: SessionStatus; version: number; goalText: string; targetDurationMs: number; accumulatedActiveMs: number; pauseReason: string | null }
 
 // 멈춘 이유. 서버가 아직 보내지 않으면 null이고, 화면은 이유를 추측하지 않고 "자동으로 멈췄어요"라고만 한다.
 const pauseReasonOf = (value: unknown) => typeof value === 'string' && /^[A-Z_]{1,40}$/u.test(value) ? value : null
@@ -35,7 +40,7 @@ const pauseReasonOf = (value: unknown) => typeof value === 'string' && /^[A-Z_]{
  * Main이 Renderer에 보내는 현재 세션. 누적 시간은 Main의 monotonic clock으로 계산한 값이며,
  * Renderer는 `RUNNING`일 때만 받은 뒤 흐른 시간을 더해 1초마다 다시 그린다.
  */
-export type SessionSnapshot = {
+export type SessionSnapshot = Partial<GoalState> & {
   sessionId: string
   goalText: string
   status: SessionStatus
@@ -51,6 +56,7 @@ export type SessionSnapshot = {
 export type SessionsApi = {
   getFocusSettings(): Promise<IpcResult<FocusSettings>>
   start(input: StartSessionInput): Promise<IpcResult<StartedSession>>
+  addGoal(input: AddSessionGoalInput): Promise<IpcResult<SessionSnapshot>>
   /** 진행 중 세션. Main에 없으면 서버의 활성 세션을 복구한다. 없으면 null. */
   getCurrent(): Promise<IpcResult<SessionSnapshot | null>>
   onChanged(callback: (snapshot: SessionSnapshot | null) => void): () => void
@@ -86,7 +92,10 @@ export function isValidTimeZone(value: unknown): value is string {
 
 /** 집중 시간은 5~300분, 분 단위다 (로그인 설계서 7.1). MVP에는 종료 없는 세션이 없다. */
 export function isValidStartInput(value: unknown): value is StartSessionInput {
-  if (!isRecord(value) || Object.keys(value).length !== 6 || !isId(value.goalId) || !isUuid(value.idempotencyKey)) return false
+  if (!isRecord(value) || Object.keys(value).length !== 6 || !isUuid(value.idempotencyKey)) return false
+  if (value.goalIds === undefined ? !isId(value.goalId) : value.goalId !== undefined
+    || !Array.isArray(value.goalIds) || value.goalIds.length < 1 || value.goalIds.length > 3
+    || ![...value.goalIds].every(isId) || new Set(value.goalIds).size !== value.goalIds.length) return false
   if (typeof value.goalText !== 'string' || value.goalText.trim().length < 2 || [...value.goalText].length > 40) return false
   const ms = value.targetDurationMs
   return typeof ms === 'number' && Number.isInteger(ms) && ms % 60000 === 0 && ms >= MIN_MINUTES * 60000 && ms <= MAX_MINUTES * 60000
@@ -108,18 +117,42 @@ const STATUSES: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 
 const isCount = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0
 export const isSessionStatus = (value: unknown): value is SessionStatus => STATUSES.includes(value as SessionStatus)
 
+export function parseSessionGoalState(value: unknown): GoalState | null {
+  if (!isRecord(value) || !isCount(value.goalVersion) || value.goalVersion < 1
+    || !Array.isArray(value.goals) || value.goals.length < 1 || value.goals.length > 3) return null
+  const goals = []
+  for (const item of value.goals) {
+    if (!isRecord(item) || !isId(item.goalId) || typeof item.goalText !== 'string' || !item.goalText.trim()) return null
+    goals.push({ goalId: item.goalId, goalText: item.goalText })
+  }
+  return new Set(goals.map(({ goalId }) => goalId)).size === goals.length ? { goals, goalVersion: value.goalVersion } : null
+}
+
+function optionalGoalState(value: Record<string, unknown>): Partial<GoalState> | null {
+  return value.goals === undefined && value.goalVersion === undefined ? {} : parseSessionGoalState(value)
+}
+
+export function isAddSessionGoalInput(value: unknown): value is AddSessionGoalInput {
+  return isRecord(value) && Object.keys(value).length === 3 && isId(value.sessionId) && isId(value.goalId)
+    && isCount(value.goalVersion) && value.goalVersion >= 1
+}
+
 export function parseStartedSession(value: unknown): StartedSession | null {
   if (!isRecord(value) || !isId(value.sessionId) || typeof value.status !== 'string' || typeof value.interventionPolicyVersion !== 'string') return null
   if (!isCount(value.version) || !isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
   if (typeof value.startedAt !== 'string' || !Number.isFinite(Date.parse(value.startedAt))) return null
-  return { sessionId: value.sessionId, status: value.status, version: value.version, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs, startedAt: value.startedAt, interventionPolicyVersion: value.interventionPolicyVersion }
+  const goalState = optionalGoalState(value)
+  if (goalState === null) return null
+  return { ...goalState, sessionId: value.sessionId, status: value.status, version: value.version, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs, startedAt: value.startedAt, interventionPolicyVersion: value.interventionPolicyVersion }
 }
 
 // GET /sessions/active · /sessions/{id} 확정 형식(결정 023): { sessionId, status, version, goalTextSnapshot, targetDurationMs, accumulatedActiveMs }
 export function parseRemoteSession(value: unknown): RemoteSession | null {
   if (!isRecord(value) || !isId(value.sessionId) || !isSessionStatus(value.status) || !isCount(value.version)) return null
   if (typeof value.goalTextSnapshot !== 'string' || !isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
-  return { sessionId: value.sessionId, status: value.status, version: value.version, goalText: value.goalTextSnapshot, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs, pauseReason: pauseReasonOf(value.pauseReason) }
+  const goalState = optionalGoalState(value)
+  if (goalState === null) return null
+  return { ...goalState, sessionId: value.sessionId, status: value.status, version: value.version, goalText: value.goalTextSnapshot, targetDurationMs: value.targetDurationMs, accumulatedActiveMs: value.accumulatedActiveMs, pauseReason: pauseReasonOf(value.pauseReason) }
 }
 
 /** 상태 명령(pause·resume·extend·end) 응답의 공통 부분. 없는 값은 이전 값을 유지한다. */
@@ -141,7 +174,7 @@ export function parseHeartbeat(value: unknown): { status: SessionStatus; accumul
 export function isSessionSnapshot(value: unknown): value is SessionSnapshot {
   return isRecord(value) && isId(value.sessionId) && typeof value.goalText === 'string' && isSessionStatus(value.status)
     && isCount(value.targetDurationMs) && isCount(value.accumulatedActiveMs) && (value.error === null || typeof value.error === 'string') && typeof value.busy === 'boolean'
-    && (value.pauseReason === null || typeof value.pauseReason === 'string')
+    && (value.pauseReason === null || typeof value.pauseReason === 'string') && optionalGoalState(value) !== null
 }
 
 /** 연장은 5~300분 (로그인 설계서 7.1과 같은 범위). */

@@ -66,6 +66,29 @@ class GoalTodoApiTests {
   }
 
   @Test
+  void repeatedGoalCreationReturnsTheSameGoal() throws Exception {
+    LoginResponse owner = desktop("goal-replay");
+    String key = UUID.randomUUID().toString();
+    String body = "{\"goalText\":\"테스트 로그 분석\","
+        + "\"confirmationSource\":\"MANUAL_CONFIRMED\"}";
+    var first = mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .header("Idempotency-Key", key).contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isCreated()).andReturn();
+    var replay = mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .header("Idempotency-Key", key).contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isCreated()).andReturn();
+    JsonNode firstGoal = json.readTree(first.getResponse().getContentAsString()).path("data");
+    JsonNode replayedGoal = json.readTree(replay.getResponse().getContentAsString()).path("data");
+    assertEquals(firstGoal.path("goalId"), replayedGoal.path("goalId"));
+    mvc.perform(post("/api/v1/goals").header("Authorization", token(owner))
+            .header("Idempotency-Key", key).contentType(MediaType.APPLICATION_JSON)
+            .content(body.replace("테스트 로그 분석", "서버 테스트 실행")))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("IDEMPOTENCY_CONFLICT"));
+    assertEquals(1, list(owner, "").path("items").size());
+  }
+
+  @Test
   void listsOwnOpenAndDoneGoalsNewestFirstWithCursor() throws Exception {
     LoginResponse owner = desktop("todo-owner");
     LoginResponse other = desktop("todo-other");

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
+import { AddSessionGoal } from './AddSessionGoal'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
 import './focus-session.css'
@@ -39,7 +40,7 @@ export function FocusSession() {
   const snapshot = view.snapshot
   const [loadError, setLoadError] = useState(false)
   const [now, setNow] = useState(0)
-  const [dialog, setDialog] = useState<'finish' | 'timeup' | 'extend' | null>(null)
+  const [dialog, setDialog] = useState<'finish' | 'timeup' | 'extend' | 'add-goal' | null>(null)
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -63,6 +64,17 @@ export function FocusSession() {
     const timer = setInterval(() => setNow(performance.now()), 1000)
     return () => { unsubscribe(); unsubscribeAuth?.(); clearInterval(timer) }
   }, [router])
+
+  const sessionId = snapshot?.sessionId
+  const canAddGoal = snapshot?.status === 'RUNNING' && !!snapshot.goalVersion && (snapshot.goals?.length ?? 3) < 3
+  useEffect(() => {
+    if (!canAddGoal || new URLSearchParams(window.location.search).get('addGoal') !== sessionId) return
+    const timer = window.setTimeout(() => {
+      window.history.replaceState(window.history.state, '', window.location.pathname)
+      setDialog('add-goal')
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [canAddGoal, sessionId])
 
   const status = snapshot?.status
   const awaiting = status === 'AWAITING_END_CONFIRMATION'
@@ -146,6 +158,10 @@ export function FocusSession() {
         <div className="side">
         <p className="goal-label">지금 집중하는 목표</p>
         <p className="goal" id="goal-text">{snapshot.goalText}</p>
+        {!!snapshot.goals && snapshot.goals.length > 1 && <ul className="session-goals" aria-label="함께 진행하는 할 일">
+          {snapshot.goals.slice(1).map(({ goalId, goalText }) => <li key={goalId}>{goalText}</li>)}
+        </ul>}
+        {canAddGoal && <button className="btn btn-ghost add-goal-button" type="button" onClick={() => setDialog('add-goal')}>할 일 추가</button>}
         <div className="controls">
           <div className="control">
             <button className={`round${paused && !awaiting ? ' is-play' : ''}`} type="button" onClick={togglePause} disabled={snapshot.busy || awaiting} aria-label={running ? '잠시 멈추기' : '다시 집중하기'}>
@@ -172,6 +188,7 @@ export function FocusSession() {
     </section>
 
     <dialog ref={dialogRef} aria-labelledby="dialog-title" onCancel={(event) => { event.preventDefault(); if (!awaiting) setDialog(null) }}>
+      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} onClose={() => setDialog(null)} /> : <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
@@ -197,6 +214,7 @@ export function FocusSession() {
         {customError && <p className="dialog-error" role="alert">5~300분(5시간) 사이로 입력해 주세요.</p>}
         <button className="btn btn-ghost" type="button" onClick={() => setDialog('timeup')}>뒤로</button>
       </div>}
+      </>}
     </dialog>
   </main>
 }

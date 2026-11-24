@@ -408,12 +408,32 @@ if (!hasSingleInstanceLock) {
         floatingWindow.hide()
       }
     }
+    async function openAddGoal(sessionId?: string): Promise<boolean> {
+      const session = runtime?.snapshot()
+      if (!sessionId || session?.sessionId !== sessionId || session.status !== 'RUNNING'
+        || !session.goalVersion || (session.goals?.length ?? 3) >= 3) return false
+      app.focus({ steal: true })
+      showMainWindow()
+      const destination = new URL('session/', rendererUrl)
+      destination.searchParams.set('addGoal', sessionId)
+      if (!mainWindow) return false
+      try {
+        await mainWindow.loadURL(destination.toString())
+        return true
+      } catch {
+        log('WARN', 'api.request.fail', { component: 'intervention', path: '/session/', code: 'LOCAL_APP_ERROR' })
+        return false
+      }
+    }
+
     const watcher = authService && runtime ? new InterventionWatcher({
       auth: authService,
       show: showFloating,
       notify: (payload, sound) => {
         if (!Notification.isSupported()) return false
-        new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound }).show()
+        const notification = new Notification({ title: 'FocusOn', body: `${payload.say} ${payload.sub}`, silent: !sound })
+        if (payload.kind === 'GOAL_ADD') notification.on('click', () => { void openAddGoal(payload.sessionId) })
+        notification.show()
         return true
       },
       pause: () => runtime.pause('USER'),
@@ -454,6 +474,12 @@ if (!hasSingleInstanceLock) {
         // [주의] macOS에서 창 focus()만으로는 비활성 앱이 앞으로 오지 않는다. 사용자가 누른 버튼이라 앱을 직접 활성화한다.
         if (action === 'OPEN_APP') { app.focus({ steal: true }); showMainWindow() }
         return { success: true, data: { done: true } }
+      }
+      if (shown.kind === 'GOAL_ADD' && action !== 'OPEN_APP' && action !== 'CLOSE') {
+        return { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } }
+      }
+      if (shown.kind === 'GOAL_ADD' && action === 'OPEN_APP' && !await openAddGoal(shown.sessionId)) {
+        return { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } }
       }
       const done = await watcher?.act(interventionId, action).catch(() => action !== 'REST') ?? true
       // 잠시 쉬기에서 일시정지에 실패하면 창을 그대로 두고 포키 창이 안내한다. 확인했어는 같은 창에서 목표 안내로 이어진다.

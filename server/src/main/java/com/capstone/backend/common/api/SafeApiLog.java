@@ -27,6 +27,15 @@ public final class SafeApiLog {
     analysisRecord(event, startedNanos).log(event.value);
   }
 
+  /** 목표 프로필 호출은 본문과 자격증명 없이 경과와 성공 여부만 남긴다. */
+  public static void goalProfileEvent(AnalysisEvent event, long startedNanos) {
+    var output = event == AnalysisEvent.AI_FAIL ? LOGGER.atWarn() : LOGGER.atInfo();
+    output.addKeyValue("component", "goal-profile")
+        .addKeyValue("event", event.value)
+        .addKeyValue("durMs", Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000))
+        .log(event.value);
+  }
+
   /** 정규화된 판정과 상태만 남기며 AI 응답 전문이나 예외를 받지 않는다. */
   public static void analysisAiResult(boolean failed, long startedNanos, Integer upstreamStatus,
       Enum<?> relation, Double confidence, Enum<?> reasonCode) {

@@ -1,8 +1,8 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { SESSION_CHANNELS, isValidStartInput, parseFocusSettings, parseStartedSession } from '../shared/session-contract.cjs'
-import type { FocusSettings, StartSessionInput, StartedSession } from '../shared/session-contract.cjs'
+import { SESSION_CHANNELS, isAddSessionGoalInput, isValidStartInput, parseFocusSettings, parseStartedSession } from '../shared/session-contract.cjs'
+import type { AddSessionGoalInput, FocusSettings, StartSessionInput, StartedSession } from '../shared/session-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -32,7 +32,7 @@ export class SessionService {
       path: '/api/v1/sessions', method: 'POST', expectedStatus: 201, parse: parseStartedSession, withDeviceId: true,
       headers: { 'Idempotency-Key': input.idempotencyKey },
       body: {
-        goalId: input.goalId,
+        ...(input.goalIds ? { goalIds: input.goalIds } : { goalId: input.goalId }),
         targetDurationMs: input.targetDurationMs,
         timeZone: input.timeZone,
         sessionOptions: input.sessionOptions,
@@ -74,6 +74,7 @@ export function registerSessionIpc(getMainWindow: () => BrowserWindow | null, re
     })
   }
   const none = (args: unknown[]) => args.length === 0
+  handleRuntime(SESSION_CHANNELS.addGoal, (args) => args.length === 1 && isAddSessionGoalInput(args[0]), (r, args) => r.addGoal(args[0] as AddSessionGoalInput))
   handleRuntime(SESSION_CHANNELS.current, none, (r) => r.restore())
   handleRuntime(SESSION_CHANNELS.pause, none, (r) => r.pause('USER'))
   handleRuntime(SESSION_CHANNELS.resume, none, (r) => r.resume())

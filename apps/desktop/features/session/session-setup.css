@@ -14,10 +14,6 @@
 .setup-window .back-link:hover { color: var(--ink); }
 .setup-window .back-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
 .setup-window h1 { margin-top: 8px; font-size: 36px; font-weight: 700; letter-spacing: -.03em; }
-.setup-window .goal-line { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; }
-.setup-window .goal-line p { font-size: 20px; font-weight: 600; line-height: 1.5; }
-.setup-window .goal-line p::before { content: '목표'; margin-right: 10px; padding: 3px 8px; border-radius: 6px; background: var(--gold-soft); font-size: 12px; font-weight: 700; vertical-align: 2px; }
-.setup-window .goal-line a { flex: 0 0 auto; color: var(--muted); font-size: 14px; font-weight: 600; }
 
 .setup-window .group { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
 .setup-window .group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
@@ -108,8 +104,6 @@
 }
 @media (max-height: 640px) {
   .setup-window h1 { font-size: 26px; }
-  .setup-window .goal-line { margin-top: 6px; }
-  .setup-window .goal-line p { font-size: 17px; }
   .setup-window .group { margin-top: 12px; padding-top: 12px; }
   .setup-window .duration-row { margin-top: 10px; }
   .setup-window .group-head { margin-bottom: 10px; }
@@ -120,3 +114,12 @@
   .setup-window .poki-stage::before { width: 130px; height: 130px; }
 }
 @media (min-height: 860px) { .setup-window .sheet-inner { padding-top: 5vh; } }
+
+.setup-window .setup-goals { min-width: 0; margin-top: 20px; padding-top: 10px; }
+.setup-window .setup-goals legend { font-size: 18px; font-weight: 700; }
+.setup-window .setup-goals .goals-status { margin-bottom: 8px; color: var(--muted); font-size: 14px; }
+.setup-window .goal-choice { display: flex; gap: 10px; align-items: center; min-height: 42px; padding: 6px 8px; border-radius: 8px; overflow-wrap: anywhere; }
+.setup-window .goal-choice:hover { background: var(--field); }
+.setup-window .goal-choice input { width: 18px; height: 18px; flex: none; accent-color: var(--brand); }
+.setup-window .goal-choice input:focus-visible, .setup-window .new-goal:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.setup-window .new-goal { display: inline-block; margin: 12px 0 0 8px; color: var(--muted); font-size: 14px; font-weight: 600; }

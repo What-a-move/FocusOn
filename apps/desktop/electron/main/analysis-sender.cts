@@ -3,9 +3,9 @@ import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import type { AuthService } from './auth-service.cjs'
 import type { Observation } from './screen-observer.cjs'
 
-import type { AnalysisRunRequest, AnalysisRunResponse, Relation } from '@focuson/shared-types'
+import type { AnalysisRunRequest, AnalysisRunResponse, MatchStatus, Relation } from '@focuson/shared-types'
 
-export type AnalysisRun = AnalysisRunResponse
+export type AnalysisRun = AnalysisRunResponse & { matchStatus?: MatchStatus | null }
 type Sequences = { APP_META: number; DESKTOP_APP_OCR: number }
 
 const RELATIONS: readonly Relation[] = ['RELATED', 'UNRELATED', 'UNCERTAIN', 'EXCLUDED', 'PRIVACY_BLOCKED']
@@ -15,11 +15,12 @@ const RATE_LIMIT_PAUSE_MS = 60_000
 /** 응답 형식을 그대로 확인한다. 값이 없거나 형식이 틀리면 null(계약 위반)이다. confidence(0~1)·reasonCode는 판정이 없으면 null일 수 있다. */
 export function parseAnalysisRun(value: unknown): AnalysisRun | null {
   if (typeof value !== 'object' || value === null) return null
-  const { analysisRunId, relation, confidence, reasonCode, observedAt, policyVersion } = value as Record<string, unknown>
+  const { analysisRunId, relation, confidence, reasonCode, observedAt, policyVersion, matchStatus } = value as Record<string, unknown>
   if (typeof analysisRunId !== 'string' || !RELATIONS.includes(relation as Relation) || typeof observedAt !== 'string' || typeof policyVersion !== 'string') return null
   if (confidence !== null && (typeof confidence !== 'number' || confidence < 0 || confidence > 1)) return null
   if (reasonCode !== null && typeof reasonCode !== 'string') return null
-  return { analysisRunId, relation: relation as Relation, confidence, reasonCode, observedAt, policyVersion }
+  const match = matchStatus === 'MATCHED' || matchStatus === 'FAR' || matchStatus === 'NOT_ENOUGH' ? matchStatus : null
+  return { analysisRunId, relation: relation as Relation, confidence, reasonCode, observedAt, policyVersion, ...(matchStatus === undefined ? {} : { matchStatus: match }) }
 }
 
 /**

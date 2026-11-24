@@ -98,5 +98,5 @@ public final class AnalysisDtos {
   /** 클라이언트가 사용하는 공개 분석 결과다. */
   public record Response(String analysisRunId, AnalysisStatus analysisStatus, Relation relation,
       Double confidence, ReasonCode reasonCode, Instant observedAt, String policyVersion,
-      MatchStatus matchStatus) {}
+      MatchStatus matchStatus, String matchedGoalId, long goalVersion) {}
 }

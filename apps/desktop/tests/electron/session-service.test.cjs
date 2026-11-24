@@ -74,3 +74,24 @@ test('세션 시작이 확정되면 Main 타이머를 시작하고, 목표 문�
   assert.equal(begun[0].goalText, '미적분 풀기')
   assert.equal(begun[0].started.version, 1)
 })
+
+test('세션 시작은 중복 없는 할 일 1~3개를 순서대로 보내고 확정 목록을 읽는다', async () => {
+  const { goalId: unusedGoalId, ...base } = input
+  assert.equal(isValidStartInput({ ...base, goalIds: ['12', '13', '14'] }), true)
+  for (const goalIds of [[], ['12', '12'], ['12', '13', '14', '15']]) {
+    assert.equal(isValidStartInput({ ...base, goalIds }), false)
+  }
+  assert.equal(isValidStartInput({ ...input, goalIds: ['12'] }), false)
+  const requests = []
+  const service = new SessionService({ authorizedRequest: async (request) => { requests.push(request); return { success: false, error: { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true } } } }, () => true, () => true)
+  await service.start({ ...base, goalIds: ['13', '12'] })
+  assert.deepEqual(requests[0].body.goalIds, ['13', '12'])
+  assert.equal('goalId' in requests[0].body, false)
+  const parsed = parseStartedSession({
+    sessionId: '901', status: 'RUNNING', version: 1, targetDurationMs: 1800000,
+    accumulatedActiveMs: 0, startedAt: '2026-10-24T01:00:00Z', interventionPolicyVersion: 'v2',
+    goals: [{ goalId: '13', goalText: '영어 단어 정리' }, { goalId: '12', goalText: '미적분 풀기' }], goalVersion: 1,
+  })
+  assert.deepEqual(parsed.goals.map(({ goalId }) => goalId), ['13', '12'])
+  assert.equal(parsed.goalVersion, 1)
+})

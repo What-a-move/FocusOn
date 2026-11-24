@@ -2,13 +2,15 @@ import { randomUUID } from 'node:crypto'
 import type { ApiResult } from './auth-api.cjs'
 import type { AuthService } from './auth-service.cjs'
 import { log } from './logger.cjs'
-import { parseCommandResult, parseHeartbeat, parseRemoteSession } from '../shared/session-contract.cjs'
-import type { CommandResult, RemoteSession, SessionOptions, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
+import { parseCommandResult, parseHeartbeat, parseRemoteSession, parseSessionGoalState } from '../shared/session-contract.cjs'
+import type { AddSessionGoalInput, CommandResult, RemoteSession, SessionGoal, SessionOptions, SessionSnapshot, SessionStatus, StartedSession } from '../shared/session-contract.cjs'
 
 type Command = 'pause' | 'resume' | 'extend' | 'end'
 type State = {
   sessionId: string
   goalText: string
+  goals?: SessionGoal[]
+  goalVersion?: number
   status: SessionStatus
   version: number
   targetDurationMs: number
@@ -61,7 +63,7 @@ export class SessionRuntime {
   snapshot(): SessionSnapshot | null {
     const s = this.state
     if (!s) return null
-    return { sessionId: s.sessionId, goalText: s.goalText, status: s.status, targetDurationMs: s.targetDurationMs, accumulatedActiveMs: this.activeMs(), error: s.error, busy: s.busy, pauseReason: s.pauseReason }
+    return { ...(s.goals && s.goalVersion ? { goals: s.goals, goalVersion: s.goalVersion } : {}), sessionId: s.sessionId, goalText: s.goalText, status: s.status, targetDurationMs: s.targetDurationMs, accumulatedActiveMs: this.activeMs(), error: s.error, busy: s.busy, pauseReason: s.pauseReason }
   }
 
   /** 세션 설정에서 시작에 성공하면 그 응답으로 타이머를 시작한다. */
@@ -69,10 +71,30 @@ export class SessionRuntime {
     this.pending.clear()
     this.options = options
     this.state = {
-      sessionId: started.sessionId, goalText, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
+      sessionId: started.sessionId, goalText: started.goals?.[0]?.goalText ?? goalText, goals: started.goals, goalVersion: started.goalVersion, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
       baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false, pauseReason: null,
     }
     this.publish('start')
+  }
+
+  async addGoal(input: AddSessionGoalInput): Promise<ApiResult<SessionSnapshot>> {
+    const state = this.state
+    if (!state || state.sessionId !== input.sessionId || state.status !== 'RUNNING') return { success: false, error: { code: 'SESSION_STATE_INVALID', retryable: false } }
+    const result = await this.auth.authorizedRequest({
+      path: `/api/v1/sessions/${state.sessionId}/goals`, method: 'POST', expectedStatus: 200,
+      withDeviceId: true, body: { goalId: input.goalId, goalVersion: input.goalVersion }, parse: parseSessionGoalState,
+    })
+    if (this.state !== state) return { success: false, error: { code: 'SESSION_NOT_FOUND', retryable: false } }
+    if (!result.success) {
+      if (result.error.code === 'SESSION_VERSION_CONFLICT' && await this.refresh(state)) this.publish('version-conflict')
+      return result
+    }
+    if (result.data.goalVersion >= (state.goalVersion ?? 0)) {
+      state.goals = result.data.goals
+      state.goalVersion = result.data.goalVersion
+      this.publish('goal-added')
+    }
+    return { success: true, data: this.snapshot() as SessionSnapshot }
   }
 
   /** 세션 시작 때 고른 개입 강도·알림 채널. */
@@ -105,7 +127,7 @@ export class SessionRuntime {
     this.options = DEFAULT_OPTIONS
     // [주의] 실행 중이었어도 꺼져 있던 동안을 세지 않도록 처음부터 멈춤으로 둔다. 서버에는 APP_RESTART로 알린다.
     const restored: State = {
-      sessionId: remote.sessionId, goalText: remote.goalText, status: remote.status === 'RUNNING' ? 'AUTO_PAUSED' : remote.status, version: remote.version,
+      sessionId: remote.sessionId, goalText: remote.goalText, goals: remote.goals, goalVersion: remote.goalVersion, status: remote.status === 'RUNNING' ? 'AUTO_PAUSED' : remote.status, version: remote.version,
       // [주의] 꺼져 있던 동안의 시간은 서버가 마지막으로 확정한 값만 쓴다. 로컬에서 추정해 더하지 않는다(resumedAt 없음).
       targetDurationMs: remote.targetDurationMs, baseActiveMs: remote.accumulatedActiveMs, resumedAt: null, error: null, busy: false,
       pauseReason: remote.status === 'RUNNING' ? 'APP_RESTART' : remote.pauseReason,
@@ -290,6 +312,10 @@ export class SessionRuntime {
     if (!latest.success || this.state !== s) return false
     this.pending.clear()
     s.version = latest.data.version
+    if (latest.data.goals && latest.data.goalVersion && latest.data.goalVersion >= (s.goalVersion ?? 0)) {
+      s.goals = latest.data.goals
+      s.goalVersion = latest.data.goalVersion
+    }
     s.targetDurationMs = latest.data.targetDurationMs
     s.baseActiveMs = latest.data.accumulatedActiveMs
     s.status = latest.data.status

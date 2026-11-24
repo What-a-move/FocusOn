@@ -37,6 +37,12 @@ public interface LearningSessionRepository extends JpaRepository<LearningSession
   Optional<LearningSessionEntity> findOwnedForUpdate(@Param("id") Long id,
       @Param("userId") Long userId);
 
+  /** 실행 명령 버전과 별도로 목표 목록 버전만 올린다. */
+  @Modifying(flushAutomatically = true)
+  @Query(value = "UPDATE learning_sessions SET goal_version = goal_version + 1 "
+      + "WHERE id = :id AND goal_version = :expected", nativeQuery = true)
+  int incrementGoalVersion(@Param("id") Long id, @Param("expected") long expected);
+
   /** 일반 신호는 명령 버전을 변경하지 않고 상태 전이 때만 버전을 증가한다. */
   @Modifying(flushAutomatically = true)
   @Query(value = "UPDATE learning_sessions SET last_heartbeat_at = :received, "

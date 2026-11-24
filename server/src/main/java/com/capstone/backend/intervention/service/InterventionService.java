@@ -1,5 +1,6 @@
 package com.capstone.backend.intervention.service;
 
+import com.capstone.backend.analysis.persistence.AnalysisRunRepository;
 import com.capstone.backend.auth.persistence.TokenFamilyRepository;
 import com.capstone.backend.auth.persistence.UserDeviceEntity.DeviceType;
 import com.capstone.backend.auth.persistence.UserRepository;
@@ -20,6 +21,7 @@ import com.capstone.backend.intervention.persistence.InterventionPolicyRepositor
 import com.capstone.backend.session.dto.SessionDtos.NotificationChannel;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionGoalRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,6 +45,8 @@ public class InterventionService {
   private final LearningSessionRepository sessions;
   private final InterventionEventRepository events;
   private final InterventionPolicyRepository states;
+  private final AnalysisRunRepository runs;
+  private final SessionGoalRepository sessionGoals;
   private final InterventionPolicyService policy;
   private final ObjectMapper json;
 
@@ -106,15 +110,28 @@ public class InterventionService {
     }
     var context = policy.binding(session, now).orElse(null);
     var state = states.findById(session.getId()).orElse(null);
+    boolean goalPrompt = event.getType() == Type.GOAL_ADD_PROMPT;
     if (context == null || !context.deliveryContractReady() || state == null
-        || (context.cooldownUntil() != null && now.isBefore(context.cooldownUntil()))) {
+        || (!goalPrompt && context.cooldownUntil() != null && now.isBefore(context.cooldownUntil()))
+        || event.getObservationContextId() == null
+        || !event.getObservationContextId().toString().equals(context.context())) {
       return Optional.empty();
     }
     var timeline = json.readValue(state.getTimelineJson(), OffTaskTimeline.Snapshot.class);
-    return event.getObservationContextId() != null
-        && event.getObservationContextId().toString().equals(context.context())
-        && timeline.openEpisode() != null && timeline.context().equals(context.context())
-        ? Optional.of(timeline) : Optional.empty();
+    if (!timeline.context().equals(context.context())) {
+      return Optional.empty();
+    }
+    if (!goalPrompt) {
+      return timeline.openEpisode() == null ? Optional.empty() : Optional.of(timeline);
+    }
+    if (state.getFarGoalVersion() != session.getGoalVersion()
+        || sessionGoals.countByIdSessionId(session.getId()) >= 3) {
+      return Optional.empty();
+    }
+    return runs.findCurrent(session.getId(), context.deviceId(), event.getObservationContextId())
+        .filter(run -> Objects.equals(run.getId(), timeline.latestRun())
+            && InterventionPolicyService.confirmedFar(session, run))
+        .map(run -> timeline);
   }
 
   private Item item(InterventionEventEntity event, Instant now) {

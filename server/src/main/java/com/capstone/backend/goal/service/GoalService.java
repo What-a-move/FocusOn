@@ -5,6 +5,8 @@ import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
 import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
+import com.capstone.backend.common.api.SafeApiLog;
+import com.capstone.backend.common.api.SafeApiLog.AnalysisEvent;
 import com.capstone.backend.goal.dto.GoalDtos.CreateGoalRequest;
 import com.capstone.backend.goal.dto.GoalDtos.GoalListResponse;
 import com.capstone.backend.goal.dto.GoalDtos.GoalResponse;
@@ -15,13 +17,25 @@ import com.capstone.backend.goal.persistence.GoalEntity;
 import com.capstone.backend.goal.persistence.GoalEntity.ConfirmationSource;
 import com.capstone.backend.goal.persistence.GoalEntity.TodoStatus;
 import com.capstone.backend.goal.persistence.GoalRepository;
+import com.capstone.backend.session.persistence.IdempotencyRecordEntity;
+import com.capstone.backend.session.persistence.IdempotencyRecordRepository;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionGoalRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.HexFormat;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 /** 인증된 사용자의 학습 목표를 저장하고 조회한다. */
@@ -31,40 +45,158 @@ import tools.jackson.databind.ObjectMapper;
 public class GoalService {
   private static final int DEFAULT_LIMIT = 20;
   private static final int MAX_LIMIT = 50;
+  private static final String CREATE_SCOPE = "CREATE_GOAL";
   private final GoalRepository goals;
+  private final IdempotencyRecordRepository records;
   private final UserRepository users;
   private final LearningSessionRepository sessions;
+  private final SessionGoalRepository sessionGoals;
   private final GoalClarificationRepository clarifications;
   private final ObjectMapper json;
+  private final GoalAiClient goalAi;
+  private final TransactionTemplate transactions;
 
-  /** 확정 방식과 명확화 이력을 검증하고 목표를 저장한다. */
-  @Transactional
-  public GoalResponse create(FocusOnPrincipal principal, CreateGoalRequest request) {
+  /** AI에 목표 확장을 요청하는 동안 DB 트랜잭션을 점유하지 않는다. */
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public GoalResponse create(FocusOnPrincipal principal, CreateGoalRequest request, String rawKey) {
     String text = validatedText(request.goalText());
-    UserEntity user = users.findById(principal.userId())
-        .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
+    GoalProfile edited = GoalProfile.fromDraft(request.goalProfile());
+    if (request.goalProfile() != null && !request.goalProfile().isNull() && edited == null) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    CreateKey key = rawKey == null ? null : createKey(rawKey, request);
+    var preflight = transactions.execute(status -> {
+      if (key != null) {
+        lockUser(principal.userId());
+        var previous = existing(principal.userId(), key);
+        if (previous != null && previous.getExpiresAt().isAfter(Instant.now())) {
+          return new Preflight(replay(previous, key), null);
+        }
+      }
+      if (edited != null) {
+        return new Preflight(null, edited);
+      }
+      var clarification = findClarification(principal.userId(), request, Instant.now());
+      GoalProfile draft = confirmedProfile(clarification, request.confirmationSource(), text);
+      return new Preflight(null, draft);
+    });
+    if (preflight.replayed() != null) {
+      return preflight.replayed();
+    }
+    GoalProfile selected = preflight.profile() == null ? expand(text) : preflight.profile();
+    return transactions.execute(status -> save(principal, request, text, selected, key));
+  }
+
+  private GoalResponse save(FocusOnPrincipal principal, CreateGoalRequest request, String text,
+      GoalProfile profile, CreateKey key) {
+    long userId = principal.userId();
+    UserEntity user = key == null ? users.findById(userId)
+        .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED)) : lockUser(userId);
     Instant now = Instant.now();
-    GoalClarificationSession clarification = findClarification(principal.userId(), request, now);
+    if (key != null) {
+      var previous = existing(userId, key);
+      if (previous != null) {
+        if (previous.getExpiresAt().isAfter(now)) {
+          return replay(previous, key);
+        }
+        records.delete(previous);
+        records.flush();
+      }
+    }
+    GoalClarificationSession clarification = findClarification(userId, request, now);
+    GoalProfile savedDraft = confirmedProfile(clarification, request.confirmationSource(), text);
     GoalEntity goal = GoalEntity.create(user, text, request.confirmationSource(), now);
     if (clarification != null) {
-      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
-        var result = json.readTree(clarification.getStateJson()).path("response");
-        if (!"CLEAR".equals(result.path("clarityStatus").asText())
-            || !text.equals(result.path("normalizedGoalText").asText())) {
-          throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
-        }
-      }
       goal.linkClarification(clarification);
-      if (request.confirmationSource() == ConfirmationSource.AI_CONFIRMED) {
-        // 확정 응답과 같은 대화 상태에 보관한 세분화만 목표에 붙인다.
-        var profile = json.readTree(clarification.getStateJson()).path("profile");
-        if (profile.isObject()) {
-          goal.attachProfile(json.writeValueAsString(profile));
-        }
-      }
       clarification.confirm(now);
     }
-    return response(goals.save(goal));
+    GoalProfile selected = profile == null ? savedDraft : profile;
+    if (selected != null) {
+      goal.attachProfile(json.writeValueAsString(selected));
+    }
+    GoalResponse response = response(goals.save(goal));
+    if (key != null) {
+      records.save(IdempotencyRecordEntity.create(user, CREATE_SCOPE, key.id(), key.hash(),
+          (short) 201, json.writeValueAsString(response), now, now.plus(Duration.ofHours(24))));
+    }
+    return response;
+  }
+
+  private IdempotencyRecordEntity existing(long userId, CreateKey key) {
+    return records.findByUserIdAndScopeAndIdempotencyKey(userId, CREATE_SCOPE, key.id())
+        .orElse(null);
+  }
+
+  private GoalResponse replay(IdempotencyRecordEntity record, CreateKey key) {
+    if (!key.hash().equals(record.getRequestHash())) {
+      throw new ApiException(ApiErrorCode.IDEMPOTENCY_CONFLICT);
+    }
+    return json.readValue(record.getResponseBodyJson(), GoalResponse.class);
+  }
+
+  private CreateKey createKey(String raw, CreateGoalRequest request) {
+    UUID id;
+    try {
+      id = UUID.fromString(raw);
+      if (!id.toString().equalsIgnoreCase(raw)) {
+        throw new IllegalArgumentException();
+      }
+    } catch (IllegalArgumentException exception) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    try {
+      byte[] body = json.writeValueAsString(request).getBytes(StandardCharsets.UTF_8);
+      String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(body));
+      return new CreateKey(id, hash);
+    } catch (NoSuchAlgorithmException exception) {
+      throw new IllegalStateException("SHA-256 is unavailable", exception);
+    }
+  }
+
+  private record CreateKey(UUID id, String hash) {}
+
+  private record Preflight(GoalResponse replayed, GoalProfile profile) {}
+
+  private GoalProfile confirmedProfile(GoalClarificationSession clarification,
+      ConfirmationSource source, String text) {
+    if (clarification == null || source != ConfirmationSource.AI_CONFIRMED) {
+      return null;
+    }
+    var state = json.readTree(clarification.getStateJson());
+    var result = state.path("response");
+    if (!"CLEAR".equals(result.path("clarityStatus").asText())
+        || !text.equals(result.path("normalizedGoalText").asText())) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    return GoalProfile.fromDraft(state.path("profile"));
+  }
+
+  private GoalProfile expand(String text) {
+    long started = System.nanoTime();
+    SafeApiLog.goalProfileEvent(AnalysisEvent.AI_START, started);
+    long[] retryDelays = {1000, 3000};
+    for (int attempt = 0; ; attempt++) {
+      try {
+        var value = goalAi.profile(text, LocaleContextHolder.getLocale().toLanguageTag());
+        GoalProfile profile = value == null ? null
+            : GoalProfile.fromDraft(value.path("goalProfile"));
+        SafeApiLog.goalProfileEvent(profile == null ? AnalysisEvent.AI_FAIL : AnalysisEvent.AI_OK,
+            started);
+        return profile;
+      } catch (GoalAiClient.GoalAiException failure) {
+        if (!failure.retryable() || attempt >= retryDelays.length) {
+          SafeApiLog.goalProfileEvent(AnalysisEvent.AI_FAIL, started);
+          return null;
+        }
+        try {
+          Thread.sleep(retryDelays[attempt]);
+        } catch (InterruptedException interrupted) {
+          Thread.currentThread().interrupt();
+          SafeApiLog.goalProfileEvent(AnalysisEvent.AI_FAIL, started);
+          return null;
+        }
+      }
+    }
   }
 
   private GoalClarificationSession findClarification(Long userId, CreateGoalRequest request,
@@ -165,13 +297,14 @@ public class GoalService {
     goal.delete(Instant.now());
   }
 
-  private void lockUser(Long userId) {
-    users.findByIdForUpdate(userId)
+  private UserEntity lockUser(Long userId) {
+    return users.findByIdForUpdate(userId)
         .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_RELOGIN_REQUIRED));
   }
 
   private void requireNotInActiveSession(Long userId, Long goalId) {
     if (sessions.existsByUserIdAndGoalIdAndStatusIn(userId, goalId,
+        SessionStatus.activeStatuses()) || sessionGoals.referencedByActiveSession(userId, goalId,
         SessionStatus.activeStatuses())) {
       throw new ApiException(ApiErrorCode.GOAL_UPDATE_BLOCKED);
     }
@@ -210,7 +343,9 @@ public class GoalService {
   }
 
   private GoalResponse response(GoalEntity goal) {
+    GoalProfile profile = goal.getProfileJson() == null ? null
+        : GoalProfile.fromDraft(json.readTree(goal.getProfileJson()));
     return new GoalResponse(goal.getId().toString(), goal.getGoalText(),
-        goal.getConfirmationSource(), goal.getTodoStatus());
+        goal.getConfirmationSource(), goal.getTodoStatus(), profile);
   }
 }

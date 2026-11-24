@@ -74,13 +74,13 @@ class ScreenEncoder:
         )
 
     @torch.inference_mode()
-    def embed(self, texts):
+    def embed(self, texts, *, role="passage"):
         unique = list(dict.fromkeys(text for text in texts if text))
         vectors = {"": np.zeros(self.model.config.hidden_size, dtype=np.float32)}
         for start in range(0, len(unique), 12):
             batch = unique[start : start + 12]
             tokens = self.tokenizer(
-                ["passage: " + text for text in batch],
+                [f"{role}: {text}" for text in batch],
                 padding=True,
                 truncation=True,
                 max_length=192,

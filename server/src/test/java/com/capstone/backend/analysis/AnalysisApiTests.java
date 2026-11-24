@@ -275,6 +275,32 @@ class AnalysisApiTests {
         .andExpect(jsonPath("$.data[0].matchStatus").value("FAR"));
   }
 
+  @Test
+  void attributionAcceptsOnlySnapshotIdsAndIgnoresOutdatedGoalVersion() {
+    Fixture f = fixture();
+    Instant now = Instant.now();
+    var first = ordered(ContentSource.CHROME_DOM, 1, 1L, now, null);
+    var initial = store.prepare(f.principal(), f.sessionId(), first);
+    var rejected = store.complete(f.principal(), initial, first, matched(initial.goalId() + 1));
+    assertEquals(Relation.RELATED, rejected.relation());
+    assertEquals(com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.NOT_ENOUGH,
+        rejected.matchStatus());
+    assertNull(rejected.matchedGoalId());
+
+    var second = ordered(ContentSource.CHROME_DOM, 2, 2L, now.plusSeconds(1), null);
+    var current = store.prepare(f.principal(), f.sessionId(), second);
+    var kept = store.complete(f.principal(), current, second, matched(current.goalId()));
+    assertEquals(Long.toString(current.goalId()), kept.matchedGoalId());
+
+    var third = ordered(ContentSource.CHROME_DOM, 3, 3L, now.plusSeconds(2), null);
+    var pending = store.prepare(f.principal(), f.sessionId(), third);
+    tx.executeWithoutResult(status -> sessions.incrementGoalVersion(f.sessionId(), 1));
+    var outdated = store.complete(f.principal(), pending, third, matched(current.goalId()));
+    assertEquals(Relation.UNCERTAIN, outdated.relation());
+    assertEquals(1, outdated.goalVersion());
+    assertNull(outdated.matchedGoalId());
+  }
+
   /** RELATED가 아닌 판정에는 matchStatus를 저장하지 않는다. */
   @Test
   void nonRelatedDecisionDropsMatchStatus() throws Exception {
@@ -1108,6 +1134,12 @@ class AnalysisApiTests {
         Instant.now().minusSeconds(1), BigDecimal.ONE, guard,
         guard == null ? new Metadata("Chrome", null, "synthetic title", "example.com") : null,
         guard == null ? new ContentPayload("private synthetic body") : null);
+  }
+
+  private static AnalysisDecision matched(long goalId) {
+    return new AnalysisDecision(Relation.RELATED, .9, ReasonCode.SEMANTIC_GOAL_MATCH,
+        AnalysisStatus.COMPLETED, "test-model", "test-prompt",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.MATCHED, goalId);
   }
 
   private static AnalysisDecision related() {

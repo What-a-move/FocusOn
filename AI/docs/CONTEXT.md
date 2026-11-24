@@ -1,5 +1,9 @@
 # AI 작업 컨텍스트
 
+## 2026-11-24 DR-030 할 일 매칭
+
+- E5 활동 판정 이후 RELATED에서만 세션 목표와 프로필 항목을 비교해 `matchedGoalId`·`matchStatus`를 반환한다. 확정 목표의 초안이 없는 경우 `POST /internal/v1/goals/profile`로 Claude 프로필을 생성한다. [내부 계약](api_spec.md)
+
 > AI 담당자가 작업 시작 시 가장 먼저 읽는 문서다.
 > 작업이 끝나면 현재 상태와 다음 담당자가 알아야 할 내용을 갱신한다.
 
