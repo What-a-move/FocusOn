@@ -90,7 +90,6 @@ export function GoalSetting() {
 
   const toReview = (goal: string, caption: string, source: ConfirmationSource, profile?: GoalProfile, candidates?: string[], editableGoal?: boolean) => {
     partialSave.current = []
-    saveKeys.current.clear()
     setProfileInputs({
       coreTopics: profile?.coreTopics.join('\n') ?? '',
       supportingTopics: profile?.supportingTopics.join('\n') ?? '',
@@ -218,6 +217,7 @@ export function GoalSetting() {
         partialSave.current.push(result.data)
       }
       const goals = partialSave.current.map(({ goalId, goalText }) => ({ goalId, goalText }))
+      saveKeys.current.clear()
       try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(goals)) } catch { /* 저장소를 못 써도 목표는 서버에 저장됐다. */ }
       setReview({ ...review, goal: goals[0].goalText, candidates: review.candidates && goals.map(({ goalText }) => goalText) })
       go('done', { text: '' })

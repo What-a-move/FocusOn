@@ -1,27 +1,28 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { goalApi, goalLength } from '../../shared/api/goal-api'
 import { sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
 import { errorText } from '../../shared/lib/error-text'
 import { useOpenGoals } from './useOpenGoals'
 
-export function AddSessionGoal({ session, onClose }: { session: SessionSnapshot; onClose: () => void }) {
+export function AddSessionGoal({ session, onClose, submittingRef }: {
+  session: SessionSnapshot; onClose: () => void; submittingRef: RefObject<boolean>
+}) {
   const { goals, nextCursor, loading, failed, load } = useOpenGoals()
   const [selected, setSelected] = useState('')
   const [goalText, setGoalText] = useState('')
   const [saved, setSaved] = useState<{ goalId: string; goalText: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [failure, setFailure] = useState('')
-  const submitting = useRef(false)
   const createAttempt = useRef<{ goalText: string; key: string } | null>(null)
   const remaining = goals.filter((goal) => !session.goals?.some(({ goalId }) => goalId === goal.goalId))
 
   const add = async () => {
     const goalVersion = session.goalVersion
-    if (submitting.current || session.status !== 'RUNNING' || !goalVersion || (session.goals?.length ?? 3) >= 3) return
+    if (submittingRef.current || session.status !== 'RUNNING' || !goalVersion || (session.goals?.length ?? 3) >= 3) return
     const text = goalText.trim()
     if (!selected && !saved && (goalLength(text) < 2 || goalLength(text) > 40)) return
 
-    submitting.current = true
+    submittingRef.current = true
     setBusy(true)
     setFailure('')
     try {
@@ -40,7 +41,7 @@ export function AddSessionGoal({ session, onClose }: { session: SessionSnapshot;
         : errorText(result.error))
     } finally {
       setBusy(false)
-      submitting.current = false
+      submittingRef.current = false
     }
   }
 

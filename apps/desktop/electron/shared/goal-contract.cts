@@ -107,7 +107,7 @@ export function parseClarifyResult(value: unknown): ClarifyResult | null {
   if (!(clarificationSessionId === undefined || clarificationSessionId === null || isId(clarificationSessionId))) return null
   // 화면에 보여 줄 수 있는(2~40자) 선택지만 남긴 뒤 개수를 센다.
   const choices = suggestions.filter(isValidGoalText).slice(0, 3)
-  const candidates = [...new Set(goalCandidates.filter(isValidGoalText))].slice(0, 3)
+  const candidates = [...new Set(goalCandidates.filter(isValidGoalText).map((goal) => goal.trim()))].slice(0, 3)
   // [주의] 결정에 필요한 값이 없으면 화면에서 할 수 있는 일이 없으므로 계약 위반으로 본다.
   if (decision === 'MULTI_GOAL' && candidates.length < 2) return null
   if ((decision === 'UNKNOWN_TERM' || decision === 'MULTI_GOAL') && !question) return null

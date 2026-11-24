@@ -317,6 +317,8 @@ export class SessionRuntime {
       s.goalVersion = latest.data.goalVersion
     }
     s.targetDurationMs = latest.data.targetDurationMs
+    // 권한 상실 이벤트를 서버에 전달하는 도중에는 최신 조회도 RUNNING을 돌려줄 수 있다.
+    if (latest.data.status === 'RUNNING' && s.status === 'AUTO_PAUSED' && s.pauseReason === 'REQUIRED_PERMISSION') return true
     s.baseActiveMs = latest.data.accumulatedActiveMs
     s.status = latest.data.status
     s.resumedAt = latest.data.status === 'RUNNING' ? this.now() : null

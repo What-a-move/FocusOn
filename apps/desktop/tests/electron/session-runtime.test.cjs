@@ -13,7 +13,7 @@ function setup(routes, ready = { screen: () => true, notification: () => true })
     authorizedRequest: async (request) => {
       calls.push(request)
       const reply = routes[`${request.method} ${request.path}`]
-      const result = typeof reply === 'function' ? reply(request, calls) : reply
+      const result = typeof reply === 'function' ? await reply(request, calls) : reply
       if (!result) return { success: false, error: { code: 'SERVICE_UNAVAILABLE', retryable: true } }
       if (!result.success) return result
       // raw: auth-api가 이미 parse한 결과(예: 204 → parse(null))를 그대로 돌려준다.
@@ -72,6 +72,28 @@ test('버전 충돌이면 서버 최신 상태로 맞추고 로컬 값으로 덮
   assert.equal(runtime.snapshot().status, 'PAUSED')
   assert.equal(runtime.snapshot().accumulatedActiveMs, 300000)
   assert.equal(runtime.snapshot().error, 'SESSION_VERSION_CONFLICT')
+})
+
+test('할 일 추가 충돌 뒤 늦게 온 조회가 화면 권한 상실로 멈춘 타이머를 다시 켜지 않는다', async () => {
+  let release
+  const { runtime, advance } = setup({
+    'POST /api/v1/sessions/901/goals': { success: false, error: { code: 'SESSION_VERSION_CONFLICT', retryable: false } },
+    'GET /api/v1/sessions/901': () => new Promise((resolve) => { release = resolve }),
+  })
+  runtime.begin(started, '미적분 풀기')
+  const request = runtime.addGoal({ sessionId: '901', goalId: '13', goalVersion: 1 })
+  await new Promise((resolve) => setImmediate(resolve))
+  advance(1000)
+  runtime.screenPermissionLost()
+  release({ success: true, data: {
+    sessionId: '901', status: 'RUNNING', version: 1, goalTextSnapshot: '미적분 풀기',
+    targetDurationMs: 600000, accumulatedActiveMs: 0,
+  } })
+  assert.equal((await request).error.code, 'SESSION_VERSION_CONFLICT')
+  advance(1000)
+  assert.equal(runtime.snapshot().status, 'AUTO_PAUSED')
+  assert.equal(runtime.snapshot().pauseReason, 'REQUIRED_PERMISSION')
+  assert.equal(runtime.snapshot().accumulatedActiveMs, 1000)
 })
 
 test('heartbeat는 X-Device-Id로 누적 시간을 보내고, 서버가 끝낸 세션은 되살리지 않는다', async () => {

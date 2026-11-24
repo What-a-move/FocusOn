@@ -43,6 +43,13 @@ test('보여 줄 수 없는 선택지를 빼고 나면 개수가 모자란 응�
   assert.equal(parseClarifyResult({ ...base, decision: 'AMBIGUOUS', suggestions: ['가', '미적분 예제 풀기'] }), null)
 })
 
+test('목표 후보를 공백 없이 비교한 뒤 최대 세 개를 남긴다', () => {
+  const result = parseClarifyResult({
+    ...base, decision: 'CLEAR', goalCandidates: ['React 학습', ' React 학습 ', 'Vue 실습', 'Svelte 실습'],
+  })
+  assert.deepEqual(result.goalCandidates, ['React 학습', 'Vue 실습', 'Svelte 실습'])
+})
+
 test('서버 CLEAR의 목표 프로필을 확인하고 사용자 편집값과 할 일 페이지를 전달한다', async () => {
   const profile = { mainTopic: '미적분', purpose: 'PRACTICE', coreTopics: ['적분'], supportingTopics: [], expectedActivities: ['예제 풀기'] }
   const draft = parseClarifyResult({ ...base, clarityStatus: 'CLEAR', goalProfileDraft: profile, normalizedGoalText: '미적분 풀기' })

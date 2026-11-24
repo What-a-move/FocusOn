@@ -42,6 +42,28 @@ class SessionGoal(InternalSchema):
     text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=40)] = Field(alias="goalText", repr=False)
     profile: GoalProfile | None = Field(default=None, alias="goalProfile", repr=False)
 
+    @field_validator("profile", mode="before")
+    @classmethod
+    def normalize_saved_profile(cls, profile):
+        # Java-stored profiles can differ in Unicode whitespace and case handling.
+        if not isinstance(profile, dict):
+            return profile
+        main_topic = profile.get("mainTopic")
+        if isinstance(main_topic, str) and not main_topic.strip():
+            return None
+        profile = profile.copy()
+        for key in ("coreTopics", "supportingTopics", "expectedActivities"):
+            values = profile.get(key)
+            if not isinstance(values, list) or len(values) > 5 or not all(isinstance(value, str) for value in values):
+                continue
+            unique = {}
+            for value in values:
+                text = value.strip()
+                if text:
+                    unique.setdefault(text.casefold(), text)
+            profile[key] = list(unique.values())
+        return profile
+
 
 class ScreenAnalysisRequest(InternalSchema):
     session_id: Identifier = Field(alias="sessionId")

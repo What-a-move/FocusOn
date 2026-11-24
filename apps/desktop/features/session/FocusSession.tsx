@@ -44,6 +44,7 @@ export function FocusSession() {
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const addGoalSubmitting = useRef(false)
   const [screenOpened, setScreenOpened] = useState(false)
 
   // 화면 기록은 켜도 앱을 다시 켜야 반영된다. 다시 켜면 세션은 멈춘 채로 이어받는다.
@@ -187,8 +188,11 @@ export function FocusSession() {
       </div>
     </section>
 
-    <dialog ref={dialogRef} aria-labelledby="dialog-title" onCancel={(event) => { event.preventDefault(); if (!awaiting) setDialog(null) }}>
-      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} onClose={() => setDialog(null)} /> : <>
+    <dialog ref={dialogRef} aria-labelledby="dialog-title" onCancel={(event) => {
+      event.preventDefault()
+      if (!awaiting && (activeDialog !== 'add-goal' || !addGoalSubmitting.current)) setDialog(null)
+    }}>
+      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} /> : <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>

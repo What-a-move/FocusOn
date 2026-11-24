@@ -162,6 +162,28 @@ def test_metadata_then_body_uses_confirmed_goal_profile(payload):
         assert len(model.inputs) == 3
 
 
+@pytest.mark.parametrize("main_topic,expected_terms", [
+    ("인증", ("인증 구현", "인증", "Straße")),
+    ("\u00a0", ("인증 구현",)),
+])
+def test_analysis_accepts_saved_profiles_with_unicode_whitespace_or_duplicates(payload, main_topic, expected_terms):
+    payload.pop("goal")
+    request = payload["request"]
+    request.pop("goalSnapshot")
+    request.update(goalVersion=1, goals=[
+        {"goalId": "goal-demo", "goalText": "인증 구현", "goalProfile": {
+            "mainTopic": main_topic, "purpose": "CONCEPT_LEARNING",
+            "coreTopics": ["Straße", "Strasse", "\u00a0"],
+        }},
+    ])
+    model = FixedScores(similarities={"인증 구현": .9})
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+    assert response.status_code == 200
+    assert response.json()["decision"] == "RELATED"
+    assert model.embeddings[-2] == ("query", expected_terms)
+
+
 @pytest.mark.parametrize("quality", [None, {"confidence": .2, "captureStatus": "LOW_CONFIDENCE"}])
 def test_ocr_preserves_study_when_match_evidence_is_insufficient(payload, quality):
     payload["request"]["contentSource"] = payload["context"]["contentSource"] = "DESKTOP_APP_OCR"
