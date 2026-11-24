@@ -210,12 +210,12 @@ export function SessionSetup() {
       </div></section>
 
       <aside className="preview" aria-label="이탈 알림 미리보기">
-        <span className="preview-label">이렇게 알려드려요</span>
-        <p className="bubble" key={level} aria-live="polite">{preview.say}</p>
+        <span className="preview-label">딴짓이 이어지면</span>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <div className="poki-stage"><img className="poki" key={preview.poki} src={preview.poki} alt={preview.alt} /></div>
-        {/* [디자인] 기준이 길어 넘쳐 떨어지지 않게, 기준 뒤에서 일부러 줄을 바꾼다. */}
-        <p className="preview-meta">{preview.meta[0]}<strong>{preview.meta[1]}</strong><br />{preview.meta[2].trim()}</p>
+        <div className="poki-stage"><img className="poki" key={preview.poki} src={preview.poki} alt="" /></div>
+        <p className="preview-scene" key={level} aria-live="polite">{preview.scene}</p>
+        {/* [디자인] 기준이 길어 넘쳐 떨어지지 않게, "이어지거나" 뒤에서 일부러 줄을 바꾼다. */}
+        <p className="preview-meta">{preview.meta[0]}<strong>{preview.meta[1]}</strong>{preview.meta[2]}<br />{preview.meta[3].trim()}</p>
       </aside>
     </div>
   </main>
