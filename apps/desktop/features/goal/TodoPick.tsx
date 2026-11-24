@@ -16,7 +16,11 @@ export function TodoPick() {
   const { goals, nextCursor, loading, failed, load } = useOpenGoals()
   const [picked, setPicked] = useState<SessionGoal[]>([])
 
-  useEffect(() => { queueMicrotask(() => setPicked(readPicked())) }, [])
+  useEffect(() => {
+    queueMicrotask(() => setPicked(readPicked()))
+    const unsubscribe = window.focusOn?.auth.onSessionChanged((snapshot) => { if (snapshot.status === 'SIGNED_OUT') router.replace('/') })
+    return () => unsubscribe?.()
+  }, [router])
 
   // 목록에 없는(닫힌) 할 일은 고른 것에서 뺀다. 목록을 다 받기 전에는 그대로 둔다.
   const visible = !loading && !failed && !nextCursor ? picked.filter(({ goalId }) => goals.some((goal) => goal.goalId === goalId)) : picked
