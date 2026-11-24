@@ -1,6 +1,6 @@
 # AI API 계약 초안
 
-> 2026-11-24 DR-030: 서버는 `request.goals`에 목표 1~3개(`goalId`, `goalText`, 선택적 `goalProfile`)와 `request.goalVersion`을 보낸다. 호환 스냅샷을 함께 보내면 첫 목표와 버전이 일치해야 한다. `RELATED` 응답의 `matchStatus`는 `MATCHED`·`FAR`·`NOT_ENOUGH`이며 일치한 목표 ID는 `matchedGoalId`에 담는다. 다른 활동 라벨은 두 필드가 null이다.
+> 2026-11-24 DR-030: 서버는 `request.goals`에 목표 1~3개(`goalId`, `goalText`, 선택적 `goalProfile`)와 `request.goalVersion`을 보낸다. 호환 스냅샷을 함께 보내면 첫 목표와 버전이 일치해야 한다. `RELATED` 응답의 `matchStatus`는 `MATCHED`·`FAR`·`NOT_ENOUGH`이며 일치한 목표 ID는 `matchedGoalId`에 담는다. 다른 활동 라벨은 두 필드가 null이다. DR-031부터 `APP_META`는 항상 `NOT_ENOUGH`이고, `TAB_META`·본문은 선택한 할 일이 화면 전체나 본문 조각에서 고정 공부 주제 목록의 분명히 다른 주제보다 화면을 잘 설명할 때만 `MATCHED`다.
 >
 > `POST /internal/v1/goals/profile`는 인증된 서버 요청의 확정 목표(`goalText`, `locale`)를 Claude에 전달해 `{goalProfile}`을 반환한다. 명확성 검사는 반복하지 않는다.
 

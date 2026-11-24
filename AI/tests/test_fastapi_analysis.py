@@ -8,19 +8,35 @@ from fastapi.testclient import TestClient
 
 from AI.src.main import create_app
 from AI.src.models.screen_activity.activity import model_result
+from AI.src.models.screen_activity.topic_bank import TopicBank
 
 KEY = "local-test-key-only-0123456789abcdef"
 PATH = "/internal/v1/analysis-runs"
 HEADERS = {"Authorization": f"Bearer {KEY}"}
+# Goal attribution needs at least 80 body characters beyond the title.
+LONG_BODY = ("JWT 서명을 검증하고 토큰의 만료 시간을 확인합니다. 서버는 공개 키로 서명을 확인한 뒤 "
+             "발급자와 대상 클레임을 비교하고, 만료된 토큰은 거부하여 다시 로그인하도록 안내합니다.")
+
+
+def task_vector(similarity):
+    # Every screen is (1, 0, 0), so a task's cosine to the screen equals `similarity`.
+    return np.array([similarity, np.sqrt(1 - similarity * similarity), 0.])
+
+
+def other_topic(similarity):
+    # Same cosine to the screen, but a different topic: far from every task vector.
+    return np.array([similarity, 0., np.sqrt(1 - similarity * similarity)])
 
 
 class FixedScores:
-    def __init__(self, scores=(.9, .05, .05), similarities=None):
+    def __init__(self, scores=(.9, .05, .05), similarities=None, bank=((0., 0., 1.),), passage=None):
         self.scores = scores
         self.inputs = []
         self.encoder = self
         self.similarities = similarities or {}
         self.embeddings = []
+        self.topic_bank = TopicBank(bank, bank)
+        self.passage = passage or (lambda text: np.array([1., 0., 0.]))
 
     def predict(self, payloads):
         self.inputs.extend(payloads)
@@ -30,8 +46,8 @@ class FixedScores:
         texts = tuple(texts)
         self.embeddings.append((role, texts))
         if role == "query":
-            return {text: np.array([self.similarities.get(text, .4)]) for text in texts}
-        return {text: np.array([1.]) for text in texts}
+            return {text: task_vector(self.similarities.get(text, .4)) for text in texts}
+        return {text: self.passage(text) for text in texts}
 
 
 @pytest.fixture
@@ -129,7 +145,7 @@ def test_chrome_year_selector_is_sanitized_without_bypassing_card_guard(payload)
     assert len(model.inputs) == 1
 
 
-def test_metadata_then_body_uses_confirmed_goal_profile(payload):
+def test_tab_title_can_attribute_but_app_window_title_cannot(payload):
     payload.pop("goal")
     request = payload["request"]
     request.pop("goalSnapshot")
@@ -139,27 +155,48 @@ def test_metadata_then_body_uses_confirmed_goal_profile(payload):
             "mainTopic": "인증", "purpose": "CONCEPT_LEARNING", "coreTopics": ["JWT 서명"],
         }},
     ])
-    body = request.pop("contentPayload")
+    request.pop("contentPayload")
     request["contentSource"] = payload["context"]["contentSource"] = "TAB_META"
-    model = FixedScores(similarities={"JWT 서명": .8593})
+    model = FixedScores(similarities={"JWT 서명": .86})
     with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
-        first = client.post(PATH, json=payload, headers=HEADERS).json()
-        assert (first["decision"], first["matchedGoalId"], first["matchStatus"]) == (
-            "RELATED", None, "NOT_ENOUGH")
-        request["contentSource"] = payload["context"]["contentSource"] = "CHROME_DOM"
-        request["contentPayload"] = body
-        second = client.post(PATH, json=payload, headers=HEADERS).json()
-        assert (second["decision"], second["matchedGoalId"], second["matchStatus"]) == (
-            "RELATED", None, "NOT_ENOUGH")
-        model.similarities["JWT 서명"] = .86
-        matched = client.post(PATH, json=payload, headers=HEADERS).json()
-        assert (matched["decision"], matched["matchedGoalId"], matched["matchStatus"]) == (
-            "RELATED", "auth", "MATCHED")
+        tab = client.post(PATH, json=payload, headers=HEADERS).json()
+        assert (tab["decision"], tab["matchedGoalId"], tab["matchStatus"]) == ("RELATED", "auth", "MATCHED")
         assert model.embeddings[-2] == ("query", ("React 실습", "인증 구현", "인증", "JWT 서명"))
+        embedded = len(model.embeddings)
+        request["contentSource"] = payload["context"]["contentSource"] = "APP_META"
+        request["metadata"] = {"appName": "Preview", "windowTitle": "jwt-notes.txt"}
+        app = client.post(PATH, json=payload, headers=HEADERS).json()
+        assert (app["decision"], app["matchedGoalId"], app["matchStatus"]) == ("RELATED", None, "NOT_ENOUGH")
+        assert len(model.embeddings) == embedded
         request["goalVersion"] = 2
         stale = client.post(PATH, json=payload, headers=HEADERS)
         assert stale.status_code == 422
-        assert len(model.inputs) == 3
+        assert len(model.inputs) == 2
+
+
+@pytest.mark.parametrize("bank,expected", [
+    # Another study topic explains the screen better than the selected task.
+    ((other_topic(.95),), (None, "NOT_ENOUGH")),
+    # The same task in other words does not compete with it.
+    ((task_vector(.95),), ("goal-demo", "MATCHED")),
+    # A topic too close to the task to tell apart (query cosine about 0.915) does not block it.
+    (((.95, .192, .246),), ("goal-demo", "MATCHED")),
+    ((other_topic(.80),), ("goal-demo", "MATCHED")),
+])
+def test_other_study_topic_blocks_attribution(payload, bank, expected):
+    payload["request"]["contentPayload"]["text"] = LONG_BODY
+    model = FixedScores(similarities={"JWT 인증 구현": .86}, bank=bank)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        result = client.post(PATH, json=payload, headers=HEADERS).json()
+    assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", *expected)
+
+
+def test_task_below_match_floor_is_not_attributed(payload):
+    payload["request"]["contentPayload"]["text"] = LONG_BODY
+    model = FixedScores(similarities={"JWT 인증 구현": .79})
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        result = client.post(PATH, json=payload, headers=HEADERS).json()
+    assert (result["matchedGoalId"], result["matchStatus"]) == (None, "FAR")
 
 
 @pytest.mark.parametrize("main_topic,expected_terms", [
@@ -176,6 +213,7 @@ def test_analysis_accepts_saved_profiles_with_unicode_whitespace_or_duplicates(p
             "coreTopics": ["Straße", "Strasse", "\u00a0"],
         }},
     ])
+    payload["request"]["contentPayload"]["text"] = LONG_BODY
     model = FixedScores(similarities={"인증 구현": .9})
     with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
         response = client.post(PATH, json=payload, headers=HEADERS)
@@ -188,9 +226,11 @@ def test_analysis_accepts_saved_profiles_with_unicode_whitespace_or_duplicates(p
 def test_ocr_preserves_study_when_match_evidence_is_insufficient(payload, quality):
     payload["request"]["contentSource"] = payload["context"]["contentSource"] = "DESKTOP_APP_OCR"
     payload["request"]["metadata"] = {"appName": "Preview", "windowTitle": "학습 메모"}
+    payload["request"]["contentPayload"]["text"] = LONG_BODY
     if quality:
         payload["ocr"] = quality
-    model = FixedScores(similarities={"JWT 인증 구현": .91 if quality else .4})
+    # 0.83 is near the goal (no FAR), but another study topic explains the screen better.
+    model = FixedScores(similarities={"JWT 인증 구현": .99 if quality else .83}, bank=(other_topic(.9),))
     with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == (
@@ -207,6 +247,42 @@ def test_body_that_only_repeats_title_does_not_attribute_goal(payload):
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == (
         "RELATED", None, "NOT_ENOUGH")
     assert not model.embeddings
+
+
+def test_short_body_cannot_support_goal_attribution(payload):
+    # Filename, menu or a single sentence is not evidence for a task.
+    model = FixedScores(similarities={"JWT 인증 구현": .99})
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        result = client.post(PATH, json=payload, headers=HEADERS).json()
+    assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == (
+        "RELATED", None, "NOT_ENOUGH")
+    assert not model.embeddings
+
+
+def test_closest_selected_task_is_attributed(payload):
+    request = payload["request"]
+    request["contentPayload"]["text"] = LONG_BODY
+    request.update(goalVersion=1, goals=[
+        {"goalId": "goal-demo", "goalText": "JWT 인증 구현"},
+        {"goalId": "other", "goalText": "세션 쿠키 관리"},
+    ])
+    model = FixedScores(similarities={"JWT 인증 구현": .95, "세션 쿠키 관리": .94})
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        result = client.post(PATH, json=payload, headers=HEADERS).json()
+    assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", "goal-demo", "MATCHED")
+
+
+@pytest.mark.parametrize("marker,expected", [(True, ("goal-demo", "MATCHED")), (False, (None, "FAR"))])
+def test_body_chunk_after_site_menu_can_support_task(payload, marker, expected):
+    # The encoder reads only the start of a long view; evidence later in the body is a chunk.
+    menu = "메뉴 홈 소개 문서 커뮤니티 블로그 다운로드 검색 로그인 " * 25
+    evidence = "CHUNK-EVIDENCE 서명 검증 순서와 만료 확인을 예제로 설명합니다. " if marker else ""
+    payload["request"]["contentPayload"]["text"] = menu + evidence + "토큰 검증 절차를 정리합니다. " * 20
+    near = lambda text: np.array([1., 0., 0.]) if "CHUNK-EVIDENCE" in text and len(text) < 700 else np.array([0., 0., 1.])
+    model = FixedScores(similarities={"JWT 인증 구현": .9}, bank=((0., 1., 0.),), passage=near)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        result = client.post(PATH, json=payload, headers=HEADERS).json()
+    assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", *expected)
 
 
 def test_matching_failure_keeps_activity_decision(payload):
