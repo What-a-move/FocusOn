@@ -1,15 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { GoalProfile } from '../../electron/shared/goal-contract.cjs'
 import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
-import { CONFIRMED_GOAL_KEY, MAX_TODO_PICK, readPicked } from '../../shared/api/goal-api'
+import { CONFIRMED_GOAL_KEY, goalApi, MAX_TODO_PICK, readPicked } from '../../shared/api/goal-api'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import '../../shared/styles/onboarding-window.css'
 import './goal.css'
 import './todo-pick.css'
+
+const UNDO_MS = 5000
 
 /** 할 일 고르기 → 목표 확인 (FocusOn-design/todo-goals.html?view=pick·review). 최대 3개를 골라 범위를 확인한 뒤 집중 준비로 넘긴다. */
 export function TodoPick() {
@@ -18,6 +20,10 @@ export function TodoPick() {
   const [picked, setPicked] = useState<SessionGoal[]>([])
   const [view, setView] = useState<'pick' | 'review'>('pick')
   const [slide, setSlide] = useState(0)
+  // 지우기: 서버에 되살리기 API가 없어 먼저 숨기고 UNDO_MS 뒤에 DELETE를 보낸다. 그 사이 되돌리기를 누르면 보내지 않는다.
+  const [hidden, setHidden] = useState<string[]>([])
+  const [note, setNote] = useState<{ kind: 'deleted' | 'failed' | 'blocked'; text: string } | null>(null)
+  const pending = useRef<{ goal: SessionGoal; order: number; timer: ReturnType<typeof setTimeout> } | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => setPicked(readPicked()))
@@ -25,8 +31,40 @@ export function TodoPick() {
     return () => unsubscribe?.()
   }, [router])
 
+  const shown = goals.filter((goal) => !hidden.includes(goal.goalId))
   // 목록에 없는(닫힌) 할 일은 고른 것에서 뺀다. 목록을 다 받기 전에는 그대로 둔다.
-  const visible = !loading && !failed && !nextCursor ? picked.filter(({ goalId }) => goals.some((goal) => goal.goalId === goalId)) : picked
+  const visible = !loading && !failed && !nextCursor ? picked.filter(({ goalId }) => shown.some((goal) => goal.goalId === goalId)) : picked
+
+  const commit = async () => {
+    const job = pending.current
+    if (!job) return
+    pending.current = null
+    clearTimeout(job.timer)
+    const result = await goalApi.remove(job.goal.goalId)
+    if (result.success || result.error.code === 'GOAL_NOT_FOUND') { setNote((current) => current?.kind === 'deleted' && current.text === job.goal.goalText ? null : current); return }
+    setHidden((current) => current.filter((id) => id !== job.goal.goalId))
+    setNote({ kind: result.error.code === 'GOAL_UPDATE_BLOCKED' ? 'blocked' : 'failed', text: job.goal.goalText })
+  }
+  const remove = (goal: SessionGoal) => {
+    void commit()
+    const order = picked.findIndex(({ goalId }) => goalId === goal.goalId)
+    pending.current = { goal: { goalId: goal.goalId, goalText: goal.goalText }, order, timer: setTimeout(() => { void commit() }, UNDO_MS) }
+    setHidden((current) => [...current, goal.goalId])
+    setPicked((current) => current.filter(({ goalId }) => goalId !== goal.goalId))
+    setNote({ kind: 'deleted', text: goal.goalText })
+  }
+  const undo = () => {
+    const job = pending.current
+    if (!job) return
+    pending.current = null
+    clearTimeout(job.timer)
+    setHidden((current) => current.filter((id) => id !== job.goal.goalId))
+    if (job.order >= 0) setPicked((current) => current.length >= MAX_TODO_PICK ? current : [...current.slice(0, job.order), job.goal, ...current.slice(job.order)])
+    setNote(null)
+  }
+  // 화면을 떠나도 지우기로 한 할 일은 지운다.
+  useEffect(() => () => { const job = pending.current; if (job) { clearTimeout(job.timer); void goalApi.remove(job.goal.goalId) } }, [])
+
   const full = visible.length >= MAX_TODO_PICK
   const toggle = (goal: SessionGoal) => setPicked((current) => current.some(({ goalId }) => goalId === goal.goalId)
     ? current.filter(({ goalId }) => goalId !== goal.goalId)
@@ -52,7 +90,7 @@ export function TodoPick() {
     return () => window.removeEventListener('keydown', onKey)
   }, [view, last])
 
-  const empty = !loading && !failed && goals.length === 0
+  const empty = !loading && !failed && shown.length === 0
 
   return <main className="app-window onboarding-window goal-window todo-window">
     <div className="flow">
@@ -103,8 +141,18 @@ export function TodoPick() {
               {full && <p>3개까지 고를 수 있어요.</p>}
             </div>
           </div>
+          {note && <div className={`todo-note${note.kind === 'deleted' ? '' : ' is-error'}`} role={note.kind === 'deleted' ? 'status' : 'alert'}>
+            <div>
+              <strong>{note.kind === 'deleted' ? `‘${note.text}’ 할 일을 지웠어요.` : '할 일을 지우지 못했어요.'}</strong>
+              {note.kind === 'blocked' && <span>진행 중인 집중에서 쓰는 할 일이에요.</span>}
+              {note.kind === 'failed' && <span>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</span>}
+            </div>
+            {note.kind === 'deleted'
+              ? <button className="btn btn-ghost" type="button" onClick={undo}>되돌리기</button>
+              : <button className="btn btn-ghost" type="button" onClick={() => setNote(null)}>닫기</button>}
+          </div>}
           <ul className="todo-grid" aria-label="할 일 목록">
-            {goals.map((goal, index) => {
+            {shown.map((goal, index) => {
               const order = visible.findIndex(({ goalId }) => goalId === goal.goalId) + 1
               const blocked = full && !order
               return <li key={goal.goalId}>
@@ -114,6 +162,7 @@ export function TodoPick() {
                   <span className="badge" aria-hidden="true">{order || ''}</span>
                   <strong>{goal.goalText}</strong>
                 </button>
+                <button className="todo-remove" type="button" aria-label={`${goal.goalText} 지우기`} onClick={() => remove(goal)}>✕</button>
               </li>
             })}
             <li><Link className="add-card" href="/goal/"><b aria-hidden="true">+</b>새 할 일 적기</Link></li>

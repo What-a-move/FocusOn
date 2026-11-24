@@ -102,3 +102,15 @@ test('할 일 목록은 범위(goalProfile)를 같이 읽고, 형식이 어긋�
   ], nextCursor: null })
   assert.deepEqual(list.items.map((item) => item.goalProfile ?? null), [profile, null, null])
 })
+
+test('할 일 지우기는 DELETE /goals/{id}를 204로 보내고, 잘못된 id는 IPC에서 막는다', async () => {
+  const { isGoalId } = require('../../dist-electron/shared/goal-contract.cjs')
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.remove('g_12')
+  assert.equal(requests[0].path, '/api/v1/goals/g_12')
+  assert.equal(requests[0].method, 'DELETE')
+  assert.equal(requests[0].expectedStatus, 204)
+  assert.equal(isGoalId('../sessions'), false)
+  assert.equal(isGoalId('g_12'), true)
+})

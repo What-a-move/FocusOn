@@ -168,9 +168,10 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | --- | --- | --- | --- |
 | `goal:clarify` | `{ goalText, conversationTurn(0~2), clarificationSessionId?, previousAnswers[{ question, answer }] }` | `{ decision, normalizedGoalText, question, suggestions, goalCandidates, conversationTurn, clarificationSessionId, goalProfileDraft? }` | `POST /api/v1/goals/clarify` |
 | `goal:create` | `{ goalText, confirmationSource: AI_CONFIRMED \| MANUAL_CONFIRMED, clarificationSessionId?, goalProfile?, idempotencyKey(UUID v4)? }` | `{ goalId, goalText, confirmationSource }` | `POST /api/v1/goals` |
-| `goal:listOpen` | 커서 또는 `null` | `{ items, nextCursor }` | `GET /api/v1/goals?todoStatus=OPEN` |
+| `goal:listOpen` | 커서 또는 `null` | `{ items, nextCursor }` (항목에 `goalProfile` 선택) | `GET /api/v1/goals?todoStatus=OPEN` |
+| `goal:remove` | `goalId` | `{}` | `DELETE /api/v1/goals/{goalId}` (204, 진행 중 세션이 쓰면 409 `GOAL_UPDATE_BLOCKED`) |
 
-- Preload는 `window.focusOn.goals.clarify()`, `create()`, `listOpen()`로 노출한다. Main은 목표 2~40자·질문 2회·허용 필드만 받는다. POST라 자동 재전송하지 않는다(AI 재시도는 Backend).
+- Preload는 `window.focusOn.goals.clarify()`, `create()`, `listOpen()`, `remove()`로 노출한다. Main은 목표 2~40자·질문 2회·허용 필드만 받는다. POST라 자동 재전송하지 않는다(AI 재시도는 Backend).
 - Renderer는 같은 목표 저장을 재시도할 때 같은 키를 사용한다. Main은 키를 `Idempotency-Key` 헤더로 보낸다.
 - `clarificationSessionId`·`previousAnswers`는 AI 분석 계약 3.2와 같은 필드다(2026-10-24 확정, 결정 020). 응답에 `clarificationSessionId`가 없으면 null로 읽는다.
 - 결정에 필요한 값이 없는 응답(예: `UNKNOWN_TERM`인데 `question` 없음, `MULTI_GOAL` 후보 1개 이하)은 `INVALID_RESPONSE`로 처리한다.

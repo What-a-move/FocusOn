@@ -114,3 +114,17 @@
 }
 @media (max-width: 760px) { .sub-block { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .track, .slide, .review-wrap { transition: none; animation: none; } }
+
+/* 할 일 지우기: 카드 오른쪽 위 ✕ (마우스를 올리거나 키보드로 갔을 때만) */
+.todo-grid > li { position: relative; }
+.todo-card { padding-right: 48px; }
+.todo-remove { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 0; border-radius: 9px; background: none; color: var(--faint); font-size: 15px; cursor: pointer; opacity: 0; transition: opacity .15s ease; }
+.todo-grid > li:hover .todo-remove, .todo-remove:focus-visible { opacity: 1; }
+.todo-remove:hover { background: var(--field); color: var(--ink); }
+.todo-remove:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.todo-note { display: flex; align-items: center; gap: 14px; margin-top: 20px; font-size: 14px; line-height: 1.55; animation: onboarding-rise-in .35s var(--ease) both; }
+.todo-note > div { flex: 1; min-width: 0; }
+.todo-note strong { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.todo-note.is-error strong { color: var(--danger); }
+.todo-note span { display: block; color: var(--ink); }
+.todo-note .btn { min-width: 0; height: 40px; padding: 0 16px; font-size: 14px; }

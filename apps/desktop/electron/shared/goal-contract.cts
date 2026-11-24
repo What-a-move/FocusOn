@@ -5,6 +5,7 @@ export const GOAL_CHANNELS = {
   clarify: 'goal:clarify',
   create: 'goal:create',
   listOpen: 'goal:listOpen',
+  remove: 'goal:remove',
 } as const
 
 export type GoalDecision = 'CLEAR' | 'AMBIGUOUS' | 'MULTI_GOAL' | 'UNKNOWN_TERM' | 'INVALID'
@@ -39,6 +40,7 @@ export type GoalsApi = {
   clarify(input: ClarifyInput): Promise<IpcResult<ClarifyResult>>
   create(input: CreateGoalInput): Promise<IpcResult<CreatedGoal>>
   listOpen(cursor?: string): Promise<IpcResult<OpenGoalList>>
+  remove(goalId: string): Promise<IpcResult<Record<string, never>>>
 }
 
 export const MAX_QUESTIONS = 2
@@ -82,6 +84,8 @@ export function isGoalProfile(value: unknown): value is GoalProfile {
     && typeof value.purpose === 'string' && PURPOSES.includes(value.purpose) && isProfileList(value.coreTopics)
     && isProfileList(value.supportingTopics) && isProfileList(value.expectedActivities)
 }
+
+export const isGoalId = (value: unknown): value is string => isId(value)
 
 export function isGoalListCursor(value: unknown): value is string | null {
   return value === null || isText(value, 1, 512)

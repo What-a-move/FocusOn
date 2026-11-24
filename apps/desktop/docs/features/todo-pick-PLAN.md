@@ -56,5 +56,5 @@
 - [x] 목표 확인 (보기 전용)
 - [x] 집중 준비 요약·바꾸기, 진입 링크 교체
 - [ ] 범위 항목 빼기·추가·다시 만들기 — 서버 `PATCH /goals/{id}`가 `goalProfile`을 받으면 붙인다(현재 `goalText`·`todoStatus`만).
-- [ ] 할 일 지우기(✕) — `DELETE /goals/{id}`는 있으나 Desktop IPC 미연결, 다음 작업
+- [x] 할 일 지우기(✕) — `goal:remove` → `DELETE /goals/{id}`. 되살리기 API가 없어 먼저 숨기고 5초 뒤 보낸다(그 사이 `되돌리기`). 409 `GOAL_UPDATE_BLOCKED`면 되살리고 안내.
 - [ ] 실제 서버 목록으로 앱 확인
