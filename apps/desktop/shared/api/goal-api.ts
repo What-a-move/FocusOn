@@ -34,6 +34,8 @@ export const goalLength = (text: string) => [...text.trim()].length
 
 /** 세션에 담을 수 있는 할 일 수 (POST /sessions goalIds 최대 3). */
 export const MAX_TODO_PICK = 3
+// 새 할 일을 저장하고 할 일 고르기로 돌아갈 때 한 번 보여 줄 안내.
+export const TODO_SAVED_KEY = 'focuson.todoSaved'
 
 /** 지난번 고른 할 일·방금 만든 할 일을 처음 선택으로 쓴다. */
 export function readPicked(): SessionGoal[] {

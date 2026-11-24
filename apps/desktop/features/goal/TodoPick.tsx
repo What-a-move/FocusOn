@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { GoalProfile } from '../../electron/shared/goal-contract.cjs'
 import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
-import { CONFIRMED_GOAL_KEY, goalApi, MAX_TODO_PICK, readPicked } from '../../shared/api/goal-api'
+import { CONFIRMED_GOAL_KEY, goalApi, MAX_TODO_PICK, readPicked, TODO_SAVED_KEY } from '../../shared/api/goal-api'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import '../../shared/styles/onboarding-window.css'
 import './goal.css'
@@ -22,11 +22,16 @@ export function TodoPick() {
   const [slide, setSlide] = useState(0)
   // 지우기: 서버에 되살리기 API가 없어 먼저 숨기고 UNDO_MS 뒤에 DELETE를 보낸다. 그 사이 되돌리기를 누르면 보내지 않는다.
   const [hidden, setHidden] = useState<string[]>([])
+  const [saved, setSaved] = useState('')
   const [note, setNote] = useState<{ kind: 'deleted' | 'failed' | 'blocked'; text: string } | null>(null)
   const pending = useRef<{ goal: SessionGoal; order: number; timer: ReturnType<typeof setTimeout> } | null>(null)
 
   useEffect(() => {
-    queueMicrotask(() => setPicked(readPicked()))
+    queueMicrotask(() => {
+      setPicked(readPicked())
+      // 개발 모드는 effect를 두 번 돌리므로, 읽은 값이 있을 때만 바꾼다.
+      try { const text = sessionStorage.getItem(TODO_SAVED_KEY); if (text) { setSaved(text); sessionStorage.removeItem(TODO_SAVED_KEY) } } catch { /* 안내만 빠진다. */ }
+    })
     const unsubscribe = window.focusOn?.auth.onSessionChanged((snapshot) => { if (snapshot.status === 'SIGNED_OUT') router.replace('/') })
     return () => unsubscribe?.()
   }, [router])
@@ -138,7 +143,7 @@ export function TodoPick() {
             <img className="poki" src="/design/poki-main-planning.png" alt="체크리스트를 든 포키" />
             <div>
               <h1>오늘은 뭐부터 <span className="hl">할까요</span>?</h1>
-              {full && <p>3개까지 고를 수 있어요.</p>}
+              {saved ? <p className="saved" role="status">{saved}</p> : full && <p>3개까지 고를 수 있어요.</p>}
             </div>
           </div>
           {note && <div className={`todo-note${note.kind === 'deleted' ? '' : ' is-error'}`} role={note.kind === 'deleted' ? 'status' : 'alert'}>
