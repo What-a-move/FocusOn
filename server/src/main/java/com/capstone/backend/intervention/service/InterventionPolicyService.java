@@ -71,13 +71,18 @@ public class InterventionPolicyService {
       return;
     }
     var state = load(session, binding.get(), now);
-    state.suspendFar();
+    boolean blocked = guarded || run.isOrderingUntrusted();
     var timeline = read(state).pending(run.getId(), now);
-    if (guarded || run.isOrderingUntrusted()) {
+    if (blocked || timeline.snapshot().latestRun() == null) {
+      state.suspendFar();
+    } else {
+      state.finishConfirmedFar(session.getGoalVersion(), now);
+    }
+    if (blocked) {
       timeline = timeline.interrupt(now);
     }
     state.transition(json.writeValueAsString(timeline.snapshot()));
-    expirePending(session, now, guarded || run.isOrderingUntrusted());
+    expirePending(session, now, blocked);
   }
 
   /** 늦은 결과는 findCurrent로 다시 확인하며 다른 기기/context의 보호 상태를 풀지 않는다. */

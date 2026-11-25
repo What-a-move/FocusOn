@@ -101,8 +101,7 @@ public final class OffTaskTimeline {
   /** 보호/미관찰/실행 또는 context 전이는 처리 중 여부와 무관하게 구간을 끊는다. */
   public OffTaskTimeline interrupt(Instant at) {
     Instant now = monotonic(at);
-    return copy(now, state.episode(), null, state.latestRun(), state.completedAt(),
-        state.latestReceivedAt(), null, closeSpan(now));
+    return copy(now, state.episode(), null, null, null, null, null, closeSpan(now));
   }
 
   /** 명시적 전경 전환은 현재 구간을 끊되 지난 반복 구간은 보존한다. */
