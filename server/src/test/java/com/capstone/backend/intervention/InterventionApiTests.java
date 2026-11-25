@@ -69,7 +69,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 /** 실제 저장과 인증 HTTP를 검증하며 전경 입력은 명시적으로 합성한다. */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+    "focuson.intervention.off-task-ratio.percent=50",
+    "focuson.intervention.off-task-ratio.minimum-observed-seconds=60"
+})
 @ActiveProfiles("test")
 class InterventionApiTests {
   @Autowired private WebApplicationContext context;
@@ -264,7 +267,7 @@ class InterventionApiTests {
               snapshot.runningSince(), snapshot.context(), snapshot.changedAt(),
               snapshot.episode(), snapshot.pendingRun(), snapshot.latestRun(),
               snapshot.completedAt(), snapshot.latestReceivedAt(), snapshot.openEpisode(),
-              spans, snapshot.offTaskRun())));
+              spans, snapshot.offTaskRun(), snapshot.relatedTime())));
       states.saveAndFlush(state);
     });
   }
@@ -567,22 +570,50 @@ class InterventionApiTests {
     assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
   }
 
+  @Test
+  void heartbeatCreatesOneOffTaskEventFromRatioAlone() throws Exception {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    Instant reference = Instant.now();
+    var related = new AnalysisDecision(
+        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
+        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
+        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa");
+    recordObservation(f, 1, reference.minusSeconds(80), unrelatedDecision());
+    recordObservation(f, 2, reference.minusSeconds(55), related);
+    recordObservation(f, 3, reference.minusSeconds(43), related);
+    recordObservation(f, 4, reference.minusSeconds(18), unrelatedDecision());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+    final var latest = runs.findCurrent(f.session(), f.principal().deviceId()).orElseThrow();
+    heartbeats.heartbeat(f.principal(), f.device(), Long.toString(f.session()),
+        new com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest(reference, 100L));
+    assertEquals(1, events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).size());
+    evaluator.evaluate(f.principal().userId(), f.session());
+    var result = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, result.size());
+    assertEquals(latest.getId(), result.getFirst().getAnalysisRunId());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].type").value("OFF_TASK"));
+  }
+
   private void seedUnrelated(Fixture f) {
+    recordObservation(f, 1, Instant.now().minusSeconds(100), unrelatedDecision());
+  }
+
+  private void recordObservation(Fixture f, long number, Instant at, AnalysisDecision decision) {
     tx.executeWithoutResult(ignored -> {
       users.findByIdForUpdate(f.principal().userId()).orElseThrow();
       var session = sessions.findOwnedForUpdate(f.session(), f.principal().userId()).orElseThrow();
-      Instant at = Instant.now().minusSeconds(100);
+      var sequence = BigDecimal.valueOf(number);
       var request = new Request(UUID.randomUUID().toString(), ContentSource.DESKTOP_APP_OCR,
-          at, BigDecimal.ONE, null, null, null, BigDecimal.ONE);
+          at, sequence, null, null, null, sequence);
       var run = AnalysisRunEntity.reserve(session,
           devices.getReferenceById(f.principal().deviceId()), request, at);
       run.bindContext(f.observationContext());
       runs.saveAndFlush(run);
       policy.prepared(session, run, true, false, at);
-      run.complete(new AnalysisDecision(
-          com.capstone.backend.analysis.dto.AnalysisDtos.Relation.UNRELATED, .9,
-          com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MISMATCH,
-          com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa"));
+      run.complete(decision);
       policy.completed(session, run, at);
     });
   }
