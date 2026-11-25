@@ -382,6 +382,81 @@ class InterventionApiTests {
   }
 
   @Test
+  void farTimeIncludesReanalysisBoundaryButExcludesWaiting() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    final Instant start = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS)
+        .minusSeconds(45);
+    var far = farDecision();
+    recordObservation(f, 1, start, far);
+    tx.executeWithoutResult(status -> policy.heartbeat(
+        sessions.findById(f.session()).orElseThrow(), start.plusSeconds(15)));
+    recordObservation(f, 2, start.plusSeconds(20), start.plusSeconds(30), far);
+    var state = states.findById(f.session()).orElseThrow();
+    assertEquals(20000L, state.getFarDurationMs());
+    assertEquals(start.plusSeconds(30), state.getFarCheckpointAt());
+
+    recordObservation(f, 3, start.plusSeconds(32), start.plusSeconds(36),
+        AnalysisDecision.unavailable());
+    state = states.findById(f.session()).orElseThrow();
+    assertEquals(22000L, state.getFarDurationMs());
+    assertEquals(null, state.getFarCheckpointAt());
+    recordObservation(f, 4, start.plusSeconds(39), far);
+    assertEquals(22000L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  @Test
+  void interruptedConsentKeepsOldFarStoppedUntilFreshAnalysis() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    Instant start = Instant.now().minusSeconds(20);
+    recordObservation(f, 1, start, farDecision());
+    tx.executeWithoutResult(status -> {
+      var session = sessions.findById(f.session()).orElseThrow();
+      policy.consentWithdrawn(session, start.plusSeconds(5));
+      policy.heartbeat(session, start.plusSeconds(10));
+    });
+    assertEquals(null, states.findById(f.session()).orElseThrow().getFarCheckpointAt());
+    recordObservation(f, 2, start.plusSeconds(15), farDecision());
+    assertEquals(0L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+  }
+
+  @Test
+  void reanalysisCreditsThresholdOnceAndWaitsForConfirmedFar() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    recordObservation(f, 1, Instant.now().minusSeconds(3), farDecision());
+    jdbc.update("UPDATE intervention_policy_states SET far_duration_ms=598000 WHERE session_id=?",
+        f.session());
+
+    var input = observation(f, 2, 2L, null);
+    final var prepared = analysisStore.prepare(f.principal(), f.session(), input);
+    assertEquals(600000L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.capstone.backend.common.api.ApiException.class,
+        () -> analysisStore.prepare(f.principal(), f.session(), input));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+
+    analysisStore.complete(f.principal(), prepared, input, farDecision());
+    evaluator.evaluate(f.principal().userId(), f.session());
+    var prompted = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, prompted.size());
+    assertEquals(Type.GOAL_ADD_PROMPT, prompted.getFirst().getType());
+  }
+
+  private AnalysisDecision farDecision() {
+    return new AnalysisDecision(
+        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
+        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
+        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.FAR);
+  }
+
+  @Test
   void confirmedFarCreatesOnePromptAndInconclusiveTimeIsExcluded() throws Exception {
     var f = fixture(true);
     jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
@@ -398,11 +473,7 @@ class InterventionApiTests {
 
     var second = observation(f, 2, 2L, null);
     var confirmed = analysisStore.prepare(f.principal(), f.session(), second);
-    var far = new AnalysisDecision(
-        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
-        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
-        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa",
-        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.FAR);
+    var far = farDecision();
     analysisStore.complete(f.principal(), confirmed, second, far);
     Instant checkpoint = states.findById(f.session()).orElseThrow().getFarCheckpointAt();
     tx.executeWithoutResult(status -> policy.heartbeat(
@@ -698,6 +769,11 @@ class InterventionApiTests {
   }
 
   private void recordObservation(Fixture f, long number, Instant at, AnalysisDecision decision) {
+    recordObservation(f, number, at, at, decision);
+  }
+
+  private void recordObservation(Fixture f, long number, Instant at, Instant completedAt,
+      AnalysisDecision decision) {
     tx.executeWithoutResult(ignored -> {
       users.findByIdForUpdate(f.principal().userId()).orElseThrow();
       var session = sessions.findOwnedForUpdate(f.session(), f.principal().userId()).orElseThrow();
@@ -710,7 +786,7 @@ class InterventionApiTests {
       runs.saveAndFlush(run);
       policy.prepared(session, run, true, false, at);
       run.complete(decision);
-      policy.completed(session, run, at);
+      policy.completed(session, run, completedAt);
     });
   }
 
