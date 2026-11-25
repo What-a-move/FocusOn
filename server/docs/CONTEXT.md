@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
+
+- PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.
+
 ## #342 v2 이탈 비율 알림
 
 - 최근 10분 이탈 비율을 기존 `OFF_TASK` 생성 경로에 연결했다. 운영 수치가 확정되기 전에는 기본 비활성이다.
