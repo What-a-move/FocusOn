@@ -9,6 +9,9 @@
 .fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
 .fo-topbar li b { color: var(--fo-ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .fo-dashboard { display: flex; flex-direction: column; gap: var(--fo-section-gap); width: 100%; max-width: calc(var(--fo-page-max) + var(--fo-page-x) * 2); margin: 0 auto; padding: var(--fo-head-gap) var(--fo-page-x) var(--fo-page-bottom); }
+/* 홈은 한눈에 보는 화면이라 기본 창(1200×800)에서 스크롤이 없어야 한다. 세로 여백만 창 높이를 따라 줄이고, 공통 토큰 값을 넘지 않는다. */
+.fo-topbar { padding-top: clamp(20px, 4vh, var(--fo-page-top)); }
+.fo-dashboard { gap: clamp(20px, 3vh, var(--fo-section-gap)); padding-top: clamp(12px, 2vh, var(--fo-head-gap)); padding-bottom: clamp(24px, 3.5vh, var(--fo-page-bottom)); }
 
 /* 오늘: 포키 + 큰 질문 + 버튼 */
 .fo-hero { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: center; gap: 40px; padding: 12px 0 4px; }
