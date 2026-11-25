@@ -24,7 +24,7 @@ class OffTaskTimelineTests {
   @Test
   void observationReceivedBeforeCooldownCannotQualifyByCompletingAfterward() {
     Instant at = Instant.parse("2026-11-09T00:00:00Z");
-    var timeline = OffTaskTimeline.empty(at, "context", at).pending(1, at)
+    var timeline = OffTaskTimeline.empty(at, "context", at, 1).pending(1, at)
         .complete(1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, at);
     timeline = timeline.pending(2, at.plusSeconds(290))
         .complete(2, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR,
@@ -232,8 +232,10 @@ class OffTaskTimelineTests {
     var node = (tools.jackson.databind.node.ObjectNode) mapper.valueToTree(
         unrelated(empty(), 1, 0).snapshot());
     node.remove("offTaskRun");
+    node.remove("goalVersion");
     var restored = mapper.treeToValue(node, OffTaskTimeline.Snapshot.class);
     assertEquals(null, restored.offTaskRun());
+    assertEquals(1L, restored.goalVersion());
     assertEquals(1L, restored.openEpisode());
   }
 
@@ -412,7 +414,7 @@ class OffTaskTimelineTests {
   }
 
   private static OffTaskTimeline empty() {
-    return OffTaskTimeline.empty(START, "synthetic-context", START);
+    return OffTaskTimeline.empty(START, "synthetic-context", START, 1);
   }
 
   private static OffTaskTimeline unrelated(OffTaskTimeline timeline, long run, long seconds) {

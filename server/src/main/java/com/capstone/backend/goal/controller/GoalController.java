@@ -134,10 +134,11 @@ public class GoalController {
   @PatchMapping("/{goalId}")
   @ResponseStatus(HttpStatus.OK)
   @Operation(summary = "학습 목표 수정",
-      description = "보낸 필드만 바꿉니다. 활성 세션이 참조 중이면 todoStatus만 바꿀 수 있습니다.")
+      description = "보낸 필드만 바꿉니다. goalProfile은 통째로 덮어씁니다. 활성 세션이 참조 중이면 "
+          + "todoStatus만 바꿀 수 있습니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "목표 수정 성공"),
-      @ApiResponse(responseCode = "400", description = "목표 문구 오류",
+      @ApiResponse(responseCode = "400", description = "목표 문구·범위 형식 오류",
           content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
       @ApiResponse(responseCode = "401", description = "인증 필요",
           content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
@@ -150,6 +151,31 @@ public class GoalController {
       @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String goalId,
       @Valid @RequestBody UpdateGoalRequest request) {
     return com.capstone.backend.common.api.ApiResponse.of(goals.update(principal, goalId, request));
+  }
+
+  /** 저장된 목표 문구로 AI 범위를 다시 만든다. */
+  @PostMapping("/{goalId}/profile")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "목표 범위 다시 만들기",
+      description = "저장된 목표 문구로 AI 범위(goalProfile)를 새로 만들어 저장합니다. AI가 실패하면 "
+          + "기존 범위는 그대로 두고 오류만 반환합니다. 활성 세션이 쓰는 할 일이면 409입니다.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "새 범위 저장 성공"),
+      @ApiResponse(responseCode = "401", description = "인증 필요",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "목표를 찾을 수 없음",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "409", description = "활성 세션이 목표를 참조함",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "503", description = "AI 서비스 사용 불가·잘못된 응답",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+      @ApiResponse(responseCode = "504", description = "AI 요청 시간 초과",
+          content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  })
+  public com.capstone.backend.common.api.ApiResponse<GoalResponse> regenerateProfile(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String goalId) {
+    return com.capstone.backend.common.api.ApiResponse.of(
+        goals.regenerateProfile(principal, goalId));
   }
 
   /** 본인 목표를 논리 삭제한다. */
