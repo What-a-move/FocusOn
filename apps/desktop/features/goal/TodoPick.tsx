@@ -120,6 +120,9 @@ export function TodoPick() {
   }, [view, last])
 
   const empty = !loading && !failed && shown.length === 0
+  // 처음부터 할 일이 없으면 빈 화면 대신 바로 할 일 적기로 간다. 방금 지워서 빈 경우는 되돌리기를 위해 남는다.
+  const none = empty && hidden.length === 0
+  useEffect(() => { if (none) router.replace('/goal/?first=1') }, [none, router])
 
   return <main className="app-window onboarding-window goal-window todo-window">
     <div className="flow">
@@ -163,7 +166,7 @@ export function TodoPick() {
           <strong className="is-error">할 일 목록을 불러오지 못했어요.</strong>
           <span>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</span>
           <button className="btn btn-ghost" type="button" onClick={() => { void load() }}>다시 시도</button>
-        </div> : empty ? <div className="todo-state">
+        </div> : none ? null : empty ? <div className="todo-state">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/design/poki-empty-note.png" alt="" />
           <strong>아직 적어 둔 할 일이 없어요</strong>

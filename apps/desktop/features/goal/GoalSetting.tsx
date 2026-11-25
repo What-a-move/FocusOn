@@ -60,6 +60,10 @@ export function GoalSetting() {
   const inputRef = useRef<HTMLInputElement>(null)
   const sayRef = useRef<HTMLParagraphElement>(null)
 
+  // 할 일이 없어 바로 온 경우 ✕는 홈으로 간다(할 일 고르기로 가면 다시 이 화면으로 돌아온다).
+  const [closeHref, setCloseHref] = useState('/todo/')
+  useEffect(() => { queueMicrotask(() => { if (new URLSearchParams(window.location.search).has('first')) setCloseHref('/') }) }, [])
+
   useEffect(() => {
     // [주의] 목표 설정 중 로그인이 만료·해제되면 로그인 화면(/)으로 돌아간다.
     const unsubscribe = window.focusOn?.auth.onSessionChanged((snapshot) => { if (snapshot.status === 'SIGNED_OUT') router.replace('/') })
@@ -298,7 +302,7 @@ export function GoalSetting() {
   return <main className="app-window onboarding-window goal-window">
     <div className="flow">
       <div className="top">
-        <Link className="close" href="/todo/" aria-label="닫고 할 일 고르기로">✕</Link>
+        <Link className="close" href={closeHref} aria-label={closeHref === '/' ? '닫고 홈으로' : '닫고 할 일 고르기로'}>✕</Link>
         <div className="progress" role="progressbar" aria-label="새 할 일 적기 진행" aria-valuemin={1} aria-valuemax={3} aria-valuenow={Math.min(stage + 1, 3)}>
           {[0, 1, 2].map((index) => <i className={index < stage ? 'done' : index === stage ? 'active' : ''} key={index} />)}
         </div>
