@@ -647,10 +647,13 @@ class ObservationDeliveryIntegrationTests {
 
     jdbc.update("INSERT INTO session_goals(session_id,position,goal_id,goal_text_snapshot) "
         + "SELECT id,1,goal_id,'목표' FROM learning_sessions WHERE id=?", deleted.session());
+    jdbc.update("INSERT INTO session_retrospectives(session_id,rating,reason_codes_json,created_at,"
+        + "updated_at) VALUES (?,'GOOD','[]',?,?)", deleted.session(),
+        java.sql.Timestamp.from(Instant.now()), java.sql.Timestamp.from(Instant.now()));
 
     assertTrue(purge.purgeDue(Instant.now()) >= 1);
 
-    for (String table : List.of("session_goals", "intervention_events",
+    for (String table : List.of("session_goals", "session_retrospectives", "intervention_events",
         "intervention_policy_states",
         "learning_review_evidences", "learning_summaries", "analysis_runs",
         "session_observation_contexts")) {

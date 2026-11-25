@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #318 세션 끝 회고 (2026-11-26)
+
+- Desktop: 세션 끝 화면에서 `PUT /sessions/{id}/retrospective`를 쓴다. 개인정보 안내 문구를 먼저 넣는다.
+- 머지 순서: #317(V33) 뒤. 다음 마이그레이션은 V35부터.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - Desktop: 범위 항목 빼기·추가는 PATCH `goalProfile`, 「다시 만들기」는 `POST /goals/{id}/profile`. 503·504면 기존 범위를 그대로 보여 준다.

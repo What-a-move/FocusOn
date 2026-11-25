@@ -262,6 +262,7 @@ DR-030 명확화 응답의 `goalProfileDraft`에는 대표 주제·목적·세 �
 ```text
 POST /api/v1/sessions
 GET  /api/v1/sessions/active
+PUT  /api/v1/sessions/{sessionId}/retrospective
 GET  /api/v1/sessions/{sessionId}
 GET  /api/v1/sessions                         # P1
 POST /api/v1/sessions/{sessionId}/pause
@@ -275,6 +276,8 @@ POST /api/v1/sessions/{sessionId}/goals
 `GET /api/v1/sessions/active`의 `data`에는 `accumulatedAt`과 `serverNow`(ISO-8601 UTC)가 있다. `accumulatedAt`은 `accumulatedActiveMs`가 확정된 서버 시각(서버가 마지막 heartbeat를 받은 시각과 마지막 재개 시각 중 늦은 값)이고, 상태가 `RUNNING`이 아니면 `null`이다. `serverNow`는 응답을 만든 서버 시각이다. 클라이언트는 `RUNNING`일 때 `accumulatedActiveMs + (serverNow - accumulatedAt)`부터 세며 두 값 모두 서버 시계이므로 사용자 시계와 무관하다.
 
 `POST /api/v1/sessions/{sessionId}/heartbeats`의 `data`는 `{ status, lastHeartbeatAt, accumulatedActiveMs, pauseReason, version }`이다. `version`은 응답 시점의 세션 명령 버전으로, 목표 시간에 닿아 `AWAITING_END_CONFIRMATION`으로 바뀐 응답에서는 증가한 값이라 `If-Match-Version`에 바로 쓸 수 있다. 필드 추가만이라 기존 클라이언트에 영향이 없다.
+
+`PUT /api/v1/sessions/{sessionId}/retrospective`(2026-11-26 #318, Desktop·`X-Device-Id` 필수): 끝난 세션(ENDED·ABANDONED)의 한 줄 회고 `{ rating: GOOD|OKAY|BAD, reasonCodes?, note? }`를 세션당 하나 저장하고 다시 보내면 덮어쓴다. `reasonCodes`(SELF_TIRED·SELF_NOISE·SELF_TOO_MANY_GOALS·APP_FALSE_ALERT·APP_TOO_FREQUENT·APP_LATE_ALERT·APP_BLUR_ANNOYING, 중복 없음)와 `note`(0~100자, 앞뒤 공백 제거)는 BAD일 때만 받는다. 응답 200 `{ sessionId, rating, reasonCodes, note, updatedAt }`. 400 `VALIDATION_ERROR`(평가 누락·허용 밖 값·중복·BAD 아닌데 사유·메모, 100자 초과, 메모 민감정보는 `details.fieldErrors.note: "SENSITIVE"`), 404 `SESSION_NOT_FOUND`, 409 `SESSION_STATE_INVALID`(끝나지 않은 세션). 메모 원문은 로그·오류 응답에 넣지 않는다.
 
 세션 시작은 단일 `goalId` 또는 순서가 있는 `goalIds` 1~3개 중 하나를 받는다. 시작·활성 응답의 `goals: [{goalId, goalText}]`와 `goalVersion`은 시작 시 고정한 목표 사본을 나타낸다. 실행 중 같은 Desktop은 `POST /api/v1/sessions/{sessionId}/goals`에 `{goalId, goalVersion}`으로 본인의 새 할 일을 하나 추가할 수 있다. 추가 시 목표 목록 버전만 증가한다.
 

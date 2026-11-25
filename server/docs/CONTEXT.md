@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #318 세션 끝 회고 (2026-11-26)
+
+- 끝난 세션의 한 줄 회고를 `session_retrospectives`(V34)에 세션당 하나 저장한다. 메모는 100자·민감정보 검사, 로그 금지. 계획: `features/session-retrospective-PLAN.md`.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.
