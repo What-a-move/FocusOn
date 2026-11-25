@@ -48,7 +48,7 @@ public class SessionCommandService {
   private final LearningSessionRepository sessions;
   private final IdempotencyRecordRepository records;
   private final SessionExtensionRepository extensions;
-  private final com.capstone.backend.session.persistence.SessionPauseRepository pauses;
+  private final SessionPauseRecorder pauses;
   private final OnboardingReadinessService onboarding;
   private final ObjectMapper mapper;
   private final com.capstone.backend.report.service.LearningSummaryWorker learningSummaries;
@@ -145,8 +145,7 @@ public class SessionCommandService {
     session.pause(pausedStatus, request.pauseReason().name(), activeMs);
     sessions.flush();
     // 리포트 가로축용 일시정지 구간을 같은 트랜잭션에서 연다(#317).
-    pauses.save(com.capstone.backend.session.persistence.SessionPauseEntity.open(session.getId(),
-        now, request.pauseReason().name()));
+    pauses.open(session.getId(), now, request.pauseReason().name());
     var response = new PauseResponse(session.getStatus(), session.getVersion(), activeMs);
     records.save(IdempotencyRecordEntity.create(user, PAUSE_SCOPE, idempotencyKey, hash,
         (short) 200, mapper.writeValueAsString(response), now, now.plus(IDEMPOTENCY_RETENTION)));
@@ -271,8 +270,7 @@ public class SessionCommandService {
     }
     session.resume(now);
     sessions.flush();
-    pauses.findFirstBySessionIdAndResumedAtIsNull(session.getId())
-        .ifPresent(pause -> pause.close(now));
+    pauses.close(session.getId(), now);
     var response = new ResumeResponse(session.getStatus(), session.getVersion(), now);
     records.save(IdempotencyRecordEntity.create(user, RESUME_SCOPE, idempotencyKey, hash,
         (short) 200, mapper.writeValueAsString(response), now, now.plus(IDEMPOTENCY_RETENTION)));

@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #317 세션 일시정지 구간 (2026-11-26)
+
+- 일시정지·자동 일시정지·재개를 `session_pauses`(V33)에 기록하고 `GET /sessions/{id}/pauses`로 돌려준다. 계획: `features/session-pauses-PLAN.md`.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.
