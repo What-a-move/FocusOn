@@ -50,6 +50,7 @@ public class InterventionPolicyService {
   private final ObjectMapper json;
   private final UserFocusSettingsRepository focusSettings;
   private final SessionGoalRepository sessionGoals;
+  private final OffTaskRatioRule offTaskRatio;
 
   /** 분석 예약의 processing과 이미 확정된 보호 결과를 구분한다. */
   public void prepared(LearningSessionEntity session, AnalysisRunEntity run, boolean current,
@@ -106,7 +107,7 @@ public class InterventionPolicyService {
       return;
     }
     timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(),
-        run.getReceivedAt(), now, session.getInterventionPolicyVersion());
+        run.getReceivedAt(), now, session.getInterventionPolicyVersion(), offTaskRatio.enabled());
     state.transition(json.writeValueAsString(timeline.snapshot()));
     if (timeline.onHold()) {
       // v2 판단 보류: 딴짓 시간은 멈춘 채 유지하지만, 보류 전에 만든 아직 표시되지 않은 알림은
@@ -313,8 +314,10 @@ public class InterventionPolicyService {
     if (suggestBreak(session, context, state, timeline, options, history, now)) {
       return;
     }
+    var ratio = run.getGoalVersion() == session.getGoalVersion()
+        ? offTaskRatio : OffTaskRatioRule.DISABLED;
     if (timeline.evaluate(session.getInterventionPolicyVersion(), options.interventionLevel(),
-        now, context.cooldownUntil()).candidate()) {
+        now, context.cooldownUntil(), ratio).candidate()) {
       boolean duplicate = history.stream()
           .anyMatch(event -> event.getCause() == state.getRevision());
       if (!duplicate) {

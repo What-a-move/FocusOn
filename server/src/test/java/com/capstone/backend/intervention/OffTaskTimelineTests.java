@@ -2,14 +2,18 @@ package com.capstone.backend.intervention;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
+import com.capstone.backend.intervention.service.OffTaskRatioRule;
 import com.capstone.backend.intervention.service.OffTaskTimeline;
 import com.capstone.backend.user.persistence.UserFocusSettingsEntity.InterventionLevel;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -205,7 +209,7 @@ class OffTaskTimelineTests {
   private static OffTaskTimeline v2(OffTaskTimeline timeline, long run, Relation relation,
       ContentSource source, long seconds) {
     Instant at = START.plusSeconds(seconds);
-    return timeline.pending(run, at).complete(run, relation, source, at, at, "v2");
+    return timeline.pending(run, at).complete(run, relation, source, at, at, "v2", true);
   }
 
   /** 근거 판정은 구간을 이어 준 마지막 무관 판정이며, 판단 보류로 멈춰도 바뀌지 않는다. */
@@ -305,6 +309,100 @@ class OffTaskTimelineTests {
         START.plusSeconds(701), null).orElseThrow();
     assertEquals(3, evidence.repeatCount());
     assertEquals(12, evidence.windowMinutes());
+  }
+
+  @Test
+  void ratioClipsBothRelationsToRollingWindowAndRespectsMinimumObservation() {
+    var timeline = episode(empty(), 1, 0, 50);
+    timeline = v2(timeline, 3, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 100);
+    timeline = episode(timeline, 4, 200, 35);
+    timeline = v2(timeline, 6, Relation.UNCERTAIN, ContentSource.DESKTOP_APP_OCR, 250);
+    timeline = v2(timeline, 7, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 600);
+    // At 620 the window contains 85 seconds unrelated and 65 seconds related.
+    var at = START.plusSeconds(620);
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null).candidate());
+    assertTrue(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(56, 150)).candidate());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(57, 150)).candidate());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(56, 151)).candidate());
+    assertFalse(timeline.evaluate("v1", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(56, 150)).candidate());
+    // At 660 the first related span also straddles the window edge (40s remain).
+    at = START.plusSeconds(660);
+    assertTrue(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(63, 150)).candidate());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(64, 150)).candidate());
+  }
+
+  @Test
+  void ratioRequiresCurrentUnrelatedObservationAndFreshReceiptCooldownEvidence() {
+    var rule = new OffTaskRatioRule(50, 40);
+    var timeline = episode(empty(), 1, 0, 25);
+    timeline = v2(timeline, 3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 35);
+    var at = START.plusSeconds(55);
+    assertTrue(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null, rule).candidate());
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, at,
+        START.plusSeconds(40), rule).candidate());
+    var pending = timeline.pending(4, at);
+    var after = at.plusSeconds(5);
+    assertFalse(pending.evaluate("v2", InterventionLevel.GENTLE, after, null, rule).candidate());
+    for (var relation : List.of(Relation.UNCERTAIN, Relation.EXCLUDED, Relation.PRIVACY_BLOCKED,
+        Relation.RELATED)) {
+      var completed = pending.complete(4, relation, ContentSource.DESKTOP_APP_OCR,
+          at, at, "v2", true);
+      assertFalse(completed.evaluate("v2", InterventionLevel.GENTLE, after, null, rule)
+          .candidate());
+    }
+  }
+
+  @Test
+  void legacySnapshotOnlyUsesIntervalsAfterRatioTrackingStarts() {
+    var mapper = tools.jackson.databind.json.JsonMapper.builder().build();
+    var old = v2(empty(), 1, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 0);
+    var node = (tools.jackson.databind.node.ObjectNode) mapper.valueToTree(old.snapshot());
+    node.remove("relatedTime");
+    var restored = new OffTaskTimeline(mapper.treeToValue(node, OffTaskTimeline.Snapshot.class));
+    assertNull(restored.snapshot().relatedTime());
+    restored = v2(restored, 2, Relation.RELATED, ContentSource.DESKTOP_APP_OCR, 40);
+    restored = v2(restored, 3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 90);
+    var at = START.plusSeconds(105);
+    assertFalse(restored.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(30, 65)).candidate());
+    assertTrue(restored.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(23, 65)).candidate());
+  }
+
+  @Test
+  void ratioIgnoresShortEpisodesAndWaitsForCurrentEpisodeToReachFifteenSeconds() {
+    var timeline = episode(empty(), 1, 0, 14);
+    timeline = v2(timeline, 3, Relation.UNRELATED, ContentSource.DESKTOP_APP_OCR, 24);
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, START.plusSeconds(38), null,
+        new OffTaskRatioRule(50, 1)).candidate());
+
+    // Only the current 15 seconds and the earlier 10 related seconds enter the ratio.
+    var at = START.plusSeconds(39);
+    assertFalse(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(61, 25)).candidate());
+    assertTrue(timeline.evaluate("v2", InterventionLevel.GENTLE, at, null,
+        new OffTaskRatioRule(60, 25)).candidate());
+  }
+
+  @Test
+  void disabledRatioDoesNotTrackRelatedTime() {
+    var timeline = empty().pending(1, START).complete(1, Relation.RELATED,
+        ContentSource.DESKTOP_APP_OCR, START, START, "v2", false);
+    assertNull(timeline.snapshot().relatedTime());
+  }
+
+  @Test
+  void ratioSettingsRequireBothValuesAndStayWithinTheWindow() {
+    assertThrows(IllegalArgumentException.class, () -> new OffTaskRatioRule(50, 0));
+    assertThrows(IllegalArgumentException.class, () -> new OffTaskRatioRule(0, 60));
+    assertThrows(IllegalArgumentException.class, () -> new OffTaskRatioRule(101, 60));
+    assertThrows(IllegalArgumentException.class, () -> new OffTaskRatioRule(50, 601));
   }
 
   private static OffTaskTimeline episode(OffTaskTimeline timeline, long run, long start,
