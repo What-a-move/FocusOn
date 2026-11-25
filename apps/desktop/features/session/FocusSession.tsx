@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
+import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
 import { AddSessionGoal } from './AddSessionGoal'
 import { errorText } from '../../shared/lib/error-text'
+import { ENDED_GOALS_KEY } from '../../shared/api/goal-api'
 import '../../shared/styles/onboarding-window.css'
 import './focus-session.css'
 
@@ -44,6 +46,13 @@ export function FocusSession() {
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [toast, setToast] = useState(false)
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(false), 2000)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+  const goals = snapshot?.goals ?? []
   const addGoalSubmitting = useRef(false)
   const [screenOpened, setScreenOpened] = useState(false)
 
@@ -67,7 +76,7 @@ export function FocusSession() {
   }, [router])
 
   const sessionId = snapshot?.sessionId
-  const canAddGoal = snapshot?.status === 'RUNNING' && !!snapshot.goalVersion && (snapshot.goals?.length ?? 3) < 3
+  const canAddGoal = snapshot?.status === 'RUNNING' && !!snapshot.goalVersion
   useEffect(() => {
     if (!canAddGoal || new URLSearchParams(window.location.search).get('addGoal') !== sessionId) return
     const timer = window.setTimeout(() => {
@@ -90,8 +99,20 @@ export function FocusSession() {
 
   // 세션이 끝나면(종료·시간 종료·자동 종료) 집중 리포트로 넘어간다(D16·D18).
   const endedSessionId = snapshot && (snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED') ? snapshot.sessionId : null
+  // 끝난 순간의 할 일. 이동은 세션이 끝날 때 한 번만 한다.
+  const endedGoals = useRef<SessionGoal[]>([])
+  const goalsNow = snapshot?.goals
+  useEffect(() => { endedGoals.current = goalsNow ?? [] }, [goalsNow])
   useEffect(() => {
-    if (endedSessionId) router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
+    if (!endedSessionId) return
+    // 할 일이 있으면 결과 전에 「다 했어요」로 간다. 저장소를 못 쓰면 결과로 바로 간다.
+    try {
+      if (!endedGoals.current.length) throw new Error('no goals')
+      sessionStorage.setItem(ENDED_GOALS_KEY, JSON.stringify({ sessionId: endedSessionId, goals: endedGoals.current.map(({ goalId, goalText }) => ({ goalId, goalText })) }))
+      router.replace(`/todo-done/?session=${encodeURIComponent(endedSessionId)}`)
+    } catch {
+      router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
+    }
   }, [endedSessionId, router])
 
   if (snapshot === undefined && !loadError) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
@@ -115,11 +136,16 @@ export function FocusSession() {
   const finished = status === 'ENDED' || status === 'ABANDONED'
   // 세션 중 화면 기록 권한이 꺼져 자동으로 멈춘 상태(session-states.html `권한 꺼짐`)
   const permissionLost = status === 'AUTO_PAUSED' && snapshot.error === 'LOCAL_SCREEN_PERMISSION_REVOKED'
+  // 멈춘 상태마다 포키 옆 말풍선(FocusOn-design/session-states.html). 포키 말은 반말, 안내는 해요체.
   // 자동으로 멈춘 이유는 아는 것만 말한다. 이유를 모르면 추측하지 않는다.
-  const autoCaption = snapshot.pauseReason === 'APP_RESTART' ? '앱을 다시 열어 멈춰 있어요'
-    : snapshot.pauseReason === 'EXTENSION_UNLINKED' ? 'Chrome 연결이 끊겨 멈췄어요'
-      : snapshot.pauseReason === 'REQUIRED_PERMISSION' ? 'Chrome 사이트 접근이 꺼져 멈췄어요' : '자동으로 멈췄어요'
-  const caption = permissionLost ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : status === 'AUTO_PAUSED' ? autoCaption : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
+  const say: { title: string; copy?: string; error?: boolean } | null = awaiting ? null
+    : permissionLost ? { title: '화면 기록 권한이 꺼졌어요.', copy: screenOpened ? '켠 뒤 ‘다시 열기’를 눌러 주세요.' : '권한을 켠 뒤 직접 이어 가 주세요.', error: true }
+      : status === 'AUTO_PAUSED' ? (snapshot.pauseReason === 'APP_RESTART' ? { title: '앱이 다시 열렸어요' }
+        : snapshot.pauseReason === 'EXTENSION_UNLINKED' ? { title: 'Chrome 연결이 끊겼어요.', copy: '다시 연결한 뒤 직접 이어 가 주세요.', error: true }
+          : snapshot.pauseReason === 'REQUIRED_PERMISSION' ? { title: 'Chrome 사이트 접근이 꺼졌어요.', copy: '권한을 켠 뒤 직접 이어 가 주세요.', error: true }
+            : { title: '자동으로 멈췄어요' })
+        : status === 'PAUSED' ? { title: '잠깐 쉬는 중이야' } : null
+  const caption = status === 'AUTO_PAUSED' ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
 
   const togglePause = () => { void (running ? sessionApi.pause() : sessionApi.resume()) }
   const end = async () => { const result = await sessionApi.end(); if (result.success) setDialog(null) }
@@ -150,18 +176,25 @@ export function FocusSession() {
           </svg>
           <div className="ring-center">
             <div className="clock" role="timer" aria-live="off">{formatClock(Math.ceil(remaining / 1000) * 1000)}</div>
-            <div className={`clock-caption${permissionLost ? ' is-error' : ''}`}>{caption}</div>
+            <div className={`clock-caption${say?.error ? ' is-error' : ''}`}>{caption}</div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="poki" key={permissionLost ? 'worried' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.worried : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '걱정하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
         </div>
         {/* 오른쪽: 목표·버튼·안내. 타이머가 세로로만 길어지지 않게 옆에 둔다. */}
         <div className="side">
-        <p className="goal-label">지금 집중하는 목표</p>
-        <p className="goal" id="goal-text">{snapshot.goalText}</p>
-        {!!snapshot.goals && snapshot.goals.length > 1 && <ul className="session-goals" aria-label="함께 진행하는 할 일">
-          {snapshot.goals.slice(1).map(({ goalId, goalText }) => <li key={goalId}>{goalText}</li>)}
-        </ul>}
+        {say && !activeDialog && <div className="say" key={say.title}>
+          <p className={`bubble${say.error ? ' is-error' : ''}`} role={say.error ? 'alert' : 'status'}>{say.title}{say.copy && <small>{say.copy}</small>}</p>
+          {permissionLost && <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>}
+          {status === 'AUTO_PAUSED' && !permissionLost && snapshot.pauseReason === 'EXTENSION_UNLINKED' && <Link className="btn btn-danger" href="/settings/#devices">다시 연결</Link>}
+        </div>}
+        {goals.length > 1
+          ? <ul className="session-goals" id="goal-text" aria-label="이번 할 일">
+            {goals.map(({ goalId, goalText }, index) => <li key={goalId} title={goalText}>
+              <span className="num" data-c={index + 1} aria-hidden="true">{index + 1}</span><span>{goalText}</span>
+            </li>)}
+          </ul>
+          : <p className="goal" id="goal-text" aria-label={`이번 할 일: ${snapshot.goalText}`}>{snapshot.goalText}</p>}
         {canAddGoal && <button className="btn btn-ghost add-goal-button" type="button" onClick={() => setDialog('add-goal')}>할 일 추가</button>}
         <div className="controls">
           <div className="control">
@@ -179,20 +212,16 @@ export function FocusSession() {
             <span className="label">끝내기</span>
           </div>
         </div>
-        {permissionLost && !activeDialog && <div className="halt-notice" role="alert">
-          <p><strong>화면 기록이 꺼져 집중을 멈췄어요.</strong>{screenOpened ? '켠 뒤 ‘다시 열기’를 눌러 주세요.' : '설정에서 다시 켜 주세요.'}</p>
-          <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>
-        </div>}
         {snapshot.error && !permissionLost && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{sessionErrorText(snapshot.error)}</p>}
         </div>
       </div>
     </section>
 
-    <dialog ref={dialogRef} aria-labelledby="dialog-title" onCancel={(event) => {
+    <dialog ref={dialogRef} className={activeDialog === 'add-goal' ? 'add-dialog' : undefined} aria-labelledby="dialog-title" onCancel={(event) => {
       event.preventDefault()
       if (!awaiting && (activeDialog !== 'add-goal' || !addGoalSubmitting.current)) setDialog(null)
     }}>
-      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} /> : <>
+      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} onAdded={() => { setDialog(null); setToast(true) }} /> : <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
@@ -219,5 +248,6 @@ export function FocusSession() {
       </div>}
       </>}
     </dialog>
+    {toast && <div className="toast" role="status">할 일에 추가했어요</div>}
   </main>
 }

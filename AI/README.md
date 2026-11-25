@@ -52,6 +52,8 @@ CLAUDE_MODEL=claude-haiku-4-5-20251001
 ```bash
 python3 -m pip install -r AI/requirements.txt
 python3 -m AI.src.models.screen_activity.setup_encoder
+# 할 일 매칭용 공부 주제 목록(model/topic-bank.json)은 저장소에 포함한다. 분야를 바꿀 때만 다시 생성한다.
+# PYTHONPATH=AI:. python3 AI/evaluation/build_topic_bank.py  (ANTHROPIC_API_KEY 필요, 이후 manifest의 topicBankSHA256 갱신)
 PYTHONPATH=AI:. python3 -m uvicorn AI.src.main:app --env-file AI/.env --host 127.0.0.1 --port 8001 --http h11 --no-access-log
 ```
 

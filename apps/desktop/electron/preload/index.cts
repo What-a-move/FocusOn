@@ -72,6 +72,7 @@ const focusOnApi: FocusOnApi = {
     getDaily: (input) => ipcRenderer.invoke(REPORT_CHANNELS.daily, { date: input.date }),
     getSessionSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionSummary, { sessionId: input.sessionId }),
     getLearningSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningSummary, { sessionId: input.sessionId }),
+    listLearningNotes: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningNotes, { cursor: input.cursor }),
   },
   goals: {
     clarify: (input) => ipcRenderer.invoke(GOAL_CHANNELS.clarify, {
@@ -88,6 +89,8 @@ const focusOnApi: FocusOnApi = {
       ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
     }),
     listOpen: (cursor) => ipcRenderer.invoke(GOAL_CHANNELS.listOpen, cursor ?? null),
+    remove: (goalId) => ipcRenderer.invoke(GOAL_CHANNELS.remove, goalId),
+    complete: (goalId) => ipcRenderer.invoke(GOAL_CHANNELS.complete, goalId),
   },
   sessions: {
     getFocusSettings: () => ipcRenderer.invoke(SESSION_CHANNELS.focusSettings),

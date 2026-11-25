@@ -198,7 +198,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
               <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/session/')}>집중 화면으로 <span aria-hidden="true">→</span></button>
             </> : <>
               <h1 className="fo-rise" style={{ animationDelay: '.15s' }} id="focus-title">오늘은 뭐에 <span className="fo-hl">집중</span>할까요?</h1>
-              <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/goal/')}>목표 설정하기 <span aria-hidden="true">→</span></button>
+              <button className="fo-button fo-button-primary fo-goal-button fo-rise" style={{ animationDelay: '.35s' }} type="button" onClick={() => router.push('/todo/')}>할 일 고르기 <span aria-hidden="true">→</span></button>
             </>}
           </div>
         </section>

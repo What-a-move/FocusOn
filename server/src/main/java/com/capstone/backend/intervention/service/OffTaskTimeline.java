@@ -12,6 +12,7 @@ import java.util.Objects;
 /** 서버 확정 시간만 세며 처리 중과 확정 UNCERTAIN을 분리하는 순수 정책 상태다. */
 public final class OffTaskTimeline {
   private static final Duration WINDOW = Duration.ofMinutes(10);
+  private static final Duration MIN_OFF_TASK_EPISODE = Duration.ofSeconds(15);
   /** 판단 보류·분석 장애가 딴짓 구간을 끊지 않고 멈추게 하는 정책 버전이다(#296). */
   public static final String POLICY_V2 = "v2";
   /** 휴식 제안: 이탈 시작 사이 최대 간격과 최소 반복 횟수(설계서 8.1). */
@@ -32,7 +33,7 @@ public final class OffTaskTimeline {
   /** 실행 세대와 명시적으로 선택한 context는 외부 권한 검증 후 제공한다. */
   public static OffTaskTimeline empty(Instant runningSince, String context, Instant now) {
     return new OffTaskTimeline(new Snapshot(runningSince, context, now, 0, null,
-        null, null, null, null, List.of(), null));
+        null, null, null, null, List.of(), null, null));
   }
 
   /** 최신 요청만 호출한다. 재분석 대기는 같은 구간을 보존하고 누적/발송만 멈춘다. */
@@ -55,7 +56,7 @@ public final class OffTaskTimeline {
   /** 완료 시각과 실제 서버 접수 시각을 분리해 cooldown 이후 새 관측을 검증한다(v1 규칙). */
   public OffTaskTimeline complete(long runId, Relation relation, ContentSource source,
       Instant receivedAt, Instant at) {
-    return complete(runId, relation, source, receivedAt, at, "v1");
+    return complete(runId, relation, source, receivedAt, at, "v1", false);
   }
 
   /**
@@ -64,7 +65,7 @@ public final class OffTaskTimeline {
    * 같은 구간을 이어 센다. 관련 판정과 보호 상태는 지금처럼 구간을 끊는다.
    */
   public OffTaskTimeline complete(long runId, Relation relation, ContentSource source,
-      Instant receivedAt, Instant at, String policyVersion) {
+      Instant receivedAt, Instant at, String policyVersion, boolean trackRatio) {
     if (!Objects.equals(state.pendingRun(), runId)) {
       return this;
     }
@@ -72,15 +73,28 @@ public final class OffTaskTimeline {
     Relation effective = relation == Relation.UNRELATED
         && (source == ContentSource.APP_META || source == ContentSource.TAB_META)
         ? Relation.UNCERTAIN : relation;
+    RelatedTime related = null;
+    if (trackRatio && POLICY_V2.equals(policyVersion)) {
+      related = closeRelatedTime(now);
+      if (related == null) {
+        related = new RelatedTime(now, List.of());
+      }
+      if (effective == Relation.RELATED) {
+        var spans = new ArrayList<>(related.spans());
+        spans.add(new RelatedSpan(now, null));
+        related = new RelatedTime(related.since(), spans);
+      }
+    }
     if (effective != Relation.UNRELATED) {
       Long paused = POLICY_V2.equals(policyVersion) && effective == Relation.UNCERTAIN
           ? state.openEpisode() : null;
-      return copy(now, state.episode(), null, runId, now, receivedAt, paused, closeSpan(now));
+      return copy(now, state.episode(), null, runId, now, receivedAt, paused, closeSpan(now),
+          paused == null ? null : state.offTaskRun(), related);
     }
     long episode = state.openEpisode() == null ? state.episode() + 1 : state.openEpisode();
     var spans = new ArrayList<>(state.spans());
     spans.add(new Span(episode, now, null));
-    return copy(now, episode, null, runId, now, receivedAt, episode, spans, runId);
+    return copy(now, episode, null, runId, now, receivedAt, episode, spans, runId, related);
   }
 
   /** 보호/미관찰/실행 또는 context 전이는 처리 중 여부와 무관하게 구간을 끊는다. */
@@ -94,12 +108,19 @@ public final class OffTaskTimeline {
   public OffTaskTimeline switchContext(String context, Instant at) {
     var closed = interrupt(at).snapshot();
     return new OffTaskTimeline(new Snapshot(closed.runningSince(), context, closed.changedAt(),
-        closed.episode(), null, null, null, null, null, closed.spans(), null));
+        closed.episode(), null, null, null, null, null, closed.spans(), null,
+        closed.relatedTime()));
   }
 
   /** 같은 서버 시각에서 반복 호출해도 구간 횟수가 늘지 않는 정책 평가다. */
   public Evaluation evaluate(String policyVersion, InterventionLevel level, Instant at,
       Instant cooldownUntil) {
+    return evaluate(policyVersion, level, at, cooldownUntil, OffTaskRatioRule.DISABLED);
+  }
+
+  /** Adds the optional v2 ratio to the existing thresholds under the same delivery gate. */
+  public Evaluation evaluate(String policyVersion, InterventionLevel level, Instant at,
+      Instant cooldownUntil, OffTaskRatioRule ratio) {
     boolean known = "v1".equals(policyVersion) || POLICY_V2.equals(policyVersion);
     if (!known || level == null || state.pendingRun() != null
         || state.openEpisode() == null) {
@@ -113,7 +134,8 @@ public final class OffTaskTimeline {
         .filter(episode -> duration(episode, left, now)
             .compareTo(Duration.ofSeconds(thresholds[1])) > 0).count();
     boolean matches = continuous.compareTo(Duration.ofSeconds(thresholds[0])) > 0
-        || repeats >= thresholds[2];
+        || repeats >= thresholds[2]
+        || (POLICY_V2.equals(policyVersion) && ratio.enabled() && matchesRatio(left, now, ratio));
     // 판단 보류로 멈춘 동안은 지금 화면이 딴짓인지 모르므로 시간은 보고하되 알림 후보는 아니다.
     return new Evaluation(cooled(now, cooldownUntil) && matches && !onHold(), continuous,
         repeats);
@@ -201,14 +223,48 @@ public final class OffTaskTimeline {
     Duration total = Duration.ZERO;
     for (var span : state.spans()) {
       if (span.episode() == episode) {
-        Instant start = span.start().isBefore(from) ? from : span.start();
-        Instant end = span.end() == null || span.end().isAfter(to) ? to : span.end();
-        if (end.isAfter(start)) {
-          total = total.plus(Duration.between(start, end));
-        }
+        total = total.plus(overlap(span.start(), span.end(), from, to));
       }
     }
     return total;
+  }
+
+  private boolean matchesRatio(Instant left, Instant now, OffTaskRatioRule rule) {
+    var related = state.relatedTime();
+    if (related == null) {
+      return false;
+    }
+    // Old snapshots have unrelated spans but no related time before tracking started.
+    Instant from = left.isBefore(related.since()) ? related.since() : left;
+    if (duration(state.openEpisode(), related.since(), now).compareTo(MIN_OFF_TASK_EPISODE) < 0) {
+      return false;
+    }
+    long unrelatedNanos = state.spans().stream().map(Span::episode).distinct()
+        .filter(episode -> duration(episode, related.since(), now)
+            .compareTo(MIN_OFF_TASK_EPISODE) >= 0)
+        .mapToLong(episode -> duration(episode, from, now).toNanos()).sum();
+    long observedNanos = unrelatedNanos + related.spans().stream()
+        .mapToLong(span -> overlap(span.start(), span.end(), from, now).toNanos()).sum();
+    return rule.matches(unrelatedNanos, observedNanos);
+  }
+
+  private static Duration overlap(Instant start, Instant end, Instant from, Instant to) {
+    Instant left = start.isBefore(from) ? from : start;
+    Instant right = end == null || end.isAfter(to) ? to : end;
+    return right.isAfter(left) ? Duration.between(left, right) : Duration.ZERO;
+  }
+
+  private RelatedTime closeRelatedTime(Instant now) {
+    var related = state.relatedTime();
+    if (related == null) {
+      return null;
+    }
+    Instant cutoff = now.minus(WINDOW);
+    var retained = related.spans().stream()
+        .filter(span -> span.end() == null || span.end().isAfter(cutoff))
+        .map(span -> span.end() == null ? new RelatedSpan(span.start(), now) : span)
+        .toList();
+    return new RelatedTime(related.since(), retained);
   }
 
   private List<Span> closeSpan(Instant now) {
@@ -220,18 +276,19 @@ public final class OffTaskTimeline {
   private OffTaskTimeline copy(Instant now, long episode, Long pending, Long latest,
       Instant completed, Instant received, Long open, List<Span> spans) {
     return copy(now, episode, pending, latest, completed, received, open, spans,
-        open == null ? null : state.offTaskRun());
+        open == null ? null : state.offTaskRun(), closeRelatedTime(now));
   }
 
   private OffTaskTimeline copy(Instant now, long episode, Long pending, Long latest,
-      Instant completed, Instant received, Long open, List<Span> spans, Long offTaskRun) {
+      Instant completed, Instant received, Long open, List<Span> spans, Long offTaskRun,
+      RelatedTime relatedTime) {
     // 10분 평가는 창으로 잘라 세므로 더 오래 보관해도 결과가 같다. 휴식 제안 사슬을 위해 15분 보관하고,
     // 열린 구간의 연속 누적은 기간과 무관하게 보존한다.
     var retained = spans.stream().filter(span -> span.end() == null
         || Objects.equals(span.episode(), open) || span.end().isAfter(now.minus(RETENTION)))
         .toList();
     return new OffTaskTimeline(new Snapshot(state.runningSince(), state.context(), now,
-        episode, pending, latest, completed, received, open, retained, offTaskRun));
+        episode, pending, latest, completed, received, open, retained, offTaskRun, relatedTime));
   }
 
   /** 같은 구간의 분석 대기 전후 확정 시간 조각을 구간 ID로 묶는다. */
@@ -245,12 +302,24 @@ public final class OffTaskTimeline {
   public record Snapshot(Instant runningSince, String context, Instant changedAt,
       long episode, Long pendingRun, Long latestRun, Instant completedAt, Instant latestReceivedAt,
       Long openEpisode,
-      List<Span> spans, Long offTaskRun) {
+      List<Span> spans, Long offTaskRun, RelatedTime relatedTime) {
     /** snapshot은 변경 가능한 목록 참조를 보유하지 않는다. */
     public Snapshot {
       Objects.requireNonNull(runningSince);
       Objects.requireNonNull(context);
       Objects.requireNonNull(changedAt);
+      spans = List.copyOf(spans);
+    }
+  }
+
+  /** Server timestamps for confirmed related observations; pending time has no span. */
+  public record RelatedSpan(Instant start, Instant end) {}
+
+  /** The tracking start avoids comparing incomplete legacy history with newly measured time. */
+  public record RelatedTime(Instant since, List<RelatedSpan> spans) {
+    /** Keeps the persisted span list immutable. */
+    public RelatedTime {
+      Objects.requireNonNull(since);
       spans = List.copyOf(spans);
     }
   }

@@ -6,7 +6,7 @@ import { createGentleTimer } from './gentle-timer'
 
 const RISE_MS = { gentle: 700, peek: 600, normal: 1300, active: 1300 }
 const ACTIVE_COPY = ['언제까지 놀기만 할래?', '공부 좀 하자..', '집중해!!']
-const STUDY_TOAST = '공부로 표시했어요. 다음 분석에 반영할게요.'
+const STUDY_TOAST = '공부로 표시했어요.'
 // Renderer에서는 Electron 계약을 타입으로만 참조한다.
 const CAMERA_ID: typeof import('../../electron/shared/intervention-contract.cjs').CAMERA_ID = 'local-camera'
 
@@ -32,7 +32,7 @@ export function OffTaskAlert({ show, presentation, lift }: { show: FloatingShow;
     setDismissal(reason)
     void window.focusOn?.interventions.act({
       interventionId: show.interventionId,
-      action: reason === 'return' ? 'RECENTER' : 'CLOSE',
+      action: reason === 'return' ? 'RECENTER' : reason === 'study' ? 'NOT_OFF_TASK' : 'CLOSE',
     })
   }, [show.interventionId])
 

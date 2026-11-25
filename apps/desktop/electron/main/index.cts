@@ -457,7 +457,7 @@ if (!hasSingleInstanceLock) {
       if (shown.kind === 'OFF_TASK') {
         if (action === 'ACK' && offTaskResponded) {
           hideFloating()
-        } else if (!offTaskResponded && (action === 'RECENTER' || action === 'CLOSE')) {
+        } else if (!offTaskResponded && (action === 'RECENTER' || action === 'CLOSE' || (action === 'NOT_OFF_TASK' && interventionId !== CAMERA_ID))) {
           offTaskResponded = true
           floatingWindow.setIgnoreMouseEvents(true, { forward: true })
           if (floatingBackdrop) floatingWindow.setVibrancy(null, { animationDuration: 1000 })

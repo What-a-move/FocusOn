@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CreatedGoal } from '../../electron/shared/goal-contract.cjs'
-import { goalApi } from '../../shared/api/goal-api'
+import { goalApi } from './goal-api'
 
 export function useOpenGoals(enabled = true) {
   const [goals, setGoals] = useState<CreatedGoal[]>([])

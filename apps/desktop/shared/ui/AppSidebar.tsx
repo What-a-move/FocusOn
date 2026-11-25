@@ -8,7 +8,7 @@ import '../styles/app-shell.css'
 // 아직 화면이 없는 메뉴는 링크 없이 보여 준다. 화면이 생기면 href를 채운다.
 const NAVIGATION = [
   { key: 'home', label: '홈', asset: 'nav-home.png', href: '/' },
-  { key: 'start', label: '집중 시작', asset: 'nav-start.svg', href: '/goal/' },
+  { key: 'start', label: '집중 시작', asset: 'nav-start.svg', href: '/todo/' },
   { key: 'records', label: '집중 기록', asset: 'nav-records.png', href: '/records/' },
   { key: 'notes', label: '학습 노트', asset: 'nav-notes.svg', href: '/notes/' },
   { key: 'settings', label: '설정', asset: 'nav-settings.png', href: '/settings/' },

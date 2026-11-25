@@ -10,6 +10,7 @@ export const COPY = {
   GENTLE: { say: '어, 잠깐 샜네?', sub: '아까 하던 거 마저 할까?' },
   NORMAL: { say: '어? 또 딴 데 보고 있네 👀', sub: '목표로 돌아가자!' },
   ACTIVE: { say: '어 얘 봐라? 또 놀고 있네 😏', sub: '이러다 오늘 목표 다 날아간다?' },
+  // 서버가 근거(breakEvidence)를 주면 say를 `최근 N분 동안 M번 흐트러졌어.`로 바꾼다.
   BREAK: { say: '벌써 세 번째 흐트러졌어.', sub: '잠깐 쉬었다 갈까?' },
   GOAL_ADD: { say: '지금 하는 일도 할 일에 넣을까?', sub: '추가하면 이번 세션에서 함께 볼게.' },
 } as const
@@ -26,7 +27,16 @@ const NORMAL_STREAK_WINDOW_MS = 10 * 60_000
 
 const TYPES = ['OFF_TASK', 'BREAK_SUGGESTION', 'GOAL_ADD_PROMPT'] as const
 /** observationContextId: 알림을 만든 전경 context(null은 예전 이력). remainingTtlMs: 서버 기준 남은 표시 가능 시간(ms). */
-export type PendingIntervention = { interventionId: string; type: (typeof TYPES)[number]; channels: string[]; observationContextId: string | null; remainingTtlMs: number | null }
+export type BreakEvidence = { repeatCount: number; windowMinutes: number }
+export type PendingIntervention = { interventionId: string; type: (typeof TYPES)[number]; channels: string[]; observationContextId: string | null; remainingTtlMs: number | null; breakEvidence: BreakEvidence | null }
+
+const count = (value: unknown) => Number.isSafeInteger(value) && (value as number) > 0 ? value as number : null
+function parseBreakEvidence(value: unknown): BreakEvidence | null {
+  if (typeof value !== 'object' || value === null) return null
+  const { repeatCount, windowMinutes } = value as Record<string, unknown>
+  const repeat = count(repeatCount), minutes = count(windowMinutes)
+  return repeat && minutes ? { repeatCount: repeat, windowMinutes: minutes } : null
+}
 
 /**
  * 알림 목록 응답에서 아직 보이지 않은(PENDING) 알림만 꺼낸다. 배열 또는 { interventions: [] } 둘 다 읽는다.
@@ -37,13 +47,14 @@ export function parsePending(value: unknown): PendingIntervention[] | null {
   if (!Array.isArray(list)) return null
   return list.flatMap((item) => {
     if (typeof item !== 'object' || item === null) return []
-    const { interventionId, type, status, channels, observationContextId, remainingTtlMs } = item as Record<string, unknown>
+    const { interventionId, type, status, channels, observationContextId, remainingTtlMs, breakEvidence } = item as Record<string, unknown>
     if (status !== 'PENDING' || typeof interventionId !== 'string' || !TYPES.includes(type as PendingIntervention['type'])) return []
     return [{
       interventionId, type: type as PendingIntervention['type'],
       channels: Array.isArray(channels) ? channels.filter((channel): channel is string => typeof channel === 'string') : [],
       observationContextId: typeof observationContextId === 'string' ? observationContextId : null,
       remainingTtlMs: Number.isSafeInteger(remainingTtlMs) && (remainingTtlMs as number) >= 0 ? remainingTtlMs as number : null,
+      breakEvidence: type === 'BREAK_SUGGESTION' ? parseBreakEvidence(breakEvidence) : null,
     }]
   })
 }
@@ -114,6 +125,7 @@ export class InterventionWatcher {
         interventionId: next.interventionId, kind, level: options.interventionLevel, goalText,
         ...(kind === 'GOAL_ADD' ? { sessionId } : {}),
         ...COPY[kind === 'OFF_TASK' ? options.interventionLevel : kind],
+        ...(next.breakEvidence ? { say: `최근 ${next.breakEvidence.windowMinutes}분 동안 ${next.breakEvidence.repeatCount}번 흐트러졌어.` } : {}),
       }
       // 알림에 채널이 없으면 세션 시작 때 고른 채널을 쓴다. 아는 채널만 쓴다.
       const channels = (next.channels.length ? next.channels : options.notificationChannels).filter((channel) => CHANNELS.includes(channel))
@@ -189,7 +201,8 @@ export class InterventionWatcher {
     if (action === 'ACK') return true
     await this.deps.auth.authorizedRequest({
       path: `/api/v1/interventions/${encodeURIComponent(interventionId)}/acknowledgements`, method: 'POST', expectedStatus: 200, parse: () => true, withDeviceId: true,
-      body: { action: action === 'CLOSE' ? 'DISMISSED' : 'ACKNOWLEDGED' },
+      // 「이것도 공부야」는 오판 신고로 따로 남긴다(서버는 OFF_TASK 알림에만 받는다).
+      body: { action: action === 'CLOSE' ? 'DISMISSED' : action === 'NOT_OFF_TASK' ? 'NOT_OFF_TASK' : 'ACKNOWLEDGED' },
     })
     if (action === 'REST') return (await this.deps.pause()).success
     return true

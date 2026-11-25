@@ -27,6 +27,20 @@ test('코드 없는 401은 다시 보내지 않고 재시도 불가 오류로 �
   assert.equal(calls.length, 1)
 })
 
+test('코드 없는 403(서버 CORS 거절)은 네트워크 끊김이 아닌 ORIGIN_NOT_ALLOWED로 돌려준다', async () => {
+  const { client, calls } = setup([() => new Response('Invalid CORS request', { status: 403 })])
+  const result = await client.authorized('/api/v1/sessions/active', 'GET', 200, parseActiveSession)
+  assert.deepEqual(result, { success: false, error: { code: 'ORIGIN_NOT_ALLOWED', retryable: false } })
+  assert.equal(calls.length, 1)
+})
+
+test('갱신 요청이 CORS로 막혀도 연결 정보를 지우지 않고 ORIGIN_NOT_ALLOWED로 돌려준다', async () => {
+  const { client, store } = setup([() => new Response('Invalid CORS request', { status: 403 })], { accessToken: 'a-1', expiresAt: new Date(NOW - 1).toISOString() })
+  const result = await client.authorized('/api/v1/sessions/active', 'GET', 200, parseActiveSession)
+  assert.equal(!result.success && result.error.code, 'ORIGIN_NOT_ALLOWED')
+  assert.equal(store.cleared, false)
+})
+
 test('토큰 저장소가 실패해도 reject하지 않고 오류 결과를 돌려준다', async () => {
   const { client, store } = setup([])
   store.getAccess = async () => { throw new Error('storage') }

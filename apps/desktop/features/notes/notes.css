@@ -51,3 +51,23 @@
 @media (max-height: 760px) { .fo-note-page { --nb-line: 28px; } .fo-nb-title { font-size: 22px; } .fo-nb-text, .fo-nb-next, .fo-nb-concepts b { font-size: 15px; } }
 @media (max-width: 860px) { .fo-nb-concepts { grid-template-columns: 1fr; } .fo-notebook { padding-inline: 28px; } }
 @media (prefers-reduced-motion: reduce) { .fo-notebook, .fo-nb-write, .fo-note-status img, .fo-note-status img.is-turning, .fo-dots i { animation: none; } }
+
+/* 학습 노트 모아 보기 (FocusOn-design/notes.html .shelf·.sheet) */
+.fo-note-title { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
+.fo-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; margin: 28px 0 0; padding: 0; list-style: none; }
+.fo-sheet { --l: 30px; position: relative; display: flex; flex-direction: column; height: 232px; padding: 20px 24px 16px; border: 1px solid var(--paper-edge); border-radius: 14px; background: repeating-linear-gradient(180deg, transparent 0 calc(var(--l) - 1px), var(--rule) calc(var(--l) - 1px) var(--l)) 0 42px / 100% 120px no-repeat, var(--paper); color: var(--fo-ink); text-decoration: none; line-height: var(--l); transition: border-color .2s ease, transform .2s ease; animation: fo-settings-rise .45s var(--fo-pop) backwards; }
+.fo-sheet::after { position: absolute; top: -1px; right: 22px; width: 14px; height: 26px; background: var(--fo-gold); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); content: ''; transition: height .2s ease; }
+.fo-sheet:hover { border-color: var(--fo-faint); transform: translateY(-2px); }
+.fo-sheet:hover::after { height: 36px; }
+.fo-sheet:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 3px; }
+.fo-sheet-date { color: var(--fo-muted); font-size: 13px; font-weight: 600; line-height: 20px; }
+.fo-sheet-goal { margin: 0; padding-top: 2px; overflow: hidden; font-size: 17px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.fo-sheet-concepts { margin: 0; padding: 0; list-style: none; counter-reset: c; }
+.fo-sheet-concepts li { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; counter-increment: c; }
+.fo-sheet-concepts li::before { display: inline-block; width: 18px; color: var(--fo-gold); font-weight: 700; content: counter(c); }
+.fo-sheet-foot { margin-top: auto; color: var(--fo-muted); font-size: 13px; font-weight: 600; line-height: 20px; }
+.fo-shelf-more { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 28px 0 0; color: var(--fo-muted); font-size: 15px; }
+.fo-note-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin-block: auto; text-align: center; }
+.fo-note-empty img { width: 112px; height: auto; }
+.fo-note-empty strong { margin-top: 4px; font-size: 20px; }
+.fo-note-empty .fo-button { display: inline-grid; place-items: center; margin-top: 14px; text-decoration: none; }

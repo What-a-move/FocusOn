@@ -1,3 +1,4 @@
+import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
 import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../../electron/shared/goal-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
@@ -23,9 +24,32 @@ export const goalApi = {
   clarify: (input: ClarifyInput) => viaGoals<ClarifyResult>((api) => api.clarify(input)),
   create: (input: CreateGoalInput) => viaGoals<CreatedGoal>((api) => api.create(input)),
   listOpen: (cursor?: string) => viaGoals<OpenGoalList>((api) => api.listOpen(cursor)),
+  remove: (goalId: string) => viaGoals<Record<string, never>>((api) => api.remove(goalId)),
+  complete: (goalId: string) => viaGoals<Record<string, never>>((api) => api.complete(goalId)),
 }
+
+// 끝난 세션의 할 일을 「다 했어요」 화면으로 넘긴다. { sessionId, goals: {goalId, goalText}[] }
+export const ENDED_GOALS_KEY = 'focuson.endedGoals'
 
 /** 저장한 목표를 세션 설정 화면으로 넘긴다. 목표 문구와 id만 두며 민감 정보가 아니다. */
 export const CONFIRMED_GOAL_KEY = 'focuson.confirmedGoal'
 
 export const goalLength = (text: string) => [...text.trim()].length
+
+/** 세션에 담을 수 있는 할 일 수 (POST /sessions goalIds 최대 3). */
+export const MAX_TODO_PICK = 3
+// 새 할 일을 저장하고 할 일 고르기로 돌아갈 때 한 번 보여 줄 안내.
+export const TODO_SAVED_KEY = 'focuson.todoSaved'
+
+/** 지난번 고른 할 일·방금 만든 할 일을 처음 선택으로 쓴다. */
+export function readPicked(): SessionGoal[] {
+  try {
+    const saved: unknown = JSON.parse(sessionStorage.getItem(CONFIRMED_GOAL_KEY) ?? 'null')
+    const list = Array.isArray(saved) ? saved : [saved]
+    const valid = list.filter((goal): goal is SessionGoal => !!goal && typeof goal.goalId === 'string'
+      && typeof goal.goalText === 'string' && !!goal.goalText.trim())
+    return [...new Map(valid.map((goal) => [goal.goalId, goal])).values()].slice(0, MAX_TODO_PICK)
+  } catch {
+    return []
+  }
+}

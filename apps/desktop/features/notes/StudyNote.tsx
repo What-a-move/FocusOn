@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { sessionResultApi, type LearningSummary, type SessionSummary } from '../../shared/api/session-result-api'
+import { sessionResultApi, type LearningNote, type LearningSummary, type SessionSummary } from '../../shared/api/session-result-api'
 import { LoadError, SettingsShell } from '../../shared/ui/SettingsShell'
 import './notes.css'
 
@@ -94,12 +94,7 @@ export function StudyNote() {
       {sessionId && <Link className="fo-back-link" href={back}>← 집중 리포트</Link>}
       {view.kind === 'loading' && <div className="fo-notebook fo-note-status" aria-busy="true" />}
       {view.kind === 'error' && <LoadError code={view.code} what="학습 노트를" onRetry={() => { if (sessionId) { setView({ kind: 'loading' }); void load(sessionId) } }} />}
-      {view.kind === 'list' && <section className="fo-notebook fo-note-status">
-        <Image src="/design/poki-floating-sleepy-v7.png" alt="" width={240} height={240} />
-        <h2>학습 노트 모아 보기는 준비 중이에요</h2>
-        <p>지금은 집중 리포트의 <b>정리 보기</b>에서 회차별 노트를 열 수 있어요.</p>
-        <Link className="fo-button fo-button-ghost" href="/records/">집중 기록으로</Link>
-      </section>}
+      {view.kind === 'list' && <NoteShelf />}
       {view.kind === 'missing' && <section className="fo-notebook fo-note-status">
         <Image src="/design/poki-looking.png" alt="두리번거리는 포키" width={240} height={240} />
         <h2>노트를 찾을 수 없어요</h2>
@@ -156,4 +151,46 @@ function Notebook({ summary, learning }: { summary: SessionSummary; learning: Le
       </li>)}</ol></>}
     {learning.nextStartPrompt && <><h2 {...write('fo-nb-label')}>다음 시작 지점</h2><p {...write('fo-nb-next')}><mark>{learning.nextStartPrompt}</mark></p></>}
   </article>
+}
+
+const noteDate = (key: string) => { const [, m, d] = key.split('-').map(Number); return `${m}월 ${d}일` }
+
+/** 학습 노트 모아 보기 (FocusOn-design/notes.html). 정리가 끝난 회차만 최신순으로, 더 보기로 이어 받는다. */
+function NoteShelf() {
+  const [notes, setNotes] = useState<LearningNote[]>([])
+  const [next, setNext] = useState<string | null>(null)
+  const [state, setState] = useState<'loading' | 'ready' | 'more' | { error: string }>('loading')
+  const load = useCallback(async (cursor: string | null) => {
+    setState(cursor ? 'more' : 'loading')
+    const result = await sessionResultApi.listLearningNotes(cursor)
+    if (!result.success) { setState({ error: result.error.code }); return }
+    setNotes((current) => cursor ? [...current, ...result.data.items.filter((item) => !current.some((note) => note.sessionId === item.sessionId))] : result.data.items)
+    setNext(result.data.nextCursor)
+    setState('ready')
+  }, [])
+  useEffect(() => { queueMicrotask(() => { void load(null) }) }, [load])
+
+  if (state === 'loading') return <div className="fo-note-status" aria-busy="true" />
+  if (typeof state === 'object' && !notes.length) return <LoadError code={state.error} what="학습 노트를" onRetry={() => { void load(null) }} />
+  if (!notes.length) return <section className="fo-note-empty">
+    <Image src="/design/poki-floating-sleepy-v7.png" alt="" width={240} height={240} />
+    <strong>아직 학습 노트가 없어요</strong>
+    <Link className="fo-button fo-button-primary" href="/todo/">집중 시작하기</Link>
+  </section>
+  return <>
+    <h1 className="fo-note-title">학습 노트</h1>
+    <ul className="fo-shelf">
+      {notes.map((note) => <li key={note.sessionId}>
+        <Link className="fo-sheet" href={`/notes/?session=${encodeURIComponent(note.sessionId)}`}>
+          <span className="fo-sheet-date">{noteDate(note.studyDate)}</span>
+          <p className="fo-sheet-goal" title={note.goalText}>{note.goalText}</p>
+          <ul className="fo-sheet-concepts">{note.keyConcepts.slice(0, 3).map((concept) => <li key={concept.name}>{concept.name}</li>)}</ul>
+          <span className="fo-sheet-foot">핵심 개념 {note.keyConcepts.length}개 · {Math.round(note.accumulatedActiveMs / 60_000)}분</span>
+        </Link>
+      </li>)}
+    </ul>
+    {typeof state === 'object' && <p className="fo-shelf-more" role="alert">더 불러오지 못했어요. <button className="fo-button fo-button-ghost" type="button" onClick={() => { void load(next) }}>다시 시도</button></p>}
+    {state !== 'more' && typeof state !== 'object' && next && <p className="fo-shelf-more"><button className="fo-button fo-button-ghost" type="button" onClick={() => { void load(next) }}>노트 더 보기</button></p>}
+    {state === 'more' && <p className="fo-shelf-more" role="status">노트를 불러오고 있어요.</p>}
+  </>
 }

@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
 const { GoalService } = require('../../dist-electron/main/goal-ipc.cjs')
-const { parseClarifyResult, parseCreatedGoal, isValidClarifyInput, isValidCreateGoalInput } = require('../../dist-electron/shared/goal-contract.cjs')
+const { parseClarifyResult, parseCreatedGoal, parseOpenGoalList, isValidClarifyInput, isValidCreateGoalInput } = require('../../dist-electron/shared/goal-contract.cjs')
 
 const base = { normalizedGoalText: null, question: null, suggestions: [], goalCandidates: [], conversationTurn: 0 }
 
@@ -91,4 +91,33 @@ test('목표 저장 재시도 키는 UUID v4만 받아서 HTTP 헤더로 전달�
     assert.deepEqual(request.headers, { 'Idempotency-Key': idempotencyKey })
     assert.deepEqual(request.body, body)
   }
+})
+
+test('할 일 목록은 범위(goalProfile)를 같이 읽고, 형식이 어긋난 범위는 버리되 할 일은 남긴다', () => {
+  const profile = { mainTopic: 'React', purpose: 'CONCEPT_LEARNING', coreTopics: ['커스텀 훅'], supportingTopics: ['useEffect'], expectedActivities: ['예제 작성'] }
+  const list = parseOpenGoalList({ items: [
+    { goalId: '1', goalText: '리액트 훅 정리', confirmationSource: 'AI_CONFIRMED', todoStatus: 'OPEN', goalProfile: profile },
+    { goalId: '2', goalText: '로그인 오류 고치기', confirmationSource: 'MANUAL_CONFIRMED', todoStatus: 'OPEN', goalProfile: null },
+    { goalId: '3', goalText: '발표 자료 정리', confirmationSource: 'AI_CONFIRMED', todoStatus: 'OPEN', goalProfile: { mainTopic: '' } },
+  ], nextCursor: null })
+  assert.deepEqual(list.items.map((item) => item.goalProfile ?? null), [profile, null, null])
+})
+
+test('할 일 지우기는 DELETE /goals/{id}를 204로 보내고, 잘못된 id는 IPC에서 막는다', async () => {
+  const { isGoalId } = require('../../dist-electron/shared/goal-contract.cjs')
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.remove('g_12')
+  assert.equal(requests[0].path, '/api/v1/goals/g_12')
+  assert.equal(requests[0].method, 'DELETE')
+  assert.equal(requests[0].expectedStatus, 204)
+  assert.equal(isGoalId('../sessions'), false)
+  assert.equal(isGoalId('g_12'), true)
+})
+
+test('다 했어요는 PATCH /goals/{id}에 todoStatus DONE만 보낸다', async () => {
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.complete('g_12')
+  assert.deepEqual([requests[0].path, requests[0].method, requests[0].body, requests[0].expectedStatus], ['/api/v1/goals/g_12', 'PATCH', { todoStatus: 'DONE' }, 200])
 })
