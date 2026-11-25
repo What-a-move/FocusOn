@@ -130,12 +130,13 @@ public class InterventionPolicyService {
       return;
     }
     var timeline = read(state);
+    if (timeline.snapshot().goalVersion() != session.getGoalVersion()) {
+      resetForGoalChange(session, binding.get(), state, now);
+      return;
+    }
     if (!Objects.equals(timeline.snapshot().runningSince(), session.getLastResumedAt())
         || !timeline.snapshot().context().equals(binding.get().context())) {
       invalidate(session, now);
-      return;
-    }
-    if (timeline.snapshot().goalVersion() != session.getGoalVersion()) {
       return;
     }
     var current = runs.findCurrent(session.getId(), binding.get().deviceId(),
@@ -196,20 +197,26 @@ public class InterventionPolicyService {
         InterventionPolicyState.create(session.getId(),
             json.writeValueAsString(empty.snapshot()))));
     var timeline = read(state);
-    boolean changedGoals = timeline.snapshot().goalVersion() != session.getGoalVersion();
-    if (changedGoals || !Objects.equals(timeline.snapshot().runningSince(),
-        session.getLastResumedAt())) {
+    if (timeline.snapshot().goalVersion() != session.getGoalVersion()) {
+      resetForGoalChange(session, context, state, now);
+    } else if (!Objects.equals(timeline.snapshot().runningSince(), session.getLastResumedAt())) {
       state.suspendFar();
       state.transition(json.writeValueAsString(empty.snapshot()));
-      if (changedGoals) {
-        expirePending(session, now, true);
-      }
     } else if (!timeline.snapshot().context().equals(context.context())) {
       state.suspendFar();
       state.transition(json.writeValueAsString(
           timeline.switchContext(context.context(), now).snapshot()));
     }
     return state;
+  }
+
+  private void resetForGoalChange(LearningSessionEntity session,
+      ForegroundPolicyContext.Binding context, InterventionPolicyState state, Instant now) {
+    var reset = OffTaskTimeline.empty(session.getLastResumedAt(), context.context(), now,
+        session.getGoalVersion());
+    state.suspendFar();
+    state.transition(json.writeValueAsString(reset.snapshot()));
+    expirePending(session, now, true);
   }
 
   private OffTaskTimeline read(InterventionPolicyState state) {

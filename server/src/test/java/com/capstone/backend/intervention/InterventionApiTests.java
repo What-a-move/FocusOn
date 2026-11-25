@@ -624,10 +624,19 @@ class InterventionApiTests {
   void pendingInterventionFromPreviousGoalVersionIsNotPresentable() throws Exception {
     var f = fixture(true);
     generate(f);
-    long id = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+    final long id = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
     changeGoalVersion(f);
     mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
         .andExpect(jsonPath("$.data").isEmpty());
+
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(2L, snapshot(f).goalVersion());
+    assertTrue(snapshot(f).spans().isEmpty());
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Status.EXPIRED,
+        events.findById(id).orElseThrow().getStatus());
+    long revision = states.findById(f.session()).orElseThrow().getRevision();
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(revision, states.findById(f.session()).orElseThrow().getRevision());
 
     var sent = new com.capstone.backend.intervention.dto.InterventionDtos.Delivery(
         UUID.randomUUID().toString(),
