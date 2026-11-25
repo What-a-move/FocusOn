@@ -93,6 +93,12 @@ test('채널에 따라 포키·macOS 알림·소리를 고른다. 휴식 제안�
   assert.deepEqual(t.shown, [], 'MOLE_UI가 없으면 포키 창은 띄우지 않음')
   assert.deepEqual(t.notified, [['b-1', true]])
   assert.deepEqual(t.receipts()[0][1].channels, ['MACOS_NOTIFICATION', 'SOUND'])
+  const b = setup([[pending('b-2', { type: 'BREAK_SUGGESTION', channels: ['MOLE_UI'], breakEvidence: { repeatCount: 3, windowMinutes: 30 } })]])
+  await b.watcher.poll('901', '목표', OPTIONS)
+  assert.equal(b.shown[0].say, '최근 30분 동안 3번 흐트러졌어.')
+  const noEvidence = setup([[pending('b-3', { type: 'BREAK_SUGGESTION', channels: ['MOLE_UI'], breakEvidence: { repeatCount: 0, windowMinutes: 30 } })]])
+  await noEvidence.watcher.poll('901', '목표', OPTIONS)
+  assert.equal(noEvidence.shown[0].say, '벌써 세 번째 흐트러졌어.', '근거가 이상하면 기본 문구')
   const g = setup([[pending('g-1')]])
   await g.watcher.poll('901', '목표', { ...OPTIONS, interventionLevel: 'GENTLE' })
   assert.equal(g.shown[0].say, '어, 잠깐 샜네?')
@@ -107,10 +113,12 @@ test('확인했어·잠시 쉬기는 확인, 닫기는 해제로 기록하고 �
   await t.watcher.act('i-1', 'ACK')
   await t.watcher.act('i-2', 'CLOSE')
   await t.watcher.act('i-3', 'REST')
+  await t.watcher.act('i-4', 'NOT_OFF_TASK')
   assert.deepEqual(t.calls.map((call) => [call.path, call.body.action, call.withDeviceId]), [
     ['/api/v1/interventions/i-1/acknowledgements', 'ACKNOWLEDGED', true],
     ['/api/v1/interventions/i-2/acknowledgements', 'DISMISSED', true],
     ['/api/v1/interventions/i-3/acknowledgements', 'ACKNOWLEDGED', true],
+    ['/api/v1/interventions/i-4/acknowledgements', 'NOT_OFF_TASK', true],
   ])
   assert.equal(t.paused(), 1)
 })

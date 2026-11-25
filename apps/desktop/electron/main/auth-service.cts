@@ -22,7 +22,7 @@ const wait = (ms: number) => new Promise<void>((resolve) => { setTimeout(resolve
 
 export type AuthorizedRequest<T> = {
   path: string
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   expectedStatus: number
   parse: (value: unknown) => T | null
   body?: object

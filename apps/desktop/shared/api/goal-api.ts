@@ -25,7 +25,11 @@ export const goalApi = {
   create: (input: CreateGoalInput) => viaGoals<CreatedGoal>((api) => api.create(input)),
   listOpen: (cursor?: string) => viaGoals<OpenGoalList>((api) => api.listOpen(cursor)),
   remove: (goalId: string) => viaGoals<Record<string, never>>((api) => api.remove(goalId)),
+  complete: (goalId: string) => viaGoals<Record<string, never>>((api) => api.complete(goalId)),
 }
+
+// 끝난 세션의 할 일을 「다 했어요」 화면으로 넘긴다. { sessionId, goals: {goalId, goalText}[] }
+export const ENDED_GOALS_KEY = 'focuson.endedGoals'
 
 /** 저장한 목표를 세션 설정 화면으로 넘긴다. 목표 문구와 id만 두며 민감 정보가 아니다. */
 export const CONFIRMED_GOAL_KEY = 'focuson.confirmedGoal'
