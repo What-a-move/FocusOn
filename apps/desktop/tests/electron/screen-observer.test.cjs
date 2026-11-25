@@ -50,6 +50,15 @@ test('Chrome·번들 ID 없는 앱은 관측하지 않는다', () => {
   assert.deepEqual(hold({ ...xcode, bundleId: null }, 20), [])
 })
 
+test('안내는 관측 대기 없이 제외 앱과 민감한 화면을 구분하고 다음 화면에서 해제한다', () => {
+  const { observer } = setup([xcode.bundleId])
+  assert.equal(observer.screenNotice(xcode), 'EXCLUDED_APP')
+  assert.equal(observer.screenNotice({ ...xcode, bundleId: 'com.apple.Notes', windowTitle: '은행 비밀번호 정리' }), 'PRIVACY')
+  assert.equal(observer.screenNotice({ ...xcode, bundleId: 'com.apple.Notes' }), null)
+  assert.equal(observer.screenNotice({ ...xcode, bundleId: 'com.google.Chrome', windowTitle: '비밀번호' }), null)
+  assert.equal(observer.screenNotice({ ...xcode, pid: 1 }), null)
+})
+
 test('제외 앱은 EXCLUDED, 민감 앱·창 제목은 PRIVACY_BLOCKED로 메타데이터 없이 만든다', () => {
   const { hold } = setup(['com.apple.dt.Xcode'])
   assert.deepEqual(hold(xcode, 15), [{ observedAt: AT.toISOString(), guardStatus: 'EXCLUDED' }])

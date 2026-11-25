@@ -23,6 +23,14 @@ function formatClock(ms: number): string {
   return hours ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
+// 집중 중 안내(FocusOn-design/session-states.html). 포키 말은 반말, 시스템 안내는 해요체. 원인을 모르는 말은 붙이지 않는다.
+const NOTICE: Record<NonNullable<SessionSnapshot['notice']>, { title: string; copy?: string; error?: boolean; caption?: string }> = {
+  OFFLINE: { title: '인터넷 연결이 끊겼어요.', copy: '집중 시간은 계속 흘러요.', error: true, caption: '오프라인' },
+  EXCLUDED_APP: { title: '이 앱은 안 볼게', caption: '분석 제외' },
+  PRIVACY: { title: '민감한 화면이라 안 볼게', caption: '개인정보 보호' },
+  CAMERA_OFF: { title: '카메라 분석만 멈췄어요.', copy: '화면 분석은 그대로예요.', error: true },
+}
+
 function sessionErrorText(code: string): string {
   switch (code) {
     case 'LOCAL_RESTART_PAUSE_UNSYNCED': return '멈춘 상태를 서버에 알리지 못했어요. 연결을 확인한 뒤 ‘이어\u00a0하기’를 눌러 주세요.'
@@ -144,8 +152,9 @@ export function FocusSession() {
         : snapshot.pauseReason === 'EXTENSION_UNLINKED' ? { title: 'Chrome 연결이 끊겼어요.', copy: '다시 연결한 뒤 직접 이어 가 주세요.', error: true }
           : snapshot.pauseReason === 'REQUIRED_PERMISSION' ? { title: 'Chrome 사이트 접근이 꺼졌어요.', copy: '권한을 켠 뒤 직접 이어 가 주세요.', error: true }
             : { title: '자동으로 멈췄어요' })
-        : status === 'PAUSED' ? { title: '잠깐 쉬는 중이야' } : null
-  const caption = status === 'AUTO_PAUSED' ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
+        : status === 'PAUSED' ? { title: '잠깐 쉬는 중이야' }
+          : snapshot.notice ? NOTICE[snapshot.notice] : null
+  const caption = status === 'AUTO_PAUSED' ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중${snapshot.notice && NOTICE[snapshot.notice].caption ? ` · ${NOTICE[snapshot.notice].caption}` : ''}`
 
   const togglePause = () => { void (running ? sessionApi.pause() : sessionApi.resume()) }
   const end = async () => { const result = await sessionApi.end(); if (result.success) setDialog(null) }
@@ -187,6 +196,7 @@ export function FocusSession() {
           <p className={`bubble${say.error ? ' is-error' : ''}`} role={say.error ? 'alert' : 'status'}>{say.title}{say.copy && <small>{say.copy}</small>}</p>
           {permissionLost && <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>}
           {status === 'AUTO_PAUSED' && !permissionLost && snapshot.pauseReason === 'EXTENSION_UNLINKED' && <Link className="btn btn-danger" href="/settings/#devices">다시 연결</Link>}
+          {status === 'RUNNING' && snapshot.notice === 'EXCLUDED_APP' && <Link className="btn btn-ghost" href="/settings/exclusions/">제외 목록</Link>}
         </div>}
         {goals.length > 1
           ? <ul className="session-goals" id="goal-text" aria-label="이번 할 일">
