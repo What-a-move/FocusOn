@@ -325,3 +325,33 @@ def test_far_requires_full_body_with_independent_study_signal(payload):
         payload["extractionStatus"] = "PARTIAL"
         partial = client.post(PATH, json=payload, headers=HEADERS).json()
         assert (partial["decision"], partial["matchStatus"]) == ("RELATED", "NOT_ENOUGH")
+
+
+@pytest.mark.parametrize("source,extraction,title,goal,expected", [
+    ("CHROME_DOM", "SUCCESS", "AWS Lambda 함수", "Django 모델 만들기", "FAR"),
+    ("CHROME_DOM", "SUCCESS", "Express 라우팅", "Node.js fs 설명 읽기", "NOT_ENOUGH"),
+    ("CHROME_DOM", "PARTIAL", "AWS Lambda 함수", "Django 모델 만들기", "NOT_ENOUGH"),
+    ("TAB_META", "SUCCESS", "AWS Lambda 함수", "Django 모델 만들기", "NOT_ENOUGH"),
+])
+def test_family_far_only_for_complete_body_and_different_family(payload, source, extraction, title, goal, expected):
+    request = payload["request"]
+    request["contentSource"] = payload["context"]["contentSource"] = source
+    request["goalSnapshot"] = payload["goal"]["text"] = goal
+    request["metadata"]["pageTitle"] = title
+    payload["extractionStatus"] = extraction
+    if source == "CHROME_DOM":
+        request["contentPayload"]["text"] = f"{title} 실습. " + LONG_BODY
+    else:
+        request.pop("contentPayload")
+    model = FixedScores(similarities={goal: .82})
+    vectors = np.repeat([other_topic(.92), task_vector(.65), [0., 0., -1.]], 3, axis=0)
+    fields = ["AWS"] * 3 + ["Django"] * 3 + ["Node.js와 Express"] * 3
+    model.topic_bank = TopicBank(vectors, vectors, fields)
+
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "RELATED"
+    assert response.json()["matchStatus"] == expected
+    assert response.json()["matchedGoalId"] is None

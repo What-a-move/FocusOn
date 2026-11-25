@@ -57,6 +57,17 @@ def _supports(bank, alias, rival, task_score, view):
     return float(scores[rival].max()) - own <= RIVAL_MARGIN
 
 
+def _far_from_goal_families(bank, encoder, title, body_chunks, views, goals, queries):
+    if bank.families is None:
+        return False
+    screen_text = tuple(dict.fromkeys(text for text in (title, *body_chunks) if text))
+    missing = [text for text in screen_text if text not in views]
+    extra_views = encoder.embed(missing) if missing else {}
+    screen = [(text, views[text] if text in views else extra_views[text]) for text in screen_text]
+    goal_evidence = [[(term, queries[term]) for term in _match_terms(goal)] for goal in goals]
+    return bank.families.clearly_different(screen, goal_evidence, bank.similarity)
+
+
 def match_goal(classifier, content, payload, goals) -> tuple[str | None, MatchStatus]:
     # A desktop window title is usually a file name; attribution needs the OCR body.
     if content.content_source is ContentSource.APP_META:
@@ -83,8 +94,8 @@ def match_goal(classifier, content, payload, goals) -> tuple[str | None, MatchSt
         return None, "NOT_ENOUGH"
     encoder = classifier.encoder
     queries = encoder.embed((term for _, terms in targets for term in terms), role="query")
-    chunks = () if metadata_only else tuple(
-        f"{title}\n{chunk}" if title else chunk for chunk in split_text(body, CHUNK_CHARS, CHUNK_OVERLAP, False))
+    body_chunks = () if metadata_only else split_text(body, CHUNK_CHARS, CHUNK_OVERLAP, False)
+    chunks = tuple(f"{title}\n{chunk}" if title else chunk for chunk in body_chunks)
     views = encoder.embed([text, title, body, *chunks])
     raw = {goal_id: max(float(queries[term] @ views[text]) for term in terms) for goal_id, terms in targets}
     fit = {goal_id: max(float(queries[term] @ views[text]) for term in _match_terms(by_id[goal_id]))
@@ -103,12 +114,14 @@ def match_goal(classifier, content, payload, goals) -> tuple[str | None, MatchSt
             return best, "MATCHED"
 
     # Only a complete body with independently recognized study evidence can be FAR.
-    # A title, a partial extraction or a screen near any goal stays eligible for reacquisition.
-    if metadata_only or content.extraction_status is not ExtractionStatus.SUCCESS or max(raw.values()) >= FAR_COSINE:
+    if metadata_only or content.extraction_status is not ExtractionStatus.SUCCESS:
         return None, "NOT_ENOUGH"
     # embed() includes a zero vector for the empty string; exclude that non-query.
     closer = [float(query @ views[view]) for term, query in queries.items() if term for view in (title, body) if view]
-    if not all(math.isfinite(score) and score < FAR_COSINE for score in closer):
+    if not all(map(math.isfinite, closer)):
+        return None, "NOT_ENOUGH"
+    distant = max(raw.values()) < FAR_COSINE and all(score < FAR_COSINE for score in closer)
+    if not distant and not _far_from_goal_families(bank, encoder, title, body_chunks, views, goals, queries):
         return None, "NOT_ENOUGH"
     body_payload = {"contentSource": payload["contentSource"], "contentPayload": {"text": body}}
     prediction = classifier.predict([body_payload])[0]
