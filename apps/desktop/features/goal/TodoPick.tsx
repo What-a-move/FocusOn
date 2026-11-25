@@ -242,6 +242,7 @@ function ReviewSlide({ goal, order, total, profile, current, busy, locked, onCha
   onChange: (next: GoalProfile) => Promise<boolean>; onRegenerate: () => void
 }) {
   const [adding, setAdding] = useState<ListKey | null>(null)
+  const hasScope = profile && (profile.coreTopics.length || profile.supportingTopics.length || profile.expectedActivities.length)
   const edit = (key: ListKey, items: string[]) => profile ? onChange({ ...profile, [key]: items }) : Promise.resolve(false)
   const list = (key: ListKey) => profile?.[key] ?? []
   const remove = (key: ListKey, index: number) => { if (!locked) void edit(key, list(key).filter((_, i) => i !== index)) }
@@ -255,7 +256,11 @@ function ReviewSlide({ goal, order, total, profile, current, busy, locked, onCha
   const x = (key: ListKey, index: number, text: string) => <button className="x" type="button" disabled={locked} aria-label={`${text} 빼기`} onClick={() => remove(key, index)}>✕</button>
   return <section className="slide" data-c={order} aria-hidden={!current} inert={!current} aria-label={`${order}번 할 일`} aria-busy={busy}>
     <div className="slide-head"><span className="badge" aria-hidden="true">{order}</span><h2>{goal.goalText}</h2><span className="count">{order} / {total}</span></div>
-    {profile ? <>
+    {!hasScope && <div className="missing">
+      <div><strong>{profile ? '등록된 범위가 없어요.' : '범위를 만들지 못했어요.'}</strong><span>할 일 이름만 보고 판단할게요.</span></div>
+      <button className="btn btn-ghost" type="button" disabled={locked} onClick={onRegenerate}>{busy ? '만드는 중…' : '다시 만들기'}</button>
+    </div>}
+    {profile && <>
       <div className="core-block">
         <p className="label">핵심 주제</p>
         <ul className="core-list">
@@ -270,10 +275,7 @@ function ReviewSlide({ goal, order, total, profile, current, busy, locked, onCha
           {add(key)}
         </div>)}
       </div>
-    </> : <div className="missing">
-      <div><strong>범위를 만들지 못했어요.</strong><span>할 일 이름만 보고 판단할게요.</span></div>
-      <button className="btn btn-ghost" type="button" disabled={locked} onClick={onRegenerate}>{busy ? '만드는 중…' : '다시 만들기'}</button>
-    </div>}
+    </>}
   </section>
 }
 
@@ -282,6 +284,7 @@ function AddInput({ items, disabled, onAdd, onClose }: { items: string[]; disabl
   const [text, setText] = useState('')
   const [note, setNote] = useState('')
   const commit = async (keepOpen: boolean) => {
+    if (disabled) return
     const value = text.trim().replace(/\s+/g, ' ')
     if (!value) { onClose(); return }
     if (items.some((item) => same(item, value))) { setNote('같은 항목이 이미 있어요.'); return }
@@ -289,7 +292,7 @@ function AddInput({ items, disabled, onAdd, onClose }: { items: string[]; disabl
     await onAdd(value, keepOpen)
   }
   return <div>
-    <input className="add-input" autoFocus maxLength={100} placeholder="적고 Enter" aria-label="항목 추가" value={text} disabled={disabled}
+    <input className="add-input" autoFocus maxLength={100} placeholder="적고 Enter" aria-label="항목 추가" value={text} readOnly={disabled}
       onChange={(event) => { setText(event.target.value); setNote('') }}
       onKeyDown={(event) => {
         if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); if (!event.repeat) void commit(true) }
