@@ -45,9 +45,17 @@ export class GoalService {
     return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'PATCH', body: { goalProfile }, expectedStatus: 200, parse: parseCreatedGoal })
   }
 
+  // 다시 만들기는 AI를 부르는 비싼 요청이라 할 일마다 한 번만 보낸다. 겹친 호출은 진행 중인 요청 결과를 같이 받는다.
+  private readonly regenerating = new Map<string, Promise<ApiResult<CreatedGoal>>>()
+
   /** AI가 느리면 오래 걸릴 수 있다(서버 요청당 60초·재시도 2회). */
   regenerateProfile(goalId: string): Promise<ApiResult<CreatedGoal>> {
-    return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}/profile`, method: 'POST', expectedStatus: 200, parse: parseCreatedGoal })
+    const running = this.regenerating.get(goalId)
+    if (running) return running
+    const request = this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}/profile`, method: 'POST', expectedStatus: 200, parse: parseCreatedGoal })
+      .finally(() => this.regenerating.delete(goalId))
+    this.regenerating.set(goalId, request)
+    return request
   }
 
   remove(goalId: string): Promise<ApiResult<Record<string, never>>> {

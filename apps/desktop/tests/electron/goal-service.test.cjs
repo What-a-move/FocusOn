@@ -137,3 +137,18 @@ test('범위 수정은 PATCH로 goalProfile만, 다시 만들기는 POST /goals/
   assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: { ...profile, coreTopics: ['극한', '극한'] } }), false, '중복 항목')
   assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: { ...profile, coreTopics: ['1', '2', '3', '4', '5', '6'] } }), false, '6개')
 })
+
+test('다시 만들기가 겹치면 같은 할 일은 서버에 한 번만 보낸다', async () => {
+  let release
+  const requests = []
+  const service = new GoalService({ authorizedRequest: (request) => { requests.push(request); return new Promise((resolve) => { release = () => resolve({ success: true, data: {} }) }) } })
+  const first = service.regenerateProfile('g_12')
+  const second = service.regenerateProfile('g_12')
+  assert.equal(requests.length, 1)
+  release()
+  await Promise.all([first, second])
+  const third = service.regenerateProfile('g_12')
+  assert.equal(requests.length, 2, '끝난 뒤에는 다시 보낼 수 있음')
+  release()
+  await third
+})
