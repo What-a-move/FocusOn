@@ -317,7 +317,7 @@ export function GoalSetting() {
           {view === 'entry' && <div className="panel">
             <div className="input-wrap">
               <input className={`goal-input${hint.error ? ' is-error' : ''}`} id="goal-input" ref={inputRef} type="text" maxLength={40} autoComplete="off"
-                aria-label="할 일" aria-describedby="goal-hint" aria-invalid={hint.error} value={draft} disabled={busy}
+                placeholder="예: 로그인 API 오류 고치기" aria-label="할 일" aria-describedby="goal-hint" aria-invalid={hint.error} value={draft} disabled={busy}
                 onChange={(event) => onDraft(event.target.value)} onKeyDown={onEnter} autoFocus />
               <span className={`counter${goalLength(draft) >= 40 ? ' is-full' : ''}`} aria-hidden="true">{goalLength(draft)}/40</span>
             </div>

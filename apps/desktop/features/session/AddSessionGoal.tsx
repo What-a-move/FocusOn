@@ -65,7 +65,7 @@ export function AddSessionGoal({ session, onClose, onAdded, submittingRef }: {
     <h2 id="dialog-title">지금 하는 일을 할 일로 추가할까요?</h2>
     <div className="add-field">
       <label htmlFor="add-input">할 일</label>
-      <input id="add-input" className="add-input" type="text" maxLength={40} autoComplete="off" autoFocus
+      <input id="add-input" className="add-input" type="text" maxLength={40} autoComplete="off" autoFocus placeholder="예: 자료구조 과제 정리하기"
         value={text} disabled={busy} aria-invalid={invalid} aria-describedby={failure ? 'add-error' : undefined}
         onChange={(event) => { setText(event.target.value); setFailure(null) }}
         onKeyDown={(event) => { if (event.key === 'Enter' && (event.repeat || event.nativeEvent.isComposing)) event.preventDefault() }} />
