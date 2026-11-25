@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- Desktop: 할 일이 3개일 때 교체할 할 일을 골라 `replaceGoalId`와 함께 보낸다. 409 `SESSION_VERSION_CONFLICT`면 활성 세션을 다시 읽는다.
+- 문서 오너: Notion API 명세의 세션 할 일 추가 항목에 `replaceGoalId` 반영.
+
 ## #342 v2 이탈 비율 알림
 
 - Notion 정본의 분모·발동 비율·최소 유효 관측 시간과 기존 v2 세션 적용 시점을 확인한다. 확인 전 서버 설정은 기본값 0으로 둔다.

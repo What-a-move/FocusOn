@@ -788,6 +788,85 @@ class SessionApiTests {
         .andExpect(jsonPath("$.code").value("GOAL_UPDATE_BLOCKED"));
   }
 
+  /** 세션 중 할 일 교체: 같은 자리를 덮어쓰고 버전을 올리며, 빠진 할 일은 수정 잠금에서 풀린다(#320). */
+  @Test
+  void replaceSessionGoalOverwritesSlotAndReleasesOldGoal() throws Exception {
+    LoginResponse owner = desktop("session-replace-goals");
+    String token = "Bearer " + owner.accessToken();
+    List<String> ids = new ArrayList<>();
+    for (String text : List.of("첫 할 일", "둘째 할 일", "셋째 할 일", "넷째 할 일")) {
+      String goal = mvc.perform(post("/api/v1/goals").header("Authorization", token)
+              .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                  "goalText", text, "confirmationSource", "MANUAL_CONFIRMED"))))
+          .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+      ids.add(json.readTree(goal).at("/data/goalId").asString());
+    }
+    var request = (tools.jackson.databind.node.ObjectNode) json.readTree(request(ids.getFirst(),
+        1800000));
+    request.remove("goalId");
+    request.set("goalIds", json.valueToTree(ids.subList(0, 2)));
+    String created = mvc.perform(post("/api/v1/sessions").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(request)))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    String sessionId = json.readTree(created).at("/data/sessionId").asString();
+    String path = "/api/v1/sessions/" + sessionId + "/goals";
+    String replace = json.writeValueAsString(Map.of("goalId", ids.get(2), "goalVersion", 1,
+        "replaceGoalId", ids.get(1)));
+    for (int call = 0; call < 2; call++) {
+      mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(replace))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(2))
+          .andExpect(jsonPath("$.data.goals.length()").value(2))
+          .andExpect(jsonPath("$.data.goals[1].goalId").value(ids.get(2)))
+          .andExpect(jsonPath("$.data.goals[1].goalText").value("셋째 할 일"));
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(Long.valueOf(ids.get(2)), jdbc.queryForObject(
+        "SELECT goal_id FROM session_goals WHERE session_id = ? AND position = 2", Long.class,
+        Long.valueOf(sessionId)));
+    // 오래된 버전, 이미 있는 할 일, 세션에 없는 교체 대상, 같은 ID는 막는다.
+    for (var body : List.of(
+        Map.of("goalId", ids.get(3), "goalVersion", 1, "replaceGoalId", ids.get(0)),
+        Map.of("goalId", ids.get(0), "goalVersion", 2, "replaceGoalId", ids.get(2)),
+        Map.of("goalId", ids.get(3), "goalVersion", 2, "replaceGoalId", ids.get(1)),
+        Map.of("goalId", ids.get(2), "goalVersion", 2, "replaceGoalId", ids.get(2)))) {
+      var result = mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)));
+      if (Integer.valueOf(1).equals(body.get("goalVersion"))) {
+        result.andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("SESSION_VERSION_CONFLICT"));
+      } else {
+        result.andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+      }
+    }
+    // 빠진 할 일은 바로 고칠 수 있고, 새로 들어온 할 일은 막힌다.
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .patch("/api/v1/goals/" + ids.get(1)).header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"둘째 고침\"}"))
+        .andExpect(status().isOk());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .patch("/api/v1/goals/" + ids.get(2)).header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"셋째 고침\"}"))
+        .andExpect(status().isConflict());
+    // 시작 때 고른 첫 할 일도 교체하면 풀린다.
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                "goalId", ids.get(3), "goalVersion", 2, "replaceGoalId", ids.get(0)))))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(3))
+        .andExpect(jsonPath("$.data.goals[0].goalId").value(ids.get(3)));
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete("/api/v1/goals/" + ids.get(0)).header("Authorization", token))
+        .andExpect(status().isNoContent());
+    mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(3))
+        .andExpect(jsonPath("$.data.goals[0].goalText").value("넷째 할 일"));
+  }
+
   /** accumulatedAt은 서버 시각 기준이며 기기 시계나 RUNNING 아닌 상태의 값을 쓰지 않는다. */
   private void assertActiveClock(String token, String id) throws Exception {
     long sessionId = Long.parseLong(id);

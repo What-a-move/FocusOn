@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- `POST /sessions/{id}/goals`에 `replaceGoalId`를 더해 같은 자리를 덮어쓴다. 활성 세션 수정 잠금은 할 일 사본 기준으로 바꿔 교체로 빠진 할 일이 풀린다. 계획: `features/session-goal-replace-PLAN.md`.
+
 ## #342 v2 이탈 비율 알림
 
 - 최근 10분 이탈 비율을 기존 `OFF_TASK` 생성 경로에 연결했다. 운영 수치가 확정되기 전에는 기본 비활성이다.
