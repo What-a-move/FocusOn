@@ -73,16 +73,30 @@ public class InterventionPolicyService {
     var state = load(session, binding.get(), now);
     boolean blocked = guarded || run.isOrderingUntrusted();
     var timeline = read(state).pending(run.getId(), now);
-    if (blocked || timeline.snapshot().latestRun() == null) {
-      state.suspendFar();
-    } else {
+    if (!blocked && state.getFarCheckpointAt() != null
+        && canFinishDesktopFar(run, timeline.snapshot().latestRun())) {
       state.finishConfirmedFar(session.getGoalVersion(), now);
+    } else {
+      state.suspendFar();
     }
     if (blocked) {
       timeline = timeline.interrupt(now);
     }
     state.transition(json.writeValueAsString(timeline.snapshot()));
     expirePending(session, now, blocked);
+  }
+
+  private boolean canFinishDesktopFar(AnalysisRunEntity next, Long latestRunId) {
+    // Chrome can navigate within the same context before the Extension sends its next observation.
+    if (latestRunId == null
+        || next.getDevice().getDeviceType() != UserDeviceEntity.DeviceType.DESKTOP
+        || (next.getContentSource() != ContentSource.APP_META
+            && next.getContentSource() != ContentSource.DESKTOP_APP_OCR)) {
+      return false;
+    }
+    return runs.findById(latestRunId).filter(previous ->
+        previous.getContentSource() == ContentSource.DESKTOP_APP_OCR
+        && previous.getDevice().getId().equals(next.getDevice().getId())).isPresent();
   }
 
   /** 늦은 결과는 findCurrent로 다시 확인하며 다른 기기/context의 보호 상태를 풀지 않는다. */
