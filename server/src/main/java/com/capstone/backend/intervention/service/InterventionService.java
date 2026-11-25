@@ -118,11 +118,13 @@ public class InterventionService {
       return Optional.empty();
     }
     var timeline = json.readValue(state.getTimelineJson(), OffTaskTimeline.Snapshot.class);
-    if (!timeline.context().equals(context.context())) {
+    if (!timeline.context().equals(context.context())
+        || timeline.goalVersion() != session.getGoalVersion()) {
       return Optional.empty();
     }
     if (!goalPrompt) {
-      return timeline.openEpisode() == null ? Optional.empty() : Optional.of(timeline);
+      return timeline.openEpisode() != null && matchesGoalVersion(session, event)
+          ? Optional.of(timeline) : Optional.empty();
     }
     if (state.getFarGoalVersion() != session.getGoalVersion()
         || sessionGoals.countByIdSessionId(session.getId()) >= 3) {
@@ -132,6 +134,15 @@ public class InterventionService {
         .filter(run -> Objects.equals(run.getId(), timeline.latestRun())
             && InterventionPolicyService.confirmedFar(session, run))
         .map(run -> timeline);
+  }
+
+  private boolean matchesGoalVersion(LearningSessionEntity session, InterventionEventEntity event) {
+    // Old events can lack a linked analysis. Their evidence is only usable at the initial version.
+    if (session.getGoalVersion() == 1) {
+      return true;
+    }
+    return event.getAnalysisRunId() != null && runs.findById(event.getAnalysisRunId())
+        .filter(run -> run.getGoalVersion() == session.getGoalVersion()).isPresent();
   }
 
   private Item item(InterventionEventEntity event, Instant now) {
