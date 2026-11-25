@@ -16,7 +16,7 @@ type View =
   | { kind: 'none' }
   | { kind: 'session'; session: ActiveSession; fetchedAt: number }
   // 서버에 닿지 않으면 마지막으로 확인한 값만 그 시각과 함께 보여 준다. 지금 값처럼 단정하지 않는다.
-  | { kind: 'offline'; last: { session: ActiveSession; at: Date } | null }
+  | { kind: 'offline'; code: string }
   | { kind: 'unlink-confirm' }
 
 // 상황별 포키는 Desktop과 같다(#179 poki-swap-PLAN, #236). name은 public/design의 파일 이름이다.
@@ -26,6 +26,17 @@ function Poki({ name, alt }: { name: string; alt: string }) {
 }
 
 /** E02 세션 없음 · E03 세션 진행 중(표시 전용) · E06 서버 연결 불가 (FocusOn-design/extension-popup.html). */
+/** 실패 원인별 안내. 인터넷 끊김이 아닌 실패를 '인터넷 연결 확인'으로 보이지 않게 나눈다. */
+function describeFailure(code: string): { pill: string; title: string; lines: string[] } {
+  switch (code) {
+    case 'LOCAL_NETWORK_UNAVAILABLE':
+    case 'REQUEST_TIMEOUT': return { pill: '서버 연결 끊김', title: '서버에 연결할 수 없어요.', lines: ['인터넷 연결을 확인해 주세요.'] }
+    case 'ORIGIN_NOT_ALLOWED': return { pill: '서버가 요청을 막음', title: '서버가 이 확장 프로그램의 요청을 막았어요.', lines: ['서버의 허용 주소 설정을 확인해 주세요.', `오류 코드 ${code}`] }
+    case 'SERVICE_UNAVAILABLE': return { pill: '서버 오류', title: '서버가 잠시 응답하지 못해요.', lines: ['잠시 후 다시 시도해 주세요.'] }
+    default: return { pill: '연결 오류', title: '서버 요청이 실패했어요.', lines: [`오류 코드 ${code}`] }
+  }
+}
+
 export function SessionPopup({ onRelink }: { onRelink: () => void }) {
   const [view, setView] = useState<View>({ kind: 'loading' })
   const [last, setLast] = useState<{ session: ActiveSession; at: Date } | null>(null)
@@ -48,7 +59,7 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
       return true
     }
     if (result.error.code === 'RELINK_REQUIRED') { onRelink(); return false }
-    setView((current) => current.kind === 'unlink-confirm' ? current : { kind: 'offline', last: null })
+    setView((current) => current.kind === 'unlink-confirm' ? current : { kind: 'offline', code: result.error.code })
     return false
   }, [onRelink])
 
@@ -76,12 +87,13 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
   }
 
   const offline = view.kind === 'offline'
+  const failure = view.kind === 'offline' ? describeFailure(view.code) : null
   return <main className="pairing-stage">
     <section className="pairing-popup" aria-label="FocusOn">
       <header className="p-head">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/design/focuson-logo.png" alt="FocusOn" />
-        <span className="conn" data-tone={offline ? 'bad' : 'ok'}>{offline ? '서버 연결 끊김' : '연결됨'}</span>
+        <span className="conn" data-tone={offline ? 'bad' : 'ok'}>{failure ? failure.pill : '연결됨'}</span>
       </header>
       <div className="p-body session-body">
         {view.kind === 'loading' && <p className="center muted" role="status">집중 상태를 확인하고 있어요.</p>}
@@ -110,7 +122,7 @@ export function SessionPopup({ onRelink }: { onRelink: () => void }) {
         {view.kind === 'session' && <SessionView session={view.session} activeMs={displayActiveMs(view.session, view.fetchedAt, Math.max(now, view.fetchedAt))} />}
 
         {view.kind === 'offline' && <>
-          <div className="notice is-error" role="alert"><strong>서버에 연결할 수 없어요.</strong><span>인터넷 연결을 확인해 주세요.</span><span>타이머는 데스크톱 앱이 계속 재고 있어요.</span></div>
+          <div className="notice is-error" role="alert"><strong>{failure?.title}</strong>{failure?.lines.map((line) => <span key={line}>{line}</span>)}<span>타이머는 데스크톱 앱이 계속 재고 있어요.</span></div>
           {last && <div>
             <span className="label">마지막으로 확인한 남은 시간</span>
             <div className="timer-row"><span className="timer is-dim">{formatClock(last.session.targetDurationMs - last.session.accumulatedActiveMs)}</span></div>
