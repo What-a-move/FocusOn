@@ -4,6 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
+- 작업명: 리포트 학습 정리 블록 새 디자인 (`feat/desktop-learning-summary-block`)
+- 상태: 시안 `session-report.html` `.learn`대로 아이콘 원을 빼고 요약 본문(18px) + `다음 시작 지점 →` 줄 + `정리 보기`·`복사`, 다른 상태는 한 줄. AI 정리 실패는 결정 031대로 기본색(시안은 빨강). 브라우저 가짜 응답으로 5가지 상태 확인(2026-11-25). 남은 일: 정리 중 `업데이트 시각` 표시(시안)는 넣지 않음, 리포트 전체 재설계(session-report.html)는 별도.
+
 - 작업명: 서버 #306·#307·#322 반영 (`fix/desktop-not-off-task`)
 - 상태: 「이것도 공부야」를 오판 신고 `NOT_OFF_TASK`로 기록(전엔 DISMISSED), 안내 `공부로 표시했어요.`. 휴식 제안은 `breakEvidence`가 있으면 `최근 N분 동안 M번 흐트러졌어.`. 세션 끝 「다 했어요」(`/todo-done/`, `goal:complete` → PATCH DONE) 추가 — [기획](features/todo-done-PLAN.md). 테스트 207개 통과, 브라우저 가짜 응답 확인(2026-11-25). 남은 일: 실제 서버 확인, 완료한 할 일 보기(시안 없음).
 

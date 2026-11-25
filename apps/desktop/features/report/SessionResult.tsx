@@ -10,17 +10,16 @@ import './session-result.css'
 const POLL_MS = 5000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 const AUTO_PAUSE_LABEL: Record<string, string> = { REQUIRED_PERMISSION: '권한 꺼짐', EXTENSION_UNLINKED: '연결 끊김', APP_RESTART: '앱 재시작', SYSTEM: '시스템' }
-// 학습 정리 상태별 문구(FocusOn-design/session-result.html). 시스템 안내라 존댓말이다.
-const REVIEW = {
-  QUEUED: { kind: 'pending', icon: 'spinner', heading: '학습 정리를 준비하고 있어요', copy: '' },
-  GENERATING: { kind: 'pending', icon: 'spinner', heading: '학습 내용을 정리하고 있어요', copy: '잠시만 기다려 주세요.' },
-  READY: { kind: 'ready', icon: '✓', heading: '학습 정리가 준비됐어요', copy: '' },
-  INSUFFICIENT_DATA: { kind: 'neutral', icon: '–', heading: '이번에는 학습 기록만 남겼어요', copy: '정리할 내용이 부족했어요.' },
-  // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
-  FAILED: { kind: 'neutral', icon: '–', heading: '학습 정리를 만들지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
+// 학습 정리 상태별 한 줄(FocusOn-design/session-report.html `learningHtml`). 시스템 안내라 존댓말이다.
+// AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
+const LEARN_LINE = {
+  QUEUED: '정리 준비 중이에요.',
+  GENERATING: '학습 내용을 정리하고 있어요.',
+  INSUFFICIENT_DATA: '이번엔 정리할 내용이 부족했어요.',
+  FAILED: '학습 정리를 만들지 못했어요.',
   // 서버 404(NOT_FOUND)는 이 회차에 정리 기록이 없다는 뜻이다(학습 정리 API 계약).
-  NONE: { kind: 'neutral', icon: '–', heading: '이번에는 학습 정리가 없어요', copy: '집중 기록은 그대로 남아 있어요.' },
-  UNKNOWN: { kind: 'neutral', icon: '–', heading: '학습 정리 상태를 확인하지 못했어요', copy: '집중 기록은 그대로 남아 있어요.' },
+  NONE: '이번에는 학습 정리가 없어요.',
+  UNKNOWN: '학습 정리 상태를 확인하지 못했어요.',
 } as const
 
 type View =
@@ -119,7 +118,6 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
   const started = summary.startedAt ? new Date(summary.startedAt) : null
   const today = started !== null && started.toDateString() === new Date().toDateString()
   const extended = summary.extensionCount && summary.extendedDurationMs ? ` · ${minutes(summary.extendedDurationMs)}분 연장` : ''
-  const review = REVIEW[learning?.status ?? (noLearning ? 'NONE' : 'UNKNOWN')]
   const autoPause = summary.autoPauseCount === null ? null
     : summary.autoPauseCount === 0 ? '없음'
       : `${summary.autoPauseCount}회${summary.autoPauseReasons.length ? ` · ${[...new Set(summary.autoPauseReasons.map((reason) => AUTO_PAUSE_LABEL[reason] ?? '시스템'))].join(', ')}` : ''}`
@@ -169,21 +167,7 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
           </> : <p className="muted-note">아직 분석된 흐름이 없어요.</p>}
         </section>
 
-        <section className="block review-block" aria-labelledby="review-title">
-          <div className="block-head"><h2 id="review-title">학습 정리</h2></div>
-          <div className={`review-row is-${review.kind}`} role="status">
-            <span className="state-icon" aria-hidden="true">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {review.icon === 'spinner' ? <img className="poki-turn" src="/design/poki-floating-logo-base-v1.png" alt="" /> : review.icon}
-            </span>
-            <div className="review-text">
-              <strong>{review.heading}</strong>
-              {(learning?.status === 'READY' ? learning.overview : review.copy) && <span>{learning?.status === 'READY' ? learning.overview : review.copy}</span>}
-            </div>
-            {/* 정리가 끝났으면 핵심 개념·다음 시작 지점까지 담은 학습 노트로 간다(study-review). */}
-            {learning?.status === 'READY' && <Link className="btn btn-ghost review-open" href={`/notes/?session=${encodeURIComponent(summary.sessionId)}`}>정리 보기</Link>}
-          </div>
-        </section>
+        <LearningBlock sessionId={summary.sessionId} learning={learning} noLearning={noLearning} />
       </div>
       <div className="col">
         <section className="block meta-block" aria-labelledby="meta-title">
@@ -195,4 +179,27 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
       </div>
     </div>
   </>
+}
+
+/** 학습 정리: 정리가 끝났으면 요약 본문 + 다음 시작 지점 + 정리 보기·복사, 아니면 상태 한 줄. */
+function LearningBlock({ sessionId, learning, noLearning }: { sessionId: string; learning: LearningSummary | null; noLearning: boolean }) {
+  const [copied, setCopied] = useState<'' | '복사했어요' | '복사하지 못했어요'>('')
+  const ready = learning?.status === 'READY' && learning.overview ? learning : null
+  const copy = async () => {
+    if (!ready) return
+    try { await navigator.clipboard.writeText([ready.overview, ready.nextStartPrompt && `다음 시작 지점: ${ready.nextStartPrompt}`].filter(Boolean).join('\n\n')); setCopied('복사했어요') }
+    catch { setCopied('복사하지 못했어요') }
+    setTimeout(() => setCopied(''), 1800)
+  }
+  return <section className="block learn" aria-labelledby="learn-title">
+    <h2 id="learn-title">학습 정리</h2>
+    {ready ? <>
+      <span className="learn-acts">
+        <Link className="text-btn" href={`/notes/?session=${encodeURIComponent(sessionId)}`}>정리 보기</Link>
+        <button className="text-btn" type="button" onClick={() => { void copy() }}>{copied || '복사'}</button>
+      </span>
+      <p className="learn-overview">{ready.overview}</p>
+      {ready.nextStartPrompt && <p className="learn-next"><b>다음 시작 지점</b><span>{ready.nextStartPrompt}</span></p>}
+    </> : <p className="learn-line" role="status">{LEARN_LINE[learning?.status === 'READY' ? 'UNKNOWN' : learning?.status ?? (noLearning ? 'NONE' : 'UNKNOWN')]}</p>}
+  </section>
 }
