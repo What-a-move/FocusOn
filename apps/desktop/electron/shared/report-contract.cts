@@ -6,6 +6,7 @@ export const REPORT_CHANNELS = {
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
   learningSummary: 'report:learning-summary:get',
+  learningNotes: 'report:learning-notes:list',
 } as const
 
 /** GET /api/v1/reports/calendar 의 날짜 하나. hasStudyActivity는 서버가 totalActiveMs >= 60000으로 계산한다. */
@@ -44,12 +45,16 @@ export type LearningSummaryStatus = 'QUEUED' | 'GENERATING' | 'READY' | 'INSUFFI
 /** 핵심 개념 하나(Notion 리포트 설계서 5.3). sessionEvidence는 세션에서 확인한 내용이며 원문·URL을 담지 않는다. */
 export type KeyConcept = { name: string; briefExplanation: string; sessionEvidence: string | null }
 export type LearningSummary = { status: LearningSummaryStatus; overview: string | null; keyConcepts: KeyConcept[]; nextStartPrompt: string | null }
+/** GET /api/v1/learning-summaries 의 노트 한 장. 서버는 정리가 끝난(READY) 회차만 endedAt 최신순으로 준다. */
+export type LearningNote = { sessionId: string; goalText: string; studyDate: string; accumulatedActiveMs: number; keyConcepts: KeyConcept[] }
+export type LearningNoteList = { items: LearningNote[]; nextCursor: string | null }
 
 export type ReportsApi = {
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
   getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
+  listLearningNotes(input: { cursor: string | null }): Promise<IpcResult<LearningNoteList>>
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -122,12 +127,22 @@ export function parseSessionSummary(value: unknown): SessionSummary | null {
   }
 }
 
+const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)
+// 핵심 개념은 최대 5개. 형식이 맞지 않는 항목은 버린다(이름·설명이 없는 개념은 노트에 쓸 수 없다).
+const parseConcepts = (value: unknown): KeyConcept[] => (Array.isArray(value) ? value : []).flatMap((item): KeyConcept[] => isRecord(item) && text(item.name) && text(item.briefExplanation)
+  ? [{ name: text(item.name) as string, briefExplanation: text(item.briefExplanation) as string, sessionEvidence: text(item.sessionEvidence) }] : []).slice(0, 5)
+
+export const isNoteCursor = (value: unknown): value is string | null => value === null || (typeof value === 'string' && value.length >= 1 && value.length <= 512)
+
+/** 노트 목록. 항목 하나라도 형식이 다르면 그 항목만 버린다(목록 전체를 잃지 않게). */
+export function parseLearningNoteList(value: unknown): LearningNoteList | null {
+  if (!isRecord(value) || !Array.isArray(value.items) || !isNoteCursor(value.nextCursor ?? null)) return null
+  const items = value.items.flatMap((item): LearningNote[] => isRecord(item) && isValidSessionId(item.sessionId) && typeof item.goalSnapshot === 'string' && isValidDate(item.studyDate) && isCount(item.accumulatedActiveMs)
+    ? [{ sessionId: item.sessionId, goalText: item.goalSnapshot, studyDate: item.studyDate, accumulatedActiveMs: item.accumulatedActiveMs, keyConcepts: parseConcepts(item.keyConcepts) }] : [])
+  return { items, nextCursor: (value.nextCursor as string | null | undefined) ?? null }
+}
+
 export function parseLearningSummary(value: unknown): LearningSummary | null {
   if (!isRecord(value) || !LEARNING_STATUSES.includes(value.learningSummaryStatus as LearningSummaryStatus)) return null
-  const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)
-  // 핵심 개념은 최대 5개. 형식이 맞지 않는 항목은 버린다(이름·설명이 없는 개념은 노트에 쓸 수 없다).
-  const concepts = Array.isArray(value.keyConcepts) ? value.keyConcepts : []
-  const keyConcepts = concepts.flatMap((item): KeyConcept[] => isRecord(item) && text(item.name) && text(item.briefExplanation)
-    ? [{ name: text(item.name) as string, briefExplanation: text(item.briefExplanation) as string, sessionEvidence: text(item.sessionEvidence) }] : []).slice(0, 5)
-  return { status: value.learningSummaryStatus as LearningSummaryStatus, overview: text(value.overview), keyConcepts, nextStartPrompt: text(value.nextStartPrompt) }
+  return { status: value.learningSummaryStatus as LearningSummaryStatus, overview: text(value.overview), keyConcepts: parseConcepts(value.keyConcepts), nextStartPrompt: text(value.nextStartPrompt) }
 }

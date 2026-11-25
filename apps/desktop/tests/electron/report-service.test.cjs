@@ -87,3 +87,18 @@ test('세션 요약·학습 정리는 세션 경로로 GET을 보낸다', async 
     { path: '/api/v1/sessions/7/learning-summary', method: 'GET' },
   ])
 })
+
+test('노트 목록은 형식이 맞는 노트만 남기고, 다음 쪽은 cursor로 GET /learning-summaries를 부른다', async () => {
+  const { parseLearningNoteList, isNoteCursor } = require('../../dist-electron/shared/report-contract.cjs')
+  const note = { sessionId: '7', goalSnapshot: '미적분 예제 풀기', studyDate: '2026-10-24', startedAt: '2026-10-24T01:00:00Z', endedAt: '2026-10-24T01:25:00Z', accumulatedActiveMs: 1500000, overview: '요약', keyConcepts: [{ name: '극한', briefExplanation: '다가가는 값' }, { name: '' }] }
+  assert.deepEqual(parseLearningNoteList({ items: [note, { ...note, sessionId: '../x' }], nextCursor: 'c1' }), {
+    items: [{ sessionId: '7', goalText: '미적분 예제 풀기', studyDate: '2026-10-24', accumulatedActiveMs: 1500000, keyConcepts: [{ name: '극한', briefExplanation: '다가가는 값', sessionEvidence: null }] }], nextCursor: 'c1',
+  })
+  assert.equal(parseLearningNoteList({ items: 'x', nextCursor: null }), null)
+  assert.equal(isNoteCursor(''), false)
+  const paths = []
+  const service = new ReportService({ authorizedRequest: async (request) => { paths.push(request.path); return { success: true, data: { items: [], nextCursor: null } } } })
+  await service.listLearningNotes(null)
+  await service.listLearningNotes('a b')
+  assert.deepEqual(paths, ['/api/v1/learning-summaries', '/api/v1/learning-summaries?cursor=a%20b'])
+})
