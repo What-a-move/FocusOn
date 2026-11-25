@@ -42,6 +42,7 @@ public class LocalEventService {
   private final TokenFamilyGuard familyGuard;
   private final LearningSessionRepository sessions;
   private final LocalEventRepository events;
+  private final com.capstone.backend.session.persistence.SessionPauseRepository pauses;
 
   /** 인증과 연결을 잠금 안에서 다시 확인한 뒤 최초 이벤트만 상태에 반영한다. */
   public Response receive(FocusOnPrincipal principal, String deviceId, String sessionId,
@@ -112,6 +113,8 @@ public class LocalEventService {
         session.pause(SessionStatus.AUTO_PAUSED, PauseReason.REQUIRED_PERMISSION.name(),
             session.getAccumulatedActiveMs());
         sessions.flush();
+        pauses.save(com.capstone.backend.session.persistence.SessionPauseEntity.open(
+            session.getId(), now, PauseReason.REQUIRED_PERMISSION.name()));
       }
       if (full) {
         return new Result(response(session), ApiErrorCode.SESSION_LOCAL_EVENT_LIMIT_EXCEEDED);

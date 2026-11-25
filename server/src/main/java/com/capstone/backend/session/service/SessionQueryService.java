@@ -6,8 +6,10 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
+import com.capstone.backend.session.persistence.SessionPauseRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -24,6 +26,7 @@ public class SessionQueryService {
   private static final int DEFAULT_LIMIT = 20;
   private static final int MAX_LIMIT = 100;
   private final LearningSessionRepository sessions;
+  private final SessionPauseRepository pauses;
 
   /** 세션 실행 기기가 달라도 같은 계정의 인증된 기기는 상세를 조회할 수 있다. */
   public Detail detail(FocusOnPrincipal principal, String id) {
@@ -39,6 +42,30 @@ public class SessionQueryService {
     return toDetail(sessions.findByIdAndUserId(numericId, principal.userId())
         .orElseThrow(() -> new ApiException(ApiErrorCode.SESSION_NOT_FOUND)));
   }
+
+  /**
+   * 본인 세션의 일시정지·재개 구간을 시작 시각 순으로 돌려준다(#317). 열린 구간의 resumedAt은 null이고,
+   * 도입 전 세션은 빈 목록이다. 다른 사용자·없는 세션은 404다.
+   */
+  public List<Pause> pauses(FocusOnPrincipal principal, String id) {
+    long numericId;
+    try {
+      numericId = Long.parseLong(id);
+      if (numericId <= 0) {
+        throw new NumberFormatException();
+      }
+    } catch (NumberFormatException exception) {
+      throw new ApiException(ApiErrorCode.SESSION_NOT_FOUND);
+    }
+    var session = sessions.findByIdAndUserId(numericId, principal.userId())
+        .orElseThrow(() -> new ApiException(ApiErrorCode.SESSION_NOT_FOUND));
+    return pauses.findBySessionIdOrderByPausedAtAscIdAsc(session.getId()).stream()
+        .map(row -> new Pause(row.getPausedAt(), row.getResumedAt(), row.getPauseReason()))
+        .toList();
+  }
+
+  /** 일시정지 구간 하나다. 재개 전이면 resumedAt은 null이다. */
+  public record Pause(Instant pausedAt, Instant resumedAt, String pauseReason) {}
 
   /** 날짜는 생성 때 고정한 studyDate를 사용해 시간대 변경으로 기록이 이동하지 않는다. */
   public History history(FocusOnPrincipal principal, String from, String to,

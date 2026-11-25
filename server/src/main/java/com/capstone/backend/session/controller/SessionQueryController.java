@@ -5,6 +5,8 @@ import com.capstone.backend.common.api.ApiErrorResponse;
 import com.capstone.backend.session.service.SessionQueryService;
 import com.capstone.backend.session.service.SessionQueryService.Detail;
 import com.capstone.backend.session.service.SessionQueryService.History;
+import com.capstone.backend.session.service.SessionQueryService.Pause;
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,6 +38,19 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class SessionQueryController {
   private final SessionQueryService queries;
+
+  /** 본인 세션의 일시정지 구간을 조회한다. 집중 리포트 가로축 계산용이다. */
+  @GetMapping("/{sessionId}/pauses")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(summary = "세션 일시정지 구간 조회",
+      description = "pausedAt 오름차순입니다. 종료 전 일시정지 중이면 마지막 resumedAt은 null입니다. "
+          + "도입 전 세션은 빈 배열입니다.")
+  @ApiResponse(responseCode = "404", description = "세션 없음 또는 소유권 없음",
+      content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+  public com.capstone.backend.common.api.ApiResponse<List<Pause>> pauses(
+      @AuthenticationPrincipal FocusOnPrincipal principal, @PathVariable String sessionId) {
+    return com.capstone.backend.common.api.ApiResponse.of(queries.pauses(principal, sessionId));
+  }
 
   /** 타인 세션과 없는 세션은 같은 404로 처리한다. */
   @GetMapping("/{sessionId}")
