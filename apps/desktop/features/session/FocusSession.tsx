@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatMinutes, MAX_MINUTES, MIN_MINUTES, sessionApi, type SessionSnapshot } from '../../shared/api/session-api'
+import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
 import { AddSessionGoal } from './AddSessionGoal'
 import { errorText } from '../../shared/lib/error-text'
+import { ENDED_GOALS_KEY } from '../../shared/api/goal-api'
 import '../../shared/styles/onboarding-window.css'
 import './focus-session.css'
 
@@ -97,8 +99,20 @@ export function FocusSession() {
 
   // 세션이 끝나면(종료·시간 종료·자동 종료) 집중 리포트로 넘어간다(D16·D18).
   const endedSessionId = snapshot && (snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED') ? snapshot.sessionId : null
+  // 끝난 순간의 할 일. 이동은 세션이 끝날 때 한 번만 한다.
+  const endedGoals = useRef<SessionGoal[]>([])
+  const goalsNow = snapshot?.goals
+  useEffect(() => { endedGoals.current = goalsNow ?? [] }, [goalsNow])
   useEffect(() => {
-    if (endedSessionId) router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
+    if (!endedSessionId) return
+    // 할 일이 있으면 결과 전에 「다 했어요」로 간다. 저장소를 못 쓰면 결과로 바로 간다.
+    try {
+      if (!endedGoals.current.length) throw new Error('no goals')
+      sessionStorage.setItem(ENDED_GOALS_KEY, JSON.stringify({ sessionId: endedSessionId, goals: endedGoals.current.map(({ goalId, goalText }) => ({ goalId, goalText })) }))
+      router.replace(`/todo-done/?session=${encodeURIComponent(endedSessionId)}`)
+    } catch {
+      router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
+    }
   }, [endedSessionId, router])
 
   if (snapshot === undefined && !loadError) return <main className="app-window onboarding-window focus-window" aria-busy="true" />

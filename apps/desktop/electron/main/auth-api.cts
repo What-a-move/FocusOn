@@ -86,7 +86,7 @@ export class AuthApiClient {
   // [유지보수] 인증 API와 이후 인증이 필요한 API가 같은 요청·오류 해석 규칙을 쓰도록 공개한다. 토큰 처리는 AuthService가 맡는다.
   async call<T>(
     path: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     expectedStatus: number,
     parse: (value: unknown, serverNow?: number) => T | null,
     body?: object,

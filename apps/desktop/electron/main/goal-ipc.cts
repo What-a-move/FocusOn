@@ -36,6 +36,11 @@ export class GoalService {
   }
 
   /** 할 일 논리 삭제. 진행 중인 세션이 쓰면 서버가 409 GOAL_UPDATE_BLOCKED로 막는다. */
+  /** 할 일을 끝냄으로 바꾼다. 진행 중인 세션이 써도 todoStatus만은 바꿀 수 있다. */
+  complete(goalId: string): Promise<ApiResult<Record<string, never>>> {
+    return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'PATCH', body: { todoStatus: 'DONE' }, expectedStatus: 200, parse: () => ({}) })
+  }
+
   remove(goalId: string): Promise<ApiResult<Record<string, never>>> {
     return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'DELETE', expectedStatus: 204, parse: () => ({}) })
   }
@@ -58,4 +63,5 @@ export function registerGoalIpc(getMainWindow: () => BrowserWindow | null, rende
   handle(GOAL_CHANNELS.create, isValidCreateGoalInput, (s, input) => s.create(input))
   handle(GOAL_CHANNELS.listOpen, isGoalListCursor, (s, cursor) => s.listOpen(cursor))
   handle(GOAL_CHANNELS.remove, isGoalId, (s, goalId) => s.remove(goalId))
+  handle(GOAL_CHANNELS.complete, isGoalId, (s, goalId) => s.complete(goalId))
 }

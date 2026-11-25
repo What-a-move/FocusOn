@@ -6,6 +6,7 @@ export const GOAL_CHANNELS = {
   create: 'goal:create',
   listOpen: 'goal:listOpen',
   remove: 'goal:remove',
+  complete: 'goal:complete',
 } as const
 
 export type GoalDecision = 'CLEAR' | 'AMBIGUOUS' | 'MULTI_GOAL' | 'UNKNOWN_TERM' | 'INVALID'
@@ -41,6 +42,7 @@ export type GoalsApi = {
   create(input: CreateGoalInput): Promise<IpcResult<CreatedGoal>>
   listOpen(cursor?: string): Promise<IpcResult<OpenGoalList>>
   remove(goalId: string): Promise<IpcResult<Record<string, never>>>
+  complete(goalId: string): Promise<IpcResult<Record<string, never>>>
 }
 
 export const MAX_QUESTIONS = 2
