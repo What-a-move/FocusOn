@@ -51,6 +51,14 @@ public class InterventionPolicyState {
     return farDurationMs >= promptAfterMs;
   }
 
+  /** 새 분석을 기다리기 직전까지 이미 확인된 FAR 시간을 합산하고 구간을 닫는다. */
+  public void finishConfirmedFar(long goalVersion, Instant now) {
+    if (farCheckpointAt != null && farGoalVersion == goalVersion) {
+      countConfirmedFar(goalVersion, now);
+    }
+    suspendFar();
+  }
+
   /** 전경 이동, 분석 대기, 보호 상태 및 실행 변경 중에는 시간을 쌓지 않는다. */
   public void suspendFar() {
     farCheckpointAt = null;

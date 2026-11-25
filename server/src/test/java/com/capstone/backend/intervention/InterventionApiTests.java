@@ -267,7 +267,7 @@ class InterventionApiTests {
               snapshot.runningSince(), snapshot.context(), snapshot.changedAt(),
               snapshot.episode(), snapshot.pendingRun(), snapshot.latestRun(),
               snapshot.completedAt(), snapshot.latestReceivedAt(), snapshot.openEpisode(),
-              spans, snapshot.offTaskRun(), snapshot.relatedTime())));
+              spans, snapshot.offTaskRun(), snapshot.relatedTime(), snapshot.goalVersion())));
       states.saveAndFlush(state);
     });
   }
@@ -382,6 +382,81 @@ class InterventionApiTests {
   }
 
   @Test
+  void farTimeIncludesReanalysisBoundaryButExcludesWaiting() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    final Instant start = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS)
+        .minusSeconds(45);
+    var far = farDecision();
+    recordObservation(f, 1, start, far);
+    tx.executeWithoutResult(status -> policy.heartbeat(
+        sessions.findById(f.session()).orElseThrow(), start.plusSeconds(15)));
+    recordObservation(f, 2, start.plusSeconds(20), start.plusSeconds(30), far);
+    var state = states.findById(f.session()).orElseThrow();
+    assertEquals(20000L, state.getFarDurationMs());
+    assertEquals(start.plusSeconds(30), state.getFarCheckpointAt());
+
+    recordObservation(f, 3, start.plusSeconds(32), start.plusSeconds(36),
+        AnalysisDecision.unavailable());
+    state = states.findById(f.session()).orElseThrow();
+    assertEquals(22000L, state.getFarDurationMs());
+    assertEquals(null, state.getFarCheckpointAt());
+    recordObservation(f, 4, start.plusSeconds(39), far);
+    assertEquals(22000L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  @Test
+  void interruptedConsentKeepsOldFarStoppedUntilFreshAnalysis() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    Instant start = Instant.now().minusSeconds(20);
+    recordObservation(f, 1, start, farDecision());
+    tx.executeWithoutResult(status -> {
+      var session = sessions.findById(f.session()).orElseThrow();
+      policy.consentWithdrawn(session, start.plusSeconds(5));
+      policy.heartbeat(session, start.plusSeconds(10));
+    });
+    assertEquals(null, states.findById(f.session()).orElseThrow().getFarCheckpointAt());
+    recordObservation(f, 2, start.plusSeconds(15), farDecision());
+    assertEquals(0L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+  }
+
+  @Test
+  void reanalysisCreditsThresholdOnceAndWaitsForConfirmedFar() {
+    var f = fixture(true);
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    recordObservation(f, 1, Instant.now().minusSeconds(3), farDecision());
+    jdbc.update("UPDATE intervention_policy_states SET far_duration_ms=598000 WHERE session_id=?",
+        f.session());
+
+    var input = observation(f, 2, 2L, null);
+    final var prepared = analysisStore.prepare(f.principal(), f.session(), input);
+    assertEquals(600000L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.capstone.backend.common.api.ApiException.class,
+        () -> analysisStore.prepare(f.principal(), f.session(), input));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+
+    analysisStore.complete(f.principal(), prepared, input, farDecision());
+    evaluator.evaluate(f.principal().userId(), f.session());
+    var prompted = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, prompted.size());
+    assertEquals(Type.GOAL_ADD_PROMPT, prompted.getFirst().getType());
+  }
+
+  private AnalysisDecision farDecision() {
+    return new AnalysisDecision(
+        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
+        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
+        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.FAR);
+  }
+
+  @Test
   void confirmedFarCreatesOnePromptAndInconclusiveTimeIsExcluded() throws Exception {
     var f = fixture(true);
     jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
@@ -398,11 +473,7 @@ class InterventionApiTests {
 
     var second = observation(f, 2, 2L, null);
     var confirmed = analysisStore.prepare(f.principal(), f.session(), second);
-    var far = new AnalysisDecision(
-        com.capstone.backend.analysis.dto.AnalysisDtos.Relation.RELATED, .9,
-        com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH,
-        com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus.COMPLETED, "qa", "qa",
-        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.FAR);
+    var far = farDecision();
     analysisStore.complete(f.principal(), confirmed, second, far);
     Instant checkpoint = states.findById(f.session()).orElseThrow().getFarCheckpointAt();
     tx.executeWithoutResult(status -> policy.heartbeat(
@@ -597,11 +668,112 @@ class InterventionApiTests {
         .andExpect(jsonPath("$.data[0].type").value("OFF_TASK"));
   }
 
+  @Test
+  void heartbeatDoesNotCreateInterventionFromPreviousGoalVersion() throws Exception {
+    var f = fixture(true);
+    seedUnrelated(f);
+    changeGoalVersion(f);
+    heartbeats.heartbeat(f.principal(), f.device(), Long.toString(f.session()),
+        new com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest(Instant.now(), 100L));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  @Test
+  void heartbeatDoesNotSuggestBreakFromPreviousGoalVersion() throws Exception {
+    var f = fixture(true, 900);
+    jdbc.update("UPDATE learning_sessions SET last_heartbeat_at=? WHERE id=?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(2)), f.session());
+    seedUnrelated(f);
+    addEarlierEpisodes(f);
+    changeGoalVersion(f);
+    heartbeats.heartbeat(f.principal(), f.device(), Long.toString(f.session()),
+        new com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest(Instant.now(), 100L));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  @Test
+  void pendingInterventionFromPreviousGoalVersionIsNotPresentable() throws Exception {
+    var f = fixture(true);
+    generate(f);
+    final long id = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+    changeGoalVersion(f);
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data").isEmpty());
+
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(2L, snapshot(f).goalVersion());
+    assertTrue(snapshot(f).spans().isEmpty());
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Status.EXPIRED,
+        events.findById(id).orElseThrow().getStatus());
+    long revision = states.findById(f.session()).orElseThrow().getRevision();
+    evaluator.evaluate(f.principal().userId(), f.session());
+    assertEquals(revision, states.findById(f.session()).orElseThrow().getRevision());
+
+    var sent = new com.capstone.backend.intervention.dto.InterventionDtos.Delivery(
+        UUID.randomUUID().toString(),
+        com.capstone.backend.intervention.dto.InterventionDtos.DispatchStatus.SENT,
+        List.of(com.capstone.backend.session.dto.SessionDtos.NotificationChannel.MOLE_UI));
+    String first = postDelivery(f, id, sent);
+    assertEquals(json.readTree(first).path("data"),
+        json.readTree(postDelivery(f, id, sent)).path("data"));
+    var stored = events.findById(id).orElseThrow();
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Status.EXPIRED,
+        stored.getStatus());
+    assertEquals(stored.getDeliveryConfirmedAt().plusSeconds(300),
+        Instant.parse(json.readTree(first).at("/data/cooldownUntil").asString()));
+  }
+
+  @Test
+  void firstObservationForChangedGoalsRestartsTheOffTaskTimeline() throws Exception {
+    var f = fixture(true);
+    seedUnrelated(f);
+    changeGoalVersion(f);
+    Instant started = Instant.now();
+    recordObservation(f, 2, started, unrelatedDecision());
+    var current = snapshot(f);
+    assertEquals(2, current.goalVersion());
+    assertEquals(1, current.spans().size());
+    assertEquals(started, current.spans().getFirst().start());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+
+    recordObservation(f, 3, started.plusSeconds(61), unrelatedDecision());
+    var alerts = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, alerts.size());
+    assertEquals(Type.OFF_TASK, alerts.getFirst().getType());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].type").value("OFF_TASK"));
+  }
+
+  private String postDelivery(Fixture f, long id,
+      com.capstone.backend.intervention.dto.InterventionDtos.Delivery delivery) throws Exception {
+    return mvc.perform(auth(post("/api/v1/interventions/" + id + "/deliveries"), f)
+            .header("X-Device-Id", f.device()).contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(delivery)))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+  }
+
+  private void changeGoalVersion(Fixture f) throws Exception {
+    var goal = tx.execute(ignored -> goals.save(GoalEntity.create(
+        users.getReferenceById(f.principal().userId()), "새 목표",
+        GoalEntity.ConfirmationSource.MANUAL_CONFIRMED, Instant.now())));
+    String body = json.writeValueAsString(java.util.Map.of(
+        "goalId", goal.getId().toString(), "goalVersion", 1));
+    mvc.perform(auth(post("/api/v1/sessions/" + f.session() + "/goals"), f)
+            .header("X-Device-Id", f.device()).contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(2));
+  }
+
   private void seedUnrelated(Fixture f) {
     recordObservation(f, 1, Instant.now().minusSeconds(100), unrelatedDecision());
   }
 
   private void recordObservation(Fixture f, long number, Instant at, AnalysisDecision decision) {
+    recordObservation(f, number, at, at, decision);
+  }
+
+  private void recordObservation(Fixture f, long number, Instant at, Instant completedAt,
+      AnalysisDecision decision) {
     tx.executeWithoutResult(ignored -> {
       users.findByIdForUpdate(f.principal().userId()).orElseThrow();
       var session = sessions.findOwnedForUpdate(f.session(), f.principal().userId()).orElseThrow();
@@ -614,7 +786,7 @@ class InterventionApiTests {
       runs.saveAndFlush(run);
       policy.prepared(session, run, true, false, at);
       run.complete(decision);
-      policy.completed(session, run, at);
+      policy.completed(session, run, completedAt);
     });
   }
 
