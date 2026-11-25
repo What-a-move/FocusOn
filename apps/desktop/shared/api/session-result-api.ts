@@ -1,8 +1,8 @@
-import type { LearningSummary, SessionSummary } from '../../electron/shared/report-contract.cjs'
+import type { LearningNote, LearningNoteList, LearningSummary, SessionSummary } from '../../electron/shared/report-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { LearningSummary, SessionSummary }
+export type { LearningNote, LearningSummary, SessionSummary }
 
 const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
@@ -20,6 +20,7 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 export const sessionResultApi = {
   getSummary: (sessionId: string) => viaReports<SessionSummary>((api) => api.getSessionSummary({ sessionId })),
   getLearningSummary: (sessionId: string) => viaReports<LearningSummary>((api) => api.getLearningSummary({ sessionId })),
+  listLearningNotes: (cursor: string | null = null) => viaReports<LearningNoteList>((api) => api.listLearningNotes({ cursor })),
 }
 
 /** 흐름 막대·범례에 쓸 분. 분석 안 됨은 실제 시간에서 분석된 구간을 뺀 나머지다(리포트 설계서 3.1·3.2). */
