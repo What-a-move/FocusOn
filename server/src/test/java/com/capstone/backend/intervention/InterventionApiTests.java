@@ -267,7 +267,7 @@ class InterventionApiTests {
               snapshot.runningSince(), snapshot.context(), snapshot.changedAt(),
               snapshot.episode(), snapshot.pendingRun(), snapshot.latestRun(),
               snapshot.completedAt(), snapshot.latestReceivedAt(), snapshot.openEpisode(),
-              spans, snapshot.offTaskRun(), snapshot.relatedTime())));
+              spans, snapshot.offTaskRun(), snapshot.relatedTime(), snapshot.goalVersion())));
       states.saveAndFlush(state);
     });
   }
@@ -595,6 +595,93 @@ class InterventionApiTests {
     assertEquals(latest.getId(), result.getFirst().getAnalysisRunId());
     mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
         .andExpect(jsonPath("$.data[0].type").value("OFF_TASK"));
+  }
+
+  @Test
+  void heartbeatDoesNotCreateInterventionFromPreviousGoalVersion() throws Exception {
+    var f = fixture(true);
+    seedUnrelated(f);
+    changeGoalVersion(f);
+    heartbeats.heartbeat(f.principal(), f.device(), Long.toString(f.session()),
+        new com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest(Instant.now(), 100L));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  @Test
+  void heartbeatDoesNotSuggestBreakFromPreviousGoalVersion() throws Exception {
+    var f = fixture(true, 900);
+    jdbc.update("UPDATE learning_sessions SET last_heartbeat_at=? WHERE id=?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(2)), f.session());
+    seedUnrelated(f);
+    addEarlierEpisodes(f);
+    changeGoalVersion(f);
+    heartbeats.heartbeat(f.principal(), f.device(), Long.toString(f.session()),
+        new com.capstone.backend.session.dto.SessionDtos.HeartbeatRequest(Instant.now(), 100L));
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  @Test
+  void pendingInterventionFromPreviousGoalVersionIsNotPresentable() throws Exception {
+    var f = fixture(true);
+    generate(f);
+    long id = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).getFirst().getId();
+    changeGoalVersion(f);
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data").isEmpty());
+
+    var sent = new com.capstone.backend.intervention.dto.InterventionDtos.Delivery(
+        UUID.randomUUID().toString(),
+        com.capstone.backend.intervention.dto.InterventionDtos.DispatchStatus.SENT,
+        List.of(com.capstone.backend.session.dto.SessionDtos.NotificationChannel.MOLE_UI));
+    String first = postDelivery(f, id, sent);
+    assertEquals(json.readTree(first).path("data"),
+        json.readTree(postDelivery(f, id, sent)).path("data"));
+    var stored = events.findById(id).orElseThrow();
+    assertEquals(com.capstone.backend.intervention.dto.InterventionDtos.Status.EXPIRED,
+        stored.getStatus());
+    assertEquals(stored.getDeliveryConfirmedAt().plusSeconds(300),
+        Instant.parse(json.readTree(first).at("/data/cooldownUntil").asString()));
+  }
+
+  @Test
+  void firstObservationForChangedGoalsRestartsTheOffTaskTimeline() throws Exception {
+    var f = fixture(true);
+    seedUnrelated(f);
+    changeGoalVersion(f);
+    Instant started = Instant.now();
+    recordObservation(f, 2, started, unrelatedDecision());
+    var current = snapshot(f);
+    assertEquals(2, current.goalVersion());
+    assertEquals(1, current.spans().size());
+    assertEquals(started, current.spans().getFirst().start());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+
+    recordObservation(f, 3, started.plusSeconds(61), unrelatedDecision());
+    var alerts = events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session());
+    assertEquals(1, alerts.size());
+    assertEquals(Type.OFF_TASK, alerts.getFirst().getType());
+    mvc.perform(auth(get(path(f)), f)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data[0].type").value("OFF_TASK"));
+  }
+
+  private String postDelivery(Fixture f, long id,
+      com.capstone.backend.intervention.dto.InterventionDtos.Delivery delivery) throws Exception {
+    return mvc.perform(auth(post("/api/v1/interventions/" + id + "/deliveries"), f)
+            .header("X-Device-Id", f.device()).contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(delivery)))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+  }
+
+  private void changeGoalVersion(Fixture f) throws Exception {
+    var goal = tx.execute(ignored -> goals.save(GoalEntity.create(
+        users.getReferenceById(f.principal().userId()), "새 목표",
+        GoalEntity.ConfirmationSource.MANUAL_CONFIRMED, Instant.now())));
+    String body = json.writeValueAsString(java.util.Map.of(
+        "goalId", goal.getId().toString(), "goalVersion", 1));
+    mvc.perform(auth(post("/api/v1/sessions/" + f.session() + "/goals"), f)
+            .header("X-Device-Id", f.device()).contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(2));
   }
 
   private void seedUnrelated(Fixture f) {

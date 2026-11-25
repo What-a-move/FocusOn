@@ -31,9 +31,10 @@ public final class OffTaskTimeline {
   }
 
   /** 실행 세대와 명시적으로 선택한 context는 외부 권한 검증 후 제공한다. */
-  public static OffTaskTimeline empty(Instant runningSince, String context, Instant now) {
+  public static OffTaskTimeline empty(Instant runningSince, String context, Instant now,
+      long goalVersion) {
     return new OffTaskTimeline(new Snapshot(runningSince, context, now, 0, null,
-        null, null, null, null, List.of(), null, null));
+        null, null, null, null, List.of(), null, null, goalVersion));
   }
 
   /** 최신 요청만 호출한다. 재분석 대기는 같은 구간을 보존하고 누적/발송만 멈춘다. */
@@ -109,7 +110,7 @@ public final class OffTaskTimeline {
     var closed = interrupt(at).snapshot();
     return new OffTaskTimeline(new Snapshot(closed.runningSince(), context, closed.changedAt(),
         closed.episode(), null, null, null, null, null, closed.spans(), null,
-        closed.relatedTime()));
+        closed.relatedTime(), closed.goalVersion()));
   }
 
   /** 같은 서버 시각에서 반복 호출해도 구간 횟수가 늘지 않는 정책 평가다. */
@@ -288,7 +289,8 @@ public final class OffTaskTimeline {
         || Objects.equals(span.episode(), open) || span.end().isAfter(now.minus(RETENTION)))
         .toList();
     return new OffTaskTimeline(new Snapshot(state.runningSince(), state.context(), now,
-        episode, pending, latest, completed, received, open, retained, offTaskRun, relatedTime));
+        episode, pending, latest, completed, received, open, retained, offTaskRun, relatedTime,
+        state.goalVersion()));
   }
 
   /** 같은 구간의 분석 대기 전후 확정 시간 조각을 구간 ID로 묶는다. */
@@ -302,13 +304,15 @@ public final class OffTaskTimeline {
   public record Snapshot(Instant runningSince, String context, Instant changedAt,
       long episode, Long pendingRun, Long latestRun, Instant completedAt, Instant latestReceivedAt,
       Long openEpisode,
-      List<Span> spans, Long offTaskRun, RelatedTime relatedTime) {
+      List<Span> spans, Long offTaskRun, RelatedTime relatedTime, Long goalVersion) {
     /** snapshot은 변경 가능한 목록 참조를 보유하지 않는다. */
     public Snapshot {
       Objects.requireNonNull(runningSince);
       Objects.requireNonNull(context);
       Objects.requireNonNull(changedAt);
       spans = List.copyOf(spans);
+      // Snapshots from before goal-version tracking are only safe to reuse at version one.
+      goalVersion = goalVersion == null ? 1L : goalVersion;
     }
   }
 

@@ -82,7 +82,8 @@ public class InterventionPolicyService {
 
   /** 늦은 결과는 findCurrent로 다시 확인하며 다른 기기/context의 보호 상태를 풀지 않는다. */
   public void completed(LearningSessionEntity session, AnalysisRunEntity run, Instant now) {
-    if (run.getObservationContextId() == null) {
+    if (run.getObservationContextId() == null
+        || run.getGoalVersion() != session.getGoalVersion()) {
       return;
     }
     var binding = binding(session, now);
@@ -134,13 +135,17 @@ public class InterventionPolicyService {
       invalidate(session, now);
       return;
     }
+    if (timeline.snapshot().goalVersion() != session.getGoalVersion()) {
+      return;
+    }
     var current = runs.findCurrent(session.getId(), binding.get().deviceId(),
         Long.parseLong(binding.get().context())).orElse(null);
     if (current != null && current.isOrderingUntrusted()) {
       invalidate(session, current.getReceivedAt());
       return;
     }
-    if (current == null || !Objects.equals(current.getId(), timeline.snapshot().latestRun())) {
+    if (current == null || current.getGoalVersion() != session.getGoalVersion()
+        || !Objects.equals(current.getId(), timeline.snapshot().latestRun())) {
       state.suspendFar();
       return;
     }
@@ -185,15 +190,20 @@ public class InterventionPolicyService {
 
   private InterventionPolicyState load(LearningSessionEntity session,
       ForegroundPolicyContext.Binding context, Instant now) {
+    var empty = OffTaskTimeline.empty(session.getLastResumedAt(), context.context(), now,
+        session.getGoalVersion());
     var state = states.findById(session.getId()).orElseGet(() -> states.save(
-        InterventionPolicyState.create(session.getId(), json.writeValueAsString(
-            OffTaskTimeline.empty(session.getLastResumedAt(), context.context(), now)
-                .snapshot()))));
+        InterventionPolicyState.create(session.getId(),
+            json.writeValueAsString(empty.snapshot()))));
     var timeline = read(state);
-    if (!Objects.equals(timeline.snapshot().runningSince(), session.getLastResumedAt())) {
+    boolean changedGoals = timeline.snapshot().goalVersion() != session.getGoalVersion();
+    if (changedGoals || !Objects.equals(timeline.snapshot().runningSince(),
+        session.getLastResumedAt())) {
       state.suspendFar();
-      state.transition(json.writeValueAsString(
-          OffTaskTimeline.empty(session.getLastResumedAt(), context.context(), now).snapshot()));
+      state.transition(json.writeValueAsString(empty.snapshot()));
+      if (changedGoals) {
+        expirePending(session, now, true);
+      }
     } else if (!timeline.snapshot().context().equals(context.context())) {
       state.suspendFar();
       state.transition(json.writeValueAsString(
@@ -314,10 +324,8 @@ public class InterventionPolicyService {
     if (suggestBreak(session, context, state, timeline, options, history, now)) {
       return;
     }
-    var ratio = run.getGoalVersion() == session.getGoalVersion()
-        ? offTaskRatio : OffTaskRatioRule.DISABLED;
     if (timeline.evaluate(session.getInterventionPolicyVersion(), options.interventionLevel(),
-        now, context.cooldownUntil(), ratio).candidate()) {
+        now, context.cooldownUntil(), offTaskRatio).candidate()) {
       boolean duplicate = history.stream()
           .anyMatch(event -> event.getCause() == state.getRevision());
       if (!duplicate) {
