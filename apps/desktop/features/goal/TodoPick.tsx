@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { GoalProfile } from '../../electron/shared/goal-contract.cjs'
 import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
 import { CONFIRMED_GOAL_KEY, goalApi, MAX_TODO_PICK, readPicked, TODO_SAVED_KEY } from '../../shared/api/goal-api'
+import { errorText } from '../../shared/lib/error-text'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import '../../shared/styles/onboarding-window.css'
 import './goal.css'
@@ -24,6 +25,10 @@ export function TodoPick() {
   const [hidden, setHidden] = useState<string[]>([])
   const [saved, setSaved] = useState('')
   const [note, setNote] = useState<{ kind: 'deleted' | 'failed' | 'blocked'; text: string } | null>(null)
+  // 목표 확인에서 고친 범위(서버가 돌려준 값). 목록을 다시 받기 전까지 이 값을 보여 준다.
+  const [edits, setEdits] = useState<Record<string, GoalProfile>>({})
+  const [editing, setEditing] = useState<string | null>(null)
+  const [reviewNote, setReviewNote] = useState<{ title: string; body: string } | null>(null)
   const pending = useRef<{ goal: SessionGoal; order: number; timer: ReturnType<typeof setTimeout> } | null>(null)
 
   useEffect(() => {
@@ -80,14 +85,33 @@ export function TodoPick() {
     router.push('/session-setup/')
   }
   const review = () => { if (visible.length) { setSlide(0); setView('review') } }
-  const profileOf = (goalId: string) => goals.find((goal) => goal.goalId === goalId)?.goalProfile
+  const profileOf = (goalId: string) => edits[goalId] ?? goals.find((goal) => goal.goalId === goalId)?.goalProfile
+  // 범위 고치기·다시 만들기. 한 번에 하나만 보내고, 실패하면 화면의 범위는 그대로 둔다(서버도 그대로다).
+  const saveProfile = async (goalId: string, run: () => ReturnType<typeof goalApi.regenerateProfile>, regenerate: boolean) => {
+    if (editing) return false
+    setEditing(goalId)
+    setReviewNote(null)
+    const result = await run()
+    setEditing(null)
+    if (result.success) {
+      const next = result.data.goalProfile
+      if (next) setEdits((current) => ({ ...current, [goalId]: next }))
+      else if (regenerate) setReviewNote({ title: '범위를 다시 만들지 못했어요.', body: '잠시 후 다시 시도해 주세요.' })
+      return true
+    }
+    const code = result.error.code
+    setReviewNote(code === 'GOAL_UPDATE_BLOCKED' ? { title: '이 할 일은 지금 고칠 수 없어요.', body: '다른 기기에서 이 할 일로 집중하고 있어요.' }
+      : regenerate ? { title: '범위를 다시 만들지 못했어요.', body: code === 'GOAL_ANALYSIS_UNAVAILABLE' || code === 'GOAL_ANALYSIS_TIMEOUT' ? '잠시 후 다시 시도해 주세요.' : errorText(result.error) }
+        : { title: '바꾼 범위를 저장하지 못했어요.', body: errorText(result.error) })
+    return false
+  }
   const last = visible.length - 1
   const move = (index: number) => setSlide(Math.max(0, Math.min(last, index)))
 
   useEffect(() => {
     if (view !== 'review') return
     const onKey = (event: KeyboardEvent) => {
-      if (event.repeat) return
+      if (event.repeat || (event.target as HTMLElement | null)?.closest?.('input, textarea')) return
       if (event.key === 'ArrowRight') setSlide((current) => Math.min(last, current + 1))
       if (event.key === 'ArrowLeft') setSlide((current) => Math.max(0, current - 1))
     }
@@ -119,10 +143,17 @@ export function TodoPick() {
               </button>)}
             </div>
           </div>
+          {reviewNote && <div className="todo-note is-error review-note" role="alert">
+            <div><strong>{reviewNote.title}</strong><span>{reviewNote.body}</span></div>
+            <button className="btn btn-ghost" type="button" onClick={() => setReviewNote(null)}>닫기</button>
+          </div>}
           <div className="center-zone"><div className="stage">
             <button className="arrow-btn" type="button" aria-label="이전 할 일" disabled={slide === 0} onClick={() => move(slide - 1)}>‹</button>
             <div className="viewport"><div className="track" style={{ transform: `translateX(-${slide * 100}%)` }}>
-              {visible.map((goal, index) => <ReviewSlide key={goal.goalId} goal={goal} order={index + 1} total={visible.length} profile={profileOf(goal.goalId)} current={index === slide} />)}
+              {visible.map((goal, index) => <ReviewSlide key={goal.goalId} goal={goal} order={index + 1} total={visible.length} profile={profileOf(goal.goalId)} current={index === slide}
+                busy={editing === goal.goalId} locked={editing !== null}
+                onChange={(next) => saveProfile(goal.goalId, () => goalApi.updateProfile(goal.goalId, next), false)}
+                onRegenerate={() => { void saveProfile(goal.goalId, () => goalApi.regenerateProfile(goal.goalId), true) }} />)}
             </div></div>
             <button className="arrow-btn" type="button" aria-label="다음 할 일" disabled={slide === last} onClick={() => move(slide + 1)}>›</button>
           </div></div>
@@ -202,26 +233,69 @@ export function TodoPick() {
   </main>
 }
 
-/** 할 일 하나의 범위. 위계: 할 일 이름 > 핵심 주제 > 함께 보는 주제·하게 될 활동. 범위 수정 API가 없어 보기만 한다. */
-function ReviewSlide({ goal, order, total, profile, current }: { goal: SessionGoal; order: number; total: number; profile?: GoalProfile; current: boolean }) {
-  return <section className="slide" data-c={order} aria-hidden={!current} inert={!current} aria-label={`${order}번 할 일`}>
+type ListKey = 'coreTopics' | 'supportingTopics' | 'expectedActivities'
+const same = (a: string, b: string) => a.trim().replace(/\s+/g, ' ').toLowerCase() === b.trim().replace(/\s+/g, ' ').toLowerCase()
+
+/** 할 일 하나의 범위. 위계: 할 일 이름 > 핵심 주제 > 함께 보는 주제·하게 될 활동. 항목은 ✕로 빼고 + 추가로 적으면 바로 저장한다. */
+function ReviewSlide({ goal, order, total, profile, current, busy, locked, onChange, onRegenerate }: {
+  goal: SessionGoal; order: number; total: number; profile?: GoalProfile; current: boolean; busy: boolean; locked: boolean
+  onChange: (next: GoalProfile) => Promise<boolean>; onRegenerate: () => void
+}) {
+  const [adding, setAdding] = useState<ListKey | null>(null)
+  const edit = (key: ListKey, items: string[]) => profile ? onChange({ ...profile, [key]: items }) : Promise.resolve(false)
+  const list = (key: ListKey) => profile?.[key] ?? []
+  const remove = (key: ListKey, index: number) => { if (!locked) void edit(key, list(key).filter((_, i) => i !== index)) }
+  const add = (key: ListKey) => adding === key
+    ? <AddInput items={list(key)} disabled={locked} onClose={() => setAdding(null)} onAdd={async (text, keepOpen) => {
+      const ok = await edit(key, [...list(key), text])
+      if (!ok || !keepOpen || list(key).length + 1 >= 5) setAdding(null)
+    }} />
+    : list(key).length >= 5 ? <p className="add-note">5개까지 넣을 수 있어요.</p>
+      : <button className="add-inline" type="button" disabled={locked} onClick={() => setAdding(key)}>+ 추가</button>
+  const x = (key: ListKey, index: number, text: string) => <button className="x" type="button" disabled={locked} aria-label={`${text} 빼기`} onClick={() => remove(key, index)}>✕</button>
+  return <section className="slide" data-c={order} aria-hidden={!current} inert={!current} aria-label={`${order}번 할 일`} aria-busy={busy}>
     <div className="slide-head"><span className="badge" aria-hidden="true">{order}</span><h2>{goal.goalText}</h2><span className="count">{order} / {total}</span></div>
     {profile ? <>
       <div className="core-block">
         <p className="label">핵심 주제</p>
-        <ul className="core-list">{profile.coreTopics.map((topic) => <li key={topic}><span>{topic}</span></li>)}</ul>
+        <ul className="core-list">
+          {profile.coreTopics.map((topic, index) => <li key={topic}><span>{topic}</span>{x('coreTopics', index, topic)}</li>)}
+          <li className="add-li">{add('coreTopics')}</li>
+        </ul>
       </div>
       <div className="sub-block">
-        <ProfileList title="함께 보는 주제" items={profile.supportingTopics} />
-        <ProfileList title="하게 될 활동" items={profile.expectedActivities} />
+        {([['supportingTopics', '함께 보는 주제'], ['expectedActivities', '하게 될 활동']] as const).map(([key, title]) => <div key={key}>
+          <p className="label">{title}</p>
+          {list(key).length > 0 && <ul className="items">{list(key).map((item, index) => <li key={item}><span>{item}</span>{x(key, index, item)}</li>)}</ul>}
+          {add(key)}
+        </div>)}
       </div>
-    </> : <div className="missing"><strong>범위를 만들지 못했어요.</strong><span>할 일 이름만 보고 판단할게요.</span></div>}
+    </> : <div className="missing">
+      <div><strong>범위를 만들지 못했어요.</strong><span>할 일 이름만 보고 판단할게요.</span></div>
+      <button className="btn btn-ghost" type="button" disabled={locked} onClick={onRegenerate}>{busy ? '만드는 중…' : '다시 만들기'}</button>
+    </div>}
   </section>
 }
 
-function ProfileList({ title, items }: { title: string; items: string[] }) {
+/** 범위 항목 적기. Enter는 저장하고 이어서 적고, Esc·빈 칸은 닫는다. 같은 항목은 저장하지 않고 알린다. */
+function AddInput({ items, disabled, onAdd, onClose }: { items: string[]; disabled: boolean; onAdd: (text: string, keepOpen: boolean) => Promise<void>; onClose: () => void }) {
+  const [text, setText] = useState('')
+  const [note, setNote] = useState('')
+  const commit = async (keepOpen: boolean) => {
+    const value = text.trim().replace(/\s+/g, ' ')
+    if (!value) { onClose(); return }
+    if (items.some((item) => same(item, value))) { setNote('같은 항목이 이미 있어요.'); return }
+    setText('')
+    await onAdd(value, keepOpen)
+  }
   return <div>
-    <p className="label">{title}</p>
-    {items.length ? <ul className="items">{items.map((item) => <li key={item}><span>{item}</span></li>)}</ul> : <p className="items-empty">없음</p>}
+    <input className="add-input" autoFocus maxLength={100} placeholder="적고 Enter" aria-label="항목 추가" value={text} disabled={disabled}
+      onChange={(event) => { setText(event.target.value); setNote('') }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); if (!event.repeat) void commit(true) }
+        if (event.key === 'Escape') onClose()
+      }}
+      onBlur={() => { if (!disabled) void commit(false) }} />
+    {note && <p className="add-note" aria-live="polite">{note}</p>}
   </div>
 }

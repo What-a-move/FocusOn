@@ -121,3 +121,19 @@ test('다 했어요는 PATCH /goals/{id}에 todoStatus DONE만 보낸다', async
   await service.complete('g_12')
   assert.deepEqual([requests[0].path, requests[0].method, requests[0].body, requests[0].expectedStatus], ['/api/v1/goals/g_12', 'PATCH', { todoStatus: 'DONE' }, 200])
 })
+
+test('범위 수정은 PATCH로 goalProfile만, 다시 만들기는 POST /goals/{id}/profile로 보내고 형식이 다른 범위는 IPC에서 막는다', async () => {
+  const { isProfileUpdate } = require('../../dist-electron/shared/goal-contract.cjs')
+  const profile = { mainTopic: '미적분', purpose: 'PRACTICE', coreTopics: ['극한'], supportingTopics: [], expectedActivities: ['문제 풀이'] }
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.updateProfile('g_12', profile)
+  await service.regenerateProfile('g_12')
+  assert.deepEqual(requests.map((r) => [r.path, r.method, r.body ?? null, r.expectedStatus]), [
+    ['/api/v1/goals/g_12', 'PATCH', { goalProfile: profile }, 200],
+    ['/api/v1/goals/g_12/profile', 'POST', null, 200],
+  ])
+  assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: profile }), true)
+  assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: { ...profile, coreTopics: ['극한', '극한'] } }), false, '중복 항목')
+  assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: { ...profile, coreTopics: ['1', '2', '3', '4', '5', '6'] } }), false, '6개')
+})
