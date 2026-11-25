@@ -317,7 +317,7 @@ export function GoalSetting() {
           {view === 'entry' && <div className="panel">
             <div className="input-wrap">
               <input className={`goal-input${hint.error ? ' is-error' : ''}`} id="goal-input" ref={inputRef} type="text" maxLength={40} autoComplete="off"
-                placeholder="예: 로그인 API 오류 고치기" aria-label="할 일" aria-describedby="goal-hint" aria-invalid={hint.error} value={draft} disabled={busy}
+                aria-label="할 일" aria-describedby="goal-hint" aria-invalid={hint.error} value={draft} disabled={busy}
                 onChange={(event) => onDraft(event.target.value)} onKeyDown={onEnter} autoFocus />
               <span className={`counter${goalLength(draft) >= 40 ? ' is-full' : ''}`} aria-hidden="true">{goalLength(draft)}/40</span>
             </div>
@@ -327,7 +327,7 @@ export function GoalSetting() {
           {view === 'questions' && question && <div className="panel">
             <span className="question-count">{question.mode === 'term' ? '확인 질문' : '질문'} {asked} / {MAX_QUESTIONS}</span>
             {question.mode === 'scope'
-              ? <div className="input-wrap"><input className="goal-input" type="text" maxLength={30} autoComplete="off" placeholder="예: 캡스톤 중간 발표" aria-label="질문에 대한 답"
+              ? <div className="input-wrap"><input className="goal-input" type="text" maxLength={30} autoComplete="off" aria-label="질문에 대한 답"
                   value={scopeAnswer} disabled={busy} onChange={(event) => { setScopeAnswer(event.target.value); setFeedback(null) }} onKeyDown={onEnter} autoFocus /></div>
               : <Options labels={question.options} selected={selected} onChoose={(index) => { setSelected(index); setFeedback(null) }} onSubmit={primary} label={question.text} />}
           </div>}
