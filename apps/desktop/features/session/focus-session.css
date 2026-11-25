@@ -84,9 +84,6 @@
 
 /* 화면 기록 권한이 꺼져 자동으로 멈춤 (FocusOn-design/session-states.html `권한 꺼짐`) */
 .focus-window .clock-caption.is-error { color: var(--danger); }
-.focus-window .halt-notice { display: grid; justify-items: start; gap: 14px; max-width: 420px; margin-top: 28px; }
-.focus-window .halt-notice p { margin: 0; color: var(--danger); font-size: 14px; font-weight: 600; line-height: 1.55; word-break: keep-all; }
-.focus-window .halt-notice strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 16px; font-weight: 700; }
 .focus-window .btn-danger { background: var(--danger-strong); color: #fff; box-shadow: 0 4px 0 var(--danger-edge, #a32218); }
 .focus-window .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
 .focus-window .btn-danger:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--danger-edge, #a32218); transition-duration: .05s; }
@@ -123,3 +120,14 @@
 .focus-window .add-error strong { display: block; color: var(--danger); font-size: 14px; }
 .focus-window .add-error span { display: block; margin-top: 2px; color: var(--ink); font-size: 14px; }
 .focus-window .toast { position: fixed; left: 50%; bottom: 72px; z-index: 5; padding: 12px 18px; border-radius: 12px; background: var(--ink); color: var(--surface); font-size: 14px; font-weight: 600; transform: translateX(-50%); animation: onboarding-fade-in .3s ease-out; }
+
+/* 멈춘 상태 말풍선 (FocusOn-design/session-states.html .say). 꼬리는 왼쪽(포키 쪽)을 가리킨다. */
+.focus-window .say { display: grid; justify-items: start; gap: 14px; max-width: 360px; margin-bottom: 28px; }
+.onboarding-window.focus-window .say .bubble { max-width: 360px; transform-origin: left center; }
+.onboarding-window.focus-window .say .bubble::before { top: auto; bottom: 18px; left: -14px; border-width: 10px 14px 10px 0; border-color: transparent var(--line) transparent transparent; }
+.onboarding-window.focus-window .say .bubble::after { top: auto; bottom: 20px; left: -11px; border-width: 8px 11px 8px 0; border-color: transparent var(--surface) transparent transparent; }
+.onboarding-window.focus-window .say .bubble.is-error::before { border-color: transparent var(--danger-line) transparent transparent; }
+.focus-window .say .bubble small { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; font-weight: 600; line-height: 1.55; white-space: pre-line; }
+.onboarding-window.focus-window .say .bubble.is-error { color: var(--ink); }
+.focus-window .say .bubble.is-error small { color: var(--danger); }
+.onboarding-window.focus-window .say .btn { width: auto; min-width: 0; height: 44px; padding: 0 18px; font-size: 15px; display: inline-grid; place-items: center; text-decoration: none; }

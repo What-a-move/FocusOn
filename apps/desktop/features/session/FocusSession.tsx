@@ -136,11 +136,16 @@ export function FocusSession() {
   const finished = status === 'ENDED' || status === 'ABANDONED'
   // 세션 중 화면 기록 권한이 꺼져 자동으로 멈춘 상태(session-states.html `권한 꺼짐`)
   const permissionLost = status === 'AUTO_PAUSED' && snapshot.error === 'LOCAL_SCREEN_PERMISSION_REVOKED'
+  // 멈춘 상태마다 포키 옆 말풍선(FocusOn-design/session-states.html). 포키 말은 반말, 안내는 해요체.
   // 자동으로 멈춘 이유는 아는 것만 말한다. 이유를 모르면 추측하지 않는다.
-  const autoCaption = snapshot.pauseReason === 'APP_RESTART' ? '앱을 다시 열어 멈춰 있어요'
-    : snapshot.pauseReason === 'EXTENSION_UNLINKED' ? 'Chrome 연결이 끊겨 멈췄어요'
-      : snapshot.pauseReason === 'REQUIRED_PERMISSION' ? 'Chrome 사이트 접근이 꺼져 멈췄어요' : '자동으로 멈췄어요'
-  const caption = permissionLost ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : status === 'AUTO_PAUSED' ? autoCaption : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
+  const say: { title: string; copy?: string; error?: boolean } | null = awaiting ? null
+    : permissionLost ? { title: '화면 기록 권한이 꺼졌어요.', copy: screenOpened ? '켠 뒤 ‘다시 열기’를 눌러 주세요.' : '권한을 켠 뒤 직접 이어 가 주세요.', error: true }
+      : status === 'AUTO_PAUSED' ? (snapshot.pauseReason === 'APP_RESTART' ? { title: '앱이 다시 열렸어요' }
+        : snapshot.pauseReason === 'EXTENSION_UNLINKED' ? { title: 'Chrome 연결이 끊겼어요.', copy: '다시 연결한 뒤 직접 이어 가 주세요.', error: true }
+          : snapshot.pauseReason === 'REQUIRED_PERMISSION' ? { title: 'Chrome 사이트 접근이 꺼졌어요.', copy: '권한을 켠 뒤 직접 이어 가 주세요.', error: true }
+            : { title: '자동으로 멈췄어요' })
+        : status === 'PAUSED' ? { title: '잠깐 쉬는 중이야' } : null
+  const caption = status === 'AUTO_PAUSED' ? '자동으로 멈춤 · 마지막 확정 시간' : awaiting ? '설정한 시간이 끝났어요' : paused ? '잠시 멈췄어요' : `${formatMinutes(Math.round(snapshot.targetDurationMs / 60000))} 중`
 
   const togglePause = () => { void (running ? sessionApi.pause() : sessionApi.resume()) }
   const end = async () => { const result = await sessionApi.end(); if (result.success) setDialog(null) }
@@ -171,13 +176,18 @@ export function FocusSession() {
           </svg>
           <div className="ring-center">
             <div className="clock" role="timer" aria-live="off">{formatClock(Math.ceil(remaining / 1000) * 1000)}</div>
-            <div className={`clock-caption${permissionLost ? ' is-error' : ''}`}>{caption}</div>
+            <div className={`clock-caption${say?.error ? ' is-error' : ''}`}>{caption}</div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="poki" key={permissionLost ? 'worried' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.worried : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '걱정하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
         </div>
         {/* 오른쪽: 목표·버튼·안내. 타이머가 세로로만 길어지지 않게 옆에 둔다. */}
         <div className="side">
+        {say && !activeDialog && <div className="say" key={say.title}>
+          <p className={`bubble${say.error ? ' is-error' : ''}`} role={say.error ? 'alert' : 'status'}>{say.title}{say.copy && <small>{say.copy}</small>}</p>
+          {permissionLost && <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>}
+          {status === 'AUTO_PAUSED' && !permissionLost && snapshot.pauseReason === 'EXTENSION_UNLINKED' && <Link className="btn btn-danger" href="/settings/#devices">다시 연결</Link>}
+        </div>}
         {goals.length > 1
           ? <ul className="session-goals" id="goal-text" aria-label="이번 할 일">
             {goals.map(({ goalId, goalText }, index) => <li key={goalId} title={goalText}>
@@ -202,10 +212,6 @@ export function FocusSession() {
             <span className="label">끝내기</span>
           </div>
         </div>
-        {permissionLost && !activeDialog && <div className="halt-notice" role="alert">
-          <p><strong>화면 기록이 꺼져 집중을 멈췄어요.</strong>{screenOpened ? '켠 뒤 ‘다시 열기’를 눌러 주세요.' : '설정에서 다시 켜 주세요.'}</p>
-          <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>
-        </div>}
         {snapshot.error && !permissionLost && !activeDialog && <p className="session-error" role="alert"><span className="icon-error" aria-hidden="true">!</span>{sessionErrorText(snapshot.error)}</p>}
         </div>
       </div>
