@@ -149,10 +149,6 @@ class AnalysisAiClientTests {
     assertFalse(accepted.toString().contains(CONCEPT));
     assertTrue(json.valueToTree(accepted).path("reviewEvidence").isMissingNode());
 
-    String operator = "Python a//b (floor division)";
-    response.set("reviewEvidence", json.readTree(evidence(operator, "CONCEPT")));
-    assertEquals(operator, AnalysisAiClient.normalize(response, true)
-        .reviewEvidence().conceptLabel());
     String boundary = "학".repeat(119) + "𐐷";
     response.set("reviewEvidence", json.readTree(evidence(boundary, "CONCEPT")));
     assertEquals(boundary, AnalysisAiClient.normalize(response, true)
@@ -174,6 +170,38 @@ class AnalysisAiClientTests {
     var unrelated = AnalysisAiClient.normalize(response, true);
     assertEquals(Relation.UNRELATED, unrelated.relation());
     assertNull(unrelated.reviewEvidence());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+      "https:example.org/private, false",
+      "HTTPS:/example.org/private, false",
+      "(//example.com/private), false",
+      "[ref]//example.com/private, false",
+      "//intranet, false",
+      "(//intranet), false",
+      "//intranet/private, false",
+      "//reader:exampleToken@intranet, false",
+      "//127.0.0.1/private, false",
+      "//[::1]/private, false",
+      "about:blank, false",
+      "Python a//b (floor division), true",
+      "Python (a)//b, true",
+      "Python (a) //b, true",
+      "Python (a)//b/c, true",
+      "Python a//b.real/c, true",
+      "NumPy x//[2], true",
+      "HTTP: status codes, true",
+      "HTTP:status codes, true"
+  })
+  void distinguishesUrlLabelsFromProgrammingConcepts(String label, boolean expected) {
+    var response = json.readTree(matchedResult()).asObject();
+    response.set("reviewEvidence", json.readTree(evidence(label, "CONCEPT")));
+    var decision = AnalysisAiClient.normalize(response, true);
+    assertEquals(Relation.RELATED, decision.relation());
+    assertEquals(MatchStatus.MATCHED, decision.matchStatus());
+    assertEquals(expected ? new ReviewEvidence(label, EvidenceType.CONCEPT) : null,
+        decision.reviewEvidence());
   }
 
   @ParameterizedTest
