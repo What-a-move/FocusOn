@@ -152,3 +152,13 @@ test('다시 만들기가 겹치면 같은 할 일은 서버에 한 번만 보�
   release()
   await third
 })
+
+test('AI를 부르는 요청(질문·저장·다시 만들기)만 응답을 70초까지 기다린다', async () => {
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.clarify({ goalText: '자료구조 공부', conversationTurn: 0, previousAnswers: [] })
+  await service.create({ goalText: '자료구조 공부', confirmationSource: 'MANUAL_CONFIRMED' })
+  await service.regenerateProfile('g_1')
+  await service.listOpen(null)
+  assert.deepEqual(requests.map((request) => request.timeoutMs), [70_000, 70_000, 70_000, undefined])
+})

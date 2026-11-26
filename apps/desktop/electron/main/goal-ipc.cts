@@ -9,6 +9,8 @@ import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
 const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
+// 서버는 AI 호출 한 번에 60초까지 기다리고, 질문 하나에 보통 10~15초 걸린다. 기본 10초면 정상 응답도 끊긴다.
+export const AI_TIMEOUT_MS = 70_000
 
 /** 목표 Backend 계약 (Notion FocusOn API 명세서). POST라 자동 재전송하지 않는다. AI 재시도는 Backend가 맡는다. */
 export class GoalService {
@@ -17,7 +19,7 @@ export class GoalService {
   clarify(input: ClarifyInput): Promise<ApiResult<ClarifyResult>> {
     const body: ClarifyInput = { goalText: input.goalText.trim(), conversationTurn: input.conversationTurn, previousAnswers: input.previousAnswers }
     if (input.clarificationSessionId) body.clarificationSessionId = input.clarificationSessionId
-    return this.auth.authorizedRequest({ path: '/api/v1/goals/clarify', method: 'POST', expectedStatus: 200, parse: parseClarifyResult, body })
+    return this.auth.authorizedRequest({ path: '/api/v1/goals/clarify', method: 'POST', expectedStatus: 200, parse: parseClarifyResult, body, timeoutMs: AI_TIMEOUT_MS })
   }
 
   create(input: CreateGoalInput): Promise<ApiResult<CreatedGoal>> {
@@ -25,7 +27,8 @@ export class GoalService {
     if (input.clarificationSessionId) body.clarificationSessionId = input.clarificationSessionId
     if (input.goalProfile) body.goalProfile = input.goalProfile
     return this.auth.authorizedRequest({
-      path: '/api/v1/goals', method: 'POST', expectedStatus: 201, parse: parseCreatedGoal, body,
+      // 확정 문구에 범위 초안이 없으면 서버가 저장 전에 AI로 범위를 만든다.
+      path: '/api/v1/goals', method: 'POST', expectedStatus: 201, parse: parseCreatedGoal, body, timeoutMs: AI_TIMEOUT_MS,
       ...(input.idempotencyKey ? { headers: { 'Idempotency-Key': input.idempotencyKey } } : {}),
     })
   }
@@ -52,7 +55,7 @@ export class GoalService {
   regenerateProfile(goalId: string): Promise<ApiResult<CreatedGoal>> {
     const running = this.regenerating.get(goalId)
     if (running) return running
-    const request = this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}/profile`, method: 'POST', expectedStatus: 200, parse: parseCreatedGoal })
+    const request = this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}/profile`, method: 'POST', expectedStatus: 200, parse: parseCreatedGoal, timeoutMs: AI_TIMEOUT_MS })
       .finally(() => this.regenerating.delete(goalId))
     this.regenerating.set(goalId, request)
     return request

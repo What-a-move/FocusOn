@@ -1,9 +1,21 @@
 # Backend 작업 컨텍스트
 
+## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
+
+- PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.
+
 ## #342 v2 이탈 비율 알림
 
 - 최근 10분 이탈 비율을 기존 `OFF_TASK` 생성 경로에 연결했다. 운영 수치가 확정되기 전에는 기본 비활성이다.
 - 정책과 서버 설정은 [기획서](features/off-task-ratio-PLAN.md)의 범위를 따른다. [GitHub 이슈 #342](https://github.com/What-a-move/FocusOn/issues/342).
+
+## #347 할 일 변경 후 개입 근거 검증
+
+- 이전 목표 버전 판정은 heartbeat와 완료 경로에서 개입을 만들 수 없다. 첫 새 관측부터 연속·반복·비율 시간을 따로 집계한다. [GitHub #347](https://github.com/What-a-move/FocusOn/issues/347)
+
+## #350 재분석 직전 FAR 시간 보존
+
+- #350은 같은 목표·Desktop 전경에서 새 분석 직전까지 확정 RELATED/FAR 시간을 보존한다. 전경 교체 시 체크포인트를 닫는다.
 
 ## DR-030 목표 프로필·세션 할 일 연동 (2026-11-24)
 

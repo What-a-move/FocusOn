@@ -25,6 +25,7 @@ import com.capstone.backend.auth.dto.AuthDtos.LoginResponse;
 import com.capstone.backend.auth.dto.PairingDtos.ClaimRequest;
 import com.capstone.backend.auth.persistence.TokenFamilyEntity;
 import com.capstone.backend.auth.persistence.TokenFamilyRepository;
+import com.capstone.backend.auth.persistence.UserDeviceEntity;
 import com.capstone.backend.auth.persistence.UserDeviceRepository;
 import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.auth.security.FocusOnPrincipal;
@@ -181,6 +182,50 @@ class ObservationDeliveryIntegrationTests {
         .orElseThrow().setStatus(
             com.capstone.backend.auth.persistence.UserDeviceEntity.Status.REVOKED));
     mvc.perform(auth(get(contextPath(f)), f)).andExpect(status().isNoContent());
+  }
+
+  @Test
+  void chromeNavigationWithSameContextDoesNotCreditUnobservedPageTime() {
+    var f = fixture();
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    var linked = pairing.claim(new ClaimRequest(pairing.issue(f.principal()).codeDisplay(),
+        UUID.randomUUID().toString()), "127.0.0.182");
+    long deviceId = Long.parseLong(linked.device().deviceId());
+    var family = families.findByDeviceAndStatus(deviceId, TokenFamilyEntity.Status.ACTIVE)
+        .orElseThrow();
+    var extension = new FocusOnPrincipal(f.principal().userId(), deviceId, family.getId(),
+        UserDeviceEntity.DeviceType.CHROME_EXTENSION);
+    String context = contexts.put(f.principal(), f.device(), f.sessionString(),
+        contextRequest(1, Observer.EXTENSION)).observationContextId();
+    var far = new AnalysisDecision(AnalysisDtos.Relation.RELATED, .9,
+        AnalysisDtos.ReasonCode.SEMANTIC_GOAL_MATCH, AnalysisDtos.AnalysisStatus.COMPLETED,
+        "synthetic-test", "synthetic-test", AnalysisDtos.MatchStatus.FAR);
+
+    var first = chromeObservation(context, AnalysisDtos.ContentSource.CHROME_DOM, 1);
+    store.complete(extension, store.prepare(extension, f.session(), first), first, far);
+    // Simulate 15 seconds between the last checkpoint and the next page's TAB_META.
+    jdbc.update("UPDATE intervention_policy_states SET far_duration_ms=590000, "
+            + "far_checkpoint_at=? WHERE session_id=?",
+        java.sql.Timestamp.from(Instant.now().minusSeconds(15)), f.session());
+
+    var tab = chromeObservation(context, AnalysisDtos.ContentSource.TAB_META, 2);
+    var reservedTab = store.prepare(extension, f.session(), tab);
+    var uncertain = AnalysisDecision.unavailable();
+    store.complete(extension, reservedTab, tab, uncertain);
+    var next = chromeObservation(context, AnalysisDtos.ContentSource.CHROME_DOM, 3);
+    store.complete(extension, store.prepare(extension, f.session(), next), next, far);
+
+    assertEquals(590000L, states.findById(f.session()).orElseThrow().getFarDurationMs());
+    assertTrue(events.findBySessionIdOrderByCreatedAtAscIdAsc(f.session()).isEmpty());
+  }
+
+  private AnalysisDtos.Request chromeObservation(String context,
+      AnalysisDtos.ContentSource source, int sequence) {
+    var order = BigDecimal.valueOf(sequence);
+    var metadata = new AnalysisDtos.Metadata("Google Chrome", null, "Same title", "example.com");
+    return new AnalysisDtos.Request(UUID.randomUUID().toString(), source, Instant.now(), order,
+        null, metadata, null, order, context);
   }
 
   @Test
