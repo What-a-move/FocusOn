@@ -1,5 +1,10 @@
 # AI 작업 컨텍스트
 
+## #29 화면 분석 근거 응답
+
+- AI 내부 분석 응답에 `reviewEvidence`를 추가했다. 매칭된 할 일과 정제 본문에 모두 나타나는 고정 공부 주제 라벨을 최대 1개 제공한다. [내부 계약](api_spec.md)
+- AI 테스트 451개와 하위 테스트 27개가 통과했다. 실제 E5를 사용한 분석 API 검증에서 React DOM은 근거 1개를 반환했고 React 탭 제목과 SQL `FAR`는 빈 배열을 반환했다.
+
 ## 2026-11-26 encoder tokenizer 경고 (#361)
 
 - 서버 시작 때 나오던 `fix_mistral_regex` 경고는 transformers 4.57.3의 오탐이다. 화면 분석 encoder는 `Metaspace` 분할만 써서 경고가 말하는 정규식과 무관하다. `fix_mistral_regex=False`로 경고만 껐고 토큰 결과는 같다.

@@ -25,7 +25,7 @@ public class ExtensionCorsConfiguration {
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key",
         "If-Match-Version", "X-Device-Id", "X-Trace-Id"));
-    config.setExposedHeaders(List.of("Retry-After"));
+    config.setExposedHeaders(List.of("Retry-After", "X-Trace-Id"));
     config.setAllowCredentials(false);
     config.setMaxAge(600L);
     var source = new UrlBasedCorsConfigurationSource();
