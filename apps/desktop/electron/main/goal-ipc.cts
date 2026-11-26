@@ -1,8 +1,8 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { GOAL_CHANNELS, isGoalId, isValidClarifyInput, isValidCreateGoalInput, isGoalListCursor, parseClarifyResult, parseCreatedGoal, parseOpenGoalList } from '../shared/goal-contract.cjs'
-import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../shared/goal-contract.cjs'
+import { GOAL_CHANNELS, isGoalId, isProfileUpdate, isValidClarifyInput, isValidCreateGoalInput, isGoalListCursor, parseClarifyResult, parseCreatedGoal, parseOpenGoalList } from '../shared/goal-contract.cjs'
+import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, GoalProfile, OpenGoalList } from '../shared/goal-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -44,6 +44,23 @@ export class GoalService {
     return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'PATCH', body: { todoStatus: 'DONE' }, expectedStatus: 200, parse: () => ({}) })
   }
 
+  updateProfile(goalId: string, goalProfile: GoalProfile): Promise<ApiResult<CreatedGoal>> {
+    return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'PATCH', body: { goalProfile }, expectedStatus: 200, parse: parseCreatedGoal })
+  }
+
+  // 다시 만들기는 AI를 부르는 비싼 요청이라 할 일마다 한 번만 보낸다. 겹친 호출은 진행 중인 요청 결과를 같이 받는다.
+  private readonly regenerating = new Map<string, Promise<ApiResult<CreatedGoal>>>()
+
+  /** AI가 느리면 오래 걸릴 수 있다(서버 요청당 60초·재시도 2회). */
+  regenerateProfile(goalId: string): Promise<ApiResult<CreatedGoal>> {
+    const running = this.regenerating.get(goalId)
+    if (running) return running
+    const request = this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}/profile`, method: 'POST', expectedStatus: 200, parse: parseCreatedGoal, timeoutMs: AI_TIMEOUT_MS })
+      .finally(() => this.regenerating.delete(goalId))
+    this.regenerating.set(goalId, request)
+    return request
+  }
+
   remove(goalId: string): Promise<ApiResult<Record<string, never>>> {
     return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'DELETE', expectedStatus: 204, parse: () => ({}) })
   }
@@ -67,4 +84,6 @@ export function registerGoalIpc(getMainWindow: () => BrowserWindow | null, rende
   handle(GOAL_CHANNELS.listOpen, isGoalListCursor, (s, cursor) => s.listOpen(cursor))
   handle(GOAL_CHANNELS.remove, isGoalId, (s, goalId) => s.remove(goalId))
   handle(GOAL_CHANNELS.complete, isGoalId, (s, goalId) => s.complete(goalId))
+  handle(GOAL_CHANNELS.updateProfile, isProfileUpdate, (s, input) => s.updateProfile(input.goalId, input.goalProfile))
+  handle(GOAL_CHANNELS.regenerateProfile, isGoalId, (s, goalId) => s.regenerateProfile(goalId))
 }

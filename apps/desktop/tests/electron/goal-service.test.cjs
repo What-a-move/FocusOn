@@ -122,11 +122,43 @@ test('다 했어요는 PATCH /goals/{id}에 todoStatus DONE만 보낸다', async
   assert.deepEqual([requests[0].path, requests[0].method, requests[0].body, requests[0].expectedStatus], ['/api/v1/goals/g_12', 'PATCH', { todoStatus: 'DONE' }, 200])
 })
 
-test('AI를 부르는 요청(질문·저장)만 응답을 70초까지 기다린다', async () => {
+test('범위 수정은 PATCH로 goalProfile만, 다시 만들기는 POST /goals/{id}/profile로 보내고 형식이 다른 범위는 IPC에서 막는다', async () => {
+  const { isProfileUpdate } = require('../../dist-electron/shared/goal-contract.cjs')
+  const profile = { mainTopic: '미적분', purpose: 'PRACTICE', coreTopics: ['극한'], supportingTopics: [], expectedActivities: ['문제 풀이'] }
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.updateProfile('g_12', profile)
+  await service.regenerateProfile('g_12')
+  assert.deepEqual(requests.map((r) => [r.path, r.method, r.body ?? null, r.expectedStatus]), [
+    ['/api/v1/goals/g_12', 'PATCH', { goalProfile: profile }, 200],
+    ['/api/v1/goals/g_12/profile', 'POST', null, 200],
+  ])
+  assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: profile }), true)
+  assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: { ...profile, coreTopics: ['극한', '극한'] } }), false, '중복 항목')
+  assert.equal(isProfileUpdate({ goalId: 'g_12', goalProfile: { ...profile, coreTopics: ['1', '2', '3', '4', '5', '6'] } }), false, '6개')
+})
+
+test('다시 만들기가 겹치면 같은 할 일은 서버에 한 번만 보낸다', async () => {
+  let release
+  const requests = []
+  const service = new GoalService({ authorizedRequest: (request) => { requests.push(request); return new Promise((resolve) => { release = () => resolve({ success: true, data: {} }) }) } })
+  const first = service.regenerateProfile('g_12')
+  const second = service.regenerateProfile('g_12')
+  assert.equal(requests.length, 1)
+  release()
+  await Promise.all([first, second])
+  const third = service.regenerateProfile('g_12')
+  assert.equal(requests.length, 2, '끝난 뒤에는 다시 보낼 수 있음')
+  release()
+  await third
+})
+
+test('AI를 부르는 요청(질문·저장·다시 만들기)만 응답을 70초까지 기다린다', async () => {
   const requests = []
   const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
   await service.clarify({ goalText: '자료구조 공부', conversationTurn: 0, previousAnswers: [] })
   await service.create({ goalText: '자료구조 공부', confirmationSource: 'MANUAL_CONFIRMED' })
+  await service.regenerateProfile('g_1')
   await service.listOpen(null)
-  assert.deepEqual(requests.map((request) => request.timeoutMs), [70_000, 70_000, undefined])
+  assert.deepEqual(requests.map((request) => request.timeoutMs), [70_000, 70_000, 70_000, undefined])
 })
