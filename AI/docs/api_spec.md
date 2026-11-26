@@ -185,6 +185,27 @@ MVP의 목표 문장은 2~40자, 명확화 질문은 전체 대화에서 최대 
 
 ### 5.3 성공 응답 예시
 
+현재 `POST /internal/v1/analysis-runs`에서 매칭된 본문에 개념 라벨이 있는 경우의 응답이다.
+
+```json
+{
+  "decision": "RELATED",
+  "confidence": null,
+  "reasonCode": "SEMANTIC_GOAL_MATCH",
+  "modelVersion": "e5-activity-10168",
+  "promptVersion": "e5-activity-v1-uncalibrated",
+  "matchedGoalId": "goal-demo",
+  "matchStatus": "MATCHED",
+  "reviewEvidence": [
+    { "conceptLabel": "React useState", "evidenceType": "CONCEPT" }
+  ]
+}
+```
+
+본문에서 매칭된 할 일의 개념을 확인하지 못하면 `"reviewEvidence": []`를 반환한다.
+
+#### 이전 응답 제안 예시
+
 ```json
 {
   "data": {
