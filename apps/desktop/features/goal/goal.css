@@ -48,11 +48,6 @@
 .goal-window .hint { display: flex; align-items: center; gap: 6px; min-height: 24px; margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.5; }
 .goal-window .hint.is-error { color: var(--danger); font-weight: 600; }
 .goal-window .hint.is-error::before { content: '!'; width: 18px; height: 18px; flex: 0 0 18px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--danger-strong); color: #fff; font-size: 12px; font-weight: 700; }
-.goal-window .chips-label { margin: 28px 0 12px; font-size: 16px; font-weight: 700; }
-.goal-window .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.goal-window .chip { height: 48px; padding: 0 18px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 16px; font-weight: 600; cursor: pointer; transition: transform .08s ease, background .15s ease; }
-.goal-window .chip:hover:not(:disabled) { background: var(--hover); }
-.goal-window .chip:active:not(:disabled) { transform: scale(.97); }
 
 /* 선택 카드 */
 .goal-window .question-count { display: inline-block; margin-bottom: 14px; padding: 5px 12px; border-radius: 99px; background: var(--field); font-size: 13px; font-weight: 700; }
@@ -64,7 +59,6 @@
 .goal-window .key { width: 22px; height: 22px; flex: 0 0 22px; border: 1.5px solid var(--dim); border-radius: 50%; }
 .goal-window .option[aria-checked='true'] .key { border: 7px solid var(--brand); }
 .goal-window .options-help { margin-top: 14px; color: var(--muted); font-size: 15px; }
-.goal-window .chip:focus-visible,
 .goal-window .option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* 확인 */
@@ -97,8 +91,6 @@
   .onboarding-window.goal-window .speaker .poki { width: 76px; height: 76px; flex-basis: 76px; }
   .onboarding-window.goal-window .bubble { font-size: 24px; }
   .goal-window .goal-input { height: 54px; }
-  .goal-window .chips-label { margin-top: 20px; }
-  .goal-window .chip { height: 42px; }
   .goal-window .option { min-height: 56px; padding: 10px 18px; }
   .goal-window .footer-inner { padding: 14px 0 28px; }
 }

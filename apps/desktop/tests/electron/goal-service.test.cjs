@@ -121,3 +121,12 @@ test('다 했어요는 PATCH /goals/{id}에 todoStatus DONE만 보낸다', async
   await service.complete('g_12')
   assert.deepEqual([requests[0].path, requests[0].method, requests[0].body, requests[0].expectedStatus], ['/api/v1/goals/g_12', 'PATCH', { todoStatus: 'DONE' }, 200])
 })
+
+test('AI를 부르는 요청(질문·저장)만 응답을 70초까지 기다린다', async () => {
+  const requests = []
+  const service = new GoalService({ authorizedRequest: async (request) => { requests.push(request); return { success: true, data: {} } } })
+  await service.clarify({ goalText: '자료구조 공부', conversationTurn: 0, previousAnswers: [] })
+  await service.create({ goalText: '자료구조 공부', confirmationSource: 'MANUAL_CONFIRMED' })
+  await service.listOpen(null)
+  assert.deepEqual(requests.map((request) => request.timeoutMs), [70_000, 70_000, undefined])
+})
