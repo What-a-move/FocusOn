@@ -511,17 +511,28 @@ if (!hasSingleInstanceLock) {
             // 맨 앞 앱이 바뀌면 15초를 기다리지 않고 바로 전경 context를 바꾼다. Chrome은 Extension이 관측을 맡는다.
             const foreground = front?.bundleId ? `${front.bundleId}\n${front.windowTitle ?? ''}` : null
             void context?.update(session.sessionId, foreground, !foreground ? 'NONE' : CHROME.has(front?.bundleId ?? '') ? 'EXTENSION' : 'DESKTOP')
+            const previousKey = observer.currentKey()
             const observation = observer.observe(front)
+            const key = observer.currentKey()
+            if (front && key && key !== previousKey) {
+              const notice = observer.screenNotice(front)
+              runtime.setScreenNotice(notice)
+              latestScreen = notice === 'PRIVACY' ? { key, relation: 'PRIVACY_BLOCKED' } : null
+            }
             if (!observation || !sender) return
             // 관측한 시점의 context를 분석 요청에 붙인다. 화면이 바뀌는 중이면 붙이지 않는다(서버가 정책에 쓰지 않음).
             const observedContext = context?.currentId() ?? null
             void analyzeObservation({
               send: async (sessionId, next) => {
+                // OCR에서 보호 화면을 찾으면 서버 응답을 기다리지 않고 표시한다.
+                if (next.guardStatus === 'PRIVACY_BLOCKED' && key) {
+                  runtime.setScreenNotice('PRIVACY')
+                  latestScreen = { key, relation: 'PRIVACY_BLOCKED' }
+                }
                 const run = await sender.send(sessionId, next, observedContext)
-                // 카메라 최종 게이트용으로 지금 화면의 최신 판정만 기억한다(설계서 5.3). 보호 상태는 판정 없이도 PRIVACY_BLOCKED다.
-                const relation = next.guardStatus === 'PRIVACY_BLOCKED' ? 'PRIVACY_BLOCKED' : run?.relation
-                const key = observer.currentKey()
-                if (relation && key) latestScreen = { key, relation }
+                const current = runtime.snapshot()
+                if (!next.guardStatus && run?.relation && key && key === observer.currentKey()
+                  && current?.status === 'RUNNING' && current.sessionId === sessionId) latestScreen = { key, relation: run.relation }
                 return run
               },
               // 창 캡처·Vision OCR은 몇 초 걸릴 수 있다. 글자만 받고 이미지는 도우미 안에서 버린다.
@@ -544,9 +555,10 @@ if (!hasSingleInstanceLock) {
       setInterval(() => {
         const session = runtime.snapshot()
         const screenNow = latestScreen && latestScreen.key === observer.currentKey() ? latestScreen.relation : null
-        const wanted = !!helper && session?.status === 'RUNNING' && runtime.sessionOptions().cameraAnalysisEnabled
-          && mediaStatus('camera') === 'granted' && screenNow !== 'PRIVACY_BLOCKED'
+        const enabled = session?.status === 'RUNNING' && runtime.sessionOptions().cameraAnalysisEnabled && screenNow !== 'PRIVACY_BLOCKED'
+        const wanted = enabled && !!helper && mediaStatus('camera') === 'granted'
         if (!wanted) {
+          runtime.setCameraOff(enabled)
           if (cameraOn) {
             cameraOn = false
             log('INFO', 'state.transition', { component: 'camera', from: cameraMonitor.current(), to: 'CAMERA_PAUSED' })
@@ -565,6 +577,7 @@ if (!hasSingleInstanceLock) {
           const { state, alert } = cameraMonitor.update(parseCameraReply(reply), { screenRelated: screenNow === 'RELATED', canShow: pendingShow === null })
           // 상태가 바뀔 때만 남긴다. 얼굴·시선 값은 남기지 않는다.
           if (state !== before) log('INFO', 'state.transition', { component: 'camera', from: before, to: state })
+          runtime.setCameraOff(state === 'LOCAL_CAMERA_UNAVAILABLE')
           if (!alert) return
           const level = runtime.sessionOptions().interventionLevel
           void showFloating({ interventionId: CAMERA_ID, kind: 'OFF_TASK', level, goalText: current.goalText, ...COPY[level] })

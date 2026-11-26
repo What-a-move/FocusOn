@@ -391,3 +391,25 @@ test('진행 세션의 할 일 추가는 올바른 세션 ID에만 요청하고 
   assert.deepEqual(runtime.snapshot().goals, [first, second])
   assert.equal(runtime.snapshot().goalVersion, 2)
 })
+
+test('집중 중 안내: 인터넷이 끊기면 OFFLINE, 다시 닿으면 지우고, 화면·카메라 안내는 오프라인 다음 순서다', async () => {
+  let online = false
+  const { runtime } = setup({
+    'POST /api/v1/sessions/901/heartbeats': () => online
+      ? { success: true, data: { sessionId: '901', status: 'RUNNING', serverReceivedAt: '2026-10-25T01:00:00Z' } }
+      : { success: false, error: { code: 'LOCAL_NETWORK_UNAVAILABLE', retryable: true } },
+  })
+  runtime.begin(started, '미적분 풀기')
+  assert.equal(runtime.snapshot().notice, undefined)
+  runtime.setCameraOff(true)
+  runtime.setScreenNotice('EXCLUDED_APP')
+  assert.equal(runtime.snapshot().notice, 'EXCLUDED_APP', '화면 안내가 카메라보다 먼저')
+  await runtime.heartbeat()
+  assert.equal(runtime.snapshot().notice, 'OFFLINE')
+  online = true
+  await runtime.heartbeat()
+  runtime.setScreenNotice(null)
+  assert.equal(runtime.snapshot().notice, 'CAMERA_OFF')
+  runtime.begin(started, '미적분 풀기')
+  assert.equal(runtime.snapshot().notice, undefined, '새 세션은 안내를 지움')
+})

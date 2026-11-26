@@ -82,6 +82,17 @@ export class ScreenObserver {
     this.current = null
   }
 
+  screenNotice(front: Frontmost): 'EXCLUDED_APP' | 'PRIVACY' | null {
+    const bundleId = front.bundleId
+    if (!bundleId || CHROME.has(bundleId) || front.pid === this.deps.selfPid) return null
+    if (this.deps.isExcluded(bundleId)) return 'EXCLUDED_APP'
+    return !UNSUPPORTED_BROWSERS.has(bundleId) && this.isSensitive(front) ? 'PRIVACY' : null
+  }
+
+  private isSensitive(front: Frontmost): boolean {
+    return SENSITIVE_APPS.has(front.bundleId ?? '') || SENSITIVE_TITLE.test(front.windowTitle ?? '')
+  }
+
   // Chrome은 Extension이 관측을 보낸다. 번들 ID가 없으면 대상 앱을 알 수 없어 관측하지 않는다.
   private skipped(front: Frontmost): boolean {
     return !front.bundleId || CHROME.has(front.bundleId)
@@ -92,7 +103,7 @@ export class ScreenObserver {
     const bundleId = front.bundleId as string
     // FocusOn 자기 창은 관련·무관 어느 쪽 근거도 아니다(Notion 화면 분석 3.1). 지원하지 않는 브라우저와 함께 분석 제외로만 알린다.
     if (front.pid === this.deps.selfPid || UNSUPPORTED_BROWSERS.has(bundleId) || this.deps.isExcluded(bundleId)) return { observedAt, guardStatus: 'EXCLUDED' }
-    if (SENSITIVE_APPS.has(bundleId) || (front.windowTitle && SENSITIVE_TITLE.test(front.windowTitle))) return { observedAt, guardStatus: 'PRIVACY_BLOCKED' }
+    if (this.isSensitive(front)) return { observedAt, guardStatus: 'PRIVACY_BLOCKED' }
     return { observedAt, guardStatus: null, contentSource: 'APP_META', metadata: { appName: front.appName ?? bundleId, windowTitle: front.windowTitle }, key: this.current?.key ?? '', windowId: front.windowId ?? null }
   }
 }
