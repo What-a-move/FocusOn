@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 final class AnalysisPrivacy {
   private static final int MAX_CONCEPT_LABEL_LENGTH = 120;
   private static final Pattern CONCEPT_LABEL_BLOCKED = Pattern.compile(
-      "(?i)://|(?:^|\\s)//\\S|\\b(?:www\\.|file:/|(?:data|blob|mailto|tel):\\S)"
+      "(?i)://|(?<![\\p{L}\\p{M}\\p{N}_])//\\S|\\b(?:www\\.|file:/|(?:data|blob|mailto|tel):\\S)"
       + "|[\\p{Cc}\\p{Cf}\\p{Cs}\\p{Zl}\\p{Zp}]");
 
   // PostgreSQL 17 timestamp.h: Julian day zero inclusive, year 294277 exclusive.

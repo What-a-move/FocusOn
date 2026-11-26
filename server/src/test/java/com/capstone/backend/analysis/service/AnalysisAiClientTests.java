@@ -130,6 +130,7 @@ class AnalysisAiClientTests {
         evidence("React\nuseState", "CONCEPT"), evidence("https://example.com/private", "CONCEPT"),
         evidence("www.example.com", "CONCEPT"), evidence("student@example.com", "CONCEPT"),
         evidence("//example.com/private", "CONCEPT"), evidence("file:/private/example", "CONCEPT"),
+        evidence("(//example.com/private)", "CONCEPT"),
         evidence("data:text/plain,example", "CONCEPT"),
         evidence("Bear\u200ber syntheticPrivateToken", "CONCEPT"),
         "[{\"conceptLabel\":\"React\",\"evidenceType\":\"CONCEPT\",\"title\":\"raw\"}]",
@@ -148,6 +149,10 @@ class AnalysisAiClientTests {
     assertFalse(accepted.toString().contains(CONCEPT));
     assertTrue(json.valueToTree(accepted).path("reviewEvidence").isMissingNode());
 
+    String operator = "Python a//b (floor division)";
+    response.set("reviewEvidence", json.readTree(evidence(operator, "CONCEPT")));
+    assertEquals(operator, AnalysisAiClient.normalize(response, true)
+        .reviewEvidence().conceptLabel());
     String boundary = "학".repeat(119) + "𐐷";
     response.set("reviewEvidence", json.readTree(evidence(boundary, "CONCEPT")));
     assertEquals(boundary, AnalysisAiClient.normalize(response, true)
