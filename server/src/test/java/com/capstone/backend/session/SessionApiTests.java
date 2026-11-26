@@ -831,7 +831,9 @@ class SessionApiTests {
         Map.of("goalId", ids.get(3), "goalVersion", 1, "replaceGoalId", ids.get(0)),
         Map.of("goalId", ids.get(0), "goalVersion", 2, "replaceGoalId", ids.get(2)),
         Map.of("goalId", ids.get(3), "goalVersion", 2, "replaceGoalId", ids.get(1)),
-        Map.of("goalId", ids.get(2), "goalVersion", 2, "replaceGoalId", ids.get(2)))) {
+        Map.of("goalId", ids.get(2), "goalVersion", 2, "replaceGoalId", ids.get(2)),
+        // 같은 버전인데 교체 대상은 없고 새 할 일은 이미 있다 = 교체한 적 없는 요청이다.
+        Map.of("goalId", ids.get(2), "goalVersion", 2, "replaceGoalId", ids.get(1)))) {
       var result = mvc.perform(post(path).header("Authorization", token)
               .header("X-Device-Id", owner.device().deviceId())
               .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)));

@@ -223,8 +223,9 @@ public class SessionService {
     }
     boolean hasNew = ordered.stream().anyMatch(row -> row.getGoalId() == goalId);
     boolean hasOld = ordered.stream().anyMatch(row -> row.getGoalId() == replaceId);
-    // 응답을 잃고 같은 교체를 다시 보내면 이미 반영된 목록을 그대로 돌려준다.
-    if (request.goalVersion() <= version && hasNew && !hasOld) {
+    // 응답을 잃고 같은 교체를 다시 보내면 이미 반영된 목록을 그대로 돌려준다. 교체에 성공하면 버전이
+    // 오르므로 재시도는 더 낮은 버전을 들고 온다. 같은 버전이면 교체한 적이 없는 요청이다.
+    if (request.goalVersion() < version && hasNew && !hasOld) {
       return new SessionGoalsResponse(publicGoals(ordered), version);
     }
     if (request.goalVersion() != version) {
