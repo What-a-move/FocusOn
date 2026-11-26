@@ -39,6 +39,7 @@ public class DeletedAccountPurge {
       "DELETE FROM session_observation_contexts WHERE session_id IN (" + SESSIONS + ")",
       "DELETE FROM session_goals WHERE session_id IN (" + SESSIONS + ")",
       "DELETE FROM session_retrospectives WHERE session_id IN (" + SESSIONS + ")",
+      "DELETE FROM session_pauses WHERE session_id IN (" + SESSIONS + ")",
       "DELETE FROM learning_sessions WHERE user_id = ?",
       "DELETE FROM goals WHERE user_id = ?",
       "DELETE FROM goal_clarification_sessions WHERE user_id = ?",

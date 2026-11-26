@@ -22,7 +22,8 @@ import org.junit.jupiter.api.Test;
 /** 소유권 조건과 입력 경계 및 다음 페이지 커서를 확인한다. */
 class SessionQueryServiceTests {
   private final LearningSessionRepository repository = mock(LearningSessionRepository.class);
-  private final SessionQueryService service = new SessionQueryService(repository);
+  private final SessionQueryService service = new SessionQueryService(repository,
+      mock(com.capstone.backend.session.persistence.SessionPauseRepository.class));
   private final FocusOnPrincipal principal = new FocusOnPrincipal(1, 2, 3, DeviceType.DESKTOP);
 
   @Test

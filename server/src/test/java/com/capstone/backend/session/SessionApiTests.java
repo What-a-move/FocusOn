@@ -1632,6 +1632,81 @@ class SessionApiTests {
         "SELECT count(*) FROM session_local_events WHERE session_id=?", Integer.class, numericId));
   }
 
+  /** 일시정지·자동 일시정지·재개·종료가 구간으로 남고 본인만 조회한다(#317). */
+  @Test
+  void pausesAreRecordedAndListedInOrder() throws Exception {
+    LoginResponse owner = desktop("pauses-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String id = startForHeartbeat(owner);
+    String path = "/api/v1/sessions/" + id + "/pauses";
+    mvc.perform(get(path).header("Authorization", token)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(0));
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    String pauseKey = UUID.randomUUID().toString();
+    for (int call = 0; call < 2; call++) {
+      // 같은 일시정지를 다시 보내도 구간은 하나다.
+      mvc.perform(post("/api/v1/sessions/" + id + "/pause").header("Authorization", token)
+              .header("Idempotency-Key", pauseKey).header("If-Match-Version", version)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"pauseReason\":\"USER\",\"accumulatedActiveMs\":0}"))
+          .andExpect(status().isOk());
+    }
+    resumeForEventTest(owner, id);
+    mvc.perform(post("/api/v1/sessions/" + id + "/local-events").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(localEventBody(Instant.now())))
+        .andExpect(status().isOk());
+    long pausedVersion = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    mvc.perform(post("/api/v1/sessions/" + id + "/end").header("Authorization", token)
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", pausedVersion)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"accumulatedActiveMs\":0}"))
+        .andExpect(status().isOk());
+    var body = json.readTree(mvc.perform(get(path).header("Authorization", token))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("data");
+    org.junit.jupiter.api.Assertions.assertEquals(2, body.size());
+    org.junit.jupiter.api.Assertions.assertEquals("USER", body.path(0).path("pauseReason")
+        .asString());
+    org.junit.jupiter.api.Assertions.assertFalse(body.path(0).path("resumedAt").isNull());
+    org.junit.jupiter.api.Assertions.assertFalse(Instant.parse(body.path(0).path("resumedAt")
+        .asString()).isBefore(Instant.parse(body.path(0).path("pausedAt").asString())));
+    org.junit.jupiter.api.Assertions.assertEquals("REQUIRED_PERMISSION",
+        body.path(1).path("pauseReason").asString());
+    // 재개 없이 끝난 마지막 구간은 resumedAt이 null이다.
+    org.junit.jupiter.api.Assertions.assertTrue(body.path(1).has("resumedAt")
+        && body.path(1).path("resumedAt").isNull());
+
+    LoginResponse other = desktop("pauses-other-" + UUID.randomUUID());
+    mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("SESSION_NOT_FOUND"));
+    mvc.perform(get("/api/v1/sessions/not-a-number/pauses").header("Authorization", token))
+        .andExpect(status().isNotFound());
+    mvc.perform(get(path)).andExpect(status().isUnauthorized());
+  }
+
+  /** 재개 기록 없이 다시 RUNNING이 된 세션도 새 일시정지 때 남은 구간을 닫고 하나만 연다. */
+  @Test
+  void stalePauseIsClosedBeforeOpeningAnother() throws Exception {
+    LoginResponse owner = desktop("pauses-stale-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String id = startForHeartbeat(owner);
+    for (int round = 0; round < 2; round++) {
+      mvc.perform(post("/api/v1/sessions/" + id + "/local-events").header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(localEventBody(Instant.now().plusSeconds(round))))
+          .andExpect(status().isOk());
+      // 재개 명령 없이 상태만 실행 중으로 되돌린 경우다.
+      jdbc.update("UPDATE learning_sessions SET status='RUNNING',last_resumed_at=? WHERE id=?",
+          java.sql.Timestamp.from(Instant.now()), Long.valueOf(id));
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_pauses WHERE session_id=? AND resumed_at IS NULL",
+        Integer.class, Long.valueOf(id)));
+    org.junit.jupiter.api.Assertions.assertEquals(2, jdbc.queryForObject(
+        "SELECT count(*) FROM session_pauses WHERE session_id=?", Integer.class, Long.valueOf(id)));
+  }
+
   private void resumeForEventTest(LoginResponse owner, String id) throws Exception {
     long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
     mvc.perform(post("/api/v1/sessions/" + id + "/resume")
