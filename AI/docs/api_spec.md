@@ -2,6 +2,8 @@
 
 > 2026-11-24 DR-030: 서버는 `request.goals`에 목표 1~3개(`goalId`, `goalText`, 선택적 `goalProfile`)와 `request.goalVersion`을 보낸다. 호환 스냅샷을 함께 보내면 첫 목표와 버전이 일치해야 한다. `RELATED` 응답의 `matchStatus`는 `MATCHED`·`FAR`·`NOT_ENOUGH`이며 일치한 목표 ID는 `matchedGoalId`에 담는다. 다른 활동 라벨은 두 필드가 null이다. DR-031부터 `APP_META`는 항상 `NOT_ENOUGH`이고, `TAB_META`·본문은 선택한 할 일이 화면 전체나 본문 조각에서 고정 공부 주제 목록의 분명히 다른 주제보다 화면을 잘 설명할 때만 `MATCHED`다.
 >
+> `reviewEvidence` (#29)는 분석 응답에 항상 배열로 포함한다. `RELATED + MATCHED`이며 성공적으로 수집한 Chrome DOM 또는 Desktop OCR 본문에서 매칭된 할 일의 개념을 확인했을 때만 `[{"conceptLabel":"React useState","evidenceType":"CONCEPT"}]`를 반환한다. 한 응답에 최대 1개, 라벨은 120자 이하다. 메타데이터만 있거나 본문에서 개념을 확인하지 못하면 `[]`다. 서버는 관측 시각과 중복 제거를 관리하며 세션 정리 입력 한도는 별도로 최대 20개다.
+>
 > `POST /internal/v1/goals/profile`는 인증된 서버 요청의 확정 목표(`goalText`, `locale`)를 Claude에 전달해 `{goalProfile}`을 반환한다. 명확성 검사는 반복하지 않는다.
 
 > 2026-11-23 화면 분석은 10,168건 E5 분류기를 사용한다. 활동 분류의 STUDY/OFF_TASK/UNCERTAIN을 각각 RELATED/UNRELATED/UNCERTAIN으로 전달한다. 목표 스냅샷은 세션 검증에 사용한다.
