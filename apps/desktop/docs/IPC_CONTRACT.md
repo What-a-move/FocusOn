@@ -172,6 +172,8 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | `goal:listOpen` | 커서 또는 `null` | `{ items, nextCursor }` (항목에 `goalProfile` 선택) | `GET /api/v1/goals?todoStatus=OPEN` |
 | `goal:remove` | `goalId` | `{}` | `DELETE /api/v1/goals/{goalId}` (204, 진행 중 세션이 쓰면 409 `GOAL_UPDATE_BLOCKED`) |
 | `goal:complete` | `goalId` | `{}` | `PATCH /api/v1/goals/{goalId}` `{ todoStatus: DONE }` (200, 세션 중에도 가능) |
+| `goal:updateProfile` | `{ goalId, goalProfile }` (목록 각 최대 5개·100자·중복 불가) | 저장된 할 일 | `PATCH /api/v1/goals/{goalId}` `{ goalProfile }` (통째 덮어쓰기, 409 `GOAL_UPDATE_BLOCKED`) — 서버 #336 |
+| `goal:regenerateProfile` | `goalId` | 저장된 할 일 | `POST /api/v1/goals/{goalId}/profile` (503·504면 기존 범위 유지) — 서버 #336 |
 
 - Preload는 `window.focusOn.goals.clarify()`, `create()`, `listOpen()`, `remove()`로 노출한다. Main은 목표 2~40자·질문 2회·허용 필드만 받는다. POST라 자동 재전송하지 않는다(AI 재시도는 Backend).
 - Renderer는 같은 목표 저장을 재시도할 때 같은 키를 사용한다. Main은 키를 `Idempotency-Key` 헤더로 보낸다.

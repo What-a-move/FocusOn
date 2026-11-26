@@ -84,6 +84,7 @@ public class ObservationContextService {
           json.readValue(state.getTimelineJson(), OffTaskTimeline.Snapshot.class));
       Instant cutoff = foreground.expiry(timeline.snapshot().context())
           .filter(at -> at.isBefore(now)).orElse(now);
+      state.suspendFar();
       state.transition(json.writeValueAsString(timeline.interrupt(cutoff)
           .switchContext(saved.getId().toString(), now).snapshot()));
     });
