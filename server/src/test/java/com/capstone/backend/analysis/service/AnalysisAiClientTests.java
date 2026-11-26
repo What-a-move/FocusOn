@@ -12,10 +12,13 @@ import ch.qos.logback.core.read.ListAppender;
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentPayload;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
+import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Metadata;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
+import com.capstone.backend.analysis.service.AnalysisDecision.EvidenceType;
+import com.capstone.backend.analysis.service.AnalysisDecision.ReviewEvidence;
 import com.capstone.backend.analysis.service.AnalysisRunStore.Prepared;
 import com.capstone.backend.common.api.SafeApiLog;
 import com.sun.net.httpserver.HttpServer;
@@ -33,12 +36,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import tools.jackson.databind.ObjectMapper;
 
 /** 실제 루프백 AI stub과 schema 검증으로 전송·오류 경계를 검증한다. */
 class AnalysisAiClientTests {
+  private static final String CONCEPT = "React useState";
   private final ObjectMapper json = new ObjectMapper();
 
   @Test
@@ -105,7 +111,115 @@ class AnalysisAiClientTests {
       String match) {
     String body = result(relation, score, reason, "v1");
     return AnalysisAiClient.normalize(json.readTree(
-        body.substring(0, body.length() - 1) + ",\"matchStatus\":" + match + "}"));
+        body.substring(0, body.length() - 1) + ",\"matchStatus\":" + match + "}"), true);
+  }
+
+  @Test
+  void missingOrInvalidEvidenceLeavesMatchedDecisionIntact() {
+    var response = json.readTree(matchedResult()).asObject();
+    var original = AnalysisAiClient.normalize(response, true);
+    assertEquals(Relation.RELATED, original.relation());
+    assertEquals(MatchStatus.MATCHED, original.matchStatus());
+    assertEquals(30L, original.matchedGoalId());
+    assertNull(original.reviewEvidence());
+    for (String invalid : new String[] {"null", "[]", "{}", "1", "\"CONCEPT\"", "[null]", "[1]",
+        "[{\"conceptLabel\":\"React\"}]", "[{\"evidenceType\":\"CONCEPT\"}]",
+        "[{\"conceptLabel\":42,\"evidenceType\":\"CONCEPT\"}]",
+        evidence("React", "UNKNOWN"), evidence("React", "concept"), evidence("", "CONCEPT"),
+        evidence(" \u00a0 ", "CONCEPT"), evidence("x".repeat(121), "CONCEPT"),
+        evidence("React\nuseState", "CONCEPT"), evidence("https://example.com/private", "CONCEPT"),
+        evidence("www.example.com", "CONCEPT"), evidence("student@example.com", "CONCEPT"),
+        evidence("//example.com/private", "CONCEPT"), evidence("file:/private/example", "CONCEPT"),
+        evidence("data:text/plain,example", "CONCEPT"),
+        evidence("Bear\u200ber syntheticPrivateToken", "CONCEPT"),
+        "[{\"conceptLabel\":\"React\",\"evidenceType\":\"CONCEPT\",\"title\":\"raw\"}]",
+        "[{\"conceptLabel\":\"React\",\"evidenceType\":\"CONCEPT\"},null]"}) {
+      response.set("reviewEvidence", json.readTree(invalid));
+      assertEquals(original, AnalysisAiClient.normalize(response, true));
+    }
+  }
+
+  @Test
+  void onlyConfirmedMatchedDecisionsCanCarryEvidence() {
+    var response = json.readTree(matchedResult()).asObject();
+    response.set("reviewEvidence", json.readTree(evidence(CONCEPT, "CONCEPT")));
+    var accepted = AnalysisAiClient.normalize(response, true);
+    assertEquals(new ReviewEvidence(CONCEPT, EvidenceType.CONCEPT), accepted.reviewEvidence());
+    assertFalse(accepted.toString().contains(CONCEPT));
+    assertTrue(json.valueToTree(accepted).path("reviewEvidence").isMissingNode());
+
+    String boundary = "학".repeat(119) + "𐐷";
+    response.set("reviewEvidence", json.readTree(evidence(boundary, "CONCEPT")));
+    assertEquals(boundary, AnalysisAiClient.normalize(response, true)
+        .reviewEvidence().conceptLabel());
+    for (String match : new String[] {"FAR", "NOT_ENOUGH", "UNKNOWN"}) {
+      response.put("matchStatus", match);
+      assertNull(AnalysisAiClient.normalize(response, true).reviewEvidence());
+    }
+    response.put("matchStatus", "MATCHED");
+    response.put("matchedGoalId", "invalid");
+    assertNull(AnalysisAiClient.normalize(response, true).reviewEvidence());
+    response.put("matchedGoalId", "30");
+    response.put("confidence", 0.59);
+    assertEquals(Relation.UNCERTAIN, AnalysisAiClient.normalize(response, true).relation());
+    assertNull(AnalysisAiClient.normalize(response, true).reviewEvidence());
+    response.put("confidence", 0.9);
+    response.put("decision", "UNRELATED");
+    response.put("reasonCode", "SEMANTIC_GOAL_MISMATCH");
+    var unrelated = AnalysisAiClient.normalize(response, true);
+    assertEquals(Relation.UNRELATED, unrelated.relation());
+    assertNull(unrelated.reviewEvidence());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+      "CHROME_DOM, body, true", "DESKTOP_APP_OCR, body, true",
+      "CHROME_DOM, , false", "DESKTOP_APP_OCR, '   ', false",
+      "CHROME_DOM, '\u00a0\u200b', false", // No-break space and zero-width space.
+      "APP_META, , false", "TAB_META, , false"
+  })
+  void evidenceThroughHttpRequiresAnObservationBody(ContentSource source, String body,
+      boolean expected) throws Exception {
+    var response = json.readTree(matchedResult()).asObject();
+    response.set("reviewEvidence", json.readTree(evidence(CONCEPT, "CONCEPT")));
+    var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    server.createContext("/internal/v1/analysis-runs", exchange -> {
+      byte[] answer = json.writeValueAsBytes(response);
+      try (exchange) {
+        exchange.sendResponseHeaders(200, answer.length);
+        exchange.getResponseBody().write(answer);
+      }
+    });
+    server.start();
+    try {
+      var client = new AnalysisAiClient(json, "http://127.0.0.1:"
+          + server.getAddress().getPort(), "service-test-only");
+      var request = new Request(UUID.randomUUID().toString(), source, Instant.now(),
+          BigDecimal.ONE, null, new Metadata("Chrome", CONCEPT, CONCEPT, "example.com"),
+          body == null ? null : new ContentPayload(body));
+      var prepared = new Prepared(10, 20, 30, 0, Instant.now(), CONCEPT, "v1", null, true, null);
+      var decision = client.analyze(prepared, request, 40);
+      assertEquals(Relation.RELATED, decision.relation());
+      assertEquals(MatchStatus.MATCHED, decision.matchStatus());
+      assertEquals(expected ? new ReviewEvidence(CONCEPT, EvidenceType.CONCEPT) : null,
+          decision.reviewEvidence());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  private String evidence(String label, String type) {
+    var array = json.createArrayNode();
+    array.addObject().put("conceptLabel", label).put("evidenceType", type);
+    return array.toString();
+  }
+
+  private static String matchedResult() {
+    return """
+        {"decision":"RELATED","confidence":null,"reasonCode":"SEMANTIC_GOAL_MATCH",
+         "modelVersion":"model-test","promptVersion":"v1-uncalibrated","matchStatus":"MATCHED",
+         "matchedGoalId":"30"}
+        """;
   }
 
   @Test
@@ -118,7 +232,7 @@ class AnalysisAiClientTests {
         result("UNCERTAIN", "null", "SEMANTIC_GOAL_MATCH", "v1"),
         result("SOMETHING", "null", "INSUFFICIENT_CONTEXT", "v1")}) {
       assertEquals(ReasonCode.ANALYSIS_UNAVAILABLE,
-          AnalysisAiClient.normalize(json.readTree(value)).reasonCode());
+          AnalysisAiClient.normalize(json.readTree(value), true).reasonCode());
     }
   }
 
@@ -343,7 +457,7 @@ class AnalysisAiClientTests {
   }
 
   private AnalysisDecision decision(String relation, String score, String reason, String prompt) {
-    return AnalysisAiClient.normalize(json.readTree(result(relation, score, reason, prompt)));
+    return AnalysisAiClient.normalize(json.readTree(result(relation, score, reason, prompt)), true);
   }
 
   private static String result(String relation, String score, String reason, String prompt) {

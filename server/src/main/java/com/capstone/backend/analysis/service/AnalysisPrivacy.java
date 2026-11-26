@@ -14,6 +14,11 @@ import java.util.regex.Pattern;
 
 /** AI 전송 전의 추가 방어다. 클라이언트 Privacy Guard를 대체하지 않는다. */
 final class AnalysisPrivacy {
+  private static final int MAX_CONCEPT_LABEL_LENGTH = 120;
+  private static final Pattern CONCEPT_LABEL_BLOCKED = Pattern.compile(
+      "(?i)://|(?:^|\\s)//\\S|\\b(?:www\\.|file:/|(?:data|blob|mailto|tel):\\S)"
+      + "|[\\p{Cc}\\p{Cf}\\p{Cs}\\p{Zl}\\p{Zp}]");
+
   // PostgreSQL 17 timestamp.h: Julian day zero inclusive, year 294277 exclusive.
   private static final Instant FIRST_TIMESTAMP = Instant.parse("-4713-11-24T00:00:00Z");
   private static final Instant END_TIMESTAMP = Instant.parse("+294277-01-01T00:00:00Z");
@@ -89,6 +94,13 @@ final class AnalysisPrivacy {
         || profile.coreTopics().stream().anyMatch(AnalysisPrivacy::sensitive)
         || profile.supportingTopics().stream().anyMatch(AnalysisPrivacy::sensitive)
         || profile.expectedActivities().stream().anyMatch(AnalysisPrivacy::sensitive)));
+  }
+
+  static boolean isSafeConceptLabel(String label) {
+    String normalized = Normalizer.normalize(label, Normalizer.Form.NFKC);
+    return !normalized.isBlank() && label.codePointCount(0, label.length())
+        <= MAX_CONCEPT_LABEL_LENGTH && !CONCEPT_LABEL_BLOCKED.matcher(normalized).find()
+        && !SENSITIVE.matcher(normalized).find();
   }
 
   /** 눈에 보이지 않는 문자로 알려진 민감 패턴 검사를 우회하지 못하게 정규화한다. */

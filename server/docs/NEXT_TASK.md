@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## #364 화면 분석의 학습 정리 근거 수신
+
+- 운영 AI 배포 커밋과 실제 Desktop·Extension 분석 동작을 확인한다. 같은 traceId의 안전한 로그와 공개 판정으로 연동 상태를 비교한다.
+- 저장 담당 인계. 팀이 동의 문구 버전·철회 처리·저장 마감을 확정한 뒤 완료 트랜잭션에서 검증한 근거만 저장에 연결한다. 종료 직전 접수한 분석은 종료 후 30초 이내 검증·저장 가능한 노트 전용 경로를 설계한다. 저장과 생성 직전에 동의를 재확인한다. [기획서](features/analysis-review-evidence-PLAN.md).
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - Desktop: 범위 항목 빼기·추가는 PATCH `goalProfile`, 「다시 만들기」는 `POST /goals/{id}/profile`. 503·504면 기존 범위를 그대로 보여 준다.
@@ -95,8 +100,8 @@
 
 ## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
 
-- AI 담당: (1) 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하, 원문·URL 없음) 추가 여부·형식 합의 (2) `POST /internal/v1/learning-summaries` 구현 — 서버 제안 형식은 PLAN 참고.
-- Backend: 합의되면 분석 결과 저장 시 근거를 `learning_review_evidences`에 넣고 실제 READY까지 확인한다.
+- AI 담당: `POST /internal/v1/learning-summaries` 구현. 서버 제안 형식은 파이프라인 기획서에 있다. 분석 응답 형식은 AI PR #362에 병합됐다.
+- Backend 저장 담당: 동의와 마감 계약 확정 뒤 `learning_review_evidences`를 연결하고 실제 READY까지 확인한다.
 - Desktop: 종료 직후 learning-summary가 404 대신 QUEUED→GENERATING→최종 상태로 온다. 5초 간격 조회 후 최종 상태에서 멈춘다.
 
 ## #182 분석 요청 추적 연동

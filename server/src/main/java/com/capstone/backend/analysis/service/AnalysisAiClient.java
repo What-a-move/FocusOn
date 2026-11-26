@@ -6,6 +6,8 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
+import com.capstone.backend.analysis.service.AnalysisDecision.EvidenceType;
+import com.capstone.backend.analysis.service.AnalysisDecision.ReviewEvidence;
 import com.capstone.backend.analysis.service.AnalysisRunStore.Prepared;
 import com.capstone.backend.common.api.SafeApiLog;
 import java.net.URI;
@@ -73,7 +75,8 @@ public class AnalysisAiClient {
       if (response.statusCode() != 200) {
         return logResult(AnalysisDecision.unavailable(), start, response.statusCode());
       }
-      return logResult(normalize(mapper.readTree(response.body())), start, response.statusCode());
+      return logResult(normalize(mapper.readTree(response.body()), hasEvidenceBody(request)), start,
+          response.statusCode());
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
     } catch (ExecutionException | TimeoutException | RuntimeException exception) {
@@ -159,8 +162,17 @@ public class AnalysisAiClient {
         "context", context, "extractionStatus", extraction);
   }
 
+  private static boolean hasEvidenceBody(Request request) {
+    return (request.contentSource() == ContentSource.CHROME_DOM
+        || request.contentSource() == ContentSource.DESKTOP_APP_OCR)
+        && request.contentPayload() != null && request.contentPayload().text().codePoints()
+        .anyMatch(character -> !Character.isWhitespace(character)
+            && !Character.isSpaceChar(character) && !Character.isISOControl(character)
+            && Character.getType(character) != Character.FORMAT);
+  }
+
   /** AI schema 밖 값과 receipt는 정상 판정으로 취급하지 않는다. */
-  static AnalysisDecision normalize(JsonNode value) {
+  static AnalysisDecision normalize(JsonNode value, boolean hasBody) {
     try {
       if (!value.isObject() || !value.path("decision").isString()
           || !value.has("confidence") || !value.path("reasonCode").isString()
@@ -201,10 +213,27 @@ public class AnalysisAiClient {
       }
       return new AnalysisDecision(relation, confidence, reason, AnalysisStatus.COMPLETED,
           model, prompt, matchStatus(value.path("matchStatus")),
-          matchedGoalId(value.path("matchedGoalId")));
+          matchedGoalId(value.path("matchedGoalId")),
+          hasBody ? reviewEvidence(value.path("reviewEvidence")) : null);
     } catch (IllegalArgumentException exception) {
       return AnalysisDecision.unavailable();
     }
+  }
+
+  private static ReviewEvidence reviewEvidence(JsonNode value) {
+    if (!value.isArray() || value.size() != 1) {
+      return null;
+    }
+    var evidence = value.path(0);
+    var label = evidence.path("conceptLabel");
+    var type = evidence.path("evidenceType");
+    if (!evidence.isObject() || evidence.size() != 2 || !type.isString()
+        || !EvidenceType.CONCEPT.name().equals(type.asString()) || !label.isString()) {
+      return null;
+    }
+    String concept = label.asString();
+    return AnalysisPrivacy.isSafeConceptLabel(concept)
+        ? new ReviewEvidence(concept.strip(), EvidenceType.CONCEPT) : null;
   }
 
   /**

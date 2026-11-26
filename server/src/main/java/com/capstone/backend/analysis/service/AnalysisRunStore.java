@@ -128,24 +128,32 @@ public class AnalysisRunStore {
     var device = lockAndValidate(principal);
     var session = ownedSession(principal, prepared.sessionId(), device);
     var run = runs.findById(prepared.runId()).orElseThrow();
-    var guard = guard(principal.userId(), request, prepared.goals());
-    Long matchedGoalId = decision.matchedGoalId();
+    var decisionToStore = finalDecision(prepared, run, session,
+        guard(principal.userId(), request, prepared.goals()), decision);
+    run.complete(decisionToStore);
+    interventionPolicy.completed(session, run, Instant.now());
+    return run.response();
+  }
+
+  static AnalysisDecision finalDecision(Prepared prepared, AnalysisRunEntity run,
+      LearningSessionEntity session, GuardStatus guard, AnalysisDecision decision) {
     if (guard != null) {
-      decision = AnalysisDecision.guarded(guard);
-    } else if (!prepared.latest() || run.isOrderingUntrusted() || !run.isCurrentEligible()
+      return AnalysisDecision.guarded(guard);
+    }
+    if (!prepared.latest() || run.isOrderingUntrusted() || !run.isCurrentEligible()
         || session.getStatus() != SessionStatus.RUNNING
         || session.getGoalVersion() != prepared.goalVersion()
         || !java.util.Objects.equals(session.getLastResumedAt(), prepared.runningSince())) {
       // pause/resume 동안 도착한 결과로 새 실행 구간을 판정하지 않는다.
-      decision = AnalysisDecision.unavailable();
-    } else if (decision.matchStatus() == MatchStatus.MATCHED
+      return AnalysisDecision.unavailable();
+    }
+    Long matchedGoalId = decision.matchedGoalId();
+    if (decision.matchStatus() == MatchStatus.MATCHED
         && (matchedGoalId == null || prepared.goals().stream()
             .noneMatch(goal -> goal.goalId().equals(matchedGoalId.toString())))) {
-      decision = decision.withoutGoalAttribution();
+      return decision.withoutGoalAttribution();
     }
-    run.complete(decision);
-    interventionPolicy.completed(session, run, Instant.now());
-    return run.response();
+    return decision;
   }
 
   /** AI 호출 중 기기·family가 폐기될 수 있어 필터 인증과 별도로 잠금 아래 재검증한다. */
