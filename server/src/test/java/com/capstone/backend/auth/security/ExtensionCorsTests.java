@@ -1,12 +1,16 @@
 package com.capstone.backend.auth.security;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,11 +69,12 @@ class ExtensionCorsTests {
   }
 
   @Test
-  void actualRequestStillRequiresAuthenticationAndExposesRetryAfter() throws Exception {
+  void actualRequestStillRequiresAuthenticationAndExposesDiagnosticHeaders() throws Exception {
     mvc.perform(get("/api/v1/auth/me").header("Origin", ORIGIN))
         .andExpect(status().isUnauthorized())
         .andExpect(header().string("Access-Control-Allow-Origin", ORIGIN))
-        .andExpect(header().string("Access-Control-Expose-Headers", "Retry-After"));
+        .andExpect(header().string("Access-Control-Expose-Headers", containsString("Retry-After")))
+        .andExpect(header().string("Access-Control-Expose-Headers", containsString("X-Trace-Id")));
     mvc.perform(options("/api/v1/auth/me"))
         .andExpect(status().isUnauthorized());
   }
@@ -82,7 +87,8 @@ class ExtensionCorsTests {
       mvc.perform(options("/api/v1/sessions/active").header("Origin", origin)
               .header("Access-Control-Request-Method", "GET"))
           .andExpect(status().isForbidden())
-          .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+          .andExpect(header().doesNotExist("Access-Control-Allow-Origin"))
+          .andExpect(header().doesNotExist("Access-Control-Expose-Headers"));
     }
     mvc.perform(options("/api/v1/auth/me").header("Origin", ORIGIN)
             .header("Access-Control-Request-Method", "PATCH"))
@@ -108,7 +114,22 @@ class ExtensionCorsTests {
     var actual = client.send(java.net.http.HttpRequest.newBuilder(uri)
         .header("Origin", ORIGIN).GET().build(),
         java.net.http.HttpResponse.BodyHandlers.ofString());
-    org.junit.jupiter.api.Assertions.assertEquals(401, actual.statusCode());
+    assertEquals(401, actual.statusCode());
+    assertEquals(ORIGIN, actual.headers().firstValue("Access-Control-Allow-Origin").orElseThrow());
+    String traceId = actual.headers().firstValue("X-Trace-Id").orElseThrow();
+    var generatedTrace = UUID.fromString(traceId);
+    assertEquals(traceId, generatedTrace.toString());
+    assertEquals(4, generatedTrace.version());
+    var exposed = actual.headers().firstValue("Access-Control-Expose-Headers").orElseThrow();
+    assertTrue(exposed.contains("Retry-After"));
+    assertTrue(exposed.contains("X-Trace-Id"));
+
+    String sentTrace = UUID.randomUUID().toString();
+    var traced = client.send(java.net.http.HttpRequest.newBuilder(uri)
+        .header("Origin", ORIGIN).header("X-Trace-Id", sentTrace).GET().build(),
+        java.net.http.HttpResponse.BodyHandlers.ofString());
+    assertEquals(401, traced.statusCode());
+    assertEquals(sentTrace, traced.headers().firstValue("X-Trace-Id").orElseThrow());
   }
 
   /** 잘못된 환경변수가 전체 origin 허용으로 바뀌지 않게 한다. */
