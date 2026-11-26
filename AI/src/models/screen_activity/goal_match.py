@@ -57,6 +57,22 @@ def _supports(bank, alias, rival, task_score, view):
     return float(scores[rival].max()) - own <= RIVAL_MARGIN
 
 
+def _clean_body_payload(payload, content):
+    body = clean_text(content.text, PassageKind.BODY, PREPROCESSING.ui_fragments, strip_html=False).text
+    return {**payload, "contentPayload": {"text": body}}
+
+
+def review_concept(classifier, content, payload, goal) -> str | None:
+    if (content.content_source not in {ContentSource.CHROME_DOM, ContentSource.DESKTOP_APP_OCR}
+            or content.extraction_status is not ExtractionStatus.SUCCESS):
+        return None
+    title, text = parts(_clean_body_payload(payload, content))
+    body = text.removeprefix(title).strip()
+    if len(body) < MIN_BODY_CHARS:
+        return None
+    return classifier.topic_bank.observed_concept(body, _match_terms(goal))
+
+
 def match_goal(classifier, content, payload, goals) -> tuple[str | None, MatchStatus]:
     # A desktop window title is usually a file name; attribution needs the OCR body.
     if content.content_source is ContentSource.APP_META:
@@ -67,8 +83,7 @@ def match_goal(classifier, content, payload, goals) -> tuple[str | None, MatchSt
         if content.content_source is ContentSource.DESKTOP_APP_OCR and content.ocr is not None:
             if content.ocr.capture_status != "SUCCESS" or content.ocr.confidence < PREPROCESSING.min_quality_score:
                 return None, "NOT_ENOUGH"
-        cleaned = clean_text(content.text, PassageKind.BODY, PREPROCESSING.ui_fragments, strip_html=False).text
-        payload = {**payload, "contentPayload": {"text": cleaned}}
+        payload = _clean_body_payload(payload, content)
     title, text = parts(payload)
     if not metadata_only:
         body = text.removeprefix(title).strip()

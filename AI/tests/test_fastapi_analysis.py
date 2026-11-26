@@ -81,7 +81,8 @@ def test_decision_contract(payload, source, scores, decision, reason):
                                "modelVersion": "e5-activity-10168",
                                "promptVersion": "e5-activity-v1-uncalibrated",
                                "matchedGoalId": None,
-                               "matchStatus": "NOT_ENOUGH" if decision == "RELATED" else None}
+                               "matchStatus": "NOT_ENOUGH" if decision == "RELATED" else None,
+                               "reviewEvidence": []}
     if decision != "RELATED":
         assert not model.embeddings
     assert model.inputs == [{
@@ -283,6 +284,49 @@ def test_body_chunk_after_site_menu_can_support_task(payload, marker, expected):
     with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", *expected)
+
+
+@pytest.mark.parametrize(("source", "extraction", "body_prefix", "goal_score", "status", "evidence"), [
+    ("CHROME_DOM", "SUCCESS", "React useState를 사용합니다. ", .90, "MATCHED", True),
+    ("DESKTOP_APP_OCR", "SUCCESS", "react usestate를 사용합니다. ", .90, "MATCHED", True),
+    ("CHROME_DOM", "SUCCESS", "", .90, "MATCHED", False),
+    ("CHROME_DOM", "SUCCESS", "React useStateful을 사용합니다. ", .90, "MATCHED", False),
+    ("CHROME_DOM", "PARTIAL", "React useState를 사용합니다. ", .90, "MATCHED", False),
+    ("TAB_META", "SUCCESS", "", .90, "MATCHED", False),
+    ("CHROME_DOM", "SUCCESS", "React useState를 사용합니다. ", .79, "FAR", False),
+])
+def test_review_evidence_requires_matched_goal_and_observed_concept(
+    payload, source, extraction, body_prefix, goal_score, status, evidence
+):
+    request = payload["request"]
+    goal = "React useState 사용법"
+    request.update(goalSnapshot=goal)
+    payload["goal"]["text"] = goal
+    request["metadata"] = {
+        "appName": "Preview" if source == "DESKTOP_APP_OCR" else "Google Chrome",
+        "pageTitle": "React useState",
+    }
+    request["contentSource"] = payload["context"]["contentSource"] = source
+    payload["extractionStatus"] = extraction
+    if source == "TAB_META":
+        request.pop("contentPayload")
+    else:
+        # A repeated title is removed. A different catalog concept in the body is irrelevant.
+        request["contentPayload"]["text"] = (
+            "React useState\n" + body_prefix + "React useEffect를 비교합니다. " + LONG_BODY
+        )
+    model = FixedScores(similarities={goal: goal_score})
+    model.topic_bank = TopicBank([(0., 0., 1.)], [(0., 0., 1.)],
+                                 ["React useState", "React useEffect"])
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+
+    assert response.status_code == 200
+    result = response.json()
+    assert (result["decision"], result["matchStatus"]) == ("RELATED", status)
+    assert result["reviewEvidence"] == (
+        [{"conceptLabel": "React useState", "evidenceType": "CONCEPT"}] if evidence else []
+    )
 
 
 def test_matching_failure_keeps_activity_decision(payload):
