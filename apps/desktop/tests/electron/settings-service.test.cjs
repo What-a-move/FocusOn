@@ -89,14 +89,22 @@ const consents = (screen) => ({ currentVersion: '2026-09-17', consents: [
 test('화면 분석 동의 철회는 서버 현재 버전으로 PUT하고 온보딩 상태를 다시 읽어 반영한다', async () => {
   let granted = true
   const { service, requests, statuses } = accountFixture({
-    'GET /api/v1/users/me/consents': () => consents(granted),
+    'GET /api/v1/users/me/consents': () => ({ ...consents(granted), currentVersion: '2026-10-01' }),
     'PUT /api/v1/users/me/consents/SCREEN_ANALYSIS': (request) => { granted = request.body.isGranted; return { consentType: 'SCREEN_ANALYSIS' } },
     'GET /api/v1/users/me/onboarding-readiness': { onboardingStatus: 'INCOMPLETE', currentStep: 'PERMISSIONS_AND_CONSENTS', steps: { profileCompleted: true, extensionLinked: true, screenAnalysisReady: true, requiredConsentsCompleted: false, analysisExcludedDomainsStepCompleted: true } },
   })
   const result = await service.setScreenConsent(false)
   assert.equal(result.data.items.find((item) => item.type === 'SCREEN_ANALYSIS').granted, false)
-  assert.deepEqual(requests.find((r) => r.method === 'PUT').body, { isGranted: false, consentVersion: '2026-09-17', consentSource: 'DESKTOP_SETTINGS' })
+  assert.deepEqual(requests.find((r) => r.method === 'PUT').body, { isGranted: false, consentVersion: '2026-10-01', consentSource: 'DESKTOP_SETTINGS' })
   assert.deepEqual(statuses, ['INCOMPLETE'])
+})
+
+test('설정에서 표시한 화면 분석 동의 버전이 서버와 다르면 재동의를 저장하지 않는다', async () => {
+  const { service, requests } = accountFixture({
+    'GET /api/v1/users/me/consents': { ...consents(false), currentVersion: '2026-10-01' },
+  })
+  assert.deepEqual(await service.setScreenConsent(true), { success: false, error: { code: 'LOCAL_CONSENT_VERSION_MISMATCH', retryable: false } })
+  assert.deepEqual(requests.map(({ method }) => method), ['GET'])
 })
 
 test('기기 목록에서 이 Desktop에 연결된 Extension만 고르고, 다른 기기는 해제하지 않는다', async () => {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { OnboardingShell } from './OnboardingShell'
 import { describeError, onboardingApi, type Notice } from '../../shared/api/onboarding-api'
 import { cameraDetail, requiredConsents, type Detail } from '../../shared/lib/consent-docs'
+import consentDocument from '../../electron/shared/consent-document.json'
 import { ConsentDocument } from '../../shared/ui/ConsentDocument'
 
 type PermName = 'screen' | 'camera' | 'notify'
@@ -31,7 +32,7 @@ const NOTIFY_BLOCKED: Record<PermState['state'], string> = {
 }
 
 // [유지보수] 앱을 다시 켜면 동의 체크가 사라지므로 이 기기에만 잠깐 기억한다. 저장에 성공하면 지운다.
-const CONSENT_DRAFT_KEY = 'focuson.onboarding.consent-draft'
+const CONSENT_DRAFT_KEY = `focuson.onboarding.consent-draft:${consentDocument.version}`
 type ConsentDraft = { accepted: string[]; cameraConsent: boolean }
 function readDraft(): ConsentDraft | null {
   try {

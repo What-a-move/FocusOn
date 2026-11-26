@@ -3,6 +3,7 @@ import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
 import { isValidDomainList } from '../shared/onboarding-contract.cjs'
+import { version as displayedConsentVersion } from '../shared/consent-document.json'
 import { isFocusSettingsInput, parseFocusSettings, type FocusSettings } from '../shared/session-contract.cjs'
 import { parseReadiness } from '../shared/onboarding-contract.cjs'
 import { SETTINGS_CHANNELS, isDeviceId, isThemeSource, parseConsentList, parseDeviceStatus, type ConsentList, type DeviceStatus, type ThemeSource } from '../shared/settings-contract.cjs'
@@ -41,13 +42,16 @@ export class SettingsService {
   }
 
   /**
-   * 화면 분석 동의를 철회하거나 다시 동의한다. 화면에 보여 준 문서와 같은 버전으로 저장되도록 서버의 현재 버전을 쓴다.
+   * 동의할 때는 표시한 문서 버전을 확인한다. 철회는 서버 버전이 바뀌어도 받을 수 있다.
    * 철회하면 서버 온보딩 상태가 미완료가 되어 새 집중을 시작할 수 없다. 바뀐 상태를 화면 상태에도 반영한다.
    */
   async setScreenConsent(granted: boolean): Promise<ApiResult<ConsentList>> {
     const current = await this.getConsents()
     if (!current.success) return current
     if (!current.data.currentVersion) return { success: false, error: { code: 'INVALID_RESPONSE', retryable: false } }
+    if (granted && current.data.currentVersion !== displayedConsentVersion) {
+      return { success: false, error: { code: 'LOCAL_CONSENT_VERSION_MISMATCH', retryable: false } }
+    }
     const saved = await this.auth.authorizedRequest({
       path: '/api/v1/users/me/consents/SCREEN_ANALYSIS', method: 'PUT', expectedStatus: 200, parse: (value) => (isRecord(value) ? {} : null),
       body: { isGranted: granted, consentVersion: current.data.currentVersion, consentSource: 'DESKTOP_SETTINGS' },
