@@ -12,6 +12,12 @@
 
 사용자가 `FocusOn 학습해`처럼 짧게 요청하면 추가 설명을 요구하지 말고 이 저장소의 시작 문서를 읽는다. `docs/PROJECT_CONTEXT.md`에서 전체 흐름과 Notion 정본 링크를 확인하고, `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, `docs/DATA_PRIVACY.md`, `docs/WORKFLOW.md` 및 각 영역의 `CONTEXT.md`, `NEXT_TASK.md`, `DECISION_RECORD.md`를 읽는다. 관련 Notion에 접근할 수 있으면 현재 내용을 확인한다. 확정 정책·제안·실제 구현 상태를 구분하고, 접근하지 못한 정본은 확인했다고 말하지 않는다. 학습 요청만 받은 경우 파일은 수정하지 않고 핵심 내용과 남은 충돌을 짧게 보고한다.
 
+## 팀원에게 변경 사항 전달
+
+- 기획·개인정보·Frontend·Desktop 검증은 사용자가 담당한다. Backend·AI 팀원에게는 각 영역에서 구현하거나 확인할 항목을 전달한다.
+- 바로 보낼 수 있는 짧은 한국어 공지로 작성한다. 제목에 변경 내용과 관련 DR·이슈·PR 번호를 적고, 본문에 API·필드·값·적용 조건, 바뀌는 동작, 수신자가 할 작업을 적는다. 저장 위치·호환성·성능 수치는 관련된 경우 확인한 근거와 함께 적는다.
+- 합의된 계약은 정해진 내용으로 전달한다. 새 설계는 구체적인 안을 잡아 `제안`으로 표시하고, 상대가 확인할 항목을 좁혀 요청한다. 메시지 초안은 사용자가 발송을 요청할 때만 실제로 보낸다.
+
 ## 모든 작업 시작 전
 
 1. 새 채팅을 포함해 모든 작업에서 `docs/PROJECT_CONTEXT.md`, `docs/README.md`, `docs/WORKFLOW.md`를 먼저 읽고 프로젝트 목적·문서 정본·현재 상태를 파악한다. `PROJECT_CONTEXT.md`는 시작용 요약이므로 세부 계약과 구현 여부는 해당 정본·코드에서 다시 확인한다.
@@ -31,6 +37,7 @@
 - Frontend 기능 개발 중 실제 오류가 발생하면 `DEVELOPMENT_ERROR_TEMPLATE.md` 형식으로 오류마다 `docs/features/기능명-오류명-ERROR.md`를 생성한다. 오류가 없으면 ERROR 문서를 만들지 않는다.
 - 기능 범위를 임의로 넓히지 않고, 추가 작업은 Issue로 분리한다.
 - Issue Branch의 PR 대상은 `dev`로 설정하고, `dev`에서 `main`으로 가는 PR은 최종 통합 시에만 생성한다.
+- Desktop PR을 열거나 수정 커밋을 푸시할 때, 또는 테스트할 브랜치·앱 코드가 바뀔 때마다 그 커밋으로 macOS QA 앱(`release/FocusOn-QA-<PR>-<SHA>`)을 새로 빌드한다. GitHub PR 최신 커밋과 빌드 커밋이 같은지, 기존 앱에 진행 중인 세션이 없는지 확인하고 정상 종료한 뒤, 이전 빌드는 보관 폴더로 옮긴다(사용자 데이터·Keychain 유지). 실제 실행 경로가 새 앱과 같아야 전환 완료로 보고, 권한 재허용 상태·설치 확인·기능 테스트 결과를 따로 알린다. 자세한 절차는 [개발 워크플로우](docs/WORKFLOW.md#desktop-pr-qa-빌드)를 따른다.
 - 카메라·화면·페이지 데이터는 루트 `docs/DATA_PRIVACY.md` 기준을 따른다.
 - **로그:** 코드에 로그를 넣을 때는 `console.log`·`System.out`·`print`를 직접 쓰지 않고 그 영역의 공용 로거만 쓴다. 형식·event 이름·traceId 규칙은 Notion `모듈 연동 로깅 규칙`과 `docs/ARCHITECTURE.md` 로그·추적 원칙을 따른다. 정본 목록 밖의 event 이름을 만들지 않고, 잡은 예외는 WARN 이상으로 남기며, 제목·본문·URL 전체·토큰·개인정보는 로그에 넣지 않는다. 새 외부 호출을 추가하면 보내는 쪽 OUT과 받는 쪽 IN을 같은 traceId로 남긴다.
 - 제품 범위나 확정 계약이 바뀌면 `docs/PROJECT_CONTEXT.md`의 요약도 같은 작업에서 갱신한다. 단순 진행 상황은 각 영역의 `CONTEXT.md`와 `NEXT_TASK.md`에 기록한다.

@@ -63,6 +63,24 @@ Issue Branch에서 작업한 PR의 대상은 `dev`로 설정한다. PR에는 작
 
 `dev`에 통합된 기능을 최종 검수한 뒤 `dev → main` PR을 생성한다.
 
+### Desktop PR QA 빌드
+
+1. Desktop PR을 열거나 수정 커밋을 푸시할 때, 또는 테스트할 브랜치나 앱 코드가 바뀔 때마다 그 커밋으로 macOS 앱을 새로 빌드한다.
+2. PR을 테스트할 때는 GitHub에 올라간 최신 PR 커밋(`gh pr view <번호> --json headRefOid`)과 빌드한 커밋이 같은지 확인한다. 빌드 폴더 이름에는 PR 번호와 짧은 SHA를 넣는다. 예: `release/FocusOn-QA-351-93210fb`.
+
+   ```bash
+   pnpm build &&
+     node --env-file=.env scripts/write-build-config.cjs &&
+     pnpm exec electron-builder --mac --arm64 --dir \
+       --config.directories.output="release/FocusOn-QA-<PR>-$(git rev-parse --short HEAD)"
+   ```
+
+3. 실행 중인 앱에 집중 세션이나 저장 중인 작업이 있는지 확인한다. 진행 중이면 사용자에게 알리고, 끝낼 수 있는 상태면 기존 앱을 정상 종료한다.
+4. 이전 빌드는 실행 경로에서 `release/retired-builds/`로 옮기고 새 `.app`을 직접 실행한다. 사용자 데이터와 Keychain 로그인 정보는 지우지 않는다.
+5. 실행 뒤 프로세스의 실제 실행 경로가 새 앱 번들과 같은지 확인한다. 같은 이름의 이전 앱이 열릴 수 있으므로, 이 확인을 마쳐야 전환 완료로 본다.
+6. 새 빌드에서 화면 기록·알림 권한을 다시 허용해야 하면 그 상태를 알린다. 설치·실행 확인과 실제 기능 테스트 결과는 따로 기록한다.
+7. 끝나면 PR 번호, 커밋 SHA, 실행한 앱의 전체 경로, 확인한 항목을 짧게 알린다.
+
 ## Merge 후
 
 - Issue Branch PR이 실제로 `dev`에 Merge된 것을 먼저 확인한다. 닫혔지만 Merge되지 않은 PR의 Issue나 Branch는 정리하지 않는다.
