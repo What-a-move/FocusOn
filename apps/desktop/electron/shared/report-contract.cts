@@ -5,6 +5,7 @@ export const REPORT_CHANNELS = {
   calendar: 'report:calendar:get',
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
+  sessionPauses: 'report:session-pauses:get',
   learningSummary: 'report:learning-summary:get',
   learningNotes: 'report:learning-notes:list',
 } as const
@@ -49,10 +50,13 @@ export type LearningSummary = { status: LearningSummaryStatus; overview: string 
 export type LearningNote = { sessionId: string; goalText: string; studyDate: string; accumulatedActiveMs: number; keyConcepts: KeyConcept[] }
 export type LearningNoteList = { items: LearningNote[]; nextCursor: string | null }
 
+export type SessionPause = { pausedAt: string; resumedAt: string | null; pauseReason: string }
+
 export type ReportsApi = {
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
+  getSessionPauses(input: { sessionId: string }): Promise<IpcResult<SessionPause[]>>
   getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
   listLearningNotes(input: { cursor: string | null }): Promise<IpcResult<LearningNoteList>>
 }
@@ -125,6 +129,23 @@ export function parseSessionSummary(value: unknown): SessionSummary | null {
     autoPauseReasons: Array.isArray(value.autoPauseReasons) ? value.autoPauseReasons.filter((reason): reason is string => typeof reason === 'string') : [],
     interventionCount: optionalCount(value.interventionCount),
   }
+}
+
+export function parseSessionPauses(value: unknown): SessionPause[] | null {
+  if (!Array.isArray(value)) return null
+  const pauses: SessionPause[] = []
+  let previousEnd = -Infinity
+  for (const item of value) {
+    if (!isRecord(item) || !isTime(item.pausedAt) || typeof item.pauseReason !== 'string' || !item.pauseReason.trim()) return null
+    const { pausedAt, resumedAt, pauseReason } = item
+    if (resumedAt !== null && !isTime(resumedAt)) return null
+    const start = Date.parse(pausedAt)
+    const end = resumedAt === null ? Infinity : Date.parse(resumedAt)
+    if (start < previousEnd || end < start) return null
+    pauses.push({ pausedAt, resumedAt, pauseReason })
+    previousEnd = end
+  }
+  return pauses
 }
 
 const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)

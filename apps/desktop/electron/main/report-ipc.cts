@@ -1,8 +1,8 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { REPORT_CHANNELS, isNoteCursor, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseDaily, parseLearningNoteList, parseLearningSummary, parseSessionSummary } from '../shared/report-contract.cjs'
-import type { CalendarMonth, DailyReport, LearningNoteList, LearningSummary, SessionSummary } from '../shared/report-contract.cjs'
+import { REPORT_CHANNELS, isNoteCursor, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseDaily, parseLearningNoteList, parseLearningSummary, parseSessionPauses, parseSessionSummary } from '../shared/report-contract.cjs'
+import type { CalendarMonth, DailyReport, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -24,6 +24,10 @@ export class ReportService {
 
   getSessionSummary(sessionId: string): Promise<ApiResult<SessionSummary>> {
     return this.auth.authorizedRequest({ path: `/api/v1/sessions/${encodeURIComponent(sessionId)}/summary`, method: 'GET', expectedStatus: 200, parse: parseSessionSummary })
+  }
+
+  getSessionPauses(sessionId: string): Promise<ApiResult<SessionPause[]>> {
+    return this.auth.authorizedRequest({ path: `/api/v1/sessions/${encodeURIComponent(sessionId)}/pauses`, method: 'GET', expectedStatus: 200, parse: parseSessionPauses })
   }
 
   listLearningNotes(cursor: string | null): Promise<ApiResult<LearningNoteList>> {
@@ -57,6 +61,7 @@ export function registerReportIpc(getMainWindow: () => BrowserWindow | null, ren
   handle(REPORT_CHANNELS.calendar, (args) => onlyKey(args, 'month', isValidMonth), (s, args) => s.getCalendar((args[0] as { month: string }).month))
   handle(REPORT_CHANNELS.daily, (args) => onlyKey(args, 'date', isValidDate), (s, args) => s.getDaily((args[0] as { date: string }).date))
   handle(REPORT_CHANNELS.sessionSummary, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getSessionSummary((args[0] as { sessionId: string }).sessionId))
+  handle(REPORT_CHANNELS.sessionPauses, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getSessionPauses((args[0] as { sessionId: string }).sessionId))
   handle(REPORT_CHANNELS.learningSummary, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getLearningSummary((args[0] as { sessionId: string }).sessionId))
   handle(REPORT_CHANNELS.learningNotes, (args) => onlyKey(args, 'cursor', isNoteCursor), (s, args) => s.listLearningNotes((args[0] as { cursor: string | null }).cursor))
 }

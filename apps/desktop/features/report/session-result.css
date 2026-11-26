@@ -62,6 +62,14 @@
 .result-window .rate small { display: block; color: var(--muted); font-size: 13px; }
 .result-window .muted-note { margin: 14px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; word-break: keep-all; }
 
+.result-window .pause-timeline { margin: 20px 0 0; color: var(--muted); font-size: 13px; }
+.result-window .pause-retry { margin-top: 8px; }
+.result-window .pause-timeline figcaption { color: var(--ink); font-weight: 700; }
+.result-window .pause-axis { position: relative; height: 2px; margin: 13px 8px 0; background: var(--line); }
+.result-window .pause-axis span { position: absolute; top: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); color: var(--surface); font-size: 10px; font-weight: 700; }
+.result-window .pause-axis-label { display: flex; justify-content: space-between; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.result-window .pause-times { margin: 8px 0 0; padding-inline-start: 18px; line-height: 1.6; }
+
 /* 학습 정리 (FocusOn-design/session-report.html .learn): 면 색 없이 큰 본문 + '다음' 줄 */
 .result-window .learn { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px 24px; }
 .result-window .learn h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }

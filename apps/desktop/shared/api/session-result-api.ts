@@ -1,8 +1,8 @@
-import type { LearningNote, LearningNoteList, LearningSummary, SessionSummary } from '../../electron/shared/report-contract.cjs'
+import type { LearningNote, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { LearningNote, LearningSummary, SessionSummary }
+export type { LearningNote, LearningSummary, SessionPause, SessionSummary }
 
 const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
@@ -19,6 +19,7 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 
 export const sessionResultApi = {
   getSummary: (sessionId: string) => viaReports<SessionSummary>((api) => api.getSessionSummary({ sessionId })),
+  getPauses: (sessionId: string) => viaReports<SessionPause[]>((api) => api.getSessionPauses({ sessionId })),
   getLearningSummary: (sessionId: string) => viaReports<LearningSummary>((api) => api.getLearningSummary({ sessionId })),
   listLearningNotes: (cursor: string | null = null) => viaReports<LearningNoteList>((api) => api.listLearningNotes({ cursor })),
 }
@@ -31,4 +32,17 @@ export function flowOf(summary: SessionSummary): { related: number; unrelated: n
   // 관련·무관 합이 1분 미만이면 비율을 보여 주지 않는다.
   const rate = related + unrelated >= 60_000 ? Math.round((related / (related + unrelated)) * 100) : null
   return { related, unrelated, uncertain, unavailable, rate }
+}
+
+/** 일시정지를 뺀 가로축에서 각 멈춤 지점의 위치를 계산한다. */
+export function pauseTimelinePositions(pauses: SessionPause[], { startedAt, accumulatedActiveMs }: Pick<SessionSummary, 'startedAt' | 'accumulatedActiveMs'>): number[] {
+  if (!startedAt || accumulatedActiveMs === 0) return []
+  const start = Date.parse(startedAt)
+  let previousPausedMs = 0
+  return pauses.map(({ pausedAt, resumedAt }) => {
+    const paused = Date.parse(pausedAt)
+    const activeMs = Math.max(0, paused - start - previousPausedMs)
+    if (resumedAt) previousPausedMs += Math.max(0, Date.parse(resumedAt) - Math.max(start, paused))
+    return Math.min(100, (activeMs / accumulatedActiveMs) * 100)
+  })
 }

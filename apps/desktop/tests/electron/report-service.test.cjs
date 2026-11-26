@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict')
 const test = require('node:test')
 const { ReportService } = require('../../dist-electron/main/report-ipc.cjs')
-const { parseCalendar, parseDaily, isValidDate, isValidMonth, isValidSessionId, parseSessionSummary, parseLearningSummary } = require('../../dist-electron/shared/report-contract.cjs')
+const { parseCalendar, parseDaily, isValidDate, isValidMonth, isValidSessionId, parseSessionSummary, parseSessionPauses, parseLearningSummary } = require('../../dist-electron/shared/report-contract.cjs')
 
 const calendar = { month: '2026-10', studyDayCount: 1, days: [{ date: '2026-10-24', totalActiveMs: 1500000, sessionCount: 1, hasStudyActivity: true }] }
 const daily = { date: '2026-10-24', totalActiveMs: 1500000, sessions: [{ sessionId: '7', goalTextSnapshot: '미적분 예제 풀기', startedAt: '2026-10-24T01:00:00Z', endedAt: '2026-10-24T01:25:00Z', accumulatedActiveMs: 1500000 }], interruptions: [], summary: {} }
@@ -101,4 +101,21 @@ test('노트 목록은 형식이 맞는 노트만 남기고, 다음 쪽은 curso
   await service.listLearningNotes(null)
   await service.listLearningNotes('a b')
   assert.deepEqual(paths, ['/api/v1/learning-summaries', '/api/v1/learning-summaries?cursor=a%20b'])
+})
+
+test('일시정지는 순서와 열린 마지막 구간을 검증하고 본인 세션 경로로 조회한다', async () => {
+  const pause = { pausedAt: '2026-10-24T01:05:00Z', resumedAt: '2026-10-24T01:07:00Z', pauseReason: 'USER' }
+  const last = { pausedAt: '2026-10-24T01:12:00Z', resumedAt: null, pauseReason: 'REQUIRED_PERMISSION' }
+  assert.deepEqual(parseSessionPauses([pause, last]), [pause, last])
+  assert.deepEqual(parseSessionPauses([]), [])
+  assert.equal(parseSessionPauses([last, pause]), null)
+  assert.equal(parseSessionPauses([pause, { ...last, pausedAt: '2026-10-24T01:06:00Z' }]), null)
+  assert.equal(parseSessionPauses([{ ...pause, resumedAt: '2026-10-24T01:01:00Z' }]), null)
+  assert.equal(parseSessionPauses([{ ...pause, resumedAt: 'invalid' }]), null)
+  const service = new ReportService({ authorizedRequest: async ({ path, method, parse }) => {
+    assert.equal(path, '/api/v1/sessions/7/pauses')
+    assert.equal(method, 'GET')
+    return { success: true, data: parse([pause, last]) }
+  } })
+  assert.deepEqual(await service.getSessionPauses('7'), { success: true, data: [pause, last] })
 })
