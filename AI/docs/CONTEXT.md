@@ -1,5 +1,13 @@
 # AI 작업 컨텍스트
 
+## 2026-11-26 목표 보조 지연·중복·문구 및 E5 토크나이저 경고 개선
+
+- `CLEAR`·`NEEDS_SUGGESTION`·`NEEDS_SELECTION` 경로의 2차 JEV 사후 검증(`verify_generated`)과 후보별 `repair` 루프를 제거해, 1차 JEV 1회 + Claude 1회 생성으로 완료되도록 개선했다. 2차 JEV의 `preserves_user_intent`가 추천(좁히기)·분할(쪼개기)·프로필 확장과 충돌해 `NEEDS_QUESTION`으로 강등되던 문제와 6~9.8초 지연을 해소했다.
+- `RecommendedGoalBatch`의 공백·대소문자 무시 중복 제목 검증, 결정적 중복 제거(`_validate_candidates`: 2개 이상 정상 반환, 2개 미만 `NEEDS_QUESTION` fallback 전환) 및 `goal_routes.py`의 `ValidationError` 502 방어로 HTTP 500을 차단했다.
+- 질문·후보 프롬프트 및 출력 검증에 한국어 해요체 고정과 보기 전제 표현(`다음 중`, `아래에서` 등) 금지를 반영했다.
+- `ScreenEncoder`에서 `transformers==4.57.3`의 비-Mistral `fix_mistral_regex` 오탐 경고만 좁은 로깅 필터로 억제해 기존 토크나이징·`activity-head.pt` 일치를 보존했다. `AI/README.md`에 Python 3.11+ 및 `uv` 실행 안내를 보강했다.
+- 계획: [goal-clarify-fixes-PLAN.md](features/goal-clarify-fixes-PLAN.md). 상세 결정: [DECISION_RECORD.md](DECISION_RECORD.md).
+
 ## 2026-11-25 DR-031 할 일 매칭 주제 목록 대조
 
 - 선택한 할 일끼리만 비교하던 매칭에 고정 공부 주제 목록(2,782개) 대조와 본문 조각 판정을 더했다. 앱 창 제목은 매칭하지 않는다. [결정](DECISION_RECORD.md)

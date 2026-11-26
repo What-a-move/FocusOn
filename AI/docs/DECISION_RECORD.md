@@ -1,5 +1,12 @@
 # AI 결정 기록
 
+## 2026-11-26 목표 보조 지연·중복 500·질문 문구 및 E5 토크나이저 오탐 경고 개선
+
+- **목표 보조 2차 JEV 사후 검증 제거 (`CLEAR`·`NEEDS_SUGGESTION`·`NEEDS_SELECTION`):** 1차 JEV에서 명확성 판정을 마친 뒤 생성된 `GoalProfileDraft`·추천 후보·분할 후보를 2차 JEV(`preserves_user_intent`·`contains_one_goal`·`is_specific_enough`)로 재검수하면, 확장 항목·범위 축소(추천)·복수 분리(분할)가 *"지어낸 범위/원래 의도 미보존"* 으로 탈락해 `repair` → `generate_fallback_question`으로 Claude 3~6회 호출(6~9.8초) 및 `NEEDS_QUESTION` 오강등이 발생했다(Live 실측으로 확인). 1차 JEV 1회 + Claude 구조화 생성 1회 + 결정적 스키마/중복 검증(`_validate_candidates`)으로 단순화한다.
+- **후보 중복 제목 500 차단:** `RecommendedGoalBatch.require_unique_titles`의 공백·대소문자 무시 정규화, `_validate_candidates` 중복 제거(2개 이상 정상 반환, 2개 미만 fallback 질문 전환), `goal_routes.py`의 내부 `ValidationError` 502 변환으로 HTTP 500을 원천 차단한다.
+- **질문 문구 해요체·보기 비의존 고정:** Backend가 `question.options`를 버리고 `question.text`만 전달하는 계약에 맞춰, `SYSTEM_PROMPT`·`question_prompt`·`_validate_question_text`에서 보기 전제 표현(`다음 중`, `아래에서`, `선택지` 등)과 모든 하십시오체(`~습니다`/`~습니까` 및 모음 어간 `~ㅂ니다`/`~ㅂ니까`)를 금지한다.
+- **E5 토크나이저 `fix_mistral_regex` 경고:** `intfloat/multilingual-e5-small`은 SentencePiece(`XLMRobertaTokenizerFast`)로 Mistral regex를 사용하지 않으며 `transformers==4.57.3`의 오탐 경고이므로 화면 분석 정확도 영향이 없다. 체크섬 고정 토크나이저 및 `activity-head.pt`와의 일치를 유지하기 위해 `fix_mistral_regex=True`를 넣지 않고 `ScreenEncoder.__init__`에서 `transformers` 핸들러·자식 로거의 해당 경고만 좁게 필터링한다.
+
 ## DR-031 할 일 매칭에 공부 주제 목록 대조 추가 (2026-11-25)
 
 - DR-030은 화면을 선택한 할 일끼리만 비교해, 어느 할 일과도 맞지 않는 같은 분야 화면도 가장 비슷한 할 일에 붙였다(예: props·useState·useEffect 세션의 Context 문서 → props). 본문 앞부분이 사이트 메뉴·언어 목록이면 맞는 할 일도 놓쳤다. 이제 고정 공부 주제 목록 2,782개와도 비교하고, 본문을 조각으로 나눠 판정한다.

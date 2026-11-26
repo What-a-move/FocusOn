@@ -252,7 +252,7 @@ class RecommendedGoalBatch(CamelModel):
     @field_validator("goals")
     @classmethod
     def require_unique_titles(cls, goals: list[RecommendedGoal]) -> list[RecommendedGoal]:
-        titles = {goal.title.casefold() for goal in goals}
+        titles = {" ".join(goal.title.casefold().split()) for goal in goals}
         if len(titles) != len(goals):
             raise ValueError("추천 목표 제목은 서로 달라야 합니다.")
         return goals

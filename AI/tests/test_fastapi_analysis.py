@@ -325,3 +325,45 @@ def test_far_requires_full_body_with_independent_study_signal(payload):
         payload["extractionStatus"] = "PARTIAL"
         partial = client.post(PATH, json=payload, headers=HEADERS).json()
         assert (partial["decision"], partial["matchStatus"]) == ("RELATED", "NOT_ENOUGH")
+
+
+def test_screen_encoder_suppresses_only_mistral_regex_false_positive_warning():
+    import logging
+    from transformers.utils import logging as transformers_logging
+    from AI.src.models.screen_activity.activity import _suppress_mistral_regex_warning
+
+    root_logger = transformers_logging.get_logger()
+    recorded: list[str] = []
+
+    class RecordingHandler(logging.Handler):
+        def emit(self, record):
+            recorded.append(record.getMessage())
+
+    handler = RecordingHandler()
+    root_logger.addHandler(handler)
+    try:
+        base_logger = logging.getLogger("transformers.tokenization_utils_base")
+        tokenizers_logger = logging.getLogger("transformers.tokenization_utils_tokenizers")
+        fast_logger = logging.getLogger("transformers.tokenization_utils_fast")
+        child_logger = logging.getLogger("transformers.custom_tokenizer_child")
+
+        with _suppress_mistral_regex_warning():
+            base_logger.warning("The tokenizer has an incorrect regex pattern. set fix_mistral_regex=True")
+            tokenizers_logger.warning("incorrect regex pattern fix_mistral_regex=True from tokenizers")
+            fast_logger.warning("fix_mistral_regex=True from fast")
+            child_logger.warning("fix_mistral_regex=True from child")
+            child_logger.warning("unrelated tokenizer warning")
+
+        assert not any("fix_mistral_regex" in message for message in recorded)
+        assert "unrelated tokenizer warning" in recorded
+
+        # Verify cleanup even when an exception occurs inside the context.
+        with pytest.raises(RuntimeError):
+            with _suppress_mistral_regex_warning():
+                raise RuntimeError("load failure")
+
+        recorded.clear()
+        tokenizers_logger.warning("post-context fix_mistral_regex check")
+        assert "post-context fix_mistral_regex check" in recorded
+    finally:
+        root_logger.removeHandler(handler)

@@ -47,3 +47,11 @@
 - 원인: 현재 `AI/.env`에서 읽은 `TYPESAFE_API_KEY`가 TypeSafe 공식 API 인증을 통과하지 못했다. 잔액 부족은 402로 반환되는 별도 경우이므로 이번 실패 원인은 충전 상태가 아니라 Key 값·복사 범위·활성화 상태다.
 - 해결: 코드가 `TYPESAFE_API_KEY`를 직접 사용하도록 전환했으며, 사용자가 새로 발급한 공식 Key를 `AI/.env`의 해당 항목에 입력한 뒤 Streamlit 서버를 재시작해야 한다.
 - 재발 방지: Key 값은 로그나 문서에 기록하지 않고, Live 확인은 모델 목록 조회와 최소 JEV 판단 요청으로 분리한다.
+
+## 후보 Repair 후 중복 제목으로 인한 RecommendedGoalBatch ValidationError
+
+- 발생일: 2026-11-16 (2026-11-26 로컬 연동 재현: `"자료구조 공부하기"` → 6.7초 뒤 HTTP 500)
+- 증상: `AI/src/workflow/goal_assistance.py`의 `_repair_generated`에서 여러 후보를 병렬 수리한 뒤 `RecommendedGoalBatch(goals=candidates)`를 조립할 때 `추천 목표 제목은 서로 달라야 합니다.` `ValidationError`가 그대로 전파되어 HTTP 500으로 종료됐다.
+- 원인: 후보 단위 `repair_candidate()` 호출 시 다른 후보 제목 목록을 전달하지 않아 중복 제목이 생성됐고, 중복 제거·fallback 처리 및 `goal_routes.py`의 `ValidationError` 포착이 빠져 있었다.
+- 해결 (2026-11-26): `CLEAR`·후보 경로의 2차 JEV 사후 검증 및 개별 후보 `repair` 루프를 제거해 중복 제목 충돌 원인을 해소했고, `RecommendedGoalBatch` 공백·대소문자 무시 중복 검증, `_validate_candidates` 중복 제거(2개 이상 정상 반환, 2개 미만 fallback 질문 전환), `goal_routes.py`의 502 안전 변환을 추가했다.
+- 재발 방지: `test_candidate_paths_skip_jev_post_verification_and_return_candidates`, `test_candidate_deduplication_keeps_two_unique_candidates_without_500`, `test_duplicate_candidates_below_two_fall_back_to_question_without_500`, `test_unexpected_validation_error_in_workflow_returns_502_not_500` 회귀 테스트를 유지한다.

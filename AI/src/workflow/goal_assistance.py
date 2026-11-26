@@ -12,6 +12,7 @@ from src.api.schemas import (
     GoalClarifyData,
     GoalClarifyRequest,
     GoalProfileDraft,
+    RecommendedGoal,
     RecommendedGoalBatch,
 )
 from src.config import Settings
@@ -20,11 +21,36 @@ from src.models.jev_client import GoalJudgmentClient
 from src.models.llm_client import GoalGenerationClient
 
 
+def _normalize_title(title: str) -> str:
+    return " ".join(title.casefold().split())
+
+
+def _dedupe_candidates(
+    candidates: list[RecommendedGoal],
+    preferred_indices: set[int] | None = None,
+) -> list[RecommendedGoal]:
+    """Keep unique candidate titles, preferring already-verified items on collision."""
+    preferred = preferred_indices or set()
+    kept_indices: set[int] = set()
+    seen_titles: set[str] = set()
+    ordered = [
+        *(index for index in range(len(candidates)) if index in preferred),
+        *(index for index in range(len(candidates)) if index not in preferred),
+    ]
+    for index in ordered:
+        key = _normalize_title(candidates[index].title)
+        if key in seen_titles:
+            continue
+        seen_titles.add(key)
+        kept_indices.add(index)
+    return [candidates[index] for index in range(len(candidates)) if index in kept_indices]
+
+
 class GoalAssistanceState(TypedDict, total=False):
     request: GoalClarifyRequest
     assessment: GoalAssessment
     clarity_status: ClarityStatus
-    candidates: RecommendedGoalBatch
+    candidates: RecommendedGoalBatch | None
     profile: GoalProfileDraft
     question: ClarificationQuestion
     failed_checks: list[str]
@@ -55,9 +81,8 @@ class GoalAssistanceWorkflow:
         graph.add_node("assess_with_jev", self._assess_with_jev)
         graph.add_node("generate_profile", self._generate_profile)
         graph.add_node("generate_candidates", self._generate_candidates)
+        graph.add_node("validate_candidates", self._validate_candidates)
         graph.add_node("generate_question", self._generate_question)
-        graph.add_node("verify_generated", self._verify_generated)
-        graph.add_node("repair_generated", self._repair_generated)
         graph.add_node("generate_fallback_question", self._generate_fallback_question)
         graph.add_node("build_generated_response", self._build_generated_response)
         graph.add_node("build_question_response", self._build_question_response)
@@ -75,19 +100,17 @@ class GoalAssistanceWorkflow:
                 "invalid": "build_invalid_response",
             },
         )
-        graph.add_edge("generate_profile", "verify_generated")
-        graph.add_edge("generate_candidates", "verify_generated")
+        graph.add_edge("generate_profile", "build_generated_response")
+        graph.add_edge("generate_candidates", "validate_candidates")
         graph.add_edge("generate_question", "build_question_response")
         graph.add_conditional_edges(
-            "verify_generated",
-            self._route_verification,
+            "validate_candidates",
+            self._route_candidate_validation,
             {
                 "pass": "build_generated_response",
-                "repair": "repair_generated",
                 "fallback": "generate_fallback_question",
             },
         )
-        graph.add_edge("repair_generated", "verify_generated")
         graph.add_edge("generate_fallback_question", "build_question_response")
         graph.add_edge("build_generated_response", END)
         graph.add_edge("build_question_response", END)
@@ -210,84 +233,33 @@ class GoalAssistanceWorkflow:
             )
         }
 
-    async def _verify_generated(self, state: GoalAssistanceState) -> dict[str, Any]:
-        request = state["request"]
-        if "profile" in state:
-            verification = await self._judgments.verify_generated_result(
-                request,
-                state["profile"].model_dump(mode="json", by_alias=True),
-                "goal_profile",
-            )
-            failed = verification.failed_checks(
-                self._settings.generated_result_pass_min
-            )
-            return {"failed_checks": failed, "candidate_failures": {}}
+    async def _validate_candidates(self, state: GoalAssistanceState) -> dict[str, Any]:
+        """Deterministically deduplicate generated candidates without JEV post-verification.
 
-        candidates = state["candidates"].goals
-        verifications = await asyncio.gather(
-            *(
-                self._judgments.verify_generated_result(
-                    request,
-                    candidate.model_dump(mode="json", by_alias=True),
-                    "recommended_goal",
-                )
-                for candidate in candidates
-            )
-        )
-        candidate_failures = {
-            index: failed
-            for index, verification in enumerate(verifications)
-            if (
-                failed := verification.failed_checks(
-                    self._settings.generated_result_pass_min
-                )
-            )
-        }
-        failed = sorted(
-            {
-                check
-                for checks in candidate_failures.values()
-                for check in checks
+        JEV's preserves_user_intent check conflicts with both narrowing a broad goal
+        (NEEDS_SUGGESTION) and splitting multi-goal inputs (NEEDS_SELECTION), causing
+        valid candidates to be rejected and demoted into slow NEEDS_QUESTION fallbacks.
+        """
+        batch = state.get("candidates")
+        if batch is None:
+            return {"candidates": None, "failed_checks": ["missing_candidates"]}
+        unique_candidates = _dedupe_candidates(list(batch.goals))
+        if len(unique_candidates) >= 2:
+            return {
+                "candidates": RecommendedGoalBatch(goals=unique_candidates),
+                "failed_checks": [],
             }
-        )
-        return {"failed_checks": failed, "candidate_failures": candidate_failures}
-
-    def _route_verification(
-        self, state: GoalAssistanceState
-    ) -> Literal["pass", "repair", "fallback"]:
-        if not state.get("failed_checks"):
-            return "pass"
-        if state.get("repair_count", 0) < 1:
-            return "repair"
-        return "fallback"
-
-    async def _repair_generated(self, state: GoalAssistanceState) -> dict[str, Any]:
-        request = state["request"]
-        failed = state["failed_checks"]
-        result: dict[str, Any] = {
-            "repair_count": state.get("repair_count", 0) + 1,
-            "failed_checks": [],
-            "candidate_failures": {},
+        return {
+            "candidates": None,
+            "failed_checks": ["duplicate_candidate_titles"],
         }
-        if "profile" in state:
-            result["profile"] = await self._generator.repair_profile(
-                request, state["profile"], failed
-            )
-        else:
-            candidates = list(state["candidates"].goals)
-            failures = state["candidate_failures"]
-            repaired = await asyncio.gather(
-                *(
-                    self._generator.repair_candidate(
-                        request, candidates[index], checks
-                    )
-                    for index, checks in failures.items()
-                )
-            )
-            for index, candidate in zip(failures, repaired):
-                candidates[index] = candidate
-            result["candidates"] = RecommendedGoalBatch(goals=candidates)
-        return result
+
+    def _route_candidate_validation(
+        self, state: GoalAssistanceState
+    ) -> Literal["pass", "fallback"]:
+        if state.get("candidates") is not None and not state.get("failed_checks"):
+            return "pass"
+        return "fallback"
 
     async def _generate_fallback_question(
         self, state: GoalAssistanceState
@@ -335,7 +307,7 @@ class GoalAssistanceWorkflow:
         return {
             "response": GoalClarifyData(
                 clarity_status=ClarityStatus.INVALID,
-                invalid_reason="학습 목표로 해석하기 어려워 내용을 수정해야 합니다.",
+                invalid_reason="학습 목표로 해석하기 어려워 내용을 수정해 주세요.",
                 requires_user_confirmation=True,
                 fallback_allowed=False,
             )

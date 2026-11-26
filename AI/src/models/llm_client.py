@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from typing import Any, Callable, Protocol, TypeVar
 
 from anthropic import (
@@ -59,6 +60,7 @@ class GoalGenerationClient(Protocol):
         request: GoalClarifyRequest,
         candidate: RecommendedGoal,
         failed_checks: list[str],
+        existing_titles: list[str] | None = None,
     ) -> RecommendedGoal: ...
 
     async def repair_profile(
@@ -67,6 +69,27 @@ class GoalGenerationClient(Protocol):
         profile: GoalProfileDraft,
         failed_checks: list[str],
     ) -> GoalProfileDraft: ...
+
+
+_FORBIDDEN_CHOICE_REF = re.compile(
+    r"(?:다음\s*중|아래\s*중|아래에서|아래\s*보기|선택지|보기\s*중|골라\s*주세요)"
+)
+_HAPSYOCHE_SUFFIX = re.compile(r"([가-힣])(?:니다|니까)(?:[.?!\s]|$)")
+_BIEUP_JONGSEONG_INDEX = 17
+
+
+def _has_formal_hapsyoche(text: str) -> bool:
+    return any(
+        (ord(match.group(1)) - 0xAC00) % 28 == _BIEUP_JONGSEONG_INDEX
+        for match in _HAPSYOCHE_SUFFIX.finditer(text)
+    )
+
+
+def _validate_question_text(text: str) -> None:
+    if _FORBIDDEN_CHOICE_REF.search(text):
+        raise ValueError("Question text must not reference hidden choice options")
+    if _has_formal_hapsyoche(text):
+        raise ValueError("Question text must use haeyoche instead of formal hapsyoche")
 
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
@@ -101,7 +124,10 @@ class ClaudeGoalGenerationClient:
         # Refusals and truncated JSON must never reach the workflow as valid drafts.
         if response.stop_reason != "end_turn" or response.parsed_output is None:
             raise ValueError("Incomplete structured response")
-        return schema.model_validate(response.parsed_output)
+        validated = schema.model_validate(response.parsed_output)
+        if isinstance(validated, ClarificationQuestion):
+            _validate_question_text(validated.text)
+        return validated
 
     @staticmethod
     def _provider_error(exc: Exception) -> Exception:
@@ -134,14 +160,26 @@ class ClaudeGoalGenerationClient:
             except (ValidationError, TypeError, ValueError, APIResponseValidationError) as exc:
                 last_schema_error = exc
                 if attempt == 0:
+                    repair_instruction = (
+                        "The previous result failed schema validation. Repair it and "
+                        "return only an object that exactly matches the requested schema."
+                    )
+                    if schema is ClarificationQuestion:
+                        repair_instruction += (
+                            " Write question.text in natural Korean haeyoche (~나요?, ~인가요?) "
+                            "without formal endings (~습니다, ~습니까) and never mention choices "
+                            "such as '다음 중' or '아래에서'."
+                        )
+                    elif schema is RecommendedGoalBatch:
+                        repair_instruction += (
+                            " Make sure every candidate has a clearly distinct Korean title "
+                            "(2 to 40 characters) with no duplicate titles."
+                        )
                     messages = [
                         *messages,
                         {
                             "role": "user",
-                            "content": (
-                                "The previous result failed schema validation. Repair it and "
-                                "return only an object that exactly matches the requested schema."
-                            )
+                            "content": repair_instruction,
                         },
                     ]
                     continue
@@ -320,6 +358,7 @@ class ClaudeGoalGenerationClient:
         request: GoalClarifyRequest,
         candidate: RecommendedGoal,
         failed_checks: list[str],
+        existing_titles: list[str] | None = None,
     ) -> RecommendedGoal:
         return await self._generate(
             RecommendedGoal,
@@ -328,6 +367,7 @@ class ClaudeGoalGenerationClient:
                 "recommended_goal",
                 candidate.model_dump(mode="json", by_alias=True),
                 failed_checks,
+                existing_titles=existing_titles,
             ),
         )
 

@@ -227,3 +227,28 @@ def test_confirmed_profile_uses_locale_and_does_not_require_goal_assessment(monk
     assert profile["mainTopic"] == payload["goalText"]
     assert "originalText" not in profile
     assert generator.generate_profile.await_args.args[0].locale == "ko-KR"
+
+
+@pytest.mark.asyncio
+async def test_unexpected_validation_error_in_workflow_returns_502_not_500():
+    from src.api.schemas import RecommendedGoal, RecommendedGoalBatch
+
+    class BrokenBatchWorkflow:
+        async def run(self, request):
+            RecommendedGoalBatch(
+                goals=[
+                    RecommendedGoal(id="a", title="중복 제목", reason="이유1"),
+                    RecommendedGoal(id="b", title="중복 제목", reason="이유2"),
+                ]
+            )
+
+    app = create_app(classifier_factory=lambda: None)
+    app.dependency_overrides[get_goal_workflow] = lambda: BrokenBatchWorkflow()
+
+    response = await post(app, {"requestId": "req-dup", "originalText": "자료구조 공부하기"})
+
+    assert response.status_code == 502
+    body = response.json()
+    assert body["code"] == "INVALID_MODEL_RESPONSE"
+    assert body["retryable"] is True
+    assert body["details"]["fallbackAllowed"] is True

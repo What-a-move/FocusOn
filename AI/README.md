@@ -47,9 +47,13 @@ CLAUDE_MODEL=claude-haiku-4-5-20251001
 
 `POST /internal/v1/analysis-runs`는 검증된 현재 화면을 로컬 10,168건 E5 분류기로 판정한다. 탭·앱 메타데이터를 먼저 보내고 보류되면 Chrome DOM 또는 데스크톱 OCR 텍스트를 보낸다. 학습된 분류기의 공부 중·딴짓·보류를 기존 계약의 `RELATED`·`UNRELATED`·`UNCERTAIN`으로 전달한다. 요청의 목표 스냅샷은 세션 검증에 사용한다.
 
-저장소 루트에서 Python 3.11 이상으로 실행한다. 최초 설치 단계에서 고정된 E5 인코더를 준비한다. 설치 이후 화면 추론은 로컬에서 실행하고, 시작 시 워커당 모델을 한 번 로드하고 예열한다. `/health`가 503이면 설치 및 무결성을 확인한 뒤 서비스를 다시 시작한다.
+저장소 루트에서 **Python 3.11 이상**으로 실행한다(macOS 기본 `python3` 3.9에서는 시작되지 않는다). `uv`를 쓰는 경우 `AI/.venv`에 3.12 가상환경을 만들어 실행할 수 있다. 최초 설치 단계에서 고정된 E5 인코더를 준비한다. 설치 이후 화면 추론은 로컬에서 실행하고, 시작 시 워커당 모델을 한 번 로드하고 예열한다. `/health`가 503이면 설치 및 무결성을 확인한 뒤 서비스를 다시 시작한다.
 
 ```bash
+# macOS 기본 python3(3.9) 대신 Python 3.11+ 가상환경 권장
+uv venv --python 3.12 AI/.venv
+source AI/.venv/bin/activate
+
 python3 -m pip install -r AI/requirements.txt
 python3 -m AI.src.models.screen_activity.setup_encoder
 # 할 일 매칭용 공부 주제 목록(model/topic-bank.json)은 저장소에 포함한다. 분야를 바꿀 때만 다시 생성한다.

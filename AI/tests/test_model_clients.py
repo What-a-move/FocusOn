@@ -33,7 +33,13 @@ from src.models.errors import (
     ModelUnavailableError,
 )
 from src.models.llm_client import ClaudeGoalGenerationClient
-from src.prompts.goal_prompt import candidate_prompt, profile_prompt
+from src.prompts.goal_prompt import (
+    SYSTEM_PROMPT,
+    candidate_prompt,
+    profile_prompt,
+    question_prompt,
+    repair_prompt,
+)
 
 
 class CapturingSystemOne:
@@ -591,3 +597,147 @@ async def test_question_returns_local_fallback_when_provider_is_unavailable():
 
     assert result.id == "fallback-1"
     assert asyncio.get_running_loop().time() - started >= 0.03
+
+
+def test_question_prompt_enforces_haeyoche_and_forbids_choice_references():
+    request = GoalClarifyRequest(request_id="req", original_text="ds 힙 정리하기")
+
+    assert "haeyoche" in SYSTEM_PROMPT
+    assert "~습니다" in SYSTEM_PROMPT
+
+    term_payload = json.loads(question_prompt(request, ClarityStatus.UNRECOGNIZED_TERM))
+    term_reqs = " ".join(term_payload["requirements"])
+    assert "다음 중" in term_reqs
+    assert "haeyoche" in term_reqs
+    assert "yes/no" in term_reqs
+
+    scope_payload = json.loads(question_prompt(request, ClarityStatus.NEEDS_QUESTION))
+    scope_reqs = " ".join(scope_payload["requirements"])
+    assert "다음 중" in scope_reqs
+    assert "open-ended" in scope_reqs
+
+
+def test_repair_prompt_includes_existing_titles_when_supplied():
+    request = GoalClarifyRequest(request_id="req", original_text="자료구조 공부하기")
+    candidate_payload = json.loads(
+        candidate_prompt(request, ClarityStatus.NEEDS_SUGGESTION)
+    )
+    candidate_reqs = " ".join(candidate_payload["requirements"])
+    assert "2 to 40 characters" in candidate_reqs
+    assert "haeyoche" in candidate_reqs
+    assert "clearly different" in candidate_reqs
+
+    payload = json.loads(
+        repair_prompt(
+            request,
+            "recommended_goal",
+            {"id": "g1", "title": "자료구조 정리", "reason": "범위 확인"},
+            ["is_specific_enough"],
+            existing_titles=["자료구조 스택 개념 정리하기"],
+        )
+    )
+
+    assert payload["existingTitles"] == ["자료구조 스택 개념 정리하기"]
+    assert any("existingTitles" in item for item in payload["requirements"])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "bad_text",
+    [
+        "다음 중 어떤 것을 정리하려고 하시나요?",
+        "'ds 힙'이 무엇을 의미하는지 확인하고 싶습니다.",
+        "'ds 힙'은 어떤 뜻입니까?",
+        "어떤 범위를 공부하십니까?",
+        "구체적인 범위를 알려주시기 바랍니다.",
+    ],
+)
+async def test_claude_rejects_choice_reference_and_formal_question_then_repairs(bad_text):
+    class Structured:
+        def __init__(self):
+            self.calls = 0
+
+        async def parse(self, **kwargs):
+            self.calls += 1
+            text = bad_text if self.calls == 1 else "'ds 힙'은 자료구조의 힙(Heap)을 뜻하는 게 맞나요?"
+            return SimpleNamespace(
+                stop_reason="end_turn",
+                parsed_output={
+                    "id": "term-1",
+                    "text": text,
+                    "options": [
+                        {"id": "yes", "label": "맞아요"},
+                        {"id": "no", "label": "아니에요"},
+                    ],
+                    "allowCustomAnswer": True,
+                },
+            )
+
+    structured = Structured()
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = SimpleNamespace(messages=structured)
+    client._model = "test-claude"
+    client._max_tokens = 1200
+
+    result = await client._generate(ClarificationQuestion, "safe prompt")
+
+    assert structured.calls == 2
+    assert result.text == "'ds 힙'은 자료구조의 힙(Heap)을 뜻하는 게 맞나요?"
+
+
+@pytest.mark.asyncio
+async def test_streamed_question_rejects_formal_and_choice_reference_text():
+    class Stream:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_args):
+            return None
+
+        async def __aiter__(self):
+            if False:
+                yield None
+
+        async def get_final_message(self):
+            return SimpleNamespace(
+                stop_reason="end_turn",
+                parsed_output=question("'ds 힙'은 어떤 뜻입니까?"),
+            )
+
+    client = ClaudeGoalGenerationClient.__new__(ClaudeGoalGenerationClient)
+    client._client = SimpleNamespace(messages=SimpleNamespace(stream=lambda **_kwargs: Stream()))
+    client._model = "test-claude"
+    client._max_tokens = 1200
+
+    with pytest.raises(InvalidModelResponseError):
+        await client._stream_question("safe prompt", lambda _preview: None)
+
+
+def test_fallback_questions_comply_with_haeyoche_and_standalone_rules():
+    from src.models.llm_client import _validate_question_text
+
+    base_request = GoalClarifyRequest(request_id="req", original_text="ds 힙 정리하기")
+    for status in (ClarityStatus.UNRECOGNIZED_TERM, ClarityStatus.NEEDS_QUESTION):
+        first = ClaudeGoalGenerationClient._fallback_question(base_request, status)
+        _validate_question_text(first.text)
+        second_request = GoalClarifyRequest.model_validate(
+            {
+                "requestId": "req-2",
+                "originalText": "ds 힙 정리하기",
+                "clarificationAnswers": [{"question": first.text, "answer": "자료구조"}],
+            }
+        )
+        second = ClaudeGoalGenerationClient._fallback_question(second_request, status)
+        _validate_question_text(second.text)
+        third_request = GoalClarifyRequest.model_validate(
+            {
+                "requestId": "req-3",
+                "originalText": "ds 힙 정리하기",
+                "clarificationAnswers": [
+                    {"question": first.text, "answer": "자료구조"},
+                    {"question": second.text, "answer": "힙"},
+                ],
+            }
+        )
+        third = ClaudeGoalGenerationClient._fallback_question(third_request, status)
+        _validate_question_text(third.text)

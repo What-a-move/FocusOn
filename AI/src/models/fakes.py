@@ -54,14 +54,16 @@ class FakeGoalGenerationClient:
 
     def __init__(self) -> None:
         self.repair_calls = 0
+        self.profile_calls = 0
+        self.repair_existing_titles: list[list[str] | None] = []
 
     async def generate_candidates(
         self, request: GoalClarifyRequest, status: ClarityStatus
     ) -> RecommendedGoalBatch:
         return RecommendedGoalBatch(
             goals=[
-                RecommendedGoal(id="cache-concept", title="React Query 캐싱 원리 학습", reason="캐시 동작에 집중합니다."),
-                RecommendedGoal(id="cache-implementation", title="React Query 캐시 갱신 구현", reason="구현 활동에 집중합니다."),
+                RecommendedGoal(id="cache-concept", title="React Query 캐싱 원리 학습", reason="캐시 동작에 집중해요."),
+                RecommendedGoal(id="cache-implementation", title="React Query 캐시 갱신 구현", reason="구현 활동에 집중해요."),
             ]
         )
 
@@ -84,6 +86,7 @@ class FakeGoalGenerationClient:
         )
 
     async def generate_profile(self, request: GoalClarifyRequest) -> GoalProfileDraft:
+        self.profile_calls += 1
         interpreted_goal = request.selected_goal_text or request.original_text
         if request.clarification_answers:
             interpreted_goal = (
@@ -105,8 +108,10 @@ class FakeGoalGenerationClient:
         request: GoalClarifyRequest,
         candidate: RecommendedGoal,
         failed_checks: list[str],
+        existing_titles: list[str] | None = None,
     ) -> RecommendedGoal:
         self.repair_calls += 1
+        self.repair_existing_titles.append(existing_titles)
         return candidate
 
     async def repair_profile(

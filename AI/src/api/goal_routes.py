@@ -2,6 +2,7 @@ from typing import Annotated, AsyncIterator
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from src.api.schemas import (
     ErrorResponse,
@@ -87,7 +88,7 @@ async def clarify_goal(
             request_id=request.request_id,
             details=exc.details,
         )
-    except InvalidModelResponseError:
+    except (InvalidModelResponseError, ValidationError):
         return _error_response(
             502,
             code="INVALID_MODEL_RESPONSE",
