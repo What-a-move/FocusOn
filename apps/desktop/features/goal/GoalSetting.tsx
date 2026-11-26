@@ -147,12 +147,18 @@ export function GoalSetting() {
     setBusy(true)
     setFeedback(null)
     setLine({ text: '할 일을 살펴보고 있어요', typing: true })
-    const result = await goalApi.clarify({ goalText, conversationTurn: asked, previousAnswers, ...(clarificationSessionId ? { clarificationSessionId } : {}) })
+    // 서버는 conversationTurn이 보낸 답 개수와 같아야 받는다. 실패·문장 수정 뒤에는 받은 질문 수(asked)와 답 개수가 달라질 수 있다.
+    const result = await goalApi.clarify({ goalText, conversationTurn: previousAnswers.length, previousAnswers, ...(clarificationSessionId ? { clarificationSessionId } : {}) })
     // [주의] 응답을 기다리는 동안 입력이 바뀌었으면(요청 번호가 달라졌으면) 늦게 온 결과를 버린다.
     if (id !== request.current) return
     setBusy(false)
     if (!result.success) {
       const offline = result.error.code === 'LOCAL_NETWORK_UNAVAILABLE'
+      // 질문에 답하다 실패하면 답을 지우지 않고 그 화면에 남겨 다시 시도하게 한다(하단 보조 버튼은 그대로).
+      if (view === 'questions') {
+        setFeedback({ title: '할 일을 살펴보지 못했어요.', body: offline ? errorText(result.error) : asked >= MAX_QUESTIONS ? '다시 시도하거나 지금 문구로 저장할 수 있어요.' : '다시 시도하거나 문장을 고칠 수 있어요.' })
+        return
+      }
       setManual('error')
       // [디자인] 실패는 하단 안내에서 한 번만 말한다. 포키 말풍선은 오류색 없이 다음 행동만 권한다.
       toEntry('2~40자', offline ? undefined : { text: '지금은 할 일을 살펴보지 못했어요' })
