@@ -287,3 +287,35 @@ def test_fastapi_analysis_endpoint_with_jev_matcher():
     assert (far.json()["decision"], far.json()["matchedGoalId"], far.json()["matchStatus"]) == (
         "RELATED", None, "FAR"
     )
+
+
+def test_evaluator_counts_wrong_goal_match_and_far_missed_as_match():
+    from AI.evaluation.evaluate_goal_match_jev_e5 import score_cases
+
+    cases = [
+        # Case 1: expected MATCHED g1, but predicted MATCHED g2 -> must count as wrongMatch=1
+        {
+            "goalIds": ["g1", "g2"],
+            "e5Scores": {"g1": 0.70, "g2": 0.90},
+            "jevGoalScores": {"g1": 0.30, "g2": 0.90},
+            "jevDifferentStudyTopic": 0.10,
+            "expectedStatus": "MATCHED",
+            "expectedGoalId": "g1",
+        },
+        # Case 2: expected FAR, but predicted MATCHED g1 -> must still count in expectedFarTotal=1 and wrongMatch=2
+        {
+            "goalIds": ["g1"],
+            "e5Scores": {"g1": 0.90},
+            "jevGoalScores": {"g1": 0.90},
+            "jevDifferentStudyTopic": 0.10,
+            "expectedStatus": "FAR",
+            "expectedGoalId": None,
+        },
+    ]
+    metrics = score_cases(cases)
+    assert metrics["expectedMatchTotal"] == 1
+    assert metrics["correctMatch"] == 0
+    assert metrics["wrongMatch"] == 2
+    assert metrics["expectedFarTotal"] == 1
+    assert metrics["correctFar"] == 0
+    assert metrics["wrongFar"] == 0

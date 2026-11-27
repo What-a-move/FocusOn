@@ -52,9 +52,9 @@ def score_cases(cases: Sequence[dict], config: MatchConfig = DEFAULT_MATCH_CONFI
             expected_match_total += 1
             if (pred_status, pred_goal) == ("MATCHED", exp_goal):
                 correct_match += 1
-        elif pred_status == "MATCHED":
+        if pred_status == "MATCHED" and (exp_status != "MATCHED" or pred_goal != exp_goal):
             wrong_match += 1
-        elif exp_status == "FAR":
+        if exp_status == "FAR":
             expected_far_total += 1
             if pred_status == "FAR":
                 correct_far += 1
