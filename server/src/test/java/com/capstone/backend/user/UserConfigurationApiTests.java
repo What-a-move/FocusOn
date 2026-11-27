@@ -193,7 +193,9 @@ class UserConfigurationApiTests {
         .andExpect(jsonPath("$.data.learningMessengers.length()").value(0))
         .andExpect(jsonPath("$.data.dailyTargetMs").value(5400000));
     for (String bad : new String[] {"\"dailyTargetMs\":540000", "\"dailyTargetMs\":36060000",
-        "\"dailyTargetMs\":3600001", "\"weeklyTargetMs\":3540000",
+        "\"dailyTargetMs\":3600001", "\"dailyTargetMs\":36000000.5",
+        "\"dailyTargetMs\":null", "\"dailyTargetMs\":\"3600000\"",
+        "\"weeklyTargetMs\":3600000.5", "\"weeklyTargetMs\":3540000",
         "\"weeklyTargetMs\":252060000", "\"weeklyTargetMs\":\"10\"",
         "\"learningMessengers\":[\"LINE\"]",
         "\"learningMessengers\":[\"SLACK\",\"SLACK\"]"}) {

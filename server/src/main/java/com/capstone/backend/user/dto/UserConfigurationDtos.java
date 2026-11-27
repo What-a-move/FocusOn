@@ -54,8 +54,9 @@ public final class UserConfigurationDtos {
               "KAKAOTALK", "TEAMS", "OTHER"})) List<String> learningMessengers,
       @Schema(description = "평소 첫 이탈 3분 전 미리 알림 (선택)", example = "true")
       Boolean preDistractionReminderEnabled,
-      @Schema(description = "하루 목표 ms, 10~600분·분 단위 (선택)", example = "3600000")
-      Long dailyTargetMs,
+      @Schema(description = "하루 목표 ms, 10~600분·분 단위 (선택)", implementation = Long.class,
+          example = "3600000")
+      tools.jackson.databind.JsonNode dailyTargetMs,
       @Schema(description = "주간 목표 ms, 60~4200분·분 단위, null이면 미설정 (선택)",
           implementation = Long.class, nullable = true, example = "null")
       tools.jackson.databind.JsonNode weeklyTargetMs,

@@ -157,10 +157,8 @@ public class UserConfigurationService {
     List<String> channels = normalizedChannels(request.notificationChannels());
     List<String> messengers = request.learningMessengers() == null ? null
         : normalizedMessengers(request.learningMessengers());
-    Long dailyTarget = request.dailyTargetMs();
-    if (dailyTarget != null && !validMinutes(dailyTarget, 10, 600)) {
-      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
-    }
+    // JSON 원본으로 받아 소수(예: 36000000.5)가 잘려 저장되지 않게 정수만 받는다.
+    Long dailyTarget = dailyTarget(request.dailyTargetMs());
     boolean weeklyGiven = request.weeklyTargetMs() != null;
     Long weeklyTarget = weeklyTarget(request.weeklyTargetMs());
     UserEntity user = lockedUser(principal);
@@ -253,6 +251,18 @@ public class UserConfigurationService {
   /** 분 단위이며 범위 안인 목표 시간인지 본다. */
   private static boolean validMinutes(long ms, long minMinutes, long maxMinutes) {
     return ms % 60_000L == 0 && ms >= minMinutes * 60_000L && ms <= maxMinutes * 60_000L;
+  }
+
+  /** 없으면 유지(null 반환). 있으면 10~600분 정수 ms만 받고, null·소수·문자는 400이다. */
+  private static Long dailyTarget(tools.jackson.databind.JsonNode value) {
+    if (value == null) {
+      return null;
+    }
+    if (!value.isIntegralNumber() || !value.canConvertToLong()
+        || !validMinutes(value.asLong(), 10, 600)) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    return value.asLong();
   }
 
   /** null(미설정) 또는 60~4200분 정수 ms만 받는다. 숫자가 아니면 400이다. */

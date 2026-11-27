@@ -43,6 +43,15 @@ export const MAX_TODO_PICK = 3
 // 새 할 일을 저장하고 할 일 고르기로 돌아갈 때 한 번 보여 줄 안내.
 export const TODO_SAVED_KEY = 'focuson.todoSaved'
 
+/** 목록을 끝까지 받았을 때만 닫히거나 사라진 할 일을 제외한다. */
+export function reconcilePicked(picked: SessionGoal[], openGoals: SessionGoal[], listComplete: boolean): SessionGoal[] {
+  return listComplete ? picked.filter(({ goalId }) => openGoals.some((goal) => goal.goalId === goalId)) : picked
+}
+
+export function writePicked(goals: SessionGoal[]): void {
+  try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(goals)) } catch { /* 이 화면의 선택은 계속 사용할 수 있다. */ }
+}
+
 /** 지난번 고른 할 일·방금 만든 할 일을 처음 선택으로 쓴다. */
 export function readPicked(): SessionGoal[] {
   try {
