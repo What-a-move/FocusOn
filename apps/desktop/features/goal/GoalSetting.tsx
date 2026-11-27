@@ -14,7 +14,7 @@ type View = 'entry' | 'questions' | 'candidates' | 'review'
 type QuestionMode = 'term' | 'scope' | 'multi'
 type Line = { text: string; error?: boolean; typing?: boolean }
 type Feedback = { title: string; body: string; info?: boolean } | null
-type Review = { goal: string; caption: string; source: ConfirmationSource; candidates?: string[]; editableGoal?: boolean }
+type Review = { goal: string; caption: string; source: ConfirmationSource; candidates?: string[]; clarificationSessionId?: string }
 
 const STAGE: Record<View, number> = { entry: 0, questions: 1, candidates: 1, review: 2 }
 const STAGE_LABEL = ['새 할 일', '다듬기', '확인']
@@ -92,9 +92,9 @@ export function GoalSetting() {
     queueMicrotask(() => inputRef.current?.focus())
   }
 
-  const toReview = (goal: string, caption: string, source: ConfirmationSource, candidates?: string[], editableGoal?: boolean) => {
+  const toReview = (goal: string, caption: string, source: ConfirmationSource, candidates?: string[], confirmedSessionId?: string) => {
     partialSave.current = []
-    const next = { goal, caption, source, candidates, editableGoal }
+    const next = { goal, caption, source, candidates, clarificationSessionId: confirmedSessionId }
     setReview(next)
     // 할 일 하나는 확인 없이 바로 저장한다. 나눈 할 일만 확인 화면을 거친다.
     if (!candidates) { void save(next); return }
@@ -119,10 +119,10 @@ export function GoalSetting() {
       case 'CLEAR':
         if (result.goalCandidates.length >= 2) {
           toReview(result.goalCandidates[0], '나눈 할 일', 'MANUAL_CONFIRMED', result.goalCandidates)
-        } else if (!result.normalizedGoalText || goalLength(result.normalizedGoalText) < 2 || goalLength(result.normalizedGoalText) > 40) {
-          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED', undefined, true)
+        } else if (!result.clarificationSessionId || !result.normalizedGoalText || goalLength(result.normalizedGoalText) < 2 || goalLength(result.normalizedGoalText) > 40) {
+          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED')
         } else {
-          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED')
+          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED', undefined, result.clarificationSessionId)
         }
         return
       case 'INVALID':
@@ -203,7 +203,7 @@ export function GoalSetting() {
         const payload = {
           goalText: term.trim(),
           confirmationSource: target.source,
-          ...(clarificationSessionId && !target.candidates && !target.editableGoal ? { clarificationSessionId } : {}),
+          ...(target.clarificationSessionId ? { clarificationSessionId: target.clarificationSessionId } : {}),
         }
         const fingerprint = JSON.stringify(payload)
         const idempotencyKey = saveKeys.current.get(fingerprint) ?? crypto.randomUUID()
@@ -266,7 +266,7 @@ export function GoalSetting() {
         return
       }
       if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
-      if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'MANUAL_CONFIRMED'); return }
+      if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'MANUAL_CONFIRMED', undefined, clarificationSessionId ?? undefined); return }
       if (selected === 0) { void clarify(draft.trim(), [...answers, { question: question.text, answer: '맞아요' }]); return }
       // 아니에요: 문장을 고치게 한다. 이 질문도 횟수에 들어간다.
       resetClarification()
@@ -276,7 +276,7 @@ export function GoalSetting() {
     }
     if (view === 'candidates') {
       if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
-      toReview(candidates.options[selected], '고른 목표', 'MANUAL_CONFIRMED')
+      toReview(candidates.options[selected], '고른 목표', 'MANUAL_CONFIRMED', undefined, clarificationSessionId ?? undefined)
       return
     }
     if (view === 'review') void save()
@@ -288,7 +288,7 @@ export function GoalSetting() {
   const secondary = () => {
     if (busy) return
     if ((view === 'entry' && validDraft() && !reuse()) || (view === 'questions' && asked >= MAX_QUESTIONS)) {
-      toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED', undefined, true)
+      toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED')
       return
     }
     if (view === 'entry') return
