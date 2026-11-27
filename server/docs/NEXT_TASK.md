@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #374 리포트 진행 요약 (2026-11-27)
+
+- Desktop: 홈·메뉴바·위젯에서 `GET /reports/progress`를 쓰고, 진행 중 세션 시간은 화면에서 더한다.
+- 문서 오너: `dailyTotals` 항목 형식(`{date, totalActiveMs}`) 확인.
+- 다음 마이그레이션은 V37부터.
+
 ## Issue #373 집중 설정 새 필드 (2026-11-27)
 
 - Desktop: 설정·온보딩에서 새 필드를 보내고, 회고 표시는 `retrospectiveEnabled`를 따른다.

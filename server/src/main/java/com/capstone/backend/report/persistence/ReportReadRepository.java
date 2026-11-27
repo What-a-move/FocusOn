@@ -29,6 +29,38 @@ public interface ReportReadRepository extends Repository<LearningSessionEntity, 
       + "com.capstone.backend.session.persistence.SessionStatus.ABANDONED)")
   List<SessionRow> findDaily(@Param("userId") long userId, @Param("date") LocalDate date);
 
+  /**
+   * 하루 목표 판정용 종료 세션 행이다(#374). 날짜별 합계와 그날 첫 세션의 고정 목표를 서비스에서
+   * 계산한다.
+   */
+  @Query("select s.studyDate as studyDate, s.startedAt as startedAt, s.id as sessionId, "
+      + "s.accumulatedActiveMs as accumulatedActiveMs, "
+      + "s.dailyTargetMsSnapshot as dailyTargetMsSnapshot from LearningSessionEntity s "
+      + "where s.user.id = :userId and s.studyDate >= :first and s.studyDate < :end "
+      + "and s.status in (com.capstone.backend.session.persistence.SessionStatus.ENDED, "
+      + "com.capstone.backend.session.persistence.SessionStatus.ABANDONED)")
+  List<TargetRow> findTargetRows(@Param("userId") long userId, @Param("first") LocalDate first,
+      @Param("end") LocalDate end);
+
+  /** 하루 목표 판정에 쓰는 종료 세션 값이다. */
+  interface TargetRow {
+    LocalDate getStudyDate();
+
+    Instant getStartedAt();
+
+    Long getSessionId();
+
+    long getAccumulatedActiveMs();
+
+    Long getDailyTargetMsSnapshot();
+  }
+
+  /** 가장 최근 세션의 시작 시간대다. 진행 요약의 기본 날짜를 정할 때 쓴다. */
+  @Query("select s.userTimeZoneSnapshot from LearningSessionEntity s where s.user.id = :userId "
+      + "order by s.startedAt desc, s.id desc")
+  List<String> findRecentTimeZones(@Param("userId") long userId,
+      org.springframework.data.domain.Pageable page);
+
   /** 기록이 존재하는 날짜의 실제 합계이며 빈 날짜의 표현은 API 계층에서 처리한다. */
   interface DayTotals {
     LocalDate getDate();

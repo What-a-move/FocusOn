@@ -35,6 +35,19 @@ public class ReportController {
     return ApiResponse.of(reports.calendar(principal, month));
   }
 
+  /** 오늘·이번 주 집중 시간과 목표, 연속 기록을 한 번에 돌려준다(#374). */
+  @GetMapping("/api/v1/reports/progress")
+  @Operation(summary = "진행 요약 조회",
+      description = "Desktop 전용. date=YYYY-MM-DD 선택(없으면 최근 세션 시간대의 오늘). 확정 종료 세션만 "
+          + "집계하며 주는 월요일 시작입니다. 연속 기록은 하루 목표를 이어서 달성한 일수입니다.")
+  public ApiResponse<com.capstone.backend.report.dto.ReportResponses.Progress> progress(
+      @AuthenticationPrincipal FocusOnPrincipal principal,
+      @RequestParam(required = false) String date,
+      @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
+    DeviceHeaderValidator.require(deviceId, principal);
+    return ApiResponse.of(reports.progress(principal, date));
+  }
+
   /** 진행 중 세션이나 추정 시간을 포함하지 않는다. */
   @GetMapping("/api/v1/reports/daily")
   @Operation(summary = "일간 학습 리포트 조회",

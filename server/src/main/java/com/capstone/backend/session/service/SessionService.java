@@ -66,6 +66,7 @@ public class SessionService {
   private final OnboardingReadinessService onboarding;
   private final UserConsentRepository consents;
   private final ObjectMapper mapper;
+  private final com.capstone.backend.user.persistence.UserFocusSettingsRepository focusSettings;
 
   /** 같은 사용자의 시작 요청을 직렬화하고 성공 응답을 원자적으로 기록한다. */
   @Transactional
@@ -124,10 +125,17 @@ public class SessionService {
     ZoneId zone = zone(request.timeZone());
     Instant startedAt = Instant.now();
     // 목표 문구·시간대·옵션을 시작 시점에 고정해 이후 설정 변경과 분리한다.
-    var session = sessions.save(LearningSessionEntity.create(user, goal, device,
+    var created = LearningSessionEntity.create(user, goal, device,
         request.targetDurationMs().longValueExact(), zone.getId(),
         startedAt.atZone(zone).toLocalDate(), mapper.writeValueAsString(request.sessionOptions()),
-        POLICY_VERSION, startedAt));
+        POLICY_VERSION, startedAt);
+    // 하루 목표를 시작 시점에 고정한다(#374). 설정이 없으면 기본 60분이다. 저장 뒤에 바꾸면 세션
+    // 명령 버전이 올라가므로 처음 저장할 때 함께 넣는다.
+    created.snapshotDailyTarget(focusSettings.findById(user.getId())
+        .map(com.capstone.backend.user.persistence.UserFocusSettingsEntity::getDailyTargetMs)
+        .orElse(com.capstone.backend.user.persistence.UserFocusSettingsEntity
+            .DEFAULT_DAILY_TARGET_MS));
+    var session = sessions.save(created);
     List<SessionGoalEntity> snapshots = new ArrayList<>(selectedGoals.size());
     for (int index = 0; index < selectedGoals.size(); index++) {
       snapshots.add(SessionGoalEntity.snapshot(session.getId(), index + 1,

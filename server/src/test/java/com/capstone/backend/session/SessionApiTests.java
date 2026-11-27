@@ -1788,6 +1788,30 @@ class SessionApiTests {
         "SELECT count(*) FROM session_pauses WHERE session_id=?", Integer.class, Long.valueOf(id)));
   }
 
+  /** 세션 시작 때 사용자 하루 목표를 고정하고, 이후 설정을 바꿔도 그대로다(#374). */
+  @Test
+  void sessionStartFreezesDailyTarget() throws Exception {
+    LoginResponse owner = desktop("daily-target-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String settings = "{\"interventionLevel\":\"NORMAL\",\"notificationChannels\":[\"MOLE_UI\"],"
+        + "\"breakSuggestionEnabled\":true,\"cameraAnalysisEnabled\":false,"
+        + "\"dailyTargetMs\":%d}";
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .put("/api/v1/users/me/focus-settings").header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content(String.format(settings, 5400000)))
+        .andExpect(status().isOk());
+    String id = startForHeartbeat(owner);
+    org.junit.jupiter.api.Assertions.assertEquals(0,
+        sessions.findById(Long.valueOf(id)).orElseThrow().getVersion());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .put("/api/v1/users/me/focus-settings").header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content(String.format(settings, 1800000)))
+        .andExpect(status().isOk());
+    org.junit.jupiter.api.Assertions.assertEquals(5400000L, jdbc.queryForObject(
+        "SELECT daily_target_ms_snapshot FROM learning_sessions WHERE id=?", Long.class,
+        Long.valueOf(id)));
+  }
+
   private void resumeForEventTest(LoginResponse owner, String id) throws Exception {
     long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
     mvc.perform(post("/api/v1/sessions/" + id + "/resume")
