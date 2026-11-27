@@ -26,11 +26,12 @@
 .setup-window .segmented button[aria-checked='true'] { background: var(--selected); color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); }
 .setup-window .segmented button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 
-.setup-window .duration-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-top: 16px; }
-.setup-window .duration-readout { display: flex; align-items: baseline; gap: 8px; }
+/* 직접 입력 줄은 늘 오른쪽 한 줄에 두고, 좁으면 "…까지"만 숫자 아래로 내린다. */
+.setup-window .duration-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 16px; }
+.setup-window .duration-readout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
 .setup-window .duration-readout strong { font-size: 52px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .setup-window .duration-readout span { color: var(--muted); font-size: 16px; }
-.setup-window .custom-row { display: flex; align-items: center; gap: 8px; }
+.setup-window .custom-row { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
 .setup-window .stepper { width: 48px; height: 48px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 20px; font-weight: 700; cursor: pointer; }
 .setup-window .stepper:hover { background: var(--field); }
 .setup-window .stepper:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
