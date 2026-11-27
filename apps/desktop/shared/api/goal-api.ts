@@ -1,5 +1,5 @@
 import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
-import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../../electron/shared/goal-contract.cjs'
+import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, GoalProfile, OpenGoalList } from '../../electron/shared/goal-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -26,6 +26,8 @@ export const goalApi = {
   listOpen: (cursor?: string) => viaGoals<OpenGoalList>((api) => api.listOpen(cursor)),
   remove: (goalId: string) => viaGoals<Record<string, never>>((api) => api.remove(goalId)),
   complete: (goalId: string) => viaGoals<Record<string, never>>((api) => api.complete(goalId)),
+  updateProfile: (goalId: string, goalProfile: GoalProfile) => viaGoals<CreatedGoal>((api) => api.updateProfile({ goalId, goalProfile })),
+  regenerateProfile: (goalId: string) => viaGoals<CreatedGoal>((api) => api.regenerateProfile(goalId)),
 }
 
 // 끝난 세션의 할 일을 「다 했어요」 화면으로 넘긴다. { sessionId, goals: {goalId, goalText}[] }

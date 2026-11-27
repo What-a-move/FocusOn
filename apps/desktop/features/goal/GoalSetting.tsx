@@ -16,7 +16,6 @@ type Line = { text: string; error?: boolean; typing?: boolean }
 type Feedback = { title: string; body: string; info?: boolean } | null
 type Review = { goal: string; caption: string; source: ConfirmationSource; profile?: GoalProfile; candidates?: string[]; editableGoal?: boolean }
 
-const EXAMPLES = ['React Query 캐싱 방식 이해하기', '미적분 적분 문제 풀기', '캡스톤 발표 자료 정리하기']
 const STAGE: Record<View, number> = { entry: 0, questions: 1, candidates: 1, review: 2 }
 const STAGE_LABEL = ['새 할 일', '다듬기', '확인']
 const ASK = '어떤 할 일을 적을까요?'
@@ -59,6 +58,10 @@ export function GoalSetting() {
   const request = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const sayRef = useRef<HTMLParagraphElement>(null)
+
+  // 할 일이 없어 바로 온 경우 ✕는 홈으로 간다(할 일 고르기로 가면 다시 이 화면으로 돌아온다).
+  const [closeHref, setCloseHref] = useState('/todo/')
+  useEffect(() => { queueMicrotask(() => { if (new URLSearchParams(window.location.search).has('first')) setCloseHref('/') }) }, [])
 
   useEffect(() => {
     // [주의] 목표 설정 중 로그인이 만료·해제되면 로그인 화면(/)으로 돌아간다.
@@ -298,7 +301,7 @@ export function GoalSetting() {
   return <main className="app-window onboarding-window goal-window">
     <div className="flow">
       <div className="top">
-        <Link className="close" href="/todo/" aria-label="닫고 할 일 고르기로">✕</Link>
+        <Link className="close" href={closeHref} aria-label={closeHref === '/' ? '닫고 홈으로' : '닫고 할 일 고르기로'}>✕</Link>
         <div className="progress" role="progressbar" aria-label="새 할 일 적기 진행" aria-valuemin={1} aria-valuemax={3} aria-valuenow={Math.min(stage + 1, 3)}>
           {[0, 1, 2].map((index) => <i className={index < stage ? 'done' : index === stage ? 'active' : ''} key={index} />)}
         </div>
@@ -323,15 +326,12 @@ export function GoalSetting() {
               <span className={`counter${goalLength(draft) >= 40 ? ' is-full' : ''}`} aria-hidden="true">{goalLength(draft)}/40</span>
             </div>
             <p className={`hint${hint.error ? ' is-error' : ''}`} id="goal-hint" aria-live="polite">{hint.text}</p>
-            <p className="chips-label">예시</p>
-            <div className="chips">{EXAMPLES.map((example) => <button className="chip" type="button" key={example} disabled={busy}
-              onClick={() => { onDraft(example); inputRef.current?.focus() }}>{example}</button>)}</div>
           </div>}
 
           {view === 'questions' && question && <div className="panel">
             <span className="question-count">{question.mode === 'term' ? '확인 질문' : '질문'} {asked} / {MAX_QUESTIONS}</span>
             {question.mode === 'scope'
-              ? <div className="input-wrap"><input className="goal-input" type="text" maxLength={30} autoComplete="off" placeholder="예: 캡스톤 중간 발표" aria-label="질문에 대한 답"
+              ? <div className="input-wrap"><input className="goal-input" type="text" maxLength={30} autoComplete="off" aria-label="질문에 대한 답"
                   value={scopeAnswer} disabled={busy} onChange={(event) => { setScopeAnswer(event.target.value); setFeedback(null) }} onKeyDown={onEnter} autoFocus /></div>
               : <Options labels={question.options} selected={selected} onChoose={(index) => { setSelected(index); setFeedback(null) }} onSubmit={primary} label={question.text} />}
           </div>}
@@ -359,8 +359,8 @@ export function GoalSetting() {
             <span className="feedback-icon" aria-hidden="true">!</span>
             <div><strong>{feedback.title}</strong><span>{feedback.body}</span></div>
           </div>}
-          {showSecondary && <button className="btn btn-ghost" type="button" onClick={secondary} disabled={busy}>{secondaryLabel}</button>}
           <span className="spacer" />
+          {showSecondary && <button className="btn btn-ghost" type="button" onClick={secondary} disabled={busy}>{secondaryLabel}</button>}
           <button className={`btn btn-primary primary${ready ? '' : ' is-blocked'}`} type="button" onClick={primary} disabled={busy}>
             {busy && view === 'review' ? '저장하는 중…' : primaryLabel}
           </button>

@@ -185,6 +185,7 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
 function LearningBlock({ sessionId, learning, noLearning }: { sessionId: string; learning: LearningSummary | null; noLearning: boolean }) {
   const [copied, setCopied] = useState<'' | '복사했어요' | '복사하지 못했어요'>('')
   const ready = learning?.status === 'READY' && learning.overview ? learning : null
+  const waiting = learning?.status === 'QUEUED' || learning?.status === 'GENERATING'
   const copy = async () => {
     if (!ready) return
     try { await navigator.clipboard.writeText([ready.overview, ready.nextStartPrompt && `다음 시작 지점: ${ready.nextStartPrompt}`].filter(Boolean).join('\n\n')); setCopied('복사했어요') }
@@ -200,6 +201,9 @@ function LearningBlock({ sessionId, learning, noLearning }: { sessionId: string;
       </span>
       <p className="learn-overview">{ready.overview}</p>
       {ready.nextStartPrompt && <p className="learn-next"><b>다음 시작 지점</b><span>{ready.nextStartPrompt}</span></p>}
-    </> : <p className="learn-line" role="status">{LEARN_LINE[learning?.status === 'READY' ? 'UNKNOWN' : learning?.status ?? (noLearning ? 'NONE' : 'UNKNOWN')]}</p>}
+    </> : <p className="learn-line" role="status">
+      {waiting && <span className="learn-writing" aria-hidden="true"><span /><span /><span /></span>}
+      <span>{LEARN_LINE[learning?.status === 'READY' ? 'UNKNOWN' : learning?.status ?? (noLearning ? 'NONE' : 'UNKNOWN')]}</span>
+    </p>}
   </section>
 }

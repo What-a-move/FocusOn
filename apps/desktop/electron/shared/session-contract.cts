@@ -40,6 +40,8 @@ const pauseReasonOf = (value: unknown) => typeof value === 'string' && /^[A-Z_]{
  * Main이 Renderer에 보내는 현재 세션. 누적 시간은 Main의 monotonic clock으로 계산한 값이며,
  * Renderer는 `RUNNING`일 때만 받은 뒤 흐른 시간을 더해 1초마다 다시 그린다.
  */
+/** 집중 중 화면에 알릴 상태(session-states.html). Desktop이 직접 아는 것만: 생존 신호 실패·제외한 앱·민감한 화면·카메라 못 씀. */
+export type SessionNotice = 'OFFLINE' | 'EXCLUDED_APP' | 'PRIVACY' | 'CAMERA_OFF'
 export type SessionSnapshot = Partial<GoalState> & {
   sessionId: string
   goalText: string
@@ -51,6 +53,8 @@ export type SessionSnapshot = Partial<GoalState> & {
   busy: boolean
   /** 멈춘 이유(USER·APP_RESTART·REQUIRED_PERMISSION·EXTENSION_UNLINKED 등). 모르면 null. */
   pauseReason: string | null
+  /** RUNNING일 때만. 없으면 빠진다. */
+  notice?: SessionNotice
 }
 
 export type SessionsApi = {

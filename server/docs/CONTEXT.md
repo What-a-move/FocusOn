@@ -4,6 +4,10 @@
 
 - 일시정지·자동 일시정지·재개를 `session_pauses`(V33)에 기록하고 `GET /sessions/{id}/pauses`로 돌려준다. 계획: `features/session-pauses-PLAN.md`.
 
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- `POST /sessions/{id}/goals`에 `replaceGoalId`를 더해 같은 자리를 덮어쓴다. 활성 세션 수정 잠금은 할 일 사본 기준으로 바꿔 교체로 빠진 할 일이 풀린다. 계획: `features/session-goal-replace-PLAN.md`.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.
@@ -20,6 +24,10 @@
 ## #350 재분석 직전 FAR 시간 보존
 
 - #350은 같은 목표·Desktop 전경에서 새 분석 직전까지 확정 RELATED/FAR 시간을 보존한다. 전경 교체 시 체크포인트를 닫는다.
+
+## #354 Extension 응답 추적 ID
+
+- 허용된 Chrome Extension origin에 `X-Trace-Id` 응답을 노출한다. [이슈 #354](https://github.com/What-a-move/FocusOn/issues/354).
 
 ## DR-030 목표 프로필·세션 할 일 연동 (2026-11-24)
 

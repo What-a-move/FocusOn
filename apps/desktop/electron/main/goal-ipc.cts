@@ -1,14 +1,16 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { GOAL_CHANNELS, isGoalId, isValidClarifyInput, isValidCreateGoalInput, isGoalListCursor, parseClarifyResult, parseCreatedGoal, parseOpenGoalList } from '../shared/goal-contract.cjs'
-import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, OpenGoalList } from '../shared/goal-contract.cjs'
+import { GOAL_CHANNELS, isGoalId, isProfileUpdate, isValidClarifyInput, isValidCreateGoalInput, isGoalListCursor, parseClarifyResult, parseCreatedGoal, parseOpenGoalList } from '../shared/goal-contract.cjs'
+import type { ClarifyInput, ClarifyResult, CreateGoalInput, CreatedGoal, GoalProfile, OpenGoalList } from '../shared/goal-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
 
 const INVALID_REQUEST = { success: false, error: { code: 'VALIDATION_ERROR', retryable: false } } as const
 const LOCAL_APP_ERROR = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
+// 서버는 AI 호출 한 번에 60초까지 기다리고, 질문 하나에 보통 10~15초 걸린다. 기본 10초면 정상 응답도 끊긴다.
+export const AI_TIMEOUT_MS = 70_000
 
 /** 목표 Backend 계약 (Notion FocusOn API 명세서). POST라 자동 재전송하지 않는다. AI 재시도는 Backend가 맡는다. */
 export class GoalService {
@@ -17,7 +19,7 @@ export class GoalService {
   clarify(input: ClarifyInput): Promise<ApiResult<ClarifyResult>> {
     const body: ClarifyInput = { goalText: input.goalText.trim(), conversationTurn: input.conversationTurn, previousAnswers: input.previousAnswers }
     if (input.clarificationSessionId) body.clarificationSessionId = input.clarificationSessionId
-    return this.auth.authorizedRequest({ path: '/api/v1/goals/clarify', method: 'POST', expectedStatus: 200, parse: parseClarifyResult, body })
+    return this.auth.authorizedRequest({ path: '/api/v1/goals/clarify', method: 'POST', expectedStatus: 200, parse: parseClarifyResult, body, timeoutMs: AI_TIMEOUT_MS })
   }
 
   create(input: CreateGoalInput): Promise<ApiResult<CreatedGoal>> {
@@ -25,7 +27,8 @@ export class GoalService {
     if (input.clarificationSessionId) body.clarificationSessionId = input.clarificationSessionId
     if (input.goalProfile) body.goalProfile = input.goalProfile
     return this.auth.authorizedRequest({
-      path: '/api/v1/goals', method: 'POST', expectedStatus: 201, parse: parseCreatedGoal, body,
+      // 확정 문구에 범위 초안이 없으면 서버가 저장 전에 AI로 범위를 만든다.
+      path: '/api/v1/goals', method: 'POST', expectedStatus: 201, parse: parseCreatedGoal, body, timeoutMs: AI_TIMEOUT_MS,
       ...(input.idempotencyKey ? { headers: { 'Idempotency-Key': input.idempotencyKey } } : {}),
     })
   }
@@ -39,6 +42,23 @@ export class GoalService {
   /** 할 일을 끝냄으로 바꾼다. 진행 중인 세션이 써도 todoStatus만은 바꿀 수 있다. */
   complete(goalId: string): Promise<ApiResult<Record<string, never>>> {
     return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'PATCH', body: { todoStatus: 'DONE' }, expectedStatus: 200, parse: () => ({}) })
+  }
+
+  updateProfile(goalId: string, goalProfile: GoalProfile): Promise<ApiResult<CreatedGoal>> {
+    return this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}`, method: 'PATCH', body: { goalProfile }, expectedStatus: 200, parse: parseCreatedGoal })
+  }
+
+  // 다시 만들기는 AI를 부르는 비싼 요청이라 할 일마다 한 번만 보낸다. 겹친 호출은 진행 중인 요청 결과를 같이 받는다.
+  private readonly regenerating = new Map<string, Promise<ApiResult<CreatedGoal>>>()
+
+  /** AI가 느리면 오래 걸릴 수 있다(서버 요청당 60초·재시도 2회). */
+  regenerateProfile(goalId: string): Promise<ApiResult<CreatedGoal>> {
+    const running = this.regenerating.get(goalId)
+    if (running) return running
+    const request = this.auth.authorizedRequest({ path: `/api/v1/goals/${encodeURIComponent(goalId)}/profile`, method: 'POST', expectedStatus: 200, parse: parseCreatedGoal, timeoutMs: AI_TIMEOUT_MS })
+      .finally(() => this.regenerating.delete(goalId))
+    this.regenerating.set(goalId, request)
+    return request
   }
 
   remove(goalId: string): Promise<ApiResult<Record<string, never>>> {
@@ -64,4 +84,6 @@ export function registerGoalIpc(getMainWindow: () => BrowserWindow | null, rende
   handle(GOAL_CHANNELS.listOpen, isGoalListCursor, (s, cursor) => s.listOpen(cursor))
   handle(GOAL_CHANNELS.remove, isGoalId, (s, goalId) => s.remove(goalId))
   handle(GOAL_CHANNELS.complete, isGoalId, (s, goalId) => s.complete(goalId))
+  handle(GOAL_CHANNELS.updateProfile, isProfileUpdate, (s, input) => s.updateProfile(input.goalId, input.goalProfile))
+  handle(GOAL_CHANNELS.regenerateProfile, isGoalId, (s, goalId) => s.regenerateProfile(goalId))
 }

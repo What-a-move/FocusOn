@@ -279,7 +279,7 @@ POST /api/v1/sessions/{sessionId}/goals
 
 `GET /api/v1/sessions/{sessionId}/pauses`(2026-11-26 #317): 본인 세션의 일시정지·재개 구간을 `{ data: [{ pausedAt, resumedAt, pauseReason }] }`로 `pausedAt` 오름차순 반환한다. 사용자 일시정지(`PAUSE`)와 자동 일시정지(권한 유실 로컬 이벤트)가 구간을 열고 재개가 닫는다. 재개 없이 끝나면 마지막 `resumedAt`은 `null`이다. 도입 전 세션은 빈 배열, 다른 사용자·없는 세션은 404 `SESSION_NOT_FOUND`다. 집중 리포트 가로축(일시정지를 뺀 경과 시간) 계산용이다.
 
-세션 시작은 단일 `goalId` 또는 순서가 있는 `goalIds` 1~3개 중 하나를 받는다. 시작·활성 응답의 `goals: [{goalId, goalText}]`와 `goalVersion`은 시작 시 고정한 목표 사본을 나타낸다. 실행 중 같은 Desktop은 `POST /api/v1/sessions/{sessionId}/goals`에 `{goalId, goalVersion}`으로 본인의 새 할 일을 하나 추가할 수 있다. 추가 시 목표 목록 버전만 증가한다.
+세션 시작은 단일 `goalId` 또는 순서가 있는 `goalIds` 1~3개 중 하나를 받는다. 시작·활성 응답의 `goals: [{goalId, goalText}]`와 `goalVersion`은 시작 시 고정한 목표 사본을 나타낸다. 실행 중 같은 Desktop은 `POST /api/v1/sessions/{sessionId}/goals`에 `{goalId, goalVersion}`으로 본인의 새 할 일을 하나 추가할 수 있다. 추가 시 목표 목록 버전만 증가한다. 같은 요청에 `replaceGoalId`를 넣으면 그 할 일의 자리를 새 할 일 사본으로 덮어쓰고 목표 목록 버전을 1 올린다(2026-11-25 #320, 교체 이력 없음). 이미 반영된 교체를 같은 내용으로 다시 보내면 현재 목록을 200으로 돌려준다. 버전 불일치는 409 `SESSION_VERSION_CONFLICT`, 세션에 없는 교체 대상·이미 세션에 있는 할 일·같은 ID는 400 `VALIDATION_ERROR`, 없거나 삭제된 할 일은 404 `GOAL_NOT_FOUND`다. 교체로 빠진 할 일은 바로 수정·삭제할 수 있다. 세션의 시작 목표 사본(`goalTextSnapshot`, 리포트 제목)은 바뀌지 않는다.
 
 세션 생성의 필수 헤더는 `Authorization`, `X-Device-Id`, `Idempotency-Key`다. 기존 세션이 아직 없으므로 생성에 `If-Match-Version`을 요구하지 않는다.
 
