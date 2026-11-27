@@ -56,6 +56,8 @@ import com.capstone.backend.intervention.persistence.InterventionDeliveryEntity;
 import com.capstone.backend.intervention.persistence.InterventionDeliveryRepository;
 import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
+import com.capstone.backend.report.persistence.LearningReviewEvidenceEntity;
+import com.capstone.backend.report.persistence.LearningReviewEvidenceRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
@@ -127,6 +129,7 @@ class AnalysisApiTests {
   @Autowired private InterventionEventRepository interventionEvents;
   @Autowired private InterventionDeliveryRepository interventionDeliveries;
   @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
+  @Autowired private LearningReviewEvidenceRepository evidences;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private AnalysisAiClient ai;
   @LocalServerPort private int port;
@@ -248,6 +251,10 @@ class AnalysisApiTests {
           .andExpect(jsonPath("$.data[0].reviewEvidence").doesNotExist())
           .andReturn().getResponse().getContentAsString();
       assertFalse(history.contains("synthetic review concept"));
+      var storedEvidence = evidenceOf(f.sessionId());
+      assertEquals(relation == Relation.RELATED ? List.of("synthetic review concept")
+          : List.of(), storedEvidence.stream().map(LearningReviewEvidenceEntity::getConceptLabel)
+          .toList());
       for (var event : logs.list) {
         var logged = event.getFormattedMessage() + event.getKeyValuePairs()
             + event.getMDCPropertyMap();
@@ -494,6 +501,75 @@ class AnalysisApiTests {
     assertTrue(runs.findById(abandonedRun).isEmpty());
     assertTrue(runs.findById(recentRun).isPresent());
     assertTrue(runs.findById(activeRun).isPresent());
+  }
+
+  @Test
+  void verifiedReviewEvidenceIsStoredOncePerConcept() {
+    var f = fixture();
+    Instant now = Instant.now().minusSeconds(10);
+    var labels = List.of("Spring  Transaction", "spring transaction", "JPA Lock");
+    for (int i = 0; i < labels.size(); i++) {
+      when(ai.analyze(any(), any(), anyLong())).thenReturn(withEvidence(f.goalId(),
+          labels.get(i)));
+      analyze(f, ordered(ContentSource.CHROME_DOM, i + 1, (long) i + 1, now.plusSeconds(i),
+          null));
+    }
+
+    var stored = evidenceOf(f.sessionId());
+    assertEquals(List.of("Spring Transaction", "JPA Lock"), stored.stream()
+        .map(LearningReviewEvidenceEntity::getConceptLabel).toList());
+    assertEquals("CONCEPT", stored.getFirst().getEvidenceType());
+    assertEquals("CHROME_DOM", stored.getFirst().getContentSource());
+    assertEquals(now.truncatedTo(ChronoUnit.MICROS),
+        stored.getFirst().getObservedAt().truncatedTo(ChronoUnit.MICROS));
+  }
+
+  @Test
+  void reviewEvidenceIsDroppedWhenSessionStopsOrGoalIsNotMatched() {
+    var paused = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenAnswer(invocation -> {
+      tx.executeWithoutResult(ignored -> sessions.findById(paused.sessionId()).orElseThrow()
+          .pause(SessionStatus.PAUSED, "USER", 1000));
+      return withEvidence(paused.goalId(), "paused concept");
+    });
+    analyze(paused, request(null));
+    assertTrue(evidenceOf(paused.sessionId()).isEmpty());
+
+    var unmatched = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(withEvidence(unmatched.goalId() + 999,
+        "other goal concept"));
+    analyze(unmatched, request(null));
+    assertTrue(evidenceOf(unmatched.sessionId()).isEmpty());
+
+    var excluded = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(withEvidence(excluded.goalId(),
+        "excluded concept"));
+    analyze(excluded, request(GuardStatus.EXCLUDED));
+    assertTrue(evidenceOf(excluded.sessionId()).isEmpty());
+  }
+
+  @Test
+  void retentionRemovesReviewEvidenceNinetyDaysAfterSessionEnds() {
+    var expired = fixture();
+    var recent = fixture();
+    for (var f : List.of(expired, recent)) {
+      when(ai.analyze(any(), any(), anyLong())).thenReturn(withEvidence(f.goalId(),
+          "retained concept"));
+      analyze(f, request(null));
+    }
+    Instant end = Instant.now().minus(Duration.ofDays(90)).truncatedTo(ChronoUnit.MICROS);
+    tx.executeWithoutResult(ignored -> {
+      sessions.findById(expired.sessionId()).orElseThrow().end(end, 1000);
+      sessions.findById(recent.sessionId()).orElseThrow().end(end.plus(Duration.ofDays(1)),
+          1000);
+    });
+
+    retention.purgeDue(end.plus(Duration.ofDays(90)).minusSeconds(1));
+    assertEquals(1, evidenceOf(expired.sessionId()).size());
+
+    retention.purgeDue(end.plus(Duration.ofDays(90)));
+    assertTrue(evidenceOf(expired.sessionId()).isEmpty());
+    assertEquals(1, evidenceOf(recent.sessionId()).size());
   }
 
   @Test
@@ -1156,6 +1232,18 @@ class AnalysisApiTests {
     return new AnalysisDecision(Relation.RELATED, .9, ReasonCode.SEMANTIC_GOAL_MATCH,
         AnalysisStatus.COMPLETED, "test-model", "test-prompt",
         com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.MATCHED, goalId);
+  }
+
+  private List<LearningReviewEvidenceEntity> evidenceOf(long sessionId) {
+    return evidences.findInput(sessionId, Instant.now().plusSeconds(60),
+        org.springframework.data.domain.PageRequest.of(0, 20));
+  }
+
+  private static AnalysisDecision withEvidence(long goalId, String label) {
+    return new AnalysisDecision(Relation.RELATED, .9, ReasonCode.SEMANTIC_GOAL_MATCH,
+        AnalysisStatus.COMPLETED, "test-model", "test-prompt",
+        com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus.MATCHED, goalId,
+        new AnalysisDecision.ReviewEvidence(label, AnalysisDecision.EvidenceType.CONCEPT));
   }
 
   private static AnalysisDecision related() {

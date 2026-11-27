@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #379 학습 정리 근거 저장 (2026-11-28)
+
+- 실연동 QA: Desktop·Extension 분석 → 근거 저장 → 세션 종료 → 학습 정리 READY까지 같은 traceId로 확인(AI `reviewEvidence` 배포 필요).
+- 팀 확정: 종료 뒤 완료된 분석의 노트 전용 30초 경로 여부, 동의 철회 시 저장된 근거 삭제 범위.
+
 ## Issue #374 리포트 진행 요약 (2026-11-27)
 
 - Desktop: 홈·메뉴바·위젯에서 `GET /reports/progress`를 쓰고, 진행 중 세션 시간은 화면에서 더한다.

@@ -16,6 +16,7 @@ import com.capstone.backend.common.api.ApiErrorCode;
 import com.capstone.backend.common.api.ApiException;
 import com.capstone.backend.goal.service.GoalProfile;
 import com.capstone.backend.intervention.service.InterventionPolicyService;
+import com.capstone.backend.report.service.LearningEvidenceRecorder;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionGoalRepository;
@@ -53,6 +54,7 @@ public class AnalysisRunStore {
   private final AuthRateLimiter limits;
   private final InterventionPolicyService interventionPolicy;
   private final com.capstone.backend.intervention.service.ForegroundPolicyContext foreground;
+  private final LearningEvidenceRecorder learningEvidence;
 
   /** 사용자가 소유한 세션의 보관 중인 관측 결과를 시각순으로 반환한다. */
   @Transactional(readOnly = true)
@@ -131,7 +133,15 @@ public class AnalysisRunStore {
     var decisionToStore = finalDecision(prepared, run, session,
         guard(principal.userId(), request, prepared.goals()), decision);
     run.complete(decisionToStore);
-    interventionPolicy.completed(session, run, Instant.now());
+    final Instant now = Instant.now();
+    var evidence = decisionToStore.reviewEvidence();
+    if (evidence != null) {
+      // 완료 재검증(동의·제외·민감·실행 구간·목표 버전)을 통과한 판정에만 근거가 남는다.
+      learningEvidence.record(session.getId(), evidence.conceptLabel(),
+          evidence.evidenceType().name(), run.getObservedAt(), run.getContentSource().name(),
+          now);
+    }
+    interventionPolicy.completed(session, run, now);
     return run.response();
   }
 

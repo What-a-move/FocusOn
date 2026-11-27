@@ -5,6 +5,7 @@ import com.capstone.backend.analysis.persistence.AnalysisRunRepository.Retention
 import com.capstone.backend.auth.persistence.UserRepository;
 import com.capstone.backend.common.api.SafeApiLog;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
+import com.capstone.backend.report.persistence.LearningReviewEvidenceRepository;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
@@ -20,7 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/** 종료된 세션에서 보관 기한이 지난 화면 분석 이력을 정리한다. */
+/** 종료된 세션에서 보관 기한이 지난 화면 분석 이력과 학습 정리 근거를 정리한다. */
 @Component
 @RequiredArgsConstructor
 public class AnalysisRunRetention {
@@ -35,6 +36,7 @@ public class AnalysisRunRetention {
   private final LearningSessionRepository sessions;
   private final InterventionEventRepository events;
   private final TransactionTemplate transactions;
+  private final LearningReviewEvidenceRepository evidences;
   private long afterId;
 
   /** 보관 기한이 지난 분석 실행 기록을 주기적으로 정리한다. */
@@ -47,6 +49,12 @@ public class AnalysisRunRetention {
   /** 후보 한 페이지를 세션별로 나눠 잠금과 삭제를 수행한다. */
   public synchronized void purgeDue(Instant now) {
     Instant cutoff = cutoff(now);
+    try {
+      // 학습 정리 근거도 분석 실행과 같은 종료 후 90일 기준으로 지운다.
+      transactions.executeWithoutResult(status -> evidences.deleteExpired(TERMINAL, cutoff));
+    } catch (RuntimeException exception) {
+      SafeApiLog.analysisRetentionFailure(exception);
+    }
     List<RetentionCandidate> batch;
     try {
       batch = runs.findRetentionCandidates(afterId, TERMINAL, cutoff, PAGE);
