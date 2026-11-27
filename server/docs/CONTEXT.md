@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- `POST /sessions/{id}/goals`에 `replaceGoalId`를 더해 같은 자리를 덮어쓴다. 활성 세션 수정 잠금은 할 일 사본 기준으로 바꿔 교체로 빠진 할 일이 풀린다. 계획: `features/session-goal-replace-PLAN.md`.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.

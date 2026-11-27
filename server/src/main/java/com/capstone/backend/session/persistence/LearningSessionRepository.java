@@ -24,9 +24,15 @@ public interface LearningSessionRepository extends JpaRepository<LearningSession
   Optional<LearningSessionEntity> findByUserIdAndStatusIn(Long userId,
       Collection<SessionStatus> statuses);
 
-  /** 특정 목표를 참조하는 활성 세션이 있는지 확인한다. */
-  boolean existsByUserIdAndGoalIdAndStatusIn(Long userId, Long goalId,
-      Collection<SessionStatus> statuses);
+  /**
+   * 세션 할 일 사본(session_goals)이 없는 옛 활성 세션이 시작 목표로 이 목표를 쓰는지 본다.
+   * 사본이 있는 세션은 사본 기준으로만 판단해야 교체로 빠진 할 일이 풀린다(#320).
+   */
+  @Query("select count(s) > 0 from LearningSessionEntity s where s.user.id = :userId "
+      + "and s.goal.id = :goalId and s.status in :statuses and not exists ("
+      + "select 1 from SessionGoalEntity g where g.id.sessionId = s.id)")
+  boolean legacyReferenceByActiveSession(@Param("userId") Long userId,
+      @Param("goalId") Long goalId, @Param("statuses") Collection<SessionStatus> statuses);
 
   /** 현재 사용자에게 속한 세션만 조회한다. */
   Optional<LearningSessionEntity> findByIdAndUserId(Long id, Long userId);

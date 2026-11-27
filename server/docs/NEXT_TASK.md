@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- Desktop: 할 일이 3개일 때 교체할 할 일을 골라 `replaceGoalId`와 함께 보낸다. 409 `SESSION_VERSION_CONFLICT`면 활성 세션을 다시 읽는다.
+- 문서 오너: Notion API 명세의 세션 할 일 추가 항목에 `replaceGoalId` 반영.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - Desktop: 범위 항목 빼기·추가는 PATCH `goalProfile`, 「다시 만들기」는 `POST /goals/{id}/profile`. 503·504면 기존 범위를 그대로 보여 준다.
