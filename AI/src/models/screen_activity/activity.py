@@ -1,9 +1,7 @@
 """Three-class screen-activity predictor for a single, prevalidated foreground target."""
 
-import contextlib
 import hashlib
 import json
-import logging
 import unicodedata
 from pathlib import Path
 
@@ -13,7 +11,6 @@ from sklearn.feature_extraction import FeatureHasher
 from sklearn.feature_extraction.text import HashingVectorizer
 from torch.nn import functional as F
 from transformers import AutoModel, AutoTokenizer
-from transformers.utils import logging as transformers_logging
 
 from .discovery import features as discovery_features
 from .evidence import features as evidence_features
@@ -62,51 +59,10 @@ def validate_route(payload):
         raise ValueError("Chrome 화면에는 탭 메타데이터 또는 DOM을 사용해 주세요.")
 
 
-class _MistralRegexFalsePositiveFilter(logging.Filter):
-    """Filter transformers==4.57.3 false-positive Mistral regex warning on XLM-RoBERTa."""
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        return "fix_mistral_regex" not in record.getMessage()
-
-
-@contextlib.contextmanager
-def _suppress_mistral_regex_warning():
-    """Suppress only the false-positive Mistral warning without altering tokenization.
-
-    intfloat/multilingual-e5-small uses SentencePiece (XLMRobertaTokenizerFast), not a
-    Mistral BPE regex pre-tokenizer. Keeping default tokenizer loading preserves exact
-    tokenization parity with the trained activity-head.pt checkpoint.
-    """
-    # Ensure transformers' root logger and default handler are initialized, and attach
-    # the filter to both handlers (for propagated child records) and tokenizer loggers.
-    root_logger = transformers_logging.get_logger()
-    loggers = (
-        root_logger,
-        logging.getLogger("transformers"),
-        logging.getLogger("transformers.tokenization_utils_base"),
-        logging.getLogger("transformers.tokenization_utils_fast"),
-        logging.getLogger("transformers.tokenization_utils_tokenizers"),
-    )
-    handlers = list(dict.fromkeys((*root_logger.handlers, *logging.getLogger("transformers").handlers)))
-    warning_filter = _MistralRegexFalsePositiveFilter()
-    for target in loggers:
-        target.addFilter(warning_filter)
-    for handler in handlers:
-        handler.addFilter(warning_filter)
-    try:
-        yield
-    finally:
-        for handler in handlers:
-            handler.removeFilter(warning_filter)
-        for target in loggers:
-            target.removeFilter(warning_filter)
-
-
 class ScreenEncoder:
     def __init__(self, directory):
         self.device = "mps" if torch.backends.mps.is_available() else "cpu"
-        with _suppress_mistral_regex_warning():
-            self.tokenizer = AutoTokenizer.from_pretrained(directory, local_files_only=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(directory, local_files_only=True)
         self.model = AutoModel.from_pretrained(directory, local_files_only=True).eval().to(self.device)
         self.words = HashingVectorizer(
             n_features=4096, ngram_range=(1, 2), binary=True, alternate_sign=False, dtype=np.float32
