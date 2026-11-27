@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ConfirmationSource, CreatedGoal, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
-import { CONFIRMED_GOAL_KEY, goalApi, readPicked, goalLength, MAX_QUESTIONS, MAX_TODO_PICK, TODO_SAVED_KEY, type ClarifyResult } from '../../shared/api/goal-api'
+import { goalApi, readPicked, reconcilePicked, writePicked, goalLength, MAX_QUESTIONS, MAX_TODO_PICK, TODO_SAVED_KEY, type ClarifyResult } from '../../shared/api/goal-api'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
@@ -35,7 +35,7 @@ function Options({ labels, selected, onChoose, onSubmit, label }: { labels: stri
 /** 새 할 일 적기 (FocusOn-design/todo-goals.html?view=add). AI가 다듬고(질문 최대 2회) 저장한 뒤 할 일 고르기로 돌아가 골라 둔다. */
 export function GoalSetting() {
   const router = useRouter()
-  const { goals: openGoals } = useOpenGoals()
+  const { goals: openGoals, loading: loadingGoals, failed: goalsFailed, nextCursor } = useOpenGoals()
   const [view, setView] = useState<View>('entry')
   const [draft, setDraft] = useState('')
   const [hint, setHint] = useState<{ text: string; error: boolean }>({ text: '2~40자', error: false })
@@ -177,11 +177,11 @@ export function GoalSetting() {
 
   // 고르던 할 일 뒤에 붙여 할 일 고르기에서 골라진 채로 보이게 하고(최대 3개), 한 줄 안내를 남긴다.
   const backToPick = (goals: { goalId: string; goalText: string }[], note: (picked: boolean) => string) => {
-    const before = readPicked()
+    const before = reconcilePicked(readPicked(), openGoals, !loadingGoals && !goalsFailed && !nextCursor)
     const merged = [...before, ...goals].filter((goal, index, list) => list.findIndex(({ goalId }) => goalId === goal.goalId) === index).slice(0, MAX_TODO_PICK)
     const picked = goals.some(({ goalId }) => merged.some((goal) => goal.goalId === goalId))
+    writePicked(merged)
     try {
-      sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(merged))
       sessionStorage.setItem(TODO_SAVED_KEY, note(picked))
     } catch { /* 저장소를 못 써도 할 일은 서버에 저장됐다. */ }
     router.push('/todo/')
