@@ -5,6 +5,7 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.GuardStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 원문·외부 오류 메시지를 포함하지 않는 정규화된 판정이다. matchStatus는 확정 RELATED일 때만 값이
@@ -12,7 +13,7 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
  */
 public record AnalysisDecision(Relation relation, Double confidence, ReasonCode reasonCode,
     AnalysisStatus status, String modelVersion, String promptVersion, MatchStatus matchStatus,
-    Long matchedGoalId) {
+    Long matchedGoalId, @JsonIgnore ReviewEvidence reviewEvidence) {
   /** 확정 RELATED가 아니면 matchStatus를 남기지 않는다. */
   public AnalysisDecision {
     if (relation != Relation.RELATED || status != AnalysisStatus.COMPLETED) {
@@ -21,6 +22,17 @@ public record AnalysisDecision(Relation relation, Double confidence, ReasonCode 
     if (matchStatus != MatchStatus.MATCHED) {
       matchedGoalId = null;
     }
+    if (matchedGoalId == null || matchedGoalId <= 0) {
+      reviewEvidence = null;
+    }
+  }
+
+  /** 기존 호출은 공부 개념 근거 없이 판정을 만들 수 있다. */
+  public AnalysisDecision(Relation relation, Double confidence, ReasonCode reasonCode,
+      AnalysisStatus status, String modelVersion, String promptVersion, MatchStatus matchStatus,
+      Long matchedGoalId) {
+    this(relation, confidence, reasonCode, status, modelVersion, promptVersion, matchStatus,
+        matchedGoalId, null);
   }
 
   /** 기존 AI 응답에는 상태만 있을 수 있다. */
@@ -39,6 +51,17 @@ public record AnalysisDecision(Relation relation, Double confidence, ReasonCode 
   public AnalysisDecision withoutGoalAttribution() {
     return new AnalysisDecision(relation, confidence, reasonCode, status, modelVersion,
         promptVersion, MatchStatus.NOT_ENOUGH, null);
+  }
+
+  /** AI에서 수신한 공부 개념의 내부 유형이다. */
+  public enum EvidenceType { CONCEPT }
+
+  /** 로그에 개념 라벨을 남기지 않는 내부 판정 데이터다. */
+  public record ReviewEvidence(String conceptLabel, EvidenceType evidenceType) {
+    @Override
+    public String toString() {
+      return "ReviewEvidence[redacted]";
+    }
   }
 
   /** AI 미설정·장애·잘못된 응답은 경고 근거가 될 수 없다. */

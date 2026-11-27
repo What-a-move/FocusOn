@@ -148,6 +148,7 @@ class AnalysisApiTests {
       Relation relation, AnalysisStatus status, ReasonCode reasonCode) throws Exception {
     Fixture f = fixture();
     var input = request(null);
+    long goalId = f.goalId();
     final String trace = UUID.randomUUID().toString();
     var aiTrace = new AtomicReference<String>();
     var fake = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -156,8 +157,10 @@ class AnalysisApiTests {
       byte[] body = """
           {"decision":"RELATED","confidence":0.9,"reasonCode":"SEMANTIC_GOAL_MATCH",
            "modelVersion":"test-model","promptVersion":"test-prompt",
+           "matchStatus":"MATCHED","matchedGoalId":"%s",
+           "reviewEvidence":[{"conceptLabel":"synthetic review concept","evidenceType":"CONCEPT"}],
            "privateExtra":"private synthetic AI response"}
-          """.getBytes(StandardCharsets.UTF_8);
+          """.formatted(goalId).getBytes(StandardCharsets.UTF_8);
       try (exchange) {
         if (withdrawConsent) {
           tx.executeWithoutResult(ignored -> consents.findByUserIdAndConsentType(
@@ -209,11 +212,16 @@ class AnalysisApiTests {
       if (relation == Relation.RELATED) {
         assertTrue(confidence.isNumber());
         assertEquals(0.9, confidence.asDouble());
+        assertEquals("MATCHED", result.path("matchStatus").asString());
+        assertEquals(Long.toString(goalId), result.path("matchedGoalId").asString());
       } else {
         assertTrue(confidence.isNull() || confidence.isMissingNode());
       }
       assertEquals("v1", result.path("policyVersion").asString());
       assertFalse(response.body().contains("private synthetic body"));
+      assertFalse(response.body().contains("synthetic review concept"));
+      assertTrue(result.path("reviewEvidence").isMissingNode());
+      assertFalse(response.body().contains("private synthetic AI response"));
       assertTrue(requestLogged.await(5, TimeUnit.SECONDS));
       boolean aiSucceeded = aiStatus == 200;
       assertEquals(List.of("http.in", "gate.rule.pass", "ai.call.start",
@@ -234,12 +242,19 @@ class AnalysisApiTests {
       assertEquals(status, stored.analysisStatus());
       assertEquals(reasonCode, stored.reasonCode());
       assertEquals(stored.confidence(), storedFields.get("confidence"));
+      var history = mvc.perform(get(path(f.sessionId())).header("Authorization",
+              "Bearer " + f.login().accessToken()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data[0].reviewEvidence").doesNotExist())
+          .andReturn().getResponse().getContentAsString();
+      assertFalse(history.contains("synthetic review concept"));
       for (var event : logs.list) {
         var logged = event.getFormattedMessage() + event.getKeyValuePairs()
             + event.getMDCPropertyMap();
         assertFalse(logged.contains("private synthetic body"));
         assertFalse(logged.contains("synthetic title"));
         assertFalse(logged.contains("private synthetic AI response"));
+        assertFalse(logged.contains("synthetic review concept"));
         assertFalse(logged.contains("private-test-service-key"));
         assertFalse(logged.contains("private-query-value"));
         assertFalse(logged.contains(f.login().accessToken()));
@@ -1031,8 +1046,9 @@ class AnalysisApiTests {
           Instant.now())).getId();
     });
     // Same device, different session: a device-only duplicate check would reject this.
-    assertEquals(Relation.RELATED, analyze(new Fixture(first.login(), first.principal(), nextId),
-        ordered(ContentSource.APP_META, 1, 1L, Instant.now(), null)).relation());
+    var next = new Fixture(first.login(), first.principal(), nextId, first.goalId());
+    assertEquals(Relation.RELATED,
+        analyze(next, ordered(ContentSource.APP_META, 1, 1L, Instant.now(), null)).relation());
   }
 
   @Test
@@ -1113,7 +1129,7 @@ class AnalysisApiTests {
       var session = sessions.saveAndFlush(LearningSessionEntity.create(user, goal, device,
           1800000, "Asia/Seoul", LocalDate.now(), "{}", "v1", startedAt));
       return new Fixture(account, new FocusOnPrincipal(user.getId(), device.getId(), family.getId(),
-          device.getDeviceType()), session.getId());
+          device.getDeviceType()), session.getId(), goal.getId());
     });
   }
 
@@ -1147,5 +1163,6 @@ class AnalysisApiTests {
         AnalysisStatus.COMPLETED, "test-model", "test-prompt");
   }
 
-  private record Fixture(LoginResponse login, FocusOnPrincipal principal, long sessionId) {}
+  private record Fixture(LoginResponse login, FocusOnPrincipal principal, long sessionId,
+      long goalId) {}
 }

@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## #364 화면 분석의 학습 정리 근거 수신
+
+- 로컬 Backend에 AI 주소·키 설정은 있으나 해당 주소의 `/health`와 `/openapi.json`에서 HTTP 응답을 받지 못했다. AI 서비스에 접근할 수 있는 배포 호스트에서 빌드 버전과 준비 상태를 확인한 뒤 Desktop·Extension 분석을 같은 traceId로 연결해 점검한다.
+- 저장 담당 인계. 팀이 동의 문구 버전·철회 처리·저장 마감을 확정한 뒤 완료 트랜잭션에서 검증한 근거만 저장에 연결한다. 종료 직전 접수한 분석은 종료 후 30초 이내 검증·저장 가능한 노트 전용 경로를 설계한다. 저장과 생성 직전에 동의를 재확인한다. [기획서](features/analysis-review-evidence-PLAN.md).
+
 ## Issue #318 세션 끝 회고 (2026-11-26)
 
 - Desktop: 세션 끝 화면에서 `PUT /sessions/{id}/retrospective`를 쓴다. 개인정보 안내 문구를 먼저 넣는다.
@@ -110,8 +115,8 @@
 
 ## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
 
-- AI 담당: (1) 분석 응답에 RELATED 화면의 `reviewEvidence`(개념 120자 이하, 원문·URL 없음) 추가 여부·형식 합의 (2) `POST /internal/v1/learning-summaries` 구현 — 서버 제안 형식은 PLAN 참고.
-- Backend: 합의되면 분석 결과 저장 시 근거를 `learning_review_evidences`에 넣고 실제 READY까지 확인한다.
+- AI 담당: `POST /internal/v1/learning-summaries` 구현. 서버 제안 형식은 파이프라인 기획서에 있다. 분석 응답 형식은 AI PR #362에 병합됐다.
+- Backend 저장 담당: 동의와 마감 계약 확정 뒤 `learning_review_evidences`를 연결하고 실제 READY까지 확인한다.
 - Desktop: 종료 직후 learning-summary가 404 대신 QUEUED→GENERATING→최종 상태로 온다. 5초 간격 조회 후 최종 상태에서 멈춘다.
 
 ## #182 분석 요청 추적 연동

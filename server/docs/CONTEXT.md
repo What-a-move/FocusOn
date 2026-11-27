@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## #364 화면 분석의 학습 정리 근거 수신
+
+- AI PR #362의 `reviewEvidence`를 분석 완료의 내부 판정에서 받는다. 본문이 있는 DOM·OCR의 확정 `RELATED + MATCHED`에서 유효한 개념 1건만 유지하며 세션·목표·보호 검증으로 판정이 바뀌면 함께 버린다. [기획 및 문서 대조](features/analysis-review-evidence-PLAN.md).
+- 근거는 공개 API 응답·이력·로그에 포함하지 않는다. 학습 정리용 저장과 Worker 연결은 팀의 동의 정책 확정 뒤 별도로 진행한다.
+
 ## Issue #318 세션 끝 회고 (2026-11-26)
 
 - 끝난 세션의 한 줄 회고를 `session_retrospectives`(V34)에 세션당 하나 저장한다. 메모는 100자·민감정보 검사, 로그 금지. 계획: `features/session-retrospective-PLAN.md`.
@@ -95,7 +100,7 @@
 ## Issue #288 학습 정리 생성 파이프라인 (2026-11-19)
 
 - 세션 종료 시 `learning_summaries`를 QUEUED로 만들고 `LearningSummaryWorker`가 입력 마감(30초) 뒤 점유해 INSUFFICIENT_DATA·READY·FAILED로 진행한다. V23에서 작업 컬럼과 `learning_review_evidences`를 추가했다.
-- AI가 근거(`reviewEvidence`)를 아직 주지 않으므로 지금은 모든 정리가 INSUFFICIENT_DATA로 끝난다. 생성 API(`/internal/v1/learning-summaries`)도 AI 미구현이다. 계획: `features/learning-summary-pipeline-PLAN.md`.
+- AI 응답은 #362에서 추가됐다. 제품 분석 결과를 근거 테이블에 쓰는 경로는 아직 없다. Worker의 근거 부족·생성 성공 동작은 합성 데이터로 확인했다. [파이프라인 기획](features/learning-summary-pipeline-PLAN.md).
 
 ## #182 분석 요청 추적 보완 (2026-11-18)
 

@@ -14,6 +14,25 @@ import java.util.regex.Pattern;
 
 /** AI 전송 전의 추가 방어다. 클라이언트 Privacy Guard를 대체하지 않는다. */
 final class AnalysisPrivacy {
+  private static final int MAX_CONCEPT_LABEL_LENGTH = 120;
+  private static final String HOST_LABEL = "[\\p{L}\\p{N}-]+";
+  private static final String DOTTED_HOST = HOST_LABEL + "(?:\\." + HOST_LABEL + ")+";
+  private static final String IPV6_LITERAL = "\\[[0-9a-f.]*:[0-9a-f:.]*(?:%25[\\w.-]+)?\\]";
+  private static final String ADDRESS_SUFFIX = "(?=:[0-9]|[/?#])";
+  private static final String USER_INFO = "[^\\s/@]+@";
+  private static final Pattern CONCEPT_LABEL_BLOCKED = Pattern.compile(
+      "(?i)://|\\bwww\\.|\\b(?:file|data|blob|mailto|tel|about):\\S"
+      + "|\\b(?:https?|ftps?):(?:/|" + USER_INFO + HOST_LABEL + "|" + IPV6_LITERAL + "|"
+      + DOTTED_HOST + "|localhost\\b|" + HOST_LABEL + "(?=:[0-9]|[/?#]|\\s*$))"
+      + "|[\\p{Cc}\\p{Cf}\\p{Cs}\\p{Zl}\\p{Zp}]");
+  // A short, unqualified token after // can also be an operand.
+  private static final Pattern SCHEME_RELATIVE_URL = Pattern.compile(
+      "(?i)(?<![\\p{L}\\p{M}\\p{N}_])//(?:" + USER_INFO + HOST_LABEL
+      + "|(?:" + USER_INFO + ")?" + IPV6_LITERAL + "|" + DOTTED_HOST + ADDRESS_SUFFIX + ")"
+      + "|(?<![\\p{L}\\p{M}\\p{N}_)\\]}])//"
+      + "(?:" + DOTTED_HOST + "|localhost\\b|" + HOST_LABEL + ADDRESS_SUFFIX + ")"
+      + "|(?:^\\s*|[(\\[{<\"'])//" + HOST_LABEL + "(?=$|\\s|[)\\]}>\"'])");
+
   // PostgreSQL 17 timestamp.h: Julian day zero inclusive, year 294277 exclusive.
   private static final Instant FIRST_TIMESTAMP = Instant.parse("-4713-11-24T00:00:00Z");
   private static final Instant END_TIMESTAMP = Instant.parse("+294277-01-01T00:00:00Z");
@@ -89,6 +108,14 @@ final class AnalysisPrivacy {
         || profile.coreTopics().stream().anyMatch(AnalysisPrivacy::sensitive)
         || profile.supportingTopics().stream().anyMatch(AnalysisPrivacy::sensitive)
         || profile.expectedActivities().stream().anyMatch(AnalysisPrivacy::sensitive)));
+  }
+
+  static boolean isSafeConceptLabel(String label) {
+    String normalized = Normalizer.normalize(label, Normalizer.Form.NFKC);
+    return !normalized.isBlank() && label.codePointCount(0, label.length())
+        <= MAX_CONCEPT_LABEL_LENGTH && !CONCEPT_LABEL_BLOCKED.matcher(normalized).find()
+        && !SCHEME_RELATIVE_URL.matcher(normalized).find()
+        && !SENSITIVE.matcher(normalized).find();
   }
 
   /** 눈에 보이지 않는 문자로 알려진 민감 패턴 검사를 우회하지 못하게 정규화한다. */
