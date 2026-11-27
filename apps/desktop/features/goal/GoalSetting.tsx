@@ -81,6 +81,11 @@ export function GoalSetting() {
     setSelected(-1)
   }
 
+  const resetClarification = () => {
+    setClarificationSessionId(null)
+    setAnswers([])
+  }
+
   const toEntry = (text: string, say: Line = { text: ASK }) => {
     go('entry', say)
     setHint({ text, error: false })
@@ -155,13 +160,13 @@ export function GoalSetting() {
     if (!result.success) {
       const offline = result.error.code === 'LOCAL_NETWORK_UNAVAILABLE'
       // 질문에 답하다 실패하면 답을 지우지 않고 그 화면에 남겨 다시 시도하게 한다(하단 보조 버튼은 그대로).
-      if (view === 'questions') {
+      if (view === 'questions' && question) {
+        setLine({ text: question.text })
         setFeedback({ title: '할 일을 살펴보지 못했어요.', body: offline ? errorText(result.error) : asked >= MAX_QUESTIONS ? '다시 시도하거나 지금 문구로 저장할 수 있어요.' : '다시 시도하거나 문장을 고칠 수 있어요.' })
         return
       }
       setManual('error')
-      // [디자인] 실패는 하단 안내에서 한 번만 말한다. 포키 말풍선은 오류색 없이 다음 행동만 권한다.
-      toEntry('2~40자', offline ? undefined : { text: '지금은 할 일을 살펴보지 못했어요' })
+      toEntry('2~40자')
       setFeedback({ title: '할 일을 살펴보지 못했어요.', body: offline ? errorText(result.error) : '입력한 그대로 저장할 수 있어요.' })
       return
     }
@@ -266,7 +271,7 @@ export function GoalSetting() {
       if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'MANUAL_CONFIRMED'); return }
       if (selected === 0) { void clarify(draft.trim(), [...answers, { question: question.text, answer: '맞아요' }]); return }
       // 아니에요: 문장을 고치게 한다. 이 질문도 횟수에 들어간다.
-      setAnswers([...answers, { question: question.text, answer: '아니에요' }])
+      resetClarification()
       if (asked >= MAX_QUESTIONS) { exhausted(); return }
       toEntry('문장을 고친 뒤 다시 ‘다음’을 눌러 주세요.')
       return
@@ -284,8 +289,12 @@ export function GoalSetting() {
   const showSecondary = !(view === 'entry' && !manual)
   const secondary = () => {
     if (busy) return
-    if (view === 'entry') { if (validDraft() && !reuse()) toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED'); return }
-    if (view === 'questions' && asked >= MAX_QUESTIONS) { toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED'); return }
+    if ((view === 'entry' && validDraft() && !reuse()) || (view === 'questions' && asked >= MAX_QUESTIONS)) {
+      toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED', undefined, undefined, true)
+      return
+    }
+    if (view === 'entry') return
+    resetClarification()
     toEntry('2~40자')
   }
 
@@ -293,6 +302,7 @@ export function GoalSetting() {
     request.current += 1 // 진행 중인 확인 응답은 버린다.
     setBusy(false)
     setDraft(value)
+    if (clarificationSessionId || answers.length) resetClarification()
     setHint({ text: goalLength(value) >= 40 ? '40자까지 입력할 수 있어요.' : '2~40자', error: false })
     if (manual === 'error') setManual(null)
     setFeedback(null)
@@ -300,7 +310,7 @@ export function GoalSetting() {
   const onEnter = (event: React.KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) primary() }
 
   const stage = STAGE[view]
-  const primaryLabel = { entry: '저장', questions: '다음', candidates: '이 할 일로', review: '할 일 저장하기' }[view]
+  const primaryLabel = { entry: manual === 'error' ? 'AI 확인 다시 시도' : '저장', questions: '다음', candidates: '이 할 일로', review: '할 일 저장하기' }[view]
   const poki = view === 'questions' || view === 'candidates' ? POKI.thinking : POKI.planning
   const pokiAlt = view === 'questions' || view === 'candidates' ? '생각하는 포키' : '체크리스트를 든 포키'
 
