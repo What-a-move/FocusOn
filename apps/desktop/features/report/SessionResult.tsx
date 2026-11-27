@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { flowOf, sessionResultApi, type LearningSummary, type SessionSummary } from '../../shared/api/session-result-api'
+import { flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
 import './session-result.css'
 
 const POLL_MS = 5000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
+const pauseTimeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
 const AUTO_PAUSE_LABEL: Record<string, string> = { REQUIRED_PERMISSION: '권한 꺼짐', EXTENSION_UNLINKED: '연결 끊김', APP_RESTART: '앱 재시작', SYSTEM: '시스템' }
 // 학습 정리 상태별 한 줄(FocusOn-design/session-report.html `learningHtml`). 시스템 안내라 존댓말이다.
 // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
@@ -165,6 +166,7 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
               ? <p className="rate"><small>분석된 구간이 짧아 목표 활동 비율은 표시하지 않았어요.</small></p>
               : <p className="rate" title="판단 보류·분석 안 됨 시간은 빼고 계산해요">목표 활동 비율 <strong>{flow.rate}%</strong></p>}
           </> : <p className="muted-note">아직 분석된 흐름이 없어요.</p>}
+          <PauseTimeline key={summary.sessionId} summary={summary} />
         </section>
 
         <LearningBlock sessionId={summary.sessionId} learning={learning} noLearning={noLearning} />
@@ -179,6 +181,50 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
       </div>
     </div>
   </>
+}
+
+function PauseTimeline({ summary }: { summary: SessionSummary }) {
+  const [pauses, setPauses] = useState<SessionPause[] | 'error' | null>(null)
+  const [attempt, setAttempt] = useState(0)
+  const sessionId = summary.sessionId
+
+  useEffect(() => {
+    let cancelled = false
+    void sessionResultApi.getPauses(sessionId).then((result) => {
+      if (!cancelled) setPauses(result.success ? result.data : 'error')
+    })
+    return () => { cancelled = true }
+  }, [sessionId, attempt])
+
+  if (pauses === 'error') return <div className="pause-timeline">
+    <p className="muted-note" role="status">일시정지 구간을 불러오지 못했어요.</p>
+    <button className="btn btn-ghost pause-retry" type="button" onClick={() => { setPauses(null); setAttempt((value) => value + 1) }}>일시정지 구간 다시 시도</button>
+  </div>
+  if (!pauses?.length) return null
+
+  const positions = pauseTimelinePositions(pauses, summary)
+  const activeSeconds = Math.floor(summary.accumulatedActiveMs / 1000)
+  return <figure className="pause-timeline">
+    <figcaption>일시정지 구간</figcaption>
+    {positions.length > 0 && <div aria-hidden="true">
+      <div className="pause-axis">
+        {positions.map((position, index) => <span key={pauses[index].pausedAt + index} style={{ left: `${position}%` }}>Ⅱ</span>)}
+      </div>
+      <div className="pause-axis-label"><span>0분</span><span>집중 {Math.floor(activeSeconds / 60)}분 {activeSeconds % 60}초</span></div>
+    </div>}
+    <ul className="pause-times" aria-label="멈춤 및 재개 시각">
+      {pauses.map(({ pausedAt, resumedAt, pauseReason }, index) => {
+        const end = resumedAt ?? summary.endedAt
+        const reason = Object.hasOwn(AUTO_PAUSE_LABEL, pauseReason) ? AUTO_PAUSE_LABEL[pauseReason] : null
+        return <li key={pausedAt + index}>
+          <time dateTime={pausedAt}>{pauseTimeFormat.format(new Date(pausedAt))}</time>
+          {end && <>부터 <time dateTime={end}>{pauseTimeFormat.format(new Date(end))}</time>까지</>}
+          {!resumedAt && (end ? ' · 재개 없이 종료' : ' · 재개 기록 없음')}
+          {reason && ` · ${reason}`}
+        </li>
+      })}
+    </ul>
+  </figure>
 }
 
 /** 학습 정리: 정리가 끝났으면 요약 본문 + 다음 시작 지점 + 정리 보기·복사, 아니면 상태 한 줄. */
