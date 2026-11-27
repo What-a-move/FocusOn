@@ -3,6 +3,7 @@ package com.capstone.backend.analysis.persistence;
 import com.capstone.backend.analysis.dto.AnalysisDtos.AnalysisStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
 import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
+import com.capstone.backend.analysis.dto.AnalysisDtos.OffTaskCategory;
 import com.capstone.backend.analysis.dto.AnalysisDtos.ReasonCode;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Relation;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
@@ -102,6 +103,10 @@ public class AnalysisRunEntity {
   @Column(name = "matched_goal_id")
   private Long matchedGoalId;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "off_task_category", length = 16)
+  private OffTaskCategory offTaskCategory;
+
   @Column(name = "goal_version", nullable = false)
   private long goalVersion;
 
@@ -160,10 +165,16 @@ public class AnalysisRunEntity {
     analysisStatus = decision.status();
     matchStatus = decision.matchStatus();
     matchedGoalId = decision.matchedGoalId();
+    offTaskCategory = null;
     modelVersion = decision.modelVersion();
     promptVersion = decision.promptVersion();
     errorCode = reasonCode == ReasonCode.ANALYSIS_UNAVAILABLE
         ? "ANALYSIS_SERVICE_UNAVAILABLE" : null;
+  }
+
+  /** 확정 UNRELATED 판정에만 딴짓 종류를 붙인다. 다른 판정이면 무시한다. */
+  public void categorize(OffTaskCategory category) {
+    offTaskCategory = relation == Relation.UNRELATED ? category : null;
   }
 
   /** 저장한 값으로 응답을 만들어 DB와 응답의 정밀도를 일치시킨다. */
@@ -171,7 +182,7 @@ public class AnalysisRunEntity {
     return new Response(id.toString(), analysisStatus, relation,
         relationConfidence == null ? null : relationConfidence.doubleValue(), reasonCode,
         observedAt, policyVersion, matchStatus,
-        matchedGoalId == null ? null : matchedGoalId.toString(), goalVersion);
+        matchedGoalId == null ? null : matchedGoalId.toString(), goalVersion, offTaskCategory);
   }
 
   /** metadata만 근거인 무관 판정은 후속 Policy Engine의 이탈 시간에 포함하지 않는다. */

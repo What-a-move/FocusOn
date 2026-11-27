@@ -133,6 +133,9 @@ public class AnalysisRunStore {
     var decisionToStore = finalDecision(prepared, run, session,
         guard(principal.userId(), request, prepared.goals()), decision);
     run.complete(decisionToStore);
+    if (run.getRelation() == com.capstone.backend.analysis.dto.AnalysisDtos.Relation.UNRELATED) {
+      run.categorize(OffTaskClassifier.classify(request));
+    }
     final Instant now = Instant.now();
     var evidence = decisionToStore.reviewEvidence();
     if (evidence != null) {

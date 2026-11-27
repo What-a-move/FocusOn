@@ -19,7 +19,7 @@ class AnalysisMigrationTests {
   @ParameterizedTest
   @ValueSource(strings = {"duplicate", "source", "sequence", "confidence", "foreignKey",
       "guard", "relation", "noRawColumns", "crossSourceOrder", "globalDuplicate", "globalInvalid",
-      "unsafeOrderingFlag", "untrustedRelation"})
+      "unsafeOrderingFlag", "untrustedRelation", "offTaskOnRelated", "offTaskUnknown"})
   void preservesSessionAndEnforcesResultConstraints(String scenario) throws Exception {
     String url = System.getenv("SPRING_DATASOURCE_URL");
     String user = System.getenv("SPRING_DATASOURCE_USERNAME");
@@ -45,7 +45,8 @@ class AnalysisMigrationTests {
               + "'relation_confidence','analysis_status','reason_code','error_code',"
               + "'model_version','prompt_version','policy_version','created_at',"
               + "'observation_sequence','current_eligible','ordering_untrusted',"
-              + "'observation_context_id','match_status','goal_version','matched_goal_id')"));
+              + "'observation_context_id','match_status','goal_version','matched_goal_id',"
+              + "'off_task_category')"));
           assertEquals(2, number(connection, "SELECT count(*) FROM pg_constraint"
               + " WHERE connamespace = '" + schema + "'::regnamespace AND convalidated"
               + " AND conname IN "
@@ -72,6 +73,9 @@ class AnalysisMigrationTests {
             case "unsafeOrderingFlag" -> "UPDATE analysis_runs SET current_eligible=false,"
                 + "ordering_untrusted=true,relation='UNCERTAIN'";
             case "untrustedRelation" -> "UPDATE analysis_runs SET ordering_untrusted=true";
+            case "offTaskOnRelated" -> "UPDATE analysis_runs SET off_task_category='VIDEO'";
+            case "offTaskUnknown" -> "UPDATE analysis_runs SET relation='UNRELATED',"
+                + "off_task_category='MUSIC'";
             case "source" -> insert.replace("CHROME_DOM", "CAMERA_LOCAL");
             case "sequence" -> insert.replace("now(),now(),1", "now(),now(),0");
             case "confidence" -> insert.replace("0.9", "1.1");

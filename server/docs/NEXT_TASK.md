@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #381 딴짓 종류 (2026-11-28)
+
+- Desktop: 세션 리포트 "딴짓 종류 비율"을 `offTaskCategory`로 계산하고, 동의 상세 v1.1 "딴짓 종류 저장" 문장을 반영한다.
+- 남은 분석 작업: 학습 메신저(`learningMessengers`)를 딴짓에서 빼는 규칙.
+- 다음 마이그레이션은 V38부터.
+
 ## Issue #379 학습 정리 근거 저장 (2026-11-28)
 
 - 실연동 QA: Desktop·Extension 분석 → 근거 저장 → 세션 종료 → 학습 정리 READY까지 같은 traceId로 확인(AI `reviewEvidence` 배포 필요).
