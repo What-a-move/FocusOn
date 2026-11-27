@@ -1,0 +1,15 @@
+{
+  "config": [
+    3,
+    0.35,
+    0.75,
+    true
+  ],
+  "train_objective": 0.7602895628186326,
+  "grid_size": 36,
+  "hashes": {
+    "evaluate.py": "ae1930f84097c10ee6d592f9c9838160037a369c3f8c9a4ac7630ec6ef5f7805",
+    "manifest.json": "d032249584bdf35144a037f6bddb3b87c148ea27527c26b71fe2349466678535",
+    "topic-bank.json": "fda04078062d64b844fe22b3c7b6fec635dc283928791073c5c4dee7fe0bd5df"
+  }
+}

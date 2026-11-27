@@ -49,6 +49,10 @@ export class SessionRuntime {
   private restoring: Promise<ApiResult<SessionSnapshot | null>> | null = null
   private flushing = false
   private options: SessionOptions = DEFAULT_OPTIONS
+  // 집중 화면 안내용 상태. 세션이 바뀌면 지운다.
+  private offline = false
+  private screenNotice: 'EXCLUDED_APP' | 'PRIVACY' | null = null
+  private cameraOff = false
   // 상태 전이 로그용: 직전에 알린 상태와 그 상태가 된 시각(monotonic·벽시계).
   private last: { sessionId: string; status: SessionStatus; mono: number; wall: number } | null = null
 
@@ -63,13 +67,31 @@ export class SessionRuntime {
   snapshot(): SessionSnapshot | null {
     const s = this.state
     if (!s) return null
-    return { ...(s.goals && s.goalVersion ? { goals: s.goals, goalVersion: s.goalVersion } : {}), sessionId: s.sessionId, goalText: s.goalText, status: s.status, targetDurationMs: s.targetDurationMs, accumulatedActiveMs: this.activeMs(), error: s.error, busy: s.busy, pauseReason: s.pauseReason }
+    // 오프라인이 가장 먼저다(시간은 계속 흐르지만 기록이 서버에 안 닿는다). 그다음 지금 화면, 카메라 순.
+    const notice = s.status !== 'RUNNING' ? null : this.offline ? 'OFFLINE' : this.screenNotice ?? (this.cameraOff ? 'CAMERA_OFF' : null)
+    return { ...(s.goals && s.goalVersion ? { goals: s.goals, goalVersion: s.goalVersion } : {}), sessionId: s.sessionId, goalText: s.goalText, status: s.status, targetDurationMs: s.targetDurationMs, accumulatedActiveMs: this.activeMs(), error: s.error, busy: s.busy, pauseReason: s.pauseReason, ...(notice ? { notice } : {}) }
+  }
+
+  /** 지금 화면(제외한 앱·민감한 화면)과 카메라 상태. 바뀔 때만 화면에 알린다. */
+  setScreenNotice(notice: 'EXCLUDED_APP' | 'PRIVACY' | null): void {
+    if (notice === this.screenNotice) return
+    this.screenNotice = notice
+    if (this.state) this.publish('notice')
+  }
+
+  setCameraOff(off: boolean): void {
+    if (off === this.cameraOff) return
+    this.cameraOff = off
+    if (this.state) this.publish('notice')
   }
 
   /** 세션 설정에서 시작에 성공하면 그 응답으로 타이머를 시작한다. */
   begin(started: StartedSession, goalText: string, options: SessionOptions = DEFAULT_OPTIONS): void {
     this.pending.clear()
     this.options = options
+    this.offline = false
+    this.screenNotice = null
+    this.cameraOff = false
     this.state = {
       sessionId: started.sessionId, goalText: started.goals?.[0]?.goalText ?? goalText, goals: started.goals, goalVersion: started.goalVersion, status: 'RUNNING', version: started.version, targetDurationMs: started.targetDurationMs,
       baseActiveMs: started.accumulatedActiveMs, resumedAt: this.now(), error: null, busy: false, pauseReason: null,
@@ -172,6 +194,9 @@ export class SessionRuntime {
       body: { clientObservedAt: this.wallClock().toISOString(), accumulatedActiveMs: this.activeMs(), ...(observationContextId ? { observationContextId } : {}) },
     })
     if (this.state !== s) return false
+    // 인터넷이 끊겨 신호가 안 닿으면 화면에 알린다. 서버 장애(5xx)는 오프라인이 아니다.
+    const offline = !result.success && (result.error.code === 'LOCAL_NETWORK_UNAVAILABLE' || result.error.code === 'REQUEST_TIMEOUT')
+    if (offline !== this.offline) { this.offline = offline; this.publish('notice') }
     // 서버가 Desktop 밖의 이유(확장 연결 끊김·Chrome 사이트 접근 꺼짐)로 멈췄으면 서버 시간으로 같이 멈춘다(Notion 권한 정책 2.4).
     // [주의] 명령 처리 중이거나 로컬에서 이미 멈췄으면 건드리지 않는다. 화면 기록 권한은 Desktop이 먼저 멈춘다.
     if (result.success && s.status === 'RUNNING' && !s.busy && (result.data.status === 'AUTO_PAUSED' || result.data.status === 'PAUSED')) {

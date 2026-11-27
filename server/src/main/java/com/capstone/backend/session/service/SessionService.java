@@ -158,7 +158,10 @@ public class SessionService {
         publicGoals(List.of(SessionGoalEntity.legacySnapshot(session))), 1);
   }
 
-  /** 실행 Desktop만 목표를 추가한다. 이미 포함한 목표는 안전하게 재시도할 수 있다. */
+  /**
+   * 실행 Desktop만 목표를 추가하거나 교체한다. 이미 반영된 요청은 안전하게 재시도할 수 있다.
+   * 교체는 replaceGoalId의 자리를 새 할 일 사본으로 덮어쓰고 goalVersion을 올린다(#320).
+   */
   @Transactional
   public SessionGoalsResponse addGoal(FocusOnPrincipal principal, String deviceId,
       String sessionId, AddGoalRequest request) {
@@ -185,6 +188,9 @@ public class SessionService {
     var snapshots = sessionGoals.findByIdSessionIdOrderByIdPositionAsc(id);
     var ordered = new ArrayList<>(snapshots.isEmpty()
         ? List.of(SessionGoalEntity.legacySnapshot(session)) : snapshots);
+    if (request.replaceGoalId() != null) {
+      return replaceGoal(principal.userId(), id, request, goalId, version, snapshots, ordered);
+    }
     if (request.goalVersion() <= version
         && ordered.stream().anyMatch(row -> row.getGoalId() == goalId)) {
       return new SessionGoalsResponse(publicGoals(ordered), version);
@@ -203,6 +209,44 @@ public class SessionService {
     sessionGoals.save(added);
     ordered.add(added);
     if (sessions.incrementGoalVersion(id, version) != 1) {
+      throw new ApiException(ApiErrorCode.SESSION_VERSION_CONFLICT);
+    }
+    return new SessionGoalsResponse(publicGoals(ordered), version + 1);
+  }
+
+  private SessionGoalsResponse replaceGoal(long userId, long sessionId, AddGoalRequest request,
+      long goalId, long version, List<SessionGoalEntity> snapshots,
+      List<SessionGoalEntity> ordered) {
+    long replaceId = parseGoalId(request.replaceGoalId());
+    if (replaceId == goalId) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    boolean hasNew = ordered.stream().anyMatch(row -> row.getGoalId() == goalId);
+    boolean hasOld = ordered.stream().anyMatch(row -> row.getGoalId() == replaceId);
+    // 응답을 잃고 같은 교체를 다시 보내면 이미 반영된 목록을 그대로 돌려준다. 교체에 성공하면 버전이
+    // 오르므로 재시도는 더 낮은 버전을 들고 온다. 같은 버전이면 교체한 적이 없는 요청이다.
+    if (request.goalVersion() < version && hasNew && !hasOld) {
+      return new SessionGoalsResponse(publicGoals(ordered), version);
+    }
+    if (request.goalVersion() != version) {
+      throw new ApiException(ApiErrorCode.SESSION_VERSION_CONFLICT);
+    }
+    if (!hasOld || hasNew) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    var goal = activeGoal(userId, goalId);
+    var target = ordered.stream().filter(row -> row.getGoalId() == replaceId).findFirst()
+        .orElseThrow();
+    if (snapshots.isEmpty()) {
+      // 사본이 없던 옛 세션은 교체 결과를 첫 사본으로 저장한다.
+      var replaced = SessionGoalEntity.snapshot(sessionId, 1, goal);
+      sessionGoals.save(replaced);
+      ordered.set(0, replaced);
+    } else {
+      target.replaceWith(goal);
+      sessionGoals.save(target);
+    }
+    if (sessions.incrementGoalVersion(sessionId, version) != 1) {
       throw new ApiException(ApiErrorCode.SESSION_VERSION_CONFLICT);
     }
     return new SessionGoalsResponse(publicGoals(ordered), version + 1);

@@ -34,6 +34,8 @@ export type AuthorizedRequest<T> = {
   traceId?: string
   /** 요청 로그에 함께 남길 값. 로거가 허용 필드만 남기고 제목·본문은 글자 수로 바꾼다. */
   logFields?: Record<string, unknown>
+  /** 응답을 기다리는 시간. 없으면 10초. AI를 부르는 요청만 길게 준다. */
+  timeoutMs?: number
 }
 const RELOGIN_REQUIRED: AuthApiError = { code: 'AUTH_RELOGIN_REQUIRED', retryable: false }
 
@@ -124,7 +126,7 @@ export class AuthService {
       const result = await this.api.call(
         request.path, request.method, request.expectedStatus, request.parse, request.body,
         this.accessToken ?? undefined, { ...request.headers, ...(request.withDeviceId && this.deviceId ? { 'X-Device-Id': this.deviceId } : {}), 'X-Trace-Id': traceId },
-        request.logFields,
+        request.logFields, request.timeoutMs,
       )
       return this.isCurrent(generation) ? result : this.staleRequest()
     }

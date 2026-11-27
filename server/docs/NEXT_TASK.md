@@ -10,6 +10,11 @@
 - Desktop: 집중 리포트 가로축 계산에 `GET /sessions/{id}/pauses`를 쓴다(열린 마지막 구간은 종료 시각까지로 본다).
 - 후속: 세션 데이터 보관 기간(1년) 정리 작업. 다음 마이그레이션은 V34부터.
 
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- Desktop: 할 일이 3개일 때 교체할 할 일을 골라 `replaceGoalId`와 함께 보낸다. 409 `SESSION_VERSION_CONFLICT`면 활성 세션을 다시 읽는다.
+- 문서 오너: Notion API 명세의 세션 할 일 추가 항목에 `replaceGoalId` 반영.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - Desktop: 범위 항목 빼기·추가는 PATCH `goalProfile`, 「다시 만들기」는 `POST /goals/{id}/profile`. 503·504면 기존 범위를 그대로 보여 준다.
@@ -27,6 +32,10 @@
 ## #350 재분석 직전 FAR 시간 보존
 
 - #350의 실제 앱 검증에서는 Desktop 재분석이 반복돼도 확정 FAR 10분에 세션당 한 번 제안하는지 확인한다. Chrome에서 같은 제목의 페이지로 이동하는 시점을 정확히 반영하려면 Extension의 전환 신호 연동이 필요하다.
+
+## #354 Extension 응답 추적 ID
+
+- 실제 Chrome Extension에서 `response.headers.get("X-Trace-Id")`로 받은 값과 서버 로그를 대조한다.
 
 ## DR-030 목표 프로필·세션 할 일 연동 (2026-11-24)
 

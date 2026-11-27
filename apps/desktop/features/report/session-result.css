@@ -65,7 +65,20 @@
 /* 학습 정리 (FocusOn-design/session-report.html .learn): 면 색 없이 큰 본문 + '다음' 줄 */
 .result-window .learn { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px 24px; }
 .result-window .learn h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
-.result-window .learn-line { grid-column: 1 / -1; margin: 0; font-size: 16px; font-weight: 600; line-height: 1.6; word-break: keep-all; }
+.result-window .learn-line { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 0; font-size: 16px; font-weight: 600; line-height: 1.6; word-break: keep-all; }
+.result-window .learn-writing { display: grid; align-content: center; justify-items: start; gap: 3px; flex: 0 0 28px; height: 28px; padding-inline-start: 7px; border-radius: 8px; background: var(--gold-soft); }
+.result-window .learn-writing > span { width: 14px; height: 2px; border-radius: 2px; background: var(--ink); opacity: .55; transform-origin: left; }
+.result-window .learn-writing > span:nth-child(2) { width: 11px; }
+.result-window .learn-writing > span:nth-child(3) { width: 8px; }
+@media (prefers-reduced-motion: no-preference) {
+  .result-window .learn-writing > span { animation: result-writing 1.4s ease-in-out 3; }
+  .result-window .learn-writing > span:nth-child(2) { animation-delay: .14s; }
+  .result-window .learn-writing > span:nth-child(3) { animation-delay: .28s; }
+}
+@keyframes result-writing {
+  0%, 60%, 100% { transform: scaleX(1); opacity: .55; }
+  25% { transform: scaleX(.45); opacity: .85; }
+}
 .result-window .learn-overview { grid-column: 1 / -1; max-width: 62ch; margin: 0; font-size: 18px; font-weight: 500; line-height: 1.75; word-break: keep-all; }
 .result-window .learn-next { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 14px; margin: 0; font-size: 16px; font-weight: 600; line-height: 1.6; word-break: keep-all; }
 .result-window .learn-next b { flex: 0 0 auto; color: var(--muted); font-size: 14px; font-weight: 700; }
