@@ -163,6 +163,8 @@ GET /api/v1/users/me/analysis-excluded-domains
 PUT /api/v1/users/me/analysis-excluded-domains
 ```
 
+집중 설정(`GET`·`PUT /api/v1/users/me/focus-settings`)에는 재설계 1차 필드(2026-11-27 #373) `learningMessengers`(DISCORD·SLACK·KAKAOTALK·TEAMS·OTHER, 중복 없음, 기본 `[]`), `preDistractionReminderEnabled`(기본 true), `dailyTargetMs`(10~600분·분 단위, 기본 3600000), `weeklyTargetMs`(60~4200분·분 단위 또는 `null`=미설정), `retrospectiveEnabled`(기본 true)가 있다. PUT에서 모두 선택이며 요청에 없으면 저장값(없으면 기본값)을 유지한다. `weeklyTargetMs: null`을 명시하면 주간 목표를 지운다. 범위 밖·분 단위가 아닌 값·허용 밖 메신저·중복은 400 `VALIDATION_ERROR`다. 새 필드는 세션 snapshot에 복사하지 않는다.
+
 `GET /api/v1/users/me`의 `onboardingStatus`는 닉네임, Extension 연결, 필수 권한·동의, 분석 제외 사이트 설정 단계를 기준으로 `INCOMPLETE` 또는 `COMPLETED`를 반환한다. 목표·시간·개입 설정은 온보딩 상태에 포함하지 않으며, 온보딩 완료 뒤 Desktop 대시보드의 `오늘 학습` 흐름에서 설정한다.
 
 앱을 다시 열었을 때 이어갈 온보딩 단계는 `GET /api/v1/users/me/onboarding-readiness`로 조회한다. 응답의 `currentStep`은 `NICKNAME`, `EXTENSION`, `PERMISSIONS_AND_CONSENTS`, `EXCLUDED_SITES`, `COMPLETED` 중 첫 미완료 단계다. `steps`에는 프로필, Extension 연결, 필수 권한·동의, 제외 사이트 단계의 현재 상태를 반환한다. `COMPLETED`면 Desktop 대시보드로 이동한다.

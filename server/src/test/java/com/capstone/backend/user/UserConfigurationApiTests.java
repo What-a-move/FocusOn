@@ -157,6 +157,62 @@ class UserConfigurationApiTests {
         .andExpect(jsonPath("$.data.notificationChannels[1]").value("SOUND"));
   }
 
+  /** 재설계 1차 새 설정은 선택 필드다. 없으면 저장값을 유지하고 범위 밖은 400이다(#373). */
+  @Test
+  void redesignFocusSettingsAreOptionalAndValidated() throws Exception {
+    LoginResponse session = desktop("focus-redesign-" + UUID.randomUUID());
+    String token = "Bearer " + session.accessToken();
+    String base = "\"interventionLevel\":\"NORMAL\",\"notificationChannels\":[\"MOLE_UI\"],"
+        + "\"breakSuggestionEnabled\":true,\"cameraAnalysisEnabled\":false";
+    mvc.perform(get("/api/v1/users/me/focus-settings").header("Authorization", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.learningMessengers.length()").value(0))
+        .andExpect(jsonPath("$.data.preDistractionReminderEnabled").value(true))
+        .andExpect(jsonPath("$.data.dailyTargetMs").value(3600000))
+        .andExpect(jsonPath("$.data.weeklyTargetMs").isEmpty())
+        .andExpect(jsonPath("$.data.retrospectiveEnabled").value(true));
+    // 기존 4개 필드만 보내도 저장되고 새 필드는 기본값이다.
+    putFocus(token, "{" + base + "}").andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.dailyTargetMs").value(3600000));
+    putFocus(token, "{" + base + ",\"learningMessengers\":[\"DISCORD\",\"SLACK\"],"
+        + "\"preDistractionReminderEnabled\":false,\"dailyTargetMs\":5400000,"
+        + "\"weeklyTargetMs\":36000000,\"retrospectiveEnabled\":false}")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.learningMessengers[1]").value("SLACK"))
+        .andExpect(jsonPath("$.data.dailyTargetMs").value(5400000))
+        .andExpect(jsonPath("$.data.weeklyTargetMs").value(36000000));
+    // 빠진 새 필드는 유지되고, 명시한 null은 주간 목표를 지운다.
+    putFocus(token, "{" + base + "}").andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.learningMessengers[0]").value("DISCORD"))
+        .andExpect(jsonPath("$.data.preDistractionReminderEnabled").value(false))
+        .andExpect(jsonPath("$.data.weeklyTargetMs").value(36000000))
+        .andExpect(jsonPath("$.data.retrospectiveEnabled").value(false));
+    putFocus(token, "{" + base + ",\"weeklyTargetMs\":null,\"learningMessengers\":[]}")
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.weeklyTargetMs").isEmpty())
+        .andExpect(jsonPath("$.data.learningMessengers.length()").value(0))
+        .andExpect(jsonPath("$.data.dailyTargetMs").value(5400000));
+    for (String bad : new String[] {"\"dailyTargetMs\":540000", "\"dailyTargetMs\":36060000",
+        "\"dailyTargetMs\":3600001", "\"dailyTargetMs\":36000000.5",
+        "\"dailyTargetMs\":null", "\"dailyTargetMs\":\"3600000\"",
+        "\"weeklyTargetMs\":3600000.5", "\"weeklyTargetMs\":3540000",
+        "\"weeklyTargetMs\":252060000", "\"weeklyTargetMs\":\"10\"",
+        "\"learningMessengers\":[\"LINE\"]",
+        "\"learningMessengers\":[\"SLACK\",\"SLACK\"]"}) {
+      putFocus(token, "{" + base + "," + bad + "}").andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+    mvc.perform(get("/api/v1/users/me/focus-settings").header("Authorization", token))
+        .andExpect(jsonPath("$.data.dailyTargetMs").value(5400000));
+  }
+
+  private org.springframework.test.web.servlet.ResultActions putFocus(String token, String body)
+      throws Exception {
+    return mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+        .put("/api/v1/users/me/focus-settings").header("Authorization", token)
+        .contentType(MediaType.APPLICATION_JSON).content(body));
+  }
+
   @Test
   void profileDuplicateAndConsentStateAreValidated() throws Exception {
     LoginResponse first = desktop("profile-first");

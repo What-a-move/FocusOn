@@ -48,12 +48,35 @@ public final class UserConfigurationDtos {
               example = "MOLE_UI"))
       @NotEmpty List<@NotBlank String> notificationChannels,
       @Schema(example = "true") @NotNull Boolean breakSuggestionEnabled,
-      @Schema(example = "false") @NotNull Boolean cameraAnalysisEnabled) {}
+      @Schema(example = "false") @NotNull Boolean cameraAnalysisEnabled,
+      @ArraySchema(arraySchema = @Schema(description = "학습에 쓰는 메신저 (선택)",
+          example = "[\"DISCORD\"]"), schema = @Schema(allowableValues = {"DISCORD", "SLACK",
+              "KAKAOTALK", "TEAMS", "OTHER"})) List<String> learningMessengers,
+      @Schema(description = "평소 첫 이탈 3분 전 미리 알림 (선택)", example = "true")
+      Boolean preDistractionReminderEnabled,
+      @Schema(description = "하루 목표 ms, 10~600분·분 단위 (선택)", implementation = Long.class,
+          example = "3600000")
+      tools.jackson.databind.JsonNode dailyTargetMs,
+      @Schema(description = "주간 목표 ms, 60~4200분·분 단위, null이면 미설정 (선택)",
+          implementation = Long.class, nullable = true, example = "null")
+      tools.jackson.databind.JsonNode weeklyTargetMs,
+      @Schema(description = "세션 끝 한 줄 회고 표시 (선택)", example = "true")
+      Boolean retrospectiveEnabled) {
+    /** 기존 4개 필드만 보내는 요청이다. */
+    public UpdateFocusSettingsRequest(InterventionLevel interventionLevel,
+        List<String> notificationChannels, Boolean breakSuggestionEnabled,
+        Boolean cameraAnalysisEnabled) {
+      this(interventionLevel, notificationChannels, breakSuggestionEnabled,
+          cameraAnalysisEnabled, null, null, null, null, null);
+    }
+  }
 
-  /** 집중 설정 응답이다. */
+  /** 집중 설정 응답이다. 재설계 1차 필드(#373)는 기본값을 포함해 항상 담는다. */
   public record FocusSettingsResponse(InterventionLevel interventionLevel,
       List<String> notificationChannels, boolean breakSuggestionEnabled,
-      boolean cameraAnalysisEnabled) {}
+      boolean cameraAnalysisEnabled, List<String> learningMessengers,
+      boolean preDistractionReminderEnabled, long dailyTargetMs, Long weeklyTargetMs,
+      boolean retrospectiveEnabled) {}
 
   /** 분석 제외 도메인 전체 교체 요청이다. */
   public record ReplaceExcludedDomainsRequest(
