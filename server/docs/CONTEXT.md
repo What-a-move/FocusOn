@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #379 학습 정리 근거 저장 (2026-11-28)
+
+- 화면 분석 완료 재검증을 통과한 개념 근거를 `learning_review_evidences`에 저장해 학습 정리 Worker가 실제 입력을 받는다. 같은 개념은 세션당 1건, 종료 후 90일에 정리한다. 계획: `features/learning-evidence-store-PLAN.md`.
+
 ## Issue #374 리포트 진행 요약 (2026-11-27)
 
 - 세션 시작 때 하루 목표를 고정하고(V36), 달력에 하루 목표 달성과 `GET /reports/progress`(오늘·주·연속 기록)를 추가했다. 계획: `features/report-progress-PLAN.md`.
