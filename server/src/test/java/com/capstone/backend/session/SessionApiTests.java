@@ -788,6 +788,87 @@ class SessionApiTests {
         .andExpect(jsonPath("$.code").value("GOAL_UPDATE_BLOCKED"));
   }
 
+  /** 세션 중 할 일 교체: 같은 자리를 덮어쓰고 버전을 올리며, 빠진 할 일은 수정 잠금에서 풀린다(#320). */
+  @Test
+  void replaceSessionGoalOverwritesSlotAndReleasesOldGoal() throws Exception {
+    LoginResponse owner = desktop("session-replace-goals");
+    String token = "Bearer " + owner.accessToken();
+    List<String> ids = new ArrayList<>();
+    for (String text : List.of("첫 할 일", "둘째 할 일", "셋째 할 일", "넷째 할 일")) {
+      String goal = mvc.perform(post("/api/v1/goals").header("Authorization", token)
+              .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                  "goalText", text, "confirmationSource", "MANUAL_CONFIRMED"))))
+          .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+      ids.add(json.readTree(goal).at("/data/goalId").asString());
+    }
+    var request = (tools.jackson.databind.node.ObjectNode) json.readTree(request(ids.getFirst(),
+        1800000));
+    request.remove("goalId");
+    request.set("goalIds", json.valueToTree(ids.subList(0, 2)));
+    String created = mvc.perform(post("/api/v1/sessions").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+            .content(json.writeValueAsString(request)))
+        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+    String sessionId = json.readTree(created).at("/data/sessionId").asString();
+    String path = "/api/v1/sessions/" + sessionId + "/goals";
+    String replace = json.writeValueAsString(Map.of("goalId", ids.get(2), "goalVersion", 1,
+        "replaceGoalId", ids.get(1)));
+    for (int call = 0; call < 2; call++) {
+      mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(replace))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(2))
+          .andExpect(jsonPath("$.data.goals.length()").value(2))
+          .andExpect(jsonPath("$.data.goals[1].goalId").value(ids.get(2)))
+          .andExpect(jsonPath("$.data.goals[1].goalText").value("셋째 할 일"));
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(Long.valueOf(ids.get(2)), jdbc.queryForObject(
+        "SELECT goal_id FROM session_goals WHERE session_id = ? AND position = 2", Long.class,
+        Long.valueOf(sessionId)));
+    // 오래된 버전, 이미 있는 할 일, 세션에 없는 교체 대상, 같은 ID는 막는다.
+    for (var body : List.of(
+        Map.of("goalId", ids.get(3), "goalVersion", 1, "replaceGoalId", ids.get(0)),
+        Map.of("goalId", ids.get(0), "goalVersion", 2, "replaceGoalId", ids.get(2)),
+        Map.of("goalId", ids.get(3), "goalVersion", 2, "replaceGoalId", ids.get(1)),
+        Map.of("goalId", ids.get(2), "goalVersion", 2, "replaceGoalId", ids.get(2)),
+        // 같은 버전인데 교체 대상은 없고 새 할 일은 이미 있다 = 교체한 적 없는 요청이다.
+        Map.of("goalId", ids.get(2), "goalVersion", 2, "replaceGoalId", ids.get(1)))) {
+      var result = mvc.perform(post(path).header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)));
+      if (Integer.valueOf(1).equals(body.get("goalVersion"))) {
+        result.andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("SESSION_VERSION_CONFLICT"));
+      } else {
+        result.andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+      }
+    }
+    // 빠진 할 일은 바로 고칠 수 있고, 새로 들어온 할 일은 막힌다.
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .patch("/api/v1/goals/" + ids.get(1)).header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"둘째 고침\"}"))
+        .andExpect(status().isOk());
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .patch("/api/v1/goals/" + ids.get(2)).header("Authorization", token)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"goalText\":\"셋째 고침\"}"))
+        .andExpect(status().isConflict());
+    // 시작 때 고른 첫 할 일도 교체하면 풀린다.
+    mvc.perform(post(path).header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                "goalId", ids.get(3), "goalVersion", 2, "replaceGoalId", ids.get(0)))))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(3))
+        .andExpect(jsonPath("$.data.goals[0].goalId").value(ids.get(3)));
+    mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete("/api/v1/goals/" + ids.get(0)).header("Authorization", token))
+        .andExpect(status().isNoContent());
+    mvc.perform(get("/api/v1/sessions/active").header("Authorization", token))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.goalVersion").value(3))
+        .andExpect(jsonPath("$.data.goals[0].goalText").value("넷째 할 일"));
+  }
+
   /** accumulatedAt은 서버 시각 기준이며 기기 시계나 RUNNING 아닌 상태의 값을 쓰지 않는다. */
   private void assertActiveClock(String token, String id) throws Exception {
     long sessionId = Long.parseLong(id);
@@ -1630,6 +1711,81 @@ class SessionApiTests {
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("RUNNING"));
     org.junit.jupiter.api.Assertions.assertEquals(256, jdbc.queryForObject(
         "SELECT count(*) FROM session_local_events WHERE session_id=?", Integer.class, numericId));
+  }
+
+  /** 일시정지·자동 일시정지·재개·종료가 구간으로 남고 본인만 조회한다(#317). */
+  @Test
+  void pausesAreRecordedAndListedInOrder() throws Exception {
+    LoginResponse owner = desktop("pauses-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String id = startForHeartbeat(owner);
+    String path = "/api/v1/sessions/" + id + "/pauses";
+    mvc.perform(get(path).header("Authorization", token)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(0));
+    long version = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    String pauseKey = UUID.randomUUID().toString();
+    for (int call = 0; call < 2; call++) {
+      // 같은 일시정지를 다시 보내도 구간은 하나다.
+      mvc.perform(post("/api/v1/sessions/" + id + "/pause").header("Authorization", token)
+              .header("Idempotency-Key", pauseKey).header("If-Match-Version", version)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"pauseReason\":\"USER\",\"accumulatedActiveMs\":0}"))
+          .andExpect(status().isOk());
+    }
+    resumeForEventTest(owner, id);
+    mvc.perform(post("/api/v1/sessions/" + id + "/local-events").header("Authorization", token)
+            .header("X-Device-Id", owner.device().deviceId())
+            .contentType(MediaType.APPLICATION_JSON).content(localEventBody(Instant.now())))
+        .andExpect(status().isOk());
+    long pausedVersion = sessions.findById(Long.valueOf(id)).orElseThrow().getVersion();
+    mvc.perform(post("/api/v1/sessions/" + id + "/end").header("Authorization", token)
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", pausedVersion)
+            .contentType(MediaType.APPLICATION_JSON).content("{\"accumulatedActiveMs\":0}"))
+        .andExpect(status().isOk());
+    var body = json.readTree(mvc.perform(get(path).header("Authorization", token))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("data");
+    org.junit.jupiter.api.Assertions.assertEquals(2, body.size());
+    org.junit.jupiter.api.Assertions.assertEquals("USER", body.path(0).path("pauseReason")
+        .asString());
+    org.junit.jupiter.api.Assertions.assertFalse(body.path(0).path("resumedAt").isNull());
+    org.junit.jupiter.api.Assertions.assertFalse(Instant.parse(body.path(0).path("resumedAt")
+        .asString()).isBefore(Instant.parse(body.path(0).path("pausedAt").asString())));
+    org.junit.jupiter.api.Assertions.assertEquals("REQUIRED_PERMISSION",
+        body.path(1).path("pauseReason").asString());
+    // 재개 없이 끝난 마지막 구간은 resumedAt이 null이다.
+    org.junit.jupiter.api.Assertions.assertTrue(body.path(1).has("resumedAt")
+        && body.path(1).path("resumedAt").isNull());
+
+    LoginResponse other = desktop("pauses-other-" + UUID.randomUUID());
+    mvc.perform(get(path).header("Authorization", "Bearer " + other.accessToken()))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("SESSION_NOT_FOUND"));
+    mvc.perform(get("/api/v1/sessions/not-a-number/pauses").header("Authorization", token))
+        .andExpect(status().isNotFound());
+    mvc.perform(get(path)).andExpect(status().isUnauthorized());
+  }
+
+  /** 재개 기록 없이 다시 RUNNING이 된 세션도 새 일시정지 때 남은 구간을 닫고 하나만 연다. */
+  @Test
+  void stalePauseIsClosedBeforeOpeningAnother() throws Exception {
+    LoginResponse owner = desktop("pauses-stale-" + UUID.randomUUID());
+    String token = "Bearer " + owner.accessToken();
+    String id = startForHeartbeat(owner);
+    for (int round = 0; round < 2; round++) {
+      mvc.perform(post("/api/v1/sessions/" + id + "/local-events").header("Authorization", token)
+              .header("X-Device-Id", owner.device().deviceId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(localEventBody(Instant.now().plusSeconds(round))))
+          .andExpect(status().isOk());
+      // 재개 명령 없이 상태만 실행 중으로 되돌린 경우다.
+      jdbc.update("UPDATE learning_sessions SET status='RUNNING',last_resumed_at=? WHERE id=?",
+          java.sql.Timestamp.from(Instant.now()), Long.valueOf(id));
+    }
+    org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.queryForObject(
+        "SELECT count(*) FROM session_pauses WHERE session_id=? AND resumed_at IS NULL",
+        Integer.class, Long.valueOf(id)));
+    org.junit.jupiter.api.Assertions.assertEquals(2, jdbc.queryForObject(
+        "SELECT count(*) FROM session_pauses WHERE session_id=?", Integer.class, Long.valueOf(id)));
   }
 
   private void resumeForEventTest(LoginResponse owner, String id) throws Exception {

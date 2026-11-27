@@ -13,9 +13,9 @@ public final class SafeApiLog {
       "api", "v1", "auth", "google", "exchange", "refresh", "logout", "me", "users",
       "profile", "consents", "focus-settings", "analysis-excluded-domains",
       "onboarding-readiness", "pairing-codes", "extension-pairings", "devices", "goals",
-      "clarify", "sessions", "active", "pause", "resume", "extend", "end", "heartbeats",
+      "clarify", "sessions", "active", "pause", "pauses", "resume", "extend", "end", "heartbeats",
       "local-events", "analysis-runs", "observation-context", "interventions",
-      "acknowledgements", "deliveries", "summary",
+      "acknowledgements", "deliveries", "summary", "retrospective",
       "learning-summary", "learning-summaries", "reports", "calendar", "daily", "weekly");
   private static final Set<String> SAFE_METHODS = Set.of(
       "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS");

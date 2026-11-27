@@ -365,8 +365,9 @@ public class GoalService {
   }
 
   private void requireNotInActiveSession(Long userId, Long goalId) {
-    if (sessions.existsByUserIdAndGoalIdAndStatusIn(userId, goalId,
-        SessionStatus.activeStatuses()) || sessionGoals.referencedByActiveSession(userId, goalId,
+    // 할 일 사본이 있는 세션은 사본 기준, 사본이 없는 옛 세션만 시작 목표 기준으로 막는다(#320).
+    if (sessions.legacyReferenceByActiveSession(userId, goalId, SessionStatus.activeStatuses())
+        || sessionGoals.referencedByActiveSession(userId, goalId,
         SessionStatus.activeStatuses())) {
       throw new ApiException(ApiErrorCode.GOAL_UPDATE_BLOCKED);
     }

@@ -1,7 +1,7 @@
 package com.capstone.backend.report.service;
 
+import com.capstone.backend.common.privacy.SensitiveText;
 import com.capstone.backend.report.dto.LearningSummaryResponse.KeyConcept;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -11,23 +11,6 @@ import java.util.regex.Pattern;
 final class LearningSummaryOutputGuard {
   static final int MAX_TOTAL = 1200;
   static final int MAX_CONCEPTS = 5;
-  private static final List<Pattern> SENSITIVE = List.of(
-      Pattern.compile("(?i)\\b(?:https?|ftp)://"),
-      Pattern.compile("(?i)\\bwww\\.[a-z0-9-]+\\."),
-      Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),
-      Pattern.compile("\\b01[016789][-. ]?\\d{3,4}[-. ]?\\d{4}\\b"),
-      Pattern.compile("\\b\\d{2,3}-\\d{3,4}-\\d{4}\\b"),
-      Pattern.compile("(?i)\\b(?:sk|pk|rk)[-_][A-Za-z0-9_-]{16,}"),
-      // 키워드 뒤에 실제 값처럼 보이는 문자열이 붙을 때만 본다("token: 인증에 쓰는 값"은 통과).
-      Pattern.compile("(?i)\\b(?:api[_-]?key|token|secret|password|passwd)\\s*[:=]\\s*[\"']?"
-          + "[A-Za-z0-9_\\-./+=]{6,}"),
-      Pattern.compile("\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}"),
-      // 긴 클래스 이름은 통과시키고, 숫자와 문자가 섞인 32자 이상 값만 비밀값으로 본다.
-      Pattern.compile("\\b(?=[A-Za-z0-9_-]*\\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{32,}\\b"),
-      // 여섯 자리 숫자는 OTP·인증번호 문맥에서만 본다("100000건"은 통과).
-      Pattern.compile("(?i)(?:otp|인증\\s*(?:번호|코드)|verification\\s*code)\\D{0,12}"
-          + "(?<!\\d)\\d{6}(?!\\d)"));
-
   /** 모델 식별자는 짧은 이름·버전 문자만 허용한다(예: summary-v1, gpt-4o-mini:2026-01). */
   private static final Pattern MODEL_VERSION = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._:-]{0,63}");
 
@@ -64,7 +47,7 @@ final class LearningSummaryOutputGuard {
   }
 
   private static boolean sensitive(String value) {
-    return value != null && SENSITIVE.stream().anyMatch(pattern -> pattern.matcher(value).find());
+    return SensitiveText.contains(value);
   }
 
   /** V20과 같이 공백·BOM만 있는 문자열을 빈 값으로 본다. */

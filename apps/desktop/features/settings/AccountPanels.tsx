@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { errorText } from '../../shared/lib/error-text'
-import { requiredConsents } from '../../shared/lib/consent-docs'
+import { requiredConsents, screenAnalysisSummary } from '../../shared/lib/consent-docs'
 import { ConsentDocument } from '../../shared/ui/ConsentDocument'
 import { onboardingApi } from '../../shared/api/onboarding-api'
 import { LoadError, failText } from '../../shared/ui/SettingsShell'
@@ -114,7 +114,7 @@ export function AccountPanel({ showToast }: { showToast: ShowToast }) {
       <div className="fo-row">
         {screen?.granted === false ? <>
           <div className="fo-row-copy"><strong>화면 분석 동의</strong><small>{screen.withdrawnAt ? `${dateText(screen.withdrawnAt)}에 철회했어요 · ` : ''}다시 동의해야 새 집중을 시작할 수 있어요</small></div>
-          <button className="fo-small-btn" type="button" onClick={() => confirm({ title: '화면 분석에 다시 동의할까요?', body: '집중 중에 보는 앱·페이지가 목표와 관련 있는지만 확인해요. 화면 원문·캡처는 저장하지 않아요.', action: '동의하기', run: () => setScreenConsent(true) })}>다시 동의</button>
+          <button className="fo-small-btn" type="button" onClick={() => confirm({ title: '화면 분석에 다시 동의할까요?', body: screenAnalysisSummary, action: '동의하기', run: () => setScreenConsent(true) })}>다시 동의</button>
         </> : <>
           <div className="fo-row-copy"><strong>화면 분석 동의 철회</strong><small>철회하면 새 집중을 시작할 수 없어요</small></div>
           <button className="fo-small-btn" type="button" disabled={consents.status !== 'ready'} onClick={() => confirm({ title: '화면 분석 동의를 철회할까요?', body: '다시 동의할 때까지 새 집중을 시작할 수 없고, 홈 대신 동의 화면이 열려요. 이미 남은 집중 기록은 그대로예요.', action: '철회하기', run: () => setScreenConsent(false) })}>철회</button>

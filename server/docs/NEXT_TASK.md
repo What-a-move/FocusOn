@@ -5,6 +5,21 @@
 - 로컬 Backend에 AI 주소·키 설정은 있으나 해당 주소의 `/health`와 `/openapi.json`에서 HTTP 응답을 받지 못했다. AI 서비스에 접근할 수 있는 배포 호스트에서 빌드 버전과 준비 상태를 확인한 뒤 Desktop·Extension 분석을 같은 traceId로 연결해 점검한다.
 - 저장 담당 인계. 팀이 동의 문구 버전·철회 처리·저장 마감을 확정한 뒤 완료 트랜잭션에서 검증한 근거만 저장에 연결한다. 종료 직전 접수한 분석은 종료 후 30초 이내 검증·저장 가능한 노트 전용 경로를 설계한다. 저장과 생성 직전에 동의를 재확인한다. [기획서](features/analysis-review-evidence-PLAN.md).
 
+## Issue #318 세션 끝 회고 (2026-11-26)
+
+- Desktop: 세션 끝 화면에서 `PUT /sessions/{id}/retrospective`를 쓴다. 개인정보 안내 문구를 먼저 넣는다.
+- 머지 순서: #317(V33) 뒤. 다음 마이그레이션은 V35부터.
+
+## Issue #317 세션 일시정지 구간 (2026-11-26)
+
+- Desktop: 집중 리포트 가로축 계산에 `GET /sessions/{id}/pauses`를 쓴다(열린 마지막 구간은 종료 시각까지로 본다).
+- 후속: 세션 데이터 보관 기간(1년) 정리 작업. 다음 마이그레이션은 V34부터.
+
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- Desktop: 할 일이 3개일 때 교체할 할 일을 골라 `replaceGoalId`와 함께 보낸다. 409 `SESSION_VERSION_CONFLICT`면 활성 세션을 다시 읽는다.
+- 문서 오너: Notion API 명세의 세션 할 일 추가 항목에 `replaceGoalId` 반영.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - Desktop: 범위 항목 빼기·추가는 PATCH `goalProfile`, 「다시 만들기」는 `POST /goals/{id}/profile`. 503·504면 기존 범위를 그대로 보여 준다.

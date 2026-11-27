@@ -56,8 +56,12 @@ public final class SessionDtos {
   /** 세션 시점의 목표 사본과 목표 목록 버전이다. */
   public record SessionGoal(String goalId, String goalText) {}
 
-  /** 기존 목표 집합에 할 일을 추가한다. */
-  public record AddGoalRequest(@NotBlank String goalId, @NotNull @Positive Long goalVersion) {}
+  /**
+   * 기존 목표 집합에 할 일을 추가한다. replaceGoalId가 있으면 그 할 일의 자리를 새 할 일로
+   * 덮어쓴다(#320). 교체 이력은 남기지 않는다.
+   */
+  public record AddGoalRequest(@NotBlank String goalId, @NotNull @Positive Long goalVersion,
+      @Schema(description = "교체할 세션 할 일 ID (선택)") String replaceGoalId) {}
 
   /** 할 일 추가 후 서버가 확정한 목록이다. */
   public record SessionGoalsResponse(List<SessionGoal> goals, long goalVersion) {}

@@ -5,6 +5,18 @@
 - AI PR #362의 `reviewEvidence`를 분석 완료의 내부 판정에서 받는다. 본문이 있는 DOM·OCR의 확정 `RELATED + MATCHED`에서 유효한 개념 1건만 유지하며 세션·목표·보호 검증으로 판정이 바뀌면 함께 버린다. [기획 및 문서 대조](features/analysis-review-evidence-PLAN.md).
 - 근거는 공개 API 응답·이력·로그에 포함하지 않는다. 학습 정리용 저장과 Worker 연결은 팀의 동의 정책 확정 뒤 별도로 진행한다.
 
+## Issue #318 세션 끝 회고 (2026-11-26)
+
+- 끝난 세션의 한 줄 회고를 `session_retrospectives`(V34)에 세션당 하나 저장한다. 메모는 100자·민감정보 검사, 로그 금지. 계획: `features/session-retrospective-PLAN.md`.
+
+## Issue #317 세션 일시정지 구간 (2026-11-26)
+
+- 일시정지·자동 일시정지·재개를 `session_pauses`(V33)에 기록하고 `GET /sessions/{id}/pauses`로 돌려준다. 계획: `features/session-pauses-PLAN.md`.
+
+## Issue #320 세션 중 할 일 교체 (2026-11-25)
+
+- `POST /sessions/{id}/goals`에 `replaceGoalId`를 더해 같은 자리를 덮어쓴다. 활성 세션 수정 잠금은 할 일 사본 기준으로 바꿔 교체로 빠진 할 일이 풀린다. 계획: `features/session-goal-replace-PLAN.md`.
+
 ## Issue #314 목표 범위 수정·다시 만들기 (2026-11-24)
 
 - PATCH `goalProfile`(통째 덮어쓰기)과 `POST /goals/{id}/profile`(저장된 문구로 AI 범위 다시 만들기)을 추가했다. 계획: `features/goal-profile-edit-PLAN.md`.

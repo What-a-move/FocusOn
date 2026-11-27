@@ -45,6 +45,13 @@ public class SessionGoalEntity {
     return entity;
   }
 
+  /** 세션 중 할 일 교체: 같은 자리를 새 할 일의 문구·세분화 사본으로 덮어쓴다(#320). */
+  public void replaceWith(GoalEntity goal) {
+    this.goalId = goal.getId();
+    this.goalTextSnapshot = goal.getGoalText();
+    this.goalProfileSnapshotJson = goal.getProfileJson();
+  }
+
   /** 다중 목표 도입 전 세션의 최초 목표 사본을 복구한다. */
   public static SessionGoalEntity legacySnapshot(LearningSessionEntity session) {
     var entity = new SessionGoalEntity();
