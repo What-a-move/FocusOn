@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #374 리포트 진행 요약 (2026-11-27)
+
+- 세션 시작 때 하루 목표를 고정하고(V36), 달력에 하루 목표 달성과 `GET /reports/progress`(오늘·주·연속 기록)를 추가했다. 계획: `features/report-progress-PLAN.md`.
+
 ## Issue #373 집중 설정 새 필드 (2026-11-27)
 
 - 집중 설정에 학습 메신저·미리 알림·하루/주간 목표·회고 표시를 추가했다(V35). 계획: `features/focus-settings-redesign-PLAN.md`.

@@ -371,6 +371,7 @@ v2에서 확정 본문 관측의 `RELATED / FAR`가 유효 전경 기준으로 �
 ```text
 GET /api/v1/reports/daily
 GET /api/v1/reports/calendar?month=YYYY-MM
+GET /api/v1/reports/progress?date=YYYY-MM-DD
 GET /api/v1/reports/weekly                     # P1
 GET /api/v1/sessions/{sessionId}/summary
 GET /api/v1/sessions/{sessionId}/learning-summary
@@ -451,6 +452,10 @@ GET /api/v1/learning-summaries?cursor=&limit=
 - 세션용 migration에서 `learning_sessions.study_date`는 처음부터 `DATE NOT NULL`로 만든다. 출시 전 신규 세션 모델의 기존 기록 백필은 하지 않는다. 이 결정 자체로 기존 DB나 테스트 데이터를 삭제하지 않는다.
 - 달력 집계에는 종료가 확정된 `ENDED`, `ABANDONED` 세션만 포함하고, `ABANDONED`는 마지막 서버 확정 누적 시간만 사용한다.
 - `totalActiveMs >= 60000`인 날짜만 학습 활동일로 표시한다.
+
+하루 목표(2026-11-27 #374): 세션 시작 때 사용자 `dailyTargetMs`를 `learning_sessions.daily_target_ms_snapshot`에 고정한다(도입 전 세션은 NULL이며 판정 때 기본 60분). 달력 `days[].dailyTargetAchieved`는 그날 확정 세션 합계가 그날 첫 세션(시작 시각, 같으면 ID 순)의 고정 목표 이상이면 true다. 목표를 바꿔도 지난 날짜의 결과는 바뀌지 않는다.
+
+`GET /api/v1/reports/progress?date=YYYY-MM-DD`(#374, Desktop·`X-Device-Id`): `date`가 없으면 가장 최근 세션의 시간대(없으면 Asia/Seoul) 기준 오늘이다. 응답 `{ date, today: { totalActiveMs, dailyTargetMs, achieved }, week: { weekStart(월요일), totalActiveMs, weeklyTargetMs | null, dailyTotals: [{ date, totalActiveMs }] × 7 }, streak: { currentDays, longestDays } }`. 확정 ENDED·ABANDONED 세션만 집계하고 진행 중 세션은 Desktop이 더해 보여 준다. `today.dailyTargetMs`는 그날 첫 세션의 고정 목표, 그날 기록이 없으면 지금 설정값이다. 연속 기록은 어제까지 이어진 달성 일수에 오늘 달성을 더하고, 최장 기록은 기준일까지 전체다. 잘못된 date 400 `VALIDATION_ERROR`, Extension 403 `SESSION_QUERY_FORBIDDEN`.
 
 `GET /api/v1/reports/daily?date=YYYY-MM-DD`의 `sessions[]` 항목은 다음 형태로 맞춘다. 날짜는 고정한 `studyDate`이며 조회 시점의 시간대로 재배정하지 않는다. API의 기존 `REVIEW` 상태를 구현 완료로 바꾸지는 않는다.
 

@@ -59,6 +59,10 @@ public class LearningSessionEntity {
   @Column(name = "goal_version", nullable = false)
   private long goalVersion = 1;
 
+  /** 시작 때 고정한 하루 목표(ms)다. 도입 전 세션은 null이다(#374). */
+  @Column(name = "daily_target_ms_snapshot")
+  private Long dailyTargetMsSnapshot;
+
   @Column(name = "target_duration_ms", nullable = false)
   private long targetDurationMs;
 
@@ -171,5 +175,10 @@ public class LearningSessionEntity {
     this.status = SessionStatus.ABANDONED;
     this.endReason = "HEARTBEAT_TIMEOUT";
     this.endedAt = now;
+  }
+
+  /** 시작 시점의 하루 목표를 고정한다. 이후 설정을 바꿔도 이 세션의 판정은 그대로다. */
+  public void snapshotDailyTarget(long dailyTargetMs) {
+    this.dailyTargetMsSnapshot = dailyTargetMs;
   }
 }
