@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #373 집중 설정 새 필드 (2026-11-27)
+
+- 집중 설정에 학습 메신저·미리 알림·하루/주간 목표·회고 표시를 추가했다(V35). 계획: `features/focus-settings-redesign-PLAN.md`.
+
 ## #364 화면 분석의 학습 정리 근거 수신
 
 - AI PR #362의 `reviewEvidence`를 분석 완료의 내부 판정에서 받는다. 본문이 있는 DOM·OCR의 확정 `RELATED + MATCHED`에서 유효한 개념 1건만 유지하며 세션·목표·보호 검증으로 판정이 바뀌면 함께 버린다. [기획 및 문서 대조](features/analysis-review-evidence-PLAN.md).

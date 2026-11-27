@@ -146,7 +146,8 @@ public class UserConfigurationService {
   public FocusSettingsResponse focusSettings(FocusOnPrincipal principal) {
     return focusSettings.findById(principal.userId()).map(this::toFocusResponse)
         .orElseGet(() -> new FocusSettingsResponse(UserFocusSettingsEntity.InterventionLevel.NORMAL,
-            List.of("MOLE_UI"), true, false));
+            List.of("MOLE_UI"), true, false, List.of(), true,
+            UserFocusSettingsEntity.DEFAULT_DAILY_TARGET_MS, null, true));
   }
 
   /** 현재 사용자의 집중 설정 전체를 저장한다. */
@@ -154,6 +155,14 @@ public class UserConfigurationService {
   public FocusSettingsResponse updateFocusSettings(FocusOnPrincipal principal,
       UpdateFocusSettingsRequest request) {
     List<String> channels = normalizedChannels(request.notificationChannels());
+    List<String> messengers = request.learningMessengers() == null ? null
+        : normalizedMessengers(request.learningMessengers());
+    Long dailyTarget = request.dailyTargetMs();
+    if (dailyTarget != null && !validMinutes(dailyTarget, 10, 600)) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    boolean weeklyGiven = request.weeklyTargetMs() != null;
+    Long weeklyTarget = weeklyTarget(request.weeklyTargetMs());
     UserEntity user = lockedUser(principal);
     String serialized = String.join(",", channels);
     Instant now = clock.instant();
@@ -165,6 +174,16 @@ public class UserConfigurationService {
       settings.apply(request.interventionLevel(), serialized, request.breakSuggestionEnabled(),
           request.cameraAnalysisEnabled(), now);
     }
+    // 새 필드는 선택이다. 요청에 없으면 저장값(없으면 기본값)을 유지한다(#373).
+    settings.applyRedesign(
+        messengers == null ? settings.getLearningMessengers() : String.join(",", messengers),
+        request.preDistractionReminderEnabled() == null
+            ? settings.isPreDistractionReminderEnabled()
+            : request.preDistractionReminderEnabled(),
+        dailyTarget == null ? settings.getDailyTargetMs() : dailyTarget,
+        weeklyGiven ? weeklyTarget : settings.getWeeklyTargetMs(),
+        request.retrospectiveEnabled() == null ? settings.isRetrospectiveEnabled()
+            : request.retrospectiveEnabled(), now);
     return toFocusResponse(focusSettings.save(settings));
   }
 
@@ -211,9 +230,41 @@ public class UserConfigurationService {
   }
 
   private FocusSettingsResponse toFocusResponse(UserFocusSettingsEntity settings) {
+    String messengers = settings.getLearningMessengers();
     return new FocusSettingsResponse(settings.getInterventionLevel(),
         List.of(settings.getNotificationChannels().split(",")), settings.isBreakSuggestionEnabled(),
-        settings.isCameraAnalysisEnabled());
+        settings.isCameraAnalysisEnabled(),
+        messengers == null || messengers.isEmpty() ? List.of() : List.of(messengers.split(",")),
+        settings.isPreDistractionReminderEnabled(), settings.getDailyTargetMs(),
+        settings.getWeeklyTargetMs(), settings.isRetrospectiveEnabled());
+  }
+
+  private static List<String> normalizedMessengers(List<String> values) {
+    Set<String> allowed = Set.of("DISCORD", "SLACK", "KAKAOTALK", "TEAMS", "OTHER");
+    Set<String> normalized = new LinkedHashSet<>();
+    for (String value : values) {
+      if (value == null || !allowed.contains(value.trim()) || !normalized.add(value.trim())) {
+        throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+      }
+    }
+    return List.copyOf(normalized);
+  }
+
+  /** 분 단위이며 범위 안인 목표 시간인지 본다. */
+  private static boolean validMinutes(long ms, long minMinutes, long maxMinutes) {
+    return ms % 60_000L == 0 && ms >= minMinutes * 60_000L && ms <= maxMinutes * 60_000L;
+  }
+
+  /** null(미설정) 또는 60~4200분 정수 ms만 받는다. 숫자가 아니면 400이다. */
+  private static Long weeklyTarget(tools.jackson.databind.JsonNode value) {
+    if (value == null || value.isNull()) {
+      return null;
+    }
+    if (!value.isIntegralNumber() || !value.canConvertToLong()
+        || !validMinutes(value.asLong(), 60, 4200)) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    return value.asLong();
   }
 
   private static List<String> normalizedChannels(List<String> channels) {

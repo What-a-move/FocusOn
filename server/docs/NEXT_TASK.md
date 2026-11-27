@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #373 집중 설정 새 필드 (2026-11-27)
+
+- Desktop: 설정·온보딩에서 새 필드를 보내고, 회고 표시는 `retrospectiveEnabled`를 따른다.
+- 다음 마이그레이션은 V36부터.
+
 ## #364 화면 분석의 학습 정리 근거 수신
 
 - 로컬 Backend에 AI 주소·키 설정은 있으나 해당 주소의 `/health`와 `/openapi.json`에서 HTTP 응답을 받지 못했다. AI 서비스에 접근할 수 있는 배포 호스트에서 빌드 버전과 준비 상태를 확인한 뒤 Desktop·Extension 분석을 같은 traceId로 연결해 점검한다.
