@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { ConfirmationSource, CreatedGoal, GoalProfile, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
+import type { ConfirmationSource, CreatedGoal, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
 import { CONFIRMED_GOAL_KEY, goalApi, readPicked, goalLength, MAX_QUESTIONS, MAX_TODO_PICK, TODO_SAVED_KEY, type ClarifyResult } from '../../shared/api/goal-api'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import { errorText } from '../../shared/lib/error-text'
@@ -14,7 +14,7 @@ type View = 'entry' | 'questions' | 'candidates' | 'review'
 type QuestionMode = 'term' | 'scope' | 'multi'
 type Line = { text: string; error?: boolean; typing?: boolean }
 type Feedback = { title: string; body: string; info?: boolean } | null
-type Review = { goal: string; caption: string; source: ConfirmationSource; profile?: GoalProfile; candidates?: string[]; editableGoal?: boolean }
+type Review = { goal: string; caption: string; source: ConfirmationSource; candidates?: string[]; editableGoal?: boolean }
 
 const STAGE: Record<View, number> = { entry: 0, questions: 1, candidates: 1, review: 2 }
 const STAGE_LABEL = ['새 할 일', '다듬기', '확인']
@@ -92,9 +92,9 @@ export function GoalSetting() {
     queueMicrotask(() => inputRef.current?.focus())
   }
 
-  const toReview = (goal: string, caption: string, source: ConfirmationSource, profile?: GoalProfile, candidates?: string[], editableGoal?: boolean) => {
+  const toReview = (goal: string, caption: string, source: ConfirmationSource, candidates?: string[], editableGoal?: boolean) => {
     partialSave.current = []
-    const next = { goal, caption, source, profile, candidates, editableGoal }
+    const next = { goal, caption, source, candidates, editableGoal }
     setReview(next)
     // 할 일 하나는 확인 없이 바로 저장한다. 나눈 할 일만 확인 화면을 거친다.
     if (!candidates) { void save(next); return }
@@ -118,11 +118,11 @@ export function GoalSetting() {
     switch (result.decision) {
       case 'CLEAR':
         if (result.goalCandidates.length >= 2) {
-          toReview(result.goalCandidates[0], '나눈 할 일', 'MANUAL_CONFIRMED', undefined, result.goalCandidates)
+          toReview(result.goalCandidates[0], '나눈 할 일', 'MANUAL_CONFIRMED', result.goalCandidates)
         } else if (!result.normalizedGoalText || goalLength(result.normalizedGoalText) < 2 || goalLength(result.normalizedGoalText) > 40) {
-          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED', result.goalProfileDraft, undefined, true)
+          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED', undefined, true)
         } else {
-          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED', result.goalProfileDraft)
+          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED')
         }
         return
       case 'INVALID':
@@ -193,7 +193,6 @@ export function GoalSetting() {
       setFeedback({ title: '할 일 길이를 확인해 주세요.', body: '할 일은 2~40자로 적어 주세요.' })
       return
     }
-    const profile = target.profile
     saving.current = true
     setBusy(true)
     setFeedback(null)
@@ -205,7 +204,6 @@ export function GoalSetting() {
           goalText: term.trim(),
           confirmationSource: target.source,
           ...(clarificationSessionId && !target.candidates && !target.editableGoal ? { clarificationSessionId } : {}),
-          ...(profile ? { goalProfile: profile } : {}),
         }
         const fingerprint = JSON.stringify(payload)
         const idempotencyKey = saveKeys.current.get(fingerprint) ?? crypto.randomUUID()
@@ -290,7 +288,7 @@ export function GoalSetting() {
   const secondary = () => {
     if (busy) return
     if ((view === 'entry' && validDraft() && !reuse()) || (view === 'questions' && asked >= MAX_QUESTIONS)) {
-      toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED', undefined, undefined, true)
+      toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED', undefined, true)
       return
     }
     if (view === 'entry') return
