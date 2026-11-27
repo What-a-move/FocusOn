@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #318 세션 끝 회고 (2026-11-26)
+
+- 끝난 세션의 한 줄 회고를 `session_retrospectives`(V34)에 세션당 하나 저장한다. 메모는 100자·민감정보 검사, 로그 금지. 계획: `features/session-retrospective-PLAN.md`.
+
 ## Issue #317 세션 일시정지 구간 (2026-11-26)
 
 - 일시정지·자동 일시정지·재개를 `session_pauses`(V33)에 기록하고 `GET /sessions/{id}/pauses`로 돌려준다. 계획: `features/session-pauses-PLAN.md`.

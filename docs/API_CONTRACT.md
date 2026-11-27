@@ -262,6 +262,7 @@ DR-030 명확화 응답의 `goalProfileDraft`에는 대표 주제·목적·세 �
 ```text
 POST /api/v1/sessions
 GET  /api/v1/sessions/active
+PUT  /api/v1/sessions/{sessionId}/retrospective
 GET  /api/v1/sessions/{sessionId}/pauses
 GET  /api/v1/sessions/{sessionId}
 GET  /api/v1/sessions                         # P1
@@ -277,6 +278,7 @@ POST /api/v1/sessions/{sessionId}/goals
 
 `POST /api/v1/sessions/{sessionId}/heartbeats`의 `data`는 `{ status, lastHeartbeatAt, accumulatedActiveMs, pauseReason, version }`이다. `version`은 응답 시점의 세션 명령 버전으로, 목표 시간에 닿아 `AWAITING_END_CONFIRMATION`으로 바뀐 응답에서는 증가한 값이라 `If-Match-Version`에 바로 쓸 수 있다. 필드 추가만이라 기존 클라이언트에 영향이 없다.
 
+`PUT /api/v1/sessions/{sessionId}/retrospective`(2026-11-26 #318, Desktop·`X-Device-Id` 필수): 끝난 세션(ENDED·ABANDONED)의 한 줄 회고 `{ rating: GOOD|OKAY|BAD, reasonCodes?, note? }`를 세션당 하나 저장하고 다시 보내면 덮어쓴다. `reasonCodes`(SELF_TIRED·SELF_NOISE·SELF_TOO_MANY_GOALS·APP_FALSE_ALERT·APP_TOO_FREQUENT·APP_LATE_ALERT·APP_BLUR_ANNOYING, 중복 없음)와 `note`(0~100자, 앞뒤 공백 제거)는 BAD일 때만 받는다. 응답 200 `{ sessionId, rating, reasonCodes, note, updatedAt }`. 400 `VALIDATION_ERROR`(평가 누락·허용 밖 값·중복·BAD 아닌데 사유·메모, 100자 초과, 메모 민감정보는 `details.fieldErrors.note: "SENSITIVE"`), 404 `SESSION_NOT_FOUND`, 409 `SESSION_STATE_INVALID`(끝나지 않은 세션). 메모 원문은 로그·오류 응답에 넣지 않는다.
 `GET /api/v1/sessions/{sessionId}/pauses`(2026-11-26 #317): 본인 세션의 일시정지·재개 구간을 `{ data: [{ pausedAt, resumedAt, pauseReason }] }`로 `pausedAt` 오름차순 반환한다. 사용자 일시정지(`PAUSE`)와 자동 일시정지(권한 유실 로컬 이벤트)가 구간을 열고 재개가 닫는다. 재개 없이 끝나면 마지막 `resumedAt`은 `null`이다. 도입 전 세션은 빈 배열, 다른 사용자·없는 세션은 404 `SESSION_NOT_FOUND`다. 집중 리포트 가로축(일시정지를 뺀 경과 시간) 계산용이다.
 
 세션 시작은 단일 `goalId` 또는 순서가 있는 `goalIds` 1~3개 중 하나를 받는다. 시작·활성 응답의 `goals: [{goalId, goalText}]`와 `goalVersion`은 시작 시 고정한 목표 사본을 나타낸다. 실행 중 같은 Desktop은 `POST /api/v1/sessions/{sessionId}/goals`에 `{goalId, goalVersion}`으로 본인의 새 할 일을 하나 추가할 수 있다. 추가 시 목표 목록 버전만 증가한다. 같은 요청에 `replaceGoalId`를 넣으면 그 할 일의 자리를 새 할 일 사본으로 덮어쓰고 목표 목록 버전을 1 올린다(2026-11-25 #320, 교체 이력 없음). 이미 반영된 교체를 같은 내용으로 다시 보내면 현재 목록을 200으로 돌려준다. 버전 불일치는 409 `SESSION_VERSION_CONFLICT`, 세션에 없는 교체 대상·이미 세션에 있는 할 일·같은 ID는 400 `VALIDATION_ERROR`, 없거나 삭제된 할 일은 404 `GOAL_NOT_FOUND`다. 교체로 빠진 할 일은 바로 수정·삭제할 수 있다. 세션의 시작 목표 사본(`goalTextSnapshot`, 리포트 제목)은 바뀌지 않는다.

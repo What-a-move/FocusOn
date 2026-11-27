@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #318 세션 끝 회고 (2026-11-26)
+
+- Desktop: 세션 끝 화면에서 `PUT /sessions/{id}/retrospective`를 쓴다. 개인정보 안내 문구를 먼저 넣는다.
+- 머지 순서: #317(V33) 뒤. 다음 마이그레이션은 V35부터.
+
 ## Issue #317 세션 일시정지 구간 (2026-11-26)
 
 - Desktop: 집중 리포트 가로축 계산에 `GET /sessions/{id}/pauses`를 쓴다(열린 마지막 구간은 종료 시각까지로 본다).
