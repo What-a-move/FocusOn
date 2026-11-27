@@ -26,7 +26,7 @@ from ..preprocessing.adapter import observation_is_current
 from ..preprocessing.models import ContentSource, ExtractionStatus
 from ..preprocessing.validator import contains_sensitive_data
 from ..models.screen_activity.beta_decision import beta_decision
-from ..models.screen_activity.goal_match import goal_terms, match_goal, review_concept
+from ..models.screen_activity.goal_match import goal_terms, match_goal, match_goal_async, review_concept
 from ..utils.logger import log_event
 
 logger = logging.getLogger(__name__)
@@ -110,46 +110,123 @@ async def validated_input(request: Request):
 async def analyze_relevance(request: Request) -> AnalysisDecisionResponse:
     """Validate the trusted envelope and classify the active screen locally."""
     content, goals = await validated_input(request)
-    # Fast tokenizers share mutable padding/truncation settings within a worker.
-    async with request.app.state.activity_lock:
-        return await run_in_threadpool(run_analysis, content, request.app.state.activity_classifier, goals)
+    return await run_analysis_async(
+        content,
+        request.app.state.activity_classifier,
+        goals,
+        jev_matcher=getattr(request.app.state, "jev_goal_matcher", None),
+        activity_lock=request.app.state.activity_lock,
+    )
 
 
-def run_analysis(content, classifier, goals) -> AnalysisDecisionResponse:
+def _build_payload(content) -> dict:
+    return {
+        "contentSource": content.content_source.value,
+        "metadata": {
+            "appName": content.app_name, "pageTitle": content.page_title,
+            "windowTitle": content.window_title, "urlHost": content.url_host,
+        },
+        "contentPayload": {"text": content.text},
+    }
+
+
+def _predict_activity(classifier, payload: dict, extraction_status: ExtractionStatus) -> tuple[str, str]:
+    prediction = classifier.predict([payload])[0]
+    result = beta_decision(payload, prediction, extraction_status.value)
+    return ACTIVITY_TO_DECISION[result["label"]], result["reasonCode"]
+
+
+def _extract_review_evidence(classifier, content, payload: dict, goals, goal_id: str | None) -> list[ReviewEvidence]:
+    goal = next(item for item in goals if item.goal_id == goal_id)
+    concept = review_concept(classifier, content, payload, goal)
+    if (concept and len(concept) <= REVIEW_CONCEPT_MAX_LENGTH
+            and not re.search(r"(?i)://|www\.", concept) and not contains_sensitive_data(concept)):
+        return [ReviewEvidence(conceptLabel=concept, evidenceType="CONCEPT")]
+    return []
+
+
+async def run_analysis_async(
+    content,
+    classifier,
+    goals,
+    *,
+    jev_matcher=None,
+    activity_lock=None,
+) -> AnalysisDecisionResponse:
     label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
     goal_id = match_status = None
-    review_evidence = []
+    review_evidence: list[ReviewEvidence] = []
     if classifier is not None and content.extraction_status in {ExtractionStatus.SUCCESS, ExtractionStatus.PARTIAL}:
-        payload = {
-            "contentSource": content.content_source.value,
-            "metadata": {
-                "appName": content.app_name, "pageTitle": content.page_title,
-                "windowTitle": content.window_title, "urlHost": content.url_host,
-            },
-            "contentPayload": {"text": content.text},
-        }
+        payload = _build_payload(content)
         try:
-            prediction = classifier.predict([payload])[0]
-            result = beta_decision(payload, prediction, content.extraction_status.value)
-            label, reason = ACTIVITY_TO_DECISION[result["label"]], result["reasonCode"]
+            if activity_lock is not None:
+                async with activity_lock:
+                    label, reason = await run_in_threadpool(
+                        _predict_activity, classifier, payload, content.extraction_status
+                    )
+            else:
+                label, reason = await run_in_threadpool(
+                    _predict_activity, classifier, payload, content.extraction_status
+                )
         except Exception:
             # Inference errors may contain input text or local runtime details.
             log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
 
         if label == "RELATED":
             try:
-                goal_id, match_status = match_goal(classifier, content, payload, goals)
+                goal_id, match_status = await match_goal_async(
+                    classifier,
+                    content,
+                    payload,
+                    goals,
+                    jev_matcher=jev_matcher,
+                    activity_lock=activity_lock,
+                )
             except Exception:
                 log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
                 match_status = "NOT_ENOUGH"
 
         if label == "RELATED" and match_status == "MATCHED":
             try:
-                goal = next(item for item in goals if item.goal_id == goal_id)
-                concept = review_concept(classifier, content, payload, goal)
-                if (concept and len(concept) <= REVIEW_CONCEPT_MAX_LENGTH
-                        and not re.search(r"(?i)://|www\.", concept) and not contains_sensitive_data(concept)):
-                    review_evidence.append(ReviewEvidence(conceptLabel=concept, evidenceType="CONCEPT"))
+                if activity_lock is not None:
+                    async with activity_lock:
+                        review_evidence = await run_in_threadpool(
+                            _extract_review_evidence, classifier, content, payload, goals, goal_id
+                        )
+                else:
+                    review_evidence = await run_in_threadpool(
+                        _extract_review_evidence, classifier, content, payload, goals, goal_id
+                    )
+            except Exception:
+                log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
+
+    return AnalysisDecisionResponse(decision=label, confidence=None, reasonCode=reason,
+                                    modelVersion=MODEL_VERSION, promptVersion=DECISION_VERSION,
+                                    matchedGoalId=goal_id, matchStatus=match_status,
+                                    reviewEvidence=review_evidence)
+
+
+def run_analysis(content, classifier, goals, *, jev_matcher=None) -> AnalysisDecisionResponse:
+    label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
+    goal_id = match_status = None
+    review_evidence: list[ReviewEvidence] = []
+    if classifier is not None and content.extraction_status in {ExtractionStatus.SUCCESS, ExtractionStatus.PARTIAL}:
+        payload = _build_payload(content)
+        try:
+            label, reason = _predict_activity(classifier, payload, content.extraction_status)
+        except Exception:
+            log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
+
+        if label == "RELATED":
+            try:
+                goal_id, match_status = match_goal(classifier, content, payload, goals, jev_matcher=jev_matcher)
+            except Exception:
+                log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
+                match_status = "NOT_ENOUGH"
+
+        if label == "RELATED" and match_status == "MATCHED":
+            try:
+                review_evidence = _extract_review_evidence(classifier, content, payload, goals, goal_id)
             except Exception:
                 log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
 

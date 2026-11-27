@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from AI.src.main import create_app
 from AI.src.models.screen_activity.activity import model_result
+from AI.src.models.screen_activity.jev_goal_matcher import JevGoalMatchResult
 from AI.src.models.screen_activity.topic_bank import TopicBank
 
 KEY = "local-test-key-only-0123456789abcdef"
@@ -48,6 +49,26 @@ class FixedScores:
         if role == "query":
             return {text: task_vector(self.similarities.get(text, .4)) for text in texts}
         return {text: self.passage(text) for text in texts}
+
+
+class FixedJev:
+    def __init__(self, scores=None, *, different_study_topic=0.1, error=None):
+        self.scores = scores or {}
+        self.different_study_topic = different_study_topic
+        self.error = error
+        self.calls = []
+
+    async def judge(self, *, title, body, content_source, goals):
+        self.calls.append((title, body, content_source, [g.goal_id for g in goals]))
+        if self.error is not None:
+            raise self.error
+        return JevGoalMatchResult(
+            goal_scores={g.goal_id: self.scores.get(g.goal_id, 0.85) for g in goals},
+            different_study_topic=self.different_study_topic,
+        )
+
+    async def aclose(self):
+        return None
 
 
 @pytest.fixture
@@ -159,7 +180,8 @@ def test_tab_title_can_attribute_but_app_window_title_cannot(payload):
     request.pop("contentPayload")
     request["contentSource"] = payload["context"]["contentSource"] = "TAB_META"
     model = FixedScores(similarities={"JWT 서명": .86})
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    jev = FixedJev({"goal-demo": 0.15, "auth": 0.90})
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         tab = client.post(PATH, json=payload, headers=HEADERS).json()
         assert (tab["decision"], tab["matchedGoalId"], tab["matchStatus"]) == ("RELATED", "auth", "MATCHED")
         assert model.embeddings[-2] == ("query", ("React 실습", "인증 구현", "인증", "JWT 서명"))
@@ -175,27 +197,28 @@ def test_tab_title_can_attribute_but_app_window_title_cannot(payload):
         assert len(model.inputs) == 2
 
 
-@pytest.mark.parametrize("bank,expected", [
-    # Another study topic explains the screen better than the selected task.
-    ((other_topic(.95),), (None, "NOT_ENOUGH")),
-    # The same task in other words does not compete with it.
-    ((task_vector(.95),), ("goal-demo", "MATCHED")),
-    # A topic too close to the task to tell apart (query cosine about 0.915) does not block it.
-    (((.95, .192, .246),), ("goal-demo", "MATCHED")),
-    ((other_topic(.80),), ("goal-demo", "MATCHED")),
+@pytest.mark.parametrize("jev_score,diff_topic,expected", [
+    # JEV rejects the subtopic even when E5 similarity is high.
+    (0.20, 0.30, (None, "NOT_ENOUGH")),
+    # JEV confirms the specific subtopic and supports attribution.
+    (0.90, 0.10, ("goal-demo", "MATCHED")),
+    # JEV is borderline-low -> blocked by MATCH_MIN without triggering FAR.
+    (0.45, 0.20, (None, "NOT_ENOUGH")),
 ])
-def test_other_study_topic_blocks_attribution(payload, bank, expected):
+def test_other_study_topic_blocks_attribution(payload, jev_score, diff_topic, expected):
     payload["request"]["contentPayload"]["text"] = LONG_BODY
-    model = FixedScores(similarities={"JWT 인증 구현": .86}, bank=bank)
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    model = FixedScores(similarities={"JWT 인증 구현": .86})
+    jev = FixedJev({"goal-demo": jev_score}, different_study_topic=diff_topic)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", *expected)
 
 
 def test_task_below_match_floor_is_not_attributed(payload):
     payload["request"]["contentPayload"]["text"] = LONG_BODY
-    model = FixedScores(similarities={"JWT 인증 구현": .79})
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    model = FixedScores(similarities={"JWT 인증 구현": .60})
+    jev = FixedJev({"goal-demo": 0.20}, different_study_topic=0.88)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["matchedGoalId"], result["matchStatus"]) == (None, "FAR")
 
@@ -231,8 +254,9 @@ def test_ocr_preserves_study_when_match_evidence_is_insufficient(payload, qualit
     if quality:
         payload["ocr"] = quality
     # 0.83 is near the goal (no FAR), but another study topic explains the screen better.
-    model = FixedScores(similarities={"JWT 인증 구현": .99 if quality else .83}, bank=(other_topic(.9),))
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    model = FixedScores(similarities={"JWT 인증 구현": .99 if quality else .83})
+    jev = FixedJev({"goal-demo": 0.25}, different_study_topic=0.20)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == (
         "RELATED", None, "NOT_ENOUGH")
@@ -268,7 +292,8 @@ def test_closest_selected_task_is_attributed(payload):
         {"goalId": "other", "goalText": "세션 쿠키 관리"},
     ])
     model = FixedScores(similarities={"JWT 인증 구현": .95, "세션 쿠키 관리": .94})
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    jev = FixedJev({"goal-demo": 0.90, "other": 0.40})
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", "goal-demo", "MATCHED")
 
@@ -280,8 +305,9 @@ def test_body_chunk_after_site_menu_can_support_task(payload, marker, expected):
     evidence = "CHUNK-EVIDENCE 서명 검증 순서와 만료 확인을 예제로 설명합니다. " if marker else ""
     payload["request"]["contentPayload"]["text"] = menu + evidence + "토큰 검증 절차를 정리합니다. " * 20
     near = lambda text: np.array([1., 0., 0.]) if "CHUNK-EVIDENCE" in text and len(text) < 700 else np.array([0., 0., 1.])
-    model = FixedScores(similarities={"JWT 인증 구현": .9}, bank=((0., 1., 0.),), passage=near)
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    model = FixedScores(similarities={"JWT 인증 구현": .9}, passage=near)
+    jev = FixedJev({"goal-demo": 0.90 if marker else 0.15}, different_study_topic=0.10 if marker else 0.88)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         result = client.post(PATH, json=payload, headers=HEADERS).json()
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", *expected)
 
@@ -318,7 +344,11 @@ def test_review_evidence_requires_matched_goal_and_observed_concept(
     model = FixedScores(similarities={goal: goal_score})
     model.topic_bank = TopicBank([(0., 0., 1.)], [(0., 0., 1.)],
                                 topics=["React useState", "React useEffect"])
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    jev = FixedJev(
+        {"goal-demo": 0.90 if status == "MATCHED" else 0.20},
+        different_study_topic=0.88 if status == "FAR" else 0.10,
+    )
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         response = client.post(PATH, json=payload, headers=HEADERS)
 
     assert response.status_code == 200
@@ -363,7 +393,8 @@ def test_far_requires_full_body_with_independent_study_signal(payload):
         "맨 아래 행에서부터 역대입하여 각 미지수의 값을 구한다."
     )
     model = FixedScores(similarities={"JWT 인증 구현": .75})
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    jev = FixedJev({"goal-demo": 0.20}, different_study_topic=0.88)
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         far = client.post(PATH, json=payload, headers=HEADERS).json()
         assert (far["decision"], far["matchStatus"], far["matchedGoalId"]) == ("RELATED", "FAR", None)
         payload["extractionStatus"] = "PARTIAL"
@@ -388,11 +419,9 @@ def test_family_far_only_for_complete_body_and_different_family(payload, source,
     else:
         request.pop("contentPayload")
     model = FixedScores(similarities={goal: .82})
-    vectors = np.repeat([other_topic(.92), task_vector(.65), [0., 0., -1.]], 3, axis=0)
-    fields = ["AWS"] * 3 + ["Django"] * 3 + ["Node.js와 Express"] * 3
-    model.topic_bank = TopicBank(vectors, vectors, fields)
+    jev = FixedJev({"goal-demo": 0.20}, different_study_topic=0.88 if title == "AWS Lambda 함수" else 0.30)
 
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         response = client.post(PATH, json=payload, headers=HEADERS)
 
     assert response.status_code == 200
@@ -417,11 +446,10 @@ def test_ocr_operation_symbols_can_attribute_without_product_name(payload):
         "db.orders.aggregate([{ $match: { status: 'paid' } }, { $group: { _id: '$category', "
         "total: { $sum: '$amount' } } }, { $sort: { total: -1 } }])"
     )
-    model = FixedScores(similarities={"MongoDB find로 문서 조회하기": .91})
-    vectors = [other_topic(.93), task_vector(.58), other_topic(.94)]
-    model.topic_bank = TopicBank(vectors, vectors, ["MongoDB"] * 3)
+    model = FixedScores(similarities={"MongoDB find로 문서 조회하기": .91, "$match 스테이지": .85})
+    jev = FixedJev({"goal-demo": 0.15, "aggregate": 0.92})
 
-    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model, jev_goal_matcher_factory=lambda: jev)) as client:
         response = client.post(PATH, json=payload, headers=HEADERS)
 
     assert response.status_code == 200

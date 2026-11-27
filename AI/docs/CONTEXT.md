@@ -281,3 +281,13 @@ Client별 사전 제외·권한 검사
 - 2026-10-28 회귀: 화면 계약 47 passed; Kiwi 평가 모듈 2개를 제외하면 158 passed, 1 skipped, 16 subtests passed. 전체 실행은 환경에 `kiwipiepy==0.23.1`이 없어 해당 75건이 실패했고, 임시 설치도 네트워크 제한으로 불가했다. 실제 모델/API 왕복은 하지 않았다. 상세는 `features/screen-analysis-contract-v1-REPORT.md`를 따른다.
 
 - #29 합성 근거용 `generate_synthetic_evidence_summary`는 RELATED 선별·동의·중복·민감정보 검사를 거쳐 기존 합성 생성 검증을 재사용한다. 실제 사용자 데이터와 서버 HTTP 연동은 미완료다.
+
+
+## 2026-11-27 E5 ∥ JEV 병렬 할 일 매칭 재설계 (`feat/ai-goal-match-jev-e5`)
+
+- `ActivityClassifier`에서 2,700개 고정 `topic-bank.json` 로드 및 체크섬 검증을 제거했다.
+- `AI/src/models/screen_activity/jev_goal_matcher.py`를 추가해 `제목 + 본문(최대 2,000자) + 세션 할 일 목록`과 `is_different_study_topic` 질문을 `AsyncTypeSafeClient.system_one`으로 3초 타임아웃·1회 재실행 정책으로 호출한다.
+- `AI/src/models/screen_activity/goal_match.py`의 `match_goal_async`가 로컬 E5 스코어링과 JEV 판별을 `asyncio.gather`로 병렬 실행하고, 가중합(`w_jev=0.65`) + JEV 비토(`jev_veto_threshold=0.35`) 결합으로 `MATCHED` / `FAR` / `NOT_ENOUGH`를 결정한다. JEV 최종 실패 시에는 `NOT_ENOUGH`로 fallback한다.
+- 검증: `PYENV_VERSION=what-a-move PYTHONPATH=AI:. pyenv exec python -m pytest AI/tests/test_goal_match_jev_e5.py AI/tests/test_fastapi_analysis.py -q` **51 passed** (Fake E5 / Fake JEV / TestClient 기반). `AI/evaluation/evaluate_goal_match_jev_e5.py --smoke --sweep` 정상 통과.
+- JEV Live 검증 (2026-11-27): 합성 4건(`exact_match`, `same_domain_rival_subtopic`, `different_subject_far`, `multi_goal_selection`)을 `TypeSafeJevGoalMatcher`로 실제 호출한 결과 **4/4 통과**, 지연 시간 **158.3~380.2ms**(평균 217.4ms, 3초 제한 이내), 같은 도메인 다른 주제(`React Query` vs `React useEffect`, E5=0.88)에서 JEV가 `0.03`으로 비토하고 `different_study_topic=0.94`로 `FAR` 판정 확인.
+- 미검증: 로컬 `what-a-move` 환경 `scikit-learn` 미설치로 실제 `ScreenEncoder` 로드 테스트 미실행, 44건 평가 원자료(`results.csv` 등) 부재로 44건 정량 평가 미실행.

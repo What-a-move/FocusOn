@@ -16,6 +16,7 @@ from src.api.goal_routes import router as goal_router
 from src.api.schemas import ErrorResponse
 from src.utils.logger import configure_logging, log_event
 from .models.screen_activity.activity import ActivityClassifier
+from .models.screen_activity.jev_goal_matcher import TypeSafeJevGoalMatcher
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,18 @@ def load_activity_classifier():
     return classifier
 
 
-def create_app(*, api_key: str | None = None, classifier_factory=load_activity_classifier) -> FastAPI:
+def load_jev_goal_matcher():
+    from .config import get_settings
+
+    return TypeSafeJevGoalMatcher(get_settings())
+
+
+def create_app(
+    *,
+    api_key: str | None = None,
+    classifier_factory=load_activity_classifier,
+    jev_goal_matcher_factory=load_jev_goal_matcher,
+) -> FastAPI:
     @asynccontextmanager
     async def lifespan(application: FastAPI):
         key = api_key if api_key is not None else os.environ.get("FOCUSON_AI_API_KEY", "")
@@ -41,10 +53,19 @@ def create_app(*, api_key: str | None = None, classifier_factory=load_activity_c
         except Exception:
             application.state.activity_classifier = None
             log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE", path="/health")
+        try:
+            application.state.jev_goal_matcher = jev_goal_matcher_factory() if jev_goal_matcher_factory else None
+        except Exception:
+            application.state.jev_goal_matcher = None
+            log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE", path="/health")
         application.state.model_load_ms = round((perf_counter() - started) * 1000, 1)
         try:
             yield
         finally:
+            matcher = getattr(application.state, "jev_goal_matcher", None)
+            if matcher is not None and hasattr(matcher, "aclose"):
+                await matcher.aclose()
+            application.state.jev_goal_matcher = None
             application.state.activity_classifier = None
             application.state.backend_api_key = ""
 
