@@ -274,6 +274,40 @@ class AnalysisApiTests {
     }
   }
 
+  /** UNRELATED 판정만 도메인·앱 규칙의 딴짓 종류를 응답·이력·DB에 남긴다(#381). */
+  @ParameterizedTest
+  @CsvSource(value = {"CHROME_DOM,m.youtube.com,Chrome,UNRELATED,VIDEO",
+      "CHROME_DOM,news.naver.com,Chrome,UNRELATED,NEWS",
+      "CHROME_DOM,docs.example.com,Chrome,UNRELATED,OTHER",
+      "DESKTOP_APP_OCR,NONE,Discord,UNRELATED,MESSENGER",
+      "DESKTOP_APP_OCR,NONE,Unknown App,UNRELATED,OTHER",
+      "CHROME_DOM,m.youtube.com,Chrome,RELATED,NONE",
+      "CHROME_DOM,m.youtube.com,Chrome,UNCERTAIN,NONE"}, nullValues = "NONE")
+  void offTaskCategoryIsSetOnlyForUnrelated(ContentSource source, String host, String app,
+      Relation relation, String category) throws Exception {
+    Fixture f = fixture();
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(new AnalysisDecision(relation,
+        relation == Relation.UNCERTAIN ? null : .9, relation == Relation.RELATED
+            ? ReasonCode.SEMANTIC_GOAL_MATCH : relation == Relation.UNRELATED
+            ? ReasonCode.SEMANTIC_GOAL_MISMATCH : ReasonCode.AMBIGUOUS_CONTEXT,
+        AnalysisStatus.COMPLETED, "test-model", "test-prompt"));
+    var input = new Request(UUID.randomUUID().toString(), source, Instant.now().minusSeconds(1),
+        BigDecimal.ONE, null, new Metadata(app, null, "synthetic title", host),
+        new ContentPayload("private synthetic body"));
+    var posted = json.readTree(mvc.perform(call(f, input)).andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString()).path("data");
+    assertEquals(relation.name(), posted.path("relation").asString());
+    assertEquals(category, posted.path("offTaskCategory").asString(null));
+    assertEquals(category, jdbc.queryForObject(
+        "SELECT off_task_category FROM analysis_runs WHERE session_id = ?", String.class,
+        f.sessionId()));
+    var history = json.readTree(mvc.perform(get(path(f.sessionId())).header("Authorization",
+            "Bearer " + f.login().accessToken()))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("data");
+    assertEquals(category, history.get(0).path("offTaskCategory").asString(null));
+    assertFalse(history.toString().contains(host == null ? app : host));
+  }
+
   /** 확정 RELATED의 matchStatus는 응답·이력·DB에 같은 값으로 남는다(#319, DR-030). */
   @Test
   void relatedMatchStatusIsStoredAndReturned() throws Exception {

@@ -95,8 +95,12 @@ public final class AnalysisDtos {
     }
   }
 
-  /** 클라이언트가 사용하는 공개 분석 결과다. */
+  /** UNRELATED 판정에만 붙는 딴짓 종류다(재설계 B). */
+  public enum OffTaskCategory { VIDEO, SNS, COMMUNITY, SHOPPING, GAME, MESSENGER, NEWS, OTHER }
+
+  /** 클라이언트가 사용하는 공개 분석 결과다. offTaskCategory는 UNRELATED일 때만 값이 있다. */
   public record Response(String analysisRunId, AnalysisStatus analysisStatus, Relation relation,
       Double confidence, ReasonCode reasonCode, Instant observedAt, String policyVersion,
-      MatchStatus matchStatus, String matchedGoalId, long goalVersion) {}
+      MatchStatus matchStatus, String matchedGoalId, long goalVersion,
+      OffTaskCategory offTaskCategory) {}
 }

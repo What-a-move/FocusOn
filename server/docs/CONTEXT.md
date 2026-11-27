@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #381 딴짓 종류 (2026-11-28)
+
+- UNRELATED 판정에 도메인·앱 목록 규칙으로 `offTaskCategory`를 붙여 저장·반환한다(V37). 계획: `features/off-task-category-PLAN.md`.
+
 ## Issue #379 학습 정리 근거 저장 (2026-11-28)
 
 - 화면 분석 완료 재검증을 통과한 개념 근거를 `learning_review_evidences`에 저장해 학습 정리 Worker가 실제 입력을 받는다. 같은 개념은 세션당 1건, 종료 후 90일에 정리한다. 계획: `features/learning-evidence-store-PLAN.md`.
