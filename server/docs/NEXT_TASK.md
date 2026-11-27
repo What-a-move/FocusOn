@@ -1,5 +1,10 @@
 # Backend 다음 작업
 
+## Issue #317 세션 일시정지 구간 (2026-11-26)
+
+- Desktop: 집중 리포트 가로축 계산에 `GET /sessions/{id}/pauses`를 쓴다(열린 마지막 구간은 종료 시각까지로 본다).
+- 후속: 세션 데이터 보관 기간(1년) 정리 작업. 다음 마이그레이션은 V34부터.
+
 ## Issue #320 세션 중 할 일 교체 (2026-11-25)
 
 - Desktop: 할 일이 3개일 때 교체할 할 일을 골라 `replaceGoalId`와 함께 보낸다. 409 `SESSION_VERSION_CONFLICT`면 활성 세션을 다시 읽는다.

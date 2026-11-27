@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #317 세션 일시정지 구간 (2026-11-26)
+
+- 일시정지·자동 일시정지·재개를 `session_pauses`(V33)에 기록하고 `GET /sessions/{id}/pauses`로 돌려준다. 계획: `features/session-pauses-PLAN.md`.
+
 ## Issue #320 세션 중 할 일 교체 (2026-11-25)
 
 - `POST /sessions/{id}/goals`에 `replaceGoalId`를 더해 같은 자리를 덮어쓴다. 활성 세션 수정 잠금은 할 일 사본 기준으로 바꿔 교체로 빠진 할 일이 풀린다. 계획: `features/session-goal-replace-PLAN.md`.
