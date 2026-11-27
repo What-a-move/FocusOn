@@ -102,16 +102,19 @@ def build_goal_match_questions(goals: Sequence[Any]) -> dict[str, Noul]:
     questions["is_different_study_topic"] = Noul(
         instructions=(
             "Determine whether the screen is genuine educational or technical study material "
-            "whose subject is a different topic or subtopic from all listed goals."
+            "for a clearly different technology, subject, or domain from all listed goals "
+            "(not an adjacent or related subtopic within the same technology or subject)."
         ),
         criteria={
             "true": (
-                "The screen clearly shows learning or technical documentation for another "
-                "subject or subtopic not covered by any of the listed goals."
+                "The screen clearly studies a different technology, framework, or academic subject "
+                "unrelated to any listed goal (e.g., Django or Git while the goal is React)."
             ),
             "false": (
-                "The screen matches one of the listed goals, is not study material, or lacks "
-                "enough context."
+                "The screen matches a listed goal, covers an adjacent or sibling subtopic within "
+                "the same technology or subject (e.g., React props for a React hooks goal, Git stash "
+                "for a Git branch goal, positional encoding for a multi-head attention goal), "
+                "is not study material, or lacks enough context."
             ),
         },
     )
