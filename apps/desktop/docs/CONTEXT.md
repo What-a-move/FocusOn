@@ -56,7 +56,7 @@
 
 - Issue #29(2026-11-26): Desktop에서 모의 응답으로 학습 정리 상태와 노트 열기·복사를 확인했다. #129 디자인 검토용으로 대기·생성·근거 부족·완료·실패 화면을 캡처했다. 신규 사용자용 화면 분석 동의에 복습 노트 생성 목적과 저장 범위·보관 기간을 반영했다. 현재 사용자가 없어 기존 사용자 이관은 생략한다. 실제 동의·근거 저장과 30초 경계 QA는 [다음 작업](NEXT_TASK.md#issue-29-학습-정리-동의와-실제-연동-qa)에 정리했다.
 
-- [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356) 반영 후 멈춤·재개·멈춘 채 종료·이전 회차의 실제 응답과 화면을 확인한다. [기획](features/report-pause-timeline-PLAN.md)
+- [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356)를 반영한 테스트 환경에서 멈춤·재개·멈춘 채 종료·이전 회차·조회 재시도를 확인했다. [기획](features/report-pause-timeline-PLAN.md) · [결과](features/report-pause-timeline-REPORT.md)
 
 - Issue #101 모듈 연동 로거(2026-10-29): Main 공용 `log()`가 JSON 한 줄을 `userData/logs/focuson.log`에 쌓는다(1MB 회전, 허용 필드만, 제목·본문은 글자 수). 모든 서버 요청에 `X-Trace-Id`와 `api.*`/`decision.*` OUT·IN·fail, 세션 `state.transition`, `notify.fire`, `power.suspend/resume`을 남긴다. 서버 쪽 traceId 기록이 붙으면 추적표로 실제 확인한다(결정 030).
 - Issue #36에서 `FocusOn-design/onboarding.html` 시안(2026-10-21 합의 순서)에 맞춰 온보딩 4단계 UI를 구현했다: 닉네임(`/onboarding`) → Extension 연결(`/onboarding/extension`) → 권한·동의(`/onboarding/permissions`, 동의 → 권한 확인) → 분석 제외 사이트(`/onboarding/sites`). 서버 호출은 Main `OnboardingService`가 Desktop 토큰으로 처리한다(만료 시 refresh 1회·재시도 1회). Backend 온보딩 API가 아직 없어 실제 왕복은 미검증이다. macOS 권한(화면 기록·카메라·시험 알림)은 Main IPC로 실제 연결했다. 로그인 뒤 온보딩이 필요한 사용자는 `/onboarding/`으로 이동한다(2026-10-22).

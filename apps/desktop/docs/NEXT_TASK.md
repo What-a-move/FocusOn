@@ -4,7 +4,7 @@
 
 ## 가장 먼저 진행할 작업
 
-- [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356) 반영 후 멈춤·재개·멈춘 채 종료·이전 회차의 실제 응답과 화면을 확인한다. [기획](features/report-pause-timeline-PLAN.md)
+- [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356)를 반영한 테스트 환경에서 멈춤·재개·멈춘 채 종료·이전 회차·조회 재시도를 확인했다. [기획](features/report-pause-timeline-PLAN.md) · [결과](features/report-pause-timeline-REPORT.md)
 
 - 작업명: 집중 중 안내 말풍선 — 오프라인·제외한 앱·민감한 화면·카메라 (PR #351)
 - 상태: 자동 테스트와 모의 응답에서 안내 4종·해제를 확인했다. 실제 macOS 집중 세션에서 제외 앱과 민감 화면 안내를 확인했다(2026-11-26). [결과](features/session-notices-REPORT.md)
