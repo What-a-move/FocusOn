@@ -1,10 +1,8 @@
 import type { ApiResult } from './auth-api.cjs'
 import type { AuthService } from './auth-service.cjs'
 import { parseReadiness } from '../shared/onboarding-contract.cjs'
+import { version as displayedConsentVersion } from '../shared/consent-document.json'
 import type { OnboardingReadiness, OnboardingSummary, RequiredConsent } from '../shared/onboarding-contract.cjs'
-
-// 동의 버전은 서버 GET /users/me/consents의 currentVersion을 쓴다(2026-10-22 합의). 응답에 없을 때만 이 값을 쓴다.
-const FALLBACK_CONSENT_VERSION = '2026-09-17'
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 const anything = () => ({})
@@ -66,15 +64,17 @@ export class OnboardingService {
 
   /** 필수 동의 3개 + 선택 카메라 동의를 항목별로 저장하고, Main이 확인한 화면 기록 상태를 준비 상태에 기록한다. */
   async savePermissionsStep(consents: RequiredConsent[], cameraConsent: boolean): Promise<ApiResult<{ saved: true }>> {
-    // 화면에 보여준 약관과 같은 버전으로 저장되도록 서버가 내려준 현재 버전을 먼저 읽는다.
+    // 서버 버전이 앞서도 앱에서 보여 준 문구를 새 동의로 기록할 수 없다.
     const current = await this.auth.authorizedRequest({ path: '/api/v1/users/me/consents', method: 'GET', expectedStatus: 200, parse: parseConsents })
     if (!current.success) return current
-    const consentVersion = current.data.currentVersion ?? FALLBACK_CONSENT_VERSION
+    if (current.data.currentVersion !== displayedConsentVersion) {
+      return { success: false, error: { code: 'LOCAL_CONSENT_VERSION_MISMATCH', retryable: false } }
+    }
     const items: [string, boolean][] = [...consents.map((type): [string, boolean] => [type, true]), ['CAMERA_ANALYSIS', cameraConsent]]
     for (const [type, isGranted] of items) {
       const result = await this.auth.authorizedRequest({
         path: `/api/v1/users/me/consents/${type}`, method: 'PUT', expectedStatus: 200, parse: anything,
-        body: { isGranted, consentVersion, consentSource: 'ONBOARDING' },
+        body: { isGranted, consentVersion: displayedConsentVersion, consentSource: 'ONBOARDING' },
       })
       if (!result.success) return result
     }

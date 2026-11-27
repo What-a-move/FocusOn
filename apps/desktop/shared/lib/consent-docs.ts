@@ -6,6 +6,8 @@ export type DocSection = { heading: string; items: string[] }
 export type Detail = { title: string; required: boolean; summary: string; sections: DocSection[] }
 export type Consent = { id: string; title: string; summary?: string; detail: Detail }
 
+export const screenAnalysisSummary = '집중하는 동안 화면이 목표와 관련 있는지 확인해요. 관련 화면에서 확인한 학습 개념을 저장해 복습 노트를 만들어요. 화면 캡처와 글자 원문은 저장하지 않아요.'
+
 export const requiredConsents: Consent[] = [
   {
     id: 'terms',
@@ -56,23 +58,26 @@ export const requiredConsents: Consent[] = [
   {
     id: 'screen-analysis',
     title: '화면 분석',
-    summary: '지금 보는 화면이 목표와 관련 있는지만 확인해요',
+    summary: '화면이 목표와 관련 있는지 확인하고 복습 노트를 만들어요',
     detail: {
       title: '화면 분석',
       required: true,
-      summary: '집중하는 동안 지금 보는 화면이 목표와 관련 있는지만 확인해요. 화면은 저장하지 않아요.',
+      summary: screenAnalysisSummary,
       sections: [
         { heading: '무엇을 확인하나요', items: [
           '앱 이름과 창 제목, Chrome 탭 제목과 도메인',
           '앱 정보만으로 판단하기 어려울 때만, 지금 보이는 화면의 글자',
-          '저장하는 건 판단 결과(관련 있음·관련 없음·판단 보류)와 시각뿐이에요.',
         ] },
-        { heading: '저장하지 않는 것', items: ['화면 캡처 원본과 화면 글자 원문', '비밀번호·인증번호·결제 정보', '메시지·이메일 본문'] },
+        { heading: '무엇을 저장하나요', items: [
+          '화면이 목표와 관련 있는지 판단한 결과와 시각',
+          '목표와 관련 있는 화면에서 확인한 학습 개념과 근거의 종류. 복습 노트를 만드는 데 써요.',
+        ] },
+        { heading: '학습 정리 근거에 저장하지 않는 것', items: ['화면 캡처와 글자 원문, 창·탭 제목, 전체 주소', '비밀번호·인증번호·결제 정보 등 개인정보', '메시지·이메일 본문'] },
         { heading: '보지 않는 화면', items: [
           '비밀번호·결제·인증·메시지처럼 민감한 화면은 자동으로 건너뛰어요.',
           '설정에서 제외한 앱과 사이트도 내용을 보지 않고 시간만 기록해요.',
         ] },
-        { heading: '얼마나 보관하나요', items: ['판단 결과는 세션이 끝난 뒤 90일 동안 보관하고, 그 뒤에는 합계만 남겨요.'] },
+        { heading: '얼마나 보관하나요', items: ['판단 결과와 학습 정리 근거는 세션이 끝난 뒤 90일 동안 보관해요.', '복습 노트는 세션이 끝난 뒤 1년 동안 보관해요.'] },
         { heading: '동의하지 않으면', items: ['동의하지 않을 수 있어요. 다만 집중을 시작할 수 없어요.', '동의한 뒤에도 설정에서 언제든 철회할 수 있어요.'] },
       ],
     },
