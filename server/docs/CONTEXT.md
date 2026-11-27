@@ -17,6 +17,10 @@
 
 - #350은 같은 목표·Desktop 전경에서 새 분석 직전까지 확정 RELATED/FAR 시간을 보존한다. 전경 교체 시 체크포인트를 닫는다.
 
+## #354 Extension 응답 추적 ID
+
+- 허용된 Chrome Extension origin에 `X-Trace-Id` 응답을 노출한다. [이슈 #354](https://github.com/What-a-move/FocusOn/issues/354).
+
 ## DR-030 목표 프로필·세션 할 일 연동 (2026-11-24)
 
 - 목표 다듬기 응답에 검증한 프로필을 공개하고, 목표 생성은 사용자 수정본·기존 초안·내부 확장 순으로 사용한다. 프로필 확장 실패에도 목표는 저장한다.

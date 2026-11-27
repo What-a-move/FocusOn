@@ -7,6 +7,8 @@ export const GOAL_CHANNELS = {
   listOpen: 'goal:listOpen',
   remove: 'goal:remove',
   complete: 'goal:complete',
+  updateProfile: 'goal:updateProfile',
+  regenerateProfile: 'goal:regenerateProfile',
 } as const
 
 export type GoalDecision = 'CLEAR' | 'AMBIGUOUS' | 'MULTI_GOAL' | 'UNKNOWN_TERM' | 'INVALID'
@@ -43,6 +45,10 @@ export type GoalsApi = {
   listOpen(cursor?: string): Promise<IpcResult<OpenGoalList>>
   remove(goalId: string): Promise<IpcResult<Record<string, never>>>
   complete(goalId: string): Promise<IpcResult<Record<string, never>>>
+  /** 범위를 통째로 바꾼다. 응답은 저장된 할 일(범위 포함)이다. */
+  updateProfile(input: { goalId: string; goalProfile: GoalProfile }): Promise<IpcResult<CreatedGoal>>
+  /** 저장된 문구로 범위를 새로 만든다. 실패하면 서버는 기존 범위를 그대로 둔다. */
+  regenerateProfile(goalId: string): Promise<IpcResult<CreatedGoal>>
 }
 
 export const MAX_QUESTIONS = 2
@@ -88,6 +94,10 @@ export function isGoalProfile(value: unknown): value is GoalProfile {
 }
 
 export const isGoalId = (value: unknown): value is string => isId(value)
+
+export function isProfileUpdate(value: unknown): value is { goalId: string; goalProfile: GoalProfile } {
+  return isRecord(value) && Object.keys(value).length === 2 && isId(value.goalId) && isGoalProfile(value.goalProfile)
+}
 
 export function isGoalListCursor(value: unknown): value is string | null {
   return value === null || isText(value, 1, 512)

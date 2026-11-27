@@ -62,7 +62,11 @@ def validate_route(payload):
 class ScreenEncoder:
     def __init__(self, directory):
         self.device = "mps" if torch.backends.mps.is_available() else "cpu"
-        self.tokenizer = AutoTokenizer.from_pretrained(directory, local_files_only=True)
+        # transformers 4.57.3 warns about a Mistral regex for any local config saved by
+        # 4.57.3. This XLM-R tokenizer uses Metaspace, so the flag only silences that false alarm.
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            directory, local_files_only=True, fix_mistral_regex=False
+        )
         self.model = AutoModel.from_pretrained(directory, local_files_only=True).eval().to(self.device)
         self.words = HashingVectorizer(
             n_features=4096, ngram_range=(1, 2), binary=True, alternate_sign=False, dtype=np.float32

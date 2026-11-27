@@ -91,6 +91,8 @@ const focusOnApi: FocusOnApi = {
     listOpen: (cursor) => ipcRenderer.invoke(GOAL_CHANNELS.listOpen, cursor ?? null),
     remove: (goalId) => ipcRenderer.invoke(GOAL_CHANNELS.remove, goalId),
     complete: (goalId) => ipcRenderer.invoke(GOAL_CHANNELS.complete, goalId),
+    updateProfile: (input) => ipcRenderer.invoke(GOAL_CHANNELS.updateProfile, { goalId: input.goalId, goalProfile: input.goalProfile }),
+    regenerateProfile: (goalId) => ipcRenderer.invoke(GOAL_CHANNELS.regenerateProfile, goalId),
   },
   sessions: {
     getFocusSettings: () => ipcRenderer.invoke(SESSION_CHANNELS.focusSettings),

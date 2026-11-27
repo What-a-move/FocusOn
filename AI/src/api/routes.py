@@ -1,7 +1,8 @@
 """Analyze verified Backend input without storing or logging content text."""
 import json
-import secrets
 import logging
+import re
+import secrets
 from time import perf_counter
 from typing import Annotated
 from uuid import UUID
@@ -12,7 +13,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
 from starlette.requests import ClientDisconnect
 
-from .reception import AnalysisReception, AnalysisDecisionResponse
+from .reception import (
+    REVIEW_CONCEPT_MAX_LENGTH,
+    AnalysisDecisionResponse,
+    AnalysisReception,
+    ReviewEvidence,
+)
 from .relevance_contract import adapt_screen_request
 from .schemas import GoalProfile, InternalSchema, SafeInputError
 from ..analysis.acquisition_policy import desktop_target_block_reason
@@ -20,7 +26,7 @@ from ..preprocessing.adapter import observation_is_current
 from ..preprocessing.models import ContentSource, ExtractionStatus
 from ..preprocessing.validator import contains_sensitive_data
 from ..models.screen_activity.beta_decision import beta_decision
-from ..models.screen_activity.goal_match import goal_terms, match_goal
+from ..models.screen_activity.goal_match import goal_terms, match_goal, review_concept
 from ..utils.logger import log_event
 
 logger = logging.getLogger(__name__)
@@ -112,6 +118,7 @@ async def analyze_relevance(request: Request) -> AnalysisDecisionResponse:
 def run_analysis(content, classifier, goals) -> AnalysisDecisionResponse:
     label, reason = "UNCERTAIN", "ANALYSIS_UNAVAILABLE"
     goal_id = match_status = None
+    review_evidence = []
     if classifier is not None and content.extraction_status in {ExtractionStatus.SUCCESS, ExtractionStatus.PARTIAL}:
         payload = {
             "contentSource": content.content_source.value,
@@ -136,9 +143,20 @@ def run_analysis(content, classifier, goals) -> AnalysisDecisionResponse:
                 log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
                 match_status = "NOT_ENOUGH"
 
+        if label == "RELATED" and match_status == "MATCHED":
+            try:
+                goal = next(item for item in goals if item.goal_id == goal_id)
+                concept = review_concept(classifier, content, payload, goal)
+                if (concept and len(concept) <= REVIEW_CONCEPT_MAX_LENGTH
+                        and not re.search(r"(?i)://|www\.", concept) and not contains_sensitive_data(concept)):
+                    review_evidence.append(ReviewEvidence(conceptLabel=concept, evidenceType="CONCEPT"))
+            except Exception:
+                log_event(logger, "request.fail", level=logging.WARNING, error_code="ANALYSIS_UNAVAILABLE")
+
     return AnalysisDecisionResponse(decision=label, confidence=None, reasonCode=reason,
                                     modelVersion=MODEL_VERSION, promptVersion=DECISION_VERSION,
-                                    matchedGoalId=goal_id, matchStatus=match_status)
+                                    matchedGoalId=goal_id, matchStatus=match_status,
+                                    reviewEvidence=review_evidence)
 
 
 from src.api.goal_routes import get_goal_workflow

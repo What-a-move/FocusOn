@@ -93,6 +93,7 @@ export class AuthApiClient {
     accessToken?: string,
     extraHeaders: Record<string, string> = {},
     logFields: Record<string, unknown> = {},
+    timeoutMs = 10_000,
   ): Promise<ApiResult<T>> {
     // 요청을 시작하는 쪽이 traceId를 정했으면(재시도·analysis-runs) 그대로 쓰고, 없으면 여기서 만든다.
     const traceId = extraHeaders['X-Trace-Id'] ?? randomUUID()
@@ -109,7 +110,7 @@ export class AuthApiClient {
         },
         body: body ? JSON.stringify(body) : undefined,
         redirect: 'manual',
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (error) {
       return trace.fail(NETWORK_UNAVAILABLE, undefined, isTimeout(error) ? 'timeout' : 'network')

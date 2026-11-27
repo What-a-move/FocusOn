@@ -18,6 +18,10 @@
 
 - #350의 실제 앱 검증에서는 Desktop 재분석이 반복돼도 확정 FAR 10분에 세션당 한 번 제안하는지 확인한다. Chrome에서 같은 제목의 페이지로 이동하는 시점을 정확히 반영하려면 Extension의 전환 신호 연동이 필요하다.
 
+## #354 Extension 응답 추적 ID
+
+- 실제 Chrome Extension에서 `response.headers.get("X-Trace-Id")`로 받은 값과 서버 로그를 대조한다.
+
 ## DR-030 목표 프로필·세션 할 일 연동 (2026-11-24)
 
 - 배포 시 기존·확장 요청을 지원하는 AI를 먼저 올린 뒤 Backend V30~V32를 적용한다.

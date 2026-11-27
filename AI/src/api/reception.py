@@ -16,15 +16,26 @@ class AnalysisReception(InternalSchema):
     ocr: OCRMetadata | None = Field(default=None, repr=False)
 
 
+REVIEW_CONCEPT_MAX_LENGTH = 120
+
+
+class ReviewEvidence(InternalSchema):
+    concept_label: str = Field(alias="conceptLabel", min_length=1, max_length=REVIEW_CONCEPT_MAX_LENGTH, repr=False)
+    evidence_type: Literal["CONCEPT"] = Field(alias="evidenceType")
+
+
 class AnalysisDecisionResponse(ScreenAnalysisResponse):
     matched_goal_id: Identifier | None = Field(alias="matchedGoalId")
     match_status: Literal["MATCHED", "FAR", "NOT_ENOUGH"] | None = Field(alias="matchStatus")
+    review_evidence: list[ReviewEvidence] = Field(default_factory=list, alias="reviewEvidence", max_length=1, repr=False)
 
     @model_validator(mode="after")
     def valid_decision(self):
         if ((self.decision == "RELATED") != (self.match_status is not None)
                 or (self.match_status == "MATCHED") != (self.matched_goal_id is not None)):
             raise ValueError("INVALID_GOAL_MATCH")
+        if self.review_evidence and (self.decision != "RELATED" or self.match_status != "MATCHED"):
+            raise ValueError("INVALID_REVIEW_EVIDENCE")
         # Backend supports uncalibrated decisions with a null confidence.
         if not self.prompt_version.endswith("-uncalibrated"):
             return super().valid_decision()

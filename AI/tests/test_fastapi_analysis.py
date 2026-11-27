@@ -81,7 +81,8 @@ def test_decision_contract(payload, source, scores, decision, reason):
                                "modelVersion": "e5-activity-10168",
                                "promptVersion": "e5-activity-v1-uncalibrated",
                                "matchedGoalId": None,
-                               "matchStatus": "NOT_ENOUGH" if decision == "RELATED" else None}
+                               "matchStatus": "NOT_ENOUGH" if decision == "RELATED" else None,
+                               "reviewEvidence": []}
     if decision != "RELATED":
         assert not model.embeddings
     assert model.inputs == [{
@@ -285,6 +286,49 @@ def test_body_chunk_after_site_menu_can_support_task(payload, marker, expected):
     assert (result["decision"], result["matchedGoalId"], result["matchStatus"]) == ("RELATED", *expected)
 
 
+@pytest.mark.parametrize(("source", "extraction", "body_prefix", "goal_score", "status", "evidence"), [
+    ("CHROME_DOM", "SUCCESS", "React useState를 사용합니다. ", .90, "MATCHED", True),
+    ("DESKTOP_APP_OCR", "SUCCESS", "react usestate를 사용합니다. ", .90, "MATCHED", True),
+    ("CHROME_DOM", "SUCCESS", "", .90, "MATCHED", False),
+    ("CHROME_DOM", "SUCCESS", "React useStateful을 사용합니다. ", .90, "MATCHED", False),
+    ("CHROME_DOM", "PARTIAL", "React useState를 사용합니다. ", .90, "MATCHED", False),
+    ("TAB_META", "SUCCESS", "", .90, "MATCHED", False),
+    ("CHROME_DOM", "SUCCESS", "React useState를 사용합니다. ", .79, "FAR", False),
+])
+def test_review_evidence_requires_matched_goal_and_observed_concept(
+    payload, source, extraction, body_prefix, goal_score, status, evidence
+):
+    request = payload["request"]
+    goal = "React useState 사용법"
+    request.update(goalSnapshot=goal)
+    payload["goal"]["text"] = goal
+    request["metadata"] = {
+        "appName": "Preview" if source == "DESKTOP_APP_OCR" else "Google Chrome",
+        "pageTitle": "React useState",
+    }
+    request["contentSource"] = payload["context"]["contentSource"] = source
+    payload["extractionStatus"] = extraction
+    if source == "TAB_META":
+        request.pop("contentPayload")
+    else:
+        # A repeated title is removed. A different catalog concept in the body is irrelevant.
+        request["contentPayload"]["text"] = (
+            "React useState\n" + body_prefix + "React useEffect를 비교합니다. " + LONG_BODY
+        )
+    model = FixedScores(similarities={goal: goal_score})
+    model.topic_bank = TopicBank([(0., 0., 1.)], [(0., 0., 1.)],
+                                topics=["React useState", "React useEffect"])
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+
+    assert response.status_code == 200
+    result = response.json()
+    assert (result["decision"], result["matchStatus"]) == ("RELATED", status)
+    assert result["reviewEvidence"] == (
+        [{"conceptLabel": "React useState", "evidenceType": "CONCEPT"}] if evidence else []
+    )
+
+
 def test_matching_failure_keeps_activity_decision(payload):
     model = FixedScores()
 
@@ -325,3 +369,78 @@ def test_far_requires_full_body_with_independent_study_signal(payload):
         payload["extractionStatus"] = "PARTIAL"
         partial = client.post(PATH, json=payload, headers=HEADERS).json()
         assert (partial["decision"], partial["matchStatus"]) == ("RELATED", "NOT_ENOUGH")
+
+
+@pytest.mark.parametrize("source,extraction,title,goal,expected", [
+    ("CHROME_DOM", "SUCCESS", "AWS Lambda 함수", "Django 모델 만들기", "FAR"),
+    ("CHROME_DOM", "SUCCESS", "Express 라우팅", "Node.js fs 설명 읽기", "NOT_ENOUGH"),
+    ("CHROME_DOM", "PARTIAL", "AWS Lambda 함수", "Django 모델 만들기", "NOT_ENOUGH"),
+    ("TAB_META", "SUCCESS", "AWS Lambda 함수", "Django 모델 만들기", "NOT_ENOUGH"),
+])
+def test_family_far_only_for_complete_body_and_different_family(payload, source, extraction, title, goal, expected):
+    request = payload["request"]
+    request["contentSource"] = payload["context"]["contentSource"] = source
+    request["goalSnapshot"] = payload["goal"]["text"] = goal
+    request["metadata"]["pageTitle"] = title
+    payload["extractionStatus"] = extraction
+    if source == "CHROME_DOM":
+        request["contentPayload"]["text"] = f"{title} 실습. " + LONG_BODY
+    else:
+        request.pop("contentPayload")
+    model = FixedScores(similarities={goal: .82})
+    vectors = np.repeat([other_topic(.92), task_vector(.65), [0., 0., -1.]], 3, axis=0)
+    fields = ["AWS"] * 3 + ["Django"] * 3 + ["Node.js와 Express"] * 3
+    model.topic_bank = TopicBank(vectors, vectors, fields)
+
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "RELATED"
+    assert response.json()["matchStatus"] == expected
+    assert response.json()["matchedGoalId"] is None
+
+
+def test_ocr_operation_symbols_can_attribute_without_product_name(payload):
+    request = payload["request"]
+    request.pop("goalSnapshot")
+    payload.pop("goal")
+    request.update(goalVersion=1, goals=[
+        {"goalId": "goal-demo", "goalText": "MongoDB find로 문서 조회하기"},
+        {"goalId": "aggregate", "goalText": "MongoDB aggregation 파이프라인으로 집계하기",
+         "goalProfile": {"mainTopic": "집계 파이프라인", "purpose": "CONCEPT_LEARNING",
+                         "coreTopics": ["$match 스테이지", "$group 스테이지", "$sort 스테이지"]}},
+    ])
+    request["contentSource"] = payload["context"]["contentSource"] = "DESKTOP_APP_OCR"
+    request["metadata"] = {"appName": "Preview", "windowTitle": "notes.txt"}
+    request["contentPayload"]["text"] = (
+        "db.orders.aggregate([{ $match: { status: 'paid' } }, { $group: { _id: '$category', "
+        "total: { $sum: '$amount' } } }, { $sort: { total: -1 } }])"
+    )
+    model = FixedScores(similarities={"MongoDB find로 문서 조회하기": .91})
+    vectors = [other_topic(.93), task_vector(.58), other_topic(.94)]
+    model.topic_bank = TopicBank(vectors, vectors, ["MongoDB"] * 3)
+
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+
+    assert response.status_code == 200
+    result = response.json()
+    assert (result["decision"], result["matchStatus"], result["matchedGoalId"]) == ("RELATED", "MATCHED", "aggregate")
+
+
+def test_family_name_only_cannot_confirm_specific_task_from_metadata(payload):
+    request = payload["request"]
+    request["goalSnapshot"] = payload["goal"]["text"] = "React Context로 전역 상태 공유하기"
+    request["contentSource"] = payload["context"]["contentSource"] = "TAB_META"
+    request["metadata"]["pageTitle"] = "React 공식 문서"
+    request.pop("contentPayload")
+    model = FixedScores(similarities={"React Context로 전역 상태 공유하기": .94})
+    vectors = [task_vector(.95)] * 3
+    model.topic_bank = TopicBank(vectors, vectors, ["React"] * 3)
+
+    with TestClient(create_app(api_key=KEY, classifier_factory=lambda: model)) as client:
+        response = client.post(PATH, json=payload, headers=HEADERS)
+
+    assert response.status_code == 200
+    assert response.json()["matchStatus"] == "NOT_ENOUGH"
