@@ -506,7 +506,8 @@ class AnalysisApiTests {
   @Test
   void verifiedReviewEvidenceIsStoredOncePerConcept() {
     var f = fixture();
-    Instant now = Instant.now().minusSeconds(10);
+    // PostgreSQL은 나노초를 마이크로초로 반올림하므로 저장 가능한 정밀도로 맞춘다.
+    Instant now = Instant.now().minusSeconds(10).truncatedTo(ChronoUnit.MICROS);
     var labels = List.of("Spring  Transaction", "spring transaction", "JPA Lock");
     for (int i = 0; i < labels.size(); i++) {
       when(ai.analyze(any(), any(), anyLong())).thenReturn(withEvidence(f.goalId(),
@@ -520,8 +521,7 @@ class AnalysisApiTests {
         .map(LearningReviewEvidenceEntity::getConceptLabel).toList());
     assertEquals("CONCEPT", stored.getFirst().getEvidenceType());
     assertEquals("CHROME_DOM", stored.getFirst().getContentSource());
-    assertEquals(now.truncatedTo(ChronoUnit.MICROS),
-        stored.getFirst().getObservedAt().truncatedTo(ChronoUnit.MICROS));
+    assertEquals(now, stored.getFirst().getObservedAt());
   }
 
   @Test
