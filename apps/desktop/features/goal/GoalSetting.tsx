@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { ConfirmationSource, CreatedGoal, GoalProfile, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
-import { CONFIRMED_GOAL_KEY, goalApi, readPicked, goalLength, MAX_QUESTIONS, MAX_TODO_PICK, TODO_SAVED_KEY, type ClarifyResult } from '../../shared/api/goal-api'
+import type { ConfirmationSource, CreatedGoal, PreviousAnswer } from '../../electron/shared/goal-contract.cjs'
+import { goalApi, readPicked, reconcilePicked, writePicked, goalLength, MAX_QUESTIONS, MAX_TODO_PICK, TODO_SAVED_KEY, type ClarifyResult } from '../../shared/api/goal-api'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
@@ -14,7 +14,7 @@ type View = 'entry' | 'questions' | 'candidates' | 'review'
 type QuestionMode = 'term' | 'scope' | 'multi'
 type Line = { text: string; error?: boolean; typing?: boolean }
 type Feedback = { title: string; body: string; info?: boolean } | null
-type Review = { goal: string; caption: string; source: ConfirmationSource; profile?: GoalProfile; candidates?: string[]; editableGoal?: boolean }
+type Review = { goal: string; caption: string; source: ConfirmationSource; candidates?: string[]; clarificationSessionId?: string }
 
 const STAGE: Record<View, number> = { entry: 0, questions: 1, candidates: 1, review: 2 }
 const STAGE_LABEL = ['새 할 일', '다듬기', '확인']
@@ -35,7 +35,7 @@ function Options({ labels, selected, onChoose, onSubmit, label }: { labels: stri
 /** 새 할 일 적기 (FocusOn-design/todo-goals.html?view=add). AI가 다듬고(질문 최대 2회) 저장한 뒤 할 일 고르기로 돌아가 골라 둔다. */
 export function GoalSetting() {
   const router = useRouter()
-  const { goals: openGoals } = useOpenGoals()
+  const { goals: openGoals, loading: loadingGoals, failed: goalsFailed, nextCursor } = useOpenGoals()
   const [view, setView] = useState<View>('entry')
   const [draft, setDraft] = useState('')
   const [hint, setHint] = useState<{ text: string; error: boolean }>({ text: '2~40자', error: false })
@@ -81,15 +81,20 @@ export function GoalSetting() {
     setSelected(-1)
   }
 
+  const resetClarification = () => {
+    setClarificationSessionId(null)
+    setAnswers([])
+  }
+
   const toEntry = (text: string, say: Line = { text: ASK }) => {
     go('entry', say)
     setHint({ text, error: false })
     queueMicrotask(() => inputRef.current?.focus())
   }
 
-  const toReview = (goal: string, caption: string, source: ConfirmationSource, profile?: GoalProfile, candidates?: string[], editableGoal?: boolean) => {
+  const toReview = (goal: string, caption: string, source: ConfirmationSource, candidates?: string[], confirmedSessionId?: string) => {
     partialSave.current = []
-    const next = { goal, caption, source, profile, candidates, editableGoal }
+    const next = { goal, caption, source, candidates, clarificationSessionId: confirmedSessionId }
     setReview(next)
     // 할 일 하나는 확인 없이 바로 저장한다. 나눈 할 일만 확인 화면을 거친다.
     if (!candidates) { void save(next); return }
@@ -113,11 +118,11 @@ export function GoalSetting() {
     switch (result.decision) {
       case 'CLEAR':
         if (result.goalCandidates.length >= 2) {
-          toReview(result.goalCandidates[0], '나눈 할 일', 'MANUAL_CONFIRMED', undefined, result.goalCandidates)
-        } else if (!result.normalizedGoalText || goalLength(result.normalizedGoalText) < 2 || goalLength(result.normalizedGoalText) > 40) {
-          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED', result.goalProfileDraft, undefined, true)
+          toReview(result.goalCandidates[0], '나눈 할 일', 'MANUAL_CONFIRMED', result.goalCandidates)
+        } else if (!result.clarificationSessionId || !result.normalizedGoalText || goalLength(result.normalizedGoalText) < 2 || goalLength(result.normalizedGoalText) > 40) {
+          toReview(goalText, '직접 정한 목표', 'MANUAL_CONFIRMED')
         } else {
-          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED', result.goalProfileDraft)
+          toReview(result.normalizedGoalText, '확인한 목표', 'AI_CONFIRMED', undefined, result.clarificationSessionId)
         }
         return
       case 'INVALID':
@@ -147,15 +152,21 @@ export function GoalSetting() {
     setBusy(true)
     setFeedback(null)
     setLine({ text: '할 일을 살펴보고 있어요', typing: true })
-    const result = await goalApi.clarify({ goalText, conversationTurn: asked, previousAnswers, ...(clarificationSessionId ? { clarificationSessionId } : {}) })
+    // 서버는 conversationTurn이 보낸 답 개수와 같아야 받는다. 실패·문장 수정 뒤에는 받은 질문 수(asked)와 답 개수가 달라질 수 있다.
+    const result = await goalApi.clarify({ goalText, conversationTurn: previousAnswers.length, previousAnswers, ...(clarificationSessionId ? { clarificationSessionId } : {}) })
     // [주의] 응답을 기다리는 동안 입력이 바뀌었으면(요청 번호가 달라졌으면) 늦게 온 결과를 버린다.
     if (id !== request.current) return
     setBusy(false)
     if (!result.success) {
       const offline = result.error.code === 'LOCAL_NETWORK_UNAVAILABLE'
+      // 질문에 답하다 실패하면 답을 지우지 않고 그 화면에 남겨 다시 시도하게 한다(하단 보조 버튼은 그대로).
+      if (view === 'questions' && question) {
+        setLine({ text: question.text })
+        setFeedback({ title: '할 일을 살펴보지 못했어요.', body: offline ? errorText(result.error) : asked >= MAX_QUESTIONS ? '다시 시도하거나 지금 문구로 저장할 수 있어요.' : '다시 시도하거나 문장을 고칠 수 있어요.' })
+        return
+      }
       setManual('error')
-      // [디자인] 실패는 하단 안내에서 한 번만 말한다. 포키 말풍선은 오류색 없이 다음 행동만 권한다.
-      toEntry('2~40자', offline ? undefined : { text: '지금은 할 일을 살펴보지 못했어요' })
+      toEntry('2~40자')
       setFeedback({ title: '할 일을 살펴보지 못했어요.', body: offline ? errorText(result.error) : '입력한 그대로 저장할 수 있어요.' })
       return
     }
@@ -166,11 +177,11 @@ export function GoalSetting() {
 
   // 고르던 할 일 뒤에 붙여 할 일 고르기에서 골라진 채로 보이게 하고(최대 3개), 한 줄 안내를 남긴다.
   const backToPick = (goals: { goalId: string; goalText: string }[], note: (picked: boolean) => string) => {
-    const before = readPicked()
+    const before = reconcilePicked(readPicked(), openGoals, !loadingGoals && !goalsFailed && !nextCursor)
     const merged = [...before, ...goals].filter((goal, index, list) => list.findIndex(({ goalId }) => goalId === goal.goalId) === index).slice(0, MAX_TODO_PICK)
     const picked = goals.some(({ goalId }) => merged.some((goal) => goal.goalId === goalId))
+    writePicked(merged)
     try {
-      sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(merged))
       sessionStorage.setItem(TODO_SAVED_KEY, note(picked))
     } catch { /* 저장소를 못 써도 할 일은 서버에 저장됐다. */ }
     router.push('/todo/')
@@ -182,7 +193,6 @@ export function GoalSetting() {
       setFeedback({ title: '할 일 길이를 확인해 주세요.', body: '할 일은 2~40자로 적어 주세요.' })
       return
     }
-    const profile = target.profile
     saving.current = true
     setBusy(true)
     setFeedback(null)
@@ -193,8 +203,7 @@ export function GoalSetting() {
         const payload = {
           goalText: term.trim(),
           confirmationSource: target.source,
-          ...(clarificationSessionId && !target.candidates && !target.editableGoal ? { clarificationSessionId } : {}),
-          ...(profile ? { goalProfile: profile } : {}),
+          ...(target.clarificationSessionId ? { clarificationSessionId: target.clarificationSessionId } : {}),
         }
         const fingerprint = JSON.stringify(payload)
         const idempotencyKey = saveKeys.current.get(fingerprint) ?? crypto.randomUUID()
@@ -257,17 +266,17 @@ export function GoalSetting() {
         return
       }
       if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
-      if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'MANUAL_CONFIRMED'); return }
+      if (question.mode === 'multi') { toReview(question.options[selected], '질문으로 고른 목표', 'MANUAL_CONFIRMED', undefined, clarificationSessionId ?? undefined); return }
       if (selected === 0) { void clarify(draft.trim(), [...answers, { question: question.text, answer: '맞아요' }]); return }
       // 아니에요: 문장을 고치게 한다. 이 질문도 횟수에 들어간다.
-      setAnswers([...answers, { question: question.text, answer: '아니에요' }])
+      resetClarification()
       if (asked >= MAX_QUESTIONS) { exhausted(); return }
       toEntry('문장을 고친 뒤 다시 ‘다음’을 눌러 주세요.')
       return
     }
     if (view === 'candidates') {
       if (selected < 0) { setFeedback({ title: '하나를 골라 주세요.', body: '가장 가까운 항목 하나를 고르면 다음으로 넘어가요.', info: true }); return }
-      toReview(candidates.options[selected], '고른 목표', 'MANUAL_CONFIRMED')
+      toReview(candidates.options[selected], '고른 목표', 'MANUAL_CONFIRMED', undefined, clarificationSessionId ?? undefined)
       return
     }
     if (view === 'review') void save()
@@ -278,8 +287,12 @@ export function GoalSetting() {
   const showSecondary = !(view === 'entry' && !manual)
   const secondary = () => {
     if (busy) return
-    if (view === 'entry') { if (validDraft() && !reuse()) toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED'); return }
-    if (view === 'questions' && asked >= MAX_QUESTIONS) { toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED'); return }
+    if ((view === 'entry' && validDraft() && !reuse()) || (view === 'questions' && asked >= MAX_QUESTIONS)) {
+      toReview(draft.trim(), '직접 정한 할 일', 'MANUAL_CONFIRMED')
+      return
+    }
+    if (view === 'entry') return
+    resetClarification()
     toEntry('2~40자')
   }
 
@@ -287,6 +300,7 @@ export function GoalSetting() {
     request.current += 1 // 진행 중인 확인 응답은 버린다.
     setBusy(false)
     setDraft(value)
+    if (clarificationSessionId || answers.length) resetClarification()
     setHint({ text: goalLength(value) >= 40 ? '40자까지 입력할 수 있어요.' : '2~40자', error: false })
     if (manual === 'error') setManual(null)
     setFeedback(null)
@@ -294,7 +308,7 @@ export function GoalSetting() {
   const onEnter = (event: React.KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) primary() }
 
   const stage = STAGE[view]
-  const primaryLabel = { entry: '저장', questions: '다음', candidates: '이 할 일로', review: '할 일 저장하기' }[view]
+  const primaryLabel = { entry: manual === 'error' ? 'AI 확인 다시 시도' : '저장', questions: '다음', candidates: '이 할 일로', review: '할 일 저장하기' }[view]
   const poki = view === 'questions' || view === 'candidates' ? POKI.thinking : POKI.planning
   const pokiAlt = view === 'questions' || view === 'candidates' ? '생각하는 포키' : '체크리스트를 든 포키'
 

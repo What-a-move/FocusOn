@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { GoalProfile } from '../../electron/shared/goal-contract.cjs'
 import type { SessionGoal } from '../../electron/shared/session-contract.cjs'
-import { CONFIRMED_GOAL_KEY, goalApi, MAX_TODO_PICK, readPicked, TODO_SAVED_KEY } from '../../shared/api/goal-api'
+import { CONFIRMED_GOAL_KEY, goalApi, MAX_TODO_PICK, readPicked, reconcilePicked, TODO_SAVED_KEY, writePicked } from '../../shared/api/goal-api'
 import { errorText } from '../../shared/lib/error-text'
 import { useOpenGoals } from '../../shared/api/useOpenGoals'
 import '../../shared/styles/onboarding-window.css'
@@ -18,7 +18,7 @@ const UNDO_MS = 5000
 export function TodoPick() {
   const router = useRouter()
   const { goals, nextCursor, loading, failed, load } = useOpenGoals()
-  const [picked, setPicked] = useState<SessionGoal[]>([])
+  const [picked, setPicked] = useState<SessionGoal[] | null>(null)
   const [view, setView] = useState<'pick' | 'review'>('pick')
   const [slide, setSlide] = useState(0)
   // 지우기: 서버에 되살리기 API가 없어 먼저 숨기고 UNDO_MS 뒤에 DELETE를 보낸다. 그 사이 되돌리기를 누르면 보내지 않는다.
@@ -43,7 +43,16 @@ export function TodoPick() {
 
   const shown = goals.filter((goal) => !hidden.includes(goal.goalId))
   // 목록에 없는(닫힌) 할 일은 고른 것에서 뺀다. 목록을 다 받기 전에는 그대로 둔다.
-  const visible = !loading && !failed && !nextCursor ? picked.filter(({ goalId }) => shown.some((goal) => goal.goalId === goalId)) : picked
+  const listComplete = !loading && !failed && !nextCursor
+  const visible = reconcilePicked(picked ?? [], shown, listComplete)
+
+  // 다른 화면에 갔다 돌아와도 방금 고른 할 일과 실제 선택 수를 복원한다.
+  const storedSelection = picked === null ? null : JSON.stringify(visible)
+  useEffect(() => {
+    if (storedSelection !== null) {
+      try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, storedSelection) } catch { /* 이 화면의 선택은 유지된다. */ }
+    }
+  }, [storedSelection])
 
   const commit = async () => {
     const job = pending.current
@@ -57,10 +66,10 @@ export function TodoPick() {
   }
   const remove = (goal: SessionGoal) => {
     void commit()
-    const order = picked.findIndex(({ goalId }) => goalId === goal.goalId)
+    const order = visible.findIndex(({ goalId }) => goalId === goal.goalId)
     pending.current = { goal: { goalId: goal.goalId, goalText: goal.goalText }, order, timer: setTimeout(() => { void commit() }, UNDO_MS) }
     setHidden((current) => [...current, goal.goalId])
-    setPicked((current) => current.filter(({ goalId }) => goalId !== goal.goalId))
+    setPicked((current) => (current ?? []).filter(({ goalId }) => goalId !== goal.goalId))
     setNote({ kind: 'deleted', text: goal.goalText })
   }
   const undo = () => {
@@ -69,19 +78,27 @@ export function TodoPick() {
     pending.current = null
     clearTimeout(job.timer)
     setHidden((current) => current.filter((id) => id !== job.goal.goalId))
-    if (job.order >= 0) setPicked((current) => current.length >= MAX_TODO_PICK ? current : [...current.slice(0, job.order), job.goal, ...current.slice(job.order)])
+    if (job.order >= 0) setPicked((current) => {
+      const active = reconcilePicked(current ?? [], shown, listComplete)
+      return active.length >= MAX_TODO_PICK ? active : [...active.slice(0, job.order), job.goal, ...active.slice(job.order)]
+    })
     setNote(null)
   }
   // 화면을 떠나도 지우기로 한 할 일은 지운다.
   useEffect(() => () => { const job = pending.current; if (job) { clearTimeout(job.timer); void goalApi.remove(job.goal.goalId) } }, [])
 
   const full = visible.length >= MAX_TODO_PICK
-  const toggle = (goal: SessionGoal) => setPicked((current) => current.some(({ goalId }) => goalId === goal.goalId)
-    ? current.filter(({ goalId }) => goalId !== goal.goalId)
-    : current.length >= MAX_TODO_PICK ? current : [...current, { goalId: goal.goalId, goalText: goal.goalText }])
+  const toggle = (goal: SessionGoal) => {
+    setSaved('')
+    setPicked((current) => {
+      const active = reconcilePicked(current ?? [], shown, listComplete)
+      if (active.some(({ goalId }) => goalId === goal.goalId)) return active.filter(({ goalId }) => goalId !== goal.goalId)
+      return active.length >= MAX_TODO_PICK ? active : [...active, { goalId: goal.goalId, goalText: goal.goalText }]
+    })
+  }
   const toSetup = () => {
     if (!visible.length) return
-    try { sessionStorage.setItem(CONFIRMED_GOAL_KEY, JSON.stringify(visible)) } catch { /* 저장소를 못 쓰면 집중 준비에서 다시 고르게 된다. */ }
+    writePicked(visible)
     router.push('/session-setup/')
   }
   const review = () => { if (visible.length) { setSlide(0); setView('review') } }
