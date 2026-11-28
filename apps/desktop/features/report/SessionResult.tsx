@@ -10,7 +10,7 @@ import './session-result.css'
 const POLL_MS = 5000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 const pauseTimeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
-const offTaskPercent = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 1 })
+const shareFormat = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 1 })
 const OFF_TASK_STYLE: Record<OffTaskShare['category'], { label: string; color: string; icon: string }> = {
   VIDEO: { label: '영상', color: '#d59072', icon: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM10 8.5l5 3.5-5 3.5z' },
   SNS: { label: 'SNS', color: '#b59bdc', icon: 'M10 3L6 21M18 3l-4 18M4 9h17M3 15h17' },
@@ -181,6 +181,7 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
           <PauseTimeline summary={summary} pauses={pauses} retry={retryPauses} />
         </section>
 
+        <GoalFocusTimes summary={summary} />
         <OffTaskBreakdown key={summary.sessionId} summary={summary} pauses={pauses} />
         <LearningBlock sessionId={summary.sessionId} learning={learning} noLearning={noLearning} />
       </div>
@@ -209,6 +210,28 @@ function observeOffTaskChart(element: HTMLDivElement | null) {
   return () => observer.disconnect()
 }
 
+function GoalFocusTimes({ summary }: { summary: SessionSummary }) {
+  const { goalFocusTimes, relatedDurationMs } = summary
+  if (!goalFocusTimes?.length || relatedDurationMs === null) return null
+
+  return <section className="block" aria-labelledby="goal-time-title">
+    <div className="block-head"><h2 id="goal-time-title">할 일별 시간</h2></div>
+    <p className="muted-note">할 일과 연결된 시간을 전체 목표 활동 시간과 비교했어요.</p>
+    <ul className="goal-focus-times" role="list">
+      {goalFocusTimes.map(({ goalId, goalTextSnapshot, matchedActiveMs }) => {
+        const share = relatedDurationMs === 0 ? 0 : matchedActiveMs / relatedDurationMs
+        const duration = matchedActiveMs === 0 ? '0분' : matchedActiveMs < 60_000 ? '1분 미만' : `약 ${minutes(matchedActiveMs)}분`
+        return <li key={goalId}>
+          <div className="goal-focus-label">
+            <span>{goalTextSnapshot}</span><strong>{duration}<small>{shareFormat.format(share)}</small></strong>
+          </div>
+          <div className="goal-focus-track" aria-hidden="true"><span style={{ width: `${share * 100}%` }} /></div>
+        </li>
+      })}
+    </ul>
+  </section>
+}
+
 function OffTaskBreakdown({ summary, pauses }: { summary: SessionSummary; pauses: SessionPause[] | 'error' | null }) {
   const sessionId = summary.sessionId
   const [breakdown, setBreakdown] = useState<OffTaskReport | 'error' | null>(null)
@@ -223,6 +246,7 @@ function OffTaskBreakdown({ summary, pauses }: { summary: SessionSummary; pauses
   }, [sessionId, attempt])
 
   const first = breakdown && breakdown !== 'error' && Array.isArray(pauses) ? firstOffTaskAt(breakdown, summary, pauses) : null
+  const routes = breakdown && breakdown !== 'error' ? breakdown.routes : undefined
   return <section className="block" aria-labelledby="off-task-title">
     <div className="block-head"><h2 id="off-task-title">딴짓 종류 비율</h2></div>
     {first && <dl className="meta">
@@ -248,11 +272,19 @@ function OffTaskBreakdown({ summary, pauses }: { summary: SessionSummary; pauses
                 <span className="off-task-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={icon} /></svg>
                 </span>
-                <span>{label}</span><strong>{offTaskPercent.format(share)}</strong>
+                <span>{label}</span><strong>{shareFormat.format(share)}</strong>
               </li>
             })}
           </ul>
         </div>}
+    {routes && <div className="off-task-routes">
+      <h3>이탈 경로</h3>
+      <p className="muted-note">확정된 딴짓 기록 건수 기준이에요.</p>
+      <dl className="meta">
+        <div><dt>브라우저</dt><dd>{shareFormat.format(routes.browser)}</dd></div>
+        <div><dt>다른 앱</dt><dd>{shareFormat.format(routes.otherApp)}</dd></div>
+      </dl>
+    </div>}
   </section>
 }
 

@@ -71,6 +71,16 @@
 .result-window .off-task-icon { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--category-color); border-radius: 8px; background: color-mix(in srgb, var(--category-color) 20%, var(--surface)); }
 .result-window .off-task-icon svg { width: 17px; height: 17px; }
 .result-window .off-task-legend strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.result-window .goal-focus-times { display: grid; gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+.result-window .goal-focus-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.result-window .goal-focus-label span { overflow-wrap: anywhere; }
+.result-window .goal-focus-label strong { flex: none; font-variant-numeric: tabular-nums; }
+.result-window .goal-focus-label small { margin-inline-start: 8px; color: var(--muted); font-weight: 500; }
+.result-window .goal-focus-track { height: 6px; margin-top: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.result-window .goal-focus-track span { display: block; height: 100%; border-radius: inherit; background: var(--gold); }
+.result-window .off-task-routes { margin-top: 24px; }
+.result-window .off-task-routes h3 { margin: 0; font-size: 16px; }
+.result-window .off-task-routes .muted-note { margin-top: 4px; }
 .result-window .rate small { display: block; color: var(--muted); font-size: 13px; }
 .result-window .muted-note { margin: 14px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; word-break: keep-all; }
 

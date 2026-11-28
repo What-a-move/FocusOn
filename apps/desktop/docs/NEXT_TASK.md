@@ -4,7 +4,7 @@
 
 ## 가장 먼저 진행할 작업
 
-- 집중 리포트 상세에서 이탈 경로와 할 일별 시간은 서버의 관측 출처와 회차별 할 일 집계 응답 확인 후 연결한다.
+- [#400](https://github.com/What-a-move/FocusOn/issues/400) 이탈 경로와 할 일별 시간 화면은 모의 응답으로 확인했다. 서버 필드 반영 후 실제 회차 QA를 한다. [결과](features/report-detail-REPORT.md)
 
 - [#387](https://github.com/What-a-move/FocusOn/issues/387) 딴짓 종류 비율: 실제 집중 세션에서 두 종류의 딴짓과 연속 판정을 만든 뒤 종료 리포트의 비율과 첫 이탈을 확인한다. 이전 회차의 빈 상태와 설정 동의 상세도 확인한다. [결과](features/report-off-task-category-REPORT.md)
 
