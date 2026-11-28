@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
-import { flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
+import { firstOffTaskAt, flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type OffTaskReport, type OffTaskShare, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
 import './session-result.css'
@@ -10,6 +10,17 @@ import './session-result.css'
 const POLL_MS = 5000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 const pauseTimeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+const offTaskPercent = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 1 })
+const OFF_TASK_STYLE: Record<OffTaskShare['category'], { label: string; color: string; icon: string }> = {
+  VIDEO: { label: '영상', color: '#d59072', icon: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM10 8.5l5 3.5-5 3.5z' },
+  SNS: { label: 'SNS', color: '#b59bdc', icon: 'M10 3L6 21M18 3l-4 18M4 9h17M3 15h17' },
+  COMMUNITY: { label: '커뮤니티', color: '#72b5aa', icon: 'M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-4-4M16 4a3.5 3.5 0 0 1 0 7m-4-3.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z' },
+  SHOPPING: { label: '쇼핑', color: '#d6ad60', icon: 'M4 8h16l1 13H3L4 8Zm4 2V7a4 4 0 1 1 8 0v3' },
+  GAME: { label: '게임', color: '#8daada', icon: 'M7 7h10a4 4 0 0 1 4 3.5l1 5.5a2.5 2.5 0 0 1-4.2 2.2L15.5 16h-7l-2.3 2.2A2.5 2.5 0 0 1 2 16l1-5.5A4 4 0 0 1 7 7Zm1 3v4m-2-2h4m6 0h.01M18 10h.01' },
+  MESSENGER: { label: '메신저', color: '#d092b5', icon: 'M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 3v-3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 7h.01m4 0h.01m4 0h.01' },
+  NEWS: { label: '뉴스', color: '#9db378', icon: 'M5 4h15v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8h2m0-4v14m4-9h7m-7 4h7m-7 4h4' },
+  OTHER: { label: '기타', color: '#a79d92', icon: 'M5 12h.01m7 0h.01m7 0h.01' },
+}
 const AUTO_PAUSE_LABEL: Record<string, string> = { REQUIRED_PERMISSION: '권한 꺼짐', EXTENSION_UNLINKED: '연결 끊김', APP_RESTART: '앱 재시작', SYSTEM: '시스템' }
 // 학습 정리 상태별 한 줄(FocusOn-design/session-report.html `learningHtml`). 시스템 안내라 존댓말이다.
 // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
@@ -87,11 +98,10 @@ export function SessionResult() {
   const shownMinutes = useCountUp(Math.floor(seconds / 60))
   const shownSeconds = useCountUp(seconds % 60)
 
-  if (view.kind === 'loading') return <main className="app-window onboarding-window result-window" aria-busy="true" />
   return <main className="app-window onboarding-window result-window">
-    <div className="scroll">
-      <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
-        {view.kind !== 'ready' ? <>
+    <div className="scroll" aria-busy={view.kind === 'loading'}>
+      {view.kind === 'loading' ? null : <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
+        {view.kind !== 'ready' ? (
           <header className="hero is-missing">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="poki" src={view.kind === 'missing' ? '/design/poki-looking.png' : '/design/poki-worried.png'} alt="" />
@@ -102,20 +112,22 @@ export function SessionResult() {
               <p className="hero-sub" role={view.kind === 'error' ? 'alert' : undefined}>{view.kind === 'error' ? errorText(view) : '홈에서 집중 기록을 다시 열어 주세요.'}</p>
             </div>
           </header>
-        </> : <ResultBody summary={view.summary} learning={view.learning} noLearning={view.noLearning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
-
-        <div className="actions">
-          {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
-          <Link className="btn btn-primary" href="/">홈으로 <span aria-hidden="true">→</span></Link>
-        </div>
-      </div>
+        ) : <ResultBody summary={view.summary} learning={view.learning} noLearning={view.noLearning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
+      </div>}
     </div>
+    <footer className="footer">
+      <div className="footer-inner actions">
+        {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
+        <Link className="btn btn-primary" href="/">홈으로 <span aria-hidden="true">→</span></Link>
+      </div>
+    </footer>
   </main>
 }
 
 function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds }: { summary: SessionSummary; learning: LearningSummary | null; noLearning: boolean; shownMinutes: number; shownSeconds: number }) {
   const abandoned = summary.status === 'ABANDONED'
   const flow = flowOf(summary)
+  const { pauses, retryPauses } = useReportPauses(summary.sessionId)
   const started = summary.startedAt ? new Date(summary.startedAt) : null
   const today = started !== null && started.toDateString() === new Date().toDateString()
   const extended = summary.extensionCount && summary.extendedDurationMs ? ` · ${minutes(summary.extendedDurationMs)}분 연장` : ''
@@ -166,9 +178,10 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
               ? <p className="rate"><small>분석된 구간이 짧아 목표 활동 비율은 표시하지 않았어요.</small></p>
               : <p className="rate" title="판단 보류·분석 안 됨 시간은 빼고 계산해요">목표 활동 비율 <strong>{flow.rate}%</strong></p>}
           </> : <p className="muted-note">아직 분석된 흐름이 없어요.</p>}
-          <PauseTimeline key={summary.sessionId} summary={summary} />
+          <PauseTimeline summary={summary} pauses={pauses} retry={retryPauses} />
         </section>
 
+        <OffTaskBreakdown key={summary.sessionId} summary={summary} pauses={pauses} />
         <LearningBlock sessionId={summary.sessionId} learning={learning} noLearning={noLearning} />
       </div>
       <div className="col">
@@ -183,11 +196,69 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
   </>
 }
 
-function PauseTimeline({ summary }: { summary: SessionSummary }) {
+// 범례가 스크롤 영역에 처음 들어올 때만 나타낸다.
+function observeOffTaskChart(element: HTMLDivElement | null) {
+  if (!element || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  element.dataset.reveal = 'pending'
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return
+    element.dataset.reveal = 'visible'
+    observer.disconnect()
+  }, { threshold: 0.1 })
+  observer.observe(element)
+  return () => observer.disconnect()
+}
+
+function OffTaskBreakdown({ summary, pauses }: { summary: SessionSummary; pauses: SessionPause[] | 'error' | null }) {
+  const sessionId = summary.sessionId
+  const [breakdown, setBreakdown] = useState<OffTaskReport | 'error' | null>(null)
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    void sessionResultApi.getOffTaskBreakdown(sessionId).then((result) => {
+      if (!cancelled) setBreakdown(result.success ? result.data : 'error')
+    })
+    return () => { cancelled = true }
+  }, [sessionId, attempt])
+
+  const first = breakdown && breakdown !== 'error' && Array.isArray(pauses) ? firstOffTaskAt(breakdown, summary, pauses) : null
+  return <section className="block" aria-labelledby="off-task-title">
+    <div className="block-head"><h2 id="off-task-title">딴짓 종류 비율</h2></div>
+    {first && <dl className="meta">
+      <div><dt>첫 이탈 시각</dt><dd><time dateTime={first}>{pauseTimeFormat.format(new Date(first))}</time></dd></div>
+    </dl>}
+    {breakdown === null ? <p className="muted-note" role="status">딴짓 종류를 불러오고 있어요.</p>
+      : breakdown === 'error' ? <>
+        <p className="muted-note" role="status">딴짓 종류를 불러오지 못했어요.</p>
+        <button className="btn btn-ghost report-retry" type="button" onClick={() => {
+          setBreakdown(null)
+          setAttempt((value) => value + 1)
+        }}>딴짓 종류 다시 시도</button>
+      </> : breakdown.categories.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
+        : <div className="off-task-chart" ref={observeOffTaskChart}>
+          <p className="muted-note">분류된 기록 건수 기준이에요. 판단을 보류한 기록은 제외해요.</p>
+          <div className="track" aria-hidden="true">
+            {breakdown.categories.map(({ category, share }) => <span key={category} style={{ flex: share, background: OFF_TASK_STYLE[category].color }} />)}
+          </div>
+          <ul className="off-task-legend" role="list">
+            {breakdown.categories.map(({ category, share }) => {
+              const { label, color, icon } = OFF_TASK_STYLE[category]
+              return <li key={category} style={{ '--category-color': color } as CSSProperties}>
+                <span className="off-task-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={icon} /></svg>
+                </span>
+                <span>{label}</span><strong>{offTaskPercent.format(share)}</strong>
+              </li>
+            })}
+          </ul>
+        </div>}
+  </section>
+}
+
+function useReportPauses(sessionId: string) {
   const [pauses, setPauses] = useState<SessionPause[] | 'error' | null>(null)
   const [attempt, setAttempt] = useState(0)
-  const sessionId = summary.sessionId
-
   useEffect(() => {
     let cancelled = false
     void sessionResultApi.getPauses(sessionId).then((result) => {
@@ -196,9 +267,13 @@ function PauseTimeline({ summary }: { summary: SessionSummary }) {
     return () => { cancelled = true }
   }, [sessionId, attempt])
 
+  return { pauses, retryPauses: () => { setPauses(null); setAttempt((value) => value + 1) } }
+}
+
+function PauseTimeline({ summary, pauses, retry }: { summary: SessionSummary; pauses: SessionPause[] | 'error' | null; retry: () => void }) {
   if (pauses === 'error') return <div className="pause-timeline">
     <p className="muted-note" role="status">일시정지 구간을 불러오지 못했어요.</p>
-    <button className="btn btn-ghost pause-retry" type="button" onClick={() => { setPauses(null); setAttempt((value) => value + 1) }}>일시정지 구간 다시 시도</button>
+    <button className="btn btn-ghost report-retry" type="button" onClick={retry}>일시정지 구간 다시 시도</button>
   </div>
   if (!pauses?.length) return null
 
