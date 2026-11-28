@@ -19,7 +19,8 @@ class AnalysisMigrationTests {
   @ParameterizedTest
   @ValueSource(strings = {"duplicate", "source", "sequence", "confidence", "foreignKey",
       "guard", "relation", "noRawColumns", "crossSourceOrder", "globalDuplicate", "globalInvalid",
-      "unsafeOrderingFlag", "untrustedRelation", "offTaskOnRelated", "offTaskUnknown"})
+      "unsafeOrderingFlag", "untrustedRelation", "offTaskOnRelated", "offTaskUnknown",
+      "messengerOnRelated", "messengerUnknown", "messengerScopes"})
   void preservesSessionAndEnforcesResultConstraints(String scenario) throws Exception {
     String url = System.getenv("SPRING_DATASOURCE_URL");
     String user = System.getenv("SPRING_DATASOURCE_USERNAME");
@@ -46,11 +47,21 @@ class AnalysisMigrationTests {
               + "'model_version','prompt_version','policy_version','created_at',"
               + "'observation_sequence','current_eligible','ordering_untrusted',"
               + "'observation_context_id','match_status','goal_version','matched_goal_id',"
-              + "'off_task_category')"));
+              + "'off_task_category','messenger_scope')"));
           assertEquals(2, number(connection, "SELECT count(*) FROM pg_constraint"
               + " WHERE connamespace = '" + schema + "'::regnamespace AND convalidated"
               + " AND conname IN "
               + "('ck_learning_session_goal_version','ck_analysis_run_goal_version')"));
+        } else if (scenario.equals("messengerScopes")) {
+          assertEquals(1, number(connection,
+              "SELECT count(*) FROM analysis_runs WHERE messenger_scope IS NULL"));
+          for (String scope : new String[] {"LEARNING", "OTHER"}) {
+            execute(connection, "UPDATE analysis_runs SET relation='PRIVACY_BLOCKED',"
+                + "analysis_status='SKIPPED',relation_confidence=NULL,reason_code=NULL,"
+                + "messenger_scope='" + scope + "'");
+            assertEquals(1, number(connection,
+                "SELECT count(*) FROM analysis_runs WHERE messenger_scope='" + scope + "'"));
+          }
         } else if (scenario.equals("crossSourceOrder")) {
           execute(connection, insert.replace("RELATED',0.9,'COMPLETED'",
               "EXCLUDED',NULL,'SKIPPED'").replace("CHROME_DOM", "APP_META")
@@ -76,6 +87,10 @@ class AnalysisMigrationTests {
             case "offTaskOnRelated" -> "UPDATE analysis_runs SET off_task_category='VIDEO'";
             case "offTaskUnknown" -> "UPDATE analysis_runs SET relation='UNRELATED',"
                 + "off_task_category='MUSIC'";
+            case "messengerOnRelated" -> "UPDATE analysis_runs SET messenger_scope='OTHER'";
+            case "messengerUnknown" -> "UPDATE analysis_runs SET relation='PRIVACY_BLOCKED',"
+                + "analysis_status='SKIPPED',relation_confidence=NULL,reason_code=NULL,"
+                + "messenger_scope='DISCORD'";
             case "source" -> insert.replace("CHROME_DOM", "CAMERA_LOCAL");
             case "sequence" -> insert.replace("now(),now(),1", "now(),now(),0");
             case "confidence" -> insert.replace("0.9", "1.1");

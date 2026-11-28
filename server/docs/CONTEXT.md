@@ -1,5 +1,10 @@
 # Backend 작업 컨텍스트
 
+## Issue #383 학습 메신저 보호와 이탈 집계 (2026-11-28)
+
+- `MESSENGER` 보호 입력을 받아 AI 호출 없이 공개 `PRIVACY_BLOCKED / SKIPPED`를 유지한다. 분석 행의 `messenger_scope`에는 선택 여부만 남긴다(V38).
+- 학습용 관측은 현재 이탈을 끊고, 미등록 관측은 검증된 전경 정책에서 시간만 센다. [기획서](features/learning-messenger-analysis-PLAN.md).
+
 ## Issue #381 딴짓 종류 (2026-11-28)
 
 - UNRELATED 판정에 도메인·앱 목록 규칙으로 `offTaskCategory`를 붙여 저장·반환한다(V37). 계획: `features/off-task-category-PLAN.md`.

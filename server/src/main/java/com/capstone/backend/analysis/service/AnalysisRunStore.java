@@ -5,6 +5,7 @@ import com.capstone.backend.analysis.dto.AnalysisDtos.MatchStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Response;
 import com.capstone.backend.analysis.persistence.AnalysisRunEntity;
+import com.capstone.backend.analysis.persistence.AnalysisRunEntity.MessengerScope;
 import com.capstone.backend.analysis.persistence.AnalysisRunRepository;
 import com.capstone.backend.auth.persistence.TokenFamilyRepository;
 import com.capstone.backend.auth.persistence.UserDeviceEntity;
@@ -25,6 +26,8 @@ import com.capstone.backend.user.persistence.AnalysisExcludedDomainRepository;
 import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
+import com.capstone.backend.user.persistence.UserFocusSettingsEntity;
+import com.capstone.backend.user.persistence.UserFocusSettingsRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Duration;
@@ -50,6 +53,7 @@ public class AnalysisRunStore {
   private final ObjectMapper json;
   private final AnalysisRunRepository runs;
   private final UserConsentRepository consents;
+  private final UserFocusSettingsRepository focusSettings;
   private final AnalysisExcludedDomainRepository exclusions;
   private final AuthRateLimiter limits;
   private final InterventionPolicyService interventionPolicy;
@@ -107,6 +111,9 @@ public class AnalysisRunStore {
     if (guard != null) {
       run.complete(AnalysisDecision.guarded(guard));
     }
+    if (guard == GuardStatus.MESSENGER && !order.untrusted()) {
+      run.classifyMessenger(messengerScope(principal.userId(), request.metadata().messengerId()));
+    }
     runs.saveAndFlush(run);
     var selected = run.getObservationContextId() == null
         ? runs.findCurrent(sessionId, device.getId())
@@ -114,7 +121,12 @@ public class AnalysisRunStore {
     boolean policyCurrent = order.eligible()
         && selected.map(value -> value.getId().equals(run.getId())).orElse(false);
     boolean latest = policyCurrent && !order.untrusted();
-    interventionPolicy.prepared(session, run, policyCurrent, guard != null, now);
+    boolean countMessengerTime = latest && run.getMessengerScope() == MessengerScope.OTHER;
+    interventionPolicy.prepared(session, run, policyCurrent, guard != null && !countMessengerTime,
+        now);
+    if (countMessengerTime) {
+      interventionPolicy.completed(session, run, now);
+    }
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),
         session.getInterventionPolicyVersion(), guard, latest, run.response(),
@@ -221,8 +233,8 @@ public class AnalysisRunStore {
         return GuardStatus.PRIVACY_BLOCKED;
       }
     }
-    if (request.guardStatus() == GuardStatus.EXCLUDED) {
-      return GuardStatus.EXCLUDED;
+    if (request.guardStatus() != null) {
+      return request.guardStatus();
     }
     String host = AnalysisPrivacy.host(request);
     boolean excluded = !host.isEmpty() && exclusions.findAllByUserIdOrderByHost(userId).stream()
@@ -232,6 +244,12 @@ public class AnalysisRunStore {
       return GuardStatus.EXCLUDED;
     }
     return AnalysisPrivacy.containsSensitive(request, goals) ? GuardStatus.PRIVACY_BLOCKED : null;
+  }
+
+  private MessengerScope messengerScope(long userId, String messengerId) {
+    return focusSettings.findById(userId).map(UserFocusSettingsEntity::getLearningMessengers)
+        .filter(values -> List.of(values.split(",")).contains(messengerId)).isPresent()
+        ? MessengerScope.LEARNING : MessengerScope.OTHER;
   }
 
   /** 화면 원문 없이 저장했던 목표 사본만 내부 AI로 전달한다. */

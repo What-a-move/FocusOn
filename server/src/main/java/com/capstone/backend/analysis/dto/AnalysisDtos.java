@@ -1,5 +1,9 @@
 package com.capstone.backend.analysis.dto;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Digits;
@@ -9,7 +13,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
+import tools.jackson.databind.JsonNode;
 
 /** 공개 분석 계약. 원문을 포함하는 객체는 기본 toString으로 출력하지 않는다. */
 public final class AnalysisDtos {
@@ -31,7 +37,21 @@ public final class AnalysisDtos {
   public enum AnalysisStatus { COMPLETED, NEEDS_CONFIRMATION, SKIPPED, ERROR }
 
   /** AI를 호출하기 전 클라이언트가 확인한 차단 상태다. */
-  public enum GuardStatus { EXCLUDED, PRIVACY_BLOCKED }
+  public enum GuardStatus {
+    EXCLUDED, PRIVACY_BLOCKED, MESSENGER;
+
+    /** Guard status is negotiated by name. Enum ordinals must not mark a run as protected. */
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public static GuardStatus fromJson(JsonNode value) {
+      if (value == null || value.isNull()) {
+        return null;
+      }
+      if (!value.isString()) {
+        throw new IllegalArgumentException("guardStatus must be a string");
+      }
+      return valueOf(value.asString());
+    }
+  }
 
   /** 판정 원인을 원문 없이 전달한다. */
   public enum ReasonCode {
@@ -42,7 +62,25 @@ public final class AnalysisDtos {
   /** 저장하지 않는 일회성 화면 메타데이터다. */
   public record Metadata(@Size(max = 256) String appName,
       @Size(max = 800) String windowTitle, @Size(max = 800) String pageTitle,
-      @Size(max = 253) String urlHost) {
+      @Size(max = 253) String urlHost, String messengerId,
+      @JsonAnySetter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) @Schema(hidden = true)
+      Map<String, Object> unknownFields) {
+    /** 원문 보관 없이 미정의 키가 있었는지만 기억한다. */
+    public Metadata {
+      unknownFields = unknownFieldMarker(unknownFields);
+    }
+
+    /** 기존 화면 메타데이터에는 보호된 메신저 ID가 없다. */
+    public Metadata(String appName, String windowTitle, String pageTitle, String urlHost) {
+      this(appName, windowTitle, pageTitle, urlHost, null);
+    }
+
+    /** 서버에서 메타데이터를 직접 구성할 때 사용한다. */
+    public Metadata(String appName, String windowTitle, String pageTitle, String urlHost,
+        String messengerId) {
+      this(appName, windowTitle, pageTitle, urlHost, messengerId, null);
+    }
+
     @Override
     public String toString() {
       return "Metadata[redacted]";
@@ -67,7 +105,14 @@ public final class AnalysisDtos {
       @Valid Metadata metadata, @Valid ContentPayload contentPayload,
       @Min(1) @Digits(integer = 16, fraction = 0)
       @DecimalMax("9007199254740991") BigDecimal observationSequence,
-      @Pattern(regexp = "[1-9][0-9]{0,18}") String observationContextId) {
+      @Pattern(regexp = "[1-9][0-9]{0,18}") String observationContextId,
+      @JsonAnySetter @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) @Schema(hidden = true)
+      Map<String, Object> unknownFields) {
+    /** 원문 보관 없이 미정의 키가 있었는지만 기억한다. */
+    public Request {
+      unknownFields = unknownFieldMarker(unknownFields);
+    }
+
     /** 기존 source별 번호 요청은 새 선택 필드 없이 계속 받을 수 있다. */
     public Request(String clientRunId, ContentSource contentSource, Instant observedAt,
         BigDecimal sequence, GuardStatus guardStatus, Metadata metadata,
@@ -84,6 +129,15 @@ public final class AnalysisDtos {
           contentPayload, observationSequence, null);
     }
 
+    /** 기존 전경 참조를 제공하는 호출도 호환한다. */
+    public Request(String clientRunId, ContentSource contentSource, Instant observedAt,
+        BigDecimal sequence, GuardStatus guardStatus, Metadata metadata,
+        ContentPayload contentPayload, BigDecimal observationSequence,
+        String observationContextId) {
+      this(clientRunId, contentSource, observedAt, sequence, guardStatus, metadata,
+          contentPayload, observationSequence, observationContextId, null);
+    }
+
     @Override
     public String toString() {
       return "AnalysisRequest[redacted]";
@@ -93,6 +147,10 @@ public final class AnalysisDtos {
     public UUID runUuid() {
       return UUID.fromString(clientRunId);
     }
+  }
+
+  private static Map<String, Object> unknownFieldMarker(Map<String, Object> fields) {
+    return fields == null || fields.isEmpty() ? Map.of() : Map.of("present", true);
   }
 
   /** UNRELATED 판정에만 붙는 딴짓 종류다(재설계 B). */
