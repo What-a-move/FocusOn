@@ -60,8 +60,9 @@
 .result-window .rate { margin: 18px 0 0; font-size: 15px; line-height: 1.6; }
 .result-window .rate strong { font-size: 20px; font-variant-numeric: tabular-nums; }
 .result-window .off-task-legend { display: grid; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
-.result-window .off-task-legend li { display: grid; grid-template-columns: 136px 1fr; align-items: baseline; gap: 12px; color: var(--muted); }
-.result-window .off-task-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 3px; background: var(--category-color); }
+.result-window .off-task-legend li { display: grid; grid-template-columns: 32px minmax(0, 92px) 1fr; align-items: center; gap: 10px; color: var(--ink); }
+.result-window .off-task-icon { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--category-color); border-radius: 8px; background: color-mix(in srgb, var(--category-color) 20%, var(--surface)); }
+.result-window .off-task-icon svg { width: 17px; height: 17px; }
 .result-window .off-task-legend strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 .result-window .rate small { display: block; color: var(--muted); font-size: 13px; }
 .result-window .muted-note { margin: 14px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; word-break: keep-all; }

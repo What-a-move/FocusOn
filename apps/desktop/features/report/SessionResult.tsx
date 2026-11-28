@@ -11,9 +11,15 @@ const POLL_MS = 5000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 const pauseTimeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
 const offTaskPercent = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 1 })
-const OFF_TASK_LABEL: Record<OffTaskShare['category'], string> = {
-  VIDEO: '영상', SNS: 'SNS', COMMUNITY: '커뮤니티', SHOPPING: '쇼핑',
-  GAME: '게임', MESSENGER: '메신저', NEWS: '뉴스', OTHER: '기타',
+const OFF_TASK_STYLE: Record<OffTaskShare['category'], { label: string; color: string; icon: string }> = {
+  VIDEO: { label: '영상', color: '#d59072', icon: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM10 8.5l5 3.5-5 3.5z' },
+  SNS: { label: 'SNS', color: '#b59bdc', icon: 'M10 3L6 21M18 3l-4 18M4 9h17M3 15h17' },
+  COMMUNITY: { label: '커뮤니티', color: '#72b5aa', icon: 'M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-4-4M16 4a3.5 3.5 0 0 1 0 7m-4-3.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z' },
+  SHOPPING: { label: '쇼핑', color: '#d6ad60', icon: 'M4 8h16l1 13H3L4 8Zm4 2V7a4 4 0 1 1 8 0v3' },
+  GAME: { label: '게임', color: '#8daada', icon: 'M7 7h10a4 4 0 0 1 4 3.5l1 5.5a2.5 2.5 0 0 1-4.2 2.2L15.5 16h-7l-2.3 2.2A2.5 2.5 0 0 1 2 16l1-5.5A4 4 0 0 1 7 7Zm1 3v4m-2-2h4m6 0h.01M18 10h.01' },
+  MESSENGER: { label: '메신저', color: '#d092b5', icon: 'M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 3v-3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 7h.01m4 0h.01m4 0h.01' },
+  NEWS: { label: '뉴스', color: '#9db378', icon: 'M5 4h15v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8h2m0-4v14m4-9h7m-7 4h7m-7 4h4' },
+  OTHER: { label: '기타', color: '#a79d92', icon: 'M5 12h.01m7 0h.01m7 0h.01' },
 }
 const AUTO_PAUSE_LABEL: Record<string, string> = { REQUIRED_PERMISSION: '권한 꺼짐', EXTENSION_UNLINKED: '연결 끊김', APP_RESTART: '앱 재시작', SYSTEM: '시스템' }
 // 학습 정리 상태별 한 줄(FocusOn-design/session-report.html `learningHtml`). 시스템 안내라 존댓말이다.
@@ -201,10 +207,6 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
     return () => { cancelled = true }
   }, [sessionId, attempt])
 
-  const rows = Array.isArray(breakdown) ? breakdown.map(({ category, share }, index) => ({
-    category, share, color: `color-mix(in srgb, var(--flow-other) ${100 - index * 10}%, var(--gold-soft))`,
-  })) : []
-
   return <section className="block" aria-labelledby="off-task-title">
     <div className="block-head"><h2 id="off-task-title">딴짓 종류 비율</h2></div>
     {breakdown === null ? <p className="muted-note" role="status">딴짓 종류를 불러오고 있어요.</p>
@@ -214,16 +216,22 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
           setBreakdown(null)
           setAttempt((value) => value + 1)
         }}>딴짓 종류 다시 시도</button>
-      </> : rows.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
+      </> : breakdown.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
         : <>
           <p className="muted-note">분류된 기록 건수 기준이에요.</p>
           <div className="track" aria-hidden="true">
-            {rows.map(({ category, share, color }) => <span key={category} style={{ flex: share, background: color }} />)}
+            {breakdown.map(({ category, share }) => <span key={category} style={{ flex: share, background: OFF_TASK_STYLE[category].color }} />)}
           </div>
           <ul className="off-task-legend" role="list">
-            {rows.map(({ category, share, color }) => <li key={category} style={{ '--category-color': color } as CSSProperties}>
-              <span>{OFF_TASK_LABEL[category]}</span><strong>{offTaskPercent.format(share)}</strong>
-            </li>)}
+            {breakdown.map(({ category, share }) => {
+              const { label, color, icon } = OFF_TASK_STYLE[category]
+              return <li key={category} style={{ '--category-color': color } as CSSProperties}>
+                <span className="off-task-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={icon} /></svg>
+                </span>
+                <span>{label}</span><strong>{offTaskPercent.format(share)}</strong>
+              </li>
+            })}
           </ul>
         </>}
   </section>
