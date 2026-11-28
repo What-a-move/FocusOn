@@ -19,7 +19,7 @@
 
 ### 완료된 작업
 
-- Desktop 할 일 교체, 목표 진행과 하루 달성, 종료 회고, 학습용 메신저 설정을 연결했다. [#391](https://github.com/What-a-move/FocusOn/issues/391) · [결과](features/desktop-session-redesign-REPORT.md)
+- Desktop 할 일 교체, 목표 진행과 하루 달성, 종료 회고, 설정·온보딩의 학습용 메신저 선택을 연결했다. 달성일 포키와 체크 배지의 표시 영역을 분리했다. [#391](https://github.com/What-a-move/FocusOn/issues/391) · [결과](features/desktop-session-redesign-REPORT.md)
 
 - 집중 중 오프라인·제외 앱·민감 화면·카메라 사용 불가 안내를 연결했다. macOS 앱 기동과 브라우저에서 안내 4종 및 해제를 확인했다. 실제 계정으로 집중을 시작한 뒤 기기 상태를 바꾸는 검증은 남아 있다. [결과](features/session-notices-REPORT.md)
 

@@ -1,5 +1,5 @@
 import type { ConsentList, DeviceStatus, SettingsApi, ThemeSource } from '../../electron/shared/settings-contract.cjs'
-import type { FocusSettings } from '../../electron/shared/session-contract.cjs'
+import type { FocusSettings, LearningMessenger } from '../../electron/shared/session-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -16,6 +16,14 @@ async function viaSettings<T>(call: (api: SettingsApi) => Promise<ApiResult<T>>)
   } catch {
     return UNAVAILABLE
   }
+}
+
+export function coreFocusSettings({ interventionLevel, notificationChannels, cameraAnalysisEnabled, breakSuggestionEnabled }: FocusSettings) {
+  return { interventionLevel, notificationChannels, cameraAnalysisEnabled, breakSuggestionEnabled }
+}
+
+export const MESSENGER_LABELS: Record<LearningMessenger, string> = {
+  DISCORD: 'Discord', SLACK: 'Slack', KAKAOTALK: '카카오톡', TEAMS: 'Teams', OTHER: '기타',
 }
 
 export const settingsApi = {

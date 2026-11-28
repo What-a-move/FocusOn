@@ -4,7 +4,7 @@
 
 ## 가장 먼저 진행할 작업
 
-- [#391](https://github.com/What-a-move/FocusOn/issues/391) 실기기 QA. 집중 중 교체, 목표 저장·달성 표시, 종료 회고, 학습용 메신저 설정을 실제 계정으로 확인한다. [결과](features/desktop-session-redesign-REPORT.md)
+- [#391](https://github.com/What-a-move/FocusOn/issues/391) 실기기 QA. 집중 중 교체, 목표 저장·달성 표시, 종료 회고, 달성 포키 표시, 온보딩과 설정의 메신저 선택을 실제 계정으로 확인한다. [결과](features/desktop-session-redesign-REPORT.md)
 
 - [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356)를 반영한 테스트 환경에서 멈춤·재개·멈춘 채 종료·이전 회차·조회 재시도를 확인했다. [기획](features/report-pause-timeline-PLAN.md) · [결과](features/report-pause-timeline-REPORT.md)
 
@@ -17,7 +17,7 @@
 
 - 작업명: 집중 화면 멈춘 상태 말풍선 (`feat/desktop-session-state-bubble`)
 - 상태: 시안 `session-states.html`대로 직접 멈춤(`잠깐 쉬는 중이야`)·앱 재시작·Chrome 연결 끊김(`다시 연결` → 설정 #devices)·Chrome 사이트 접근 꺼짐·화면 기록 꺼짐(`설정 열기`→`다시 열기`)을 포키 옆 말풍선으로, 자동 멈춤 캡션은 `자동으로 멈춤 · 마지막 확정 시간`. 기존 halt-notice 대체. 브라우저 가짜 응답 확인(2026-11-25). 남은 일: 오프라인·제외 사이트·민감한 화면·카메라·알림 꺼짐 상태는 집중 화면이 신호를 받지 않아 연결 뒤에.
-- 보류: 동의 상세 v1.1 딴짓 종류 저장 문장는 해당 기능이 생길 때 동의 버전과 함께 반영(2026-11-25 사용자 결정).
+- 보류: 동의 상세 v1.1 딴짓 종류 저장 문장은 해당 기능이 생길 때 동의 버전과 함께 반영(2026-11-25 사용자 결정).
 
 - 작업명: 학습 노트 모아 보기 (`feat/desktop-notes-list`)
 - 상태: `/notes/`(회차 없이)를 준비 중 안내에서 노트 목록으로 바꿈 — 시안 `notes.html` 공책 카드(날짜·할 일·핵심 개념 3개·개념 수·분), 노트 더 보기, 빈 상태(졸린 포키 + `집중 시작하기`), 불러오기 실패. `report:learning-notes:list` → `GET /learning-summaries`. 브라우저 가짜 응답 확인(2026-11-25). 남은 일: 서버 목록 응답에 할 일이 하나(goalSnapshot)라 `외 n개`는 못 넣음, 실제 서버 확인.

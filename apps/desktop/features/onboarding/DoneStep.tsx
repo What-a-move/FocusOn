@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { sessionApi } from '../../shared/api/session-api'
 import { OnboardingShell } from './OnboardingShell'
 import { onboardingApi, type OnboardingSummary } from '../../shared/api/onboarding-api'
 
 export function DoneStep() {
   const router = useRouter()
   const [summary, setSummary] = useState<OnboardingSummary | null>(null)
+  const [messengerCount, setMessengerCount] = useState<number | null>(null)
   const [extensionLinked, setExtensionLinked] = useState(false)
 
   useEffect(() => {
     // [유지보수] 요약은 서버가 확정한 값만 보여 준다. 불러오지 못하면 요약 없이 완료 안내만 둔다.
+    void sessionApi.getFocusSettings().then((result) => { if (result.success && result.data.learningMessengers) setMessengerCount(result.data.learningMessengers.length) })
     void onboardingApi.getSummary().then((result) => { if (result.success) setSummary(result.data) })
     void onboardingApi.getReadiness().then((result) => { if (result.success) setExtensionLinked(result.data.steps.extensionLinked) })
   }, [])
@@ -21,6 +24,7 @@ export function DoneStep() {
     summary.screenAnalysisReady ? '화면 기록 허용' : '화면 기록 확인 필요',
     summary.cameraConsent ? '카메라 사용' : '카메라 사용 안 함',
     summary.excludedDomainCount ? `제외 사이트 ${summary.excludedDomainCount}개` : '제외 사이트 없음',
+    ...(messengerCount === null ? [] : [messengerCount ? `학습용 메신저 ${messengerCount}개` : '학습용 메신저 없음']),
   ] : []
 
   return (
