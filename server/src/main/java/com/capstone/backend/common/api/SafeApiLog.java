@@ -130,6 +130,13 @@ public final class SafeApiLog {
         .log("session cleanup candidate failed");
   }
 
+  /** 세션 보관 기간 정리 실패를 식별자와 예외 메시지 없이 기록한다. */
+  public static void sessionRetentionFailure(RuntimeException exception) {
+    LOGGER.atWarn().addKeyValue("component", "session-retention")
+        .addKeyValue("errorClass", exception.getClass().getSimpleName())
+        .log("session retention failed");
+  }
+
   /** 삭제 계정 정리 실패를 사용자 ID나 예외 메시지 없이 기록한다. */
   public static void accountPurgeFailure(RuntimeException exception) {
     LOGGER.atWarn().addKeyValue("component", "deleted-account-purge")

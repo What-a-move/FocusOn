@@ -1,5 +1,9 @@
 # Backend 작업 컨텍스트
 
+## Issue #389 세션 데이터 1년 보관 정리 (2026-11-28)
+
+- 종료 후 1년이 지난 세션과 하위 기록(개입·분석·학습 정리·회고·일시정지 등)을 1시간마다 지운다. 목표·동의·설정은 남긴다(V39 Index). 계획: `features/session-retention-PLAN.md`.
+
 ## Issue #383 학습 메신저 보호와 이탈 집계 (2026-11-28)
 
 - `MESSENGER` 보호 입력을 받아 AI 호출 없이 공개 `PRIVACY_BLOCKED / SKIPPED`를 유지한다. 분석 행의 `messenger_scope`에는 선택 여부만 남긴다(V38).
