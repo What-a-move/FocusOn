@@ -49,6 +49,7 @@
 ## #342 v2 이탈 비율 알림
 
 - 최근 10분 이탈 비율을 기존 `OFF_TASK` 생성 경로에 연결했다. 운영 수치가 확정되기 전에는 기본 비활성이다.
+- Docker Compose에서 두 비율 설정을 Backend 컨테이너 환경으로 전달한다.
 - 정책과 서버 설정은 [기획서](features/off-task-ratio-PLAN.md)의 범위를 따른다. [GitHub 이슈 #342](https://github.com/What-a-move/FocusOn/issues/342).
 
 ## #347 할 일 변경 후 개입 근거 검증
