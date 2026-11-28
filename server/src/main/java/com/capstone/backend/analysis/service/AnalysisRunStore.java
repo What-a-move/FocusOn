@@ -146,19 +146,24 @@ public class AnalysisRunStore {
     var session = ownedSession(principal, prepared.sessionId(), device);
     var run = runs.findById(prepared.runId()).orElseThrow();
     var consentAtCompletion = requiredConsentStamps(principal.userId());
-    var decisionToStore = finalDecision(prepared, run, session,
-        guard(principal.userId(), request, prepared.goals(), consentAtCompletion), decision);
+    var guardAtCompletion = guard(principal.userId(), request, prepared.goals(),
+        consentAtCompletion);
+    var decisionToStore = finalDecision(prepared, run, session, guardAtCompletion, decision);
     run.complete(decisionToStore);
     if (run.getRelation() == com.capstone.backend.analysis.dto.AnalysisDtos.Relation.UNRELATED) {
       run.categorize(OffTaskClassifier.classify(request));
     }
     final Instant now = Instant.now();
-    var evidence = decisionToStore.reviewEvidence();
-    if (evidence != null && consentAtCompletion.equals(prepared.evidenceConsents())) {
+    if (consentAtCompletion.equals(prepared.evidenceConsents())) {
       // 같은 문서 버전으로 다시 동의해도 이전 접수에 대한 저장 권한은 복구하지 않는다.
-      learningEvidence.record(session.getId(), evidence.conceptLabel(),
-          evidence.evidenceType().name(), run.getObservedAt(), run.getContentSource().name(),
-          now);
+      var evidence = decisionToStore.reviewEvidence();
+      if (evidence != null) {
+        learningEvidence.record(session.getId(), evidence.conceptLabel(),
+            evidence.evidenceType().name(), run.getObservedAt(), run.getContentSource().name(),
+            now);
+      } else if (guardAtCompletion == null && decision.reviewEvidence() != null) {
+        recordLateEvidence(prepared, run, session, decision);
+      }
     }
     interventionPolicy.completed(session, run, now);
     return run.response();
@@ -169,11 +174,34 @@ public class AnalysisRunStore {
     if (guard != null) {
       return AnalysisDecision.guarded(guard);
     }
-    if (!prepared.latest() || run.isOrderingUntrusted() || !run.isCurrentEligible()
-        || session.getStatus() != SessionStatus.RUNNING
-        || session.getGoalVersion() != prepared.goalVersion()
+    if (session.getStatus() != SessionStatus.RUNNING
         || !java.util.Objects.equals(session.getLastResumedAt(), prepared.runningSince())) {
       // pause/resume 동안 도착한 결과로 새 실행 구간을 판정하지 않는다.
+      return AnalysisDecision.unavailable();
+    }
+    return eligibleDecision(prepared, run, session, decision);
+  }
+
+  private void recordLateEvidence(Prepared prepared, AnalysisRunEntity run,
+      LearningSessionEntity session, AnalysisDecision decision) {
+    if (session.getStatus() != SessionStatus.ENDED || session.getEndedAt() == null
+        || run.getReceivedAt().isAfter(session.getEndedAt())) {
+      return;
+    }
+    var evidence = eligibleDecision(prepared, run, session, decision).reviewEvidence();
+    if (evidence == null || runs.findCurrent(session.getId(), run.getDevice().getId())
+        .filter(current -> current.getId().equals(run.getId())).isEmpty()) {
+      return;
+    }
+    learningEvidence.recordLate(session.getId(), evidence.conceptLabel(),
+        evidence.evidenceType().name(), run.getObservedAt(), run.getContentSource().name(),
+        prepared.runningSince());
+  }
+
+  private static AnalysisDecision eligibleDecision(Prepared prepared, AnalysisRunEntity run,
+      LearningSessionEntity session, AnalysisDecision decision) {
+    if (!prepared.latest() || run.isOrderingUntrusted() || !run.isCurrentEligible()
+        || session.getGoalVersion() != prepared.goalVersion()) {
       return AnalysisDecision.unavailable();
     }
     Long matchedGoalId = decision.matchedGoalId();

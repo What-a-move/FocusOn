@@ -200,10 +200,11 @@ public class SessionCommandService {
       // 멈춘 구간은 시간이 증가하지 않는다. 재시작 복구 등도 저장 확정값만 사용한다.
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
+    Instant runningSince = session.getLastResumedAt();
     session.end(now, finalActiveMs);
     sessions.flush();
     // 종료와 같은 transaction에서 정리 작업만 등록한다. 생성은 worker가 비동기로 한다.
-    learningSummaries.enqueue(session.getId(), now);
+    learningSummaries.enqueue(session.getId(), now, runningSince);
     var response = new EndResponse(session.getStatus(), session.getVersion(),
         session.getAccumulatedActiveMs(), session.getTargetDurationMs(), session.getEndedAt());
     records.save(IdempotencyRecordEntity.create(user, scope, idempotencyKey, hash,

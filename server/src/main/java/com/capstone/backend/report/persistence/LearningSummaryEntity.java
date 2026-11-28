@@ -40,6 +40,8 @@ public class LearningSummaryEntity {
   private String nextStartPrompt;
   @Column(name = "input_cutoff_at")
   private Instant inputCutoffAt;
+  @Column(name = "input_running_since")
+  private Instant inputRunningSince;
   @Column(name = "attempt_count", nullable = false)
   private short attemptCount;
   @Column(name = "next_attempt_at")
@@ -73,12 +75,14 @@ public class LearningSummaryEntity {
   }
 
   /** 세션 종료 직후 생성 대기 정리를 만든다. 입력은 cutoff까지 도착한 근거로 고정한다. */
-  public static LearningSummaryEntity queued(long sessionId, Instant inputCutoffAt, Instant now) {
+  public static LearningSummaryEntity queued(long sessionId, Instant inputCutoffAt, Instant now,
+      Instant inputRunningSince) {
     var entity = new LearningSummaryEntity();
     entity.sessionId = sessionId;
     entity.status = Status.QUEUED;
     entity.keyConcepts = List.of();
     entity.inputCutoffAt = inputCutoffAt;
+    entity.inputRunningSince = inputRunningSince;
     entity.nextAttemptAt = inputCutoffAt;
     entity.updatedAt = now;
     return entity;
