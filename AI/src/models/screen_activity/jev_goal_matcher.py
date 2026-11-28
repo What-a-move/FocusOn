@@ -18,6 +18,7 @@ from typesafe_sdk import (
 )
 
 from ...config import Settings
+from .cloud_sanitizer import SanitizedMatchPayload, sanitize_goal_match_payload
 from ..errors import (
     InvalidModelResponseError,
     ModelConfigurationError,
@@ -56,23 +57,31 @@ def build_goal_match_state(
     content_source: str,
     goals: Sequence[Any],
     max_body_chars: int = DEFAULT_JEV_MAX_BODY_CHARS,
+    sanitized: SanitizedMatchPayload | None = None,
 ) -> dict[str, Any]:
     """Build sanitized JEV state containing screen title/body and all session goals."""
-    goal_items = []
-    for goal in goals:
-        profile = getattr(goal, "profile", None)
-        goal_items.append(
-            {
-                "goal_id": goal.goal_id,
-                "text": goal.text,
-                "main_topic": profile.main_topic if profile is not None else "",
-                "core_topics": list(profile.core_topics) if profile is not None else [],
-            }
+    if sanitized is None:
+        sanitized = sanitize_goal_match_payload(
+            title=title,
+            body=body,
+            goals=goals,
+            max_body_chars=max_body_chars,
         )
+    if sanitized.blocked:
+        raise ModelUnavailableError(f"JEV_CLOUD_SANITIZATION_BLOCKED:{sanitized.reason}")
+    goal_items = [
+        {
+            "goal_id": goal.goal_id,
+            "text": goal.text,
+            "main_topic": goal.main_topic,
+            "core_topics": list(goal.core_topics),
+        }
+        for goal in sanitized.goals
+    ]
     return {
         "screen": {
-            "title": title,
-            "body": body[:max_body_chars],
+            "title": sanitized.title,
+            "body": sanitized.body,
             "content_source": content_source,
         },
         "goals": goal_items,
@@ -157,13 +166,23 @@ class TypeSafeJevGoalMatcher:
         if not goals:
             raise ValueError("GOALS_REQUIRED")
 
+        sanitized = sanitize_goal_match_payload(
+            title=title,
+            body=body,
+            goals=goals,
+            max_body_chars=DEFAULT_JEV_MAX_BODY_CHARS,
+        )
+        if sanitized.blocked:
+            raise ModelUnavailableError(f"JEV_CLOUD_SANITIZATION_BLOCKED:{sanitized.reason}")
+
         state = build_goal_match_state(
             title=title,
             body=body,
             content_source=content_source,
             goals=goals,
+            sanitized=sanitized,
         )
-        questions = build_goal_match_questions(goals)
+        questions = build_goal_match_questions(sanitized.goals)
 
         last_exc: Exception | None = None
         for attempt in range(self._max_retries + 1):
