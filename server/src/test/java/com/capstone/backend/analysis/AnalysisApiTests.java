@@ -1,5 +1,6 @@
 package com.capstone.backend.analysis;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -57,8 +58,11 @@ import com.capstone.backend.intervention.persistence.InterventionDeliveryEntity;
 import com.capstone.backend.intervention.persistence.InterventionDeliveryRepository;
 import com.capstone.backend.intervention.persistence.InterventionEventEntity;
 import com.capstone.backend.intervention.persistence.InterventionEventRepository;
+import com.capstone.backend.report.dto.LearningSummaryResponse.Status;
 import com.capstone.backend.report.persistence.LearningReviewEvidenceEntity;
 import com.capstone.backend.report.persistence.LearningReviewEvidenceRepository;
+import com.capstone.backend.report.persistence.LearningSummaryRepository;
+import com.capstone.backend.report.service.LearningSummaryWorker;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
@@ -84,6 +88,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,6 +136,8 @@ class AnalysisApiTests {
   @Autowired private InterventionDeliveryRepository interventionDeliveries;
   @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
   @Autowired private LearningReviewEvidenceRepository evidences;
+  @Autowired private LearningSummaryRepository summaries;
+  @Autowired private LearningSummaryWorker summaryWorker;
   @MockitoBean private GoogleOauthClient google;
   @MockitoBean private AnalysisAiClient ai;
   @LocalServerPort private int port;
@@ -684,6 +691,146 @@ class AnalysisApiTests {
         "excluded concept"));
     analyze(excluded, request(GuardStatus.EXCLUDED));
     assertTrue(evidenceOf(excluded.sessionId()).isEmpty());
+  }
+
+  @Test
+  void lateEvidenceGoesToSummaryAndKeepsPublicAnalysisUncertain() throws Exception {
+    var f = fixture();
+    var request = request(null);
+    when(ai.analyze(any(), any(), anyLong())).thenAnswer(invocation -> {
+      endForLateEvidence(f, 0);
+      return withEvidence(f.goalId(), "late Spring concept");
+    });
+
+    mvc.perform(call(f, request))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("UNCERTAIN"))
+        .andExpect(jsonPath("$.data.reviewEvidence").doesNotExist());
+    assertEquals(Relation.UNCERTAIN,
+        runs.findCurrent(f.sessionId(), f.principal().deviceId()).orElseThrow().getRelation());
+    assertLateEvidenceFeedsSummary(f);
+  }
+
+  @Test
+  void endingAfterTargetReachedAcceptsEvidenceFromTheSameRun() throws Exception {
+    var f = fixture();
+    var request = request(null);
+    var prepared = store.prepare(f.principal(), f.sessionId(), request);
+    long target = sessions.findById(f.sessionId()).orElseThrow().getTargetDurationMs();
+    tx.executeWithoutResult(status -> assertEquals(1,
+        sessions.recordHeartbeat(f.sessionId(), Instant.now(), Instant.now(), target, true)));
+    endForLateEvidence(f, target);
+    assertEquals(Relation.UNCERTAIN, store.complete(f.principal(), prepared, request,
+        withEvidence(f.goalId(), "late Spring concept")).relation());
+    assertLateEvidenceFeedsSummary(f);
+  }
+
+  private void assertLateEvidenceFeedsSummary(Fixture f) {
+    assertEquals(List.of("late Spring concept"), evidenceOf(f.sessionId()).stream()
+        .map(LearningReviewEvidenceEntity::getConceptLabel).toList());
+
+    var summary = summaries.findById(f.sessionId()).orElseThrow();
+    summaryWorker.processDue(summary.getInputCutoffAt().plusSeconds(1));
+    var processed = summaries.findById(f.sessionId()).orElseThrow();
+    assertEquals(Status.INSUFFICIENT_DATA, processed.getStatus());
+    assertEquals(1, processed.getEvidenceCount());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+      "expired", "withdrawn", "regranted", "paused", "resumed", "goalChanged",
+      "newerProtected", "otherGoal", "abandoned"
+  })
+  void lateEvidenceRejectsIneligibleResults(String change) throws Exception {
+    var f = fixture();
+    var request = ordered(ContentSource.CHROME_DOM, 1, 1L, Instant.now(), null);
+    var prepared = store.prepare(f.principal(), f.sessionId(), request);
+    tx.executeWithoutResult(status -> {
+      var session = sessions.findById(f.sessionId()).orElseThrow();
+      switch (change) {
+        case "paused" -> session.pause(SessionStatus.PAUSED, "USER", 0);
+        case "resumed" -> session.resume(Instant.now());
+        case "goalChanged" -> sessions.incrementGoalVersion(f.sessionId(),
+            prepared.goalVersion());
+        case "abandoned" -> session.abandon(Instant.now());
+        default -> {
+          // 나머지 입력은 세션 상태를 직접 바꾸지 않는다.
+        }
+      }
+    });
+    if ("newerProtected".equals(change)) {
+      analyze(f, ordered(ContentSource.CHROME_DOM, 2, 2L, Instant.now(), GuardStatus.EXCLUDED));
+    }
+    if (!"abandoned".equals(change)) {
+      endForLateEvidence(f, 0);
+    }
+    if ("expired".equals(change)) {
+      jdbc.update("UPDATE learning_summaries SET input_cutoff_at = ? WHERE session_id = ?",
+          java.sql.Timestamp.from(Instant.now().minusSeconds(1)), f.sessionId());
+    }
+    if ("withdrawn".equals(change) || "regranted".equals(change)) {
+      updateConsent(f, ConsentType.SCREEN_ANALYSIS, false);
+    }
+    if ("regranted".equals(change)) {
+      updateConsent(f, ConsentType.SCREEN_ANALYSIS, true);
+    }
+    long matchedGoalId = "otherGoal".equals(change) ? f.goalId() + 999 : f.goalId();
+    var result = store.complete(f.principal(), prepared, request,
+        withEvidence(matchedGoalId, "rejected late concept"));
+
+    assertEquals("withdrawn".equals(change) ? Relation.PRIVACY_BLOCKED : Relation.UNCERTAIN,
+        result.relation());
+    assertTrue(evidenceOf(f.sessionId()).isEmpty());
+  }
+
+  @Test
+  void workerClaimPreventsLateEvidenceWhileHoldingTheSameRowLock() throws Exception {
+    var f = fixture();
+    var request = request(null);
+    var prepared = store.prepare(f.principal(), f.sessionId(), request);
+    endForLateEvidence(f, 0);
+    var cutoff = summaries.findById(f.sessionId()).orElseThrow().getInputCutoffAt();
+    var claimed = new CountDownLatch(1);
+    var releaseClaim = new CountDownLatch(1);
+    var completing = new CountDownLatch(1);
+
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var worker = executor.submit(() -> tx.executeWithoutResult(status -> {
+        assertEquals(1, summaries.claim(f.sessionId(), Status.QUEUED, Status.GENERATING,
+            cutoff, cutoff.plusSeconds(60)));
+        claimed.countDown();
+        assertTrue(assertDoesNotThrow(() -> releaseClaim.await(10, TimeUnit.SECONDS)));
+      }));
+      try {
+        assertTrue(claimed.await(10, TimeUnit.SECONDS));
+        var late = executor.submit(() -> {
+          completing.countDown();
+          return store.complete(f.principal(), prepared, request,
+              withEvidence(f.goalId(), "worker already has the input"));
+        });
+        assertTrue(completing.await(10, TimeUnit.SECONDS));
+        assertThrows(TimeoutException.class, () -> late.get(200, TimeUnit.MILLISECONDS));
+        releaseClaim.countDown();
+        worker.get(10, TimeUnit.SECONDS);
+        assertEquals(Relation.UNCERTAIN, late.get(10, TimeUnit.SECONDS).relation());
+      } finally {
+        releaseClaim.countDown();
+      }
+    }
+    assertTrue(evidenceOf(f.sessionId()).isEmpty());
+  }
+
+  private void endForLateEvidence(Fixture fixture, long finalActiveMs) throws Exception {
+    var version = jdbc.queryForObject("SELECT version FROM learning_sessions WHERE id = ?",
+        Long.class, fixture.sessionId());
+    mvc.perform(post("/api/v1/sessions/" + fixture.sessionId() + "/end")
+            .header("Authorization", "Bearer " + fixture.login().accessToken())
+            .header("X-Device-Id", fixture.login().device().deviceId())
+            .header("Idempotency-Key", UUID.randomUUID()).header("If-Match-Version", version)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"accumulatedActiveMs\":" + finalActiveMs + "}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.status").value("ENDED"));
   }
 
   @ParameterizedTest

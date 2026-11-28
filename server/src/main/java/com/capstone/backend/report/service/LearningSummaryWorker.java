@@ -61,10 +61,10 @@ public class LearningSummaryWorker {
    * 세션 종료 transaction 안에서 호출해 정리를 QUEUED로 등록한다. 입력 마감은 종료 30초 뒤다.
    * 세션 행을 잠근 종료 명령에서만 부르므로 같은 세션의 중복 등록은 기존 행 확인으로 막는다.
    */
-  public void enqueue(long sessionId, Instant endedAt) {
+  public void enqueue(long sessionId, Instant endedAt, Instant runningSince) {
     if (!summaries.existsById(sessionId)) {
       summaries.save(LearningSummaryEntity.queued(sessionId, endedAt.plus(INPUT_WINDOW),
-          endedAt));
+          endedAt, runningSince));
     }
   }
 
