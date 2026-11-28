@@ -13,3 +13,8 @@
 | 전체 Gradle build 및 Checkstyle | 테스트 444건 중 427건 통과, 17건 생략, 실패 0건 |
 | 격리 PostgreSQL 17 및 Flyway | 분석·개입 테스트 141건 전부 통과 |
 | 독립 리뷰 | 15초 기준 지적 반영 및 경계 테스트 추가 |
+
+## Docker Compose 설정 전달 후속
+
+- 기존 Compose는 환경 파일의 비율 설정을 Backend에 넘기지 않았다. 수정 후 합성 환경 파일의 50%·60초가 전달되고 기본·미설정·빈 값은 0·0으로 남는 것을 `docker compose config`로 확인했다. 한 값만 지정하면 기존 Spring 검증에 전달된다.
+- Gradle 전체 build와 Checkstyle 통과. 격리 H2에서 518건 통과, 18건 생략, 실패 0건.
