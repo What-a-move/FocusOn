@@ -6,16 +6,19 @@ import Link from 'next/link'
 // Pretendard 웹 글꼴(@font-face)이 여기 있다. 예전엔 온보딩·집중 준비 코드를 거쳐 함께 불려 왔다(#183).
 import '../../shared/styles/onboarding-window.css'
 import { CHANNELS, LEVELS, PREVIEW } from '../../shared/lib/intervention-options'
+import type { LearningMessenger } from '../../electron/shared/session-contract.cjs'
 import { sessionApi, type NotificationChannel } from '../../shared/api/session-api'
+import { sessionResultApi, type ReminderEstimate } from '../../shared/api/session-result-api'
 import { onboardingApi } from '../../shared/api/onboarding-api'
 import { AccountPanel, DevicesPanel } from './AccountPanels'
 import { LoadError, SettingsShell, ToastView, failText, useToast } from '../../shared/ui/SettingsShell'
 import './settings.css'
-import { settingsApi, type FocusSettings, type ThemeSource } from './settings-api'
+import { coreFocusSettings, MESSENGER_LABELS, settingsApi, type FocusSettings, type ThemeSource } from '../../shared/api/settings-api'
 
 const TABS = [
   { id: 'account', label: '계정', poki: 'poki-celebrate.png' },
   { id: 'focus', label: '집중', poki: 'poki-floating-master-v3.png' },
+  { id: 'goals', label: '목표·기록', poki: 'poki-main-planning.png' },
   { id: 'analysis', label: '분석·권한', poki: 'poki-key.png' },
   { id: 'devices', label: '기기 연결', poki: 'poki-plug.png' },
   { id: 'general', label: '화면', poki: 'poki-floating-sleepy-v7.png' },
@@ -82,6 +85,7 @@ export function Settings() {
       <section className="fo-settings-panel" id={tab} role="tabpanel" aria-labelledby={`tab-${tab}`} key={tab}>
         {tab === 'account' && <AccountPanel showToast={showToast} />}
         {tab === 'focus' && <FocusPanel showToast={showToast} />}
+        {tab === 'goals' && <FocusPanel showToast={showToast} targets />}
         {tab === 'analysis' && <AnalysisPanel showToast={showToast} />}
         {tab === 'devices' && <DevicesPanel showToast={showToast} />}
         {tab === 'general' && <GeneralPanel showToast={showToast} />}
@@ -94,9 +98,19 @@ export function Settings() {
 type ShowToast = (toast: { text: string }) => void
 
 /** 집중 기본값 (focus-settings). 바꿀 때마다 전체 객체를 저장하고, 실패하면 이전 값으로 되돌린다. */
-function FocusPanel({ showToast }: { showToast: ShowToast }) {
+function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targets?: boolean }) {
   const [view, setView] = useState<Load<FocusSettings>>({ status: 'loading' })
   const [saving, setSaving] = useState(false)
+  const [reminderEstimate, setReminderEstimate] = useState<ReminderEstimate | null>(null)
+
+  useEffect(() => {
+    if (!targets) return
+    let current = true
+    void sessionResultApi.getReminderEstimate().then((result) => {
+      if (current && result.success) setReminderEstimate(result.data)
+    })
+    return () => { current = false }
+  }, [targets])
 
   const load = useCallback(async () => {
     setView({ status: 'loading' })
@@ -113,7 +127,13 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
   async function save(next: FocusSettings) {
     setView({ status: 'ready', data: next })
     setSaving(true)
-    const result = await settingsApi.saveFocusSettings(next)
+    const result = await settingsApi.saveFocusSettings({
+      ...coreFocusSettings(next),
+      ...(next.dailyTargetMs === settings.dailyTargetMs ? {} : { dailyTargetMs: next.dailyTargetMs }),
+      ...(next.weeklyTargetMs === settings.weeklyTargetMs ? {} : { weeklyTargetMs: next.weeklyTargetMs }),
+      ...(next.preDistractionReminderEnabled === settings.preDistractionReminderEnabled ? {} : { preDistractionReminderEnabled: next.preDistractionReminderEnabled }),
+      ...(next.retrospectiveEnabled === settings.retrospectiveEnabled ? {} : { retrospectiveEnabled: next.retrospectiveEnabled }),
+    })
     setSaving(false)
     if (result.success) {
       setView({ status: 'ready', data: result.data })
@@ -122,6 +142,41 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
       setView({ status: 'ready', data: settings })
       showToast({ text: failText(result.error.code) })
     }
+  }
+
+  if (targets) {
+    const daily = (settings.dailyTargetMs ?? 3_600_000) / 60_000
+    const weekly = settings.weeklyTargetMs == null ? null : settings.weeklyTargetMs / 60_000
+    return <>
+      <TargetStepper label="하루 목표" value={daily} min={10} max={600} step={10} disabled={saving}
+        onChange={(value) => { void save({ ...settings, dailyTargetMs: value * 60_000 }) }} />
+      <div className="fo-field">
+        <div className="fo-row-copy"><strong id="weekly-target-title">주간 목표</strong></div>
+        <div className="fo-segmented" role="group" aria-labelledby="weekly-target-title">
+          <button type="button" aria-pressed={weekly === null} disabled={saving} onClick={() => { if (weekly !== null) void save({ ...settings, weeklyTargetMs: null }) }}>정하지 않음</button>
+          <button type="button" aria-pressed={weekly !== null} disabled={saving} onClick={() => { if (weekly === null) void save({ ...settings, weeklyTargetMs: 18_000_000 }) }}>정하기</button>
+        </div>
+        {weekly !== null && <TargetStepper label="주간 목표 시간" value={weekly} min={60} max={4200} step={60} disabled={saving}
+          onChange={(value) => { void save({ ...settings, weeklyTargetMs: value * 60_000 }) }} />}
+      </div>
+      <div className="fo-row">
+        <div className="fo-row-copy"><strong id="retrospective-title">회고</strong></div>
+        <button className="fo-switch" type="button" role="switch" aria-labelledby="retrospective-title"
+          aria-checked={settings.retrospectiveEnabled ?? true} disabled={saving}
+          onClick={() => { void save({ ...settings, retrospectiveEnabled: !(settings.retrospectiveEnabled ?? true) }) }} />
+      </div>
+      <div className="fo-row">
+        <div className="fo-row-copy">
+          <strong id="pre-reminder-title">미리 알림</strong>
+          <small id="pre-reminder-description" role="status">{reminderEstimate?.status === 'insufficient'
+            ? '몇 번 더 집중하면 알려 드릴게요'
+            : '평소 흐트러지던 때 3분 전에 알려요'}</small>
+        </div>
+        <button className="fo-switch" type="button" role="switch" aria-labelledby="pre-reminder-title"
+          aria-describedby="pre-reminder-description" aria-checked={settings.preDistractionReminderEnabled ?? true} disabled={saving}
+          onClick={() => { void save({ ...settings, preDistractionReminderEnabled: !(settings.preDistractionReminderEnabled ?? true) }) }} />
+      </div>
+    </>
   }
 
   function toggleChannel(key: NotificationChannel) {
@@ -153,6 +208,19 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
         onClick={() => { void save({ ...settings, breakSuggestionEnabled: !settings.breakSuggestionEnabled }) }} />
     </div>
   </>
+}
+
+function TargetStepper({ label, value, min, max, step, disabled, onChange }: {
+  label: string; value: number; min: number; max: number; step: number; disabled: boolean; onChange: (value: number) => void
+}) {
+  return <fieldset className="fo-field fo-target-stepper">
+    <legend className="fo-field-title">{label}</legend>
+    <div>
+      <button className="fo-small-btn" type="button" aria-label={`${label} 줄이기`} disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - step))}>−</button>
+      <output aria-live="polite">{value}분</output>
+      <button className="fo-small-btn" type="button" aria-label={`${label} 늘리기`} disabled={disabled || value >= max} onClick={() => onChange(Math.min(max, value + step))}>+</button>
+    </div>
+  </fieldset>
 }
 
 const CHECK = <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg>
@@ -236,7 +304,52 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
       <div className="fo-row-copy"><strong>분석 제외 목록</strong></div>
       <Link className="fo-small-btn" href="/settings/exclusions/">관리</Link>
     </div>
+    <LearningMessengerSettings showToast={showToast} />
   </>
+}
+
+function LearningMessengerSettings({ showToast }: { showToast: ShowToast }) {
+  const [view, setView] = useState<Load<LearningMessenger[]>>({ status: 'loading' })
+  const [saving, setSaving] = useState(false)
+  const pending = useRef(false)
+
+  const load = useCallback(async () => {
+    setView({ status: 'loading' })
+    const result = await sessionApi.getFocusSettings()
+    setView(result.success ? { status: 'ready', data: result.data.learningMessengers ?? [] } : { status: 'error', code: result.error.code })
+  }, [])
+  useEffect(() => { queueMicrotask(() => { void load() }) }, [load])
+
+  async function toggle(messenger: LearningMessenger) {
+    if (pending.current) return
+    pending.current = true
+    setSaving(true)
+    try {
+      const latest = await sessionApi.getFocusSettings()
+      if (!latest.success) { showToast({ text: failText(latest.error.code) }); return }
+      const selected = latest.data.learningMessengers ?? []
+      const learningMessengers = selected.includes(messenger) ? selected.filter((item) => item !== messenger) : [...selected, messenger]
+      const result = await settingsApi.saveFocusSettings({ ...coreFocusSettings(latest.data), learningMessengers })
+      if (!result.success) { showToast({ text: failText(result.error.code) }); return }
+      setView({ status: 'ready', data: result.data.learningMessengers ?? [] })
+      showToast({ text: '저장했어요' })
+    } finally {
+      pending.current = false
+      setSaving(false)
+    }
+  }
+
+  return <div className="fo-field">
+    <strong className="fo-field-title" id="learning-messenger-title">학습용 메신저</strong>
+    {view.status === 'error' ? <LoadError compact code={view.code} what="학습용 메신저를" onRetry={() => { void load() }} />
+      : view.status === 'loading' ? <p role="status">학습용 메신저를 불러오고 있어요.</p>
+      : <div className="fo-chips" role="group" aria-labelledby="learning-messenger-title">
+        {(Object.keys(MESSENGER_LABELS) as LearningMessenger[]).map((messenger) => <button className="fo-chip" type="button" role="checkbox"
+          key={messenger} disabled={saving} aria-checked={view.data.includes(messenger)} onClick={() => { void toggle(messenger) }}>
+          {MESSENGER_LABELS[messenger]}
+        </button>)}
+      </div>}
+  </div>
 }
 
 // 카메라 오류는 macOS가 확실히 알려 주는 두 가지만 한 줄로 보여 준다(사용자 결정 2026-11-13). 시스템 안내라 존댓말이다.
@@ -290,7 +403,9 @@ function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
         const consent = await settingsApi.setCameraConsent(true)
         if (!consent.success) return showToast({ text: failText(consent.error.code) })
       }
-      const saved = await settingsApi.saveFocusSettings({ ...settings, cameraAnalysisEnabled: on })
+      const latest = await sessionApi.getFocusSettings()
+      if (!latest.success) return showToast({ text: failText(latest.error.code) })
+      const saved = await settingsApi.saveFocusSettings({ ...coreFocusSettings(latest.data), cameraAnalysisEnabled: on })
       if (!saved.success) return showToast({ text: failText(saved.error.code) })
       setSettings(saved.data)
       // 끄면 동의도 철회한다. 설정은 이미 꺼졌으니 철회만 실패하면 안내만 한다.

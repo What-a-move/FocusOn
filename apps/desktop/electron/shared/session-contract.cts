@@ -18,13 +18,15 @@ export type InterventionLevel = 'GENTLE' | 'NORMAL' | 'ACTIVE'
 export type NotificationChannel = 'MOLE_UI' | 'MACOS_NOTIFICATION' | 'SOUND'
 export type SessionOptions = { interventionLevel: InterventionLevel; notificationChannels: NotificationChannel[]; cameraAnalysisEnabled: boolean }
 /** GET·PUT /users/me/focus-settings. 세션 시작 sessionOptions에는 breakSuggestionEnabled를 넣지 않는다(API_CONTRACT). */
-export type FocusSettings = SessionOptions & { breakSuggestionEnabled: boolean }
+const LEARNING_MESSENGERS = ['DISCORD', 'SLACK', 'KAKAOTALK', 'TEAMS', 'OTHER'] as const
+export type LearningMessenger = typeof LEARNING_MESSENGERS[number]
+export type FocusSettings = SessionOptions & { breakSuggestionEnabled: boolean; dailyTargetMs?: number; weeklyTargetMs?: number | null; retrospectiveEnabled?: boolean; preDistractionReminderEnabled?: boolean; learningMessengers?: LearningMessenger[] }
 /** goalText는 집중 화면 표시용이며 서버로 보내지 않는다(서버는 goalId로 snapshot을 만든다). */
 export type StartSessionInput = { goalText: string; targetDurationMs: number; timeZone: string; sessionOptions: SessionOptions; idempotencyKey: string }
   & ({ goalId: string; goalIds?: never } | { goalIds: string[]; goalId?: never })
 export type SessionGoal = { goalId: string; goalText: string }
 type GoalState = { goals: SessionGoal[]; goalVersion: number }
-export type AddSessionGoalInput = { sessionId: string; goalId: string; goalVersion: number }
+export type AddSessionGoalInput = { sessionId: string; goalId: string; goalVersion: number; replaceGoalId?: string }
 export type StartedSession = Partial<GoalState> & { sessionId: string; status: string; version: number; targetDurationMs: number; accumulatedActiveMs: number; startedAt: string; interventionPolicyVersion: string }
 
 /** 서버 세션 상태 (세션 상태 전이 정책). */
@@ -106,15 +108,32 @@ export function isValidStartInput(value: unknown): value is StartSessionInput {
     && isValidTimeZone(value.timeZone) && isSessionOptions(value.sessionOptions)
 }
 
+const isTarget = (value: unknown, min: number, max: number): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value % 60000 === 0 && value >= min * 60000 && value <= max * 60000
+
 export function parseFocusSettings(value: unknown): FocusSettings | null {
   if (!isRecord(value) || !LEVELS.includes(value.interventionLevel as InterventionLevel) || !isChannelList(value.notificationChannels)
     || typeof value.cameraAnalysisEnabled !== 'boolean' || typeof value.breakSuggestionEnabled !== 'boolean') return null
-  return { interventionLevel: value.interventionLevel as InterventionLevel, notificationChannels: value.notificationChannels, cameraAnalysisEnabled: value.cameraAnalysisEnabled, breakSuggestionEnabled: value.breakSuggestionEnabled }
+  const { dailyTargetMs, weeklyTargetMs, retrospectiveEnabled, preDistractionReminderEnabled, learningMessengers } = value
+  if (learningMessengers !== undefined && (!Array.isArray(learningMessengers) || learningMessengers.length > LEARNING_MESSENGERS.length
+    || new Set(learningMessengers).size !== learningMessengers.length || !learningMessengers.every((item) => LEARNING_MESSENGERS.includes(item)))) return null
+  if (preDistractionReminderEnabled !== undefined && typeof preDistractionReminderEnabled !== 'boolean') return null
+  if (retrospectiveEnabled !== undefined && typeof retrospectiveEnabled !== 'boolean') return null
+  if (dailyTargetMs !== undefined && !isTarget(dailyTargetMs, 10, 600)) return null
+  if (weeklyTargetMs !== undefined && weeklyTargetMs !== null && !isTarget(weeklyTargetMs, 60, 4200)) return null
+  return { interventionLevel: value.interventionLevel as InterventionLevel, notificationChannels: value.notificationChannels, cameraAnalysisEnabled: value.cameraAnalysisEnabled, breakSuggestionEnabled: value.breakSuggestionEnabled,
+    ...(dailyTargetMs === undefined ? {} : { dailyTargetMs }),
+    ...(weeklyTargetMs === undefined ? {} : { weeklyTargetMs }),
+    ...(preDistractionReminderEnabled === undefined ? {} : { preDistractionReminderEnabled }),
+    ...(retrospectiveEnabled === undefined ? {} : { retrospectiveEnabled }),
+    ...(learningMessengers === undefined ? {} : { learningMessengers }),
+  }
 }
 
-/** Renderer가 보낸 집중 설정 저장 입력. 4개 필드만 받는다. */
+/** Renderer가 보낸 저장 입력은 허용된 필드만 받는다. */
 export function isFocusSettingsInput(value: unknown): value is FocusSettings {
-  return isRecord(value) && Object.keys(value).length === 4 && parseFocusSettings(value) !== null
+  const parsed = parseFocusSettings(value)
+  return isRecord(value) && parsed !== null && Object.keys(value).every((key) => Object.hasOwn(parsed, key))
 }
 
 const STATUSES: readonly SessionStatus[] = ['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION', 'ENDING', 'ENDED', 'ABANDONED']
@@ -137,8 +156,9 @@ function optionalGoalState(value: Record<string, unknown>): Partial<GoalState> |
 }
 
 export function isAddSessionGoalInput(value: unknown): value is AddSessionGoalInput {
-  return isRecord(value) && Object.keys(value).length === 3 && isId(value.sessionId) && isId(value.goalId)
-    && isCount(value.goalVersion) && value.goalVersion >= 1
+  return isRecord(value) && Object.keys(value).every((key) => ['sessionId', 'goalId', 'goalVersion', 'replaceGoalId'].includes(key))
+    && isId(value.sessionId) && isId(value.goalId) && isCount(value.goalVersion) && value.goalVersion >= 1
+    && (!Object.hasOwn(value, 'replaceGoalId') || (isId(value.replaceGoalId) && value.replaceGoalId !== value.goalId))
 }
 
 export function parseStartedSession(value: unknown): StartedSession | null {

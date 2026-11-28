@@ -111,3 +111,10 @@
 .onboarding-window .app-option small { margin-left: auto; color: var(--muted); font-size: 12px; }
 .onboarding-window .app-option .item-icon { width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center; border-radius: 8px; background: var(--field); font-size: 14px; font-weight: 700; }
 .onboarding-window .app-error .btn { width: 100%; margin-top: 12px; }
+
+.onboarding-window .messenger-field { min-width: 0; margin: 20px 0 0; padding: 0; border: 0; }
+.onboarding-window .messenger-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.onboarding-window .messenger-chips label { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 6px 12px; border: 1.5px solid var(--line); border-radius: 999px; cursor: pointer; }
+.onboarding-window .messenger-chips label:has(:checked) { border-color: var(--gold); background: var(--gold-tint); }
+.onboarding-window .messenger-chips input { margin: 0; accent-color: var(--brand); }
+.onboarding-window .messenger-load-failed { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }

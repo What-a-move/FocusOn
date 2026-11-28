@@ -7,7 +7,7 @@ import { requiredConsents, screenAnalysisSummary } from '../../shared/lib/consen
 import { ConsentDocument } from '../../shared/ui/ConsentDocument'
 import { onboardingApi } from '../../shared/api/onboarding-api'
 import { LoadError, failText } from '../../shared/ui/SettingsShell'
-import { settingsApi, type ConsentList, type DeviceStatus } from './settings-api'
+import { settingsApi, type ConsentList, type DeviceStatus } from '../../shared/api/settings-api'
 
 // 디자인 원본: FocusOn-design/settings.html 계정(D25)·기기 연결(D24) 패널. 철회·해제·삭제는 오류가 아니므로 빨간색을 쓰지 않는다(결정 031).
 type Load<T> = { status: 'loading' } | { status: 'error'; code: string } | { status: 'ready'; data: T }

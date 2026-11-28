@@ -95,3 +95,20 @@ test('세션 시작은 중복 없는 할 일 1~3개를 순서대로 보내고 �
   assert.deepEqual(parsed.goals.map(({ goalId }) => goalId), ['13', '12'])
   assert.equal(parsed.goalVersion, 1)
 })
+
+test('할 일 교체의 선택 필드와 새 집중 설정은 이전 입력과 호환되며 허용 값만 받는다', () => {
+  const { isAddSessionGoalInput, isFocusSettingsInput, parseFocusSettings } = require('../../dist-electron/shared/session-contract.cjs')
+  const goal = { sessionId: '7', goalId: '8', goalVersion: 2 }
+  assert.equal(isAddSessionGoalInput(goal), true)
+  assert.equal(isAddSessionGoalInput({ ...goal, replaceGoalId: '9' }), true)
+  assert.equal(isAddSessionGoalInput({ ...goal, replaceGoalId: '8' }), false)
+  assert.equal(isAddSessionGoalInput({ ...goal, replaceGoalId: '9?x' }), false)
+  const old = { interventionLevel: 'NORMAL', notificationChannels: ['MOLE_UI'], cameraAnalysisEnabled: false, breakSuggestionEnabled: true }
+  const current = { ...old, dailyTargetMs: 600000, weeklyTargetMs: null, retrospectiveEnabled: false, learningMessengers: ['DISCORD', 'TEAMS'] }
+  assert.deepEqual(parseFocusSettings(old), old)
+  assert.deepEqual(parseFocusSettings(current), current)
+  assert.equal(isFocusSettingsInput(current), true)
+  assert.equal(isFocusSettingsInput({ ...current, dailyTargetMs: 600001 }), false)
+  assert.equal(isFocusSettingsInput({ ...current, learningMessengers: ['SLACK', 'SLACK'] }), false)
+  assert.equal(isFocusSettingsInput({ ...current, preDistractionReminderEnabled: true }), true)
+})

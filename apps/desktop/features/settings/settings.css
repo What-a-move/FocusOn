@@ -47,7 +47,7 @@
 .fo-segmented button { height: 46px; padding: 0 14px; border: 0; border-radius: 12px; background: transparent; color: var(--fo-muted); font-size: 15px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background .15s ease, color .15s ease, transform .25s var(--fo-pop), box-shadow .2s ease; }
 .fo-segmented button:hover { color: var(--fo-ink); }
 .fo-segmented button:not(:disabled):active { transform: translateY(2px); }
-.fo-segmented button[aria-checked="true"] { background: var(--fo-surface); color: var(--fo-brand); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); }
+.fo-segmented button[aria-checked="true"], .fo-segmented button[aria-pressed="true"] { background: var(--fo-surface); color: var(--fo-brand); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); }
 .fo-switch { position: relative; flex: 0 0 54px; width: 54px; height: 32px; border: 0; border-radius: 99px; background: var(--fo-dim); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .12); cursor: pointer; transition: background .2s ease; }
 .fo-switch::after { position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, .2), inset 0 -2px 0 rgba(0, 0, 0, .06); content: ""; transition: transform .3s var(--fo-pop), width .15s ease; }
 .fo-switch:not(:disabled):active::after { width: 32px; }
@@ -208,3 +208,9 @@
 /* 좁은 창에서는 안내를 코드 아래 한 줄로 내려 어색한 줄바꿈을 막는다(#257). */
 @media (max-width: 1100px) { .fo-link-code { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'tiles actions' 'copy copy'; } }
 .fo-link-code small + small { margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.fo-target-stepper { margin: 0; padding: 0; border: 0; }
+.fo-target-stepper legend { margin-bottom: 10px; }
+.fo-field > .fo-target-stepper { margin-top: 16px; }
+.fo-target-stepper > div { display: flex; align-items: center; gap: 12px; }
+.fo-target-stepper output { min-width: 64px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }

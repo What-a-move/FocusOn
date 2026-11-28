@@ -104,7 +104,7 @@ export class SessionRuntime {
     if (!state || state.sessionId !== input.sessionId || state.status !== 'RUNNING') return { success: false, error: { code: 'SESSION_STATE_INVALID', retryable: false } }
     const result = await this.auth.authorizedRequest({
       path: `/api/v1/sessions/${state.sessionId}/goals`, method: 'POST', expectedStatus: 200,
-      withDeviceId: true, body: { goalId: input.goalId, goalVersion: input.goalVersion }, parse: parseSessionGoalState,
+      withDeviceId: true, body: { goalId: input.goalId, goalVersion: input.goalVersion, ...(input.replaceGoalId === undefined ? {} : { replaceGoalId: input.replaceGoalId }) }, parse: parseSessionGoalState,
     })
     if (this.state !== state) return { success: false, error: { code: 'SESSION_NOT_FOUND', retryable: false } }
     if (!result.success) {

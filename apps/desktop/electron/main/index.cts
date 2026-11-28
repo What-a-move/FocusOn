@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { app, BrowserWindow, ipcMain, Menu, nativeTheme, net, Notification, powerMonitor, protocol, screen, shell } from 'electron'
@@ -23,6 +24,7 @@ import { registerOnboardingIpc } from './onboarding-ipc.cjs'
 import { ReportService, registerReportIpc } from './report-ipc.cjs'
 import { GoalService, registerGoalIpc } from './goal-ipc.cjs'
 import { SessionService, registerSessionIpc } from './session-ipc.cjs'
+import { PreDistractionReminder } from './pre-distraction-reminder.cjs'
 import { NotificationReadiness } from './notification-readiness.cjs'
 import { SessionRuntime } from './session-runtime.cjs'
 import { SESSION_CHANNELS, type SessionSnapshot } from '../shared/session-contract.cjs'
@@ -247,7 +249,8 @@ if (!hasSingleInstanceLock) {
     registerPermissionIpc(() => mainWindow, rendererUrl, notificationReadiness, { issue: () => cameraMonitor.issue(), clear: () => cameraMonitor.clearIssue() })
     // [주의] 화면 기록 준비 상태는 Renderer 주장이 아니라 Main이 macOS에서 직접 확인한 값으로 서버에 보낸다.
     registerOnboardingIpc(() => mainWindow, rendererUrl, authService ? new OnboardingService(authService, () => mediaStatus('screen') === 'granted') : null)
-    registerReportIpc(() => mainWindow, rendererUrl, authService ? new ReportService(authService) : null)
+    const reportService = authService ? new ReportService(authService) : null
+    registerReportIpc(() => mainWindow, rendererUrl, reportService)
     registerGoalIpc(() => mainWindow, rendererUrl, authService ? new GoalService(authService) : null)
     const sessionReady = { screen: () => mediaStatus('screen') === 'granted', notification: () => notificationReadiness.isConfirmed() }
     let lastSession: SessionSnapshot | null = null
@@ -260,7 +263,39 @@ if (!hasSingleInstanceLock) {
       lastSession = snapshot
     }, sessionReady) : null
     const runtime = sessionRuntime
-    registerSessionIpc(() => mainWindow, rendererUrl, authService && runtime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, runtime) : null, runtime)
+    const sessionService = authService && runtime ? new SessionService(authService, sessionReady.screen, sessionReady.notification, runtime) : null
+    registerSessionIpc(() => mainWindow, rendererUrl, sessionService, runtime)
+    const reminderReceipt = path.join(app.getPath('userData'), 'pre-distraction-reminder.txt')
+    const reminder = runtime && reportService && sessionService ? new PreDistractionReminder({
+      session: () => runtime.snapshot(),
+      account: () => authStore.getSnapshot().user?.userId ?? null,
+      estimate: () => reportService.getReminderEstimate(),
+      enabled: async () => {
+        if (!sessionReady.notification() || !Notification.isSupported()) return false
+        const settings = await sessionService.getFocusSettings()
+        return settings.success && (settings.data.preDistractionReminderEnabled ?? true) && sessionReady.notification()
+      },
+      deliver: (account, sessionId) => {
+        const key = createHash('sha256').update(JSON.stringify([apiBaseUrl, account, sessionId])).digest('hex')
+        // 가장 최근에 보낸 회차만 남겨 앱 재시작 후 같은 알림을 반복하지 않는다.
+        if (existsSync(reminderReceipt) && readFileSync(reminderReceipt, 'utf8') === key) return
+        writeFileSync(`${reminderReceipt}.tmp`, key, { mode: 0o600 })
+        renameSync(`${reminderReceipt}.tmp`, reminderReceipt)
+        const notification = new Notification({ title: 'FocusOn', body: '곧 평소에 흐트러지던 시간이야. 5분만 더 버텨 볼까?' })
+        notification.on('click', () => {
+          const current = runtime.snapshot()
+          if (current?.sessionId !== sessionId || !['RUNNING', 'PAUSED', 'AUTO_PAUSED', 'AWAITING_END_CONFIRMATION'].includes(current.status)
+            || authStore.getSnapshot().user?.userId !== account) return
+          app.focus({ steal: true })
+          showMainWindow()
+          void mainWindow?.loadURL(new URL('session/', rendererUrl).toString()).catch(() => {
+            log('WARN', 'api.request.fail', { component: 'reminder', path: '/session/', code: 'LOCAL_APP_ERROR' })
+          })
+        })
+        notification.show()
+      },
+      onError: () => log('WARN', 'api.request.fail', { component: 'reminder', code: 'LOCAL_APP_ERROR' }),
+    }) : null
     const excludedApps = new ExcludedApps(path.join(app.getPath('userData'), 'excluded-apps.json'))
     const helper = process.platform === 'darwin'
       ? new ObserverHelper(app.isPackaged ? path.join(process.resourcesPath, 'focuson-observer') : path.join(app.getAppPath(), 'build/native/focuson-observer'))
@@ -494,6 +529,7 @@ if (!hasSingleInstanceLock) {
         runtime.tick()
         // 세션이 RUNNING일 때만 맨 앞 앱을 본다(결정 024). 멈추면 15초 계산을 처음부터 다시 한다.
         const session = runtime.snapshot()
+        void reminder?.tick()
         if (session?.status !== 'RUNNING') { observer.reset(); context?.reset(); return }
         if (!helper || observing) return
         observing = true

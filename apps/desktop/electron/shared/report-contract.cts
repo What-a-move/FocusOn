@@ -3,15 +3,19 @@ import type { IpcResult } from './auth-contract.cjs'
 // IPC_CONTRACT.md 리포트 Channel. 홈 대시보드(집중 달력·지난 목표)가 쓴다.
 export const REPORT_CHANNELS = {
   calendar: 'report:calendar:get',
+  progress: 'report:progress:get',
+  reminderEstimate: 'report:reminder:estimate',
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
+  retrospective: 'report:retrospective:save',
   sessionPauses: 'report:session-pauses:get',
+  offTaskBreakdown: 'report:off-task-breakdown:get',
   learningSummary: 'report:learning-summary:get',
   learningNotes: 'report:learning-notes:list',
 } as const
 
 /** GET /api/v1/reports/calendar 의 날짜 하나. hasStudyActivity는 서버가 totalActiveMs >= 60000으로 계산한다. */
-export type CalendarDay = { date: string; totalActiveMs: number; sessionCount: number; hasStudyActivity: boolean }
+export type CalendarDay = { date: string; totalActiveMs: number; sessionCount: number; hasStudyActivity: boolean; dailyTargetAchieved?: boolean }
 export type CalendarMonth = { month: string; studyDayCount: number; days: CalendarDay[] }
 
 /** GET /api/v1/reports/daily 의 세션 카드. 항목 형식은 2026-10-24 확정(결정 020). */
@@ -52,11 +56,41 @@ export type LearningNoteList = { items: LearningNote[]; nextCursor: string | nul
 
 export type SessionPause = { pausedAt: string; resumedAt: string | null; pauseReason: string }
 
+export type FocusProgress = {
+  date: string
+  today: { totalActiveMs: number; dailyTargetMs: number }
+  week: { totalActiveMs: number; weeklyTargetMs: number | null }
+  streak?: { currentDays: number; longestDays: number }
+}
+
+export const RETROSPECTIVE_RATINGS = ['GOOD', 'OKAY', 'BAD'] as const
+export const RETROSPECTIVE_REASONS = ['SELF_TIRED', 'SELF_NOISE', 'SELF_TOO_MANY_GOALS', 'APP_FALSE_ALERT', 'APP_TOO_FREQUENT', 'APP_LATE_ALERT', 'APP_BLUR_ANNOYING'] as const
+export type RetrospectiveInput = {
+  sessionId: string
+  rating: typeof RETROSPECTIVE_RATINGS[number]
+  reasonCodes?: Array<typeof RETROSPECTIVE_REASONS[number]>
+  note?: string
+}
+
+const OFF_TASK_CATEGORIES = ['VIDEO', 'SNS', 'COMMUNITY', 'SHOPPING', 'GAME', 'MESSENGER', 'NEWS', 'OTHER'] as const
+type OffTaskCategory = typeof OFF_TASK_CATEGORIES[number]
+export type OffTaskShare = { category: OffTaskCategory; share: number }
+export type OffTaskReport = {
+  categories: OffTaskShare[]
+  consecutive: Array<{ firstAt: string; secondAt: string }>
+}
+
+export type ReminderEstimate = { status: 'ready'; activeMs: number } | { status: 'insufficient' | 'tooEarly' }
+
 export type ReportsApi = {
+  getReminderEstimate(): Promise<IpcResult<ReminderEstimate>>
+  saveRetrospective(input: RetrospectiveInput): Promise<IpcResult<{ saved: true }>>
+  getProgress(input: { date: string }): Promise<IpcResult<FocusProgress>>
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
   getSessionPauses(input: { sessionId: string }): Promise<IpcResult<SessionPause[]>>
+  getOffTaskBreakdown(input: { sessionId: string }): Promise<IpcResult<OffTaskReport>>
   getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
   listLearningNotes(input: { cursor: string | null }): Promise<IpcResult<LearningNoteList>>
 }
@@ -76,13 +110,25 @@ export function isValidDate(value: unknown): value is string {
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day
 }
 
+export function parseFocusProgress(value: unknown): FocusProgress | null {
+  if (!isRecord(value) || !isValidDate(value.date) || !isRecord(value.today) || !isRecord(value.week)) return null
+  const { today, week, streak } = value
+  if (!isCount(today.totalActiveMs) || !isCount(today.dailyTargetMs) || today.dailyTargetMs === 0
+    || !isCount(week.totalActiveMs) || (week.weeklyTargetMs !== null && (!isCount(week.weeklyTargetMs) || week.weeklyTargetMs === 0))) return null
+  return { date: value.date, today: { totalActiveMs: today.totalActiveMs, dailyTargetMs: today.dailyTargetMs },
+    week: { totalActiveMs: week.totalActiveMs, weeklyTargetMs: week.weeklyTargetMs },
+    ...(isRecord(streak) && isCount(streak.currentDays) && isCount(streak.longestDays) && streak.longestDays >= streak.currentDays
+      ? { streak: { currentDays: streak.currentDays, longestDays: streak.longestDays } } : {}),
+  }
+}
+
 export function parseCalendar(value: unknown): CalendarMonth | null {
   if (!isRecord(value) || !isValidMonth(value.month) || !isCount(value.studyDayCount) || !Array.isArray(value.days)) return null
   const days: CalendarDay[] = []
   for (const item of value.days) {
     if (!isRecord(item) || !isValidDate(item.date) || !item.date.startsWith(value.month)) return null
     if (!isCount(item.totalActiveMs) || !isCount(item.sessionCount) || typeof item.hasStudyActivity !== 'boolean') return null
-    days.push({ date: item.date, totalActiveMs: item.totalActiveMs, sessionCount: item.sessionCount, hasStudyActivity: item.hasStudyActivity })
+    days.push({ date: item.date, totalActiveMs: item.totalActiveMs, sessionCount: item.sessionCount, hasStudyActivity: item.hasStudyActivity, ...(typeof item.dailyTargetAchieved === 'boolean' ? { dailyTargetAchieved: item.dailyTargetAchieved } : {}) })
   }
   return { month: value.month, studyDayCount: value.studyDayCount, days }
 }
@@ -106,6 +152,17 @@ export function isValidSessionId(value: unknown): value is string {
 
 const optionalCount = (value: unknown): number | null => isCount(value) ? value : null
 const LEARNING_STATUSES: readonly LearningSummaryStatus[] = ['QUEUED', 'GENERATING', 'READY', 'INSUFFICIENT_DATA', 'FAILED']
+
+export function isRetrospectiveInput(value: unknown): value is RetrospectiveInput {
+  if (!isRecord(value) || !isValidSessionId(value.sessionId)
+    || !RETROSPECTIVE_RATINGS.includes(value.rating as RetrospectiveInput['rating'])
+    || !Object.keys(value).every((key) => ['sessionId', 'rating', 'reasonCodes', 'note'].includes(key))) return false
+  const { rating, reasonCodes, note } = value
+  if (rating !== 'BAD') return reasonCodes === undefined && note === undefined
+  return (reasonCodes === undefined || (Array.isArray(reasonCodes) && reasonCodes.length <= RETROSPECTIVE_REASONS.length
+    && new Set(reasonCodes).size === reasonCodes.length && reasonCodes.every((reason) => RETROSPECTIVE_REASONS.includes(reason))))
+    && (note === undefined || (typeof note === 'string' && note.trim().length <= 100))
+}
 
 export function parseSessionSummary(value: unknown): SessionSummary | null {
   if (!isRecord(value) || typeof value.sessionId !== 'string' || typeof value.goalSnapshot !== 'string') return null
@@ -146,6 +203,31 @@ export function parseSessionPauses(value: unknown): SessionPause[] | null {
     previousEnd = end
   }
   return pauses
+}
+
+/** 분석 기록 중 저장된 딴짓 분류만 집계한다. 이전 회차의 누락 값은 분류된 기록 수에서 뺀다. */
+export function parseOffTaskBreakdown(value: unknown): OffTaskReport | null {
+  if (!Array.isArray(value)) return null
+  const counts = new Map<OffTaskCategory, number>()
+  let total = 0
+  let previous: string | null = null
+  const consecutive: OffTaskReport['consecutive'] = []
+  for (const item of value) {
+    if (!isRecord(item) || item.relation !== 'UNRELATED') { previous = null; continue }
+    const category = OFF_TASK_CATEGORIES.find((entry) => entry === item.offTaskCategory)
+    if (category) {
+      counts.set(category, (counts.get(category) ?? 0) + 1)
+      total += 1
+    }
+    if (item.analysisStatus !== 'COMPLETED' || !isTime(item.observedAt)) { previous = null; continue }
+    if (previous && Date.parse(previous) < Date.parse(item.observedAt)) {
+      consecutive.push({ firstAt: previous, secondAt: item.observedAt })
+    }
+    previous = item.observedAt
+  }
+  const categories = Array.from(counts, ([category, count]) => ({ category, share: count / total }))
+    .sort((left, right) => right.share - left.share)
+  return { categories, consecutive }
 }
 
 const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)

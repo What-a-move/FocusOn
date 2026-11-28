@@ -7,6 +7,8 @@
 .fo-topbar ul { display: flex; align-items: center; gap: 22px; margin: 0; padding: 0; list-style: none; }
 .fo-topbar li { display: flex; align-items: center; gap: 8px; color: var(--fo-muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
+.fo-topbar li.fo-streak { flex-direction: column; align-items: flex-start; gap: 2px; }
+.fo-topbar .fo-streak small { font-size: 12px; font-variant-numeric: tabular-nums; }
 .fo-topbar li b { color: var(--fo-ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .fo-dashboard { display: flex; flex-direction: column; gap: var(--fo-section-gap); width: 100%; max-width: calc(var(--fo-page-max) + var(--fo-page-x) * 2); margin: 0 auto; padding: var(--fo-head-gap) var(--fo-page-x) var(--fo-page-bottom); }
 /* 홈은 한눈에 보는 화면이라 기본 창(1200×800)에서 스크롤이 없어야 한다. 세로 여백만 창 높이를 따라 줄이고, 공통 토큰 값을 넘지 않는다. */
@@ -53,7 +55,7 @@ a.fo-calendar-day:not(.completed):hover { background: var(--fo-field); }
 a.fo-calendar-day:focus-visible, a.fo-recent-item:focus-visible { outline: 3px solid var(--fo-focus); outline-offset: 2px; }
 .fo-calendar-day.completed { overflow: hidden; border: 1.5px solid var(--fo-gold); background: var(--fo-gold-soft); animation: fo-pop-in .55s var(--fo-ease) both; }
 .fo-calendar-day.completed.today { box-shadow: 0 0 0 2px var(--fo-surface), 0 0 0 4px var(--fo-ink); }
-.fo-poki-face { display: block; width: 100%; height: 100%; background: url('/design/poki-floating-master-v3.png') center 42% / 190% auto no-repeat; }
+.fo-poki-face { display: block; width: 100%; height: 100%; border-radius: inherit; background: url('/design/poki-floating-master-v3.png') center 42% / 190% auto no-repeat; }
 .fo-calendar-state { display: grid; gap: 4px; margin-top: 20px; padding: 14px 16px; border: 1px solid var(--fo-line); border-radius: 12px; font-size: 14px; line-height: 1.6; }
 .fo-calendar-state strong { font-weight: 700; }
 /* 불러오지 못하면 칸의 남은 자리 가운데에 오류 화면(LoadError)을 둔다. */
@@ -133,3 +135,7 @@ a.fo-recent-item:hover { background: var(--fo-field); }
   .fo-calendar-day { width: 32px; height: 32px; font-size: 13px; }
   .fo-calendar-grid { gap: 2px; }
 }
+
+.fo-calendar-day.goal-achieved { position: relative; overflow: visible; }
+.fo-calendar-day .fo-achieved-mark { position: absolute; right: -4px; bottom: -3px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--fo-ink); color: var(--fo-surface); font-size: 11px; }
+.fo-topbar ul { flex-wrap: wrap; }

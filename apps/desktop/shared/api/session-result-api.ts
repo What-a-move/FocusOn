@@ -1,8 +1,10 @@
-import type { LearningNote, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
+import type { LearningNote, LearningNoteList, LearningSummary, OffTaskReport, OffTaskShare, ReminderEstimate, RetrospectiveInput, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
+
+export { firstOffTaskAt } from '../../electron/shared/first-off-task'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { LearningNote, LearningSummary, SessionPause, SessionSummary }
+export type { LearningNote, LearningSummary, OffTaskReport, OffTaskShare, ReminderEstimate, SessionPause, SessionSummary }
 
 const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
@@ -18,8 +20,11 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 }
 
 export const sessionResultApi = {
+  getReminderEstimate: () => viaReports<ReminderEstimate>((api) => api.getReminderEstimate()),
+  saveRetrospective: (input: RetrospectiveInput) => viaReports<{ saved: true }>((api) => api.saveRetrospective(input)),
   getSummary: (sessionId: string) => viaReports<SessionSummary>((api) => api.getSessionSummary({ sessionId })),
   getPauses: (sessionId: string) => viaReports<SessionPause[]>((api) => api.getSessionPauses({ sessionId })),
+  getOffTaskBreakdown: (sessionId: string) => viaReports<OffTaskReport>((api) => api.getOffTaskBreakdown({ sessionId })),
   getLearningSummary: (sessionId: string) => viaReports<LearningSummary>((api) => api.getLearningSummary({ sessionId })),
   listLearningNotes: (cursor: string | null = null) => viaReports<LearningNoteList>((api) => api.listLearningNotes({ cursor })),
 }

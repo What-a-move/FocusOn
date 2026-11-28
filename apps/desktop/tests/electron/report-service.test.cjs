@@ -119,3 +119,80 @@ test('일시정지는 순서와 열린 마지막 구간을 검증하고 본인 �
   } })
   assert.deepEqual(await service.getSessionPauses('7'), { success: true, data: [pause, last] })
 })
+
+test('목표 진행과 회고는 Desktop 기기 인증을 사용하며 원문 메모를 렌더러에 돌려주지 않는다', async () => {
+  const { isRetrospectiveInput, parseFocusProgress } = require('../../dist-electron/shared/report-contract.cjs')
+  const date = '2026-11-29'
+  const progress = { date, today: { totalActiveMs: 600000, dailyTargetMs: 3600000 }, week: { totalActiveMs: 1200000, weeklyTargetMs: null } }
+  assert.deepEqual(parseFocusProgress(progress), progress)
+  const streak = { currentDays: 0, longestDays: 12 }
+  assert.deepEqual(parseFocusProgress({ ...progress, streak }), { ...progress, streak })
+  assert.deepEqual(parseFocusProgress({ ...progress, streak: { currentDays: 4, longestDays: 3 } }), progress)
+  assert.deepEqual(parseFocusProgress({ ...progress, streak: { currentDays: -1, longestDays: 12 } }), progress)
+  assert.equal(parseFocusProgress({ ...progress, week: { totalActiveMs: 0, weeklyTargetMs: 0 } }), null)
+  assert.equal(parseCalendar({ ...calendar, days: [{ ...calendar.days[0], dailyTargetAchieved: true }] }).days[0].dailyTargetAchieved, true)
+
+  const input = { sessionId: '7', rating: 'BAD', reasonCodes: ['SELF_TIRED'], note: '  피곤했어요  ' }
+  assert.equal(isRetrospectiveInput(input), true)
+  assert.equal(isRetrospectiveInput({ ...input, rating: 'GOOD' }), false)
+  assert.equal(isRetrospectiveInput({ ...input, note: '가'.repeat(101) }), false)
+  assert.equal(isRetrospectiveInput({ ...input, reasonCodes: ['SELF_TIRED', 'SELF_TIRED'] }), false)
+
+  const requests = []
+  const service = new ReportService({ authorizedRequest: async (request) => {
+    requests.push(request)
+    return { success: true, data: request.parse(request.method === 'GET' ? progress : { sessionId: '7', note: input.note }) }
+  } })
+  assert.deepEqual(await service.getProgress(date), { success: true, data: progress })
+  assert.deepEqual(await service.saveRetrospective(input), { success: true, data: { saved: true } })
+  assert.deepEqual(requests.map(({ path, method, withDeviceId, body }) => ({ path, method, withDeviceId, body })), [
+    { path: '/api/v1/reports/progress?date=2026-11-29', method: 'GET', withDeviceId: true, body: undefined },
+    { path: '/api/v1/sessions/7/retrospective', method: 'PUT', withDeviceId: true, body: { rating: 'BAD', reasonCodes: ['SELF_TIRED'], note: '피곤했어요' } },
+  ])
+})
+
+test('딴짓 비율은 유효하게 분류된 UNRELATED 기록만 쓰고 기타와 예전 누락 값을 구분한다', async () => {
+  const record = (offTaskCategory) => ({ relation: 'UNRELATED', offTaskCategory })
+  const data = [
+    record('SNS'),
+    record('VIDEO'),
+    record('VIDEO'),
+    record('OTHER'),
+    record(null),
+    record(undefined),
+    record('UNKNOWN_CATEGORY'),
+    { relation: 'RELATED', offTaskCategory: 'GAME' },
+    { relation: 'UNCERTAIN', offTaskCategory: 'NEWS' },
+    null,
+  ]
+  const service = new ReportService({ authorizedRequest: async ({ path, method, parse }) => {
+    assert.equal(path, '/api/v1/sessions/7/analysis-runs')
+    assert.equal(method, 'GET')
+    assert.deepEqual(parse([record(null), record(undefined)]), { categories: [], consecutive: [] })
+    assert.deepEqual(parse([]), { categories: [], consecutive: [] })
+    assert.equal(parse({ items: data }), null)
+    return { success: true, data: parse(data) }
+  } })
+  assert.deepEqual(await service.getOffTaskBreakdown('7'), {
+    success: true,
+    data: {
+      categories: [
+        { category: 'VIDEO', share: 0.5 },
+        { category: 'SNS', share: 0.25 },
+        { category: 'OTHER', share: 0.25 },
+      ],
+      consecutive: [],
+    },
+  })
+})
+
+test('첫 이탈은 서로 다른 시각에 연속해 확정된 기록만 후보에 넣는다', () => {
+  const { parseOffTaskBreakdown } = require('../../dist-electron/shared/report-contract.cjs')
+  const run = (minute, relation = 'UNRELATED', analysisStatus = 'COMPLETED') => ({ relation, analysisStatus, observedAt: `2026-11-29T01:${minute}:00Z` })
+  const report = parseOffTaskBreakdown([
+    run('01'), run('01'), run('02', 'UNCERTAIN', 'NEEDS_CONFIRMATION'),
+    run('03'), run('04', 'UNRELATED', 'ERROR'),
+    run('05'), run('06'), run('07', 'PRIVACY_BLOCKED', 'SKIPPED'), run('08'),
+  ])
+  assert.deepEqual(report.consecutive, [{ firstAt: run('05').observedAt, secondAt: run('06').observedAt }])
+})

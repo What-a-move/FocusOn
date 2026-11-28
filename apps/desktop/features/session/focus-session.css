@@ -115,7 +115,6 @@
 .focus-window .replace-list input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--brand); }
 .focus-window .replace-list label:has(input:checked) { border-color: var(--brand); }
 .focus-window .replace-list label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
-.focus-window dialog .replace-note { margin-top: 8px; font-size: 13px; }
 .focus-window .add-error { margin-top: 12px; }
 .focus-window .add-error strong { display: block; color: var(--danger); font-size: 14px; }
 .focus-window .add-error span { display: block; margin-top: 2px; color: var(--ink); font-size: 14px; }
