@@ -7,14 +7,11 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from sklearn.feature_extraction import FeatureHasher
-from sklearn.feature_extraction.text import HashingVectorizer
 from torch.nn import functional as F
 from transformers import AutoModel, AutoTokenizer
 
 from .discovery import features as discovery_features
 from .evidence import features as evidence_features
-from .topic_bank import TOPIC_BANK_FILE, TopicBank
 
 ROOT = Path(__file__).resolve().parent
 MODEL_DIR = ROOT / "model"
@@ -61,6 +58,9 @@ def validate_route(payload):
 
 class ScreenEncoder:
     def __init__(self, directory):
+        from sklearn.feature_extraction import FeatureHasher
+        from sklearn.feature_extraction.text import HashingVectorizer
+
         self.device = "mps" if torch.backends.mps.is_available() else "cpu"
         # transformers 4.57.3 warns about a Mistral regex for any local config saved by
         # 4.57.3. This XLM-R tokenizer uses Metaspace, so the flag only silences that false alarm.
@@ -143,14 +143,11 @@ class ActivityClassifier:
         for key, filename in (
             ("headSHA256", "activity-head.pt"),
             ("encoderSHA256", "encoder/model.safetensors"),
-            ("topicBankSHA256", TOPIC_BANK_FILE),
         ):
             with (directory / filename).open("rb") as handle:
                 if hashlib.file_digest(handle, "sha256").hexdigest() != self.manifest[key]:
                     raise ValueError(f"체크포인트 SHA-256이 일치하지 않습니다 ({filename}).")
         self.encoder = ScreenEncoder(directory / "encoder")
-        # Embedded once at startup; goal matching compares a screen against these topics.
-        self.topic_bank = TopicBank.load(directory / TOPIC_BANK_FILE, self.encoder)
         self.head = torch.load(directory / "activity-head.pt", weights_only=True, map_location="cpu")
 
     def predict(self, payloads):

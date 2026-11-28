@@ -1,0 +1,5258 @@
+{
+  "note": "200 AI-domain cases; JEV scores are live TypeSafe API calls; E5 scores are simulated constants.",
+  "totalSeconds": 3.53,
+  "summary": {
+    "total": 200,
+    "exactMatches": 189,
+    "expectedMatchTotal": 60,
+    "correctMatch": 51,
+    "wrongMatch": 1,
+    "expectedFarTotal": 55,
+    "correctFar": 54,
+    "wrongFar": 0,
+    "meetsTarget": false
+  },
+  "misclassifiedCount": 11,
+  "misclassified": [
+    {
+      "caseId": "ai200-020",
+      "category": "MATCHED_SINGLE",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "SGD Momentum과 AdamW 옵티마이저 업데이트 수식",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.43
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 170.0
+    },
+    {
+      "caseId": "ai200-023",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph Checkpointer(MemorySaver/PostgresSaver) 상태 영속화",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.61
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 163.4
+    },
+    {
+      "caseId": "ai200-024",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph interrupt_before와 Human-in-the-Loop 승인",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.47
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 157.3
+    },
+    {
+      "caseId": "ai200-026",
+      "category": "MATCHED_SINGLE",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "디코더 추론 시 Key-Value Cache 재사용 원리",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.33
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 167.7
+    },
+    {
+      "caseId": "ai200-031",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "RLHF Reward Model Bradley-Terry 선호 손실 함수",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.3
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 163.0
+    },
+    {
+      "caseId": "ai200-032",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO(Proximal Policy Optimization) Clipped Surrogate Loss",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.3
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 160.2
+    },
+    {
+      "caseId": "ai200-034",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO Value Network와 GAE(Generalized Advantage Estimation)",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.52
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 175.1
+    },
+    {
+      "caseId": "ai200-046",
+      "category": "MATCHED_MULTI",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "디코더 추론 시 Key-Value Cache 재사용 원리",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.46
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 159.5
+    },
+    {
+      "caseId": "ai200-047",
+      "category": "MATCHED_MULTI",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO(Proximal Policy Optimization) Clipped Surrogate Loss",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.02,
+        "g2": 0.51
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 159.4
+    },
+    {
+      "caseId": "ai200-124",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "DoRA(Weight-Decomposed Low-Rank Adaptation)",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.77,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 178.1
+    },
+    {
+      "caseId": "ai200-146",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "선형대수 고유값 분해(Eigen-decomposition)와 대각화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.42,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 158.1
+    }
+  ],
+  "rows": [
+    {
+      "caseId": "ai200-001",
+      "category": "MATCHED_SINGLE",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PyTorch Multi-Head Attention Q, K, V 구현",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.96
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 253.3
+    },
+    {
+      "caseId": "ai200-002",
+      "category": "MATCHED_SINGLE",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Scaled Dot-Product Attention과 어텐션 마스크",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.77
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 253.0
+    },
+    {
+      "caseId": "ai200-003",
+      "category": "MATCHED_SINGLE",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "nn.MultiheadAttention 파라미터와 batch_first 옵션",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.8
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 257.6
+    },
+    {
+      "caseId": "ai200-004",
+      "category": "MATCHED_SINGLE",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Self-Attention 차원 분할과 head 병렬 연산",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.89
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 249.2
+    },
+    {
+      "caseId": "ai200-005",
+      "category": "MATCHED_SINGLE",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Multi-Head Attention과 Cross-Attention 비교 구현",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.9
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 273.0
+    },
+    {
+      "caseId": "ai200-006",
+      "category": "MATCHED_SINGLE",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LoRA 저차원 행렬 분해(W_0 + BA) 원리",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.96
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 255.3
+    },
+    {
+      "caseId": "ai200-007",
+      "category": "MATCHED_SINGLE",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "HuggingFace PEFT LoraConfig rank(r)와 alpha 튜닝",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.8
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 255.5
+    },
+    {
+      "caseId": "ai200-008",
+      "category": "MATCHED_SINGLE",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LoRA 가중치 병합(merge_and_unload)과 추론 지연 제거",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.78
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 250.9
+    },
+    {
+      "caseId": "ai200-009",
+      "category": "MATCHED_SINGLE",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LoRA 학습 시 target_modules 선택과 성능 비교",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.85
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 266.6
+    },
+    {
+      "caseId": "ai200-010",
+      "category": "MATCHED_SINGLE",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LoRA+와 학습률 비대칭 설정 원리",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.87
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 258.8
+    },
+    {
+      "caseId": "ai200-011",
+      "category": "MATCHED_SINGLE",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "BM25 희소 검색과 Dense 벡터 검색 결합(RRF)",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.79
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.1
+    },
+    {
+      "caseId": "ai200-012",
+      "category": "MATCHED_SINGLE",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "하이브리드 검색에서 가중치 알파(alpha) 튜닝",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.81
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.2
+    },
+    {
+      "caseId": "ai200-013",
+      "category": "MATCHED_SINGLE",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Qdrant/Elasticsearch 하이브리드 쿼리 구현",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.3
+    },
+    {
+      "caseId": "ai200-014",
+      "category": "MATCHED_SINGLE",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "한국어 형태소 분석(Kiwi) 기반 BM25 + 임베딩 하이브리드",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.67
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.4
+    },
+    {
+      "caseId": "ai200-015",
+      "category": "MATCHED_SINGLE",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Hybrid Search 이후 Cross-Encoder Reranker 연결",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.84
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.9
+    },
+    {
+      "caseId": "ai200-016",
+      "category": "MATCHED_SINGLE",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "PyTorch autograd와 loss.backward() 기울기 계산",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.85
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.4
+    },
+    {
+      "caseId": "ai200-017",
+      "category": "MATCHED_SINGLE",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "optimizer.zero_grad()와 optimizer.step() 호출 순서",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 165.6
+    },
+    {
+      "caseId": "ai200-018",
+      "category": "MATCHED_SINGLE",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Gradient Accumulation(기울기 누적)과 학습 루프",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.91
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.4
+    },
+    {
+      "caseId": "ai200-019",
+      "category": "MATCHED_SINGLE",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "torch.no_grad()와 gradient clipping(clip_grad_norm_)",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.84
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.3
+    },
+    {
+      "caseId": "ai200-020",
+      "category": "MATCHED_SINGLE",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "SGD Momentum과 AdamW 옵티마이저 업데이트 수식",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.43
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 170.0
+    },
+    {
+      "caseId": "ai200-021",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph StateGraph와 TypedDict 상태 정의",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.9
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.5
+    },
+    {
+      "caseId": "ai200-022",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "add_conditional_edges로 도구 호출 분기 라우팅",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.89
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 180.0
+    },
+    {
+      "caseId": "ai200-023",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph Checkpointer(MemorySaver/PostgresSaver) 상태 영속화",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.61
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 163.4
+    },
+    {
+      "caseId": "ai200-024",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph interrupt_before와 Human-in-the-Loop 승인",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.47
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 157.3
+    },
+    {
+      "caseId": "ai200-025",
+      "category": "MATCHED_SINGLE",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph 서브그래프(Subgraph)와 멀티 에이전트 오케스트레이션",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.82
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 199.5
+    },
+    {
+      "caseId": "ai200-026",
+      "category": "MATCHED_SINGLE",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "디코더 추론 시 Key-Value Cache 재사용 원리",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.33
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 167.7
+    },
+    {
+      "caseId": "ai200-027",
+      "category": "MATCHED_SINGLE",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "GQA(Grouped-Query Attention)로 KV Cache 크기 절감",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.5
+    },
+    {
+      "caseId": "ai200-028",
+      "category": "MATCHED_SINGLE",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "vLLM PagedAttention과 KV Cache 블록 단편화 해소",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.95
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 187.8
+    },
+    {
+      "caseId": "ai200-029",
+      "category": "MATCHED_SINGLE",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "KV Cache 양자화(FP8/INT8)와 컨텍스트 길이 확장",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.95
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 192.9
+    },
+    {
+      "caseId": "ai200-030",
+      "category": "MATCHED_SINGLE",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Prefix Caching으로 공통 시스템 프롬프트 KV 재사용",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.79
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 227.8
+    },
+    {
+      "caseId": "ai200-031",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "RLHF Reward Model Bradley-Terry 선호 손실 함수",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.3
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 163.0
+    },
+    {
+      "caseId": "ai200-032",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO(Proximal Policy Optimization) Clipped Surrogate Loss",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.3
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 160.2
+    },
+    {
+      "caseId": "ai200-033",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "RLHF 학습에서 KL-Divergence 패널티 역할",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.69
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 184.1
+    },
+    {
+      "caseId": "ai200-034",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO Value Network와 GAE(Generalized Advantage Estimation)",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.52
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 175.1
+    },
+    {
+      "caseId": "ai200-035",
+      "category": "MATCHED_SINGLE",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "RLHF 3단계(SFT → RM → PPO) 파이프라인 구현",
+      "simulatedE5Scores": {
+        "g1": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.77
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.7
+    },
+    {
+      "caseId": "ai200-036",
+      "category": "MATCHED_MULTI",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "BM25 희소 검색과 Dense 벡터 검색 결합(RRF)",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.83
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.4
+    },
+    {
+      "caseId": "ai200-037",
+      "category": "MATCHED_MULTI",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "optimizer.zero_grad()와 optimizer.step() 호출 순서",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.94
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.0
+    },
+    {
+      "caseId": "ai200-038",
+      "category": "MATCHED_MULTI",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph Checkpointer(MemorySaver/PostgresSaver) 상태 영속화",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.7
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.3
+    },
+    {
+      "caseId": "ai200-039",
+      "category": "MATCHED_MULTI",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "KV Cache 양자화(FP8/INT8)와 컨텍스트 길이 확장",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.95
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 170.9
+    },
+    {
+      "caseId": "ai200-040",
+      "category": "MATCHED_MULTI",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "RLHF 3단계(SFT → RM → PPO) 파이프라인 구현",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.15,
+        "g2": 0.74
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.8
+    },
+    {
+      "caseId": "ai200-041",
+      "category": "MATCHED_MULTI",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PyTorch Multi-Head Attention Q, K, V 구현",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.97
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.2
+    },
+    {
+      "caseId": "ai200-042",
+      "category": "MATCHED_MULTI",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "HuggingFace PEFT LoraConfig rank(r)와 alpha 튜닝",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.04,
+        "g2": 0.88
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.8
+    },
+    {
+      "caseId": "ai200-043",
+      "category": "MATCHED_MULTI",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Qdrant/Elasticsearch 하이브리드 쿼리 구현",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.04,
+        "g2": 0.9
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.7
+    },
+    {
+      "caseId": "ai200-044",
+      "category": "MATCHED_MULTI",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "torch.no_grad()와 gradient clipping(clip_grad_norm_)",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.85
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.8
+    },
+    {
+      "caseId": "ai200-045",
+      "category": "MATCHED_MULTI",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph 서브그래프(Subgraph)와 멀티 에이전트 오케스트레이션",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.08,
+        "g2": 0.87
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 175.2
+    },
+    {
+      "caseId": "ai200-046",
+      "category": "MATCHED_MULTI",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "디코더 추론 시 Key-Value Cache 재사용 원리",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.46
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 159.5
+    },
+    {
+      "caseId": "ai200-047",
+      "category": "MATCHED_MULTI",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO(Proximal Policy Optimization) Clipped Surrogate Loss",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.02,
+        "g2": 0.51
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": false,
+      "error": null,
+      "elapsedMs": 159.4
+    },
+    {
+      "caseId": "ai200-048",
+      "category": "MATCHED_MULTI",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "nn.MultiheadAttention 파라미터와 batch_first 옵션",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.81
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.5
+    },
+    {
+      "caseId": "ai200-049",
+      "category": "MATCHED_MULTI",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LoRA 학습 시 target_modules 선택과 성능 비교",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.04,
+        "g2": 0.91
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 209.4
+    },
+    {
+      "caseId": "ai200-050",
+      "category": "MATCHED_MULTI",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Hybrid Search 이후 Cross-Encoder Reranker 연결",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.04,
+        "g2": 0.82
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.5
+    },
+    {
+      "caseId": "ai200-051",
+      "category": "MATCHED_MULTI",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "PyTorch autograd와 loss.backward() 기울기 계산",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.91
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.2
+    },
+    {
+      "caseId": "ai200-052",
+      "category": "MATCHED_MULTI",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "add_conditional_edges로 도구 호출 분기 라우팅",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.07,
+        "g2": 0.89
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.3
+    },
+    {
+      "caseId": "ai200-053",
+      "category": "MATCHED_MULTI",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "vLLM PagedAttention과 KV Cache 블록 단편화 해소",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.02,
+        "g2": 0.95
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 186.9
+    },
+    {
+      "caseId": "ai200-054",
+      "category": "MATCHED_MULTI",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PPO Value Network와 GAE(Generalized Advantage Estimation)",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.71
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 204.8
+    },
+    {
+      "caseId": "ai200-055",
+      "category": "MATCHED_MULTI",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Multi-Head Attention과 Cross-Attention 비교 구현",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.0
+    },
+    {
+      "caseId": "ai200-056",
+      "category": "MATCHED_MULTI",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LoRA 저차원 행렬 분해(W_0 + BA) 원리",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.96
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 164.5
+    },
+    {
+      "caseId": "ai200-057",
+      "category": "MATCHED_MULTI",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "하이브리드 검색에서 가중치 알파(alpha) 튜닝",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.83
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.5
+    },
+    {
+      "caseId": "ai200-058",
+      "category": "MATCHED_MULTI",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Gradient Accumulation(기울기 누적)과 학습 루프",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.91
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 164.1
+    },
+    {
+      "caseId": "ai200-059",
+      "category": "MATCHED_MULTI",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangGraph interrupt_before와 Human-in-the-Loop 승인",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.65
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.6
+    },
+    {
+      "caseId": "ai200-060",
+      "category": "MATCHED_MULTI",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Prefix Caching으로 공통 시스템 프롬프트 KV 재사용",
+      "simulatedE5Scores": {
+        "g1": 0.68,
+        "g2": 0.9
+      },
+      "jevGoalScores": {
+        "g1": 0.03,
+        "g2": 0.88
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g2",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g2",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.3
+    },
+    {
+      "caseId": "ai200-061",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Transformer Positional Encoding 사인 코사인 공식",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.2
+    },
+    {
+      "caseId": "ai200-062",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "RoPE(Rotary Position Embedding) 회전 위치 인코딩",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.15
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.4
+    },
+    {
+      "caseId": "ai200-063",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Layer Normalization: Pre-LN과 Post-LN 수렴 차이",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.4
+    },
+    {
+      "caseId": "ai200-064",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "SwiGLU 활성화 함수와 Feed-Forward Network",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 178.2
+    },
+    {
+      "caseId": "ai200-065",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "FlashAttention IO-Aware 타일링 알고리즘",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.15
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.8
+    },
+    {
+      "caseId": "ai200-066",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Decoder-Only vs Encoder-Decoder 트랜스포머 아키텍처",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.08
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.0
+    },
+    {
+      "caseId": "ai200-067",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "QLoRA 4-bit NF4 양자화와 Double Quantization",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.33
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.9
+    },
+    {
+      "caseId": "ai200-068",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Prompt Tuning과 Prefix Tuning 비교",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.9
+    },
+    {
+      "caseId": "ai200-069",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Full Fine-Tuning과 Gradient Checkpointing 메모리 절감",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.3
+    },
+    {
+      "caseId": "ai200-070",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "bitsandbytes 8-bit AdamW 옵티마이저 상태 압축",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.19,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.4
+    },
+    {
+      "caseId": "ai200-071",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "DoRA(Weight-Decomposed Low-Rank Adaptation)",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.55
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.2
+    },
+    {
+      "caseId": "ai200-072",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "합성 지시 데이터셋(Alpaca 포맷) JSONL 구축",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.07
+      },
+      "jevDifferentStudyTopic": 0.15,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 186.8
+    },
+    {
+      "caseId": "ai200-073",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "RAGAS Faithfulness와 Answer Relevancy 평가 지표",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.11
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.0
+    },
+    {
+      "caseId": "ai200-074",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Semantic Chunking과 RecursiveCharacterTextSplitter",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.18
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.1
+    },
+    {
+      "caseId": "ai200-075",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "HNSW 벡터 인덱스 M과 ef_construction 파라미터",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.13
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 185.4
+    },
+    {
+      "caseId": "ai200-076",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "HyDE(Hypothetical Document Embeddings) 가상 문서 검색",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.46
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.5
+    },
+    {
+      "caseId": "ai200-077",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "RAG 시스템의 프롬프트 인젝션 방어와 컨텍스트 격리",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.09
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.9
+    },
+    {
+      "caseId": "ai200-078",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "PDF 표(Table) 파싱과 마크다운 변환 전처리",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.31,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.0
+    },
+    {
+      "caseId": "ai200-079",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "PyTorch DataLoader num_workers와 pin_memory 최적화",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 169.6
+    },
+    {
+      "caseId": "ai200-080",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Tensor 브로드캐스팅 규칙과 view, reshape 차이",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.11,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 188.8
+    },
+    {
+      "caseId": "ai200-081",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "DistributedDataParallel(DDP) 멀티 GPU 분산 학습",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.23
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.8
+    },
+    {
+      "caseId": "ai200-082",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "torch.amp.autocast 혼합 정밀도(FP16/BF16) 학습",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.27
+      },
+      "jevDifferentStudyTopic": 0.03,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.9
+    },
+    {
+      "caseId": "ai200-083",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "TorchScript(trace/script)와 torch.compile 그래프 최적화",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.7
+    },
+    {
+      "caseId": "ai200-084",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Custom Dataset __len__과 __getitem__ 구현",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.09,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.6
+    },
+    {
+      "caseId": "ai200-085",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangChain LCEL 파이프(|) 연산자와 RunnableLambda",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.17,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 174.2
+    },
+    {
+      "caseId": "ai200-086",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "LangSmith 트레이싱과 실행 지연/토큰 비용 추적",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.16,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.6
+    },
+    {
+      "caseId": "ai200-087",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "OpenAI Function Calling JSON Schema 설계",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.26,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 177.7
+    },
+    {
+      "caseId": "ai200-088",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "MCP(Model Context Protocol) 서버와 도구 목록 노출",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.27,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 180.3
+    },
+    {
+      "caseId": "ai200-089",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "ReAct 프롬프트 패턴(Thought-Action-Observation)",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.2,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.4
+    },
+    {
+      "caseId": "ai200-090",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Structured Output(with_structured_output) 파싱 오류 처리",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.07
+      },
+      "jevDifferentStudyTopic": 0.15,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.5
+    },
+    {
+      "caseId": "ai200-091",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Continuous Batching과 vLLM 스케줄링",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.1
+      },
+      "jevDifferentStudyTopic": 0.1,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.9
+    },
+    {
+      "caseId": "ai200-092",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "AWQ와 GPTQ 4-bit 가중치 양자화 비교",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.12,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.1
+    },
+    {
+      "caseId": "ai200-093",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Speculative Decoding 초안 모델과 검증 단계",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.11,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.1
+    },
+    {
+      "caseId": "ai200-094",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Tensor Parallelism과 Megatron-LM 열/행 분할",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.16,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.1
+    },
+    {
+      "caseId": "ai200-095",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "ONNX Runtime과 TensorRT-LLM 그래프 최적화",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.07
+      },
+      "jevDifferentStudyTopic": 0.13,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.6
+    },
+    {
+      "caseId": "ai200-096",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "LLM 서빙 TTFT와 TPOT 지연 지표 측정",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.09
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 176.6
+    },
+    {
+      "caseId": "ai200-097",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "DPO(Direct Preference Optimization) 손실 함수 유도",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.08
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.2
+    },
+    {
+      "caseId": "ai200-098",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "GRPO(Group Relative Policy Optimization)와 Critic 제거",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.13
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 165.9
+    },
+    {
+      "caseId": "ai200-099",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Constitutional AI(RLAIF)와 AI 피드백 생성",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.14
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.6
+    },
+    {
+      "caseId": "ai200-100",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Reward Hacking 현상과 길이 편향(Length Bias) 문제",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.23
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.2
+    },
+    {
+      "caseId": "ai200-101",
+      "category": "ADJACENT_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Rejection Sampling(Best-of-N)과 SFT 재학습",
+      "simulatedE5Scores": {
+        "g1": 0.85
+      },
+      "jevGoalScores": {
+        "g1": 0.09
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 165.3
+    },
+    {
+      "caseId": "ai200-102",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Transformer Positional Encoding 사인 코사인 공식",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 174.0
+    },
+    {
+      "caseId": "ai200-103",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Prompt Tuning과 Prefix Tuning 비교",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.16,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.6
+    },
+    {
+      "caseId": "ai200-104",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "HNSW 벡터 인덱스 M과 ef_construction 파라미터",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.18,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.35,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 177.0
+    },
+    {
+      "caseId": "ai200-105",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "torch.amp.autocast 혼합 정밀도(FP16/BF16) 학습",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.35,
+        "g2": 0.04
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 174.2
+    },
+    {
+      "caseId": "ai200-106",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "ReAct 프롬프트 패턴(Thought-Action-Observation)",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.04
+      },
+      "jevDifferentStudyTopic": 0.23,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.4
+    },
+    {
+      "caseId": "ai200-107",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "LLM 서빙 TTFT와 TPOT 지연 지표 측정",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.1,
+        "g2": 0.04
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.4
+    },
+    {
+      "caseId": "ai200-108",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "GRPO(Group Relative Policy Optimization)와 Critic 제거",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.21,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.1,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.8
+    },
+    {
+      "caseId": "ai200-109",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "RoPE(Rotary Position Embedding) 회전 위치 인코딩",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.19,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.4
+    },
+    {
+      "caseId": "ai200-110",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Full Fine-Tuning과 Gradient Checkpointing 메모리 절감",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.07,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.12,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.1
+    },
+    {
+      "caseId": "ai200-111",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "HyDE(Hypothetical Document Embeddings) 가상 문서 검색",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.57,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.5
+    },
+    {
+      "caseId": "ai200-112",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "TorchScript(trace/script)와 torch.compile 그래프 최적화",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.12,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.2
+    },
+    {
+      "caseId": "ai200-113",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Structured Output(with_structured_output) 파싱 오류 처리",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.08,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.33,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.3
+    },
+    {
+      "caseId": "ai200-114",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Continuous Batching과 vLLM 스케줄링",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.11,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.24,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.0
+    },
+    {
+      "caseId": "ai200-115",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Reward Hacking 현상과 길이 편향(Length Bias) 문제",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.34,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.6
+    },
+    {
+      "caseId": "ai200-116",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Layer Normalization: Pre-LN과 Post-LN 수렴 차이",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.08,
+        "g2": 0.22
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.5
+    },
+    {
+      "caseId": "ai200-117",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "bitsandbytes 8-bit AdamW 옵티마이저 상태 압축",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.04,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.49,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.6
+    },
+    {
+      "caseId": "ai200-118",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "RAG 시스템의 프롬프트 인젝션 방어와 컨텍스트 격리",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.13,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.16,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.4
+    },
+    {
+      "caseId": "ai200-119",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Custom Dataset __len__과 __getitem__ 구현",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.15,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 182.2
+    },
+    {
+      "caseId": "ai200-120",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "LangChain LCEL 파이프(|) 연산자와 RunnableLambda",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.27,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.3
+    },
+    {
+      "caseId": "ai200-121",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "AWQ와 GPTQ 4-bit 가중치 양자화 비교",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.12,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.2
+    },
+    {
+      "caseId": "ai200-122",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "DPO(Direct Preference Optimization) 손실 함수 유도",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.1,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.13,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 223.6
+    },
+    {
+      "caseId": "ai200-123",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "SwiGLU 활성화 함수와 Feed-Forward Network",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.04
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.6
+    },
+    {
+      "caseId": "ai200-124",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "DoRA(Weight-Decomposed Low-Rank Adaptation)",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.77,
+        "g2": 0.02
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": true,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 178.1
+    },
+    {
+      "caseId": "ai200-125",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현",
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "PDF 표(Table) 파싱과 마크다운 변환 전처리",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.43,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.4
+    },
+    {
+      "caseId": "ai200-126",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법",
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "PyTorch DataLoader num_workers와 pin_memory 최적화",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.09,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.5
+    },
+    {
+      "caseId": "ai200-127",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현",
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "LangSmith 트레이싱과 실행 지연/토큰 비용 추적",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.25,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 169.3
+    },
+    {
+      "caseId": "ai200-128",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화",
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Speculative Decoding 초안 모델과 검증 단계",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.05,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.13,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 188.8
+    },
+    {
+      "caseId": "ai200-129",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습",
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Constitutional AI(RLAIF)와 AI 피드백 생성",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.15,
+        "g2": 0.03
+      },
+      "jevDifferentStudyTopic": 0.1,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 175.6
+    },
+    {
+      "caseId": "ai200-130",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현",
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "FlashAttention IO-Aware 타일링 알고리즘",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.17,
+        "g2": 0.05
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.9
+    },
+    {
+      "caseId": "ai200-131",
+      "category": "ADJACENT_MULTI_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해",
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "합성 지시 데이터셋(Alpaca 포맷) JSONL 구축",
+      "simulatedE5Scores": {
+        "g1": 0.85,
+        "g2": 0.66
+      },
+      "jevGoalScores": {
+        "g1": 0.06,
+        "g2": 0.04
+      },
+      "jevDifferentStudyTopic": 0.17,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.7
+    },
+    {
+      "caseId": "ai200-132",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Docker Multi-Stage Build로 이미지 경량화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.89,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.0
+    },
+    {
+      "caseId": "ai200-133",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "TanStack Query useMutation과 캐시 무효화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.89,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.3
+    },
+    {
+      "caseId": "ai200-134",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.75,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.3
+    },
+    {
+      "caseId": "ai200-135",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.95,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.8
+    },
+    {
+      "caseId": "ai200-136",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Kubernetes Readiness Probe와 Liveness Probe",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.86,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.3
+    },
+    {
+      "caseId": "ai200-137",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set(ZSET) 기반 실시간 랭킹",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.65,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.8
+    },
+    {
+      "caseId": "ai200-138",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "CSS Grid와 Flexbox 반응형 레이아웃",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.94,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.1
+    },
+    {
+      "caseId": "ai200-139",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Next.js App Router Server Component와 Client Component",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.74,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.3
+    },
+    {
+      "caseId": "ai200-140",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Git Rebase와 Interactive Squash 커밋 정리",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.93,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.8
+    },
+    {
+      "caseId": "ai200-141",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "HTTP/2 멀티플렉싱과 HPACK 헤더 압축",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.79,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.9
+    },
+    {
+      "caseId": "ai200-142",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "운영체제 프로세스 컨텍스트 스위칭과 스레드",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.88,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.5
+    },
+    {
+      "caseId": "ai200-143",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "데이터베이스 ACID 트랜잭션과 MVCC 격리 수준",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.82,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.9
+    },
+    {
+      "caseId": "ai200-144",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "TypeScript 제네릭과 조건부 타입(infer)",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.87,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.5
+    },
+    {
+      "caseId": "ai200-145",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Go 언어 Goroutine과 Channel 동시성 제어",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.96,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.9
+    },
+    {
+      "caseId": "ai200-146",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "선형대수 고유값 분해(Eigen-decomposition)와 대각화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.42,
+      "isStudy": true,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 158.1
+    },
+    {
+      "caseId": "ai200-147",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "미적분 테일러 급수 전개와 근사 오차",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.91,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 156.7
+    },
+    {
+      "caseId": "ai200-148",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "FastAPI 의존성 주입(Depends)과 Pydantic 검증",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.74,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.5
+    },
+    {
+      "caseId": "ai200-149",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "AWS S3 Presigned URL을 이용한 직접 업로드",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 156.9
+    },
+    {
+      "caseId": "ai200-150",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "브라우저 CORS Preflight(OPTIONS) 요청 처리",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.72,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.8
+    },
+    {
+      "caseId": "ai200-151",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Rust 소유권(Ownership)과 빌림(Borrowing) 규칙",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.66,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 155.8
+    },
+    {
+      "caseId": "ai200-152",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Docker Multi-Stage Build로 이미지 경량화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.89,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.6
+    },
+    {
+      "caseId": "ai200-153",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "TanStack Query useMutation과 캐시 무효화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.79,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.8
+    },
+    {
+      "caseId": "ai200-154",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.94,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.1
+    },
+    {
+      "caseId": "ai200-155",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.79,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 175.9
+    },
+    {
+      "caseId": "ai200-156",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Kubernetes Readiness Probe와 Liveness Probe",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.91,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.6
+    },
+    {
+      "caseId": "ai200-157",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Redis Sorted Set(ZSET) 기반 실시간 랭킹",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.82,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.6
+    },
+    {
+      "caseId": "ai200-158",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "CSS Grid와 Flexbox 반응형 레이아웃",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.6
+    },
+    {
+      "caseId": "ai200-159",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Next.js App Router Server Component와 Client Component",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.89,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.6
+    },
+    {
+      "caseId": "ai200-160",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "Git Rebase와 Interactive Squash 커밋 정리",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.79,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.8
+    },
+    {
+      "caseId": "ai200-161",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "HTTP/2 멀티플렉싱과 HPACK 헤더 압축",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.92,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 164.2
+    },
+    {
+      "caseId": "ai200-162",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "운영체제 프로세스 컨텍스트 스위칭과 스레드",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.82,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.3
+    },
+    {
+      "caseId": "ai200-163",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "데이터베이스 ACID 트랜잭션과 MVCC 격리 수준",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.95,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.0
+    },
+    {
+      "caseId": "ai200-164",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "TypeScript 제네릭과 조건부 타입(infer)",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.65,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.8
+    },
+    {
+      "caseId": "ai200-165",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Go 언어 Goroutine과 Channel 동시성 제어",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.73,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.2
+    },
+    {
+      "caseId": "ai200-166",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "선형대수 고유값 분해(Eigen-decomposition)와 대각화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.8
+    },
+    {
+      "caseId": "ai200-167",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "미적분 테일러 급수 전개와 근사 오차",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.89,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.7
+    },
+    {
+      "caseId": "ai200-168",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "FastAPI 의존성 주입(Depends)과 Pydantic 검증",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.84,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.8
+    },
+    {
+      "caseId": "ai200-169",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "AWS S3 Presigned URL을 이용한 직접 업로드",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.68,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 156.7
+    },
+    {
+      "caseId": "ai200-170",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "브라우저 CORS Preflight(OPTIONS) 요청 처리",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.2
+    },
+    {
+      "caseId": "ai200-171",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Rust 소유권(Ownership)과 빌림(Borrowing) 규칙",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.91,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.1
+    },
+    {
+      "caseId": "ai200-172",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Docker Multi-Stage Build로 이미지 경량화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.75,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.3
+    },
+    {
+      "caseId": "ai200-173",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "TanStack Query useMutation과 캐시 무효화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.91,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.3
+    },
+    {
+      "caseId": "ai200-174",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.93,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.0
+    },
+    {
+      "caseId": "ai200-175",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.93,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 179.8
+    },
+    {
+      "caseId": "ai200-176",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "Kubernetes Readiness Probe와 Liveness Probe",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.84,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.4
+    },
+    {
+      "caseId": "ai200-177",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "Redis Sorted Set(ZSET) 기반 실시간 랭킹",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.0
+    },
+    {
+      "caseId": "ai200-178",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "CSS Grid와 Flexbox 반응형 레이아웃",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.86,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 186.2
+    },
+    {
+      "caseId": "ai200-179",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Next.js App Router Server Component와 Client Component",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.84,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 174.7
+    },
+    {
+      "caseId": "ai200-180",
+      "category": "DIFFERENT_FAR",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Git Rebase와 Interactive Squash 커밋 정리",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.93,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.3
+    },
+    {
+      "caseId": "ai200-181",
+      "category": "DIFFERENT_FAR",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "HTTP/2 멀티플렉싱과 HPACK 헤더 압축",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.76,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.1
+    },
+    {
+      "caseId": "ai200-182",
+      "category": "DIFFERENT_FAR",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "운영체제 프로세스 컨텍스트 스위칭과 스레드",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.88,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.9
+    },
+    {
+      "caseId": "ai200-183",
+      "category": "DIFFERENT_FAR",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "데이터베이스 ACID 트랜잭션과 MVCC 격리 수준",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.75,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.9
+    },
+    {
+      "caseId": "ai200-184",
+      "category": "DIFFERENT_FAR",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "TypeScript 제네릭과 조건부 타입(infer)",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.97,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.7
+    },
+    {
+      "caseId": "ai200-185",
+      "category": "DIFFERENT_FAR",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "Go 언어 Goroutine과 Channel 동시성 제어",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.86,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 170.1
+    },
+    {
+      "caseId": "ai200-186",
+      "category": "DIFFERENT_FAR",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "선형대수 고유값 분해(Eigen-decomposition)와 대각화",
+      "simulatedE5Scores": {
+        "g1": 0.64
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.83,
+      "isStudy": true,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.7
+    },
+    {
+      "caseId": "ai200-187",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "AI 개발자 2026년 회고 및 이직 준비 후기",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.04
+      },
+      "jevDifferentStudyTopic": 0.04,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.9
+    },
+    {
+      "caseId": "ai200-188",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "주간 AI 뉴스 요약: 주요 기업 신모델 출시 소식",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.09,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.4
+    },
+    {
+      "caseId": "ai200-189",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "GPU 서버 세팅 중 CUDA 드라이버 충돌 로그 모음",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.63,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.1
+    },
+    {
+      "caseId": "ai200-190",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "오늘 점심 메뉴 추천과 판교 카페 리스트",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.13,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.4
+    },
+    {
+      "caseId": "ai200-191",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "2026 AI 컨퍼런스 부스 방문 및 기념품 후기",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.23,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 290.3
+    },
+    {
+      "caseId": "ai200-192",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "AI 개발자 2026년 회고 및 이직 준비 후기",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.5
+    },
+    {
+      "caseId": "ai200-193",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "주간 AI 뉴스 요약: 주요 기업 신모델 출시 소식",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.11,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 172.5
+    },
+    {
+      "caseId": "ai200-194",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Transformer/Attention",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "GPU 서버 세팅 중 CUDA 드라이버 충돌 로그 모음",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.38,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 209.1
+    },
+    {
+      "caseId": "ai200-195",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "PEFT/Fine-Tuning",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "오늘 점심 메뉴 추천과 판교 카페 리스트",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.1,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.0
+    },
+    {
+      "caseId": "ai200-196",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "RAG/Retrieval",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "2026 AI 컨퍼런스 부스 방문 및 기념품 후기",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.17,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.6
+    },
+    {
+      "caseId": "ai200-197",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "PyTorch/Training",
+      "goalTexts": [
+        "PyTorch 역전파와 경사 하강법"
+      ],
+      "title": "AI 개발자 2026년 회고 및 이직 준비 후기",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 164.9
+    },
+    {
+      "caseId": "ai200-198",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Agents/LangGraph",
+      "goalTexts": [
+        "LangGraph 상태 그래프 구현"
+      ],
+      "title": "주간 AI 뉴스 요약: 주요 기업 신모델 출시 소식",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.28,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.0
+    },
+    {
+      "caseId": "ai200-199",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Inference/Serving",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "GPU 서버 세팅 중 CUDA 드라이버 충돌 로그 모음",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.03
+      },
+      "jevDifferentStudyTopic": 0.3,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.2
+    },
+    {
+      "caseId": "ai200-200",
+      "category": "NOISY_NOT_ENOUGH",
+      "domain": "Alignment/RLHF",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "오늘 점심 메뉴 추천과 판교 카페 리스트",
+      "simulatedE5Scores": {
+        "g1": 0.68
+      },
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.12,
+      "isStudy": false,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 219.6
+    }
+  ]
+}

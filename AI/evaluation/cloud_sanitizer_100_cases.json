@@ -1,0 +1,1902 @@
+[
+  {
+    "caseId": "sec100-001",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #1",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly000==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN RSA PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-002",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #2",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN OPENSSH PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly001==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN OPENSSH PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-003",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #3",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN EC PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly002==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN EC PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-004",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #4",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly003==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-005",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #5",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN ENCRYPTED PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly004==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-006",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #6",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly005==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN RSA PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-007",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #7",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN OPENSSH PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly006==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN OPENSSH PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-008",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #8",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN EC PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly007==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN EC PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-009",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #9",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly008==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-010",
+    "category": "BLOCKED_PEM",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "SSH 및 TLS 인증 공부"
+      }
+    ],
+    "title": "서버 개인키 설정 #10",
+    "body": "서버 인증서와 개인키를 설정합니다.\n-----BEGIN ENCRYPTED PRIVATE KEY-----\nMIIEowIBAAKCAQEA7xFakeKeyMaterialForTestingOnly009==\n-----END PRIVATE KEY-----",
+    "secretSubstring": "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-011",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #1",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0000\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0000\nDB_PASSWORD=super_secret_db_password_0000\nJWT_SECRET=another_long_jwt_secret_value_0000\nDATABASE_URL=postgres://admin:pass0000@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0000",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-012",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #2",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0001\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0001\nDB_PASSWORD=super_secret_db_password_0001\nJWT_SECRET=another_long_jwt_secret_value_0001\nDATABASE_URL=postgres://admin:pass0001@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0001",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-013",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #3",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0002\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0002\nDB_PASSWORD=super_secret_db_password_0002\nJWT_SECRET=another_long_jwt_secret_value_0002\nDATABASE_URL=postgres://admin:pass0002@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0002",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-014",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #4",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0003\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0003\nDB_PASSWORD=super_secret_db_password_0003\nJWT_SECRET=another_long_jwt_secret_value_0003\nDATABASE_URL=postgres://admin:pass0003@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0003",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-015",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #5",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0004\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0004\nDB_PASSWORD=super_secret_db_password_0004\nJWT_SECRET=another_long_jwt_secret_value_0004\nDATABASE_URL=postgres://admin:pass0004@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0004",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-016",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #6",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0005\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0005\nDB_PASSWORD=super_secret_db_password_0005\nJWT_SECRET=another_long_jwt_secret_value_0005\nDATABASE_URL=postgres://admin:pass0005@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0005",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-017",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #7",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0006\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0006\nDB_PASSWORD=super_secret_db_password_0006\nJWT_SECRET=another_long_jwt_secret_value_0006\nDATABASE_URL=postgres://admin:pass0006@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0006",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-018",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #8",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0007\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0007\nDB_PASSWORD=super_secret_db_password_0007\nJWT_SECRET=another_long_jwt_secret_value_0007\nDATABASE_URL=postgres://admin:pass0007@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0007",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-019",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #9",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0008\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0008\nDB_PASSWORD=super_secret_db_password_0008\nJWT_SECRET=another_long_jwt_secret_value_0008\nDATABASE_URL=postgres://admin:pass0008@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0008",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-020",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #10",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0009\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0009\nDB_PASSWORD=super_secret_db_password_0009\nJWT_SECRET=another_long_jwt_secret_value_0009\nDATABASE_URL=postgres://admin:pass0009@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0009",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-021",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #11",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0010\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0010\nDB_PASSWORD=super_secret_db_password_0010\nJWT_SECRET=another_long_jwt_secret_value_0010\nDATABASE_URL=postgres://admin:pass0010@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0010",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-022",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #12",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0011\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0011\nDB_PASSWORD=super_secret_db_password_0011\nJWT_SECRET=another_long_jwt_secret_value_0011\nDATABASE_URL=postgres://admin:pass0011@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0011",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-023",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #13",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0012\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0012\nDB_PASSWORD=super_secret_db_password_0012\nJWT_SECRET=another_long_jwt_secret_value_0012\nDATABASE_URL=postgres://admin:pass0012@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0012",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-024",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #14",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0013\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0013\nDB_PASSWORD=super_secret_db_password_0013\nJWT_SECRET=another_long_jwt_secret_value_0013\nDATABASE_URL=postgres://admin:pass0013@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0013",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-025",
+    "category": "BLOCKED_EXCESSIVE",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "환경변수 보안 관리 공부"
+      }
+    ],
+    "title": ".env 설정 파일 #15",
+    "body": "# .env\nOPENAI_API_KEY=sk-proj-1234567890abcdefghij0014\nGITHUB_TOKEN=ghp_1234567890abcdefghijklmn0014\nDB_PASSWORD=super_secret_db_password_0014\nJWT_SECRET=another_long_jwt_secret_value_0014\nDATABASE_URL=postgres://admin:pass0014@10.0.0.15:5432/prod",
+    "secretSubstring": "super_secret_db_password_0014",
+    "simulatedE5Scores": {
+      "g1": 0.88
+    },
+    "expectedBlocked": true,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-026",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI PostgreSQL 비동기 연동",
+    "body": "FastAPI에서 SQLAlchemy 비동기 세션을 열고 트랜잭션을 커밋하거나 롤백하는 방법을 학습합니다. 연결 설정 예시로 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 구문을 참고하되 실제 환경변수로 분리합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-027",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Security JWT 인증 필터 구현",
+    "body": "OncePerRequestFilter를 상속해 Authorization 헤더에서 토큰을 추출하고 서명을 검증합니다. 테스트 요청 헤더 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 처리 시 만료 여부를 함께 확인합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-028",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangGraph 에이전트 노드와 API 연동",
+    "body": "LangGraph StateGraph에서 외부 도구를 호출하는 노드를 작성하고 상태를 갱신합니다. 설정 예시 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 값은 서버 환경변수에서 안전하게 읽어오도록 구성합니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-029",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAG 하이브리드 검색 파이프라인 구축",
+    "body": "BM25 키워드 검색과 Dense 벡터 검색을 RRF로 결합해 상위 문서를 추출합니다. 검색 엔진 클라이언트 초기화 시 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 인증 정보를 분리해 관리합니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-030",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch 분산 학습과 체크포인트 저장",
+    "body": "PyTorch 학습 루프에서 loss.backward()와 optimizer.step()을 실행하고 에폭마다 모델 체크포인트를 저장합니다. 로깅 시 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 같은 민감 문자열이 남지 않게 필터링합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-031",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Docker Compose 백엔드 컨테이너 구성"
+      }
+    ],
+    "title": "Docker Compose 백엔드 컨테이너 구성",
+    "body": "Dockerfile과 docker-compose.yml로 애플리케이션과 데이터베이스 컨테이너를 함께 실행합니다. 컨테이너 환경변수 DB_PASSWORD=my_prod_password_9876 설정은 .env 파일로 분리해 마운트합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-032",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "React Query useMutation 캐시 무효화"
+      }
+    ],
+    "title": "React Query useMutation 캐시 무효화",
+    "body": "React 앱에서 데이터 변경 후 onSuccess 콜백에서 queryClient.invalidateQueries를 호출해 목록을 최신화합니다. API 클라이언트 설정의 문의 메일: backend.dev@company.co.kr 헤더는 인터셉터에서 주입합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-033",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI PostgreSQL 비동기 연동",
+    "body": "FastAPI에서 SQLAlchemy 비동기 세션을 열고 트랜잭션을 커밋하거나 롤백하는 방법을 학습합니다. 연결 설정 예시로 비상 연락처: 010-9876-5432 구문을 참고하되 실제 환경변수로 분리합니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-034",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Security JWT 인증 필터 구현",
+    "body": "OncePerRequestFilter를 상속해 Authorization 헤더에서 토큰을 추출하고 서명을 검증합니다. 테스트 요청 헤더 서버 호스트: 172.16.254.10 처리 시 만료 여부를 함께 확인합니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-035",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangGraph 에이전트 노드와 API 연동",
+    "body": "LangGraph StateGraph에서 외부 도구를 호출하는 노드를 작성하고 상태를 갱신합니다. 설정 예시 테스트 카드: 4532-1234-5678-9012 값은 서버 환경변수에서 안전하게 읽어오도록 구성합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-036",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAG 하이브리드 검색 파이프라인 구축",
+    "body": "BM25 키워드 검색과 Dense 벡터 검색을 RRF로 결합해 상위 문서를 추출합니다. 검색 엔진 클라이언트 초기화 시 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 인증 정보를 분리해 관리합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-037",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch 분산 학습과 체크포인트 저장",
+    "body": "PyTorch 학습 루프에서 loss.backward()와 optimizer.step()을 실행하고 에폭마다 모델 체크포인트를 저장합니다. 로깅 시 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 같은 민감 문자열이 남지 않게 필터링합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-038",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Docker Compose 백엔드 컨테이너 구성"
+      }
+    ],
+    "title": "Docker Compose 백엔드 컨테이너 구성",
+    "body": "Dockerfile과 docker-compose.yml로 애플리케이션과 데이터베이스 컨테이너를 함께 실행합니다. 컨테이너 환경변수 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 설정은 .env 파일로 분리해 마운트합니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-039",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "React Query useMutation 캐시 무효화"
+      }
+    ],
+    "title": "React Query useMutation 캐시 무효화",
+    "body": "React 앱에서 데이터 변경 후 onSuccess 콜백에서 queryClient.invalidateQueries를 호출해 목록을 최신화합니다. API 클라이언트 설정의 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 헤더는 인터셉터에서 주입합니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-040",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI PostgreSQL 비동기 연동",
+    "body": "FastAPI에서 SQLAlchemy 비동기 세션을 열고 트랜잭션을 커밋하거나 롤백하는 방법을 학습합니다. 연결 설정 예시로 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 구문을 참고하되 실제 환경변수로 분리합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-041",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Security JWT 인증 필터 구현",
+    "body": "OncePerRequestFilter를 상속해 Authorization 헤더에서 토큰을 추출하고 서명을 검증합니다. 테스트 요청 헤더 DB_PASSWORD=my_prod_password_9876 처리 시 만료 여부를 함께 확인합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-042",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangGraph 에이전트 노드와 API 연동",
+    "body": "LangGraph StateGraph에서 외부 도구를 호출하는 노드를 작성하고 상태를 갱신합니다. 설정 예시 문의 메일: backend.dev@company.co.kr 값은 서버 환경변수에서 안전하게 읽어오도록 구성합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-043",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAG 하이브리드 검색 파이프라인 구축",
+    "body": "BM25 키워드 검색과 Dense 벡터 검색을 RRF로 결합해 상위 문서를 추출합니다. 검색 엔진 클라이언트 초기화 시 비상 연락처: 010-9876-5432 인증 정보를 분리해 관리합니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-044",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch 분산 학습과 체크포인트 저장",
+    "body": "PyTorch 학습 루프에서 loss.backward()와 optimizer.step()을 실행하고 에폭마다 모델 체크포인트를 저장합니다. 로깅 시 서버 호스트: 172.16.254.10 같은 민감 문자열이 남지 않게 필터링합니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-045",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Docker Compose 백엔드 컨테이너 구성"
+      }
+    ],
+    "title": "Docker Compose 백엔드 컨테이너 구성",
+    "body": "Dockerfile과 docker-compose.yml로 애플리케이션과 데이터베이스 컨테이너를 함께 실행합니다. 컨테이너 환경변수 테스트 카드: 4532-1234-5678-9012 설정은 .env 파일로 분리해 마운트합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-046",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "React Query useMutation 캐시 무효화"
+      }
+    ],
+    "title": "React Query useMutation 캐시 무효화",
+    "body": "React 앱에서 데이터 변경 후 onSuccess 콜백에서 queryClient.invalidateQueries를 호출해 목록을 최신화합니다. API 클라이언트 설정의 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 헤더는 인터셉터에서 주입합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-047",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI PostgreSQL 비동기 연동",
+    "body": "FastAPI에서 SQLAlchemy 비동기 세션을 열고 트랜잭션을 커밋하거나 롤백하는 방법을 학습합니다. 연결 설정 예시로 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 구문을 참고하되 실제 환경변수로 분리합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-048",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Security JWT 인증 필터 구현",
+    "body": "OncePerRequestFilter를 상속해 Authorization 헤더에서 토큰을 추출하고 서명을 검증합니다. 테스트 요청 헤더 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 처리 시 만료 여부를 함께 확인합니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-049",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangGraph 에이전트 노드와 API 연동",
+    "body": "LangGraph StateGraph에서 외부 도구를 호출하는 노드를 작성하고 상태를 갱신합니다. 설정 예시 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 값은 서버 환경변수에서 안전하게 읽어오도록 구성합니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-050",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAG 하이브리드 검색 파이프라인 구축",
+    "body": "BM25 키워드 검색과 Dense 벡터 검색을 RRF로 결합해 상위 문서를 추출합니다. 검색 엔진 클라이언트 초기화 시 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 인증 정보를 분리해 관리합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-051",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch 분산 학습과 체크포인트 저장",
+    "body": "PyTorch 학습 루프에서 loss.backward()와 optimizer.step()을 실행하고 에폭마다 모델 체크포인트를 저장합니다. 로깅 시 DB_PASSWORD=my_prod_password_9876 같은 민감 문자열이 남지 않게 필터링합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-052",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Docker Compose 백엔드 컨테이너 구성"
+      }
+    ],
+    "title": "Docker Compose 백엔드 컨테이너 구성",
+    "body": "Dockerfile과 docker-compose.yml로 애플리케이션과 데이터베이스 컨테이너를 함께 실행합니다. 컨테이너 환경변수 문의 메일: backend.dev@company.co.kr 설정은 .env 파일로 분리해 마운트합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-053",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "React Query useMutation 캐시 무효화"
+      }
+    ],
+    "title": "React Query useMutation 캐시 무효화",
+    "body": "React 앱에서 데이터 변경 후 onSuccess 콜백에서 queryClient.invalidateQueries를 호출해 목록을 최신화합니다. API 클라이언트 설정의 비상 연락처: 010-9876-5432 헤더는 인터셉터에서 주입합니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-054",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI PostgreSQL 비동기 연동",
+    "body": "FastAPI에서 SQLAlchemy 비동기 세션을 열고 트랜잭션을 커밋하거나 롤백하는 방법을 학습합니다. 연결 설정 예시로 서버 호스트: 172.16.254.10 구문을 참고하되 실제 환경변수로 분리합니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-055",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Security JWT 인증 필터 구현",
+    "body": "OncePerRequestFilter를 상속해 Authorization 헤더에서 토큰을 추출하고 서명을 검증합니다. 테스트 요청 헤더 테스트 카드: 4532-1234-5678-9012 처리 시 만료 여부를 함께 확인합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-056",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangGraph 에이전트 노드와 API 연동",
+    "body": "LangGraph StateGraph에서 외부 도구를 호출하는 노드를 작성하고 상태를 갱신합니다. 설정 예시 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 값은 서버 환경변수에서 안전하게 읽어오도록 구성합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-057",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAG 하이브리드 검색 파이프라인 구축",
+    "body": "BM25 키워드 검색과 Dense 벡터 검색을 RRF로 결합해 상위 문서를 추출합니다. 검색 엔진 클라이언트 초기화 시 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 인증 정보를 분리해 관리합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-058",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch 분산 학습과 체크포인트 저장",
+    "body": "PyTorch 학습 루프에서 loss.backward()와 optimizer.step()을 실행하고 에폭마다 모델 체크포인트를 저장합니다. 로깅 시 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 같은 민감 문자열이 남지 않게 필터링합니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-059",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Docker Compose 백엔드 컨테이너 구성"
+      }
+    ],
+    "title": "Docker Compose 백엔드 컨테이너 구성",
+    "body": "Dockerfile과 docker-compose.yml로 애플리케이션과 데이터베이스 컨테이너를 함께 실행합니다. 컨테이너 환경변수 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 설정은 .env 파일로 분리해 마운트합니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-060",
+    "category": "MATCHED_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "React Query useMutation 캐시 무효화"
+      }
+    ],
+    "title": "React Query useMutation 캐시 무효화",
+    "body": "React 앱에서 데이터 변경 후 onSuccess 콜백에서 queryClient.invalidateQueries를 호출해 목록을 최신화합니다. API 클라이언트 설정의 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 헤더는 인터셉터에서 주입합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.9
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "MATCHED",
+    "expectedGoalId": "g1"
+  },
+  {
+    "caseId": "sec100-061",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI 의존성 주입과 Pydantic 검증",
+    "body": "FastAPI 라우트에서 Depends로 공통 객체를 주입하고 Pydantic BaseModel로 요청 본문을 검증합니다. 설정값 예시 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 등이 요청 스키마에 노출되지 않도록 응답 모델을 분리합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-062",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Boot CORS 전역 설정",
+    "body": "WebMvcConfigurer에서 addCorsMappings를 오버라이드해 허용 출처와 메서드를 지정합니다. 프리플라이트 요청 처리 시 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 관련 헤더가 불필요하게 노출되지 않게 제한합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-063",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+    "body": "LangSmith 대시보드에서 에이전트 실행 단계별 지연 시간과 토큰 사용량을 추적합니다. 트레이스 기록 시 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 같은 개인정보나 키가 남지 않도록 마스킹 옵션을 켭니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-064",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAGAS 답변 품질 평가 지표",
+    "body": "RAGAS의 Faithfulness와 Answer Relevancy 지표로 생성 답변이 검색 문맥에 충실한지 평가합니다. 평가 스크립트 실행 시 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 설정은 별도 시크릿 매니저에서 불러옵니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-065",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch DataLoader num_workers 튜닝",
+    "body": "DataLoader의 num_workers와 pin_memory 옵션을 조절해 GPU 데이터 공급 병목을 줄입니다. 데이터셋 메타데이터에 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 항목이 포함되지 않도록 전처리 단계에서 제외합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-066",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI 의존성 주입과 Pydantic 검증",
+    "body": "FastAPI 라우트에서 Depends로 공통 객체를 주입하고 Pydantic BaseModel로 요청 본문을 검증합니다. 설정값 예시 DB_PASSWORD=my_prod_password_9876 등이 요청 스키마에 노출되지 않도록 응답 모델을 분리합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-067",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Boot CORS 전역 설정",
+    "body": "WebMvcConfigurer에서 addCorsMappings를 오버라이드해 허용 출처와 메서드를 지정합니다. 프리플라이트 요청 처리 시 문의 메일: backend.dev@company.co.kr 관련 헤더가 불필요하게 노출되지 않게 제한합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-068",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+    "body": "LangSmith 대시보드에서 에이전트 실행 단계별 지연 시간과 토큰 사용량을 추적합니다. 트레이스 기록 시 비상 연락처: 010-9876-5432 같은 개인정보나 키가 남지 않도록 마스킹 옵션을 켭니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-069",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAGAS 답변 품질 평가 지표",
+    "body": "RAGAS의 Faithfulness와 Answer Relevancy 지표로 생성 답변이 검색 문맥에 충실한지 평가합니다. 평가 스크립트 실행 시 서버 호스트: 172.16.254.10 설정은 별도 시크릿 매니저에서 불러옵니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-070",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch DataLoader num_workers 튜닝",
+    "body": "DataLoader의 num_workers와 pin_memory 옵션을 조절해 GPU 데이터 공급 병목을 줄입니다. 데이터셋 메타데이터에 테스트 카드: 4532-1234-5678-9012 항목이 포함되지 않도록 전처리 단계에서 제외합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-071",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI 의존성 주입과 Pydantic 검증",
+    "body": "FastAPI 라우트에서 Depends로 공통 객체를 주입하고 Pydantic BaseModel로 요청 본문을 검증합니다. 설정값 예시 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 등이 요청 스키마에 노출되지 않도록 응답 모델을 분리합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-072",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Boot CORS 전역 설정",
+    "body": "WebMvcConfigurer에서 addCorsMappings를 오버라이드해 허용 출처와 메서드를 지정합니다. 프리플라이트 요청 처리 시 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 관련 헤더가 불필요하게 노출되지 않게 제한합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-073",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+    "body": "LangSmith 대시보드에서 에이전트 실행 단계별 지연 시간과 토큰 사용량을 추적합니다. 트레이스 기록 시 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 같은 개인정보나 키가 남지 않도록 마스킹 옵션을 켭니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-074",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAGAS 답변 품질 평가 지표",
+    "body": "RAGAS의 Faithfulness와 Answer Relevancy 지표로 생성 답변이 검색 문맥에 충실한지 평가합니다. 평가 스크립트 실행 시 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 설정은 별도 시크릿 매니저에서 불러옵니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-075",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch DataLoader num_workers 튜닝",
+    "body": "DataLoader의 num_workers와 pin_memory 옵션을 조절해 GPU 데이터 공급 병목을 줄입니다. 데이터셋 메타데이터에 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 항목이 포함되지 않도록 전처리 단계에서 제외합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-076",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "FastAPI PostgreSQL 비동기 연동"
+      }
+    ],
+    "title": "FastAPI 의존성 주입과 Pydantic 검증",
+    "body": "FastAPI 라우트에서 Depends로 공통 객체를 주입하고 Pydantic BaseModel로 요청 본문을 검증합니다. 설정값 예시 DB_PASSWORD=my_prod_password_9876 등이 요청 스키마에 노출되지 않도록 응답 모델을 분리합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-077",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "Spring Security JWT 인증 필터 구현"
+      }
+    ],
+    "title": "Spring Boot CORS 전역 설정",
+    "body": "WebMvcConfigurer에서 addCorsMappings를 오버라이드해 허용 출처와 메서드를 지정합니다. 프리플라이트 요청 처리 시 문의 메일: backend.dev@company.co.kr 관련 헤더가 불필요하게 노출되지 않게 제한합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-078",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LangGraph 에이전트 노드와 API 연동"
+      }
+    ],
+    "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+    "body": "LangSmith 대시보드에서 에이전트 실행 단계별 지연 시간과 토큰 사용량을 추적합니다. 트레이스 기록 시 비상 연락처: 010-9876-5432 같은 개인정보나 키가 남지 않도록 마스킹 옵션을 켭니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-079",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 파이프라인 구축"
+      }
+    ],
+    "title": "RAGAS 답변 품질 평가 지표",
+    "body": "RAGAS의 Faithfulness와 Answer Relevancy 지표로 생성 답변이 검색 문맥에 충실한지 평가합니다. 평가 스크립트 실행 시 서버 호스트: 172.16.254.10 설정은 별도 시크릿 매니저에서 불러옵니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-080",
+    "category": "ADJACENT_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PyTorch 분산 학습과 체크포인트 저장"
+      }
+    ],
+    "title": "PyTorch DataLoader num_workers 튜닝",
+    "body": "DataLoader의 num_workers와 pin_memory 옵션을 조절해 GPU 데이터 공급 병목을 줄입니다. 데이터셋 메타데이터에 테스트 카드: 4532-1234-5678-9012 항목이 포함되지 않도록 전처리 단계에서 제외합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.85
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "NOT_ENOUGH",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-081",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "멀티헤드 어텐션 구현"
+      }
+    ],
+    "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+    "body": "PostgreSQL에서 다중 컬럼 B-Tree 인덱스를 설계할 때는 등치 조건 컬럼을 앞에 두고 범위 조건 컬럼을 뒤에 배치합니다. 운영 DB 접속 예시 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 환경에서 EXPLAIN ANALYZE로 스캔 비용을 확인합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-082",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LoRA 파인튜닝 원리 이해"
+      }
+    ],
+    "title": "Kubernetes Readiness Probe 설정",
+    "body": "Kubernetes에서 Readiness Probe는 파드가 트래픽을 받을 준비가 되었는지 주기적으로 확인합니다. 헬스체크 엔드포인트 설정 시 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 같은 내부 자격증명이 응답에 포함되지 않게 주의합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-083",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 구현"
+      }
+    ],
+    "title": "React CSS Grid 반응형 레이아웃",
+    "body": "CSS Grid의 grid-template-columns와 repeat(auto-fit, minmax())로 반응형 카드 레이아웃을 구성합니다. 개발자 연락처 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 푸터 영역은 별도 Flexbox로 정렬합니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-084",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PPO 기반 RLHF 보상 모델 학습"
+      }
+    ],
+    "title": "Git Rebase Interactive 커밋 정리",
+    "body": "기능 브랜치의 자잘한 커밋을 git rebase -i로 squash해 히스토리를 깔끔하게 정리합니다. 커밋 전 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 같은 민감 정보가 코드에 포함되지 않았는지 diff를 점검합니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-085",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "KV Cache 메모리 최적화"
+      }
+    ],
+    "title": "Redis Sorted Set 실시간 랭킹",
+    "body": "Redis의 ZADD와 ZREVRANGE 명령어를 사용해 점수 기준 리더보드를 O(log N)으로 유지합니다. Redis 접속 설정 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 값을 환경변수로 주입해 클라이언트를 초기화합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-086",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "멀티헤드 어텐션 구현"
+      }
+    ],
+    "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+    "body": "PostgreSQL에서 다중 컬럼 B-Tree 인덱스를 설계할 때는 등치 조건 컬럼을 앞에 두고 범위 조건 컬럼을 뒤에 배치합니다. 운영 DB 접속 예시 DB_PASSWORD=my_prod_password_9876 환경에서 EXPLAIN ANALYZE로 스캔 비용을 확인합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-087",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LoRA 파인튜닝 원리 이해"
+      }
+    ],
+    "title": "Kubernetes Readiness Probe 설정",
+    "body": "Kubernetes에서 Readiness Probe는 파드가 트래픽을 받을 준비가 되었는지 주기적으로 확인합니다. 헬스체크 엔드포인트 설정 시 문의 메일: backend.dev@company.co.kr 같은 내부 자격증명이 응답에 포함되지 않게 주의합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-088",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 구현"
+      }
+    ],
+    "title": "React CSS Grid 반응형 레이아웃",
+    "body": "CSS Grid의 grid-template-columns와 repeat(auto-fit, minmax())로 반응형 카드 레이아웃을 구성합니다. 개발자 연락처 비상 연락처: 010-9876-5432 푸터 영역은 별도 Flexbox로 정렬합니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-089",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PPO 기반 RLHF 보상 모델 학습"
+      }
+    ],
+    "title": "Git Rebase Interactive 커밋 정리",
+    "body": "기능 브랜치의 자잘한 커밋을 git rebase -i로 squash해 히스토리를 깔끔하게 정리합니다. 커밋 전 서버 호스트: 172.16.254.10 같은 민감 정보가 코드에 포함되지 않았는지 diff를 점검합니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-090",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "KV Cache 메모리 최적화"
+      }
+    ],
+    "title": "Redis Sorted Set 실시간 랭킹",
+    "body": "Redis의 ZADD와 ZREVRANGE 명령어를 사용해 점수 기준 리더보드를 O(log N)으로 유지합니다. Redis 접속 설정 테스트 카드: 4532-1234-5678-9012 값을 환경변수로 주입해 클라이언트를 초기화합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-091",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "멀티헤드 어텐션 구현"
+      }
+    ],
+    "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+    "body": "PostgreSQL에서 다중 컬럼 B-Tree 인덱스를 설계할 때는 등치 조건 컬럼을 앞에 두고 범위 조건 컬럼을 뒤에 배치합니다. 운영 DB 접속 예시 postgres://admin:SuperSecretPass99@10.0.1.25:5432/app 환경에서 EXPLAIN ANALYZE로 스캔 비용을 확인합니다.",
+    "secretSubstring": "SuperSecretPass99",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-092",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LoRA 파인튜닝 원리 이해"
+      }
+    ],
+    "title": "Kubernetes Readiness Probe 설정",
+    "body": "Kubernetes에서 Readiness Probe는 파드가 트래픽을 받을 준비가 되었는지 주기적으로 확인합니다. 헬스체크 엔드포인트 설정 시 Bearer eyJhbGciOiJIUzI1NiJ9.payload987654.signature1234 같은 내부 자격증명이 응답에 포함되지 않게 주의합니다.",
+    "secretSubstring": "payload987654",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-093",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 구현"
+      }
+    ],
+    "title": "React CSS Grid 반응형 레이아웃",
+    "body": "CSS Grid의 grid-template-columns와 repeat(auto-fit, minmax())로 반응형 카드 레이아웃을 구성합니다. 개발자 연락처 OPENAI_API_KEY=sk-proj-1234567890abcdefghij1234 푸터 영역은 별도 Flexbox로 정렬합니다.",
+    "secretSubstring": "sk-proj-1234567890abcdefghij1234",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-094",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PPO 기반 RLHF 보상 모델 학습"
+      }
+    ],
+    "title": "Git Rebase Interactive 커밋 정리",
+    "body": "기능 브랜치의 자잘한 커밋을 git rebase -i로 squash해 히스토리를 깔끔하게 정리합니다. 커밋 전 GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqr 같은 민감 정보가 코드에 포함되지 않았는지 diff를 점검합니다.",
+    "secretSubstring": "ghp_1234567890abcdefghijklmnopqr",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-095",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "KV Cache 메모리 최적화"
+      }
+    ],
+    "title": "Redis Sorted Set 실시간 랭킹",
+    "body": "Redis의 ZADD와 ZREVRANGE 명령어를 사용해 점수 기준 리더보드를 O(log N)으로 유지합니다. Redis 접속 설정 AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE 값을 환경변수로 주입해 클라이언트를 초기화합니다.",
+    "secretSubstring": "AKIAIOSFODNN7EXAMPLE",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-096",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "멀티헤드 어텐션 구현"
+      }
+    ],
+    "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+    "body": "PostgreSQL에서 다중 컬럼 B-Tree 인덱스를 설계할 때는 등치 조건 컬럼을 앞에 두고 범위 조건 컬럼을 뒤에 배치합니다. 운영 DB 접속 예시 DB_PASSWORD=my_prod_password_9876 환경에서 EXPLAIN ANALYZE로 스캔 비용을 확인합니다.",
+    "secretSubstring": "my_prod_password_9876",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-097",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "LoRA 파인튜닝 원리 이해"
+      }
+    ],
+    "title": "Kubernetes Readiness Probe 설정",
+    "body": "Kubernetes에서 Readiness Probe는 파드가 트래픽을 받을 준비가 되었는지 주기적으로 확인합니다. 헬스체크 엔드포인트 설정 시 문의 메일: backend.dev@company.co.kr 같은 내부 자격증명이 응답에 포함되지 않게 주의합니다.",
+    "secretSubstring": "backend.dev@company.co.kr",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-098",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "RAG 하이브리드 검색 구현"
+      }
+    ],
+    "title": "React CSS Grid 반응형 레이아웃",
+    "body": "CSS Grid의 grid-template-columns와 repeat(auto-fit, minmax())로 반응형 카드 레이아웃을 구성합니다. 개발자 연락처 비상 연락처: 010-9876-5432 푸터 영역은 별도 Flexbox로 정렬합니다.",
+    "secretSubstring": "010-9876-5432",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-099",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "PPO 기반 RLHF 보상 모델 학습"
+      }
+    ],
+    "title": "Git Rebase Interactive 커밋 정리",
+    "body": "기능 브랜치의 자잘한 커밋을 git rebase -i로 squash해 히스토리를 깔끔하게 정리합니다. 커밋 전 서버 호스트: 172.16.254.10 같은 민감 정보가 코드에 포함되지 않았는지 diff를 점검합니다.",
+    "secretSubstring": "172.16.254.10",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  },
+  {
+    "caseId": "sec100-100",
+    "category": "FAR_WITH_SECRET",
+    "goals": [
+      {
+        "goalId": "g1",
+        "goalText": "KV Cache 메모리 최적화"
+      }
+    ],
+    "title": "Redis Sorted Set 실시간 랭킹",
+    "body": "Redis의 ZADD와 ZREVRANGE 명령어를 사용해 점수 기준 리더보드를 O(log N)으로 유지합니다. Redis 접속 설정 테스트 카드: 4532-1234-5678-9012 값을 환경변수로 주입해 클라이언트를 초기화합니다.",
+    "secretSubstring": "4532-1234-5678-9012",
+    "simulatedE5Scores": {
+      "g1": 0.65
+    },
+    "expectedBlocked": false,
+    "expectedStatus": "FAR",
+    "expectedGoalId": null
+  }
+]

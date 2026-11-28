@@ -1389,3 +1389,17 @@ OCR 전달은 개인정보 검사를 통과한 `text`와 `ocr` 메타데이터�
 - 회차는 0~2이며 완료된 답변 수와 일치한다. 두 번 답한 뒤 명확하지 않으면 세 번째 AI 질문을 생성하지 않고 직접 수정·확인을 요청한다. 기존 응답 상태값과 나머지 필드는 유지한다.
 - 자동 요청 재시도는 Backend가 retryable 오류에 1초→3초, 최대 2회 수행한다. 같은 대화 ID·회차·답변을 유지하며 Desktop은 자동 재전송하지 않는다. AI HTTP 경로의 제공자 SDK 재시도는 0, 기존 병렬 후보 생성·의미 검수 Repair는 별도다.
 - Notion 연결 도구의 404 때문에 이번에는 최신 3.2 본문을 확인하지 못했다. 사용자가 직접 전달한 계약을 변경 근거로 기록한다.
+
+
+## 결정 SA-001 - `topic-bank.json` 제거 및 `E5 ∥ JEV` 병렬 할 일 매칭 도입
+
+- 결정일: 2026-11-27
+- 상태: 구현 및 단위 테스트 완료 (`feat/ai-goal-match-jev-e5`), 44건 실측 튜닝 대기
+- 관련 문서: `AI/docs/features/goal-match-jev-e5-PLAN.md`
+
+### 결정 내용
+
+1. 2,700개 고정 합성 공부 목록(`topic-bank.json`)을 `ActivityClassifier` 및 `goal_match`에서 제거한다.
+2. `goal_match_async`에서 로컬 E5 코사인 유사도·`STUDY` 분류와 TypeSafe JEV(`제목 + 본문 최대 2,000자 + 세션 전체 할 일 목록 + is_different_study_topic`)를 병렬 실행한다.
+3. 결합은 **가중합(`w_jev=0.65`) + JEV 비토(`jev_veto_threshold=0.35`)** 방식을 사용한다.
+4. JEV 정상 타임아웃은 3.0초로 두고 타임아웃·일시 오류 시 1회 재실행하며, 재실행까지 실패하면 오매칭 방지를 위해 `NOT_ENOUGH`로 fallback한다.

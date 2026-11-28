@@ -128,3 +128,10 @@ Server → AI에서는 인증된 세션·목표·실행 문맥을 조회해 `Ver
 - 위 브랜치 실행 이력과 공통 공개 계약을 대조해 4종 응답 변환·목표 길이·인증을 담당자와 확인한 뒤 연결한다. PR 충돌 해소 자체를 통합 완료로 간주하지 않는다.
 
 - #29 서버 담당자와 근거 입력·인증·결과 상태 계약을 확정하고, 실제 사용자 데이터의 제공자·보존·고지 조건을 확인한 뒤 HTTP 어댑터와 종료 후 생성 작업을 연동한다.
+
+
+## 2026-11-27 E5 ∥ JEV 병렬 할 일 매칭 후속 작업 (`feat/ai-goal-match-jev-e5`)
+
+- **44건 평가셋 정량 검증 및 임계값 튜닝**: 평가 원자료(`--data`, `results.csv` 등)와 실제 `TYPESAFE_API_KEY`가 있는 환경에서 `MatchConfig`(`w_jev`, `jev_veto_threshold`, `jev_match_min`, `e5_min_floor`, `combined_match_floor`, `jev_far_min`)를 튜닝한다. (목표: 잘못된 연결 ≤ 2건, 올바른 연결 ≥ 13/14, 올바른 FAR ≥ 10/14, 잘못된 FAR ≤ 1건)
+- **구형 `TopicBank` 테스트 정리**: `AI/tests/test_fastapi_analysis.py` 내 구 `TopicBank` 및 동기 `create_app` 가정 테스트 18건은 `jev_goal_matcher_factory` 주입 또는 새 `goal_match` 계약에 맞게 정리한다.
+- **환경 의존성 확인**: `AI/requirements.txt`의 `scikit-learn==1.9.0`이 설치된 환경에서 실제 `ActivityClassifier` 초기화 및 E5 모델 로드 회귀 테스트를 실행한다.
