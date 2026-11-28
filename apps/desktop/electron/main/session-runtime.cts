@@ -51,7 +51,7 @@ export class SessionRuntime {
   private options: SessionOptions = DEFAULT_OPTIONS
   // 집중 화면 안내용 상태. 세션이 바뀌면 지운다.
   private offline = false
-  private screenNotice: 'EXCLUDED_APP' | 'PRIVACY' | null = null
+  private screenNotice: Extract<SessionSnapshot['notice'], 'EXCLUDED_APP' | 'EXCLUDED_SITE' | 'PRIVACY'> | null = null
   private cameraOff = false
   // 상태 전이 로그용: 직전에 알린 상태와 그 상태가 된 시각(monotonic·벽시계).
   private last: { sessionId: string; status: SessionStatus; mono: number; wall: number } | null = null
@@ -73,7 +73,7 @@ export class SessionRuntime {
   }
 
   /** 지금 화면(제외한 앱·민감한 화면)과 카메라 상태. 바뀔 때만 화면에 알린다. */
-  setScreenNotice(notice: 'EXCLUDED_APP' | 'PRIVACY' | null): void {
+  setScreenNotice(notice: Extract<SessionSnapshot['notice'], 'EXCLUDED_APP' | 'EXCLUDED_SITE' | 'PRIVACY'> | null): void {
     if (notice === this.screenNotice) return
     this.screenNotice = notice
     if (this.state) this.publish('notice')

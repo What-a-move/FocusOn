@@ -273,6 +273,11 @@ if (!hasSingleInstanceLock) {
     // 지금 앞에 떠 있는 화면(전경 context)을 서버에 알린다(#182). 알림은 이 context 기준으로만 만들어지고 표시된다.
     const context = authService ? new ObservationContext(authService, path.join(app.getPath('userData'), 'observation-context.json')) : null
     let observing = false
+    let frontChrome = false
+    const chromeCameraReady = () => {
+      const guard = context?.currentChromeGuard()
+      return !frontChrome || guard === 'CLEAR' || guard === 'EXCLUDED_SITE'
+    }
     // 맨 앞 창이 전체 화면인지. 바뀌면 떠 있는 포키도 바닥 위치를 다시 맞춘다(#225).
     let frontFullScreen = false
     // 카메라 분석(#222). 화면 판정은 같은 화면(key)일 때만 최신으로 본다. 화면이 바뀌면 이전 판정은 쓰지 않는다.
@@ -494,7 +499,9 @@ if (!hasSingleInstanceLock) {
         runtime.tick()
         // 세션이 RUNNING일 때만 맨 앞 앱을 본다(결정 024). 멈추면 15초 계산을 처음부터 다시 한다.
         const session = runtime.snapshot()
-        if (session?.status !== 'RUNNING') { observer.reset(); context?.reset(); return }
+        if (session?.status !== 'RUNNING') {
+          observer.reset(); context?.reset(); frontChrome = false; runtime.setScreenNotice(null); return
+        }
         if (!helper || observing) return
         observing = true
         void helper.request('frontmost')
@@ -510,15 +517,24 @@ if (!hasSingleInstanceLock) {
             }
             // 맨 앞 앱이 바뀌면 15초를 기다리지 않고 바로 전경 context를 바꾼다. Chrome은 Extension이 관측을 맡는다.
             const foreground = front?.bundleId ? `${front.bundleId}\n${front.windowTitle ?? ''}` : null
-            void context?.update(session.sessionId, foreground, !foreground ? 'NONE' : CHROME.has(front?.bundleId ?? '') ? 'EXTENSION' : 'DESKTOP')
+            const wasChrome = frontChrome
+            if (front?.bundleId) frontChrome = CHROME.has(front.bundleId)
+            void context?.update(session.sessionId, foreground, !foreground ? 'NONE' : frontChrome ? 'EXTENSION' : 'DESKTOP')
+            if (frontChrome) {
+              const guard = context?.currentChromeGuard()
+              runtime.setScreenNotice(guard === 'EXCLUDED_SITE' ? 'EXCLUDED_SITE' : guard === 'PRIVACY_BLOCKED' ? 'PRIVACY' : null)
+              void context?.refreshChromeGuard().catch(() => {
+                log('WARN', 'api.request.fail', { component: 'observation-context', code: 'LOCAL_APP_ERROR' })
+              })
+            }
             const previousKey = observer.currentKey()
             const observation = observer.observe(front)
             const key = observer.currentKey()
-            if (front && key && key !== previousKey) {
+            if (!frontChrome && front && key && key !== previousKey) {
               const notice = observer.screenNotice(front)
               runtime.setScreenNotice(notice)
               latestScreen = notice === 'PRIVACY' ? { key, relation: 'PRIVACY_BLOCKED' } : null
-            }
+            } else if (!frontChrome && wasChrome) runtime.setScreenNotice(null)
             if (!observation || !sender) return
             // 관측한 시점의 context를 분석 요청에 붙인다. 화면이 바뀌는 중이면 붙이지 않는다(서버가 정책에 쓰지 않음).
             const observedContext = context?.currentId() ?? null
@@ -554,8 +570,9 @@ if (!hasSingleInstanceLock) {
       // 카메라는 2초마다 한 번 본다(설계서 7.3 샘플링). RUNNING·카메라 켬·권한 허용·보호 화면 아님일 때만 켜고, 아니면 바로 해제한다.
       setInterval(() => {
         const session = runtime.snapshot()
-        const screenNow = latestScreen && latestScreen.key === observer.currentKey() ? latestScreen.relation : null
-        const enabled = session?.status === 'RUNNING' && runtime.sessionOptions().cameraAnalysisEnabled && screenNow !== 'PRIVACY_BLOCKED'
+        const cameraScreenKey = observer.currentKey()
+        const screenNow = latestScreen && latestScreen.key === cameraScreenKey ? latestScreen.relation : null
+        const enabled = session?.status === 'RUNNING' && cameraScreenKey !== null && runtime.sessionOptions().cameraAnalysisEnabled && screenNow !== 'PRIVACY_BLOCKED' && chromeCameraReady()
         const wanted = enabled && !!helper && mediaStatus('camera') === 'granted'
         if (!wanted) {
           runtime.setCameraOff(enabled)
@@ -572,7 +589,8 @@ if (!hasSingleInstanceLock) {
         cameraOn = true
         void helper.request('camera', { timeoutMs: 1500 }).then((reply) => {
           const current = runtime.snapshot()
-          if (current?.status !== 'RUNNING' || current.sessionId !== session?.sessionId || !cameraOn) return
+          if (current?.status !== 'RUNNING' || current.sessionId !== session?.sessionId || !cameraOn || !chromeCameraReady()
+            || observer.currentKey() !== cameraScreenKey) return
           const before = cameraMonitor.current()
           const { state, alert } = cameraMonitor.update(parseCameraReply(reply), { screenRelated: screenNow === 'RELATED', canShow: pendingShow === null })
           // 상태가 바뀔 때만 남긴다. 얼굴·시선 값은 남기지 않는다.

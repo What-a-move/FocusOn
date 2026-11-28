@@ -5,7 +5,7 @@ import { DWELL_MS, TabAnalyzer, type Deps, type RunBody, type Target, type Track
 
 const docs: Target = { tabId: 7, url: 'https://tanstack.com/query/latest?utm=1', title: 'Important Defaults - TanStack Query' }
 
-function setup(options: { relation?: string; relations?: string[]; matchStatus?: MatchStatus | null; page?: { sensitive: boolean; text: string } | null; excluded?: string[] | null; access?: boolean; session?: string | null } = {}) {
+function setup(options: { relation?: string; relations?: string[]; matchStatus?: MatchStatus | null; page?: { sensitive: boolean; text: string } | null; excluded?: string[] | null; access?: boolean; session?: string | null; beforeGuard?: () => void; beforePost?: () => void } = {}) {
   let clock = 1_000_000
   let ids = 0
   let target: Target | null = docs
@@ -20,10 +20,18 @@ function setup(options: { relation?: string; relations?: string[]; matchStatus?:
     uuid: () => `id-${++ids}`,
     currentTarget: async () => target,
     activeSession: async () => options.session === null ? null : { sessionId: '901', status: options.session ?? 'RUNNING' },
-    excludedDomains: async () => options.excluded === undefined ? [] : options.excluded,
+    excludedDomains: async () => {
+      options.beforeGuard?.()
+      return options.excluded === undefined ? [] : options.excluded
+    },
     hasSiteAccess: async () => options.access ?? true,
     inspect: async (_tabId, max) => { inspected.push(max); return options.page === undefined ? { sensitive: false, text: 'staleTime 기본값은 0이다' } : options.page },
-    post: async (_sessionId, body) => { sent.push(body); return { ok: true, relation: relations.shift() ?? 'RELATED', matchStatus: options.matchStatus === undefined ? 'MATCHED' : options.matchStatus } },
+    post: async (_sessionId, body, stillShowing) => {
+      options.beforePost?.()
+      if (!(await stillShowing())) return { ok: false, code: 'LOCAL_STALE_OBSERVATION' }
+      sent.push(body)
+      return { ok: true, relation: relations.shift() ?? 'RELATED', matchStatus: options.matchStatus === undefined ? 'MATCHED' : options.matchStatus }
+    },
     loadTracking: async () => tracking,
     saveTracking: async (value) => { tracking = value },
     loadSequences: async () => sequences,
@@ -154,4 +162,15 @@ test('Chrome이 뒤로 가면 추적을 멈춘다', async () => {
   t.advance(DWELL_MS)
   await t.fire()
   assert.equal(t.sent.length, 0)
+})
+
+
+test('제외 목록 확인이나 서버 전경 조회를 기다리는 사이 탭을 바꾸면 지난 탭 상태를 보내지 않는다', async () => {
+  for (const changeAt of ['beforeGuard', 'beforePost'] as const) {
+    const t = setup({ excluded: ['tanstack.com'], [changeAt]: () => t.show({ ...docs, tabId: 8 }) })
+    await t.analyzer.onChange()
+    t.advance(DWELL_MS)
+    await t.fire()
+    assert.deepEqual(t.sent, [], changeAt)
+  }
 })

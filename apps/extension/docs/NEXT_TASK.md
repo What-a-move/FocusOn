@@ -8,6 +8,8 @@
 
 ## 가장 먼저 진행할 작업
 
+- [#398](https://github.com/What-a-move/FocusOn/issues/398) Chrome 제외·민감 상태 알림. 서버 전경 응답과 Extension 상태 갱신 계약을 연결한 뒤 Chrome↔Desktop 실기기 QA를 한다.
+
 - 작업명: 팝업 시간 Desktop과 맞추기 (Issue #255, `fix/255-extension-timer-sync`)
 - 상태: `/sessions/active`의 `accumulatedAt`·`serverNow`(서버 #251)로 RUNNING이면 마지막 heartbeat 뒤 경과분을 더해 센다. 실제 서버로 Desktop 타이머와 일치 확인(2026-11-13). 남은 일 없음.
 

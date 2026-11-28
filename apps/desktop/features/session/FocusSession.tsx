@@ -13,7 +13,7 @@ import './focus-session.css'
 
 const CIRCUMFERENCE = 2 * Math.PI * 90
 const EXTEND_OPTIONS = [10, 25, 50]
-const POKI = { focus: '/design/poki-floating-master-v3.png', paused: '/design/poki-floating-paused-v3.png', thinking: '/design/poki-thinking.png', worried: '/design/poki-worried.png', looking: '/design/poki-looking.png', timeUp: '/design/poki-time-up.png' }
+const POKI = { excluded: '/design/poki-floating-excluded-v2.png', focus: '/design/poki-floating-master-v3.png', paused: '/design/poki-floating-paused-v3.png', thinking: '/design/poki-thinking.png', worried: '/design/poki-worried.png', looking: '/design/poki-looking.png', timeUp: '/design/poki-time-up.png' }
 
 function formatClock(ms: number): string {
   const seconds = Math.max(0, Math.floor(ms / 1000))
@@ -27,6 +27,7 @@ function formatClock(ms: number): string {
 const NOTICE: Record<NonNullable<SessionSnapshot['notice']>, { title: string; copy?: string; error?: boolean; caption?: string }> = {
   OFFLINE: { title: '인터넷 연결이 끊겼어요.', copy: '집중 시간은 계속 흘러요.', error: true, caption: '오프라인' },
   EXCLUDED_APP: { title: '이 앱은 안 볼게', caption: '분석 제외' },
+  EXCLUDED_SITE: { title: '이 사이트는 안 볼게', caption: '분석 제외' },
   PRIVACY: { title: '민감한 화면이라 안 볼게', caption: '개인정보 보호' },
   CAMERA_OFF: { title: '카메라 분석만 멈췄어요.', copy: '화면 분석은 그대로예요.', error: true },
 }
@@ -170,6 +171,10 @@ export function FocusSession() {
     if (valid) void extend(value)
   }
 
+  const excludesCurrentPage = running && snapshot.notice === 'EXCLUDED_SITE'
+  const protectedScreen = excludesCurrentPage || (running && snapshot.notice === 'PRIVACY')
+  const poki = permissionLost ? POKI.worried : paused ? POKI.paused : protectedScreen ? POKI.excluded : POKI.focus
+
   // 리포트로 넘어가는 동안은 빈 화면만 둔다.
   if (finished) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
 
@@ -188,15 +193,16 @@ export function FocusSession() {
             <div className={`clock-caption${say?.error ? ' is-error' : ''}`}>{caption}</div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="poki" key={permissionLost ? 'worried' : paused ? 'paused' : 'focus'} src={permissionLost ? POKI.worried : paused ? POKI.paused : POKI.focus} alt={permissionLost ? '걱정하는 포키' : paused ? '쉬고 있는 포키' : '함께 집중하는 포키'} />
+          <img className="poki" key={poki} src={poki} alt={permissionLost ? '걱정하는 포키' : paused ? '쉬고 있는 포키' : protectedScreen ? '' : '함께 집중하는 포키'} />
         </div>
         {/* 오른쪽: 목표·버튼·안내. 타이머가 세로로만 길어지지 않게 옆에 둔다. */}
         <div className="side">
+        <p className="sr-only" role="status">{protectedScreen && !activeDialog ? say?.title : null}</p>
         {say && !activeDialog && <div className="say" key={say.title}>
-          <p className={`bubble${say.error ? ' is-error' : ''}`} role={say.error ? 'alert' : 'status'}>{say.title}{say.copy && <small>{say.copy}</small>}</p>
+          <p className={`bubble${say.error ? ' is-error' : ''}`} role={say.error ? 'alert' : protectedScreen ? undefined : 'status'}>{say.title}{say.copy && <small>{say.copy}</small>}</p>
           {permissionLost && <button className="btn btn-danger" type="button" onClick={() => { void fixScreenPermission() }}>{screenOpened ? '다시 열기' : '설정 열기'}</button>}
           {status === 'AUTO_PAUSED' && !permissionLost && snapshot.pauseReason === 'EXTENSION_UNLINKED' && <Link className="btn btn-danger" href="/settings/#devices">다시 연결</Link>}
-          {status === 'RUNNING' && snapshot.notice === 'EXCLUDED_APP' && <Link className="btn btn-ghost" href="/settings/exclusions/">제외 목록</Link>}
+          {running && (snapshot.notice === 'EXCLUDED_APP' || excludesCurrentPage) && <Link className="btn btn-ghost" href="/settings/exclusions/">제외 목록</Link>}
         </div>}
         {goals.length > 1
           ? <ul className="session-goals" id="goal-text" aria-label="이번 할 일">

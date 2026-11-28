@@ -41,7 +41,7 @@ const pauseReasonOf = (value: unknown) => typeof value === 'string' && /^[A-Z_]{
  * Renderer는 `RUNNING`일 때만 받은 뒤 흐른 시간을 더해 1초마다 다시 그린다.
  */
 /** 집중 중 화면에 알릴 상태(session-states.html). Desktop이 직접 아는 것만: 생존 신호 실패·제외한 앱·민감한 화면·카메라 못 씀. */
-export type SessionNotice = 'OFFLINE' | 'EXCLUDED_APP' | 'PRIVACY' | 'CAMERA_OFF'
+export type SessionNotice = 'OFFLINE' | 'EXCLUDED_APP' | 'EXCLUDED_SITE' | 'PRIVACY' | 'CAMERA_OFF'
 export type SessionSnapshot = Partial<GoalState> & {
   sessionId: string
   goalText: string

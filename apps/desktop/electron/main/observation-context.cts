@@ -3,6 +3,8 @@ import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import type { AuthService } from './auth-service.cjs'
 
 export type Observer = 'DESKTOP' | 'EXTENSION' | 'NONE'
+type ChromeGuardStatus = 'CLEAR' | 'EXCLUDED_SITE' | 'PRIVACY_BLOCKED'
+type ChromeGuard = { status: ChromeGuardStatus; remainingMs: number }
 type Remote = { observationContextId: string; foregroundSequence: number }
 
 /** PUT·GET observation-context 응답에서 쓰는 값만 확인한다. */
@@ -11,6 +13,20 @@ export function parseContext(value: unknown): Remote | null {
   const { observationContextId, foregroundSequence } = value as Record<string, unknown>
   if (typeof observationContextId !== 'string' || !Number.isSafeInteger(foregroundSequence)) return null
   return { observationContextId, foregroundSequence: foregroundSequence as number }
+}
+
+// 서버 연동 제안. 현재 서버처럼 chromeGuard가 없으면 확인되지 않은 상태로 처리한다.
+function parseChromeGuardContext(value: unknown): (Remote & { guard: ChromeGuard | null }) | null {
+  const context = parseContext(value)
+  if (!context || typeof value !== 'object' || value === null) return null
+  const { observer, chromeGuard, leaseRemainingMs } = value as Record<string, unknown>
+  if (observer !== 'EXTENSION' || typeof leaseRemainingMs !== 'number' || !Number.isFinite(leaseRemainingMs) || leaseRemainingMs <= 0) return null
+  if (typeof chromeGuard !== 'object' || chromeGuard === null) return { ...context, guard: null }
+  const { status, remainingMs } = chromeGuard as Record<string, unknown>
+  const guard: ChromeGuard | null = (status === 'CLEAR' || status === 'EXCLUDED_SITE' || status === 'PRIVACY_BLOCKED')
+    && typeof remainingMs === 'number' && Number.isFinite(remainingMs) && remainingMs > 0
+    ? { status, remainingMs: Math.min(remainingMs, leaseRemainingMs, 30_000) } : null
+  return { ...context, guard }
 }
 
 // lease는 30초다. heartbeat(10초)가 이어 주지 못한 채 25초가 지나면 끊긴 것으로 보고 새 번호로 다시 등록한다.
@@ -27,6 +43,8 @@ type Current = { sessionId: string; key: string; observer: Observer; sequence: n
 export class ObservationContext {
   private current: Current | null = null
   private sending = false
+  private guardRead: { context: Current; nextAt: number; pending: boolean } | null = null
+  private chromeGuard: { context: Current; status: ChromeGuardStatus; validUntil: number } | null = null
 
   constructor(
     private readonly auth: Pick<AuthService, 'authorizedRequest'>,
@@ -51,6 +69,32 @@ export class ObservationContext {
     return this.current?.observer === 'NONE' ? null : this.current?.id ?? null
   }
 
+  currentChromeGuard(): ChromeGuardStatus | null {
+    const guard = this.chromeGuard
+    return guard && guard.context === this.current && this.now() < guard.validUntil ? guard.status : null
+  }
+
+  /** 현재 연결된 Chrome 전경의 제어 상태만 받는다. 전경 변경 중 읽은 응답은 버린다. */
+  async refreshChromeGuard(): Promise<void> {
+    const c = this.current
+    const startedAt = this.now()
+    if (!c?.id || c.observer !== 'EXTENSION') return
+    if (this.guardRead?.context === c && (this.guardRead.pending || this.guardRead.nextAt > startedAt)) return
+    const read = { context: c, nextAt: startedAt + 3_000, pending: true }
+    this.guardRead = read
+    try {
+      const result = await this.auth.authorizedRequest({
+        path: `/api/v1/sessions/${c.sessionId}/observation-context`, method: 'GET', expectedStatus: 200,
+        parse: parseChromeGuardContext, withDeviceId: true, timeoutMs: 2_000,
+      })
+      if (this.current !== c) return
+      const guard = result.success && result.data.observationContextId === c.id && result.data.foregroundSequence === c.sequence ? result.data.guard : null
+      this.chromeGuard = guard ? { context: c, status: guard.status, validUntil: startedAt + guard.remainingMs } : null
+    } finally {
+      read.pending = false
+    }
+  }
+
   /** heartbeat가 이 ID로 성공하면 lease가 이어진 것으로 본다. */
   renewed(id: string): void {
     if (this.current?.id === id) this.current.renewedAt = this.now()
@@ -59,6 +103,8 @@ export class ObservationContext {
   /** 세션이 RUNNING이 아니면 비운다. 다시 시작하면 새 번호로 등록한다. */
   reset(): void {
     this.current = null
+    this.chromeGuard = null
+    this.guardRead = null
   }
 
   private async register(): Promise<void> {
