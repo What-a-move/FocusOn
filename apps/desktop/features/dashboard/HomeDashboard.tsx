@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AppSidebar } from '../../shared/ui/AppSidebar'
+import { sessionApi } from '../../shared/api/session-api'
 import { useOngoingSession } from '../../shared/api/useOngoingSession'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from '../../shared/api/dashboard-api'
 import type { FocusProgress } from '../../electron/shared/report-contract.cjs'
@@ -122,6 +123,22 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const shownDay = useRef('')
   const ongoing = useOngoingSession()
   const [progress, setProgress] = useState<FocusProgress | null>(null)
+  const [runningTime, setRunningTime] = useState<{ sessionId: string; ms: number } | null>(null)
+  const ongoingId = ongoing?.sessionId
+  const running = ongoing?.status === 'RUNNING'
+
+  useEffect(() => {
+    if (!running || !ongoingId) return
+    let cancelled = false
+    const timer = window.setInterval(() => {
+      void sessionApi.getCurrent().then((result) => {
+        if (!cancelled && result.success && result.data?.sessionId === ongoingId) {
+          setRunningTime({ sessionId: ongoingId, ms: result.data.accumulatedActiveMs })
+        }
+      })
+    }, 10_000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [running, ongoingId])
 
   useEffect(() => {
     // [유지보수] 정적 빌드 시각과 실행 시각이 달라도 날짜가 어긋나지 않게 실행 후 계산한다.
@@ -183,9 +200,10 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
       if (!cancelled) setProgress(result.success ? result.data : null)
     })
     return () => { cancelled = true }
-  }, [dateKey])
+  }, [dateKey, ongoingId])
   const currentProgress = progress?.date === dateKey ? progress : null
-  const activeMs = ongoing?.accumulatedActiveMs ?? 0
+  const activeMs = Math.max(ongoing?.accumulatedActiveMs ?? 0,
+    running && runningTime?.sessionId === ongoingId ? runningTime?.ms ?? 0 : 0)
 
   const todayMinutes = currentProgress ? Math.floor((currentProgress.today.totalActiveMs + activeMs) / 60000) : today && current && current !== 'error'
     ? Math.floor((current.days.find((day) => day.date === dayKey(today))?.totalActiveMs ?? 0) / 60000)

@@ -49,6 +49,7 @@ export function FocusSession() {
   const [view, setView] = useState<{ snapshot: SessionSnapshot | null | undefined; receivedAt: number }>({ snapshot: undefined, receivedAt: 0 })
   const snapshot = view.snapshot
   const [loadError, setLoadError] = useState(false)
+  const retrospectiveEnabled = useRef(false)
   const [now, setNow] = useState(0)
   const [dialog, setDialog] = useState<'finish' | 'timeup' | 'extend' | 'add-goal' | null>(null)
   const [custom, setCustom] = useState('')
@@ -77,10 +78,14 @@ export function FocusSession() {
 
   useEffect(() => {
     const unsubscribeAuth = window.focusOn?.auth.onSessionChanged((auth) => { if (auth.status === 'SIGNED_OUT') router.replace('/') })
+    let cancelled = false
     const unsubscribe = sessionApi.onChanged(apply)
+    void sessionApi.getFocusSettings().then((result) => {
+      if (!cancelled) retrospectiveEnabled.current = result.success && result.data.retrospectiveEnabled === true
+    })
     void sessionApi.getCurrent().then((result) => { if (result.success) apply(result.data); else setLoadError(true) })
     const timer = setInterval(() => setNow(performance.now()), 1000)
-    return () => { unsubscribe(); unsubscribeAuth?.(); clearInterval(timer) }
+    return () => { cancelled = true; unsubscribe(); unsubscribeAuth?.(); clearInterval(timer) }
   }, [router])
 
   const sessionId = snapshot?.sessionId
@@ -121,13 +126,8 @@ export function FocusSession() {
         hasGoals = true
       }
     } catch { /* 저장소를 사용할 수 없으면 할 일 완료 단계를 건너뛴다. */ }
-    let cancelled = false
-    void sessionApi.getFocusSettings().then((settings) => {
-      if (cancelled) return
-      const next = hasGoals ? '/todo-done/' : '/session-result/'
-      router.replace(settings.success && settings.data.retrospectiveEnabled !== false ? `/session-retrospective/${query}` : next + query)
-    })
-    return () => { cancelled = true }
+    const next = retrospectiveEnabled.current ? '/session-retrospective/' : hasGoals ? '/todo-done/' : '/session-result/'
+    router.replace(next + query)
   }, [endedSessionId, router])
 
   if (snapshot === undefined && !loadError) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
