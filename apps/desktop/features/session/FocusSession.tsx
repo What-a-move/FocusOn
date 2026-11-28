@@ -54,10 +54,10 @@ export function FocusSession() {
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [toast, setToast] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
   useEffect(() => {
     if (!toast) return
-    const timer = window.setTimeout(() => setToast(false), 2000)
+    const timer = window.setTimeout(() => setToast(null), 2000)
     return () => window.clearTimeout(timer)
   }, [toast])
   const goals = snapshot?.goals ?? []
@@ -231,7 +231,7 @@ export function FocusSession() {
       event.preventDefault()
       if (!awaiting && (activeDialog !== 'add-goal' || !addGoalSubmitting.current)) setDialog(null)
     }}>
-      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} onAdded={() => { setDialog(null); setToast(true) }} /> : <>
+      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} onAdded={(replaced) => { setDialog(null); setToast(replaced ? '할 일을 바꿨어요' : '할 일에 추가했어요') }} /> : <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
@@ -258,6 +258,6 @@ export function FocusSession() {
       </div>}
       </>}
     </dialog>
-    {toast && <div className="toast" role="status">할 일에 추가했어요</div>}
+    {toast && <div className="toast" role="status">{toast}</div>}
   </main>
 }

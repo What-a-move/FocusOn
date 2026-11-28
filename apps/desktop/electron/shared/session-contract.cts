@@ -24,7 +24,7 @@ export type StartSessionInput = { goalText: string; targetDurationMs: number; ti
   & ({ goalId: string; goalIds?: never } | { goalIds: string[]; goalId?: never })
 export type SessionGoal = { goalId: string; goalText: string }
 type GoalState = { goals: SessionGoal[]; goalVersion: number }
-export type AddSessionGoalInput = { sessionId: string; goalId: string; goalVersion: number }
+export type AddSessionGoalInput = { sessionId: string; goalId: string; goalVersion: number; replaceGoalId?: string }
 export type StartedSession = Partial<GoalState> & { sessionId: string; status: string; version: number; targetDurationMs: number; accumulatedActiveMs: number; startedAt: string; interventionPolicyVersion: string }
 
 /** 서버 세션 상태 (세션 상태 전이 정책). */
@@ -137,8 +137,9 @@ function optionalGoalState(value: Record<string, unknown>): Partial<GoalState> |
 }
 
 export function isAddSessionGoalInput(value: unknown): value is AddSessionGoalInput {
-  return isRecord(value) && Object.keys(value).length === 3 && isId(value.sessionId) && isId(value.goalId)
-    && isCount(value.goalVersion) && value.goalVersion >= 1
+  return isRecord(value) && Object.keys(value).every((key) => ['sessionId', 'goalId', 'goalVersion', 'replaceGoalId'].includes(key))
+    && isId(value.sessionId) && isId(value.goalId) && isCount(value.goalVersion) && value.goalVersion >= 1
+    && (!Object.hasOwn(value, 'replaceGoalId') || (isId(value.replaceGoalId) && value.replaceGoalId !== value.goalId))
 }
 
 export function parseStartedSession(value: unknown): StartedSession | null {

@@ -109,7 +109,7 @@ const focusOnApi: FocusOnApi = {
       idempotencyKey: input.idempotencyKey,
       goalText: input.goalText,
     }),
-    addGoal: (input) => ipcRenderer.invoke(SESSION_CHANNELS.addGoal, { sessionId: input.sessionId, goalId: input.goalId, goalVersion: input.goalVersion }),
+    addGoal: (input) => ipcRenderer.invoke(SESSION_CHANNELS.addGoal, { sessionId: input.sessionId, goalId: input.goalId, goalVersion: input.goalVersion, ...(input.replaceGoalId === undefined ? {} : { replaceGoalId: input.replaceGoalId }) }),
     getCurrent: () => ipcRenderer.invoke(SESSION_CHANNELS.current),
     onChanged(callback) {
       const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => { callback(isSessionSnapshot(payload) ? payload : null) }
