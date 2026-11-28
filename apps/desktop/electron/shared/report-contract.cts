@@ -6,6 +6,7 @@ export const REPORT_CHANNELS = {
   progress: 'report:progress:get',
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
+  retrospective: 'report:retrospective:save',
   sessionPauses: 'report:session-pauses:get',
   learningSummary: 'report:learning-summary:get',
   learningNotes: 'report:learning-notes:list',
@@ -59,7 +60,17 @@ export type FocusProgress = {
   week: { totalActiveMs: number; weeklyTargetMs: number | null }
 }
 
+export const RETROSPECTIVE_RATINGS = ['GOOD', 'OKAY', 'BAD'] as const
+export const RETROSPECTIVE_REASONS = ['SELF_TIRED', 'SELF_NOISE', 'SELF_TOO_MANY_GOALS', 'APP_FALSE_ALERT', 'APP_TOO_FREQUENT', 'APP_LATE_ALERT', 'APP_BLUR_ANNOYING'] as const
+export type RetrospectiveInput = {
+  sessionId: string
+  rating: typeof RETROSPECTIVE_RATINGS[number]
+  reasonCodes?: Array<typeof RETROSPECTIVE_REASONS[number]>
+  note?: string
+}
+
 export type ReportsApi = {
+  saveRetrospective(input: RetrospectiveInput): Promise<IpcResult<{ saved: true }>>
   getProgress(input: { date: string }): Promise<IpcResult<FocusProgress>>
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
@@ -123,6 +134,17 @@ export function isValidSessionId(value: unknown): value is string {
 
 const optionalCount = (value: unknown): number | null => isCount(value) ? value : null
 const LEARNING_STATUSES: readonly LearningSummaryStatus[] = ['QUEUED', 'GENERATING', 'READY', 'INSUFFICIENT_DATA', 'FAILED']
+
+export function isRetrospectiveInput(value: unknown): value is RetrospectiveInput {
+  if (!isRecord(value) || !isValidSessionId(value.sessionId)
+    || !RETROSPECTIVE_RATINGS.includes(value.rating as RetrospectiveInput['rating'])
+    || !Object.keys(value).every((key) => ['sessionId', 'rating', 'reasonCodes', 'note'].includes(key))) return false
+  const { rating, reasonCodes, note } = value
+  if (rating !== 'BAD') return reasonCodes === undefined && note === undefined
+  return (reasonCodes === undefined || (Array.isArray(reasonCodes) && reasonCodes.length <= RETROSPECTIVE_REASONS.length
+    && new Set(reasonCodes).size === reasonCodes.length && reasonCodes.every((reason) => RETROSPECTIVE_REASONS.includes(reason))))
+    && (note === undefined || (typeof note === 'string' && note.trim().length <= 100))
+}
 
 export function parseSessionSummary(value: unknown): SessionSummary | null {
   if (!isRecord(value) || typeof value.sessionId !== 'string' || typeof value.goalSnapshot !== 'string') return null

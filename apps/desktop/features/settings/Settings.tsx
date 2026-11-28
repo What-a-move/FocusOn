@@ -141,6 +141,12 @@ function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targ
         {weekly !== null && <TargetStepper label="주간 목표 시간" value={weekly} min={60} max={4200} step={60} disabled={saving}
           onChange={(value) => { void save({ ...settings, weeklyTargetMs: value * 60_000 }) }} />}
       </div>
+      <div className="fo-row">
+        <div className="fo-row-copy"><strong id="retrospective-title">회고</strong></div>
+        <button className="fo-switch" type="button" role="switch" aria-labelledby="retrospective-title"
+          aria-checked={settings.retrospectiveEnabled ?? true} disabled={saving}
+          onClick={() => { void save({ ...settings, retrospectiveEnabled: !(settings.retrospectiveEnabled ?? true) }) }} />
+      </div>
     </>
   }
 

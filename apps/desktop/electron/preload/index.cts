@@ -71,6 +71,8 @@ const focusOnApi: FocusOnApi = {
     getProgress: (input) => ipcRenderer.invoke(REPORT_CHANNELS.progress, { date: input.date }),
     getCalendar: (input) => ipcRenderer.invoke(REPORT_CHANNELS.calendar, { month: input.month }),
     getDaily: (input) => ipcRenderer.invoke(REPORT_CHANNELS.daily, { date: input.date }),
+    saveRetrospective: ({ sessionId, rating, reasonCodes, note }) =>
+      ipcRenderer.invoke(REPORT_CHANNELS.retrospective, { sessionId, rating, reasonCodes, note }),
     getSessionSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionSummary, { sessionId: input.sessionId }),
     getSessionPauses: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionPauses, { sessionId: input.sessionId }),
     getLearningSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningSummary, { sessionId: input.sessionId }),
@@ -135,6 +137,7 @@ const focusOnApi: FocusOnApi = {
       breakSuggestionEnabled: input.breakSuggestionEnabled,
       ...(input.dailyTargetMs === undefined ? {} : { dailyTargetMs: input.dailyTargetMs }),
       ...(input.weeklyTargetMs === undefined ? {} : { weeklyTargetMs: input.weeklyTargetMs }),
+      ...(input.retrospectiveEnabled === undefined ? {} : { retrospectiveEnabled: input.retrospectiveEnabled }),
     }),
     getExcludedDomains: () => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsGet),
     saveExcludedDomains: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsSave, { domains: [...input.domains] }),

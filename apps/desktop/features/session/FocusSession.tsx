@@ -105,7 +105,7 @@ export function FocusSession() {
     if (!activeDialog && element.open) element.close()
   }, [activeDialog])
 
-  // 세션이 끝나면(종료·시간 종료·자동 종료) 집중 리포트로 넘어간다(D16·D18).
+  // 세션 종료 후 회고 설정에 따라 회고 또는 다음 화면으로 이동한다.
   const endedSessionId = snapshot && (snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED') ? snapshot.sessionId : null
   // 끝난 순간의 할 일. 이동은 세션이 끝날 때 한 번만 한다.
   const endedGoals = useRef<SessionGoal[]>([])
@@ -113,14 +113,21 @@ export function FocusSession() {
   useEffect(() => { endedGoals.current = goalsNow ?? [] }, [goalsNow])
   useEffect(() => {
     if (!endedSessionId) return
-    // 할 일이 있으면 결과 전에 「다 했어요」로 간다. 저장소를 못 쓰면 결과로 바로 간다.
+    const query = `?session=${encodeURIComponent(endedSessionId)}`
+    let hasGoals = false
     try {
-      if (!endedGoals.current.length) throw new Error('no goals')
-      sessionStorage.setItem(ENDED_GOALS_KEY, JSON.stringify({ sessionId: endedSessionId, goals: endedGoals.current.map(({ goalId, goalText }) => ({ goalId, goalText })) }))
-      router.replace(`/todo-done/?session=${encodeURIComponent(endedSessionId)}`)
-    } catch {
-      router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
-    }
+      if (endedGoals.current.length) {
+        sessionStorage.setItem(ENDED_GOALS_KEY, JSON.stringify({ sessionId: endedSessionId, goals: endedGoals.current.map(({ goalId, goalText }) => ({ goalId, goalText })) }))
+        hasGoals = true
+      }
+    } catch { /* 저장소를 사용할 수 없으면 할 일 완료 단계를 건너뛴다. */ }
+    let cancelled = false
+    void sessionApi.getFocusSettings().then((settings) => {
+      if (cancelled) return
+      const next = hasGoals ? '/todo-done/' : '/session-result/'
+      router.replace(settings.success && settings.data.retrospectiveEnabled !== false ? `/session-retrospective/${query}` : next + query)
+    })
+    return () => { cancelled = true }
   }, [endedSessionId, router])
 
   if (snapshot === undefined && !loadError) return <main className="app-window onboarding-window focus-window" aria-busy="true" />

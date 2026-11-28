@@ -45,6 +45,7 @@ export const requiredConsents: Consent[] = [
           'Google 계정 식별자, 닉네임',
           '목표, 집중 시작·종료 시각과 집중한 시간',
           '연결한 기기 정보(이 Mac, Chrome 확장)',
+          '남겨 주신 회고는 FocusOn을 개선하는 데만 써요.',
         ] },
         { heading: '얼마나 보관하나요', items: [
           '집중 기록·리포트·학습 노트: 세션이 끝난 뒤 1년',
