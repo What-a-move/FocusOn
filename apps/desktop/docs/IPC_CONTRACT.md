@@ -155,6 +155,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | Channel | 입력 | 성공 data | Backend |
 | --- | --- | --- | --- |
 | `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity, dailyTargetAchieved? }] }` | `GET /api/v1/reports/calendar` |
+| `report:reminder:estimate` | 없음 | `ReminderEstimate` | 최근 세션 목록·분석 기록·요약·일시정지 조회 |
 | `report:progress:get` | `{ date }` | `FocusProgress` | `GET /api/v1/reports/progress` |
 | `report:retrospective:save` | `{ sessionId, rating, reasonCodes?, note? }` | `{ saved: true }` | `PUT /api/v1/sessions/{id}/retrospective` |
 | `report:session-summary:get` | `{ sessionId }` | `SessionSummary` (결정 027, 없는 값은 null) | `GET /api/v1/sessions/{id}/summary` |

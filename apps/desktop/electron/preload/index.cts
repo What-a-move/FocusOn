@@ -68,6 +68,7 @@ const focusOnApi: FocusOnApi = {
     getSummary: () => ipcRenderer.invoke(ONBOARDING_CHANNELS.summary),
   },
   reports: {
+    getReminderEstimate: () => ipcRenderer.invoke(REPORT_CHANNELS.reminderEstimate),
     getProgress: (input) => ipcRenderer.invoke(REPORT_CHANNELS.progress, { date: input.date }),
     getCalendar: (input) => ipcRenderer.invoke(REPORT_CHANNELS.calendar, { month: input.month }),
     getDaily: (input) => ipcRenderer.invoke(REPORT_CHANNELS.daily, { date: input.date }),

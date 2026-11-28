@@ -8,6 +8,7 @@ import '../../shared/styles/onboarding-window.css'
 import { CHANNELS, LEVELS, PREVIEW } from '../../shared/lib/intervention-options'
 import type { LearningMessenger } from '../../electron/shared/session-contract.cjs'
 import { sessionApi, type NotificationChannel } from '../../shared/api/session-api'
+import { sessionResultApi, type ReminderEstimate } from '../../shared/api/session-result-api'
 import { onboardingApi } from '../../shared/api/onboarding-api'
 import { AccountPanel, DevicesPanel } from './AccountPanels'
 import { LoadError, SettingsShell, ToastView, failText, useToast } from '../../shared/ui/SettingsShell'
@@ -100,6 +101,16 @@ type ShowToast = (toast: { text: string }) => void
 function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targets?: boolean }) {
   const [view, setView] = useState<Load<FocusSettings>>({ status: 'loading' })
   const [saving, setSaving] = useState(false)
+  const [reminderEstimate, setReminderEstimate] = useState<ReminderEstimate | null>(null)
+
+  useEffect(() => {
+    if (!targets) return
+    let current = true
+    void sessionResultApi.getReminderEstimate().then((result) => {
+      if (current && result.success) setReminderEstimate(result.data)
+    })
+    return () => { current = false }
+  }, [targets])
 
   const load = useCallback(async () => {
     setView({ status: 'loading' })
@@ -120,6 +131,7 @@ function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targ
       ...coreFocusSettings(next),
       ...(next.dailyTargetMs === settings.dailyTargetMs ? {} : { dailyTargetMs: next.dailyTargetMs }),
       ...(next.weeklyTargetMs === settings.weeklyTargetMs ? {} : { weeklyTargetMs: next.weeklyTargetMs }),
+      ...(next.preDistractionReminderEnabled === settings.preDistractionReminderEnabled ? {} : { preDistractionReminderEnabled: next.preDistractionReminderEnabled }),
       ...(next.retrospectiveEnabled === settings.retrospectiveEnabled ? {} : { retrospectiveEnabled: next.retrospectiveEnabled }),
     })
     setSaving(false)
@@ -152,6 +164,17 @@ function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targ
         <button className="fo-switch" type="button" role="switch" aria-labelledby="retrospective-title"
           aria-checked={settings.retrospectiveEnabled ?? true} disabled={saving}
           onClick={() => { void save({ ...settings, retrospectiveEnabled: !(settings.retrospectiveEnabled ?? true) }) }} />
+      </div>
+      <div className="fo-row">
+        <div className="fo-row-copy">
+          <strong id="pre-reminder-title">미리 알림</strong>
+          <small id="pre-reminder-description" role="status">{reminderEstimate?.status === 'insufficient'
+            ? '몇 번 더 집중하면 알려 드릴게요'
+            : '평소 흐트러지던 때 3분 전에 알려요'}</small>
+        </div>
+        <button className="fo-switch" type="button" role="switch" aria-labelledby="pre-reminder-title"
+          aria-describedby="pre-reminder-description" aria-checked={settings.preDistractionReminderEnabled ?? true} disabled={saving}
+          onClick={() => { void save({ ...settings, preDistractionReminderEnabled: !(settings.preDistractionReminderEnabled ?? true) }) }} />
       </div>
     </>
   }

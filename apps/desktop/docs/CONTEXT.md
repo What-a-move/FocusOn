@@ -19,6 +19,8 @@
 
 ### 완료된 작업
 
+- 목표·기록 설정의 미리 알림과 최근 첫 이탈 기록을 사용한 macOS 알림을 연결했다. [#395](https://github.com/What-a-move/FocusOn/issues/395) · [결과](features/pre-distraction-reminder-REPORT.md)
+
 - Desktop 할 일 교체, 목표 진행·하루 달성·연속 기록, 종료 회고, 설정·온보딩의 학습용 메신저 선택을 연결했다. 달성일 포키와 체크 배지의 표시 영역을 분리했다. [#391](https://github.com/What-a-move/FocusOn/issues/391) · [결과](features/desktop-session-redesign-REPORT.md)
 
 - 집중 리포트에 분류된 딴짓 기록 건수 비율과 첫 연속 이탈 시각을 표시하고 화면 분석 동의 상세에 저장 목적을 추가했다. [결과](features/report-off-task-category-REPORT.md)

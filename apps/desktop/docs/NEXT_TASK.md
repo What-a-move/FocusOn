@@ -4,6 +4,8 @@
 
 ## 가장 먼저 진행할 작업
 
+- [#395](https://github.com/What-a-move/FocusOn/issues/395) 미리 알림 실기기 QA. 유효한 첫 이탈 기록 3건 이상인 계정으로 예정 시각, 끄기, 일시정지·재개, 알림 클릭과 동일 회차 중복 방지를 확인한다. [결과](features/pre-distraction-reminder-REPORT.md)
+
 - [#391](https://github.com/What-a-move/FocusOn/issues/391) 실기기 QA. 집중 중 교체, 목표 저장·달성·연속 기록 표시, 종료 회고, 달성 포키 표시, 온보딩과 설정의 메신저 선택을 실제 계정으로 확인한다. [결과](features/desktop-session-redesign-REPORT.md)
 
 - 집중 리포트 상세에서 이탈 경로와 할 일별 시간은 서버의 관측 출처와 회차별 할 일 집계 응답 확인 후 연결한다.

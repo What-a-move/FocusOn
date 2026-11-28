@@ -110,5 +110,5 @@ test('할 일 교체의 선택 필드와 새 집중 설정은 이전 입력과 �
   assert.equal(isFocusSettingsInput(current), true)
   assert.equal(isFocusSettingsInput({ ...current, dailyTargetMs: 600001 }), false)
   assert.equal(isFocusSettingsInput({ ...current, learningMessengers: ['SLACK', 'SLACK'] }), false)
-  assert.equal(isFocusSettingsInput({ ...current, preDistractionReminderEnabled: true }), false)
+  assert.equal(isFocusSettingsInput({ ...current, preDistractionReminderEnabled: true }), true)
 })

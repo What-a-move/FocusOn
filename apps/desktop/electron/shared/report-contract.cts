@@ -4,6 +4,7 @@ import type { IpcResult } from './auth-contract.cjs'
 export const REPORT_CHANNELS = {
   calendar: 'report:calendar:get',
   progress: 'report:progress:get',
+  reminderEstimate: 'report:reminder:estimate',
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
   retrospective: 'report:retrospective:save',
@@ -79,7 +80,10 @@ export type OffTaskReport = {
   consecutive: Array<{ firstAt: string; secondAt: string }>
 }
 
+export type ReminderEstimate = { status: 'ready'; activeMs: number } | { status: 'insufficient' | 'tooEarly' }
+
 export type ReportsApi = {
+  getReminderEstimate(): Promise<IpcResult<ReminderEstimate>>
   saveRetrospective(input: RetrospectiveInput): Promise<IpcResult<{ saved: true }>>
   getProgress(input: { date: string }): Promise<IpcResult<FocusProgress>>
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
