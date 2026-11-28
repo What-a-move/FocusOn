@@ -1,0 +1,2498 @@
+{
+  "note": "100 cloud-sanitizer + JEV live evaluation cases; E5 scores are simulated constants.",
+  "totalSeconds": 1.42,
+  "securityMetrics": {
+    "total": 100,
+    "blockedCorrect": 25,
+    "blockedTotal": 25,
+    "secretLeakCount": 0,
+    "apiCalledOnBlocked": 0,
+    "passedAllChecks": 95
+  },
+  "summary": {
+    "total": 100,
+    "exactMatches": 95,
+    "expectedMatchTotal": 35,
+    "correctMatch": 35,
+    "wrongMatch": 0,
+    "expectedFarTotal": 20,
+    "correctFar": 15,
+    "wrongFar": 0,
+    "meetsTarget": true
+  },
+  "misclassifiedCount": 5,
+  "misclassified": [
+    {
+      "caseId": "sec100-085",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.52,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 159.2
+    },
+    {
+      "caseId": "sec100-090",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.54,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 165.7
+    },
+    {
+      "caseId": "sec100-095",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.54,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 160.4
+    },
+    {
+      "caseId": "sec100-098",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "React CSS Grid 반응형 레이아웃",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.63,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 156.1
+    },
+    {
+      "caseId": "sec100-100",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.52,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 162.3
+    }
+  ],
+  "rows": [
+    {
+      "caseId": "sec100-001",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #1",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-002",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #2",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-003",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #3",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-004",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #4",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-005",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #5",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-006",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #6",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-007",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #7",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-008",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #8",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-009",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #9",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-010",
+      "category": "BLOCKED_PEM",
+      "goalTexts": [
+        "SSH 및 TLS 인증 공부"
+      ],
+      "title": "서버 개인키 설정 #10",
+      "blocked": true,
+      "blockReason": "PEM_PRIVATE_KEY",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-011",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #1",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-012",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #2",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-013",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #3",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-014",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #4",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-015",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #5",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-016",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #6",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-017",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #7",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-018",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #8",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-019",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #9",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-020",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #10",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-021",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #11",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-022",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #12",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-023",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #13",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-024",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #14",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-025",
+      "category": "BLOCKED_EXCESSIVE",
+      "goalTexts": [
+        "환경변수 보안 관리 공부"
+      ],
+      "title": ".env 설정 파일 #15",
+      "blocked": true,
+      "blockReason": "EXCESSIVE_REDACTION",
+      "redactionCount": 0,
+      "leaked": false,
+      "apiCalled": false,
+      "jevGoalScores": null,
+      "jevDifferentStudyTopic": null,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 0.0
+    },
+    {
+      "caseId": "sec100-026",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI PostgreSQL 비동기 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.95
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 243.2
+    },
+    {
+      "caseId": "sec100-027",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.96
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 244.1
+    },
+    {
+      "caseId": "sec100-028",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangGraph 에이전트 노드와 API 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 249.8
+    },
+    {
+      "caseId": "sec100-029",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAG 하이브리드 검색 파이프라인 구축",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 243.9
+    },
+    {
+      "caseId": "sec100-030",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch 분산 학습과 체크포인트 저장",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.84
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 256.3
+    },
+    {
+      "caseId": "sec100-031",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Docker Compose 백엔드 컨테이너 구성"
+      ],
+      "title": "Docker Compose 백엔드 컨테이너 구성",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 270.6
+    },
+    {
+      "caseId": "sec100-032",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "React Query useMutation 캐시 무효화"
+      ],
+      "title": "React Query useMutation 캐시 무효화",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.92
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 243.7
+    },
+    {
+      "caseId": "sec100-033",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI PostgreSQL 비동기 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 369.9
+    },
+    {
+      "caseId": "sec100-034",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.95
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 243.4
+    },
+    {
+      "caseId": "sec100-035",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangGraph 에이전트 노드와 API 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.91
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 244.7
+    },
+    {
+      "caseId": "sec100-036",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAG 하이브리드 검색 파이프라인 구축",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.1
+    },
+    {
+      "caseId": "sec100-037",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch 분산 학습과 체크포인트 저장",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.87
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.6
+    },
+    {
+      "caseId": "sec100-038",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Docker Compose 백엔드 컨테이너 구성"
+      ],
+      "title": "Docker Compose 백엔드 컨테이너 구성",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.92
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.1
+    },
+    {
+      "caseId": "sec100-039",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "React Query useMutation 캐시 무효화"
+      ],
+      "title": "React Query useMutation 캐시 무효화",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 178.1
+    },
+    {
+      "caseId": "sec100-040",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI PostgreSQL 비동기 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.5
+    },
+    {
+      "caseId": "sec100-041",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.95
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.8
+    },
+    {
+      "caseId": "sec100-042",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangGraph 에이전트 노드와 API 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.91
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.5
+    },
+    {
+      "caseId": "sec100-043",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAG 하이브리드 검색 파이프라인 구축",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.91
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.0
+    },
+    {
+      "caseId": "sec100-044",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch 분산 학습과 체크포인트 저장",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.87
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.2
+    },
+    {
+      "caseId": "sec100-045",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Docker Compose 백엔드 컨테이너 구성"
+      ],
+      "title": "Docker Compose 백엔드 컨테이너 구성",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.92
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.4
+    },
+    {
+      "caseId": "sec100-046",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "React Query useMutation 캐시 무효화"
+      ],
+      "title": "React Query useMutation 캐시 무효화",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 175.5
+    },
+    {
+      "caseId": "sec100-047",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI PostgreSQL 비동기 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 168.8
+    },
+    {
+      "caseId": "sec100-048",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 169.2
+    },
+    {
+      "caseId": "sec100-049",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangGraph 에이전트 노드와 API 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 155.5
+    },
+    {
+      "caseId": "sec100-050",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAG 하이브리드 검색 파이프라인 구축",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 169.4
+    },
+    {
+      "caseId": "sec100-051",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch 분산 학습과 체크포인트 저장",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.86
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.0
+    },
+    {
+      "caseId": "sec100-052",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Docker Compose 백엔드 컨테이너 구성"
+      ],
+      "title": "Docker Compose 백엔드 컨테이너 구성",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.89
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 187.2
+    },
+    {
+      "caseId": "sec100-053",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "React Query useMutation 캐시 무효화"
+      ],
+      "title": "React Query useMutation 캐시 무효화",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.7
+    },
+    {
+      "caseId": "sec100-054",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI PostgreSQL 비동기 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.94
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.4
+    },
+    {
+      "caseId": "sec100-055",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Security JWT 인증 필터 구현",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.95
+      },
+      "jevDifferentStudyTopic": 0.01,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.8
+    },
+    {
+      "caseId": "sec100-056",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangGraph 에이전트 노드와 API 연동",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.92
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 156.9
+    },
+    {
+      "caseId": "sec100-057",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAG 하이브리드 검색 파이프라인 구축",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.1
+    },
+    {
+      "caseId": "sec100-058",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch 분산 학습과 체크포인트 저장",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.86
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 171.2
+    },
+    {
+      "caseId": "sec100-059",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "Docker Compose 백엔드 컨테이너 구성"
+      ],
+      "title": "Docker Compose 백엔드 컨테이너 구성",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.92
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.6
+    },
+    {
+      "caseId": "sec100-060",
+      "category": "MATCHED_WITH_SECRET",
+      "goalTexts": [
+        "React Query useMutation 캐시 무효화"
+      ],
+      "title": "React Query useMutation 캐시 무효화",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.93
+      },
+      "jevDifferentStudyTopic": 0.02,
+      "predictedStatus": "MATCHED",
+      "predictedGoalId": "g1",
+      "expectedStatus": "MATCHED",
+      "expectedGoalId": "g1",
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.5
+    },
+    {
+      "caseId": "sec100-061",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI 의존성 주입과 Pydantic 검증",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.16
+      },
+      "jevDifferentStudyTopic": 0.05,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 167.2
+    },
+    {
+      "caseId": "sec100-062",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Boot CORS 전역 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.1
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.3
+    },
+    {
+      "caseId": "sec100-063",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.18
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 157.2
+    },
+    {
+      "caseId": "sec100-064",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAGAS 답변 품질 평가 지표",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.16
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.1
+    },
+    {
+      "caseId": "sec100-065",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch DataLoader num_workers 튜닝",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 156.8
+    },
+    {
+      "caseId": "sec100-066",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI 의존성 주입과 Pydantic 검증",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.08
+      },
+      "jevDifferentStudyTopic": 0.14,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 165.6
+    },
+    {
+      "caseId": "sec100-067",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Boot CORS 전역 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.11,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.5
+    },
+    {
+      "caseId": "sec100-068",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.15
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 159.2
+    },
+    {
+      "caseId": "sec100-069",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAGAS 답변 품질 평가 지표",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.16
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.8
+    },
+    {
+      "caseId": "sec100-070",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch DataLoader num_workers 튜닝",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 188.3
+    },
+    {
+      "caseId": "sec100-071",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI 의존성 주입과 Pydantic 검증",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.15
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.7
+    },
+    {
+      "caseId": "sec100-072",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Boot CORS 전역 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.09
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.2
+    },
+    {
+      "caseId": "sec100-073",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.18
+      },
+      "jevDifferentStudyTopic": 0.06,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.2
+    },
+    {
+      "caseId": "sec100-074",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAGAS 답변 품질 평가 지표",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.14
+      },
+      "jevDifferentStudyTopic": 0.08,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 177.0
+    },
+    {
+      "caseId": "sec100-075",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch DataLoader num_workers 튜닝",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.8
+    },
+    {
+      "caseId": "sec100-076",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "FastAPI PostgreSQL 비동기 연동"
+      ],
+      "title": "FastAPI 의존성 주입과 Pydantic 검증",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.08
+      },
+      "jevDifferentStudyTopic": 0.16,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.2
+    },
+    {
+      "caseId": "sec100-077",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "Spring Security JWT 인증 필터 구현"
+      ],
+      "title": "Spring Boot CORS 전역 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.11,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 202.1
+    },
+    {
+      "caseId": "sec100-078",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "LangGraph 에이전트 노드와 API 연동"
+      ],
+      "title": "LangSmith 트레이싱과 지연 시간 모니터링",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.15
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 164.8
+    },
+    {
+      "caseId": "sec100-079",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 파이프라인 구축"
+      ],
+      "title": "RAGAS 답변 품질 평가 지표",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.15
+      },
+      "jevDifferentStudyTopic": 0.07,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 160.0
+    },
+    {
+      "caseId": "sec100-080",
+      "category": "ADJACENT_WITH_SECRET",
+      "goalTexts": [
+        "PyTorch 분산 학습과 체크포인트 저장"
+      ],
+      "title": "PyTorch DataLoader num_workers 튜닝",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.09,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "NOT_ENOUGH",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 162.0
+    },
+    {
+      "caseId": "sec100-081",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.94,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 170.6
+    },
+    {
+      "caseId": "sec100-082",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Kubernetes Readiness Probe 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.82,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.4
+    },
+    {
+      "caseId": "sec100-083",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "React CSS Grid 반응형 레이아웃",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.75,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 173.7
+    },
+    {
+      "caseId": "sec100-084",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Git Rebase Interactive 커밋 정리",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 163.2
+    },
+    {
+      "caseId": "sec100-085",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.52,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 159.2
+    },
+    {
+      "caseId": "sec100-086",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.01
+      },
+      "jevDifferentStudyTopic": 0.93,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 161.5
+    },
+    {
+      "caseId": "sec100-087",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Kubernetes Readiness Probe 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.84,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.3
+    },
+    {
+      "caseId": "sec100-088",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "React CSS Grid 반응형 레이아웃",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.66,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 177.1
+    },
+    {
+      "caseId": "sec100-089",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Git Rebase Interactive 커밋 정리",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 185.8
+    },
+    {
+      "caseId": "sec100-090",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.54,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 165.7
+    },
+    {
+      "caseId": "sec100-091",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 2,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.93,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 184.7
+    },
+    {
+      "caseId": "sec100-092",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Kubernetes Readiness Probe 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.86,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 178.8
+    },
+    {
+      "caseId": "sec100-093",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "React CSS Grid 반응형 레이아웃",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.73,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 177.1
+    },
+    {
+      "caseId": "sec100-094",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Git Rebase Interactive 커밋 정리",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.91,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 166.8
+    },
+    {
+      "caseId": "sec100-095",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.06
+      },
+      "jevDifferentStudyTopic": 0.54,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 160.4
+    },
+    {
+      "caseId": "sec100-096",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "멀티헤드 어텐션 구현"
+      ],
+      "title": "PostgreSQL B-Tree 복합 인덱스 설계",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.94,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 158.5
+    },
+    {
+      "caseId": "sec100-097",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "LoRA 파인튜닝 원리 이해"
+      ],
+      "title": "Kubernetes Readiness Probe 설정",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.87,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 155.8
+    },
+    {
+      "caseId": "sec100-098",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "RAG 하이브리드 검색 구현"
+      ],
+      "title": "React CSS Grid 반응형 레이아웃",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.63,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 156.1
+    },
+    {
+      "caseId": "sec100-099",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "PPO 기반 RLHF 보상 모델 학습"
+      ],
+      "title": "Git Rebase Interactive 커밋 정리",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.02
+      },
+      "jevDifferentStudyTopic": 0.9,
+      "predictedStatus": "FAR",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": true,
+      "error": null,
+      "elapsedMs": 156.3
+    },
+    {
+      "caseId": "sec100-100",
+      "category": "FAR_WITH_SECRET",
+      "goalTexts": [
+        "KV Cache 메모리 최적화"
+      ],
+      "title": "Redis Sorted Set 실시간 랭킹",
+      "blocked": false,
+      "blockReason": null,
+      "redactionCount": 1,
+      "leaked": false,
+      "apiCalled": true,
+      "jevGoalScores": {
+        "g1": 0.05
+      },
+      "jevDifferentStudyTopic": 0.52,
+      "predictedStatus": "NOT_ENOUGH",
+      "predictedGoalId": null,
+      "expectedStatus": "FAR",
+      "expectedGoalId": null,
+      "passed": false,
+      "error": null,
+      "elapsedMs": 162.3
+    }
+  ]
+}
