@@ -150,3 +150,49 @@ test('목표 진행과 회고는 Desktop 기기 인증을 사용하며 원문 �
     { path: '/api/v1/sessions/7/retrospective', method: 'PUT', withDeviceId: true, body: { rating: 'BAD', reasonCodes: ['SELF_TIRED'], note: '피곤했어요' } },
   ])
 })
+
+test('딴짓 비율은 유효하게 분류된 UNRELATED 기록만 쓰고 기타와 예전 누락 값을 구분한다', async () => {
+  const record = (offTaskCategory) => ({ relation: 'UNRELATED', offTaskCategory })
+  const data = [
+    record('SNS'),
+    record('VIDEO'),
+    record('VIDEO'),
+    record('OTHER'),
+    record(null),
+    record(undefined),
+    record('UNKNOWN_CATEGORY'),
+    { relation: 'RELATED', offTaskCategory: 'GAME' },
+    { relation: 'UNCERTAIN', offTaskCategory: 'NEWS' },
+    null,
+  ]
+  const service = new ReportService({ authorizedRequest: async ({ path, method, parse }) => {
+    assert.equal(path, '/api/v1/sessions/7/analysis-runs')
+    assert.equal(method, 'GET')
+    assert.deepEqual(parse([record(null), record(undefined)]), { categories: [], consecutive: [] })
+    assert.deepEqual(parse([]), { categories: [], consecutive: [] })
+    assert.equal(parse({ items: data }), null)
+    return { success: true, data: parse(data) }
+  } })
+  assert.deepEqual(await service.getOffTaskBreakdown('7'), {
+    success: true,
+    data: {
+      categories: [
+        { category: 'VIDEO', share: 0.5 },
+        { category: 'SNS', share: 0.25 },
+        { category: 'OTHER', share: 0.25 },
+      ],
+      consecutive: [],
+    },
+  })
+})
+
+test('첫 이탈은 서로 다른 시각에 연속해 확정된 기록만 후보에 넣는다', () => {
+  const { parseOffTaskBreakdown } = require('../../dist-electron/shared/report-contract.cjs')
+  const run = (minute, relation = 'UNRELATED', analysisStatus = 'COMPLETED') => ({ relation, analysisStatus, observedAt: `2026-11-29T01:${minute}:00Z` })
+  const report = parseOffTaskBreakdown([
+    run('01'), run('01'), run('02', 'UNCERTAIN', 'NEEDS_CONFIRMATION'),
+    run('03'), run('04', 'UNRELATED', 'ERROR'),
+    run('05'), run('06'), run('07', 'PRIVACY_BLOCKED', 'SKIPPED'), run('08'),
+  ])
+  assert.deepEqual(report.consecutive, [{ firstAt: run('05').observedAt, secondAt: run('06').observedAt }])
+})

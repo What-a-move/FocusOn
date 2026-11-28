@@ -74,6 +74,7 @@ const focusOnApi: FocusOnApi = {
     saveRetrospective: ({ sessionId, rating, reasonCodes, note }) =>
       ipcRenderer.invoke(REPORT_CHANNELS.retrospective, { sessionId, rating, reasonCodes, note }),
     getSessionSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionSummary, { sessionId: input.sessionId }),
+    getOffTaskBreakdown: (input) => ipcRenderer.invoke(REPORT_CHANNELS.offTaskBreakdown, { sessionId: input.sessionId }),
     getSessionPauses: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionPauses, { sessionId: input.sessionId }),
     getLearningSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningSummary, { sessionId: input.sessionId }),
     listLearningNotes: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningNotes, { cursor: input.cursor }),

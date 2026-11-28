@@ -8,6 +8,7 @@ export const REPORT_CHANNELS = {
   sessionSummary: 'report:session-summary:get',
   retrospective: 'report:retrospective:save',
   sessionPauses: 'report:session-pauses:get',
+  offTaskBreakdown: 'report:off-task-breakdown:get',
   learningSummary: 'report:learning-summary:get',
   learningNotes: 'report:learning-notes:list',
 } as const
@@ -70,6 +71,14 @@ export type RetrospectiveInput = {
   note?: string
 }
 
+const OFF_TASK_CATEGORIES = ['VIDEO', 'SNS', 'COMMUNITY', 'SHOPPING', 'GAME', 'MESSENGER', 'NEWS', 'OTHER'] as const
+type OffTaskCategory = typeof OFF_TASK_CATEGORIES[number]
+export type OffTaskShare = { category: OffTaskCategory; share: number }
+export type OffTaskReport = {
+  categories: OffTaskShare[]
+  consecutive: Array<{ firstAt: string; secondAt: string }>
+}
+
 export type ReportsApi = {
   saveRetrospective(input: RetrospectiveInput): Promise<IpcResult<{ saved: true }>>
   getProgress(input: { date: string }): Promise<IpcResult<FocusProgress>>
@@ -77,6 +86,7 @@ export type ReportsApi = {
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
   getSessionPauses(input: { sessionId: string }): Promise<IpcResult<SessionPause[]>>
+  getOffTaskBreakdown(input: { sessionId: string }): Promise<IpcResult<OffTaskReport>>
   getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
   listLearningNotes(input: { cursor: string | null }): Promise<IpcResult<LearningNoteList>>
 }
@@ -189,6 +199,31 @@ export function parseSessionPauses(value: unknown): SessionPause[] | null {
     previousEnd = end
   }
   return pauses
+}
+
+/** 분석 기록 중 저장된 딴짓 분류만 집계한다. 이전 회차의 누락 값은 분류된 기록 수에서 뺀다. */
+export function parseOffTaskBreakdown(value: unknown): OffTaskReport | null {
+  if (!Array.isArray(value)) return null
+  const counts = new Map<OffTaskCategory, number>()
+  let total = 0
+  let previous: string | null = null
+  const consecutive: OffTaskReport['consecutive'] = []
+  for (const item of value) {
+    if (!isRecord(item) || item.relation !== 'UNRELATED') { previous = null; continue }
+    const category = OFF_TASK_CATEGORIES.find((entry) => entry === item.offTaskCategory)
+    if (category) {
+      counts.set(category, (counts.get(category) ?? 0) + 1)
+      total += 1
+    }
+    if (item.analysisStatus !== 'COMPLETED' || !isTime(item.observedAt)) { previous = null; continue }
+    if (previous && Date.parse(previous) < Date.parse(item.observedAt)) {
+      consecutive.push({ firstAt: previous, secondAt: item.observedAt })
+    }
+    previous = item.observedAt
+  }
+  const categories = Array.from(counts, ([category, count]) => ({ category, share: count / total }))
+    .sort((left, right) => right.share - left.share)
+  return { categories, consecutive }
 }
 
 const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)
