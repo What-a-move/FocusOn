@@ -68,8 +68,11 @@ const focusOnApi: FocusOnApi = {
     getSummary: () => ipcRenderer.invoke(ONBOARDING_CHANNELS.summary),
   },
   reports: {
+    getProgress: (input) => ipcRenderer.invoke(REPORT_CHANNELS.progress, { date: input.date }),
     getCalendar: (input) => ipcRenderer.invoke(REPORT_CHANNELS.calendar, { month: input.month }),
     getDaily: (input) => ipcRenderer.invoke(REPORT_CHANNELS.daily, { date: input.date }),
+    saveRetrospective: ({ sessionId, rating, reasonCodes, note }) =>
+      ipcRenderer.invoke(REPORT_CHANNELS.retrospective, { sessionId, rating, reasonCodes, note }),
     getSessionSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionSummary, { sessionId: input.sessionId }),
     getSessionPauses: (input) => ipcRenderer.invoke(REPORT_CHANNELS.sessionPauses, { sessionId: input.sessionId }),
     getLearningSummary: (input) => ipcRenderer.invoke(REPORT_CHANNELS.learningSummary, { sessionId: input.sessionId }),
@@ -109,7 +112,7 @@ const focusOnApi: FocusOnApi = {
       idempotencyKey: input.idempotencyKey,
       goalText: input.goalText,
     }),
-    addGoal: (input) => ipcRenderer.invoke(SESSION_CHANNELS.addGoal, { sessionId: input.sessionId, goalId: input.goalId, goalVersion: input.goalVersion }),
+    addGoal: (input) => ipcRenderer.invoke(SESSION_CHANNELS.addGoal, { sessionId: input.sessionId, goalId: input.goalId, goalVersion: input.goalVersion, ...(input.replaceGoalId === undefined ? {} : { replaceGoalId: input.replaceGoalId }) }),
     getCurrent: () => ipcRenderer.invoke(SESSION_CHANNELS.current),
     onChanged(callback) {
       const listener = (_event: Electron.IpcRendererEvent, payload: unknown): void => { callback(isSessionSnapshot(payload) ? payload : null) }
@@ -132,6 +135,10 @@ const focusOnApi: FocusOnApi = {
       notificationChannels: [...input.notificationChannels],
       cameraAnalysisEnabled: input.cameraAnalysisEnabled,
       breakSuggestionEnabled: input.breakSuggestionEnabled,
+      ...(input.dailyTargetMs === undefined ? {} : { dailyTargetMs: input.dailyTargetMs }),
+      ...(input.weeklyTargetMs === undefined ? {} : { weeklyTargetMs: input.weeklyTargetMs }),
+      ...(input.retrospectiveEnabled === undefined ? {} : { retrospectiveEnabled: input.retrospectiveEnabled }),
+      ...(input.learningMessengers === undefined ? {} : { learningMessengers: input.learningMessengers }),
     }),
     getExcludedDomains: () => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsGet),
     saveExcludedDomains: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsSave, { domains: [...input.domains] }),

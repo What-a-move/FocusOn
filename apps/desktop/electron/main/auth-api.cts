@@ -123,7 +123,14 @@ export class AuthApiClient {
     }
     // [주의] 로그인 요청의 redirect를 자동 추적하면 code나 token이 다른 주소로 넘어갈 수 있다.
     if (response.status !== expectedStatus) {
-      try { return trace.fail(parseError(await response.json()), response.status) }
+      try {
+        const payload: unknown = await response.json()
+        if (response.status === 400 && path.endsWith('/retrospective') && isRecord(payload)
+          && isRecord(payload.details) && isRecord(payload.details.fieldErrors) && payload.details.fieldErrors.note === 'SENSITIVE') {
+          return trace.fail({ code: 'RETROSPECTIVE_NOTE_SENSITIVE', retryable: false }, response.status)
+        }
+        return trace.fail(parseError(payload), response.status)
+      }
       catch { return trace.fail(SERVICE_UNAVAILABLE, response.status) }
     }
     // 본문 없는 성공(204)을 기대한 요청(예: DELETE)은 parse(null)로 결과를 만든다.

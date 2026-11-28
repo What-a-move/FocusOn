@@ -154,7 +154,9 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 
 | Channel | 입력 | 성공 data | Backend |
 | --- | --- | --- | --- |
-| `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }` | `GET /api/v1/reports/calendar` |
+| `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity, dailyTargetAchieved? }] }` | `GET /api/v1/reports/calendar` |
+| `report:progress:get` | `{ date }` | `FocusProgress` | `GET /api/v1/reports/progress` |
+| `report:retrospective:save` | `{ sessionId, rating, reasonCodes?, note? }` | `{ saved: true }` | `PUT /api/v1/sessions/{id}/retrospective` |
 | `report:session-summary:get` | `{ sessionId }` | `SessionSummary` (결정 027, 없는 값은 null) | `GET /api/v1/sessions/{id}/summary` |
 | `report:session-pauses:get` | `{ sessionId }` | `SessionPause[]` (재개 없이 끝난 구간의 `resumedAt`은 null) | `GET /api/v1/sessions/{id}/pauses` |
 | `report:learning-summary:get` | `{ sessionId }` | `{ status: QUEUED·GENERATING·READY·INSUFFICIENT_DATA·FAILED, overview, keyConcepts: [{ name, briefExplanation, sessionEvidence }] (최대 5), nextStartPrompt }` | `GET /api/v1/sessions/{id}/learning-summary` (핵심 개념·다음 시작 지점은 Issue #129에서 추가) |

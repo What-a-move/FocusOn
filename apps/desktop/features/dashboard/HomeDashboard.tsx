@@ -5,8 +5,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AppSidebar } from '../../shared/ui/AppSidebar'
+import { sessionApi } from '../../shared/api/session-api'
 import { useOngoingSession } from '../../shared/api/useOngoingSession'
 import { dashboardApi, dayKey, loadRecentSessions, monthKey, type CalendarMonth, type DailySession } from '../../shared/api/dashboard-api'
+import type { FocusProgress } from '../../electron/shared/report-contract.cjs'
 import { LoadError } from '../../shared/ui/LoadError'
 import './dashboard.css'
 
@@ -44,6 +46,7 @@ function Calendar({ today, month, view, onMove, onRetry }: {
 }) {
   const data = view.status === 'ready' ? view.data : view.status === 'offline' ? view.cached?.data ?? null : null
   const active = new Set(data?.days.filter((day) => day.hasStudyActivity).map((day) => day.date))
+  const achieved = new Set(data?.days.filter((day) => day.dailyTargetAchieved).map((day) => day.date))
   const isCurrentMonth = monthKey(month) === monthKey(today)
   const offset = (month.getDay() + 6) % 7
   const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
@@ -68,14 +71,15 @@ function Calendar({ today, month, view, onMove, onRetry }: {
         const future = date > today
         // [주의] 미래 날짜와 확인되지 않은 날에는 포키를 표시하지 않는다.
         const studied = !future && active.has(key)
-        const classes = ['fo-calendar-day', key === dayKey(today) ? 'today' : '', future ? 'future' : '', studied ? 'completed' : ''].filter(Boolean).join(' ')
+        const reached = !future && achieved.has(key)
+        const classes = ['fo-calendar-day', key === dayKey(today) ? 'today' : '', future ? 'future' : '', studied ? 'completed' : '', reached ? 'goal-achieved' : ''].filter(Boolean).join(' ')
         const style = studied ? { animationDelay: `${0.3 + order++ * 0.07}s` } : undefined
-        const label = `${date.getMonth() + 1}월 ${date.getDate()}일${studied ? ', 집중 기록 있음' : ', 기록 없음'}`
+        const label = `${date.getMonth() + 1}월 ${date.getDate()}일${studied ? ', 집중 기록 있음' : ', 기록 없음'}${reached ? ', 하루 목표 달성' : ''}`
         const content = studied ? <span className="fo-poki-face" aria-hidden="true" /> : date.getDate()
         // 오늘까지의 날짜는 그날 집중 기록으로 간다.
         return future
           ? <span className={classes} key={key} aria-label={label}>{content}</span>
-          : <Link className={classes} style={style} key={key} href={`/records/?date=${key}`} aria-label={label}>{content}</Link>
+          : <Link className={classes} style={style} key={key} href={`/records/?date=${key}`} aria-label={label}>{content}{reached && <span className="fo-achieved-mark" aria-hidden="true">✓</span>}</Link>
       })}
     </div>}
     {view.status === 'loading' && <div className="fo-calendar-state" role="status"><strong>집중 달력을 불러오고 있어요.</strong><span>잠시만 기다려 주세요.</span></div>}
@@ -118,6 +122,23 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const latestSummary = useRef(0)
   const shownDay = useRef('')
   const ongoing = useOngoingSession()
+  const [progress, setProgress] = useState<FocusProgress | null>(null)
+  const [runningTime, setRunningTime] = useState<{ sessionId: string; ms: number } | null>(null)
+  const ongoingId = ongoing?.sessionId
+  const running = ongoing?.status === 'RUNNING'
+
+  useEffect(() => {
+    if (!running || !ongoingId) return
+    let cancelled = false
+    const timer = window.setInterval(() => {
+      void sessionApi.getCurrent().then((result) => {
+        if (!cancelled && result.success && result.data?.sessionId === ongoingId) {
+          setRunningTime({ sessionId: ongoingId, ms: result.data.accumulatedActiveMs })
+        }
+      })
+    }, 10_000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [running, ongoingId])
 
   useEffect(() => {
     // [유지보수] 정적 빌드 시각과 실행 시각이 달라도 날짜가 어긋나지 않게 실행 후 계산한다.
@@ -171,9 +192,23 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
     if (today && month) queueMicrotask(() => { void loadMonth(month, today) })
   }, [today, month, loadMonth])
 
-  const todayMinutes = today && current && current !== 'error'
+  const dateKey = today ? dayKey(today) : null
+  useEffect(() => {
+    if (!dateKey) return
+    let cancelled = false
+    void dashboardApi.getProgress(dateKey).then((result) => {
+      if (!cancelled) setProgress(result.success ? result.data : null)
+    })
+    return () => { cancelled = true }
+  }, [dateKey, ongoingId])
+  const currentProgress = progress?.date === dateKey ? progress : null
+  const activeMs = Math.max(ongoing?.accumulatedActiveMs ?? 0,
+    running && runningTime?.sessionId === ongoingId ? runningTime?.ms ?? 0 : 0)
+
+  const todayMinutes = currentProgress ? Math.floor((currentProgress.today.totalActiveMs + activeMs) / 60000) : today && current && current !== 'error'
     ? Math.floor((current.days.find((day) => day.date === dayKey(today))?.totalActiveMs ?? 0) / 60000)
     : null
+  const streak = currentProgress?.streak
   const monthDays = current && current !== 'error' ? current.studyDayCount : null
 
   return <main className="fo-home-window">
@@ -181,8 +216,13 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
     <div className="fo-home-content">
       <header className="fo-topbar">
         <div className="fo-rise"><span>{today ? new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(today) : '오늘'}</span><p><strong>{name}</strong>님, 안녕하세요</p></div>
-        <ul className="fo-rise" style={{ animationDelay: '.1s' }} aria-label="오늘 요약">
-          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#f2b632"/><circle cx="12" cy="12" r="7" fill="#fff6dc"/><path d="M12 8v4.2l2.8 1.8" fill="none" stroke="#8a5a3b" strokeWidth="2" strokeLinecap="round"/></svg><span>오늘 {todayMinutes === null ? <b>–</b> : <CountUp value={todayMinutes} />}분</span></li>
+        <ul className="fo-rise" style={{ animationDelay: '.1s' }} role="list" aria-label="오늘 요약">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#f2b632"/><circle cx="12" cy="12" r="7" fill="#fff6dc"/><path d="M12 8v4.2l2.8 1.8" fill="none" stroke="#8a5a3b" strokeWidth="2" strokeLinecap="round"/></svg><span>오늘 {todayMinutes === null ? <b>–</b> : <CountUp value={todayMinutes} />}분{currentProgress && (currentProgress.today.totalActiveMs + activeMs >= currentProgress.today.dailyTargetMs ? ' · 목표 달성' : ` / ${currentProgress.today.dailyTargetMs / 60000}분`)}</span></li>
+          {streak && <li className="fo-streak">
+            <span>연속 <b>{streak.currentDays}</b>일{streak.currentDays > 0 && <span aria-hidden="true"> 🔥</span>}</span>
+            <small>최장 {streak.longestDays}일</small>
+          </li>}
+          {currentProgress?.week.weeklyTargetMs != null && <li><span>이번 주 <b>{Math.floor((currentProgress.week.totalActiveMs + activeMs) / 60000)}</b> / {currentProgress.week.weeklyTargetMs / 60000}분</span></li>}
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="4" fill="#8a5a3b"/><rect x="5" y="9" width="14" height="9.5" rx="2" fill="#fff6dc"/><path d="M9 13.8l2 2 4-4" fill="none" stroke="#e0a52a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>이번 달 {monthDays === null ? <b>–</b> : <CountUp value={monthDays} />}일</span></li>
         </ul>
       </header>

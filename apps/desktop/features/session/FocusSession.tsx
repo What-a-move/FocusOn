@@ -49,15 +49,16 @@ export function FocusSession() {
   const [view, setView] = useState<{ snapshot: SessionSnapshot | null | undefined; receivedAt: number }>({ snapshot: undefined, receivedAt: 0 })
   const snapshot = view.snapshot
   const [loadError, setLoadError] = useState(false)
+  const retrospectiveEnabled = useRef(false)
   const [now, setNow] = useState(0)
   const [dialog, setDialog] = useState<'finish' | 'timeup' | 'extend' | 'add-goal' | null>(null)
   const [custom, setCustom] = useState('')
   const [customError, setCustomError] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [toast, setToast] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
   useEffect(() => {
     if (!toast) return
-    const timer = window.setTimeout(() => setToast(false), 2000)
+    const timer = window.setTimeout(() => setToast(null), 2000)
     return () => window.clearTimeout(timer)
   }, [toast])
   const goals = snapshot?.goals ?? []
@@ -77,10 +78,14 @@ export function FocusSession() {
 
   useEffect(() => {
     const unsubscribeAuth = window.focusOn?.auth.onSessionChanged((auth) => { if (auth.status === 'SIGNED_OUT') router.replace('/') })
+    let cancelled = false
     const unsubscribe = sessionApi.onChanged(apply)
+    void sessionApi.getFocusSettings().then((result) => {
+      if (!cancelled) retrospectiveEnabled.current = result.success && result.data.retrospectiveEnabled === true
+    })
     void sessionApi.getCurrent().then((result) => { if (result.success) apply(result.data); else setLoadError(true) })
     const timer = setInterval(() => setNow(performance.now()), 1000)
-    return () => { unsubscribe(); unsubscribeAuth?.(); clearInterval(timer) }
+    return () => { cancelled = true; unsubscribe(); unsubscribeAuth?.(); clearInterval(timer) }
   }, [router])
 
   const sessionId = snapshot?.sessionId
@@ -105,7 +110,7 @@ export function FocusSession() {
     if (!activeDialog && element.open) element.close()
   }, [activeDialog])
 
-  // 세션이 끝나면(종료·시간 종료·자동 종료) 집중 리포트로 넘어간다(D16·D18).
+  // 세션 종료 후 회고 설정에 따라 회고 또는 다음 화면으로 이동한다.
   const endedSessionId = snapshot && (snapshot.status === 'ENDED' || snapshot.status === 'ABANDONED') ? snapshot.sessionId : null
   // 끝난 순간의 할 일. 이동은 세션이 끝날 때 한 번만 한다.
   const endedGoals = useRef<SessionGoal[]>([])
@@ -113,14 +118,16 @@ export function FocusSession() {
   useEffect(() => { endedGoals.current = goalsNow ?? [] }, [goalsNow])
   useEffect(() => {
     if (!endedSessionId) return
-    // 할 일이 있으면 결과 전에 「다 했어요」로 간다. 저장소를 못 쓰면 결과로 바로 간다.
+    const query = `?session=${encodeURIComponent(endedSessionId)}`
+    let hasGoals = false
     try {
-      if (!endedGoals.current.length) throw new Error('no goals')
-      sessionStorage.setItem(ENDED_GOALS_KEY, JSON.stringify({ sessionId: endedSessionId, goals: endedGoals.current.map(({ goalId, goalText }) => ({ goalId, goalText })) }))
-      router.replace(`/todo-done/?session=${encodeURIComponent(endedSessionId)}`)
-    } catch {
-      router.replace(`/session-result/?session=${encodeURIComponent(endedSessionId)}`)
-    }
+      if (endedGoals.current.length) {
+        sessionStorage.setItem(ENDED_GOALS_KEY, JSON.stringify({ sessionId: endedSessionId, goals: endedGoals.current.map(({ goalId, goalText }) => ({ goalId, goalText })) }))
+        hasGoals = true
+      }
+    } catch { /* 저장소를 사용할 수 없으면 할 일 완료 단계를 건너뛴다. */ }
+    const next = retrospectiveEnabled.current ? '/session-retrospective/' : hasGoals ? '/todo-done/' : '/session-result/'
+    router.replace(next + query)
   }, [endedSessionId, router])
 
   if (snapshot === undefined && !loadError) return <main className="app-window onboarding-window focus-window" aria-busy="true" />
@@ -231,7 +238,7 @@ export function FocusSession() {
       event.preventDefault()
       if (!awaiting && (activeDialog !== 'add-goal' || !addGoalSubmitting.current)) setDialog(null)
     }}>
-      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} onAdded={() => { setDialog(null); setToast(true) }} /> : <>
+      {activeDialog === 'add-goal' ? <AddSessionGoal session={snapshot} submittingRef={addGoalSubmitting} onClose={() => setDialog(null)} onAdded={(replaced) => { setDialog(null); setToast(replaced ? '할 일을 바꿨어요' : '할 일에 추가했어요') }} /> : <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="poki" src={activeDialog === 'finish' ? POKI.thinking : POKI.timeUp} alt="" />
       <h2 id="dialog-title">{activeDialog === 'finish' ? '집중을 끝낼까요?' : '목표한 시간이 지났어요'}</h2>
@@ -258,6 +265,6 @@ export function FocusSession() {
       </div>}
       </>}
     </dialog>
-    {toast && <div className="toast" role="status">할 일에 추가했어요</div>}
+    {toast && <div className="toast" role="status">{toast}</div>}
   </main>
 }

@@ -9,7 +9,7 @@ import { DOMAIN, MAX_SITES, normalizeDomain } from '../../shared/lib/domain'
 import { analysisApi, type ExcludedApp, type InstalledApp } from '../../shared/api/onboarding-api'
 import { LoadError, SettingsShell, ToastView, failText, useToast, type Toast } from '../../shared/ui/SettingsShell'
 import './settings.css'
-import { settingsApi } from './settings-api'
+import { settingsApi } from '../../shared/api/settings-api'
 
 const MAX_APPS = 50
 const SUGGESTED = ['youtube.com', 'instagram.com', 'netflix.com', 'x.com']

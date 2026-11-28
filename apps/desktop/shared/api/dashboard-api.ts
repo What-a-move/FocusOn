@@ -1,4 +1,4 @@
-import type { CalendarMonth, DailyReport, DailySession } from '../../electron/shared/report-contract.cjs'
+import type { CalendarMonth, FocusProgress, DailyReport, DailySession } from '../../electron/shared/report-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -18,6 +18,7 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 }
 
 export const dashboardApi = {
+  getProgress: (date: string) => viaReports<FocusProgress>((api) => api.getProgress({ date })),
   getCalendar: (month: string) => viaReports<CalendarMonth>((api) => api.getCalendar({ month })),
   getDaily: (date: string) => viaReports<DailyReport>((api) => api.getDaily({ date })),
 }

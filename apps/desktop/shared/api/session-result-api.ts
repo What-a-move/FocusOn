@@ -1,4 +1,4 @@
-import type { LearningNote, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
+import type { LearningNote, LearningNoteList, LearningSummary, RetrospectiveInput, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
@@ -18,6 +18,7 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 }
 
 export const sessionResultApi = {
+  saveRetrospective: (input: RetrospectiveInput) => viaReports<{ saved: true }>((api) => api.saveRetrospective(input)),
   getSummary: (sessionId: string) => viaReports<SessionSummary>((api) => api.getSessionSummary({ sessionId })),
   getPauses: (sessionId: string) => viaReports<SessionPause[]>((api) => api.getSessionPauses({ sessionId })),
   getLearningSummary: (sessionId: string) => viaReports<LearningSummary>((api) => api.getLearningSummary({ sessionId })),

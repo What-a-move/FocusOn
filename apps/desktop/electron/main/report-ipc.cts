@@ -1,8 +1,8 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { REPORT_CHANNELS, isNoteCursor, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseDaily, parseLearningNoteList, parseLearningSummary, parseSessionPauses, parseSessionSummary } from '../shared/report-contract.cjs'
-import type { CalendarMonth, DailyReport, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
+import { REPORT_CHANNELS, isNoteCursor, isRetrospectiveInput, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseFocusProgress, parseDaily, parseLearningNoteList, parseLearningSummary, parseSessionPauses, parseSessionSummary } from '../shared/report-contract.cjs'
+import type { CalendarMonth, DailyReport, FocusProgress, LearningNoteList, LearningSummary, RetrospectiveInput, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -18,8 +18,20 @@ export class ReportService {
     return this.auth.authorizedRequest({ path: `/api/v1/reports/calendar?month=${month}`, method: 'GET', expectedStatus: 200, parse: parseCalendar, withDeviceId: true })
   }
 
+  getProgress(date: string): Promise<ApiResult<FocusProgress>> {
+    return this.auth.authorizedRequest({ path: `/api/v1/reports/progress?date=${date}`, method: 'GET', expectedStatus: 200, parse: parseFocusProgress, withDeviceId: true })
+  }
+
   getDaily(date: string): Promise<ApiResult<DailyReport>> {
     return this.auth.authorizedRequest({ path: `/api/v1/reports/daily?date=${date}`, method: 'GET', expectedStatus: 200, parse: parseDaily, withDeviceId: true })
+  }
+
+  saveRetrospective({ sessionId, rating, reasonCodes, note }: RetrospectiveInput): Promise<ApiResult<{ saved: true }>> {
+    const body = { rating, ...(reasonCodes === undefined ? {} : { reasonCodes }), ...(note === undefined ? {} : { note: note.trim() }) }
+    return this.auth.authorizedRequest({
+      path: `/api/v1/sessions/${encodeURIComponent(sessionId)}/retrospective`, method: 'PUT', expectedStatus: 200,
+      withDeviceId: true, body, parse: (value) => value && typeof value === 'object' && 'sessionId' in value && value.sessionId === sessionId ? { saved: true } : null,
+    })
   }
 
   getSessionSummary(sessionId: string): Promise<ApiResult<SessionSummary>> {
@@ -59,7 +71,9 @@ export function registerReportIpc(getMainWindow: () => BrowserWindow | null, ren
   }
 
   handle(REPORT_CHANNELS.calendar, (args) => onlyKey(args, 'month', isValidMonth), (s, args) => s.getCalendar((args[0] as { month: string }).month))
+  handle(REPORT_CHANNELS.progress, (args) => onlyKey(args, 'date', isValidDate), (s, args) => s.getProgress((args[0] as { date: string }).date))
   handle(REPORT_CHANNELS.daily, (args) => onlyKey(args, 'date', isValidDate), (s, args) => s.getDaily((args[0] as { date: string }).date))
+  handle(REPORT_CHANNELS.retrospective, (args) => args.length === 1 && isRetrospectiveInput(args[0]), (s, args) => s.saveRetrospective(args[0] as RetrospectiveInput))
   handle(REPORT_CHANNELS.sessionSummary, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getSessionSummary((args[0] as { sessionId: string }).sessionId))
   handle(REPORT_CHANNELS.sessionPauses, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getSessionPauses((args[0] as { sessionId: string }).sessionId))
   handle(REPORT_CHANNELS.learningSummary, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getLearningSummary((args[0] as { sessionId: string }).sessionId))

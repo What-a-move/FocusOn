@@ -119,3 +119,34 @@ test('일시정지는 순서와 열린 마지막 구간을 검증하고 본인 �
   } })
   assert.deepEqual(await service.getSessionPauses('7'), { success: true, data: [pause, last] })
 })
+
+test('목표 진행과 회고는 Desktop 기기 인증을 사용하며 원문 메모를 렌더러에 돌려주지 않는다', async () => {
+  const { isRetrospectiveInput, parseFocusProgress } = require('../../dist-electron/shared/report-contract.cjs')
+  const date = '2026-11-29'
+  const progress = { date, today: { totalActiveMs: 600000, dailyTargetMs: 3600000 }, week: { totalActiveMs: 1200000, weeklyTargetMs: null } }
+  assert.deepEqual(parseFocusProgress(progress), progress)
+  const streak = { currentDays: 0, longestDays: 12 }
+  assert.deepEqual(parseFocusProgress({ ...progress, streak }), { ...progress, streak })
+  assert.deepEqual(parseFocusProgress({ ...progress, streak: { currentDays: 4, longestDays: 3 } }), progress)
+  assert.deepEqual(parseFocusProgress({ ...progress, streak: { currentDays: -1, longestDays: 12 } }), progress)
+  assert.equal(parseFocusProgress({ ...progress, week: { totalActiveMs: 0, weeklyTargetMs: 0 } }), null)
+  assert.equal(parseCalendar({ ...calendar, days: [{ ...calendar.days[0], dailyTargetAchieved: true }] }).days[0].dailyTargetAchieved, true)
+
+  const input = { sessionId: '7', rating: 'BAD', reasonCodes: ['SELF_TIRED'], note: '  피곤했어요  ' }
+  assert.equal(isRetrospectiveInput(input), true)
+  assert.equal(isRetrospectiveInput({ ...input, rating: 'GOOD' }), false)
+  assert.equal(isRetrospectiveInput({ ...input, note: '가'.repeat(101) }), false)
+  assert.equal(isRetrospectiveInput({ ...input, reasonCodes: ['SELF_TIRED', 'SELF_TIRED'] }), false)
+
+  const requests = []
+  const service = new ReportService({ authorizedRequest: async (request) => {
+    requests.push(request)
+    return { success: true, data: request.parse(request.method === 'GET' ? progress : { sessionId: '7', note: input.note }) }
+  } })
+  assert.deepEqual(await service.getProgress(date), { success: true, data: progress })
+  assert.deepEqual(await service.saveRetrospective(input), { success: true, data: { saved: true } })
+  assert.deepEqual(requests.map(({ path, method, withDeviceId, body }) => ({ path, method, withDeviceId, body })), [
+    { path: '/api/v1/reports/progress?date=2026-11-29', method: 'GET', withDeviceId: true, body: undefined },
+    { path: '/api/v1/sessions/7/retrospective', method: 'PUT', withDeviceId: true, body: { rating: 'BAD', reasonCodes: ['SELF_TIRED'], note: '피곤했어요' } },
+  ])
+})
