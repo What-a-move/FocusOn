@@ -59,11 +59,12 @@ const analyzer = new TabAnalyzer({
       return null
     }
   },
-  async post(sessionId, body) {
+  async post(sessionId, body, stillShowing) {
     // 보내기 직전에 Desktop이 정한 전경 context를 확인해, 이 기기가 맡은 화면일 때만 ID를 붙인다(#182).
     const headers = await deviceHeaders()
     const context = await client.authorized(`/api/v1/sessions/${sessionId}/observation-context`, 'GET', 200, (data) => ({ data }), { headers })
     const observationContextId = context.success ? pickContextId(context.data.data, headers['X-Device-Id'] ?? null) : null
+    if (!(await stillShowing())) return { ok: false, code: 'LOCAL_STALE_OBSERVATION' }
     const result = await client.authorized(`/api/v1/sessions/${sessionId}/analysis-runs`, 'POST', 200, (data) => {
       const run = data as { relation?: unknown; matchStatus?: unknown } | null
       if (typeof run?.relation !== 'string') return null

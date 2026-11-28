@@ -93,3 +93,46 @@ test('서버가 작은 순번이라 거절하면 순번을 올려 새 전환으�
   assert.deepEqual(t.calls.map((c) => [c.body.foregroundSequence, c.body.clientContextId]), [[1, 'nonce-1'], [2, 'nonce-2']])
   assert.equal(t.context.currentId(), 'ctx-ok')
 })
+
+test('Chrome 보호 상태는 같은 전경·순번에 속하고 남은 시간이 있을 때만 유지한다', async () => {
+  let response = { observationContextId: 'ctx-1', observer: 'EXTENSION', foregroundSequence: 1, leaseRemainingMs: 9_000 }
+  const t = setup({ reply: (request) => {
+    const value = request.method === 'GET' ? response : { observationContextId: 'ctx-1', foregroundSequence: 1 }
+    const data = request.parse(value)
+    return data ? { success: true, data } : { success: false, error: { code: 'INVALID_RESPONSE' } }
+  } })
+  await t.context.update('901', 'chrome\nA', 'EXTENSION')
+  await t.context.refreshChromeGuard()
+  assert.equal(t.context.currentChromeGuard(), null, '예전 응답은 추측하지 않음')
+  response = { ...response, chromeGuard: { status: 'EXCLUDED_SITE', remainingMs: 8_000 } }
+  t.clock.t = 3_000
+  await t.context.refreshChromeGuard()
+  assert.equal(t.context.currentChromeGuard(), 'EXCLUDED_SITE')
+  assert.equal(t.calls[2].withDeviceId, true)
+  assert.equal(t.calls[2].body, undefined)
+  t.clock.t = 11_000
+  assert.equal(t.context.currentChromeGuard(), null)
+  response = { ...response, chromeGuard: { status: 'PRIVACY_BLOCKED', remainingMs: 5_000 } }
+  await t.context.refreshChromeGuard()
+  assert.equal(t.context.currentChromeGuard(), 'PRIVACY_BLOCKED')
+  t.clock.t = 14_000
+  response = { ...response, foregroundSequence: 9 }
+  await t.context.refreshChromeGuard()
+  assert.equal(t.context.currentChromeGuard(), null, '다른 순번 결과는 버림')
+})
+
+test('Chrome 상태 조회를 기다리는 중 세션이나 전경이 바뀌면 결과를 버린다', async () => {
+  let resolveRead
+  const t = setup({ reply: (request) => request.method === 'GET'
+    ? new Promise((resolve) => { resolveRead = () => resolve({ success: true, data: request.parse({
+      observationContextId: 'ctx-1', observer: 'EXTENSION', foregroundSequence: 1,
+      leaseRemainingMs: 10_000, chromeGuard: { status: 'PRIVACY_BLOCKED', remainingMs: 10_000 },
+    }) }) })
+    : { success: true, data: request.parse({ observationContextId: 'ctx-' + request.body.foregroundSequence, foregroundSequence: request.body.foregroundSequence }) } })
+  await t.context.update('901', 'chrome\nA', 'EXTENSION')
+  const reading = t.context.refreshChromeGuard()
+  await t.context.update('902', 'app\nA', 'DESKTOP')
+  resolveRead()
+  await reading
+  assert.equal(t.context.currentChromeGuard(), null)
+})

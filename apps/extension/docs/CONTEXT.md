@@ -1,5 +1,7 @@
 # Extension 작업 컨텍스트
 
+- Chrome 제외·민감 안내의 Desktop 소비 및 Extension 탭 전환 보호를 구현했다. 실제 전경 상태 전달은 서버 계약과 연결 대기 중이다. [#398](https://github.com/What-a-move/FocusOn/issues/398)
+
 ## DR-030 탭 분석 후 본문 요청
 
 - 메타데이터가 `RELATED`이고 `matchStatus=MATCHED`일 때 종료한다. 매칭되지 않은 관련 화면은 같은 탭일 때만 DOM으로 다시 확인한다.

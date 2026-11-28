@@ -1,5 +1,7 @@
 # Desktop 작업 컨텍스트
 
+- Chrome 제외·민감 안내의 Desktop 소비 및 Extension 탭 전환 보호를 구현했다. 실제 전경 상태 전달은 서버 계약과 연결 대기 중이다. [#398](https://github.com/What-a-move/FocusOn/issues/398)
+
 > Frontend(`apps`) 담당자가 Desktop 작업을 시작할 때 읽는 플랫폼 전용 문서다.
 > 작업이 끝나면 현재 상태와 다음 담당자가 알아야 할 내용을 갱신한다.
 

@@ -28,7 +28,7 @@ export type Deps = {
   hasSiteAccess(url: string): Promise<boolean>
   /** 페이지 안에서 민감 입력칸 확인·본문 읽기. 읽을 수 없으면 null. */
   inspect(tabId: number, maxLength: number): Promise<{ sensitive: boolean; text: string } | null>
-  post(sessionId: string, body: RunBody): Promise<RunResult>
+  post(sessionId: string, body: RunBody, stillShowing: () => Promise<boolean>): Promise<RunResult>
   loadTracking(): Promise<Tracking | null>
   saveTracking(tracking: Tracking | null): Promise<void>
   loadSequences(): Promise<Sequences | null>
@@ -84,17 +84,17 @@ export class TabAnalyzer {
     if (session?.status !== 'RUNNING' || this.deps.now() < this.pausedUntil) return
 
     const guard = await this.guardOf(target)
-    if (guard) { await this.send(session.sessionId, 'TAB_META', guard); return }
+    if (guard) { await this.send(tracking, session.sessionId, 'TAB_META', guard); return }
     const metadata = { appName: 'Google Chrome' as const, pageTitle: target.title, urlHost: hostOf(target.url) ?? '' }
-    const meta = await this.send(session.sessionId, 'TAB_META', null, metadata)
+    const meta = await this.send(tracking, session.sessionId, 'TAB_META', null, metadata)
     if (!meta.ok || !['RELATED', 'UNRELATED', 'UNCERTAIN'].includes(meta.relation)) return
     if (meta.relation === 'RELATED' && meta.matchStatus === 'MATCHED') return
     if (!(await this.stillShowing(tracking))) return
     const page = await this.deps.inspect(target.tabId, MAX_TEXT_LENGTH)
     if (!page || !(await this.stillShowing(tracking))) return
     const cleaned = cleanPageText(page.text)
-    if (page.sensitive || cleaned.sensitive) { await this.send(session.sessionId, 'CHROME_DOM', 'PRIVACY_BLOCKED'); return }
-    if (cleaned.text) await this.send(session.sessionId, 'CHROME_DOM', null, metadata, cleaned.text)
+    if (page.sensitive || cleaned.sensitive) { await this.send(tracking, session.sessionId, 'CHROME_DOM', 'PRIVACY_BLOCKED'); return }
+    if (cleaned.text) await this.send(tracking, session.sessionId, 'CHROME_DOM', null, metadata, cleaned.text)
   }
 
   /** 제외·민감 화면이면 보낼 상태. 내용 없이 상태만 보낸다. */
@@ -116,7 +116,9 @@ export class TabAnalyzer {
     return saved?.navigationId === tracking.navigationId && !!target && keyOf(target) === tracking.key
   }
 
-  private async send(sessionId: string, source: Source, guard: Guard | null, metadata?: RunBody['metadata'], text?: string): Promise<RunResult> {
+  private async send(tracking: Tracking, sessionId: string, source: Source, guard: Guard | null, metadata?: RunBody['metadata'], text?: string): Promise<RunResult> {
+    const stillShowing = () => this.stillShowing(tracking)
+    if (!(await stillShowing())) return { ok: false, code: 'LOCAL_STALE_OBSERVATION' }
     const saved = await this.deps.loadSequences()
     const sequences = saved?.sessionId === sessionId ? saved : { sessionId, TAB_META: 0, CHROME_DOM: 0 }
     sequences[source] += 1
@@ -125,7 +127,7 @@ export class TabAnalyzer {
       clientRunId: this.deps.uuid(), contentSource: source, observedAt: new Date(this.deps.now()).toISOString(), sequence: sequences[source], guardStatus: guard,
       ...(guard ? {} : { metadata, ...(text ? { contentPayload: { text } } : {}) }),
     }
-    const result = await this.deps.post(sessionId, body)
+    const result = await this.deps.post(sessionId, body, stillShowing)
     if (!result.ok && result.code === 'TOO_MANY_REQUESTS') this.pausedUntil = this.deps.now() + RATE_LIMIT_PAUSE_MS
     return result
   }
