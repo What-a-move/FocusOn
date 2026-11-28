@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
-import { flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type OffTaskShare, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
+import { firstOffTaskAt, flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type OffTaskReport, type OffTaskShare, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
 import './session-result.css'
@@ -127,6 +127,7 @@ export function SessionResult() {
 function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds }: { summary: SessionSummary; learning: LearningSummary | null; noLearning: boolean; shownMinutes: number; shownSeconds: number }) {
   const abandoned = summary.status === 'ABANDONED'
   const flow = flowOf(summary)
+  const { pauses, retryPauses } = useReportPauses(summary.sessionId)
   const started = summary.startedAt ? new Date(summary.startedAt) : null
   const today = started !== null && started.toDateString() === new Date().toDateString()
   const extended = summary.extensionCount && summary.extendedDurationMs ? ` · ${minutes(summary.extendedDurationMs)}분 연장` : ''
@@ -177,10 +178,10 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
               ? <p className="rate"><small>분석된 구간이 짧아 목표 활동 비율은 표시하지 않았어요.</small></p>
               : <p className="rate" title="판단 보류·분석 안 됨 시간은 빼고 계산해요">목표 활동 비율 <strong>{flow.rate}%</strong></p>}
           </> : <p className="muted-note">아직 분석된 흐름이 없어요.</p>}
-          <PauseTimeline key={summary.sessionId} summary={summary} />
+          <PauseTimeline summary={summary} pauses={pauses} retry={retryPauses} />
         </section>
 
-        <OffTaskBreakdown key={summary.sessionId} sessionId={summary.sessionId} />
+        <OffTaskBreakdown key={summary.sessionId} summary={summary} pauses={pauses} />
         <LearningBlock sessionId={summary.sessionId} learning={learning} noLearning={noLearning} />
       </div>
       <div className="col">
@@ -208,8 +209,9 @@ function observeOffTaskChart(element: HTMLDivElement | null) {
   return () => observer.disconnect()
 }
 
-function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
-  const [breakdown, setBreakdown] = useState<OffTaskShare[] | 'error' | null>(null)
+function OffTaskBreakdown({ summary, pauses }: { summary: SessionSummary; pauses: SessionPause[] | 'error' | null }) {
+  const sessionId = summary.sessionId
+  const [breakdown, setBreakdown] = useState<OffTaskReport | 'error' | null>(null)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
@@ -220,8 +222,12 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
     return () => { cancelled = true }
   }, [sessionId, attempt])
 
+  const first = breakdown && breakdown !== 'error' && Array.isArray(pauses) ? firstOffTaskAt(breakdown, summary, pauses) : null
   return <section className="block" aria-labelledby="off-task-title">
     <div className="block-head"><h2 id="off-task-title">딴짓 종류 비율</h2></div>
+    {first && <dl className="meta">
+      <div><dt>첫 이탈 시각</dt><dd><time dateTime={first}>{pauseTimeFormat.format(new Date(first))}</time></dd></div>
+    </dl>}
     {breakdown === null ? <p className="muted-note" role="status">딴짓 종류를 불러오고 있어요.</p>
       : breakdown === 'error' ? <>
         <p className="muted-note" role="status">딴짓 종류를 불러오지 못했어요.</p>
@@ -229,14 +235,14 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
           setBreakdown(null)
           setAttempt((value) => value + 1)
         }}>딴짓 종류 다시 시도</button>
-      </> : breakdown.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
+      </> : breakdown.categories.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
         : <div className="off-task-chart" ref={observeOffTaskChart}>
           <p className="muted-note">분류된 기록 건수 기준이에요. 판단을 보류한 기록은 제외해요.</p>
           <div className="track" aria-hidden="true">
-            {breakdown.map(({ category, share }) => <span key={category} style={{ flex: share, background: OFF_TASK_STYLE[category].color }} />)}
+            {breakdown.categories.map(({ category, share }) => <span key={category} style={{ flex: share, background: OFF_TASK_STYLE[category].color }} />)}
           </div>
           <ul className="off-task-legend" role="list">
-            {breakdown.map(({ category, share }) => {
+            {breakdown.categories.map(({ category, share }) => {
               const { label, color, icon } = OFF_TASK_STYLE[category]
               return <li key={category} style={{ '--category-color': color } as CSSProperties}>
                 <span className="off-task-icon" aria-hidden="true">
@@ -250,11 +256,9 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
   </section>
 }
 
-function PauseTimeline({ summary }: { summary: SessionSummary }) {
+function useReportPauses(sessionId: string) {
   const [pauses, setPauses] = useState<SessionPause[] | 'error' | null>(null)
   const [attempt, setAttempt] = useState(0)
-  const sessionId = summary.sessionId
-
   useEffect(() => {
     let cancelled = false
     void sessionResultApi.getPauses(sessionId).then((result) => {
@@ -263,9 +267,13 @@ function PauseTimeline({ summary }: { summary: SessionSummary }) {
     return () => { cancelled = true }
   }, [sessionId, attempt])
 
+  return { pauses, retryPauses: () => { setPauses(null); setAttempt((value) => value + 1) } }
+}
+
+function PauseTimeline({ summary, pauses, retry }: { summary: SessionSummary; pauses: SessionPause[] | 'error' | null; retry: () => void }) {
   if (pauses === 'error') return <div className="pause-timeline">
     <p className="muted-note" role="status">일시정지 구간을 불러오지 못했어요.</p>
-    <button className="btn btn-ghost report-retry" type="button" onClick={() => { setPauses(null); setAttempt((value) => value + 1) }}>일시정지 구간 다시 시도</button>
+    <button className="btn btn-ghost report-retry" type="button" onClick={retry}>일시정지 구간 다시 시도</button>
   </div>
   if (!pauses?.length) return null
 

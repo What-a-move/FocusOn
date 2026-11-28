@@ -1,8 +1,8 @@
-import type { LearningNote, LearningNoteList, LearningSummary, OffTaskShare, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
+import type { LearningNote, LearningNoteList, LearningSummary, OffTaskReport, OffTaskShare, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { LearningNote, LearningSummary, OffTaskShare, SessionPause, SessionSummary }
+export type { LearningNote, LearningSummary, OffTaskReport, OffTaskShare, SessionPause, SessionSummary }
 
 const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
@@ -20,7 +20,7 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 export const sessionResultApi = {
   getSummary: (sessionId: string) => viaReports<SessionSummary>((api) => api.getSessionSummary({ sessionId })),
   getPauses: (sessionId: string) => viaReports<SessionPause[]>((api) => api.getSessionPauses({ sessionId })),
-  getOffTaskBreakdown: (sessionId: string) => viaReports<OffTaskShare[]>((api) => api.getOffTaskBreakdown({ sessionId })),
+  getOffTaskBreakdown: (sessionId: string) => viaReports<OffTaskReport>((api) => api.getOffTaskBreakdown({ sessionId })),
   getLearningSummary: (sessionId: string) => viaReports<LearningSummary>((api) => api.getLearningSummary({ sessionId })),
   listLearningNotes: (cursor: string | null = null) => viaReports<LearningNoteList>((api) => api.listLearningNotes({ cursor })),
 }
@@ -46,4 +46,19 @@ export function pauseTimelinePositions(pauses: SessionPause[], { startedAt, accu
     if (resumedAt) previousPausedMs += Math.max(0, Date.parse(resumedAt) - Math.max(start, paused))
     return Math.min(100, (activeMs / accumulatedActiveMs) * 100)
   })
+}
+
+
+/** 두 판정 사이에 멈춤이 있으면 같은 집중 구간에 연속한 판정으로 보지 않는다. */
+export function firstOffTaskAt(report: OffTaskReport, summary: SessionSummary, pauses: SessionPause[]): string | null {
+  if (!summary.startedAt || !summary.endedAt) return null
+  const sessionStart = Date.parse(summary.startedAt)
+  const sessionEnd = Date.parse(summary.endedAt)
+  const intervals = pauses.map(({ pausedAt, resumedAt }) => [Date.parse(pausedAt), resumedAt ? Date.parse(resumedAt) : sessionEnd])
+  return report.consecutive.find(({ firstAt, secondAt }) => {
+    const first = Date.parse(firstAt)
+    const second = Date.parse(secondAt)
+    return first >= sessionStart && second <= sessionEnd
+      && !intervals.some(([pause, resume]) => first < resume && second >= pause)
+  })?.firstAt ?? null
 }

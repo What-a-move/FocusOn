@@ -4,7 +4,9 @@
 
 ## 가장 먼저 진행할 작업
 
-- [#387](https://github.com/What-a-move/FocusOn/issues/387) 딴짓 종류 비율: 실제 집중 세션에서 분류된 딴짓과 관련 활동을 각각 만든 뒤 종료 리포트의 비율, 이전 회차의 빈 상태, 설정의 화면 분석 동의 상세를 확인한다. [결과](features/report-off-task-category-REPORT.md)
+- 집중 리포트 상세에서 이탈 경로와 할 일별 시간은 서버의 관측 출처와 회차별 할 일 집계 응답 확인 후 연결한다.
+
+- [#387](https://github.com/What-a-move/FocusOn/issues/387) 딴짓 종류 비율: 실제 집중 세션에서 두 종류의 딴짓과 연속 판정을 만든 뒤 종료 리포트의 비율과 첫 이탈을 확인한다. 이전 회차의 빈 상태와 설정 동의 상세도 확인한다. [결과](features/report-off-task-category-REPORT.md)
 
 - [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356)를 반영한 테스트 환경에서 멈춤·재개·멈춘 채 종료·이전 회차·조회 재시도를 확인했다. [기획](features/report-pause-timeline-PLAN.md) · [결과](features/report-pause-timeline-REPORT.md)
 

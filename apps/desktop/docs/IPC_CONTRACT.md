@@ -156,7 +156,7 @@ type AuthSessionChangedPayload = AuthSessionSnapshot
 | --- | --- | --- | --- |
 | `report:calendar:get` | `{ month: 'YYYY-MM' }` | `{ month, studyDayCount, days[{ date, totalActiveMs, sessionCount, hasStudyActivity }] }` | `GET /api/v1/reports/calendar` |
 | `report:session-summary:get` | `{ sessionId }` | `SessionSummary` (결정 027, 없는 값은 null) | `GET /api/v1/sessions/{id}/summary` |
-| `report:off-task-breakdown:get` | `{ sessionId }` | `OffTaskShare[]` (종류와 0~1 비율) | `GET /api/v1/sessions/{id}/analysis-runs` |
+| `report:off-task-breakdown:get` | `{ sessionId }` | `OffTaskReport` (종류 비율과 연속 이탈 시각 후보) | `GET /api/v1/sessions/{id}/analysis-runs` |
 | `report:session-pauses:get` | `{ sessionId }` | `SessionPause[]` (재개 없이 끝난 구간의 `resumedAt`은 null) | `GET /api/v1/sessions/{id}/pauses` |
 | `report:learning-summary:get` | `{ sessionId }` | `{ status: QUEUED·GENERATING·READY·INSUFFICIENT_DATA·FAILED, overview, keyConcepts: [{ name, briefExplanation, sessionEvidence }] (최대 5), nextStartPrompt }` | `GET /api/v1/sessions/{id}/learning-summary` (핵심 개념·다음 시작 지점은 Issue #129에서 추가) |
 | `report:learning-notes:list` | `{ cursor: string \| null }` | `{ items: [{ sessionId, goalText, studyDate, accumulatedActiveMs, keyConcepts }], nextCursor }` | `GET /api/v1/learning-summaries?cursor=` (READY 노트만, endedAt 최신순, 형식이 다른 항목만 버림) |

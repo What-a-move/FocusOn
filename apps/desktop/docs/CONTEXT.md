@@ -19,7 +19,7 @@
 
 ### 완료된 작업
 
-- 집중 리포트에 분류된 딴짓 기록 건수 비율을 표시하고 화면 분석 동의 상세에 저장 목적을 추가했다. [결과](features/report-off-task-category-REPORT.md)
+- 집중 리포트에 분류된 딴짓 기록 건수 비율과 첫 연속 이탈 시각을 표시하고 화면 분석 동의 상세에 저장 목적을 추가했다. [결과](features/report-off-task-category-REPORT.md)
 
 - 집중 중 오프라인·제외 앱·민감 화면·카메라 사용 불가 안내를 연결했다. macOS 앱 기동과 브라우저에서 안내 4종 및 해제를 확인했다. 실제 계정으로 집중을 시작한 뒤 기기 상태를 바꾸는 검증은 남아 있다. [결과](features/session-notices-REPORT.md)
 

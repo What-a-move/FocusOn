@@ -2,7 +2,7 @@ import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
 import { REPORT_CHANNELS, isNoteCursor, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseDaily, parseLearningNoteList, parseLearningSummary, parseOffTaskBreakdown, parseSessionPauses, parseSessionSummary } from '../shared/report-contract.cjs'
-import type { CalendarMonth, DailyReport, LearningNoteList, LearningSummary, OffTaskShare, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
+import type { CalendarMonth, DailyReport, LearningNoteList, LearningSummary, OffTaskReport, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -30,7 +30,7 @@ export class ReportService {
     return this.auth.authorizedRequest({ path: `/api/v1/sessions/${encodeURIComponent(sessionId)}/pauses`, method: 'GET', expectedStatus: 200, parse: parseSessionPauses })
   }
 
-  getOffTaskBreakdown(sessionId: string): Promise<ApiResult<OffTaskShare[]>> {
+  getOffTaskBreakdown(sessionId: string): Promise<ApiResult<OffTaskReport>> {
     return this.auth.authorizedRequest({ path: `/api/v1/sessions/${encodeURIComponent(sessionId)}/analysis-runs`, method: 'GET', expectedStatus: 200, parse: parseOffTaskBreakdown })
   }
 

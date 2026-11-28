@@ -56,13 +56,17 @@ export type SessionPause = { pausedAt: string; resumedAt: string | null; pauseRe
 const OFF_TASK_CATEGORIES = ['VIDEO', 'SNS', 'COMMUNITY', 'SHOPPING', 'GAME', 'MESSENGER', 'NEWS', 'OTHER'] as const
 type OffTaskCategory = typeof OFF_TASK_CATEGORIES[number]
 export type OffTaskShare = { category: OffTaskCategory; share: number }
+export type OffTaskReport = {
+  categories: OffTaskShare[]
+  consecutive: Array<{ firstAt: string; secondAt: string }>
+}
 
 export type ReportsApi = {
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
   getSessionPauses(input: { sessionId: string }): Promise<IpcResult<SessionPause[]>>
-  getOffTaskBreakdown(input: { sessionId: string }): Promise<IpcResult<OffTaskShare[]>>
+  getOffTaskBreakdown(input: { sessionId: string }): Promise<IpcResult<OffTaskReport>>
   getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
   listLearningNotes(input: { cursor: string | null }): Promise<IpcResult<LearningNoteList>>
 }
@@ -155,19 +159,28 @@ export function parseSessionPauses(value: unknown): SessionPause[] | null {
 }
 
 /** 분석 기록 중 저장된 딴짓 분류만 집계한다. 이전 회차의 누락 값은 분류된 기록 수에서 뺀다. */
-export function parseOffTaskBreakdown(value: unknown): OffTaskShare[] | null {
+export function parseOffTaskBreakdown(value: unknown): OffTaskReport | null {
   if (!Array.isArray(value)) return null
   const counts = new Map<OffTaskCategory, number>()
   let total = 0
+  let previous: string | null = null
+  const consecutive: OffTaskReport['consecutive'] = []
   for (const item of value) {
-    if (!isRecord(item) || item.relation !== 'UNRELATED') continue
+    if (!isRecord(item) || item.relation !== 'UNRELATED') { previous = null; continue }
     const category = OFF_TASK_CATEGORIES.find((entry) => entry === item.offTaskCategory)
-    if (!category) continue
-    counts.set(category, (counts.get(category) ?? 0) + 1)
-    total += 1
+    if (category) {
+      counts.set(category, (counts.get(category) ?? 0) + 1)
+      total += 1
+    }
+    if (item.analysisStatus !== 'COMPLETED' || !isTime(item.observedAt)) { previous = null; continue }
+    if (previous && Date.parse(previous) < Date.parse(item.observedAt)) {
+      consecutive.push({ firstAt: previous, secondAt: item.observedAt })
+    }
+    previous = item.observedAt
   }
-  return Array.from(counts, ([category, count]) => ({ category, share: count / total }))
+  const categories = Array.from(counts, ([category, count]) => ({ category, share: count / total }))
     .sort((left, right) => right.share - left.share)
+  return { categories, consecutive }
 }
 
 const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)

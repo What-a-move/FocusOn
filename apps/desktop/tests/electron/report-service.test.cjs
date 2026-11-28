@@ -137,17 +137,31 @@ test('딴짓 비율은 유효하게 분류된 UNRELATED 기록만 쓰고 기타�
   const service = new ReportService({ authorizedRequest: async ({ path, method, parse }) => {
     assert.equal(path, '/api/v1/sessions/7/analysis-runs')
     assert.equal(method, 'GET')
-    assert.deepEqual(parse([record(null), record(undefined)]), [])
-    assert.deepEqual(parse([]), [])
+    assert.deepEqual(parse([record(null), record(undefined)]), { categories: [], consecutive: [] })
+    assert.deepEqual(parse([]), { categories: [], consecutive: [] })
     assert.equal(parse({ items: data }), null)
     return { success: true, data: parse(data) }
   } })
   assert.deepEqual(await service.getOffTaskBreakdown('7'), {
     success: true,
-    data: [
-      { category: 'VIDEO', share: 0.5 },
-      { category: 'SNS', share: 0.25 },
-      { category: 'OTHER', share: 0.25 },
-    ],
+    data: {
+      categories: [
+        { category: 'VIDEO', share: 0.5 },
+        { category: 'SNS', share: 0.25 },
+        { category: 'OTHER', share: 0.25 },
+      ],
+      consecutive: [],
+    },
   })
+})
+
+test('첫 이탈은 서로 다른 시각에 연속해 확정된 기록만 후보에 넣는다', () => {
+  const { parseOffTaskBreakdown } = require('../../dist-electron/shared/report-contract.cjs')
+  const run = (minute, relation = 'UNRELATED', analysisStatus = 'COMPLETED') => ({ relation, analysisStatus, observedAt: `2026-11-29T01:${minute}:00Z` })
+  const report = parseOffTaskBreakdown([
+    run('01'), run('01'), run('02', 'UNCERTAIN', 'NEEDS_CONFIRMATION'),
+    run('03'), run('04', 'UNRELATED', 'ERROR'),
+    run('05'), run('06'), run('07', 'PRIVACY_BLOCKED', 'SKIPPED'), run('08'),
+  ])
+  assert.deepEqual(report.consecutive, [{ firstAt: run('05').observedAt, secondAt: run('06').observedAt }])
 })
