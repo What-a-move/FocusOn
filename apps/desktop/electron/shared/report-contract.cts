@@ -3,6 +3,7 @@ import type { IpcResult } from './auth-contract.cjs'
 // IPC_CONTRACT.md 리포트 Channel. 홈 대시보드(집중 달력·지난 목표)가 쓴다.
 export const REPORT_CHANNELS = {
   calendar: 'report:calendar:get',
+  progress: 'report:progress:get',
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
   sessionPauses: 'report:session-pauses:get',
@@ -11,7 +12,7 @@ export const REPORT_CHANNELS = {
 } as const
 
 /** GET /api/v1/reports/calendar 의 날짜 하나. hasStudyActivity는 서버가 totalActiveMs >= 60000으로 계산한다. */
-export type CalendarDay = { date: string; totalActiveMs: number; sessionCount: number; hasStudyActivity: boolean }
+export type CalendarDay = { date: string; totalActiveMs: number; sessionCount: number; hasStudyActivity: boolean; dailyTargetAchieved?: boolean }
 export type CalendarMonth = { month: string; studyDayCount: number; days: CalendarDay[] }
 
 /** GET /api/v1/reports/daily 의 세션 카드. 항목 형식은 2026-10-24 확정(결정 020). */
@@ -52,7 +53,14 @@ export type LearningNoteList = { items: LearningNote[]; nextCursor: string | nul
 
 export type SessionPause = { pausedAt: string; resumedAt: string | null; pauseReason: string }
 
+export type FocusProgress = {
+  date: string
+  today: { totalActiveMs: number; dailyTargetMs: number }
+  week: { totalActiveMs: number; weeklyTargetMs: number | null }
+}
+
 export type ReportsApi = {
+  getProgress(input: { date: string }): Promise<IpcResult<FocusProgress>>
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
@@ -76,13 +84,22 @@ export function isValidDate(value: unknown): value is string {
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day
 }
 
+export function parseFocusProgress(value: unknown): FocusProgress | null {
+  if (!isRecord(value) || !isValidDate(value.date) || !isRecord(value.today) || !isRecord(value.week)) return null
+  const { today, week } = value
+  if (!isCount(today.totalActiveMs) || !isCount(today.dailyTargetMs) || today.dailyTargetMs === 0
+    || !isCount(week.totalActiveMs) || (week.weeklyTargetMs !== null && (!isCount(week.weeklyTargetMs) || week.weeklyTargetMs === 0))) return null
+  return { date: value.date, today: { totalActiveMs: today.totalActiveMs, dailyTargetMs: today.dailyTargetMs },
+    week: { totalActiveMs: week.totalActiveMs, weeklyTargetMs: week.weeklyTargetMs } }
+}
+
 export function parseCalendar(value: unknown): CalendarMonth | null {
   if (!isRecord(value) || !isValidMonth(value.month) || !isCount(value.studyDayCount) || !Array.isArray(value.days)) return null
   const days: CalendarDay[] = []
   for (const item of value.days) {
     if (!isRecord(item) || !isValidDate(item.date) || !item.date.startsWith(value.month)) return null
     if (!isCount(item.totalActiveMs) || !isCount(item.sessionCount) || typeof item.hasStudyActivity !== 'boolean') return null
-    days.push({ date: item.date, totalActiveMs: item.totalActiveMs, sessionCount: item.sessionCount, hasStudyActivity: item.hasStudyActivity })
+    days.push({ date: item.date, totalActiveMs: item.totalActiveMs, sessionCount: item.sessionCount, hasStudyActivity: item.hasStudyActivity, ...(typeof item.dailyTargetAchieved === 'boolean' ? { dailyTargetAchieved: item.dailyTargetAchieved } : {}) })
   }
   return { month: value.month, studyDayCount: value.studyDayCount, days }
 }

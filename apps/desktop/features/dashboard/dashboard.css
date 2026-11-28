@@ -133,3 +133,7 @@ a.fo-recent-item:hover { background: var(--fo-field); }
   .fo-calendar-day { width: 32px; height: 32px; font-size: 13px; }
   .fo-calendar-grid { gap: 2px; }
 }
+
+.fo-calendar-day.goal-achieved { position: relative; overflow: visible; }
+.fo-calendar-day .fo-achieved-mark { position: absolute; right: -4px; bottom: -3px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--fo-ink); color: var(--fo-surface); font-size: 11px; }
+.fo-topbar ul { flex-wrap: wrap; }

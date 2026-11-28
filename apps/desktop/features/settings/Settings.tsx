@@ -16,6 +16,7 @@ import { settingsApi, type FocusSettings, type ThemeSource } from './settings-ap
 const TABS = [
   { id: 'account', label: '계정', poki: 'poki-celebrate.png' },
   { id: 'focus', label: '집중', poki: 'poki-floating-master-v3.png' },
+  { id: 'goals', label: '목표·기록', poki: 'poki-main-planning.png' },
   { id: 'analysis', label: '분석·권한', poki: 'poki-key.png' },
   { id: 'devices', label: '기기 연결', poki: 'poki-plug.png' },
   { id: 'general', label: '화면', poki: 'poki-floating-sleepy-v7.png' },
@@ -82,6 +83,7 @@ export function Settings() {
       <section className="fo-settings-panel" id={tab} role="tabpanel" aria-labelledby={`tab-${tab}`} key={tab}>
         {tab === 'account' && <AccountPanel showToast={showToast} />}
         {tab === 'focus' && <FocusPanel showToast={showToast} />}
+        {tab === 'goals' && <FocusPanel showToast={showToast} targets />}
         {tab === 'analysis' && <AnalysisPanel showToast={showToast} />}
         {tab === 'devices' && <DevicesPanel showToast={showToast} />}
         {tab === 'general' && <GeneralPanel showToast={showToast} />}
@@ -94,7 +96,7 @@ export function Settings() {
 type ShowToast = (toast: { text: string }) => void
 
 /** 집중 기본값 (focus-settings). 바꿀 때마다 전체 객체를 저장하고, 실패하면 이전 값으로 되돌린다. */
-function FocusPanel({ showToast }: { showToast: ShowToast }) {
+function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targets?: boolean }) {
   const [view, setView] = useState<Load<FocusSettings>>({ status: 'loading' })
   const [saving, setSaving] = useState(false)
 
@@ -122,6 +124,24 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
       setView({ status: 'ready', data: settings })
       showToast({ text: failText(result.error.code) })
     }
+  }
+
+  if (targets) {
+    const daily = (settings.dailyTargetMs ?? 3_600_000) / 60_000
+    const weekly = settings.weeklyTargetMs == null ? null : settings.weeklyTargetMs / 60_000
+    return <>
+      <TargetStepper label="하루 목표" value={daily} min={10} max={600} step={10} disabled={saving}
+        onChange={(value) => { void save({ ...settings, dailyTargetMs: value * 60_000 }) }} />
+      <div className="fo-field">
+        <div className="fo-row-copy"><strong id="weekly-target-title">주간 목표</strong></div>
+        <div className="fo-segmented" role="group" aria-labelledby="weekly-target-title">
+          <button type="button" aria-pressed={weekly === null} disabled={saving} onClick={() => { if (weekly !== null) void save({ ...settings, weeklyTargetMs: null }) }}>정하지 않음</button>
+          <button type="button" aria-pressed={weekly !== null} disabled={saving} onClick={() => { if (weekly === null) void save({ ...settings, weeklyTargetMs: 18_000_000 }) }}>정하기</button>
+        </div>
+        {weekly !== null && <TargetStepper label="주간 목표 시간" value={weekly} min={60} max={4200} step={60} disabled={saving}
+          onChange={(value) => { void save({ ...settings, weeklyTargetMs: value * 60_000 }) }} />}
+      </div>
+    </>
   }
 
   function toggleChannel(key: NotificationChannel) {
@@ -153,6 +173,19 @@ function FocusPanel({ showToast }: { showToast: ShowToast }) {
         onClick={() => { void save({ ...settings, breakSuggestionEnabled: !settings.breakSuggestionEnabled }) }} />
     </div>
   </>
+}
+
+function TargetStepper({ label, value, min, max, step, disabled, onChange }: {
+  label: string; value: number; min: number; max: number; step: number; disabled: boolean; onChange: (value: number) => void
+}) {
+  return <fieldset className="fo-field fo-target-stepper">
+    <legend className="fo-field-title">{label}</legend>
+    <div>
+      <button className="fo-small-btn" type="button" aria-label={`${label} 줄이기`} disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - step))}>−</button>
+      <output aria-live="polite">{value}분</output>
+      <button className="fo-small-btn" type="button" aria-label={`${label} 늘리기`} disabled={disabled || value >= max} onClick={() => onChange(Math.min(max, value + step))}>+</button>
+    </div>
+  </fieldset>
 }
 
 const CHECK = <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg>

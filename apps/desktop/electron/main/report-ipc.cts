@@ -1,8 +1,8 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
 import type { IpcResult } from '../shared/auth-contract.cjs'
-import { REPORT_CHANNELS, isNoteCursor, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseDaily, parseLearningNoteList, parseLearningSummary, parseSessionPauses, parseSessionSummary } from '../shared/report-contract.cjs'
-import type { CalendarMonth, DailyReport, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
+import { REPORT_CHANNELS, isNoteCursor, isValidDate, isValidMonth, isValidSessionId, parseCalendar, parseFocusProgress, parseDaily, parseLearningNoteList, parseLearningSummary, parseSessionPauses, parseSessionSummary } from '../shared/report-contract.cjs'
+import type { CalendarMonth, DailyReport, FocusProgress, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../shared/report-contract.cjs'
 import type { ApiResult } from './auth-api.cjs'
 import { isTrustedAuthSender } from './auth-ipc.cjs'
 import type { AuthService } from './auth-service.cjs'
@@ -16,6 +16,10 @@ export class ReportService {
 
   getCalendar(month: string): Promise<ApiResult<CalendarMonth>> {
     return this.auth.authorizedRequest({ path: `/api/v1/reports/calendar?month=${month}`, method: 'GET', expectedStatus: 200, parse: parseCalendar, withDeviceId: true })
+  }
+
+  getProgress(date: string): Promise<ApiResult<FocusProgress>> {
+    return this.auth.authorizedRequest({ path: `/api/v1/reports/progress?date=${date}`, method: 'GET', expectedStatus: 200, parse: parseFocusProgress, withDeviceId: true })
   }
 
   getDaily(date: string): Promise<ApiResult<DailyReport>> {
@@ -59,6 +63,7 @@ export function registerReportIpc(getMainWindow: () => BrowserWindow | null, ren
   }
 
   handle(REPORT_CHANNELS.calendar, (args) => onlyKey(args, 'month', isValidMonth), (s, args) => s.getCalendar((args[0] as { month: string }).month))
+  handle(REPORT_CHANNELS.progress, (args) => onlyKey(args, 'date', isValidDate), (s, args) => s.getProgress((args[0] as { date: string }).date))
   handle(REPORT_CHANNELS.daily, (args) => onlyKey(args, 'date', isValidDate), (s, args) => s.getDaily((args[0] as { date: string }).date))
   handle(REPORT_CHANNELS.sessionSummary, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getSessionSummary((args[0] as { sessionId: string }).sessionId))
   handle(REPORT_CHANNELS.sessionPauses, (args) => onlyKey(args, 'sessionId', isValidSessionId), (s, args) => s.getSessionPauses((args[0] as { sessionId: string }).sessionId))
