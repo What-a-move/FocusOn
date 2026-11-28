@@ -686,6 +686,39 @@ class AnalysisApiTests {
     assertTrue(evidenceOf(excluded.sessionId()).isEmpty());
   }
 
+  @ParameterizedTest
+  @EnumSource(value = ConsentType.class, names = {
+      "TERMS_OF_SERVICE", "PRIVACY_POLICY", "SCREEN_ANALYSIS"
+  })
+  void regrantDoesNotAllowEvidenceFromBeforeWithdrawal(ConsentType type) throws Exception {
+    var f = fixture();
+    var first = ordered(ContentSource.CHROME_DOM, 1, 1L, Instant.now(), null);
+    var prepared = store.prepare(f.principal(), f.sessionId(), first);
+    updateConsent(f, type, false);
+    updateConsent(f, type, true);
+
+    var completed = store.complete(f.principal(), prepared, first,
+        withEvidence(f.goalId(), "previous concept"));
+    assertEquals(Relation.RELATED, completed.relation());
+    assertTrue(evidenceOf(f.sessionId()).isEmpty());
+
+    when(ai.analyze(any(), any(), anyLong())).thenReturn(withEvidence(f.goalId(), "fresh concept"));
+    analyze(f, ordered(ContentSource.CHROME_DOM, 2, 2L, Instant.now(), null));
+    assertEquals(List.of("fresh concept"), evidenceOf(f.sessionId()).stream()
+        .map(LearningReviewEvidenceEntity::getConceptLabel).toList());
+  }
+
+  private void updateConsent(Fixture fixture, ConsentType type, boolean grant) throws Exception {
+    mvc.perform(put("/api/v1/users/me/consents/" + type.name())
+            .header("Authorization", "Bearer " + fixture.login().accessToken())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {"isGranted":%s,"consentVersion":"2026-09-17","consentSource":"DESKTOP_SETTINGS"}
+                """.formatted(grant)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.isGranted").value(grant));
+  }
+
   @Test
   void retentionRemovesReviewEvidenceNinetyDaysAfterSessionEnds() {
     var expired = fixture();

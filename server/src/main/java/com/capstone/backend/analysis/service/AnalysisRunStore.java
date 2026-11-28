@@ -23,7 +23,6 @@ import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.persistence.SessionGoalRepository;
 import com.capstone.backend.session.persistence.SessionStatus;
 import com.capstone.backend.user.persistence.AnalysisExcludedDomainRepository;
-import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
 import com.capstone.backend.user.persistence.UserFocusSettingsEntity;
@@ -43,6 +42,9 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 @RequiredArgsConstructor
 public class AnalysisRunStore {
+  private static final List<ConsentType> REQUIRED_CONSENTS = List.of(
+      ConsentType.TERMS_OF_SERVICE, ConsentType.PRIVACY_POLICY, ConsentType.SCREEN_ANALYSIS);
+
   private final EntityManager entityManager;
   private final Clock clock;
   private final UserRepository users;
@@ -104,7 +106,8 @@ public class AnalysisRunStore {
         request.observationContextId(), now));
     run.order(order.eligible(), order.untrusted());
     var verifiedGoals = goalInputs(session);
-    GuardStatus guard = guard(principal.userId(), request, verifiedGoals);
+    var consentAtReception = requiredConsentStamps(principal.userId());
+    GuardStatus guard = guard(principal.userId(), request, verifiedGoals, consentAtReception);
     if (order.untrusted()) {
       guard = AnalysisObservationOrder.retainGuard(guard, current);
     }
@@ -130,7 +133,7 @@ public class AnalysisRunStore {
     return new Prepared(run.getId(), sessionId, session.getGoal().getId(),
         session.getVersion(), session.getLastResumedAt(), session.getGoalTextSnapshot(),
         session.getInterventionPolicyVersion(), guard, latest, run.response(),
-        session.getGoalVersion(), verifiedGoals);
+        session.getGoalVersion(), verifiedGoals, consentAtReception);
   }
 
   /** 호출 중의 unlink·동의 철회·세션 전이를 다시 확인하고 해당 이력만 완료한다. */
@@ -142,16 +145,17 @@ public class AnalysisRunStore {
     var device = lockAndValidate(principal);
     var session = ownedSession(principal, prepared.sessionId(), device);
     var run = runs.findById(prepared.runId()).orElseThrow();
+    var consentAtCompletion = requiredConsentStamps(principal.userId());
     var decisionToStore = finalDecision(prepared, run, session,
-        guard(principal.userId(), request, prepared.goals()), decision);
+        guard(principal.userId(), request, prepared.goals(), consentAtCompletion), decision);
     run.complete(decisionToStore);
     if (run.getRelation() == com.capstone.backend.analysis.dto.AnalysisDtos.Relation.UNRELATED) {
       run.categorize(OffTaskClassifier.classify(request));
     }
     final Instant now = Instant.now();
     var evidence = decisionToStore.reviewEvidence();
-    if (evidence != null) {
-      // 완료 재검증(동의·제외·민감·실행 구간·목표 버전)을 통과한 판정에만 근거가 남는다.
+    if (evidence != null && consentAtCompletion.equals(prepared.evidenceConsents())) {
+      // 같은 문서 버전으로 다시 동의해도 이전 접수에 대한 저장 권한은 복구하지 않는다.
       learningEvidence.record(session.getId(), evidence.conceptLabel(),
           evidence.evidenceType().name(), run.getObservedAt(), run.getContentSource().name(),
           now);
@@ -221,17 +225,23 @@ public class AnalysisRunStore {
             : GoalProfile.fromDraft(json.readTree(row.getGoalProfileSnapshotJson())))).toList();
   }
 
+  private List<ConsentStamp> requiredConsentStamps(long userId) {
+    return consents.findAllByUserIdOrderByConsentType(userId).stream()
+        .filter(consent -> consent.isGranted()
+            && REQUIRED_CONSENTS.contains(consent.getConsentType()))
+        .map(consent -> new ConsentStamp(consent.getConsentType(), consent.getGrantedAt(),
+            consent.getConsentVersion()))
+        .toList();
+  }
+
   /** 동의 철회·제외 목록 변경을 AI 전후에 확인해 오래된 허용 상태를 사용하지 않는다. */
-  private GuardStatus guard(long userId, Request request, List<GoalInput> goals) {
+  private GuardStatus guard(long userId, Request request, List<GoalInput> goals,
+      List<ConsentStamp> currentConsents) {
     if (request.guardStatus() == GuardStatus.PRIVACY_BLOCKED) {
       return GuardStatus.PRIVACY_BLOCKED;
     }
-    for (var type : new ConsentType[] {ConsentType.TERMS_OF_SERVICE,
-        ConsentType.PRIVACY_POLICY, ConsentType.SCREEN_ANALYSIS}) {
-      if (!consents.findByUserIdAndConsentType(userId, type)
-          .map(UserConsentEntity::isGranted).orElse(false)) {
-        return GuardStatus.PRIVACY_BLOCKED;
-      }
+    if (currentConsents.size() != REQUIRED_CONSENTS.size()) {
+      return GuardStatus.PRIVACY_BLOCKED;
     }
     if (request.guardStatus() != null) {
       return request.guardStatus();
@@ -255,18 +265,22 @@ public class AnalysisRunStore {
   /** 화면 원문 없이 저장했던 목표 사본만 내부 AI로 전달한다. */
   public record GoalInput(String goalId, String goalText, GoalProfile goalProfile) {}
 
+  /** 같은 사용자 동의의 문구 버전과 서버에서 수락한 시각이다. */
+  public record ConsentStamp(ConsentType type, Instant grantedAt, String version) {}
+
   /** Entity나 화면 원문을 transaction 밖으로 유출하지 않는 서버 snapshot이다. */
   public record Prepared(long runId, long sessionId, long goalId, long sessionVersion,
       Instant runningSince,
       String goalSnapshot, String policyVersion, GuardStatus guard, boolean latest,
-      Response initialResponse, long goalVersion, List<GoalInput> goals) {
+      Response initialResponse, long goalVersion, List<GoalInput> goals,
+      List<ConsentStamp> evidenceConsents) {
     /** 기존 단일 목표 요청에 맞는 초기 목표 집합이다. */
     public Prepared(long runId, long sessionId, long goalId, long sessionVersion,
         Instant runningSince, String goalSnapshot, String policyVersion, GuardStatus guard,
         boolean latest, Response initialResponse) {
       this(runId, sessionId, goalId, sessionVersion, runningSince, goalSnapshot, policyVersion,
           guard, latest, initialResponse, 1,
-          List.of(new GoalInput(Long.toString(goalId), goalSnapshot, null)));
+          List.of(new GoalInput(Long.toString(goalId), goalSnapshot, null)), List.of());
     }
 
     @Override

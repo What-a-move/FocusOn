@@ -5,6 +5,10 @@
 - Desktop·Extension 담당자는 메신저 화면을 로컬에서 먼저 차단하고 `guardStatus: MESSENGER`, `metadata.messengerId`와 기존 관측 번호·전경 참조만 전송하도록 연결한다. shared-types에는 해당 요청만 추가한다.
 - 테스트 배포에서 두 앱의 메신저 관측에 원문·제목이 실리지 않는지, 선택값에 따라 집계가 달라지는지 확인한다. [기획서](features/learning-messenger-analysis-PLAN.md).
 
+## 2026-11-28 #384 학습 근거 저장의 동의 확인
+
+- #384 뒤 종료 후 30초 근거 수용과 철회 전 근거·노트 처리는 팀 합의에 맞춘다. 생성 전 동의 재확인은 학습 정리 담당과 연결한다.
+
 ## Issue #381 딴짓 종류 (2026-11-28)
 
 - Desktop: 세션 리포트 "딴짓 종류 비율"을 `offTaskCategory`로 계산하고, 동의 상세 v1.1 "딴짓 종류 저장" 문장을 반영한다.

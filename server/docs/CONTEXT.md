@@ -5,6 +5,10 @@
 - `MESSENGER` 보호 입력을 받아 AI 호출 없이 공개 `PRIVACY_BLOCKED / SKIPPED`를 유지한다. 분석 행의 `messenger_scope`에는 선택 여부만 남긴다(V38).
 - 학습용 관측은 현재 이탈을 끊고, 미등록 관측은 검증된 전경 정책에서 시간만 센다. [기획서](features/learning-messenger-analysis-PLAN.md).
 
+## 2026-11-28 #384 학습 근거 저장의 동의 확인
+
+- #384는 접수와 완료 시 같은 필수 동의 기록을 확인해 철회 이전 분석이 재동의 후 학습 근거로 저장되는 것을 막는다.
+
 ## Issue #381 딴짓 종류 (2026-11-28)
 
 - UNRELATED 판정에 도메인·앱 목록 규칙으로 `offTaskCategory`를 붙여 저장·반환한다(V37). 계획: `features/off-task-category-PLAN.md`.
