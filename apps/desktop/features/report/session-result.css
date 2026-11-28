@@ -1,4 +1,4 @@
-/* 디자인 원본: FocusOn-design/session-result.html. 색 토큰·버튼·창 상단은 onboarding.css(.onboarding-window)를 쓰고,
+/* 디자인 원본: FocusOn-design/session-report.html. 색 토큰·버튼·창 상단은 onboarding-window.css(.onboarding-window)를 쓰고,
    리포트에만 필요한 토큰과 배치를 .result-window로 덧붙인다. 시안의 `예시` 태그·미리보기 링크는 넣지 않는다. */
 .onboarding-window.result-window { --gold-soft: #fff4e3; --flow-other: var(--fo-flow-other); --flow-hold: var(--fo-flow-hold); --stripe-1: var(--fo-stripe-1); --stripe-2: var(--fo-stripe-2); --ease-pop: cubic-bezier(.34, 1.56, .64, 1); }
 @media (prefers-color-scheme: dark) {
@@ -59,11 +59,33 @@
 .result-window .legend strong { display: block; margin-top: 4px; color: var(--ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .result-window .rate { margin: 18px 0 0; font-size: 15px; line-height: 1.6; }
 .result-window .rate strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.result-window .off-task-chart .track { animation: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .result-window .off-task-chart[data-reveal] { animation: result-up .4s var(--ease) both; }
+  .result-window .off-task-chart[data-reveal] .track { animation: result-wipe .55s .08s var(--ease) both; }
+  .result-window .off-task-chart[data-reveal="pending"],
+  .result-window .off-task-chart[data-reveal="pending"] .track { animation-play-state: paused; }
+}
+.result-window .off-task-legend { display: grid; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.result-window .off-task-legend li { display: grid; grid-template-columns: 32px minmax(0, 92px) 1fr; align-items: center; gap: 10px; color: var(--ink); }
+.result-window .off-task-icon { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--category-color); border-radius: 8px; background: color-mix(in srgb, var(--category-color) 20%, var(--surface)); }
+.result-window .off-task-icon svg { width: 17px; height: 17px; }
+.result-window .off-task-legend strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.result-window .goal-focus-times { display: grid; gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+.result-window .goal-focus-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.result-window .goal-focus-label span { overflow-wrap: anywhere; }
+.result-window .goal-focus-label strong { flex: none; font-variant-numeric: tabular-nums; }
+.result-window .goal-focus-label small { margin-inline-start: 8px; color: var(--muted); font-weight: 500; }
+.result-window .goal-focus-track { height: 6px; margin-top: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.result-window .goal-focus-track span { display: block; height: 100%; border-radius: inherit; background: var(--gold); }
+.result-window .off-task-routes { margin-top: 24px; }
+.result-window .off-task-routes h3 { margin: 0; font-size: 16px; }
+.result-window .off-task-routes .muted-note { margin-top: 4px; }
 .result-window .rate small { display: block; color: var(--muted); font-size: 13px; }
 .result-window .muted-note { margin: 14px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; word-break: keep-all; }
 
 .result-window .pause-timeline { margin: 20px 0 0; color: var(--muted); font-size: 13px; }
-.result-window .pause-retry { margin-top: 8px; }
+.result-window .report-retry { margin-top: 8px; }
 .result-window .pause-timeline figcaption { color: var(--ink); font-weight: 700; }
 .result-window .pause-axis { position: relative; height: 2px; margin: 13px 8px 0; background: var(--line); }
 .result-window .pause-axis span { position: absolute; top: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); color: var(--surface); font-size: 10px; font-weight: 700; }
@@ -107,11 +129,9 @@
 .result-window .notice { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--danger-line); border-radius: 14px; background: var(--danger-soft); color: var(--danger); font-size: 15px; line-height: 1.6; }
 .result-window .notice strong { display: block; font-weight: 700; }
 .result-window .notice span { display: block; color: var(--ink); }
-/* 기록 없음·불러오기 실패: 내용이 짧으므로 제목과 버튼을 한 덩어리로 화면 가운데에 둔다. */
+/* 본문만 스크롤하고 하단 이동 버튼은 항상 보인다. */
 .result-window .report.is-empty { justify-content: center; align-items: center; }
-.result-window .report.is-empty .actions { justify-content: center; margin-top: 28px; padding-top: 0; border-top: 0; }
-
-.result-window .actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: auto; padding-top: 24px; border-top: 1px solid var(--line); }
+.result-window .footer-inner.actions { width: min(1040px, calc(100% - 64px)); justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
 .result-window .actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; padding: 0 22px; text-decoration: none; }
 .result-window .actions .btn span { transition: transform .2s ease; }
 .result-window .actions .btn:hover span { transform: translateX(4px); }

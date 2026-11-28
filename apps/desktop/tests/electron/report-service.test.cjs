@@ -119,3 +119,85 @@ test('일시정지는 순서와 열린 마지막 구간을 검증하고 본인 �
   } })
   assert.deepEqual(await service.getSessionPauses('7'), { success: true, data: [pause, last] })
 })
+
+test('딴짓 비율은 유효하게 분류된 UNRELATED 기록만 쓰고 기타와 예전 누락 값을 구분한다', async () => {
+  const record = (offTaskCategory) => ({ relation: 'UNRELATED', offTaskCategory })
+  const data = [
+    record('SNS'),
+    record('VIDEO'),
+    record('VIDEO'),
+    record('OTHER'),
+    record(null),
+    record(undefined),
+    record('UNKNOWN_CATEGORY'),
+    { relation: 'RELATED', offTaskCategory: 'GAME' },
+    { relation: 'UNCERTAIN', offTaskCategory: 'NEWS' },
+    null,
+  ]
+  const service = new ReportService({ authorizedRequest: async ({ path, method, parse }) => {
+    assert.equal(path, '/api/v1/sessions/7/analysis-runs')
+    assert.equal(method, 'GET')
+    assert.deepEqual(parse([record(null), record(undefined)]), { categories: [], consecutive: [] })
+    assert.deepEqual(parse([]), { categories: [], consecutive: [] })
+    assert.equal(parse({ items: data }), null)
+    return { success: true, data: parse(data) }
+  } })
+  assert.deepEqual(await service.getOffTaskBreakdown('7'), {
+    success: true,
+    data: {
+      categories: [
+        { category: 'VIDEO', share: 0.5 },
+        { category: 'SNS', share: 0.25 },
+        { category: 'OTHER', share: 0.25 },
+      ],
+      consecutive: [],
+    },
+  })
+})
+
+test('첫 이탈은 서로 다른 시각에 연속해 확정된 기록만 후보에 넣는다', () => {
+  const { parseOffTaskBreakdown } = require('../../dist-electron/shared/report-contract.cjs')
+  const run = (minute, relation = 'UNRELATED', analysisStatus = 'COMPLETED') => ({ relation, analysisStatus, observedAt: `2026-11-29T01:${minute}:00Z` })
+  const report = parseOffTaskBreakdown([
+    run('01'), run('01'), run('02', 'UNCERTAIN', 'NEEDS_CONFIRMATION'),
+    run('03'), run('04', 'UNRELATED', 'ERROR'),
+    run('05'), run('06'), run('07', 'PRIVACY_BLOCKED', 'SKIPPED'), run('08'),
+  ])
+  assert.deepEqual(report.consecutive, [{ firstAt: run('05').observedAt, secondAt: run('06').observedAt }])
+})
+
+test('할 일별 시간은 회차의 사본·확정 활동 시간을 검증하고 기존 요약을 계속 읽는다', () => {
+  const { parseSessionSummary } = require('../../dist-electron/shared/report-contract.cjs')
+  const summary = { sessionId: '7', goalSnapshot: '기존 목표', targetDurationMs: 600_000, accumulatedActiveMs: 540_000, relatedDurationMs: 360_000 }
+  const goalFocusTimes = [
+    { goalId: '13', goalTextSnapshot: 'API 응답 조건 확인', matchedActiveMs: 180_000 },
+    { goalId: '14', goalTextSnapshot: '교체 후 응답 테스트', matchedActiveMs: 120_000 },
+  ]
+  assert.deepEqual(parseSessionSummary({ ...summary, goalFocusTimes }).goalFocusTimes, goalFocusTimes)
+  assert.equal(parseSessionSummary(summary).goalFocusTimes, undefined)
+  assert.equal(parseSessionSummary({ ...summary, relatedDurationMs: null, goalFocusTimes }).goalFocusTimes, undefined)
+  assert.equal(parseSessionSummary({ ...summary, relatedDurationMs: 600_000, goalFocusTimes }).goalFocusTimes, undefined)
+  for (const invalid of [[goalFocusTimes[0], goalFocusTimes[0]], [{ ...goalFocusTimes[0], matchedActiveMs: -1 }],
+    [...goalFocusTimes, { goalId: '15', goalTextSnapshot: '추가 할 일', matchedActiveMs: 61_000 }],
+    [{ ...goalFocusTimes[0], goalTextSnapshot: ' ' }]]) {
+    const result = parseSessionSummary({ ...summary, goalFocusTimes: invalid })
+    assert.equal(result.goalFocusTimes, undefined)
+    assert.equal(result.goalText, '기존 목표')
+  }
+  const zero = [{ ...goalFocusTimes[0], matchedActiveMs: 0 }]
+  assert.deepEqual(parseSessionSummary({ ...summary, relatedDurationMs: 0, goalFocusTimes: zero }).goalFocusTimes, zero)
+})
+
+test('이탈 경로는 출처가 확인된 모든 확정 딴짓 기록으로만 계산한다', () => {
+  const { parseOffTaskBreakdown } = require('../../dist-electron/shared/report-contract.cjs')
+  const run = (contentSource, relation = 'UNRELATED', analysisStatus = 'COMPLETED') => ({ contentSource, relation, analysisStatus })
+  const records = [
+    run('TAB_META'), run('CHROME_DOM'), run('APP_META'),
+    run('DESKTOP_APP_OCR', 'RELATED'), run('APP_META', 'UNRELATED', 'ERROR'),
+  ]
+  assert.deepEqual(parseOffTaskBreakdown(records).routes, { browser: 2 / 3, otherApp: 1 / 3 })
+  assert.deepEqual(parseOffTaskBreakdown([run('DESKTOP_APP_OCR')]).routes, { browser: 0, otherApp: 1 })
+  assert.equal(parseOffTaskBreakdown([...records, run(undefined)]).routes, undefined)
+  assert.equal(parseOffTaskBreakdown([...records, run('UNKNOWN_SOURCE')]).routes, undefined)
+  assert.equal(parseOffTaskBreakdown([run('APP_META', 'UNCERTAIN')]).routes, undefined)
+})

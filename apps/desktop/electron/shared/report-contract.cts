@@ -6,6 +6,7 @@ export const REPORT_CHANNELS = {
   daily: 'report:daily:get',
   sessionSummary: 'report:session-summary:get',
   sessionPauses: 'report:session-pauses:get',
+  offTaskBreakdown: 'report:off-task-breakdown:get',
   learningSummary: 'report:learning-summary:get',
   learningNotes: 'report:learning-notes:list',
 } as const
@@ -22,6 +23,8 @@ export type DailyReport = { date: string; totalActiveMs: number; sessions: Daily
  * GET /api/v1/sessions/{id}/summary. 시간 필드 이름은 리포트 설계서 3.1을 따른다.
  * 나머지(status·startedAt·endedAt·연장·멈춤·자동 멈춤·알림 횟수)는 Notion에 이름이 없어 제안 형식이며, 없으면 null(화면에 `기록 없음`)이다.
  */
+type GoalFocusTime = { goalId: string; goalTextSnapshot: string; matchedActiveMs: number }
+
 export type SessionSummary = {
   sessionId: string
   goalText: string
@@ -31,6 +34,7 @@ export type SessionSummary = {
   targetDurationMs: number
   accumulatedActiveMs: number
   totalPausedMs: number | null
+  goalFocusTimes?: GoalFocusTime[]
   relatedDurationMs: number | null
   unrelatedDurationMs: number | null
   uncertainDurationMs: number | null
@@ -52,11 +56,21 @@ export type LearningNoteList = { items: LearningNote[]; nextCursor: string | nul
 
 export type SessionPause = { pausedAt: string; resumedAt: string | null; pauseReason: string }
 
+const OFF_TASK_CATEGORIES = ['VIDEO', 'SNS', 'COMMUNITY', 'SHOPPING', 'GAME', 'MESSENGER', 'NEWS', 'OTHER'] as const
+type OffTaskCategory = typeof OFF_TASK_CATEGORIES[number]
+export type OffTaskShare = { category: OffTaskCategory; share: number }
+export type OffTaskReport = {
+  categories: OffTaskShare[]
+  routes?: { browser: number; otherApp: number }
+  consecutive: Array<{ firstAt: string; secondAt: string }>
+}
+
 export type ReportsApi = {
   getCalendar(input: { month: string }): Promise<IpcResult<CalendarMonth>>
   getDaily(input: { date: string }): Promise<IpcResult<DailyReport>>
   getSessionSummary(input: { sessionId: string }): Promise<IpcResult<SessionSummary>>
   getSessionPauses(input: { sessionId: string }): Promise<IpcResult<SessionPause[]>>
+  getOffTaskBreakdown(input: { sessionId: string }): Promise<IpcResult<OffTaskReport>>
   getLearningSummary(input: { sessionId: string }): Promise<IpcResult<LearningSummary>>
   listLearningNotes(input: { cursor: string | null }): Promise<IpcResult<LearningNoteList>>
 }
@@ -107,9 +121,28 @@ export function isValidSessionId(value: unknown): value is string {
 const optionalCount = (value: unknown): number | null => isCount(value) ? value : null
 const LEARNING_STATUSES: readonly LearningSummaryStatus[] = ['QUEUED', 'GENERATING', 'READY', 'INSUFFICIENT_DATA', 'FAILED']
 
+/** 제안 응답의 집계가 맞을 때만 할 일 통계를 추가한다. 기존 리포트는 계속 읽을 수 있다. */
+function parseGoalFocusTimes(value: unknown, relatedMs: number | null): GoalFocusTime[] | undefined {
+  if (!Array.isArray(value) || relatedMs === null) return undefined
+  const ids = new Set<string>()
+  const goals: GoalFocusTime[] = []
+  let remaining = relatedMs
+  for (const item of value) {
+    if (!isRecord(item) || !isValidSessionId(item.goalId) || ids.has(item.goalId)
+      || typeof item.goalTextSnapshot !== 'string' || !item.goalTextSnapshot.trim()
+      || !isCount(item.matchedActiveMs) || item.matchedActiveMs > remaining) return undefined
+    ids.add(item.goalId)
+    remaining -= item.matchedActiveMs
+    goals.push({ goalId: item.goalId, goalTextSnapshot: item.goalTextSnapshot.trim(), matchedActiveMs: item.matchedActiveMs })
+  }
+  return goals
+}
+
 export function parseSessionSummary(value: unknown): SessionSummary | null {
   if (!isRecord(value) || typeof value.sessionId !== 'string' || typeof value.goalSnapshot !== 'string') return null
   if (!isCount(value.targetDurationMs) || !isCount(value.accumulatedActiveMs)) return null
+  const relatedDurationMs = optionalCount(value.relatedDurationMs)
+  const goalFocusTimes = parseGoalFocusTimes(value.goalFocusTimes, relatedDurationMs !== null && relatedDurationMs <= value.accumulatedActiveMs ? relatedDurationMs : null)
   return {
     sessionId: value.sessionId,
     goalText: value.goalSnapshot,
@@ -119,7 +152,8 @@ export function parseSessionSummary(value: unknown): SessionSummary | null {
     targetDurationMs: value.targetDurationMs,
     accumulatedActiveMs: value.accumulatedActiveMs,
     totalPausedMs: optionalCount(value.totalPausedMs),
-    relatedDurationMs: optionalCount(value.relatedDurationMs),
+    relatedDurationMs,
+    ...(goalFocusTimes === undefined ? {} : { goalFocusTimes }),
     unrelatedDurationMs: optionalCount(value.unrelatedDurationMs),
     uncertainDurationMs: optionalCount(value.uncertainDurationMs),
     extensionCount: optionalCount(value.extensionCount),
@@ -146,6 +180,43 @@ export function parseSessionPauses(value: unknown): SessionPause[] | null {
     previousEnd = end
   }
   return pauses
+}
+
+/** 분석 기록 중 저장된 딴짓 분류만 집계한다. 이전 회차의 누락 값은 분류된 기록 수에서 뺀다. */
+export function parseOffTaskBreakdown(value: unknown): OffTaskReport | null {
+  if (!Array.isArray(value)) return null
+  const counts = new Map<OffTaskCategory, number>()
+  let total = 0
+  let previous: string | null = null
+  const routeCounts = { browser: 0, otherApp: 0 }
+  let unknownRoute = false
+  const consecutive: OffTaskReport['consecutive'] = []
+  for (const item of value) {
+    if (!isRecord(item) || item.relation !== 'UNRELATED') { previous = null; continue }
+    const category = OFF_TASK_CATEGORIES.find((entry) => entry === item.offTaskCategory)
+    if (category) {
+      counts.set(category, (counts.get(category) ?? 0) + 1)
+      total += 1
+    }
+    if (item.analysisStatus !== 'COMPLETED') { previous = null; continue }
+    switch (item.contentSource) {
+      case 'TAB_META':
+      case 'CHROME_DOM': routeCounts.browser += 1; break
+      case 'APP_META':
+      case 'DESKTOP_APP_OCR': routeCounts.otherApp += 1; break
+      default: unknownRoute = true
+    }
+    if (!isTime(item.observedAt)) { previous = null; continue }
+    if (previous && Date.parse(previous) < Date.parse(item.observedAt)) {
+      consecutive.push({ firstAt: previous, secondAt: item.observedAt })
+    }
+    previous = item.observedAt
+  }
+  const categories = Array.from(counts, ([category, count]) => ({ category, share: count / total }))
+    .sort((left, right) => right.share - left.share)
+  const routeTotal = routeCounts.browser + routeCounts.otherApp
+  return { categories, consecutive, ...(!unknownRoute && routeTotal > 0
+    ? { routes: { browser: routeCounts.browser / routeTotal, otherApp: routeCounts.otherApp / routeTotal } } : {}) }
 }
 
 const text = (field: unknown) => (typeof field === 'string' && field.trim() ? field.trim() : null)
