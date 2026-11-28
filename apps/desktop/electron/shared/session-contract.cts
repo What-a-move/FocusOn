@@ -18,7 +18,9 @@ export type InterventionLevel = 'GENTLE' | 'NORMAL' | 'ACTIVE'
 export type NotificationChannel = 'MOLE_UI' | 'MACOS_NOTIFICATION' | 'SOUND'
 export type SessionOptions = { interventionLevel: InterventionLevel; notificationChannels: NotificationChannel[]; cameraAnalysisEnabled: boolean }
 /** GET·PUT /users/me/focus-settings. 세션 시작 sessionOptions에는 breakSuggestionEnabled를 넣지 않는다(API_CONTRACT). */
-export type FocusSettings = SessionOptions & { breakSuggestionEnabled: boolean; dailyTargetMs?: number; weeklyTargetMs?: number | null; retrospectiveEnabled?: boolean }
+const LEARNING_MESSENGERS = ['DISCORD', 'SLACK', 'KAKAOTALK', 'TEAMS', 'OTHER'] as const
+export type LearningMessenger = typeof LEARNING_MESSENGERS[number]
+export type FocusSettings = SessionOptions & { breakSuggestionEnabled: boolean; dailyTargetMs?: number; weeklyTargetMs?: number | null; retrospectiveEnabled?: boolean; learningMessengers?: LearningMessenger[] }
 /** goalText는 집중 화면 표시용이며 서버로 보내지 않는다(서버는 goalId로 snapshot을 만든다). */
 export type StartSessionInput = { goalText: string; targetDurationMs: number; timeZone: string; sessionOptions: SessionOptions; idempotencyKey: string }
   & ({ goalId: string; goalIds?: never } | { goalIds: string[]; goalId?: never })
@@ -112,7 +114,9 @@ const isTarget = (value: unknown, min: number, max: number): value is number =>
 export function parseFocusSettings(value: unknown): FocusSettings | null {
   if (!isRecord(value) || !LEVELS.includes(value.interventionLevel as InterventionLevel) || !isChannelList(value.notificationChannels)
     || typeof value.cameraAnalysisEnabled !== 'boolean' || typeof value.breakSuggestionEnabled !== 'boolean') return null
-  const { dailyTargetMs, weeklyTargetMs, retrospectiveEnabled } = value
+  const { dailyTargetMs, weeklyTargetMs, retrospectiveEnabled, learningMessengers } = value
+  if (learningMessengers !== undefined && (!Array.isArray(learningMessengers) || learningMessengers.length > LEARNING_MESSENGERS.length
+    || new Set(learningMessengers).size !== learningMessengers.length || !learningMessengers.every((item) => LEARNING_MESSENGERS.includes(item)))) return null
   if (retrospectiveEnabled !== undefined && typeof retrospectiveEnabled !== 'boolean') return null
   if (dailyTargetMs !== undefined && !isTarget(dailyTargetMs, 10, 600)) return null
   if (weeklyTargetMs !== undefined && weeklyTargetMs !== null && !isTarget(weeklyTargetMs, 60, 4200)) return null
@@ -120,6 +124,7 @@ export function parseFocusSettings(value: unknown): FocusSettings | null {
     ...(dailyTargetMs === undefined ? {} : { dailyTargetMs }),
     ...(weeklyTargetMs === undefined ? {} : { weeklyTargetMs }),
     ...(retrospectiveEnabled === undefined ? {} : { retrospectiveEnabled }),
+    ...(learningMessengers === undefined ? {} : { learningMessengers }),
   }
 }
 

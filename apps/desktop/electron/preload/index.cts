@@ -138,6 +138,7 @@ const focusOnApi: FocusOnApi = {
       ...(input.dailyTargetMs === undefined ? {} : { dailyTargetMs: input.dailyTargetMs }),
       ...(input.weeklyTargetMs === undefined ? {} : { weeklyTargetMs: input.weeklyTargetMs }),
       ...(input.retrospectiveEnabled === undefined ? {} : { retrospectiveEnabled: input.retrospectiveEnabled }),
+      ...(input.learningMessengers === undefined ? {} : { learningMessengers: input.learningMessengers }),
     }),
     getExcludedDomains: () => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsGet),
     saveExcludedDomains: (input) => ipcRenderer.invoke(SETTINGS_CHANNELS.excludedDomainsSave, { domains: [...input.domains] }),

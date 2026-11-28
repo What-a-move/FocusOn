@@ -6,6 +6,7 @@ import Link from 'next/link'
 // Pretendard 웹 글꼴(@font-face)이 여기 있다. 예전엔 온보딩·집중 준비 코드를 거쳐 함께 불려 왔다(#183).
 import '../../shared/styles/onboarding-window.css'
 import { CHANNELS, LEVELS, PREVIEW } from '../../shared/lib/intervention-options'
+import type { LearningMessenger } from '../../electron/shared/session-contract.cjs'
 import { sessionApi, type NotificationChannel } from '../../shared/api/session-api'
 import { onboardingApi } from '../../shared/api/onboarding-api'
 import { AccountPanel, DevicesPanel } from './AccountPanels'
@@ -95,6 +96,10 @@ export function Settings() {
 
 type ShowToast = (toast: { text: string }) => void
 
+function coreFocusSettings({ interventionLevel, notificationChannels, cameraAnalysisEnabled, breakSuggestionEnabled }: FocusSettings) {
+  return { interventionLevel, notificationChannels, cameraAnalysisEnabled, breakSuggestionEnabled }
+}
+
 /** 집중 기본값 (focus-settings). 바꿀 때마다 전체 객체를 저장하고, 실패하면 이전 값으로 되돌린다. */
 function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targets?: boolean }) {
   const [view, setView] = useState<Load<FocusSettings>>({ status: 'loading' })
@@ -115,7 +120,12 @@ function FocusPanel({ showToast, targets = false }: { showToast: ShowToast; targ
   async function save(next: FocusSettings) {
     setView({ status: 'ready', data: next })
     setSaving(true)
-    const result = await settingsApi.saveFocusSettings(next)
+    const result = await settingsApi.saveFocusSettings({
+      ...coreFocusSettings(next),
+      ...(next.dailyTargetMs === settings.dailyTargetMs ? {} : { dailyTargetMs: next.dailyTargetMs }),
+      ...(next.weeklyTargetMs === settings.weeklyTargetMs ? {} : { weeklyTargetMs: next.weeklyTargetMs }),
+      ...(next.retrospectiveEnabled === settings.retrospectiveEnabled ? {} : { retrospectiveEnabled: next.retrospectiveEnabled }),
+    })
     setSaving(false)
     if (result.success) {
       setView({ status: 'ready', data: result.data })
@@ -275,7 +285,56 @@ function AnalysisPanel({ showToast }: { showToast: ShowToast }) {
       <div className="fo-row-copy"><strong>분석 제외 목록</strong></div>
       <Link className="fo-small-btn" href="/settings/exclusions/">관리</Link>
     </div>
+    <LearningMessengerSettings showToast={showToast} />
   </>
+}
+
+const MESSENGER_LABELS: Record<LearningMessenger, string> = {
+  DISCORD: 'Discord', SLACK: 'Slack', KAKAOTALK: '카카오톡', TEAMS: 'Teams', OTHER: '기타',
+}
+
+function LearningMessengerSettings({ showToast }: { showToast: ShowToast }) {
+  const [view, setView] = useState<Load<LearningMessenger[]>>({ status: 'loading' })
+  const [saving, setSaving] = useState(false)
+  const pending = useRef(false)
+
+  const load = useCallback(async () => {
+    setView({ status: 'loading' })
+    const result = await sessionApi.getFocusSettings()
+    setView(result.success ? { status: 'ready', data: result.data.learningMessengers ?? [] } : { status: 'error', code: result.error.code })
+  }, [])
+  useEffect(() => { queueMicrotask(() => { void load() }) }, [load])
+
+  async function toggle(messenger: LearningMessenger) {
+    if (pending.current) return
+    pending.current = true
+    setSaving(true)
+    try {
+      const latest = await sessionApi.getFocusSettings()
+      if (!latest.success) { showToast({ text: failText(latest.error.code) }); return }
+      const selected = latest.data.learningMessengers ?? []
+      const learningMessengers = selected.includes(messenger) ? selected.filter((item) => item !== messenger) : [...selected, messenger]
+      const result = await settingsApi.saveFocusSettings({ ...coreFocusSettings(latest.data), learningMessengers })
+      if (!result.success) { showToast({ text: failText(result.error.code) }); return }
+      setView({ status: 'ready', data: result.data.learningMessengers ?? [] })
+      showToast({ text: '저장했어요' })
+    } finally {
+      pending.current = false
+      setSaving(false)
+    }
+  }
+
+  return <div className="fo-field">
+    <strong className="fo-field-title" id="learning-messenger-title">학습용 메신저</strong>
+    {view.status === 'error' ? <LoadError compact code={view.code} what="학습용 메신저를" onRetry={() => { void load() }} />
+      : view.status === 'loading' ? <p role="status">학습용 메신저를 불러오고 있어요.</p>
+      : <div className="fo-chips" role="group" aria-labelledby="learning-messenger-title">
+        {(Object.keys(MESSENGER_LABELS) as LearningMessenger[]).map((messenger) => <button className="fo-chip" type="button" role="checkbox"
+          key={messenger} disabled={saving} aria-checked={view.data.includes(messenger)} onClick={() => { void toggle(messenger) }}>
+          {MESSENGER_LABELS[messenger]}
+        </button>)}
+      </div>}
+  </div>
 }
 
 // 카메라 오류는 macOS가 확실히 알려 주는 두 가지만 한 줄로 보여 준다(사용자 결정 2026-11-13). 시스템 안내라 존댓말이다.
@@ -329,7 +388,9 @@ function CameraRow({ showToast, n }: { showToast: ShowToast; n: number }) {
         const consent = await settingsApi.setCameraConsent(true)
         if (!consent.success) return showToast({ text: failText(consent.error.code) })
       }
-      const saved = await settingsApi.saveFocusSettings({ ...settings, cameraAnalysisEnabled: on })
+      const latest = await sessionApi.getFocusSettings()
+      if (!latest.success) return showToast({ text: failText(latest.error.code) })
+      const saved = await settingsApi.saveFocusSettings({ ...coreFocusSettings(latest.data), cameraAnalysisEnabled: on })
       if (!saved.success) return showToast({ text: failText(saved.error.code) })
       setSettings(saved.data)
       // 끄면 동의도 철회한다. 설정은 이미 꺼졌으니 철회만 실패하면 안내만 한다.
