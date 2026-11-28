@@ -119,3 +119,35 @@ test('일시정지는 순서와 열린 마지막 구간을 검증하고 본인 �
   } })
   assert.deepEqual(await service.getSessionPauses('7'), { success: true, data: [pause, last] })
 })
+
+test('딴짓 비율은 유효하게 분류된 UNRELATED 기록만 쓰고 기타와 예전 누락 값을 구분한다', async () => {
+  const record = (offTaskCategory) => ({ relation: 'UNRELATED', offTaskCategory })
+  const data = [
+    record('SNS'),
+    record('VIDEO'),
+    record('VIDEO'),
+    record('OTHER'),
+    record(null),
+    record(undefined),
+    record('UNKNOWN_CATEGORY'),
+    { relation: 'RELATED', offTaskCategory: 'GAME' },
+    { relation: 'UNCERTAIN', offTaskCategory: 'NEWS' },
+    null,
+  ]
+  const service = new ReportService({ authorizedRequest: async ({ path, method, parse }) => {
+    assert.equal(path, '/api/v1/sessions/7/analysis-runs')
+    assert.equal(method, 'GET')
+    assert.deepEqual(parse([record(null), record(undefined)]), [])
+    assert.deepEqual(parse([]), [])
+    assert.equal(parse({ items: data }), null)
+    return { success: true, data: parse(data) }
+  } })
+  assert.deepEqual(await service.getOffTaskBreakdown('7'), {
+    success: true,
+    data: [
+      { category: 'VIDEO', share: 0.5 },
+      { category: 'SNS', share: 0.25 },
+      { category: 'OTHER', share: 0.25 },
+    ],
+  })
+})

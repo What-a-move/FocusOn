@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
-import { flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
+import { flowOf, pauseTimelinePositions, sessionResultApi, type LearningSummary, type OffTaskShare, type SessionPause, type SessionSummary } from '../../shared/api/session-result-api'
 import { errorText } from '../../shared/lib/error-text'
 import '../../shared/styles/onboarding-window.css'
 import './session-result.css'
@@ -10,6 +10,11 @@ import './session-result.css'
 const POLL_MS = 5000
 const timeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit' })
 const pauseTimeFormat = new Intl.DateTimeFormat('ko-KR', { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+const offTaskPercent = new Intl.NumberFormat('ko-KR', { style: 'percent', maximumFractionDigits: 1 })
+const OFF_TASK_LABEL: Record<OffTaskShare['category'], string> = {
+  VIDEO: '영상', SNS: 'SNS', COMMUNITY: '커뮤니티', SHOPPING: '쇼핑',
+  GAME: '게임', MESSENGER: '메신저', NEWS: '뉴스', OTHER: '기타',
+}
 const AUTO_PAUSE_LABEL: Record<string, string> = { REQUIRED_PERMISSION: '권한 꺼짐', EXTENSION_UNLINKED: '연결 끊김', APP_RESTART: '앱 재시작', SYSTEM: '시스템' }
 // 학습 정리 상태별 한 줄(FocusOn-design/session-report.html `learningHtml`). 시스템 안내라 존댓말이다.
 // AI 정리 실패는 요청 오류가 아니라 서버가 정한 결과라 기본색으로 보여 준다(결정 031).
@@ -169,6 +174,7 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
           <PauseTimeline key={summary.sessionId} summary={summary} />
         </section>
 
+        <OffTaskBreakdown key={summary.sessionId} sessionId={summary.sessionId} />
         <LearningBlock sessionId={summary.sessionId} learning={learning} noLearning={noLearning} />
       </div>
       <div className="col">
@@ -181,6 +187,46 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
       </div>
     </div>
   </>
+}
+
+function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
+  const [breakdown, setBreakdown] = useState<OffTaskShare[] | 'error' | null>(null)
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    void sessionResultApi.getOffTaskBreakdown(sessionId).then((result) => {
+      if (!cancelled) setBreakdown(result.success ? result.data : 'error')
+    })
+    return () => { cancelled = true }
+  }, [sessionId, attempt])
+
+  const rows = Array.isArray(breakdown) ? breakdown.map(({ category, share }, index) => ({
+    category, share, color: `color-mix(in srgb, var(--flow-other) ${100 - index * 10}%, var(--gold-soft))`,
+  })) : []
+
+  return <section className="block" aria-labelledby="off-task-title">
+    <div className="block-head"><h2 id="off-task-title">딴짓 종류 비율</h2></div>
+    {breakdown === null ? <p className="muted-note" role="status">딴짓 종류를 불러오고 있어요.</p>
+      : breakdown === 'error' ? <>
+        <p className="muted-note" role="status">딴짓 종류를 불러오지 못했어요.</p>
+        <button className="btn btn-ghost report-retry" type="button" onClick={() => {
+          setBreakdown(null)
+          setAttempt((value) => value + 1)
+        }}>딴짓 종류 다시 시도</button>
+      </> : rows.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
+        : <>
+          <p className="muted-note">분류된 기록 건수 기준이에요.</p>
+          <div className="track" aria-hidden="true">
+            {rows.map(({ category, share, color }) => <span key={category} style={{ flex: share, background: color }} />)}
+          </div>
+          <ul className="off-task-legend" role="list">
+            {rows.map(({ category, share, color }) => <li key={category} style={{ '--category-color': color } as CSSProperties}>
+              <span>{OFF_TASK_LABEL[category]}</span><strong>{offTaskPercent.format(share)}</strong>
+            </li>)}
+          </ul>
+        </>}
+  </section>
 }
 
 function PauseTimeline({ summary }: { summary: SessionSummary }) {
@@ -198,7 +244,7 @@ function PauseTimeline({ summary }: { summary: SessionSummary }) {
 
   if (pauses === 'error') return <div className="pause-timeline">
     <p className="muted-note" role="status">일시정지 구간을 불러오지 못했어요.</p>
-    <button className="btn btn-ghost pause-retry" type="button" onClick={() => { setPauses(null); setAttempt((value) => value + 1) }}>일시정지 구간 다시 시도</button>
+    <button className="btn btn-ghost report-retry" type="button" onClick={() => { setPauses(null); setAttempt((value) => value + 1) }}>일시정지 구간 다시 시도</button>
   </div>
   if (!pauses?.length) return null
 

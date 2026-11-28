@@ -1,8 +1,8 @@
-import type { LearningNote, LearningNoteList, LearningSummary, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
+import type { LearningNote, LearningNoteList, LearningSummary, OffTaskShare, SessionPause, SessionSummary } from '../../electron/shared/report-contract.cjs'
 
 export type ApiError = { code: string; retryable: boolean }
 export type ApiResult<T> = { success: true; data: T } | { success: false; error: ApiError }
-export type { LearningNote, LearningSummary, SessionPause, SessionSummary }
+export type { LearningNote, LearningSummary, OffTaskShare, SessionPause, SessionSummary }
 
 const UNAVAILABLE = { success: false, error: { code: 'LOCAL_APP_ERROR', retryable: true } } as const
 
@@ -20,6 +20,7 @@ async function viaReports<T>(call: (api: NonNullable<Window['focusOn']>['reports
 export const sessionResultApi = {
   getSummary: (sessionId: string) => viaReports<SessionSummary>((api) => api.getSessionSummary({ sessionId })),
   getPauses: (sessionId: string) => viaReports<SessionPause[]>((api) => api.getSessionPauses({ sessionId })),
+  getOffTaskBreakdown: (sessionId: string) => viaReports<OffTaskShare[]>((api) => api.getOffTaskBreakdown({ sessionId })),
   getLearningSummary: (sessionId: string) => viaReports<LearningSummary>((api) => api.getLearningSummary({ sessionId })),
   listLearningNotes: (cursor: string | null = null) => viaReports<LearningNoteList>((api) => api.listLearningNotes({ cursor })),
 }
