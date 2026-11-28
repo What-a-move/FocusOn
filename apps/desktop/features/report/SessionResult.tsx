@@ -98,11 +98,10 @@ export function SessionResult() {
   const shownMinutes = useCountUp(Math.floor(seconds / 60))
   const shownSeconds = useCountUp(seconds % 60)
 
-  if (view.kind === 'loading') return <main className="app-window onboarding-window result-window" aria-busy="true" />
   return <main className="app-window onboarding-window result-window">
-    <div className="scroll">
-      <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
-        {view.kind !== 'ready' ? <>
+    <div className="scroll" aria-busy={view.kind === 'loading'}>
+      {view.kind === 'loading' ? null : <div className={`report${view.kind !== 'ready' ? ' is-empty' : ''}`}>
+        {view.kind !== 'ready' ? (
           <header className="hero is-missing">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="poki" src={view.kind === 'missing' ? '/design/poki-looking.png' : '/design/poki-worried.png'} alt="" />
@@ -113,14 +112,15 @@ export function SessionResult() {
               <p className="hero-sub" role={view.kind === 'error' ? 'alert' : undefined}>{view.kind === 'error' ? errorText(view) : '홈에서 집중 기록을 다시 열어 주세요.'}</p>
             </div>
           </header>
-        </> : <ResultBody summary={view.summary} learning={view.learning} noLearning={view.noLearning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
-
-        <div className="actions">
-          {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
-          <Link className="btn btn-primary" href="/">홈으로 <span aria-hidden="true">→</span></Link>
-        </div>
-      </div>
+        ) : <ResultBody summary={view.summary} learning={view.learning} noLearning={view.noLearning} shownMinutes={shownMinutes} shownSeconds={shownSeconds} />}
+      </div>}
     </div>
+    <footer className="footer">
+      <div className="footer-inner actions">
+        {view.kind === 'error' && sessionId && <button className="btn btn-ghost" type="button" onClick={() => { setView({ kind: 'loading' }); void load(sessionId) }}>다시 시도</button>}
+        <Link className="btn btn-primary" href="/">홈으로 <span aria-hidden="true">→</span></Link>
+      </div>
+    </footer>
   </main>
 }
 
@@ -195,6 +195,19 @@ function ResultBody({ summary, learning, noLearning, shownMinutes, shownSeconds 
   </>
 }
 
+// 범례가 스크롤 영역에 처음 들어올 때만 나타낸다.
+function observeOffTaskChart(element: HTMLDivElement | null) {
+  if (!element || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  element.dataset.reveal = 'pending'
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return
+    element.dataset.reveal = 'visible'
+    observer.disconnect()
+  }, { threshold: 0.1 })
+  observer.observe(element)
+  return () => observer.disconnect()
+}
+
 function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
   const [breakdown, setBreakdown] = useState<OffTaskShare[] | 'error' | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -217,8 +230,8 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
           setAttempt((value) => value + 1)
         }}>딴짓 종류 다시 시도</button>
       </> : breakdown.length === 0 ? <p className="muted-note">분류된 딴짓 기록이 없어요.</p>
-        : <>
-          <p className="muted-note">분류된 기록 건수 기준이에요.</p>
+        : <div className="off-task-chart" ref={observeOffTaskChart}>
+          <p className="muted-note">분류된 기록 건수 기준이에요. 판단을 보류한 기록은 제외해요.</p>
           <div className="track" aria-hidden="true">
             {breakdown.map(({ category, share }) => <span key={category} style={{ flex: share, background: OFF_TASK_STYLE[category].color }} />)}
           </div>
@@ -233,7 +246,7 @@ function OffTaskBreakdown({ sessionId }: { sessionId: string }) {
               </li>
             })}
           </ul>
-        </>}
+        </div>}
   </section>
 }
 
