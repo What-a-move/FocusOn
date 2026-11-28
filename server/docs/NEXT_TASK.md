@@ -1,5 +1,11 @@
 # Backend 다음 작업
 
+## Issue #389 세션 데이터 1년 보관 정리 (2026-11-28)
+
+- 배포 뒤 첫 실행 로그에 `session-retention` 실패가 없는지 확인한다.
+- 로컬 PostgreSQL에서 `TokenLifecycleApiTests` 2개가 `dev`에서도 실패한다(CI 통과). 원인 확인은 별도 이슈로.
+- 다음 마이그레이션은 V40부터.
+
 ## Issue #383 학습 메신저 보호와 이탈 집계
 
 - Desktop·Extension 담당자는 메신저 화면을 로컬에서 먼저 차단하고 `guardStatus: MESSENGER`, `metadata.messengerId`와 기존 관측 번호·전경 참조만 전송하도록 연결한다. shared-types에는 해당 요청만 추가한다.

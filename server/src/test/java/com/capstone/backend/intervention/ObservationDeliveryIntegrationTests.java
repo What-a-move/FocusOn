@@ -109,6 +109,7 @@ class ObservationDeliveryIntegrationTests {
   @Autowired private HeartbeatPolicyEvaluator evaluator;
   @Autowired private JdbcTemplate jdbc;
   @Autowired private com.capstone.backend.user.service.DeletedAccountPurge purge;
+  @Autowired private com.capstone.backend.session.service.SessionRetention retention;
   @Autowired private ObjectMapper json;
   @MockitoBean private GoogleOauthClient google;
   private MockMvc mvc;
@@ -716,6 +717,58 @@ class ObservationDeliveryIntegrationTests {
         kept.session()));
     assertEquals(1, count("SELECT count(*) FROM learning_sessions WHERE id=?", recent.session()));
     assertEquals(0, purge.purgeDue(Instant.now()));
+  }
+
+  /** 종료 후 1년이 지난 세션만 하위 기록과 함께 지우고 목표·다른 세션은 남긴다(#389). */
+  @Test
+  void sessionDataIsPurgedOneYearAfterEnd() {
+    var expired = fixture();
+    long event = generate(expired);
+    deliveries.receive(expired.principal(), expired.device(), Long.toString(event),
+        delivery(UUID.randomUUID().toString(), InterventionDtos.DispatchStatus.SENT));
+    jdbc.update("INSERT INTO learning_summaries(session_id,summary_status,key_concepts,"
+        + "attempt_count) VALUES(?,'QUEUED','[]',0)", expired.session());
+    jdbc.update("INSERT INTO learning_review_evidences(session_id,concept_label,evidence_type,"
+        + "observed_at,content_source,dedupe_hash,created_at) VALUES(?,?,?,?,?,?,?)",
+        expired.session(), "트랜잭션", "CONCEPT", java.sql.Timestamp.from(Instant.now()),
+        "CHROME_DOM", "b".repeat(64), java.sql.Timestamp.from(Instant.now()));
+    jdbc.update("INSERT INTO session_goals(session_id,position,goal_id,goal_text_snapshot) "
+        + "SELECT id,1,goal_id,'목표' FROM learning_sessions WHERE id=?", expired.session());
+    jdbc.update("INSERT INTO session_retrospectives(session_id,rating,reason_codes_json,created_at,"
+        + "updated_at) VALUES (?,'GOOD','[]',?,?)", expired.session(),
+        java.sql.Timestamp.from(Instant.now()), java.sql.Timestamp.from(Instant.now()));
+    jdbc.update("INSERT INTO session_pauses(session_id,paused_at,pause_reason) VALUES (?,?,'USER')",
+        expired.session(), java.sql.Timestamp.from(Instant.now().minusSeconds(60)));
+    var recent = fixture();
+    generate(recent);
+    final var running = fixture();
+    Instant end = Instant.now().minus(java.time.Duration.ofDays(365))
+        .truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+    tx.executeWithoutResult(ignored -> {
+      sessions.findById(expired.session()).orElseThrow().end(end, 1000);
+      sessions.findById(recent.session()).orElseThrow().end(end.plusSeconds(1), 1000);
+    });
+
+    assertEquals(0, retention.purgeDue(end.plus(java.time.Duration.ofDays(365)).minusSeconds(1)));
+    assertEquals(1, count("SELECT count(*) FROM learning_sessions WHERE id=?", expired.session()));
+
+    assertEquals(1, retention.purgeDue(end.plus(java.time.Duration.ofDays(365))));
+    for (String table : List.of("session_goals", "session_retrospectives", "session_pauses",
+        "intervention_events", "intervention_policy_states", "learning_review_evidences",
+        "learning_summaries", "analysis_runs", "session_observation_contexts")) {
+      assertEquals(0, count("SELECT count(*) FROM " + table + " WHERE session_id=?",
+          expired.session()), table);
+    }
+    assertEquals(0, count("SELECT count(*) FROM intervention_deliveries WHERE intervention_id=?",
+        event));
+    assertEquals(0, count("SELECT count(*) FROM learning_sessions WHERE id=?", expired.session()));
+    // 목표는 세션 데이터가 아니므로 남는다. 1년 미만 세션과 진행 중 세션도 그대로다.
+    assertTrue(count("SELECT count(*) FROM goals WHERE user_id=?",
+        expired.principal().userId()) >= 1);
+    assertEquals(1, count("SELECT count(*) FROM intervention_events WHERE session_id=?",
+        recent.session()));
+    assertEquals(1, count("SELECT count(*) FROM learning_sessions WHERE id=?", running.session()));
+    assertEquals(0, retention.purgeDue(end.plus(java.time.Duration.ofDays(365))));
   }
 
   private int count(String sql, long id) {
