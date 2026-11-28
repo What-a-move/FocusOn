@@ -4,7 +4,7 @@
 
 ## 가장 먼저 진행할 작업
 
-- [#391](https://github.com/What-a-move/FocusOn/issues/391) 실기기 QA. 집중 중 교체, 목표 저장·달성 표시, 종료 회고, 달성 포키 표시, 온보딩과 설정의 메신저 선택을 실제 계정으로 확인한다. [결과](features/desktop-session-redesign-REPORT.md)
+- [#391](https://github.com/What-a-move/FocusOn/issues/391) 실기기 QA. 집중 중 교체, 목표 저장·달성·연속 기록 표시, 종료 회고, 달성 포키 표시, 온보딩과 설정의 메신저 선택을 실제 계정으로 확인한다. [결과](features/desktop-session-redesign-REPORT.md)
 
 - [#370](https://github.com/What-a-move/FocusOn/issues/370) 집중 리포트 일시정지 표시: Desktop 조회·시간 축·실제 시각 목록을 구현했다. 서버 [#356](https://github.com/What-a-move/FocusOn/pull/356)를 반영한 테스트 환경에서 멈춤·재개·멈춘 채 종료·이전 회차·조회 재시도를 확인했다. [기획](features/report-pause-timeline-PLAN.md) · [결과](features/report-pause-timeline-REPORT.md)
 

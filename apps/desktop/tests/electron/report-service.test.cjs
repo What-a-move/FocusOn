@@ -125,6 +125,10 @@ test('목표 진행과 회고는 Desktop 기기 인증을 사용하며 원문 �
   const date = '2026-11-29'
   const progress = { date, today: { totalActiveMs: 600000, dailyTargetMs: 3600000 }, week: { totalActiveMs: 1200000, weeklyTargetMs: null } }
   assert.deepEqual(parseFocusProgress(progress), progress)
+  const streak = { currentDays: 0, longestDays: 12 }
+  assert.deepEqual(parseFocusProgress({ ...progress, streak }), { ...progress, streak })
+  assert.deepEqual(parseFocusProgress({ ...progress, streak: { currentDays: 4, longestDays: 3 } }), progress)
+  assert.deepEqual(parseFocusProgress({ ...progress, streak: { currentDays: -1, longestDays: 12 } }), progress)
   assert.equal(parseFocusProgress({ ...progress, week: { totalActiveMs: 0, weeklyTargetMs: 0 } }), null)
   assert.equal(parseCalendar({ ...calendar, days: [{ ...calendar.days[0], dailyTargetAchieved: true }] }).days[0].dailyTargetAchieved, true)
 

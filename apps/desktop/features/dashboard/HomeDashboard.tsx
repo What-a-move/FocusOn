@@ -208,6 +208,7 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
   const todayMinutes = currentProgress ? Math.floor((currentProgress.today.totalActiveMs + activeMs) / 60000) : today && current && current !== 'error'
     ? Math.floor((current.days.find((day) => day.date === dayKey(today))?.totalActiveMs ?? 0) / 60000)
     : null
+  const streak = currentProgress?.streak
   const monthDays = current && current !== 'error' ? current.studyDayCount : null
 
   return <main className="fo-home-window">
@@ -215,10 +216,14 @@ export function HomeDashboard({ name, onLogout, busy, message }: { name: string;
     <div className="fo-home-content">
       <header className="fo-topbar">
         <div className="fo-rise"><span>{today ? new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(today) : '오늘'}</span><p><strong>{name}</strong>님, 안녕하세요</p></div>
-        <ul className="fo-rise" style={{ animationDelay: '.1s' }} aria-label="오늘 요약">
+        <ul className="fo-rise" style={{ animationDelay: '.1s' }} role="list" aria-label="오늘 요약">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#f2b632"/><circle cx="12" cy="12" r="7" fill="#fff6dc"/><path d="M12 8v4.2l2.8 1.8" fill="none" stroke="#8a5a3b" strokeWidth="2" strokeLinecap="round"/></svg><span>오늘 {todayMinutes === null ? <b>–</b> : <CountUp value={todayMinutes} />}분{currentProgress && (currentProgress.today.totalActiveMs + activeMs >= currentProgress.today.dailyTargetMs ? ' · 목표 달성' : ` / ${currentProgress.today.dailyTargetMs / 60000}분`)}</span></li>
-          <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="4" fill="#8a5a3b"/><rect x="5" y="9" width="14" height="9.5" rx="2" fill="#fff6dc"/><path d="M9 13.8l2 2 4-4" fill="none" stroke="#e0a52a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>이번 달 {monthDays === null ? <b>–</b> : <CountUp value={monthDays} />}일</span></li>
+          {streak && <li className="fo-streak">
+            <span>연속 <b>{streak.currentDays}</b>일{streak.currentDays > 0 && <span aria-hidden="true"> 🔥</span>}</span>
+            <small>최장 {streak.longestDays}일</small>
+          </li>}
           {currentProgress?.week.weeklyTargetMs != null && <li><span>이번 주 <b>{Math.floor((currentProgress.week.totalActiveMs + activeMs) / 60000)}</b> / {currentProgress.week.weeklyTargetMs / 60000}분</span></li>}
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="4" fill="#8a5a3b"/><rect x="5" y="9" width="14" height="9.5" rx="2" fill="#fff6dc"/><path d="M9 13.8l2 2 4-4" fill="none" stroke="#e0a52a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>이번 달 {monthDays === null ? <b>–</b> : <CountUp value={monthDays} />}일</span></li>
         </ul>
       </header>
       <div className="fo-dashboard">

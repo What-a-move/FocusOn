@@ -7,6 +7,8 @@
 .fo-topbar ul { display: flex; align-items: center; gap: 22px; margin: 0; padding: 0; list-style: none; }
 .fo-topbar li { display: flex; align-items: center; gap: 8px; color: var(--fo-muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .fo-topbar li svg { width: 26px; height: 26px; flex: 0 0 26px; }
+.fo-topbar li.fo-streak { flex-direction: column; align-items: flex-start; gap: 2px; }
+.fo-topbar .fo-streak small { font-size: 12px; font-variant-numeric: tabular-nums; }
 .fo-topbar li b { color: var(--fo-ink); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .fo-dashboard { display: flex; flex-direction: column; gap: var(--fo-section-gap); width: 100%; max-width: calc(var(--fo-page-max) + var(--fo-page-x) * 2); margin: 0 auto; padding: var(--fo-head-gap) var(--fo-page-x) var(--fo-page-bottom); }
 /* 홈은 한눈에 보는 화면이라 기본 창(1200×800)에서 스크롤이 없어야 한다. 세로 여백만 창 높이를 따라 줄이고, 공통 토큰 값을 넘지 않는다. */

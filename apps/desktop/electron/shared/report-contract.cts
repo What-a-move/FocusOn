@@ -58,6 +58,7 @@ export type FocusProgress = {
   date: string
   today: { totalActiveMs: number; dailyTargetMs: number }
   week: { totalActiveMs: number; weeklyTargetMs: number | null }
+  streak?: { currentDays: number; longestDays: number }
 }
 
 export const RETROSPECTIVE_RATINGS = ['GOOD', 'OKAY', 'BAD'] as const
@@ -97,11 +98,14 @@ export function isValidDate(value: unknown): value is string {
 
 export function parseFocusProgress(value: unknown): FocusProgress | null {
   if (!isRecord(value) || !isValidDate(value.date) || !isRecord(value.today) || !isRecord(value.week)) return null
-  const { today, week } = value
+  const { today, week, streak } = value
   if (!isCount(today.totalActiveMs) || !isCount(today.dailyTargetMs) || today.dailyTargetMs === 0
     || !isCount(week.totalActiveMs) || (week.weeklyTargetMs !== null && (!isCount(week.weeklyTargetMs) || week.weeklyTargetMs === 0))) return null
   return { date: value.date, today: { totalActiveMs: today.totalActiveMs, dailyTargetMs: today.dailyTargetMs },
-    week: { totalActiveMs: week.totalActiveMs, weeklyTargetMs: week.weeklyTargetMs } }
+    week: { totalActiveMs: week.totalActiveMs, weeklyTargetMs: week.weeklyTargetMs },
+    ...(isRecord(streak) && isCount(streak.currentDays) && isCount(streak.longestDays) && streak.longestDays >= streak.currentDays
+      ? { streak: { currentDays: streak.currentDays, longestDays: streak.longestDays } } : {}),
+  }
 }
 
 export function parseCalendar(value: unknown): CalendarMonth | null {
