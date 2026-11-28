@@ -1,6 +1,7 @@
 package com.capstone.backend.analysis.service;
 
 import com.capstone.backend.analysis.dto.AnalysisDtos.ContentSource;
+import com.capstone.backend.analysis.dto.AnalysisDtos.GuardStatus;
 import com.capstone.backend.analysis.dto.AnalysisDtos.Request;
 import com.capstone.backend.analysis.service.AnalysisRunStore.GoalInput;
 import com.capstone.backend.common.api.ApiErrorCode;
@@ -10,10 +11,13 @@ import java.text.Normalizer;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /** AI 전송 전의 추가 방어다. 클라이언트 Privacy Guard를 대체하지 않는다. */
 final class AnalysisPrivacy {
+  private static final Set<String> MESSENGER_IDS = Set.of(
+      "DISCORD", "SLACK", "KAKAOTALK", "TEAMS", "OTHER");
   private static final int MAX_CONCEPT_LABEL_LENGTH = 120;
   private static final String HOST_LABEL = "[\\p{L}\\p{N}-]+";
   private static final String DOTTED_HOST = HOST_LABEL + "(?:\\." + HOST_LABEL + ")+";
@@ -51,6 +55,20 @@ final class AnalysisPrivacy {
     // JDBC rounds nanos to micros; prevent rounding the final half microsecond out of range.
     if (request.observedAt().isBefore(FIRST_TIMESTAMP)
         || !request.observedAt().isBefore(END_TIMESTAMP.minusNanos(500))) {
+      throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+    }
+    var metadata = request.metadata();
+    if (request.guardStatus() == GuardStatus.MESSENGER) {
+      if (metadata == null || metadata.messengerId() == null
+          || !MESSENGER_IDS.contains(metadata.messengerId()) || request.contentPayload() != null
+          || metadata.appName() != null || metadata.windowTitle() != null
+          || metadata.pageTitle() != null || metadata.urlHost() != null
+          || !request.unknownFields().isEmpty() || !metadata.unknownFields().isEmpty()) {
+        throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+      }
+      return;
+    }
+    if (metadata != null && metadata.messengerId() != null) {
       throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
     }
     boolean metadataSource = request.contentSource() == ContentSource.APP_META

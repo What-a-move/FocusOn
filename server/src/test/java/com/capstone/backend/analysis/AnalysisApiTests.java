@@ -379,6 +379,109 @@ class AnalysisApiTests {
   }
 
   @Test
+  void messengerUsesCurrentSettingsWithoutSendingContentToAi() throws Exception {
+    Fixture f = fixture();
+    var unregistered = messenger(1, "DISCORD");
+    mvc.perform(call(f, unregistered)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("PRIVACY_BLOCKED"))
+        .andExpect(jsonPath("$.data.analysisStatus").value("SKIPPED"))
+        .andExpect(jsonPath("$.data.offTaskCategory").doesNotExist())
+        .andExpect(jsonPath("$.data.messengerId").doesNotExist())
+        .andExpect(jsonPath("$.data.messengerScope").doesNotExist());
+    assertEquals("OTHER", storedMessengerScope(f, 1));
+
+    mvc.perform(put("/api/v1/users/me/focus-settings")
+        .header("Authorization", "Bearer " + f.login().accessToken())
+        .header("X-Device-Id", f.login().device().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content("""
+            {"interventionLevel":"NORMAL","notificationChannels":["MOLE_UI"],
+             "breakSuggestionEnabled":true,"cameraAnalysisEnabled":false,
+             "learningMessengers":["SLACK","DISCORD"]}
+            """)).andExpect(status().isOk());
+    mvc.perform(call(f, messenger(2, "DISCORD"))).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("PRIVACY_BLOCKED"));
+    assertEquals("LEARNING", storedMessengerScope(f, 2));
+    mvc.perform(call(f, messenger(3, "OTHER"))).andExpect(status().isOk());
+    assertEquals("OTHER", storedMessengerScope(f, 3));
+
+    tx.executeWithoutResult(ignored -> consents.findByUserIdAndConsentType(
+            f.principal().userId(), ConsentType.SCREEN_ANALYSIS).orElseThrow()
+        .apply(false, "2026-09-17", "SETTINGS", Instant.now()));
+    mvc.perform(call(f, messenger(4, "DISCORD"))).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.relation").value("PRIVACY_BLOCKED"));
+    assertNull(storedMessengerScope(f, 4));
+
+    var history = mvc.perform(get(path(f.sessionId()))
+        .header("Authorization", "Bearer " + f.login().accessToken()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.length()").value(4))
+        .andReturn().getResponse().getContentAsString();
+    for (var item : json.readTree(history).path("data")) {
+      assertEquals("PRIVACY_BLOCKED", item.path("relation").asString());
+      assertTrue(item.path("messengerId").isMissingNode());
+      assertTrue(item.path("messengerScope").isMissingNode());
+    }
+    assertFalse(history.contains("DISCORD"));
+    assertTrue(evidenceOf(f.sessionId()).isEmpty());
+    verify(ai, never()).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void invalidMessengerShapeNeverReachesAiOrStorage() throws Exception {
+    Fixture f = fixture();
+    var source = json.valueToTree(messenger(1, "DISCORD")).asObject();
+    for (String invalid : List.of(
+        "{\"metadata\":null}",
+        "{\"metadata\":{}}",
+        "{\"metadata\":{\"messengerId\":42}}",
+        "{\"metadata\":{\"messengerId\":\"discord\"}}",
+        "{\"metadata\":{\"messengerId\":\"LINE\"}}",
+        "{\"metadata\":{\"messengerId\":\"DISCORD\",\"appName\":\"synthetic\"}}",
+        "{\"metadata\":{\"messengerId\":\"DISCORD\",\"windowTitle\":\"synthetic\"}}",
+        "{\"metadata\":{\"messengerId\":\"DISCORD\",\"pageTitle\":\"synthetic\"}}",
+        "{\"metadata\":{\"messengerId\":\"DISCORD\",\"urlHost\":\"example.org\"}}",
+        "{\"metadata\":{\"messengerId\":\"DISCORD\",\"text\":\"synthetic\"}}",
+        "{\"windowTitle\":\"synthetic\"}",
+        "{\"contentPayload\":{\"text\":\"synthetic\"}}",
+        "{\"guardStatus\":2}",
+        "{\"guardStatus\":\"PRIVACY_BLOCKED\"}",
+        "{\"guardStatus\":null}")) {
+      var body = source.deepCopy().setAll(json.readTree(invalid).asObject());
+      mvc.perform(post(path(f.sessionId())).header("Authorization", "Bearer "
+              + f.login().accessToken()).header("X-Device-Id", f.login().device().deviceId())
+          .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+          .andExpect(result -> assertEquals(400, result.getResponse().getStatus(), invalid))
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+    assertTrue(store.history(f.principal().userId(), f.sessionId()).isEmpty());
+    verify(ai, never()).analyze(any(), any(), anyLong());
+  }
+
+  @Test
+  void legacyAnalysisStillIgnoresUnknownRequestFields() throws Exception {
+    Fixture f = fixture();
+    var body = json.valueToTree(request(null)).asObject();
+    body.put("extra", "synthetic");
+    body.path("metadata").asObject().put("extra", "synthetic");
+    mvc.perform(post(path(f.sessionId())).header("Authorization", "Bearer "
+            + f.login().accessToken()).header("X-Device-Id", f.login().device().deviceId())
+        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.relation").value("RELATED"));
+    verify(ai, times(1)).analyze(any(), any(), anyLong());
+  }
+
+  private String storedMessengerScope(Fixture f, long sequence) {
+    return jdbc.queryForObject(
+        "SELECT messenger_scope FROM analysis_runs WHERE session_id = ? AND sequence = ?",
+        String.class, f.sessionId(), sequence);
+  }
+
+  private static Request messenger(long sequence, String id) {
+    return new Request(UUID.randomUUID().toString(), ContentSource.APP_META, Instant.now(),
+        BigDecimal.valueOf(sequence), GuardStatus.MESSENGER,
+        new Metadata(null, null, null, null, id), null, BigDecimal.valueOf(sequence));
+  }
+
+  @Test
   void actualHttpReturnsPublicShapeAndServerPolicy() throws Exception {
     Fixture f = fixture();
     String trace = UUID.randomUUID().toString();
@@ -775,7 +878,7 @@ class AnalysisApiTests {
     }
     assertEquals(before, runs.count());
     verify(ai, never()).analyze(any(), any(), anyLong());
-    for (var guard : GuardStatus.values()) {
+    for (var guard : List.of(GuardStatus.EXCLUDED, GuardStatus.PRIVACY_BLOCKED)) {
       var blocked = new Request(UUID.randomUUID().toString(), contentSource,
           source.observedAt(), BigDecimal.ONE, guard, null, null);
       mvc.perform(call(f, blocked)).andExpect(status().isOk());

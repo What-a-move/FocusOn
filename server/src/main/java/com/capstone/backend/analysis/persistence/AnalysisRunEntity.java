@@ -107,6 +107,10 @@ public class AnalysisRunEntity {
   @Column(name = "off_task_category", length = 16)
   private OffTaskCategory offTaskCategory;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "messenger_scope", length = 16)
+  private MessengerScope messengerScope;
+
   @Column(name = "goal_version", nullable = false)
   private long goalVersion;
 
@@ -166,6 +170,7 @@ public class AnalysisRunEntity {
     matchStatus = decision.matchStatus();
     matchedGoalId = decision.matchedGoalId();
     offTaskCategory = null;
+    messengerScope = null;
     modelVersion = decision.modelVersion();
     promptVersion = decision.promptVersion();
     errorCode = reasonCode == ReasonCode.ANALYSIS_UNAVAILABLE
@@ -177,6 +182,16 @@ public class AnalysisRunEntity {
     offTaskCategory = relation == Relation.UNRELATED ? category : null;
   }
 
+  /** 내부 집계용 분류만 보존한다. */
+  public enum MessengerScope { LEARNING, OTHER }
+
+  /** 보호 판정에만 메신저 구분을 남긴다. */
+  public void classifyMessenger(MessengerScope scope) {
+    messengerScope = relation == Relation.PRIVACY_BLOCKED
+        && analysisStatus == AnalysisStatus.SKIPPED
+        ? scope : null;
+  }
+
   /** 저장한 값으로 응답을 만들어 DB와 응답의 정밀도를 일치시킨다. */
   public Response response() {
     return new Response(id.toString(), analysisStatus, relation,
@@ -185,8 +200,11 @@ public class AnalysisRunEntity {
         matchedGoalId == null ? null : matchedGoalId.toString(), goalVersion, offTaskCategory);
   }
 
-  /** metadata만 근거인 무관 판정은 후속 Policy Engine의 이탈 시간에 포함하지 않는다. */
+  /** 보호한 미등록 메신저는 내부 시간 집계용 이탈 신호로 사용한다. */
   public Relation effectiveRelation() {
+    if (messengerScope == MessengerScope.OTHER) {
+      return Relation.UNRELATED;
+    }
     return relation == Relation.UNRELATED
         && (contentSource == ContentSource.APP_META || contentSource == ContentSource.TAB_META)
         ? Relation.UNCERTAIN : relation;

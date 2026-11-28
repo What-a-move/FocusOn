@@ -67,13 +67,18 @@ public final class OffTaskTimeline {
    */
   public OffTaskTimeline complete(long runId, Relation relation, ContentSource source,
       Instant receivedAt, Instant at, String policyVersion, boolean trackRatio) {
+    Relation effective = relation == Relation.UNRELATED
+        && (source == ContentSource.APP_META || source == ContentSource.TAB_META)
+        ? Relation.UNCERTAIN : relation;
+    return completeEffective(runId, effective, receivedAt, at, policyVersion, trackRatio);
+  }
+
+  OffTaskTimeline completeEffective(long runId, Relation effective, Instant receivedAt, Instant at,
+      String policyVersion, boolean trackRatio) {
     if (!Objects.equals(state.pendingRun(), runId)) {
       return this;
     }
     Instant now = monotonic(at);
-    Relation effective = relation == Relation.UNRELATED
-        && (source == ContentSource.APP_META || source == ContentSource.TAB_META)
-        ? Relation.UNCERTAIN : relation;
     RelatedTime related = null;
     if (trackRatio && POLICY_V2.equals(policyVersion)) {
       related = closeRelatedTime(now);

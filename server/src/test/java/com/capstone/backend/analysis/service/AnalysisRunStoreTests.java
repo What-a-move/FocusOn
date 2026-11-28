@@ -72,7 +72,8 @@ class AnalysisRunStoreTests {
   @EnumSource(GuardStatus.class)
   void protectionChangeClearsEvidence(GuardStatus guard) {
     var guarded = AnalysisRunStore.finalDecision(prepared, run, session, guard, matched(30));
-    assertEquals(Relation.valueOf(guard.name()), guarded.relation());
+    assertEquals(guard == GuardStatus.EXCLUDED ? Relation.EXCLUDED : Relation.PRIVACY_BLOCKED,
+        guarded.relation());
     assertNull(guarded.reviewEvidence());
   }
 

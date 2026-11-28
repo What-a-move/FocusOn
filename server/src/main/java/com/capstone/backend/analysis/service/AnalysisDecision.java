@@ -72,7 +72,9 @@ public record AnalysisDecision(Relation relation, Double confidence, ReasonCode 
 
   /** 사전 보호 결과는 AI 관련성 판정과 분리한다. */
   public static AnalysisDecision guarded(GuardStatus guard) {
-    return new AnalysisDecision(Relation.valueOf(guard.name()), null, null,
+    Relation relation = guard == GuardStatus.MESSENGER
+        ? Relation.PRIVACY_BLOCKED : Relation.valueOf(guard.name());
+    return new AnalysisDecision(relation, null, null,
         AnalysisStatus.SKIPPED, null, null);
   }
 }

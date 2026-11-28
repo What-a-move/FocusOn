@@ -3,6 +3,7 @@ package com.capstone.backend.intervention;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,9 +54,11 @@ import com.capstone.backend.session.dto.SessionDtos;
 import com.capstone.backend.session.persistence.LearningSessionEntity;
 import com.capstone.backend.session.persistence.LearningSessionRepository;
 import com.capstone.backend.session.service.SessionHeartbeatService;
+import com.capstone.backend.user.dto.UserConfigurationDtos.UpdateFocusSettingsRequest;
 import com.capstone.backend.user.persistence.UserConsentEntity;
 import com.capstone.backend.user.persistence.UserConsentEntity.ConsentType;
 import com.capstone.backend.user.persistence.UserConsentRepository;
+import com.capstone.backend.user.persistence.UserFocusSettingsEntity.InterventionLevel;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -496,6 +499,41 @@ class ObservationDeliveryIntegrationTests {
   }
 
   @Test
+  void onlyCurrentUnregisteredMessengerContinuesTheOffTaskTimeline() {
+    var f = fixture();
+    jdbc.update("UPDATE learning_sessions SET intervention_policy_version='v2' WHERE id=?",
+        f.session());
+    configuration.updateFocusSettings(f.principal(), new UpdateFocusSettingsRequest(
+        InterventionLevel.NORMAL, List.of("MOLE_UI"), true, false, List.of("SLACK"),
+        null, null, null, null));
+    var context = contexts.put(f.principal(), f.device(), f.sessionString(),
+        contextRequest(1, Observer.DESKTOP)).observationContextId();
+
+    var other = store.prepare(f.principal(), f.session(), messengerObservation(context, 2,
+        "DISCORD"));
+    assertEquals(AnalysisDtos.Relation.PRIVACY_BLOCKED, other.initialResponse().relation());
+    var active = snapshot(f);
+    assertNotNull(active.openEpisode());
+    assertNull(active.pendingRun());
+    assertEquals(other.runId(), active.offTaskRun());
+    assertNull(active.spans().getLast().end());
+
+    store.prepare(f.principal(), f.session(), messengerObservation(context, 1, "SLACK"));
+    assertEquals(active, snapshot(f));
+
+    var learning = store.prepare(f.principal(), f.session(), messengerObservation(context, 3,
+        "SLACK"));
+    assertEquals(AnalysisDtos.Relation.PRIVACY_BLOCKED, learning.initialResponse().relation());
+    var closed = snapshot(f);
+    assertNull(closed.openEpisode());
+    assertNull(closed.offTaskRun());
+    assertNotNull(closed.spans().getLast().end());
+
+    store.prepare(f.principal(), f.session(), messengerObservation(null, 4, "DISCORD"));
+    assertEquals(closed, snapshot(f));
+  }
+
+  @Test
   void ordinaryReanalysisHidesButPreservesCandidateAndNotSentRetry() {
     var f = fixture();
     final long event = generate(f);
@@ -708,6 +746,14 @@ class ObservationDeliveryIntegrationTests {
     return new AnalysisDtos.Request(UUID.randomUUID().toString(),
         AnalysisDtos.ContentSource.DESKTOP_APP_OCR, Instant.now(), BigDecimal.valueOf(sequence),
         null, null, null, BigDecimal.valueOf(sequence), contextId);
+  }
+
+  private AnalysisDtos.Request messengerObservation(String contextId, int sequence, String id) {
+    return new AnalysisDtos.Request(UUID.randomUUID().toString(),
+        AnalysisDtos.ContentSource.APP_META, Instant.now(), BigDecimal.valueOf(sequence),
+        AnalysisDtos.GuardStatus.MESSENGER,
+        new AnalysisDtos.Metadata(null, null, null, null, id), null, BigDecimal.valueOf(sequence),
+        contextId);
   }
 
   private AnalysisDecision unrelated() {

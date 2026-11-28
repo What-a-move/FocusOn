@@ -126,7 +126,7 @@ public class InterventionPolicyService {
       // 유효 관측은 prepare와 pending 상태를 같은 transaction에서 저장한다.
       return;
     }
-    timeline = timeline.complete(run.getId(), run.effectiveRelation(), run.getContentSource(),
+    timeline = timeline.completeEffective(run.getId(), run.effectiveRelation(),
         run.getReceivedAt(), now, session.getInterventionPolicyVersion(), offTaskRatio.enabled());
     state.transition(json.writeValueAsString(timeline.snapshot()));
     if (timeline.onHold()) {
